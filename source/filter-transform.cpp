@@ -163,6 +163,7 @@ Filter::Transform::Instance::Instance(obs_data_t *data, obs_source_t *context)
 	m_vertexHelper->set_uv_layers(1);
 	m_vertexHelper->resize(4);
 	obs_leave_graphics();
+
 	update(data);
 }
 
@@ -183,7 +184,61 @@ void Filter::Transform::Instance::update(obs_data_t *data) {
 	rot.z = obs_data_get_double(data, P_FILTER_TRANSFORM_ROTATION_Z) / 360.0 * PI;
 	scale.x = obs_data_get_double(data, P_FILTER_TRANSFORM_SCALE_X);
 	scale.y = obs_data_get_double(data, P_FILTER_TRANSFORM_SCALE_Y);
+	scale.z = 1.0;
 	m_isOrthographic = obs_data_get_bool(data, P_FILTER_TRANSFORM_ORTHOGRAPHIC);
+
+	// Matrix
+	matrix4 ident;
+	matrix4_identity(&ident);
+	matrix4_scale(&ident, &ident, &scale);
+	matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rot.x);
+	matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rot.y);
+	matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rot.z);
+
+	// Mesh
+	{
+		Helper::Vertex& v = m_vertexHelper->at(0);
+		v.position.x = -0.5;
+		v.position.y = -0.5;
+		v.position.z = 0.0;
+		vec3_transform(&v.position, &v.position, &ident);
+		v.color = 0xFFFFFFFF;
+		v.uv[0].x = 0;
+		v.uv[0].y = 0;
+	}
+	{
+		Helper::Vertex& v = m_vertexHelper->at(1);
+		v.position.x = 0.5;
+		v.position.y = -0.5;
+		v.position.z = 0.0;
+		vec3_transform(&v.position, &v.position, &ident);
+		v.color = 0xFFFFFFFF;
+		v.uv[0].x = 1;
+		v.uv[0].y = 0;
+	}
+	{
+		Helper::Vertex& v = m_vertexHelper->at(2);
+		v.position.x = -0.5;
+		v.position.y = 0.5;
+		v.position.z = 0.0;
+		vec3_transform(&v.position, &v.position, &ident);
+		v.color = 0xFFFFFFFF;
+		v.uv[0].x = 0;
+		v.uv[0].y = 1;
+	}
+	{
+		Helper::Vertex& v = m_vertexHelper->at(3);
+		v.position.x = 0.5;
+		v.position.y = 0.5;
+		v.position.z = 0.0;
+		vec3_transform(&v.position, &v.position, &ident);
+		v.color = 0xFFFFFFFF;
+		v.uv[0].x = 1;
+		v.uv[0].y = 1;
+	}
+	obs_enter_graphics();
+	m_vertexBuffer = m_vertexHelper->update();
+	obs_leave_graphics();
 }
 
 uint32_t Filter::Transform::Instance::get_width() {
@@ -217,19 +272,21 @@ void Filter::Transform::Instance::video_tick(float) {
 void Filter::Transform::Instance::video_render(gs_effect_t *effect) {
 	obs_source_t *parent = obs_filter_get_parent(context);
 	obs_source_t *target = obs_filter_get_target(context);
+
+	// Skip rendering if our target, parent or context is not valid.
+	if (!target || !parent || !context || !m_vertexBuffer || !m_texRender || !m_shapeRender) {
+		obs_source_skip_video_filter(context);
+		return;
+	}
+
 	uint32_t
 		baseW = obs_source_get_base_width(target),
 		baseH = obs_source_get_base_height(target);
 	float halfW = (float)baseW / 2.0,
 		halfH = (float)baseH / 2.0;
 
-	// Skip rendering if our target, parent or context is not valid.
-	if (!target || !parent || !context) {
-		obs_source_skip_video_filter(context);
-		return;
-	}
-
-	gs_effect_t* eff = obs_get_base_effect(OBS_EFFECT_OPAQUE);
+	gs_effect_t* opaque = obs_get_base_effect(OBS_EFFECT_OPAQUE),
+		*default = obs_get_base_effect(OBS_EFFECT_DEFAULT);
 
 	// Draw previous filters to texture.
 	gs_texrender_reset(m_texRender);
@@ -262,7 +319,9 @@ void Filter::Transform::Instance::video_render(gs_effect_t *effect) {
 				-halfH, halfH,
 				-65535.0, 65535.0);
 		} else {
-			gs_perspective(90 / 360.0 * PI, (float)baseW / (float)baseH, -65535.0, 65535.0);
+			gs_perspective(PI / 4.0,
+				(float)baseW / (float)baseH,
+				-1.0, 65535.0);
 		}
 
 		gs_set_cull_mode(GS_NEITHER);
@@ -273,72 +332,18 @@ void Filter::Transform::Instance::video_render(gs_effect_t *effect) {
 		gs_enable_color(true, true, true, true);
 		gs_enable_depth_test(false);
 
-		// Data
-		vec3 sourceSize;
-		sourceSize.x = baseW;
-		sourceSize.y = baseH;
-		sourceSize.z = 1.0;
-
-		// Matrix
-		matrix4 ident;
-		matrix4_identity(&ident);
-		matrix4_scale(&ident, &ident, &scale);
-		//matrix4_scale(&ident, &ident, &sourceSize);
-		matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rot.x);
-		matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rot.y);
-		matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rot.z);
-		gs_matrix_set(&ident);
-
-		// Mesh
-		{
-			Helper::Vertex& v = m_vertexHelper->at(0);
-			v.position.x = -halfW;
-			v.position.y = -halfH;
-			v.position.z = 1.0;
-			v.color = 0xFFFFFFFF;
-			v.uv[0].x = 0;
-			v.uv[0].y = 0;
-		}
-		{
-			Helper::Vertex& v = m_vertexHelper->at(1);
-			v.position.x = halfW;
-			v.position.y = -halfH;
-			v.position.z = 1.0;
-			v.color = 0xFFFFFFFF;
-			v.uv[0].x = 1;
-			v.uv[0].y = 0;
-		}
-		{
-			Helper::Vertex& v = m_vertexHelper->at(2);
-			v.position.x = -halfW;
-			v.position.y = halfH;
-			v.position.z = 1.0;
-			v.color = 0xFFFFFFFF;
-			v.uv[0].x = 0;
-			v.uv[0].y = 1;
-		}
-		{
-			Helper::Vertex& v = m_vertexHelper->at(3);
-			v.position.x = halfW;
-			v.position.y = halfH;
-			v.position.z = 1.0;
-			v.color = 0xFFFFFFFF;
-			v.uv[0].x = 1;
-			v.uv[0].y = 1;
-		}
-		m_vertexBuffer = m_vertexHelper->update();
+		gs_matrix_scale3f(baseW, baseH, 1);
 
 		// Rendering
 		vec4 black;
 		vec4_zero(&black);
 		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
 
-		while (gs_effect_loop(eff, "Draw")) {
-			gs_effect_set_texture(gs_effect_get_param_by_name(eff, "image"), filterTexture);
-			//gs_draw_sprite(filterTexture, 0, 0, 0);
+		while (gs_effect_loop(default, "Draw")) {
+			gs_effect_set_texture(gs_effect_get_param_by_name(default, "image"), filterTexture);
 			gs_load_vertexbuffer(m_vertexBuffer);
 			gs_load_indexbuffer(NULL);
-			gs_draw(GS_LINESTRIP, 0, 4);
+			gs_draw(GS_TRISTRIP, 0, 4);
 		}
 
 		gs_projection_pop();
@@ -352,8 +357,8 @@ void Filter::Transform::Instance::video_render(gs_effect_t *effect) {
 	gs_texture* shapeTexture = gs_texrender_get_texture(m_shapeRender);
 
 	// Draw final shape
-	while (gs_effect_loop(eff, "Draw")) {
-		gs_effect_set_texture(gs_effect_get_param_by_name(eff, "image"), shapeTexture);
+	while (gs_effect_loop(default, "Draw")) {
+		gs_effect_set_texture(gs_effect_get_param_by_name(default, "image"), shapeTexture);
 		gs_draw_sprite(shapeTexture, 0, 0, 0);
 	}
 }
