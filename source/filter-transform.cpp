@@ -285,14 +285,14 @@ void Filter::Transform::Instance::video_render(gs_effect_t *effect) {
 	float halfW = (float)baseW / 2.0,
 		halfH = (float)baseH / 2.0;
 
-	gs_effect_t* opaque = obs_get_base_effect(OBS_EFFECT_OPAQUE),
-		*default = obs_get_base_effect(OBS_EFFECT_DEFAULT);
+	gs_effect_t* opaqueEffect = obs_get_base_effect(OBS_EFFECT_OPAQUE),
+		*alphaEffect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
 
 	// Draw previous filters to texture.
 	gs_texrender_reset(m_texRender);
 	if (gs_texrender_begin(m_texRender, baseW, baseH)) {
 		if (obs_source_process_filter_begin(context, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
-			obs_source_process_filter_end(context, obs_get_base_effect(OBS_EFFECT_OPAQUE), baseW, baseH);
+			obs_source_process_filter_end(context, alphaEffect, baseW, baseH);
 		} else {
 			obs_source_skip_video_filter(context);
 		}
@@ -318,9 +318,11 @@ void Filter::Transform::Instance::video_render(gs_effect_t *effect) {
 				-halfW, halfW,
 				-halfH, halfH,
 				-65535.0, 65535.0);
+			gs_matrix_scale3f(baseW, baseH, 1);
 		} else {
-			gs_perspective(PI / 4.0,
-				(float)baseW / (float)baseH,
+			gs_frustum(
+				-halfW, halfW,
+				-halfH, halfH,
 				-1.0, 65535.0);
 		}
 
@@ -332,15 +334,13 @@ void Filter::Transform::Instance::video_render(gs_effect_t *effect) {
 		gs_enable_color(true, true, true, true);
 		gs_enable_depth_test(false);
 
-		gs_matrix_scale3f(baseW, baseH, 1);
-
 		// Rendering
 		vec4 black;
 		vec4_zero(&black);
 		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
 
-		while (gs_effect_loop(default, "Draw")) {
-			gs_effect_set_texture(gs_effect_get_param_by_name(default, "image"), filterTexture);
+		while (gs_effect_loop(alphaEffect, "Draw")) {
+			gs_effect_set_texture(gs_effect_get_param_by_name(alphaEffect, "image"), filterTexture);
 			gs_load_vertexbuffer(m_vertexBuffer);
 			gs_load_indexbuffer(NULL);
 			gs_draw(GS_TRISTRIP, 0, 4);
@@ -357,8 +357,8 @@ void Filter::Transform::Instance::video_render(gs_effect_t *effect) {
 	gs_texture* shapeTexture = gs_texrender_get_texture(m_shapeRender);
 
 	// Draw final shape
-	while (gs_effect_loop(default, "Draw")) {
-		gs_effect_set_texture(gs_effect_get_param_by_name(default, "image"), shapeTexture);
+	while (gs_effect_loop(alphaEffect, "Draw")) {
+		gs_effect_set_texture(gs_effect_get_param_by_name(alphaEffect, "image"), shapeTexture);
 		gs_draw_sprite(shapeTexture, 0, 0, 0);
 	}
 }
