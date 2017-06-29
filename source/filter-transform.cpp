@@ -24,7 +24,10 @@
 #include "libobs/graphics/graphics.h"
 #include "libobs/graphics/matrix4.h"
 
-static const float PI = 3.1415926535897932384626433832795;
+static const float PI = 3.1415926535897932384626433832795f;
+static const float nearZ = 0.0001f;
+static const float farZ = 65536.0f;
+static const float valueLimit = 65536.0f;
 
 Filter::Transform::Transform() {
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
@@ -57,23 +60,27 @@ const char* Filter::Transform::get_name(void *) {
 }
 
 void Filter::Transform::get_defaults(obs_data_t *data) {
-	obs_data_set_default_bool(data, P_FILTER_TRANSFORM_ORTHOGRAPHIC, true);
+	obs_data_set_default_int(data, P_FILTER_TRANSFORM_CAMERA, 0);
 	obs_data_set_default_double(data, P_FILTER_TRANSFORM_POSITION_X, 0);
 	obs_data_set_default_double(data, P_FILTER_TRANSFORM_POSITION_Y, 0);
-	obs_data_set_default_double(data, P_FILTER_TRANSFORM_POSITION_Z, 0);
+	obs_data_set_default_double(data, P_FILTER_TRANSFORM_POSITION_Z, -100.0);
+	obs_data_set_default_double(data, P_FILTER_TRANSFORM_SCALE_X, 100);
+	obs_data_set_default_double(data, P_FILTER_TRANSFORM_SCALE_Y, 100);
+	obs_data_set_default_int(data, P_FILTER_TRANSFORM_ROTATION_ORDER, 4); //ZXY
 	obs_data_set_default_double(data, P_FILTER_TRANSFORM_ROTATION_X, 0);
 	obs_data_set_default_double(data, P_FILTER_TRANSFORM_ROTATION_Y, 0);
 	obs_data_set_default_double(data, P_FILTER_TRANSFORM_ROTATION_Z, 0);
-	obs_data_set_default_double(data, P_FILTER_TRANSFORM_SCALE_X, 1);
-	obs_data_set_default_double(data, P_FILTER_TRANSFORM_SCALE_Y, 1);
 }
 
 obs_properties_t * Filter::Transform::get_properties(void *) {
 	obs_properties_t *pr = obs_properties_create();
 	obs_property_t* p = NULL;
 
-	p = obs_properties_add_bool(pr, P_FILTER_TRANSFORM_ORTHOGRAPHIC, P_TRANSLATE(P_FILTER_TRANSFORM_ORTHOGRAPHIC));
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_FILTER_TRANSFORM_ORTHOGRAPHIC)));
+	p = obs_properties_add_list(pr, P_FILTER_TRANSFORM_CAMERA, P_TRANSLATE(P_FILTER_TRANSFORM_CAMERA),
+		OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_FILTER_TRANSFORM_CAMERA)));
+	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_CAMERA_ORTHOGRAPHIC), 0);
+	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_CAMERA_PERSPECTIVE), 1);
 
 	{
 		std::pair<const char*, const char*> entries[] = {
@@ -85,10 +92,21 @@ obs_properties_t * Filter::Transform::get_properties(void *) {
 		};
 		for (auto kv : entries) {
 			p = obs_properties_add_float(pr, kv.first, P_TRANSLATE(kv.first),
-				-100000.00, 100000.00, 0.01);
+				-valueLimit, valueLimit, 0.01);
 			obs_property_set_long_description(p, P_TRANSLATE(kv.second));
 		}
 	}
+
+	p = obs_properties_add_list(pr, P_FILTER_TRANSFORM_ROTATION_ORDER, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER),
+		OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_FILTER_TRANSFORM_ROTATION_ORDER)));
+	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER_XYZ), 0);
+	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER_XZY), 1);
+	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER_YXZ), 2);
+	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER_YZX), 3);
+	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER_ZXY), 4);
+	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER_ZYX), 5);
+
 	{
 		std::pair<const char*, const char*> entries[] = {
 			std::make_pair(P_FILTER_TRANSFORM_ROTATION_X, P_DESC(P_FILTER_TRANSFORM_ROTATION_X)),
@@ -97,17 +115,12 @@ obs_properties_t * Filter::Transform::get_properties(void *) {
 		};
 		for (auto kv : entries) {
 			p = obs_properties_add_float_slider(pr, kv.first, P_TRANSLATE(kv.first),
-				-360.00, 360.00, 0.01);
+				-180, 180, 0.01);
 			obs_property_set_long_description(p, P_TRANSLATE(kv.second));
 		}
 	}
 
 	return pr;
-}
-
-bool Filter::Transform::modified_properties(obs_properties_t *pr, obs_property_t *, obs_data_t *data) {
-
-	return true;
 }
 
 void * Filter::Transform::create(obs_data_t *data, obs_source_t *source) {
@@ -176,31 +189,61 @@ Filter::Transform::Instance::~Instance() {
 }
 
 void Filter::Transform::Instance::update(obs_data_t *data) {
-	pos.x = obs_data_get_double(data, P_FILTER_TRANSFORM_POSITION_X);
-	pos.y = obs_data_get_double(data, P_FILTER_TRANSFORM_POSITION_Y);
-	pos.z = obs_data_get_double(data, P_FILTER_TRANSFORM_POSITION_Z);
-	rot.x = obs_data_get_double(data, P_FILTER_TRANSFORM_ROTATION_X) / 360.0 * PI;
-	rot.y = obs_data_get_double(data, P_FILTER_TRANSFORM_ROTATION_Y) / 360.0 * PI;
-	rot.z = obs_data_get_double(data, P_FILTER_TRANSFORM_ROTATION_Z) / 360.0 * PI;
-	scale.x = obs_data_get_double(data, P_FILTER_TRANSFORM_SCALE_X);
-	scale.y = obs_data_get_double(data, P_FILTER_TRANSFORM_SCALE_Y);
+	pos.x = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_POSITION_X) / 100.0f;
+	pos.y = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_POSITION_Y) / 100.0f;
+	pos.z = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_POSITION_Z) / 100.0f;
+	rot.x = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_ROTATION_X) / 180.0f * PI;
+	rot.y = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_ROTATION_Y) / 180.0f * PI;
+	rot.z = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_ROTATION_Z) / 180.0f * PI;
+	scale.x = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_SCALE_X) / 100.0f;
+	scale.y = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_SCALE_Y) / 100.0f;
 	scale.z = 1.0;
-	m_isOrthographic = obs_data_get_bool(data, P_FILTER_TRANSFORM_ORTHOGRAPHIC);
+	m_isOrthographic = obs_data_get_int(data, P_FILTER_TRANSFORM_CAMERA) == 0;
 
 	// Matrix
 	matrix4 ident;
 	matrix4_identity(&ident);
 	matrix4_scale(&ident, &ident, &scale);
-	matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rot.x);
-	matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rot.y);
-	matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rot.z);
+	switch (obs_data_get_int(data, P_FILTER_TRANSFORM_ROTATION_ORDER)) {
+		case 0: // XYZ
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rot.x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rot.y);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rot.z);
+			break;
+		case 1: // XZY
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rot.x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rot.z);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rot.y);
+			break;
+		case 2: // YXZ
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rot.y);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rot.x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rot.z);
+			break;
+		case 3: // YZX
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rot.y);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rot.z);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rot.x);
+			break;
+		case 4: // ZXY
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rot.z);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rot.x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rot.y);
+			break;
+		case 5: // ZYX
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rot.z);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rot.y);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rot.x);
+			break;
+	}
+	matrix4_translate3f(&ident, &ident, pos.x, pos.y, pos.z);
 
 	// Mesh
 	{
 		Helper::Vertex& v = m_vertexHelper->at(0);
 		v.position.x = -0.5;
 		v.position.y = -0.5;
-		v.position.z = 0.0;
+		v.position.z = 0.0f;
 		vec3_transform(&v.position, &v.position, &ident);
 		v.color = 0xFFFFFFFF;
 		v.uv[0].x = 0;
@@ -210,7 +253,7 @@ void Filter::Transform::Instance::update(obs_data_t *data) {
 		Helper::Vertex& v = m_vertexHelper->at(1);
 		v.position.x = 0.5;
 		v.position.y = -0.5;
-		v.position.z = 0.0;
+		v.position.z = 0.0f;
 		vec3_transform(&v.position, &v.position, &ident);
 		v.color = 0xFFFFFFFF;
 		v.uv[0].x = 1;
@@ -220,7 +263,7 @@ void Filter::Transform::Instance::update(obs_data_t *data) {
 		Helper::Vertex& v = m_vertexHelper->at(2);
 		v.position.x = -0.5;
 		v.position.y = 0.5;
-		v.position.z = 0.0;
+		v.position.z = 0.0f;
 		vec3_transform(&v.position, &v.position, &ident);
 		v.color = 0xFFFFFFFF;
 		v.uv[0].x = 0;
@@ -230,7 +273,7 @@ void Filter::Transform::Instance::update(obs_data_t *data) {
 		Helper::Vertex& v = m_vertexHelper->at(3);
 		v.position.x = 0.5;
 		v.position.y = 0.5;
-		v.position.z = 0.0;
+		v.position.z = 0.0f;
 		vec3_transform(&v.position, &v.position, &ident);
 		v.color = 0xFFFFFFFF;
 		v.uv[0].x = 1;
@@ -249,27 +292,17 @@ uint32_t Filter::Transform::Instance::get_height() {
 	return 0;
 }
 
-void Filter::Transform::Instance::activate() {
+void Filter::Transform::Instance::activate() {}
 
-}
+void Filter::Transform::Instance::deactivate() {}
 
-void Filter::Transform::Instance::deactivate() {
+void Filter::Transform::Instance::show() {}
 
-}
+void Filter::Transform::Instance::hide() {}
 
-void Filter::Transform::Instance::show() {
+void Filter::Transform::Instance::video_tick(float) {}
 
-}
-
-void Filter::Transform::Instance::hide() {
-
-}
-
-void Filter::Transform::Instance::video_tick(float) {
-
-}
-
-void Filter::Transform::Instance::video_render(gs_effect_t *effect) {
+void Filter::Transform::Instance::video_render(gs_effect_t *) {
 	obs_source_t *parent = obs_filter_get_parent(context);
 	obs_source_t *target = obs_filter_get_target(context);
 
@@ -282,20 +315,30 @@ void Filter::Transform::Instance::video_render(gs_effect_t *effect) {
 	uint32_t
 		baseW = obs_source_get_base_width(target),
 		baseH = obs_source_get_base_height(target);
-	float halfW = (float)baseW / 2.0,
-		halfH = (float)baseH / 2.0;
 
-	gs_effect_t* opaqueEffect = obs_get_base_effect(OBS_EFFECT_OPAQUE),
-		*alphaEffect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
+	gs_effect_t *alphaEffect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
 
 	// Draw previous filters to texture.
 	gs_texrender_reset(m_texRender);
 	if (gs_texrender_begin(m_texRender, baseW, baseH)) {
+		gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
+
+		vec4 black;
+		vec4_zero(&black);
+		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
+		gs_set_cull_mode(GS_NEITHER);
+		gs_enable_blending(false);
+		gs_enable_depth_test(false);
+		gs_enable_stencil_test(false);
+		gs_enable_stencil_write(false);
+		gs_enable_color(true, true, true, true);
+
 		if (obs_source_process_filter_begin(context, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
 			obs_source_process_filter_end(context, alphaEffect, baseW, baseH);
 		} else {
 			obs_source_skip_video_filter(context);
 		}
+
 		gs_texrender_end(m_texRender);
 	} else {
 		obs_source_skip_video_filter(context);
@@ -305,39 +348,28 @@ void Filter::Transform::Instance::video_render(gs_effect_t *effect) {
 	// Draw shape to texture
 	gs_texrender_reset(m_shapeRender);
 	if (gs_texrender_begin(m_shapeRender, baseW, baseH)) {
-		gs_rect vp;
-		gs_get_viewport(&vp);
-
-		gs_projection_push();
-		gs_matrix_push();
-		gs_viewport_push();
-
-		gs_set_viewport(0, 0, baseW, baseH);
 		if (m_isOrthographic) {
 			gs_ortho(
-				-halfW, halfW,
-				-halfH, halfH,
-				-65535.0, 65535.0);
-			gs_matrix_scale3f(baseW, baseH, 1);
+				-0.5, 0.5,
+				-0.5, 0.5,
+				-farZ, farZ);
 		} else {
-			gs_frustum(
-				-halfW, halfW,
-				-halfH, halfH,
-				-1.0, 65535.0);
+			gs_perspective(PI * (90.0f / 180.0f),
+				(float)baseW / (float)baseH, nearZ, farZ);
 		}
-
-		gs_set_cull_mode(GS_NEITHER);
-		gs_enable_blending(false);
-		gs_enable_depth_test(false);
-		gs_enable_stencil_test(false);
-		gs_enable_stencil_write(false);
-		gs_enable_color(true, true, true, true);
-		gs_enable_depth_test(false);
 
 		// Rendering
 		vec4 black;
 		vec4_zero(&black);
 		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
+
+		gs_set_cull_mode(GS_NEITHER);
+		gs_enable_blending(false);
+		gs_enable_depth_test(false);
+		gs_depth_function(gs_depth_test::GS_ALWAYS);
+		gs_enable_stencil_test(false);
+		gs_enable_stencil_write(false);
+		gs_enable_color(true, true, true, true);
 
 		while (gs_effect_loop(alphaEffect, "Draw")) {
 			gs_effect_set_texture(gs_effect_get_param_by_name(alphaEffect, "image"), filterTexture);
@@ -346,10 +378,6 @@ void Filter::Transform::Instance::video_render(gs_effect_t *effect) {
 			gs_draw(GS_TRISTRIP, 0, 4);
 		}
 
-		gs_projection_pop();
-		gs_matrix_pop();
-		gs_viewport_pop();
-
 		gs_texrender_end(m_shapeRender);
 	} else {
 		obs_source_skip_video_filter(context);
@@ -357,6 +385,8 @@ void Filter::Transform::Instance::video_render(gs_effect_t *effect) {
 	gs_texture* shapeTexture = gs_texrender_get_texture(m_shapeRender);
 
 	// Draw final shape
+	gs_reset_blend_state();
+	gs_enable_depth_test(false);
 	while (gs_effect_loop(alphaEffect, "Draw")) {
 		gs_effect_set_texture(gs_effect_get_param_by_name(alphaEffect, "image"), shapeTexture);
 		gs_draw_sprite(shapeTexture, 0, 0, 0);
