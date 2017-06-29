@@ -27,6 +27,7 @@ SET(obs-stream-effects_HEADERS
 	"${PROJECT_SOURCE_DIR}/source/plugin.h"
 	"${PROJECT_SOURCE_DIR}/source/filter-displacement.h"
 	"${PROJECT_SOURCE_DIR}/source/filter-shape.h"
+	"${PROJECT_SOURCE_DIR}/source/filter-transform.h"
 	"${PROJECT_SOURCE_DIR}/source/gs-helper.h"
 	"${PROJECT_BINARY_DIR}/source/version.h"
 	"${PROJECT_SOURCE_DIR}/source/strings.h"
@@ -35,6 +36,7 @@ SET(obs-stream-effects_SOURCES
 	"${PROJECT_SOURCE_DIR}/source/plugin.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filter-displacement.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filter-shape.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filter-transform.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-helper.cpp"
 )
 SET(obs-stream-effects_LIBRARIES

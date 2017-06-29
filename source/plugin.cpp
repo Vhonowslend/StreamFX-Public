@@ -20,6 +20,7 @@
 #include "plugin.h"
 #include "filter-displacement.h"
 #include "filter-shape.h"
+#include "filter-transform.h"
 
 OBS_DECLARE_MODULE();
 OBS_MODULE_AUTHOR("Michael Fabian Dirks");
@@ -27,15 +28,18 @@ OBS_MODULE_USE_DEFAULT_LOCALE("obs-stream-effects", "en-US");
 
 Filter::Displacement *filterDisplacement;
 Filter::Shape *filterShape;
+Filter::Transform *filterTransform;
 
 MODULE_EXPORT bool obs_module_load(void) {
 	filterDisplacement = new Filter::Displacement();
 	filterShape = new Filter::Shape();
+	filterTransform = new Filter::Transform();
 
 	return true;
 }
 
 MODULE_EXPORT void obs_module_unload(void) {
+	delete filterTransform;
 	delete filterShape;
 	delete filterDisplacement;
 }
