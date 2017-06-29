@@ -21,7 +21,7 @@
 
 Filter::Displacement::Displacement() {
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
-	sourceInfo.id = "obs-stream-effects-displacement";
+	sourceInfo.id = "obs-stream-effects-filter-displacement";
 	sourceInfo.type = OBS_SOURCE_TYPE_FILTER;
 	sourceInfo.output_flags = OBS_SOURCE_VIDEO;
 	sourceInfo.get_name = get_name;
@@ -81,7 +81,7 @@ obs_properties_t * Filter::Displacement::get_properties(void *ptr) {
 		path = reinterpret_cast<Instance*>(ptr)->get_file();
 
 	obs_properties_add_path(pr, "file", "File", obs_path_type::OBS_PATH_FILE,
-		"Images (*.png *.jpeg *.jpg *.bmp);*.png *.jpeg *.jpg *.bmp;;All Files (*)", path.c_str());
+		"Images (*.png *.jpeg *.jpg *.bmp);All Files (*)", path.c_str());
 	obs_properties_add_float_slider(pr, "ratio", "Distance (%)", 0, 1, 0.01);
 	obs_properties_add_float_slider(pr, "scale", "Strength", -1000, 1000, 0.01);
 	return pr;
@@ -240,7 +240,7 @@ void Filter::Displacement::Instance::updateDisplacementMap(std::string file) {
 	} else { // Different Timestamps
 		struct stat stats;
 		if (os_stat(dispmap.file.c_str(), &stats) != 0) {
-			shouldUpdateTexture = shouldUpdateTexture || 
+			shouldUpdateTexture = shouldUpdateTexture ||
 			(dispmap.createTime != stats.st_ctime) ||
 			(dispmap.modifiedTime != stats.st_mtime);
 			dispmap.createTime = stats.st_ctime;
