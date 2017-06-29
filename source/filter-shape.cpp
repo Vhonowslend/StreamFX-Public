@@ -57,7 +57,7 @@ static void initialize() {
 
 Filter::Shape::Shape() {
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
-	sourceInfo.id = "obs-stream-effects-shape";
+	sourceInfo.id = "obs-stream-effects-filter-shape";
 	sourceInfo.type = OBS_SOURCE_TYPE_FILTER;
 	sourceInfo.output_flags = OBS_SOURCE_VIDEO;
 	sourceInfo.get_name = get_name;
@@ -74,7 +74,8 @@ Filter::Shape::Shape() {
 	sourceInfo.video_tick = video_tick;
 	sourceInfo.video_render = video_render;
 
-	obs_register_source(&sourceInfo);
+	// Disabled for the time being. 3D Transform is better for this.
+	//obs_register_source(&sourceInfo);
 
 	initialize();
 }
@@ -113,6 +114,12 @@ obs_properties_t * Filter::Shape::get_properties(void *) {
 
 	p = obs_properties_add_bool(pr, P_SHAPE_LOOP, P_TRANSLATE(P_SHAPE_LOOP));
 	obs_property_set_long_description(p, P_DESC(P_SHAPE_LOOP));
+
+	p = obs_properties_add_list(pr, P_SHAPE_MODE, P_TRANSLATE(P_SHAPE_MODE),
+		obs_combo_type::OBS_COMBO_TYPE_LIST, obs_combo_format::OBS_COMBO_FORMAT_INT);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHAPE_MODE)));
+	obs_property_list_add_int(p, P_TRANSLATE(P_SHAPE_MODE_TRIS), GS_TRIS);
+	obs_property_list_add_int(p, P_TRANSLATE(P_SHAPE_MODE_TRISTRIP), GS_TRISTRIP);
 
 	p = obs_properties_add_int_slider(pr, P_SHAPE_POINTS, P_TRANSLATE(P_SHAPE_POINTS), minimumPoints, maximumPoints, 1);
 	obs_property_set_long_description(p, P_DESC(P_SHAPE_POINTS));
@@ -204,8 +211,9 @@ void Filter::Shape::video_render(void *ptr, gs_effect_t *effect) {
 Filter::Shape::Instance::Instance(obs_data_t *data, obs_source_t *context)
 	: context(context) {
 	obs_enter_graphics();
-	m_vertexHelper = new Helper::VertexBuffer();
+	m_vertexHelper = new Helper::VertexBuffer(maximumPoints);
 	m_vertexHelper->set_uv_layers(1);
+	m_texRender = gs_texrender_create(GS_RGBA, GS_Z32F);
 	obs_leave_graphics();
 
 	update(data);
@@ -247,11 +255,11 @@ void Filter::Shape::Instance::update(obs_data_t *data) {
 			}
 		}
 		v.color = 0xFFFFFFFF;
-		v.position.z = 10.0f;
+		v.position.z = 0.0f;
 	}
+	drawmode = (gs_draw_mode)obs_data_get_int(data, P_SHAPE_MODE);
 	obs_enter_graphics();
 	m_vertexBuffer = m_vertexHelper->update();
-	m_texRender = gs_texrender_create(GS_RGBA, GS_Z32F);
 	obs_leave_graphics();
 }
 
@@ -298,7 +306,7 @@ void Filter::Shape::Instance::video_render(gs_effect_t *effect) {
 
 	gs_texrender_reset(m_texRender);
 	if (gs_texrender_begin(m_texRender, baseW, baseH)) {
-		if (obs_source_process_filter_begin(context, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
+		if (obs_source_process_filter_begin(context, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
 			obs_source_process_filter_end(context, obs_get_base_effect(OBS_EFFECT_OPAQUE), baseW, baseH);
 		} else {
 			obs_source_skip_video_filter(context);
@@ -308,9 +316,9 @@ void Filter::Shape::Instance::video_render(gs_effect_t *effect) {
 		obs_source_skip_video_filter(context);
 	}
 	gs_texture* tex = gs_texrender_get_texture(m_texRender);
-		
-	gs_projection_push();
-	gs_viewport_push();
+
+	//gs_projection_push();
+	//gs_viewport_push();
 
 	matrix4 alignedMatrix;
 	gs_matrix_get(&alignedMatrix);
@@ -326,32 +334,15 @@ void Filter::Shape::Instance::video_render(gs_effect_t *effect) {
 	gs_enable_color(true, true, true, true);
 	gs_enable_depth_test(false);
 
-	gs_effect_t* eff = obs_get_base_effect(OBS_EFFECT_SOLID);
-	while (gs_effect_loop(eff, "Solid")) {
-		//gs_effect_set_texture(gs_effect_get_param_by_name(eff, "image"), tex);
-		//gs_draw_sprite(tex, 0, baseW * m_vertexHelper->at(0).position.x, baseH * m_vertexHelper->at(0).position.y);
-
-		//gs_load_default_samplerstate(false, 0);
+	gs_effect_t* eff = obs_get_base_effect(OBS_EFFECT_OPAQUE);
+	while (gs_effect_loop(eff, "Draw")) {
+		gs_effect_set_texture(gs_effect_get_param_by_name(eff, "image"), tex);
 		gs_load_vertexbuffer(m_vertexBuffer);
 		gs_load_indexbuffer(nullptr);
-		gs_draw(GS_LINESTRIP, 0, 3);
-
-		gs_render_start(true);
-		gs_vertex2f(0, 0);
-		gs_color(0xFFFFFFFF);
-
-		gs_vertex2f(1, 0);
-		gs_color(0xFFFFFFFF);
-
-		gs_vertex2f(1, 1);
-		gs_color(0xFFFFFFFF);
-
-		gs_vertex2f(0, 1);
-		gs_color(0xFFFFFFFF);
-		gs_render_stop(GS_LINESTRIP);
+		gs_draw(drawmode, 0, m_vertexHelper->size());
 	}
 
 	gs_matrix_pop();
-	gs_viewport_pop();
-	gs_projection_pop();
+	//gs_viewport_pop();
+	//gs_projection_pop();
 }

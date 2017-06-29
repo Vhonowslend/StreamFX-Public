@@ -15,14 +15,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
-*/
+ */
 
 #pragma once
 #include "plugin.h"
 #include "gs-helper.h"
 
-#define P_SHAPE							"Shape"
+#define P_SHAPE						"Shape"
 #define P_SHAPE_LOOP					"Shape.Loop"
+#define P_SHAPE_MODE					"Shape.Mode"
+#define P_SHAPE_MODE_TRIS				"Shape.Mode.Tris"
+#define P_SHAPE_MODE_TRISTRIP				"Shape.Mode.TriStrip"
+#define P_SHAPE_MODE					"Shape.Mode"
 #define P_SHAPE_POINTS					"Shape.Points"
 #define P_SHAPE_POINT_X					"Shape.Point.X"
 #define P_SHAPE_POINT_Y					"Shape.Point.Y"
@@ -34,7 +38,7 @@ namespace Filter {
 		public:
 		Shape();
 		~Shape();
-		
+
 		static const char *get_name(void *);
 		static void get_defaults(obs_data_t *);
 		static obs_properties_t *get_properties(void *);
@@ -76,8 +80,7 @@ namespace Filter {
 			gs_effect_t *customEffect;
 			Helper::VertexBuffer *m_vertexHelper;
 			gs_vertbuffer_t *m_vertexBuffer;
-
-			size_t width, height;
+			gs_draw_mode drawmode;
 			gs_texrender_t *m_texRender;
 		};
 	};
