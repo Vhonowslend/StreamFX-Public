@@ -25,6 +25,7 @@
 #define P_FILTER_TRANSFORM_CAMERA			"Filter.Transform.Camera"
 #define P_FILTER_TRANSFORM_CAMERA_ORTHOGRAPHIC		"Filter.Transform.Camera.Orthographic"
 #define P_FILTER_TRANSFORM_CAMERA_PERSPECTIVE		"Filter.Transform.Camera.Perspective"
+#define P_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW		"Filter.Transform.Camera.FieldOfView"
 #define P_FILTER_TRANSFORM_POSITION			"Filter.Transform.Position"
 #define P_FILTER_TRANSFORM_POSITION_X			"Filter.Transform.Position.X"
 #define P_FILTER_TRANSFORM_POSITION_Y			"Filter.Transform.Position.Y"
@@ -53,6 +54,7 @@ namespace Filter {
 		static const char *get_name(void *);
 		static void get_defaults(obs_data_t *);
 		static obs_properties_t *get_properties(void *);
+		static bool modified_properties(obs_properties_t *, obs_property_t *, obs_data_t *);
 
 		static void *create(obs_data_t *, obs_source_t *);
 		static void destroy(void *);

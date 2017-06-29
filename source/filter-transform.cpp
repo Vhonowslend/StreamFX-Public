@@ -61,6 +61,7 @@ const char* Filter::Transform::get_name(void *) {
 
 void Filter::Transform::get_defaults(obs_data_t *data) {
 	obs_data_set_default_int(data, P_FILTER_TRANSFORM_CAMERA, 0);
+	obs_data_set_default_double(data, P_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW, 90.0);
 	obs_data_set_default_double(data, P_FILTER_TRANSFORM_POSITION_X, 0);
 	obs_data_set_default_double(data, P_FILTER_TRANSFORM_POSITION_Y, 0);
 	obs_data_set_default_double(data, P_FILTER_TRANSFORM_POSITION_Z, -100.0);
@@ -81,6 +82,10 @@ obs_properties_t * Filter::Transform::get_properties(void *) {
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_FILTER_TRANSFORM_CAMERA)));
 	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_CAMERA_ORTHOGRAPHIC), 0);
 	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_CAMERA_PERSPECTIVE), 1);
+
+	p = obs_properties_add_float_slider(pr, P_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW, P_TRANSLATE(P_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW),
+		1.0, 180.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW)));
 
 	{
 		std::pair<const char*, const char*> entries[] = {
@@ -121,6 +126,21 @@ obs_properties_t * Filter::Transform::get_properties(void *) {
 	}
 
 	return pr;
+}
+
+bool Filter::Transform::modified_properties(obs_properties_t *pr, obs_property_t *, obs_data_t *d) {
+	switch (obs_data_get_int(d, P_FILTER_TRANSFORM_CAMERA)) {
+		case 0:
+			obs_property_set_visible(obs_properties_get(pr, P_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW), false);
+			obs_property_set_visible(obs_properties_get(pr, P_FILTER_TRANSFORM_POSITION_Z), false);
+			break;
+		case 1:
+			obs_property_set_visible(obs_properties_get(pr, P_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW), true);
+			obs_property_set_visible(obs_properties_get(pr, P_FILTER_TRANSFORM_POSITION_Z), true);
+			break;
+	}
+
+	return false;
 }
 
 void * Filter::Transform::create(obs_data_t *data, obs_source_t *source) {
@@ -171,7 +191,7 @@ Filter::Transform::Instance::Instance(obs_data_t *data, obs_source_t *context)
 	: context(context) {
 	obs_enter_graphics();
 	m_texRender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
-	m_shapeRender = gs_texrender_create(GS_RGBA, GS_Z32F);
+	m_shapeRender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 	m_vertexHelper = new Helper::VertexBuffer(4);
 	m_vertexHelper->set_uv_layers(1);
 	m_vertexHelper->resize(4);
@@ -199,6 +219,7 @@ void Filter::Transform::Instance::update(obs_data_t *data) {
 	scale.y = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_SCALE_Y) / 100.0f;
 	scale.z = 1.0;
 	m_isOrthographic = obs_data_get_int(data, P_FILTER_TRANSFORM_CAMERA) == 0;
+	fov = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW);
 
 	// Matrix
 	matrix4 ident;
@@ -302,7 +323,7 @@ void Filter::Transform::Instance::hide() {}
 
 void Filter::Transform::Instance::video_tick(float) {}
 
-void Filter::Transform::Instance::video_render(gs_effect_t *) {
+void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 	obs_source_t *parent = obs_filter_get_parent(context);
 	obs_source_t *target = obs_filter_get_target(context);
 
@@ -327,14 +348,19 @@ void Filter::Transform::Instance::video_render(gs_effect_t *) {
 		vec4_zero(&black);
 		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
 		gs_set_cull_mode(GS_NEITHER);
-		gs_enable_blending(false);
+		gs_reset_blend_state();
+		gs_blend_function_separate(
+			gs_blend_type::GS_BLEND_ONE,
+			gs_blend_type::GS_BLEND_ZERO,
+			gs_blend_type::GS_BLEND_ONE,
+			gs_blend_type::GS_BLEND_ZERO);
 		gs_enable_depth_test(false);
 		gs_enable_stencil_test(false);
 		gs_enable_stencil_write(false);
 		gs_enable_color(true, true, true, true);
 
 		if (obs_source_process_filter_begin(context, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
-			obs_source_process_filter_end(context, alphaEffect, baseW, baseH);
+			obs_source_process_filter_end(context, paramEffect ? paramEffect : alphaEffect, baseW, baseH);
 		} else {
 			obs_source_skip_video_filter(context);
 		}
@@ -354,8 +380,14 @@ void Filter::Transform::Instance::video_render(gs_effect_t *) {
 				-0.5, 0.5,
 				-farZ, farZ);
 		} else {
-			gs_perspective(PI * (90.0f / 180.0f),
-				(float)baseW / (float)baseH, nearZ, farZ);
+			float aspect = (float)baseW / (float)baseH;
+			gs_perspective(fov, aspect, nearZ, farZ);
+
+			//if (baseW > baseH) {
+			//	gs_matrix_scale3f(1.0, (float)baseH / (float)baseW, 1.0);
+			//} else if (baseH > baseW) {
+			//	gs_matrix_scale3f((float)baseW / (float)baseH, 1.0, 1.0);
+			//}
 		}
 
 		// Rendering
