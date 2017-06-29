@@ -424,5 +424,3 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 		gs_draw_sprite(shapeTexture, 0, 0, 0);
 	}
 }
-
-

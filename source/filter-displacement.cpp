@@ -67,7 +67,7 @@ uint32_t Filter::Displacement::get_height(void *ptr) {
 }
 
 void Filter::Displacement::get_defaults(obs_data_t *data) {
-	char* disp = obs_module_file("displacement.png");
+	char* disp = obs_module_file("filter-displacement/neutral.png");
 	obs_data_set_default_string(data, P_FILTER_DISPLACEMENT_FILE, disp);
 	obs_data_set_default_double(data, P_FILTER_DISPLACEMENT_RATIO, 0);
 	obs_data_set_default_double(data, P_FILTER_DISPLACEMENT_SCALE, 0);
@@ -124,7 +124,7 @@ Filter::Displacement::Instance::Instance(obs_data_t *data, obs_source_t *context
 	this->context = context;
 
 	obs_enter_graphics();
-	char* effectFile = obs_module_file("displacement.effect");
+	char* effectFile = obs_module_file("filter-displacement/displacement.effect");
 	char* errorMessage = nullptr;
 	this->customEffect = gs_effect_create_from_file(effectFile, &errorMessage);
 	bfree(effectFile);
