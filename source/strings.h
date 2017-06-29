@@ -20,6 +20,6 @@
 #pragma once
 #include "plugin.h"
 
-#define P_TRANSLATE(x)				obs_module_text(x)
+#define P_TRANSLATE(x)					obs_module_text(x)
 #define P_DESC(x)					x ".Description"
 
