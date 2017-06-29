@@ -19,19 +19,21 @@
 
 #include "gs-helper.h"
 
-Helper::VertexBuffer::VertexBuffer() {
-	m_positions.resize(1);
-	m_normals.resize(1);
-	m_tangents.resize(1);
-	m_colors.resize(1);
-	m_uvs.resize(1);
-	m_uvs[0].resize(1);
-	m_uvArrays.resize(1);
-	m_uvArrays[0].width = 2;
-	m_uvArrays[0].array = m_uvs[0].data();
+Helper::VertexBuffer::VertexBuffer(size_t maxVertices) {
+	m_positions.resize(maxVertices);
+	m_normals.resize(maxVertices);
+	m_tangents.resize(maxVertices);
+	m_colors.resize(maxVertices);
+	m_uvs.resize(8);
+	m_uvArrays.resize(8);
+	for (size_t idx = 0; idx < 8; idx++) {
+		m_uvs[idx].resize(maxVertices);
+		m_uvArrays[idx].width = 2;
+		m_uvArrays[idx].array = m_uvs[idx].data();
+	}
 
 	m_vertexData = gs_vbdata_create();
-	m_vertexData->num = 1;
+	m_vertexData->num = maxVertices;
 	m_vertexData->points = m_positions.data();
 	m_vertexData->normals = m_normals.data();
 	m_vertexData->tangents = m_normals.data();
@@ -73,9 +75,9 @@ gs_vertbuffer_t* Helper::VertexBuffer::update() {
 	for (size_t vert = 0; vert < verts; vert++) {
 		Vertex& v = this->at(vert);
 
-		vec3_copy(&m_positions[vert], &v.position);
-		vec3_copy(&m_normals[vert], &v.normal);
-		vec3_copy(&m_tangents[vert], &v.tangent);
+		vec3_copy(&(m_positions.at(vert)), &v.position);
+		vec3_copy(&(m_normals.at(vert)), &v.normal);
+		vec3_copy(&(m_tangents.at(vert)), &v.tangent);
 		m_colors[vert] = v.color;
 		for (size_t layer = 0; layer < m_uvs.size(); layer++) {
 			vec2_copy(&m_uvs[layer][vert], &v.uv[layer]);

@@ -28,20 +28,20 @@ namespace Helper {
 	struct Vertex {
 		Vertex();
 
-		vec3 
-			position, 
-			normal, 
+		vec3
+			position,
+			normal,
 			tangent;
 		vec2 uv[8];
-		uint32_t 
+		uint32_t
 			color;
 	};
 
 	class VertexBuffer : public std::vector<Vertex> {
 		public:
-		VertexBuffer();
+		VertexBuffer(size_t maxVertices);
 		virtual ~VertexBuffer();
-		
+
 		void set_uv_layers(size_t count);
 		size_t get_uv_layers();
 
