@@ -18,6 +18,7 @@
 */
 
 #include "filter-displacement.h"
+#include "strings.h"
 
 Filter::Displacement::Displacement() {
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
@@ -46,7 +47,7 @@ Filter::Displacement::~Displacement() {
 }
 
 const char * Filter::Displacement::get_name(void *) {
-	return "Displacement Filter";
+	return P_TRANSLATE(P_FILTER_DISPLACEMENT);
 }
 
 void * Filter::Displacement::create(obs_data_t *data, obs_source_t *source) {
@@ -67,9 +68,9 @@ uint32_t Filter::Displacement::get_height(void *ptr) {
 
 void Filter::Displacement::get_defaults(obs_data_t *data) {
 	char* disp = obs_module_file("displacement.png");
-	obs_data_set_default_string(data, "file", disp);
-	obs_data_set_default_double(data, "ratio", 0);
-	obs_data_set_default_double(data, "scale", 0);
+	obs_data_set_default_string(data, P_FILTER_DISPLACEMENT_FILE, disp);
+	obs_data_set_default_double(data, P_FILTER_DISPLACEMENT_RATIO, 0);
+	obs_data_set_default_double(data, P_FILTER_DISPLACEMENT_SCALE, 0);
 	bfree(disp);
 }
 
@@ -80,10 +81,9 @@ obs_properties_t * Filter::Displacement::get_properties(void *ptr) {
 	if (ptr)
 		path = reinterpret_cast<Instance*>(ptr)->get_file();
 
-	obs_properties_add_path(pr, "file", "File", obs_path_type::OBS_PATH_FILE,
-		"Images (*.png *.jpeg *.jpg *.bmp);;All Files (*)", path.c_str());
-	obs_properties_add_float_slider(pr, "ratio", "Distance (%)", 0, 1, 0.01);
-	obs_properties_add_float_slider(pr, "scale", "Strength", -1000, 1000, 0.01);
+	obs_properties_add_path(pr, P_FILTER_DISPLACEMENT_FILE, P_TRANSLATE(P_FILTER_DISPLACEMENT_FILE), obs_path_type::OBS_PATH_FILE, P_TRANSLATE(P_FILTER_DISPLACEMENT_FILE_TYPES), path.c_str());
+	obs_properties_add_float_slider(pr, P_FILTER_DISPLACEMENT_RATIO, P_TRANSLATE(P_FILTER_DISPLACEMENT_RATIO), 0, 1, 0.01);
+	obs_properties_add_float_slider(pr, P_FILTER_DISPLACEMENT_SCALE, P_TRANSLATE(P_FILTER_DISPLACEMENT_SCALE), -1000, 1000, 0.01);
 	return pr;
 }
 
@@ -147,12 +147,12 @@ Filter::Displacement::Instance::~Instance() {
 }
 
 void Filter::Displacement::Instance::update(obs_data_t *data) {
-	updateDisplacementMap(obs_data_get_string(data, "file"));
+	updateDisplacementMap(obs_data_get_string(data, P_FILTER_DISPLACEMENT_FILE));
 
-	distance = float_t(obs_data_get_double(data, "ratio"));
+	distance = float_t(obs_data_get_double(data, P_FILTER_DISPLACEMENT_RATIO));
 	vec2_set(&displacementScale,
-		float_t(obs_data_get_double(data, "scale")),
-		float_t(obs_data_get_double(data, "scale")));
+		float_t(obs_data_get_double(data, P_FILTER_DISPLACEMENT_SCALE)),
+		float_t(obs_data_get_double(data, P_FILTER_DISPLACEMENT_SCALE)));
 }
 
 uint32_t Filter::Displacement::Instance::get_width() {

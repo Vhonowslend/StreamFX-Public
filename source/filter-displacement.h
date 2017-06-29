@@ -23,6 +23,12 @@
 #include <libobs/util/platform.h>
 #include <string>
 
+#define P_FILTER_DISPLACEMENT				"Filter.Displament"
+#define P_FILTER_DISPLACEMENT_FILE			"Filter.Displament.File"
+#define P_FILTER_DISPLACEMENT_FILE_TYPES		"Filter.Displament.File.Types"
+#define P_FILTER_DISPLACEMENT_RATIO			"Filter.Displament.Ratio"
+#define P_FILTER_DISPLACEMENT_SCALE			"Filter.Displament.Scale"
+
 namespace Filter {
 	class Displacement {
 		public:
@@ -47,13 +53,13 @@ namespace Filter {
 
 		private:
 		obs_source_info sourceInfo;
-				
+
 		private:
 		class Instance {
 			public:
 			Instance(obs_data_t*, obs_source_t*);
 			~Instance();
-			
+
 			void update(obs_data_t*);
 			uint32_t get_width();
 			uint32_t get_height();
