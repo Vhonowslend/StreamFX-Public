@@ -81,7 +81,7 @@ obs_properties_t * Filter::Displacement::get_properties(void *ptr) {
 		path = reinterpret_cast<Instance*>(ptr)->get_file();
 
 	obs_properties_add_path(pr, "file", "File", obs_path_type::OBS_PATH_FILE,
-		"Images (*.png *.jpeg *.jpg *.bmp);All Files (*)", path.c_str());
+		"Images (*.png *.jpeg *.jpg *.bmp);;All Files (*)", path.c_str());
 	obs_properties_add_float_slider(pr, "ratio", "Distance (%)", 0, 1, 0.01);
 	obs_properties_add_float_slider(pr, "scale", "Strength", -1000, 1000, 0.01);
 	return pr;
