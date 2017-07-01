@@ -6,7 +6,7 @@ PROJECT(obs-stream-effects)
 ################################################################################
 SET(VERSION_MAJOR 0)
 SET(VERSION_MINOR 1)
-SET(VERSION_PATCH 0)
+SET(VERSION_PATCH 1)
 #configure_file(
 #	"${PROJECT_SOURCE_DIR}/#Resources/package.in.bat"
 #	"${PROJECT_SOURCE_DIR}/#Resources/package.bat"
