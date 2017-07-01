@@ -88,15 +88,21 @@ namespace Filter {
 			void video_render(gs_effect_t*);
 
 			private:
-			obs_source_t *context;
+			obs_source_t *m_sourceContext;
 			Helper::VertexBuffer *m_vertexHelper;
 			gs_vertbuffer_t *m_vertexBuffer;
 			gs_texrender_t *m_texRender, *m_shapeRender;
 
-			bool m_isOrthographic;
-			float_t fov;
-			vec3 pos, rot;
-			vec3 scale;
+			// Camera
+			bool m_isCameraOrthographic;
+			float_t m_cameraFieldOfView;
+
+			// Source
+			bool m_isMeshUpdateRequired;
+			uint32_t m_rotationOrder;
+			vec3 m_position,
+				m_rotation,
+				m_scale;
 		};
 	};
 }

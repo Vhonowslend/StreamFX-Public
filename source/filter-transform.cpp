@@ -25,9 +25,18 @@
 #include "libobs/graphics/matrix4.h"
 
 static const float PI = 3.1415926535897932384626433832795f;
-static const float nearZ = 0.0001f;
-static const float farZ = 65536.0f;
+static const float farZ = 2097152.0f; // 2 pow 21
+static const float nearZ = 1.0f / farZ;
 static const float valueLimit = 65536.0f;
+
+enum RotationOrder : int64_t {
+	XYZ,
+	XZY,
+	YXZ,
+	YZX,
+	ZXY,
+	ZYX,
+};
 
 Filter::Transform::Transform() {
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
@@ -64,10 +73,10 @@ void Filter::Transform::get_defaults(obs_data_t *data) {
 	obs_data_set_default_double(data, P_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW, 90.0);
 	obs_data_set_default_double(data, P_FILTER_TRANSFORM_POSITION_X, 0);
 	obs_data_set_default_double(data, P_FILTER_TRANSFORM_POSITION_Y, 0);
-	obs_data_set_default_double(data, P_FILTER_TRANSFORM_POSITION_Z, -100.0);
+	obs_data_set_default_double(data, P_FILTER_TRANSFORM_POSITION_Z, 0);
 	obs_data_set_default_double(data, P_FILTER_TRANSFORM_SCALE_X, 100);
 	obs_data_set_default_double(data, P_FILTER_TRANSFORM_SCALE_Y, 100);
-	obs_data_set_default_int(data, P_FILTER_TRANSFORM_ROTATION_ORDER, 4); //ZXY
+	obs_data_set_default_int(data, P_FILTER_TRANSFORM_ROTATION_ORDER, RotationOrder::ZXY); //ZXY
 	obs_data_set_default_double(data, P_FILTER_TRANSFORM_ROTATION_X, 0);
 	obs_data_set_default_double(data, P_FILTER_TRANSFORM_ROTATION_Y, 0);
 	obs_data_set_default_double(data, P_FILTER_TRANSFORM_ROTATION_Z, 0);
@@ -84,7 +93,7 @@ obs_properties_t * Filter::Transform::get_properties(void *) {
 	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_CAMERA_PERSPECTIVE), 1);
 
 	p = obs_properties_add_float_slider(pr, P_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW, P_TRANSLATE(P_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW),
-		1.0, 180.0, 0.01);
+		1.0, 179.0, 0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW)));
 
 	{
@@ -105,12 +114,12 @@ obs_properties_t * Filter::Transform::get_properties(void *) {
 	p = obs_properties_add_list(pr, P_FILTER_TRANSFORM_ROTATION_ORDER, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER),
 		OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_FILTER_TRANSFORM_ROTATION_ORDER)));
-	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER_XYZ), 0);
-	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER_XZY), 1);
-	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER_YXZ), 2);
-	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER_YZX), 3);
-	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER_ZXY), 4);
-	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER_ZYX), 5);
+	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER_XYZ), RotationOrder::XYZ);
+	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER_XZY), RotationOrder::XZY);
+	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER_YXZ), RotationOrder::YXZ);
+	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER_YZX), RotationOrder::YZX);
+	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER_ZXY), RotationOrder::ZXY);
+	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_TRANSFORM_ROTATION_ORDER_ZYX), RotationOrder::ZYX);
 
 	{
 		std::pair<const char*, const char*> entries[] = {
@@ -188,7 +197,12 @@ void Filter::Transform::video_render(void *ptr, gs_effect_t *effect) {
 }
 
 Filter::Transform::Instance::Instance(obs_data_t *data, obs_source_t *context)
-	: context(context) {
+	: m_sourceContext(context),
+	m_isCameraOrthographic(true),
+	m_cameraFieldOfView(90.0f),
+	m_isMeshUpdateRequired(true),
+	m_rotationOrder(RotationOrder::ZXY) {
+
 	obs_enter_graphics();
 	m_texRender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 	m_shapeRender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
@@ -209,100 +223,22 @@ Filter::Transform::Instance::~Instance() {
 }
 
 void Filter::Transform::Instance::update(obs_data_t *data) {
-	pos.x = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_POSITION_X) / 100.0f;
-	pos.y = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_POSITION_Y) / 100.0f;
-	pos.z = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_POSITION_Z) / 100.0f;
-	rot.x = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_ROTATION_X) / 180.0f * PI;
-	rot.y = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_ROTATION_Y) / 180.0f * PI;
-	rot.z = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_ROTATION_Z) / 180.0f * PI;
-	scale.x = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_SCALE_X) / 100.0f;
-	scale.y = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_SCALE_Y) / 100.0f;
-	scale.z = 1.0;
-	m_isOrthographic = obs_data_get_int(data, P_FILTER_TRANSFORM_CAMERA) == 0;
-	fov = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW);
+	// Camera
+	m_isCameraOrthographic = obs_data_get_int(data, P_FILTER_TRANSFORM_CAMERA) == 0;
+	m_cameraFieldOfView = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW);
 
-	// Matrix
-	matrix4 ident;
-	matrix4_identity(&ident);
-	matrix4_scale(&ident, &ident, &scale);
-	switch (obs_data_get_int(data, P_FILTER_TRANSFORM_ROTATION_ORDER)) {
-		case 0: // XYZ
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rot.x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rot.y);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rot.z);
-			break;
-		case 1: // XZY
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rot.x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rot.z);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rot.y);
-			break;
-		case 2: // YXZ
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rot.y);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rot.x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rot.z);
-			break;
-		case 3: // YZX
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rot.y);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rot.z);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rot.x);
-			break;
-		case 4: // ZXY
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rot.z);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rot.x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rot.y);
-			break;
-		case 5: // ZYX
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rot.z);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rot.y);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rot.x);
-			break;
-	}
-	matrix4_translate3f(&ident, &ident, pos.x, pos.y, pos.z);
-
-	// Mesh
-	{
-		Helper::Vertex& v = m_vertexHelper->at(0);
-		v.position.x = -0.5;
-		v.position.y = -0.5;
-		v.position.z = 0.0f;
-		vec3_transform(&v.position, &v.position, &ident);
-		v.color = 0xFFFFFFFF;
-		v.uv[0].x = 0;
-		v.uv[0].y = 0;
-	}
-	{
-		Helper::Vertex& v = m_vertexHelper->at(1);
-		v.position.x = 0.5;
-		v.position.y = -0.5;
-		v.position.z = 0.0f;
-		vec3_transform(&v.position, &v.position, &ident);
-		v.color = 0xFFFFFFFF;
-		v.uv[0].x = 1;
-		v.uv[0].y = 0;
-	}
-	{
-		Helper::Vertex& v = m_vertexHelper->at(2);
-		v.position.x = -0.5;
-		v.position.y = 0.5;
-		v.position.z = 0.0f;
-		vec3_transform(&v.position, &v.position, &ident);
-		v.color = 0xFFFFFFFF;
-		v.uv[0].x = 0;
-		v.uv[0].y = 1;
-	}
-	{
-		Helper::Vertex& v = m_vertexHelper->at(3);
-		v.position.x = 0.5;
-		v.position.y = 0.5;
-		v.position.z = 0.0f;
-		vec3_transform(&v.position, &v.position, &ident);
-		v.color = 0xFFFFFFFF;
-		v.uv[0].x = 1;
-		v.uv[0].y = 1;
-	}
-	obs_enter_graphics();
-	m_vertexBuffer = m_vertexHelper->update();
-	obs_leave_graphics();
+	// Source
+	m_position.x = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_POSITION_X) / 100.0f;
+	m_position.y = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_POSITION_Y) / 100.0f;
+	m_position.z = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_POSITION_Z) / 100.0f;
+	m_scale.x = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_SCALE_X) / 100.0f;
+	m_scale.y = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_SCALE_Y) / 100.0f;
+	m_scale.z = 1.0;
+	m_rotationOrder = obs_data_get_int(data, P_FILTER_TRANSFORM_ROTATION_ORDER);
+	m_rotation.x = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_ROTATION_X) / 180.0f * PI;
+	m_rotation.y = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_ROTATION_Y) / 180.0f * PI;
+	m_rotation.z = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_ROTATION_Z) / 180.0f * PI;
+	m_isMeshUpdateRequired = true;
 }
 
 uint32_t Filter::Transform::Instance::get_width() {
@@ -324,12 +260,12 @@ void Filter::Transform::Instance::hide() {}
 void Filter::Transform::Instance::video_tick(float) {}
 
 void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
-	obs_source_t *parent = obs_filter_get_parent(context);
-	obs_source_t *target = obs_filter_get_target(context);
+	obs_source_t *parent = obs_filter_get_parent(m_sourceContext);
+	obs_source_t *target = obs_filter_get_target(m_sourceContext);
 
 	// Skip rendering if our target, parent or context is not valid.
-	if (!target || !parent || !context || !m_vertexBuffer || !m_texRender || !m_shapeRender) {
-		obs_source_skip_video_filter(context);
+	if (!target || !parent || !m_sourceContext || !m_vertexBuffer || !m_texRender || !m_shapeRender) {
+		obs_source_skip_video_filter(m_sourceContext);
 		return;
 	}
 
@@ -359,42 +295,123 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 		gs_enable_stencil_write(false);
 		gs_enable_color(true, true, true, true);
 
-		if (obs_source_process_filter_begin(context, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
-			obs_source_process_filter_end(context, paramEffect ? paramEffect : alphaEffect, baseW, baseH);
+		if (obs_source_process_filter_begin(m_sourceContext, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
+			obs_source_process_filter_end(m_sourceContext, paramEffect ? paramEffect : alphaEffect, baseW, baseH);
 		} else {
-			obs_source_skip_video_filter(context);
+			obs_source_skip_video_filter(m_sourceContext);
 		}
 
 		gs_texrender_end(m_texRender);
 	} else {
-		obs_source_skip_video_filter(context);
+		obs_source_skip_video_filter(m_sourceContext);
 	}
 	gs_texture* filterTexture = gs_texrender_get_texture(m_texRender);
+
+	// Update Mesh
+	if (m_isMeshUpdateRequired) {
+		double_t aspectRatioX = double_t(baseW) / double_t(baseH),
+			aspectRatioY = double_t(baseH) / double_t(baseW);
+		if (baseW > baseH) {
+			aspectRatioY = 1.0;
+		} else {
+			aspectRatioX = 1.0;
+		}
+
+		// Mesh
+		matrix4 ident;
+		matrix4_identity(&ident);
+		matrix4_scale3f(&ident, &ident, aspectRatioX, aspectRatioY, 1.0);
+		matrix4_scale(&ident, &ident, &m_scale);
+		switch (m_rotationOrder) {
+			case RotationOrder::XYZ: // XYZ
+				matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation.x);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation.y);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation.z);
+				break;
+			case RotationOrder::XZY: // XZY
+				matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation.x);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation.z);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation.y);
+				break;
+			case RotationOrder::YXZ: // YXZ
+				matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation.y);
+				matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation.x);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation.z);
+				break;
+			case RotationOrder::YZX: // YZX
+				matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation.y);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation.z);
+				matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation.x);
+				break;
+			case RotationOrder::ZXY: // ZXY
+				matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation.z);
+				matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation.x);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation.y);
+				break;
+			case RotationOrder::ZYX: // ZYX
+				matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation.z);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation.y);
+				matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation.x);
+				break;
+		}
+		matrix4_translate3f(&ident, &ident, m_position.x, m_position.y, m_position.z);
+
+		{
+			Helper::Vertex& v = m_vertexHelper->at(0);
+			v.uv[0].x = 0; v.uv[0].y = 0;
+			v.color = 0xFFFFFFFF;
+			v.position.x = -1.0;
+			v.position.y = -1.0;
+			v.position.z = 0.0f;
+			vec3_transform(&v.position, &v.position, &ident);
+		}
+		{
+			Helper::Vertex& v = m_vertexHelper->at(1);
+			v.uv[0].x = 1; v.uv[0].y = 0;
+			v.color = 0xFFFFFFFF;
+			v.position.x = 1.0;
+			v.position.y = -1.0;
+			v.position.z = 0.0f;
+			vec3_transform(&v.position, &v.position, &ident);
+		}
+		{
+			Helper::Vertex& v = m_vertexHelper->at(2);
+			v.uv[0].x = 0; v.uv[0].y = 1;
+			v.color = 0xFFFFFFFF;
+			v.position.x = -1.0;
+			v.position.y = 1.0;
+			v.position.z = 0.0f;
+			vec3_transform(&v.position, &v.position, &ident);
+		}
+		{
+			Helper::Vertex& v = m_vertexHelper->at(3);
+			v.uv[0].x = 1; v.uv[0].y = 1;
+			v.color = 0xFFFFFFFF;
+			v.position.x = 1.0;
+			v.position.y = 1.0;
+			v.position.z = 0.0f;
+			vec3_transform(&v.position, &v.position, &ident);
+		}
+		m_vertexBuffer = m_vertexHelper->update();
+	}
 
 	// Draw shape to texture
 	gs_texrender_reset(m_shapeRender);
 	if (gs_texrender_begin(m_shapeRender, baseW, baseH)) {
-		if (m_isOrthographic) {
-			gs_ortho(
-				-0.5, 0.5,
-				-0.5, 0.5,
-				-farZ, farZ);
+		if (m_isCameraOrthographic) {
+			gs_ortho(-1.0, 1.0, -1.0, 1.0, -farZ, farZ);
 		} else {
-			float aspect = (float)baseW / (float)baseH;
-			gs_perspective(fov, aspect, nearZ, farZ);
-
-			//if (baseW > baseH) {
-			//	gs_matrix_scale3f(1.0, (float)baseH / (float)baseW, 1.0);
-			//} else if (baseH > baseW) {
-			//	gs_matrix_scale3f((float)baseW / (float)baseH, 1.0, 1.0);
-			//}
+			gs_perspective(m_cameraFieldOfView, float_t(baseW) / float_t(baseH), nearZ, farZ);
+			// Fix camera pointing at -Z instead of +Z.
+			gs_matrix_scale3f(1.0, 1.0, -1.0);
+			// Move backwards so we can actually see stuff.
+			gs_matrix_translate3f(0, 0, 1.0);
 		}
 
 		// Rendering
 		vec4 black;
 		vec4_zero(&black);
-		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
-
+		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, farZ, 0);
 		gs_set_cull_mode(GS_NEITHER);
 		gs_enable_blending(false);
 		gs_enable_depth_test(false);
@@ -402,7 +419,6 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 		gs_enable_stencil_test(false);
 		gs_enable_stencil_write(false);
 		gs_enable_color(true, true, true, true);
-
 		while (gs_effect_loop(alphaEffect, "Draw")) {
 			gs_effect_set_texture(gs_effect_get_param_by_name(alphaEffect, "image"), filterTexture);
 			gs_load_vertexbuffer(m_vertexBuffer);
@@ -412,7 +428,7 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 
 		gs_texrender_end(m_shapeRender);
 	} else {
-		obs_source_skip_video_filter(context);
+		obs_source_skip_video_filter(m_sourceContext);
 	}
 	gs_texture* shapeTexture = gs_texrender_get_texture(m_shapeRender);
 
