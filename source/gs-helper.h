@@ -20,7 +20,12 @@
 #pragma once
 #include "plugin.h"
 
+extern "C" {
+#pragma warning (push)
+#pragma warning (disable: 4201)
 #include "libobs/graphics/graphics.h"
+#pragma warning (pop)
+}
 
 #include <vector>
 
