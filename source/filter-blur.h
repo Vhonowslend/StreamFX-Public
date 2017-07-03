@@ -25,7 +25,10 @@
 #define P_FILTER_BLUR_TYPE				"Filter.Blur.Type"
 #define P_FILTER_BLUR_TYPE_BOX				"Filter.Blur.Type.Box"
 #define P_FILTER_BLUR_TYPE_GAUSSIAN			"Filter.Blur.Type.Gaussian"
+#define P_FILTER_BLUR_TYPE_BILATERAL			"Filter.Blur.Type.Bilateral"
 #define P_FILTER_BLUR_SIZE				"Filter.Blur.Size"
+#define P_FILTER_BLUR_BILATERAL_SMOOTHING		"Filter.Blur.Bilateral.Smoothing"
+#define P_FILTER_BLUR_BILATERAL_SHARPNESS		"Filter.Blur.Bilateral.Sharpness"
 
 namespace Filter {
 	class Blur {
@@ -36,6 +39,7 @@ namespace Filter {
 		static const char *get_name(void *);
 		static void get_defaults(obs_data_t *);
 		static obs_properties_t *get_properties(void *);
+		static bool modified_properties(obs_properties_t *, obs_property_t *, obs_data_t *);
 
 		static void *create(obs_data_t *, obs_source_t *);
 		static void destroy(void *);
@@ -52,6 +56,7 @@ namespace Filter {
 		enum Type : int64_t {
 			Box,
 			Gaussian,
+			Bilateral,
 		};
 
 		private:
@@ -73,17 +78,22 @@ namespace Filter {
 			void video_tick(float);
 			void video_render(gs_effect_t*);
 
+			bool apply_effect_param(gs_texture_t* texture, 
+				float uvTexelX, float uvTexelY);
+
 			private:
-			obs_source_t
-				*m_source;
-			gs_effect_t
-				*m_effect;
-			gs_technique_t
-				*m_technique;
-			gs_texrender_t 
-				*m_primaryRT,
-				*m_secondaryRT;
-			int m_filterWidth;
+			obs_source_t *m_source;
+			gs_effect_t *m_effect;
+			gs_technique_t *m_technique;
+			gs_texrender_t *m_primaryRT, *m_secondaryRT;
+
+			// Blur
+			Type m_type;
+			uint64_t m_size;
+
+			// Bilateral
+			double_t m_bilateralSmoothing;
+			double_t m_bilateralSharpness;
 		};
 	};
 }

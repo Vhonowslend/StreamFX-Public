@@ -29,6 +29,8 @@ extern "C" {
 #pragma warning (pop)
 }
 
+static gs_effect_t *g_boxBlurEffect, *g_gaussianBlurEffect, *g_bilateralBlurEffect;
+
 Filter::Blur::Blur() {
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
 	sourceInfo.id = "obs-stream-effects-filter-blur";
@@ -48,10 +50,56 @@ Filter::Blur::Blur() {
 	sourceInfo.video_tick = video_tick;
 	sourceInfo.video_render = video_render;
 
-	obs_register_source(&sourceInfo);
+	obs_enter_graphics();
+	{
+		char* loadError = nullptr;
+		char* file = obs_module_file("filter-blur/box.effect");
+		g_boxBlurEffect = gs_effect_create_from_file(file, &loadError);
+		bfree(file);
+		if (loadError != nullptr) {
+			PLOG_ERROR("<filter-blur> Loading effect failed with error(s): %s", loadError);
+			bfree(loadError);
+		} else if (!g_boxBlurEffect) {
+			PLOG_ERROR("<filter-blur> Loading effect failed with unspecified error.");
+		}
+	}
+	{
+		char* loadError = nullptr;
+		char* file = obs_module_file("filter-blur/gaussian.effect");
+		g_gaussianBlurEffect = gs_effect_create_from_file(file, &loadError);
+		bfree(file);
+		if (loadError != nullptr) {
+			PLOG_ERROR("<filter-blur> Loading effect failed with error(s): %s", loadError);
+			bfree(loadError);
+		} else if (!g_gaussianBlurEffect) {
+			PLOG_ERROR("<filter-blur> Loading effect failed with unspecified error.");
+		}
+	}
+	{
+		char* loadError = nullptr;
+		char* file = obs_module_file("filter-blur/bilateral.effect");
+		g_bilateralBlurEffect = gs_effect_create_from_file(file, &loadError);
+		bfree(file);
+		if (loadError != nullptr) {
+			PLOG_ERROR("<filter-blur> Loading effect failed with error(s): %s", loadError);
+			bfree(loadError);
+		} else if (!g_bilateralBlurEffect) {
+			PLOG_ERROR("<filter-blur> Loading effect failed with unspecified error.");
+		}
+	}
+	obs_leave_graphics();
+
+	if (g_boxBlurEffect && g_gaussianBlurEffect && g_bilateralBlurEffect)
+		obs_register_source(&sourceInfo);
 }
 
-Filter::Blur::~Blur() {}
+Filter::Blur::~Blur() {
+	obs_enter_graphics();
+	gs_effect_destroy(g_bilateralBlurEffect);
+	gs_effect_destroy(g_gaussianBlurEffect);
+	gs_effect_destroy(g_boxBlurEffect);
+	obs_leave_graphics();
+}
 
 const char * Filter::Blur::get_name(void *) {
 	return P_TRANSLATE(P_FILTER_BLUR);
@@ -59,7 +107,11 @@ const char * Filter::Blur::get_name(void *) {
 
 void Filter::Blur::get_defaults(obs_data_t *data) {
 	obs_data_set_default_int(data, P_FILTER_BLUR_TYPE, Filter::Blur::Type::Box);
-	obs_data_set_default_int(data, P_FILTER_BLUR_SIZE, 1);
+	obs_data_set_default_int(data, P_FILTER_BLUR_SIZE, 5);
+
+	// Bilateral Only
+	obs_data_set_default_double(data, P_FILTER_BLUR_BILATERAL_SMOOTHING, 50.0);
+	obs_data_set_default_double(data, P_FILTER_BLUR_BILATERAL_SHARPNESS, 90.0);
 }
 
 obs_properties_t * Filter::Blur::get_properties(void *) {
@@ -69,15 +121,48 @@ obs_properties_t * Filter::Blur::get_properties(void *) {
 	p = obs_properties_add_list(pr, P_FILTER_BLUR_TYPE, P_TRANSLATE(P_FILTER_BLUR_TYPE),
 		obs_combo_type::OBS_COMBO_TYPE_LIST, obs_combo_format::OBS_COMBO_FORMAT_INT);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_FILTER_BLUR_TYPE)));
-	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_BLUR_TYPE_BOX), Filter::Blur::Type::Box);
+	obs_property_set_modified_callback(p, modified_properties);
+	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_BLUR_TYPE_BOX),
+		Filter::Blur::Type::Box);
 	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_BLUR_TYPE_GAUSSIAN),
 		Filter::Blur::Type::Gaussian);
+	obs_property_list_add_int(p, P_TRANSLATE(P_FILTER_BLUR_TYPE_BILATERAL),
+		Filter::Blur::Type::Bilateral);
 
-	p = obs_properties_add_int_slider(pr, P_FILTER_BLUR_SIZE, P_TRANSLATE(P_FILTER_BLUR_SIZE),
-		1, 100, 1);
+	p = obs_properties_add_int_slider(pr, P_FILTER_BLUR_SIZE,
+		P_TRANSLATE(P_FILTER_BLUR_SIZE), 1, 25, 1);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_FILTER_BLUR_SIZE)));
 
+	// Bilateral Only
+	p = obs_properties_add_float_slider(pr, P_FILTER_BLUR_BILATERAL_SMOOTHING,
+		P_TRANSLATE(P_FILTER_BLUR_BILATERAL_SMOOTHING), 0.01, 100.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_FILTER_BLUR_BILATERAL_SMOOTHING)));
+	p = obs_properties_add_float_slider(pr, P_FILTER_BLUR_BILATERAL_SHARPNESS,
+		P_TRANSLATE(P_FILTER_BLUR_BILATERAL_SHARPNESS), 0, 99.99, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_FILTER_BLUR_BILATERAL_SHARPNESS)));
+	
 	return pr;
+}
+
+bool Filter::Blur::modified_properties(obs_properties_t *pr, obs_property_t *, obs_data_t *d) {
+	bool showBilateral = false;
+
+	switch (obs_data_get_int(d, P_FILTER_BLUR_TYPE)) {
+		case Filter::Blur::Type::Box:
+			break;
+		case Filter::Blur::Type::Gaussian:
+			break;
+		case Filter::Blur::Type::Bilateral:
+			showBilateral = true;
+			break;
+	}
+
+	obs_property_set_visible(obs_properties_get(pr, P_FILTER_BLUR_BILATERAL_SMOOTHING),
+		showBilateral);
+	obs_property_set_visible(obs_properties_get(pr, P_FILTER_BLUR_BILATERAL_SHARPNESS),
+		showBilateral);
+
+	return true;
 }
 
 void * Filter::Blur::create(obs_data_t *data, obs_source_t *source) {
@@ -126,16 +211,7 @@ void Filter::Blur::video_render(void *ptr, gs_effect_t *effect) {
 
 Filter::Blur::Instance::Instance(obs_data_t *data, obs_source_t *context) : m_source(context) {
 	obs_enter_graphics();
-	{
-		char* loadError = nullptr;
-		char* file = obs_module_file("filter-blur/filter.effect");
-		m_effect = gs_effect_create_from_file(file, &loadError);
-		bfree(file);
-		if (loadError != nullptr) {
-			PLOG_ERROR("<filter-blur> Loading effect failed with error(s): %s", loadError);
-			bfree(loadError);
-		}
-	}
+	m_effect = g_boxBlurEffect;
 	m_primaryRT = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 	m_secondaryRT = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 	obs_leave_graphics();
@@ -145,22 +221,29 @@ Filter::Blur::Instance::Instance(obs_data_t *data, obs_source_t *context) : m_so
 
 Filter::Blur::Instance::~Instance() {
 	obs_enter_graphics();
-	gs_effect_destroy(m_effect);
 	gs_texrender_destroy(m_primaryRT);
 	gs_texrender_destroy(m_secondaryRT);
 	obs_leave_graphics();
 }
 
 void Filter::Blur::Instance::update(obs_data_t *data) {
-	switch (obs_data_get_int(data, P_FILTER_BLUR_TYPE)) {
+	m_type = (Type)obs_data_get_int(data, P_FILTER_BLUR_TYPE);
+	switch (m_type) {
 		case Filter::Blur::Type::Box:
-			m_technique = gs_effect_get_technique(m_effect, "Box");
+			m_effect = g_boxBlurEffect;
 			break;
 		case Filter::Blur::Type::Gaussian:
-			m_technique = gs_effect_get_technique(m_effect, "Gaussian");
+			m_effect = g_gaussianBlurEffect;
+			break;
+		case Filter::Blur::Type::Bilateral:
+			m_effect = g_bilateralBlurEffect;
 			break;
 	}
-	m_filterWidth = (int)obs_data_get_int(data, P_FILTER_BLUR_SIZE);
+	m_size = (uint64_t)obs_data_get_int(data, P_FILTER_BLUR_SIZE);
+
+	// Bilateral Blur
+	m_bilateralSmoothing = obs_data_get_double(data, P_FILTER_BLUR_BILATERAL_SMOOTHING) / 100.0;
+	m_bilateralSharpness = obs_data_get_double(data, P_FILTER_BLUR_BILATERAL_SHARPNESS) / 100.0;
 }
 
 uint32_t Filter::Blur::Instance::get_width() {
@@ -182,6 +265,7 @@ void Filter::Blur::Instance::hide() {}
 void Filter::Blur::Instance::video_tick(float) {}
 
 void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
+	bool failed = false;
 	obs_source_t
 		*parent = obs_filter_get_parent(m_source),
 		*target = obs_filter_get_target(m_source);
@@ -197,8 +281,7 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 	}
 
 	gs_effect_t* defaultEffect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
-	gs_texture_t *sourceTexture = nullptr,
-		*horizontalTexture = nullptr;
+	gs_texture_t *sourceTexture = nullptr, *horizontalTexture = nullptr;
 
 #pragma region Source To Texture
 	gs_texrender_reset(m_primaryRT);
@@ -207,7 +290,7 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 		obs_source_skip_video_filter(m_source);
 		return;
 	} else {
-		gs_ortho(0, baseW, 0, baseH, -1, 1);
+		gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
 
 		// Clear to Black
 		vec4 black;
@@ -232,10 +315,14 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 			obs_source_process_filter_end(m_source, effect ? effect : defaultEffect, baseW, baseH);
 		} else {
 			PLOG_ERROR("<filter-blur> Unable to render source.");
-			obs_source_skip_video_filter(m_source);
-			return;
+			failed = true;
 		}
 		gs_texrender_end(m_primaryRT);
+	}
+
+	if (failed) {
+		obs_source_skip_video_filter(m_source);
+		return;
 	}
 
 	sourceTexture = gs_texrender_get_texture(m_primaryRT);
@@ -253,7 +340,7 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 		obs_source_skip_video_filter(m_source);
 		return;
 	} else {
-		gs_ortho(0, baseW, 0, baseH, -1, 1);
+		gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
 
 		// Clear to Black
 		vec4 black;
@@ -274,42 +361,33 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 		gs_enable_color(true, true, true, true);
 
 		// Prepare Effect
-		gs_eparam_t *param = gs_effect_get_param_by_name(m_effect, "texel");
-		if (param) {
-			vec2 texel;
-			vec2_set(&texel, (float)(1.0 / baseW), 0);
-			gs_effect_set_vec2(param, &texel);
+		if (!apply_effect_param(sourceTexture, (float)(1.0 / baseW), 0)) {
+			PLOG_ERROR("<filter-blur> Failed to apply effect parameters.");
+			failed = true;
 		} else {
-			PLOG_ERROR("<filter-blur> Failed to set texel param.");
-			obs_source_skip_video_filter(m_source);
-			return;
-		}
-		param = gs_effect_get_param_by_name(m_effect, "size");
-		if (param) {
-			gs_effect_set_int(param, m_filterWidth);
-		} else {
-			PLOG_ERROR("<filter-blur> Failed to set size param.");
-			obs_source_skip_video_filter(m_source);
-			return;
-		}
-		param = gs_effect_get_param_by_name(m_effect, "image");
-		if (param) {
-			gs_effect_set_texture(param, sourceTexture);
-		} else {
-			PLOG_ERROR("<filter-blur> Failed to set image param.");
-			obs_source_skip_video_filter(m_source);
-			return;
-		}
-
-		// Render
-		if (gs_technique_begin(m_technique)) {
-			if (gs_technique_begin_pass_by_name(m_technique, "Horizontal")) {
+			while (gs_effect_loop(m_effect, "Draw")) {
 				gs_draw_sprite(sourceTexture, 0, baseW, baseH);
-				gs_technique_end_pass(m_technique);
 			}
-			gs_technique_end(m_technique);
+			//// Render
+			//if (gs_technique_begin(m_technique)) {
+			//	PLOG_ERROR("<filter-blur> Failed to render effect.");
+			//	failed = true;
+			//} else {
+			//	if (!gs_technique_begin_pass_by_name(m_technique, "Draw")) {
+			//		PLOG_ERROR("<filter-blur> Failed to render horizontal pass.");
+			//		failed = true;
+			//	} else {
+			//		gs_technique_end_pass(m_technique);
+			//	}
+			//	gs_technique_end(m_technique);
+			//}
 		}
 		gs_texrender_end(m_secondaryRT);
+	}
+
+	if (failed) {
+		obs_source_skip_video_filter(m_source);
+		return;
 	}
 
 	horizontalTexture = gs_texrender_get_texture(m_secondaryRT);
@@ -320,53 +398,102 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 	}
 #pragma endregion Horizontal Pass
 
-#pragma region Horizontal Pass
+#pragma region Vertical Pass
 	// Prepare Effect
-	gs_eparam_t *param = gs_effect_get_param_by_name(m_effect, "texel");
-	if (param) {
-		vec2 texel;
-		vec2_set(&texel, 0, (float)(1.0 / baseH));
-		gs_effect_set_vec2(param, &texel);
+	if (!apply_effect_param(horizontalTexture, 0, (float)(1.0 / baseH))) {
+		PLOG_ERROR("<filter-blur> Failed to apply effect parameters.");
+		failed = true;
 	} else {
-		PLOG_ERROR("<filter-blur> Failed to set texel param.");
-		obs_source_skip_video_filter(m_source);
-		return;
-	}
-	param = gs_effect_get_param_by_name(m_effect, "size");
-	if (param) {
-		gs_effect_set_int(param, m_filterWidth);
-	} else {
-		PLOG_ERROR("<filter-blur> Failed to set size param.");
-		obs_source_skip_video_filter(m_source);
-		return;
-	}
-	param = gs_effect_get_param_by_name(m_effect, "image");
-	if (param) {
-		gs_effect_set_texture(param, horizontalTexture);
-	} else {
-		PLOG_ERROR("<filter-blur> Failed to set image param.");
-		obs_source_skip_video_filter(m_source);
-		return;
-	}
-
-	// Render
-	if (gs_technique_begin(m_technique)) {
-		if (gs_technique_begin_pass_by_name(m_technique, "Vertical")) {
+		while (gs_effect_loop(m_effect, "Draw")) {
 			gs_draw_sprite(horizontalTexture, 0, baseW, baseH);
-			gs_technique_end_pass(m_technique);
 		}
-		gs_technique_end(m_technique);
+		// Render
+		//if (!gs_technique_begin(m_technique)) {
+		//	PLOG_ERROR("<filter-blur> Failed to render effect.");
+		//	failed = true;
+		//} else {
+		//	if (!gs_technique_begin_pass_by_name(m_technique, "Draw")) {
+		//		PLOG_ERROR("<filter-blur> Failed to render vertical pass.");
+		//		failed = true;
+		//	} else {
+		//		gs_draw_sprite(sourceTexture, 0, baseW, baseH);
+		//		gs_technique_end_pass(m_technique);
+		//	}
+		//	gs_technique_end(m_technique);
+		//}
 	}
-#pragma endregion Horizontal Pass
 
+	if (failed) {
+		obs_source_skip_video_filter(m_source);
+		return;
+	}
+#pragma endregion Vertical Pass
+}
 
+bool Filter::Blur::Instance::apply_effect_param(gs_texture_t* texture, float uvTexelX, float uvTexelY) {
+	gs_eparam_t *param;
 
+	// UV Stepping
+	param = gs_effect_get_param_by_name(m_effect, "texel");
+	if (!param) {
+		PLOG_ERROR("<filter-blur> Failed to set texel param.");
+		return false;
+	} else {
+		PLOG_DEBUG("<filter-blur> Applying texel parameter.");
+		vec2 texel;
+		vec2_set(&texel, uvTexelX, uvTexelY);
+		gs_effect_set_vec2(param, &texel);
+	}
 
-	// Draw final shape
-	//gs_reset_blend_state();
-	//gs_enable_depth_test(false);
-	//while (gs_effect_loop(defaultEffect, "Draw")) {
-	//	gs_effect_set_texture(gs_effect_get_param_by_name(defaultEffect, "image"), horizontalTexture);
-	//	gs_draw_sprite(horizontalTexture, 0, 0, 0);
-	//}
+	// Filter Width
+	param = gs_effect_get_param_by_name(m_effect, "widthHalf");
+	if (!param) {
+		PLOG_ERROR("<filter-blur> Failed to set widthHalf param.");
+		return false;
+	} else {
+		PLOG_DEBUG("<filter-blur> Applying widthHalf parameter.");
+		gs_effect_set_int(param, (int)m_size);
+	}
+	param = gs_effect_get_param_by_name(m_effect, "width");
+	if (!param) {
+		PLOG_ERROR("<filter-blur> Failed to set width param.");
+		return false;
+	} else {
+		PLOG_DEBUG("<filter-blur> Applying width parameter.");
+		gs_effect_set_int(param, (int)(1 + m_size * 2));
+	}
+
+	// Texture
+	param = gs_effect_get_param_by_name(m_effect, "image");
+	if (!param) {
+		PLOG_ERROR("<filter-blur> Failed to set image param.");
+		return false;
+	} else {
+		PLOG_DEBUG("<filter-blur> Applying image parameter.");
+		gs_effect_set_texture(param, texture);
+	}
+
+	// Bilateral Blur
+	if (m_type == Type::Bilateral) {
+		param = gs_effect_get_param_by_name(m_effect, "bilateralSmoothing");
+		if (!param) {
+			PLOG_ERROR("<filter-blur> Failed to set bilateralSmoothing param.");
+			return false;
+		} else {
+			PLOG_DEBUG("<filter-blur> Applying bilateralSmoothing parameter.");
+			gs_effect_set_float(param,
+				(float)(m_bilateralSmoothing * (1 + m_size * 2)));
+		}
+
+		param = gs_effect_get_param_by_name(m_effect, "bilateralSharpness");
+		if (!param) {
+			PLOG_ERROR("<filter-blur> Failed to set bilateralSmoothing param.");
+			return false;
+		} else {
+			PLOG_DEBUG("<filter-blur> Applying bilateralSharpness parameter.");
+			gs_effect_set_float(param, (float)(1.0 - m_bilateralSharpness));
+		}
+	}
+
+	return true;
 }
