@@ -20,9 +20,14 @@
 #include "filter-transform.h"
 #include "strings.h"
 
+extern "C" {
+#pragma warning (push)
+#pragma warning (disable: 4201)
 #include "libobs/util/platform.h"
 #include "libobs/graphics/graphics.h"
 #include "libobs/graphics/matrix4.h"
+#pragma warning (pop)
+}
 
 static const float PI = 3.1415926535897932384626433832795f;
 static const float farZ = 2097152.0f; // 2 pow 21
@@ -234,7 +239,7 @@ void Filter::Transform::Instance::update(obs_data_t *data) {
 	m_scale.x = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_SCALE_X) / 100.0f;
 	m_scale.y = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_SCALE_Y) / 100.0f;
 	m_scale.z = 1.0;
-	m_rotationOrder = obs_data_get_int(data, P_FILTER_TRANSFORM_ROTATION_ORDER);
+	m_rotationOrder = (int)obs_data_get_int(data, P_FILTER_TRANSFORM_ROTATION_ORDER);
 	m_rotation.x = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_ROTATION_X) / 180.0f * PI;
 	m_rotation.y = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_ROTATION_Y) / 180.0f * PI;
 	m_rotation.z = (float)obs_data_get_double(data, P_FILTER_TRANSFORM_ROTATION_Z) / 180.0f * PI;
@@ -262,16 +267,16 @@ void Filter::Transform::Instance::video_tick(float) {}
 void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 	obs_source_t *parent = obs_filter_get_parent(m_sourceContext);
 	obs_source_t *target = obs_filter_get_target(m_sourceContext);
-
-	// Skip rendering if our target, parent or context is not valid.
-	if (!target || !parent || !m_sourceContext || !m_vertexBuffer || !m_texRender || !m_shapeRender) {
-		obs_source_skip_video_filter(m_sourceContext);
-		return;
-	}
-
 	uint32_t
 		baseW = obs_source_get_base_width(target),
 		baseH = obs_source_get_base_height(target);
+
+	// Skip rendering if our target, parent or context is not valid.
+	if (!target || !parent || !m_sourceContext || !m_vertexBuffer || !m_texRender 
+		|| !m_shapeRender || !baseW || !baseH) {
+		obs_source_skip_video_filter(m_sourceContext);
+		return;
+	}
 
 	gs_effect_t *alphaEffect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
 
@@ -304,6 +309,7 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 		gs_texrender_end(m_texRender);
 	} else {
 		obs_source_skip_video_filter(m_sourceContext);
+		return;
 	}
 	gs_texture* filterTexture = gs_texrender_get_texture(m_texRender);
 
@@ -320,7 +326,7 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 		// Mesh
 		matrix4 ident;
 		matrix4_identity(&ident);
-		matrix4_scale3f(&ident, &ident, aspectRatioX, aspectRatioY, 1.0);
+		matrix4_scale3f(&ident, &ident, (float)aspectRatioX, (float)aspectRatioY, 1.0);
 		matrix4_scale(&ident, &ident, &m_scale);
 		switch (m_rotationOrder) {
 			case RotationOrder::XYZ: // XYZ
@@ -429,6 +435,7 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 		gs_texrender_end(m_shapeRender);
 	} else {
 		obs_source_skip_video_filter(m_sourceContext);
+		return;
 	}
 	gs_texture* shapeTexture = gs_texrender_get_texture(m_shapeRender);
 
