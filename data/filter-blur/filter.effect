@@ -1,0 +1,85 @@
+uniform float4x4 ViewProj;
+uniform texture2d image;
+uniform int size;
+uniform float2 texel;
+
+sampler_state textureSampler {
+	Filter    = Point;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+};
+
+struct VertDataIn {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+struct VertDataOut {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertDataOut VSDefault(VertDataIn v_in)
+{
+	VertDataOut vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+	return vert_out;
+}
+
+// Box Blur
+float4 PSBox(VertDataOut v_in) : TARGET
+{
+	float4 rgba = float4(0,0,0,0); //image.Sample(textureSampler, v_in.uv);
+	float trueWidth = 1 + (size * 2);
+	for (int k = -size; k <= size; k++) {
+		rgba += image.Sample(textureSampler, v_in.uv + (texel * k));
+	}
+	rgba = rgba / trueWidth;
+	return rgba;
+}
+
+technique Box
+{
+	pass Horizontal
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSBox(v_in);
+	}
+	pass Vertical
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSBox(v_in);
+	}
+}
+
+// Gaussian Blur
+float Gaussian(float x, float deviation) {
+	return (1.0 / sqrt(2.0 * 3.141592 * deviation)) * exp(-((x * x) / (2.0 * deviation)));	
+}
+
+float4 PSGaussian(VertDataOut v_in) : TARGET
+{
+	float4 rgba = float4(0, 0, 0, 0);	
+	float trueWidth = 1.0 + (size * 2);
+	for (int k = -size; k <= size; k++) {
+		float4 smpl = image.Sample(textureSampler, v_in.uv + (texel * k));
+		smpl *= Gaussian(k / trueWidth, 1.0);
+		rgba += smpl;
+	}
+	return rgba;
+}
+
+technique Gaussian
+{
+	pass Horizontal
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSGaussian(v_in);
+	}
+	pass Vertical
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSGaussian(v_in);
+	}
+}
