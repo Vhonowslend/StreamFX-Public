@@ -20,9 +20,14 @@
 #include "filter-shape.h"
 #include "strings.h"
 
+extern "C" {
+#pragma warning (push)
+#pragma warning (disable: 4201)
 #include "libobs/util/platform.h"
 #include "libobs/graphics/graphics.h"
 #include "libobs/graphics/matrix4.h"
+#pragma warning (pop)
+}
 
 #include <string>
 #include <vector>
@@ -233,25 +238,25 @@ void Filter::Shape::Instance::update(obs_data_t *data) {
 		{
 			auto strings = cache.find(std::make_pair(point, P_SHAPE_POINT_X));
 			if (strings != cache.end()) {
-				v.position.x = obs_data_get_double(data, strings->second.first.c_str()) / 100.0;
+				v.position.x = (float)(obs_data_get_double(data, strings->second.first.c_str()) / 100.0);
 			}
 		}
 		{
 			auto strings = cache.find(std::make_pair(point, P_SHAPE_POINT_Y));
 			if (strings != cache.end()) {
-				v.position.y = obs_data_get_double(data, strings->second.first.c_str()) / 100.0;
+				v.position.y = (float)(obs_data_get_double(data, strings->second.first.c_str()) / 100.0);
 			}
 		}
 		{
 			auto strings = cache.find(std::make_pair(point, P_SHAPE_POINT_U));
 			if (strings != cache.end()) {
-				v.uv[0].x = obs_data_get_double(data, strings->second.first.c_str()) / 100.0;
+				v.uv[0].x = (float)(obs_data_get_double(data, strings->second.first.c_str()) / 100.0);
 			}
 		}
 		{
 			auto strings = cache.find(std::make_pair(point, P_SHAPE_POINT_V));
 			if (strings != cache.end()) {
-				v.uv[0].y = obs_data_get_double(data, strings->second.first.c_str()) / 100.0;
+				v.uv[0].y = (float)(obs_data_get_double(data, strings->second.first.c_str()) / 100.0);
 			}
 		}
 		v.color = 0xFFFFFFFF;
@@ -299,7 +304,8 @@ void Filter::Shape::Instance::video_render(gs_effect_t *effect) {
 		baseH = obs_source_get_base_height(target);
 
 	// Skip rendering if our target, parent or context is not valid.
-	if (!target || !parent || !context) {
+	if (!target || !parent || !context || !m_vertexBuffer
+		|| !m_texRender || !baseW || !baseH) {
 		obs_source_skip_video_filter(context);
 		return;
 	}
@@ -307,13 +313,14 @@ void Filter::Shape::Instance::video_render(gs_effect_t *effect) {
 	gs_texrender_reset(m_texRender);
 	if (gs_texrender_begin(m_texRender, baseW, baseH)) {
 		if (obs_source_process_filter_begin(context, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
-			obs_source_process_filter_end(context, obs_get_base_effect(OBS_EFFECT_OPAQUE), baseW, baseH);
+			obs_source_process_filter_end(context, effect ? effect : obs_get_base_effect(OBS_EFFECT_OPAQUE), baseW, baseH);
 		} else {
 			obs_source_skip_video_filter(context);
 		}
 		gs_texrender_end(m_texRender);
 	} else {
 		obs_source_skip_video_filter(context);
+		return;
 	}
 	gs_texture* tex = gs_texrender_get_texture(m_texRender);
 
@@ -324,7 +331,7 @@ void Filter::Shape::Instance::video_render(gs_effect_t *effect) {
 	gs_matrix_get(&alignedMatrix);
 	gs_matrix_push();
 	gs_matrix_set(&alignedMatrix);
-	gs_matrix_scale3f(baseW, baseH, 1.0);
+	gs_matrix_scale3f((float)baseW, (float)baseH, 1.0);
 
 	gs_set_cull_mode(GS_NEITHER);
 	gs_enable_blending(false);
@@ -339,7 +346,7 @@ void Filter::Shape::Instance::video_render(gs_effect_t *effect) {
 		gs_effect_set_texture(gs_effect_get_param_by_name(eff, "image"), tex);
 		gs_load_vertexbuffer(m_vertexBuffer);
 		gs_load_indexbuffer(nullptr);
-		gs_draw(drawmode, 0, m_vertexHelper->size());
+		gs_draw(drawmode, 0, (uint32_t)m_vertexHelper->size());
 	}
 
 	gs_matrix_pop();
