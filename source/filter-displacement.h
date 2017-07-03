@@ -19,8 +19,15 @@
 
 #pragma once
 #include "plugin.h"
+
+extern "C" {
+#pragma warning (push)
+#pragma warning (disable: 4201)
 #include <libobs/obs-source.h>
 #include <libobs/util/platform.h>
+#pragma warning (pop)
+}
+
 #include <string>
 
 #define P_FILTER_DISPLACEMENT				"Filter.Displacement"

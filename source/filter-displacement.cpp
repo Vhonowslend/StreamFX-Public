@@ -139,10 +139,8 @@ Filter::Displacement::Instance::Instance(obs_data_t *data, obs_source_t *context
 
 Filter::Displacement::Instance::~Instance() {
 	obs_enter_graphics();
-	if (customEffect)
-		gs_effect_destroy(customEffect);
-	if (dispmap.texture)
-		gs_texture_destroy(dispmap.texture);
+	gs_effect_destroy(customEffect);
+	gs_texture_destroy(dispmap.texture);
 	obs_leave_graphics();
 }
 
@@ -191,7 +189,8 @@ void Filter::Displacement::Instance::video_render(gs_effect_t *) {
 		baseH = obs_source_get_base_height(target);
 
 	// Skip rendering if our target, parent or context is not valid.
-	if (!target || !parent || !context || !dispmap.texture) {
+	if (!target || !parent || !context || !dispmap.texture
+		|| !baseW || !baseH) {
 		obs_source_skip_video_filter(context);
 		return;
 	}
