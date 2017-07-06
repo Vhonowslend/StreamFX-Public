@@ -53,43 +53,43 @@ Filter::Blur::Blur() {
 	obs_enter_graphics();
 	{
 		char* loadError = nullptr;
-		char* file = obs_module_file("filter-blur/box.effect");
+		char* file = obs_module_file("effects/box-blur.effect");
 		g_boxBlurEffect = gs_effect_create_from_file(file, &loadError);
 		bfree(file);
 		if (loadError != nullptr) {
-			PLOG_ERROR("<filter-blur> Loading effect failed with error(s): %s", loadError);
+			PLOG_ERROR("<filter-blur> Loading box-blur effect failed with error(s): %s", loadError);
 			bfree(loadError);
 		} else if (!g_boxBlurEffect) {
-			PLOG_ERROR("<filter-blur> Loading effect failed with unspecified error.");
+			PLOG_ERROR("<filter-blur> Loading box-blur effect failed with unspecified error.");
 		}
 	}
 	{
 		char* loadError = nullptr;
-		char* file = obs_module_file("filter-blur/gaussian.effect");
+		char* file = obs_module_file("effects/gaussian-blur.effect");
 		g_gaussianBlurEffect = gs_effect_create_from_file(file, &loadError);
 		bfree(file);
 		if (loadError != nullptr) {
-			PLOG_ERROR("<filter-blur> Loading effect failed with error(s): %s", loadError);
+			PLOG_ERROR("<filter-blur> Loading gaussian blur effect failed with error(s): %s", loadError);
 			bfree(loadError);
 		} else if (!g_gaussianBlurEffect) {
-			PLOG_ERROR("<filter-blur> Loading effect failed with unspecified error.");
+			PLOG_ERROR("<filter-blur> Loading gaussian blur effect failed with unspecified error.");
 		}
 	}
 	{
 		char* loadError = nullptr;
-		char* file = obs_module_file("filter-blur/bilateral.effect");
+		char* file = obs_module_file("effects/bilateral-blur.effect");
 		g_bilateralBlurEffect = gs_effect_create_from_file(file, &loadError);
 		bfree(file);
 		if (loadError != nullptr) {
-			PLOG_ERROR("<filter-blur> Loading effect failed with error(s): %s", loadError);
+			PLOG_ERROR("<filter-blur> Loading bilateral blur effect failed with error(s): %s", loadError);
 			bfree(loadError);
 		} else if (!g_bilateralBlurEffect) {
-			PLOG_ERROR("<filter-blur> Loading effect failed with unspecified error.");
+			PLOG_ERROR("<filter-blur> Loading bilateral blur effect failed with unspecified error.");
 		}
 	}
 	obs_leave_graphics();
 
-	if (g_boxBlurEffect && g_gaussianBlurEffect && g_bilateralBlurEffect)
+	if (g_boxBlurEffect && g_gaussianBlurEffect && g_bilateralBlurEffect && g_colorConversionEffect)
 		obs_register_source(&sourceInfo);
 }
 
@@ -157,6 +157,7 @@ bool Filter::Blur::modified_properties(obs_properties_t *pr, obs_property_t *, o
 			break;
 	}
 
+	// Bilateral Blur
 	obs_property_set_visible(obs_properties_get(pr, P_FILTER_BLUR_BILATERAL_SMOOTHING),
 		showBilateral);
 	obs_property_set_visible(obs_properties_get(pr, P_FILTER_BLUR_BILATERAL_SHARPNESS),

@@ -38,7 +38,7 @@ float4 PSGaussian(VertDataOut v_in) : TARGET
 	float4 rgba = float4(0, 0, 0, 0);	
 	for (int k = -widthHalf; k <= widthHalf; k++) {
 		float4 smpl = image.Sample(textureSampler, v_in.uv + (texel * k));
-		smpl *= Gaussian(k / width, 1.0);
+		smpl *= Gaussian(k, width / 2.0);
 		rgba += smpl;
 	}
 	return rgba;
