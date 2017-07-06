@@ -29,7 +29,12 @@ extern "C" {
 #pragma warning (pop)
 }
 
-static gs_effect_t *g_boxBlurEffect, *g_gaussianBlurEffect, *g_bilateralBlurEffect;
+enum ColorFormat : uint64_t {
+	RGB,
+	YUV, // 701
+};
+
+static gs_effect_t *g_boxBlurEffect, *g_gaussianBlurEffect, *g_bilateralBlurEffect, *g_colorConversionEffect;
 
 Filter::Blur::Blur() {
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
@@ -87,6 +92,18 @@ Filter::Blur::Blur() {
 			PLOG_ERROR("<filter-blur> Loading bilateral blur effect failed with unspecified error.");
 		}
 	}
+	{
+		char* loadError = nullptr;
+		char* file = obs_module_file("effects/color-conversion.effect");
+		g_colorConversionEffect = gs_effect_create_from_file(file, &loadError);
+		bfree(file);
+		if (loadError != nullptr) {
+			PLOG_ERROR("<filter-blur> Loading color conversion effect failed with error(s): %s", loadError);
+			bfree(loadError);
+		} else if (!g_colorConversionEffect) {
+			PLOG_ERROR("<filter-blur> Loading color conversion effect failed with unspecified error.");
+		}
+	}
 	obs_leave_graphics();
 
 	if (g_boxBlurEffect && g_gaussianBlurEffect && g_bilateralBlurEffect && g_colorConversionEffect)
@@ -95,6 +112,7 @@ Filter::Blur::Blur() {
 
 Filter::Blur::~Blur() {
 	obs_enter_graphics();
+	gs_effect_destroy(g_colorConversionEffect);
 	gs_effect_destroy(g_bilateralBlurEffect);
 	gs_effect_destroy(g_gaussianBlurEffect);
 	gs_effect_destroy(g_boxBlurEffect);
@@ -112,6 +130,10 @@ void Filter::Blur::get_defaults(obs_data_t *data) {
 	// Bilateral Only
 	obs_data_set_default_double(data, P_FILTER_BLUR_BILATERAL_SMOOTHING, 50.0);
 	obs_data_set_default_double(data, P_FILTER_BLUR_BILATERAL_SHARPNESS, 90.0);
+
+	// Advanced
+	obs_data_set_default_bool(data, P_FILTER_BLUR_ADVANCED, false);
+	obs_data_set_default_int(data, P_FILTER_BLUR_ADVANCED_COLORFORMAT, ColorFormat::RGB);
 }
 
 obs_properties_t * Filter::Blur::get_properties(void *) {
@@ -132,6 +154,7 @@ obs_properties_t * Filter::Blur::get_properties(void *) {
 	p = obs_properties_add_int_slider(pr, P_FILTER_BLUR_SIZE,
 		P_TRANSLATE(P_FILTER_BLUR_SIZE), 1, 25, 1);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_FILTER_BLUR_SIZE)));
+	obs_property_set_modified_callback(p, modified_properties);
 
 	// Bilateral Only
 	p = obs_properties_add_float_slider(pr, P_FILTER_BLUR_BILATERAL_SMOOTHING,
@@ -140,7 +163,22 @@ obs_properties_t * Filter::Blur::get_properties(void *) {
 	p = obs_properties_add_float_slider(pr, P_FILTER_BLUR_BILATERAL_SHARPNESS,
 		P_TRANSLATE(P_FILTER_BLUR_BILATERAL_SHARPNESS), 0, 99.99, 0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_FILTER_BLUR_BILATERAL_SHARPNESS)));
-	
+
+	// Advanced
+	p = obs_properties_add_bool(pr, P_FILTER_BLUR_ADVANCED, P_TRANSLATE(P_FILTER_BLUR_ADVANCED));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_FILTER_BLUR_ADVANCED)));
+	obs_property_set_modified_callback(p, modified_properties);
+
+	p = obs_properties_add_list(pr, P_FILTER_BLUR_ADVANCED_COLORFORMAT,
+		P_TRANSLATE(P_FILTER_BLUR_ADVANCED_COLORFORMAT),
+		obs_combo_type::OBS_COMBO_TYPE_LIST, obs_combo_format::OBS_COMBO_FORMAT_INT);
+	obs_property_set_long_description(p,
+		P_TRANSLATE(P_DESC(P_FILTER_BLUR_ADVANCED_COLORFORMAT)));
+	obs_property_list_add_int(p, "RGB",
+		ColorFormat::RGB);
+	obs_property_list_add_int(p, "YUV",
+		ColorFormat::YUV);
+
 	return pr;
 }
 
@@ -162,6 +200,14 @@ bool Filter::Blur::modified_properties(obs_properties_t *pr, obs_property_t *, o
 		showBilateral);
 	obs_property_set_visible(obs_properties_get(pr, P_FILTER_BLUR_BILATERAL_SHARPNESS),
 		showBilateral);
+
+	// Advanced
+	bool showAdvanced = false;
+	if (obs_data_get_bool(d, P_FILTER_BLUR_ADVANCED))
+		showAdvanced = true;
+
+	obs_property_set_visible(obs_properties_get(pr, P_FILTER_BLUR_ADVANCED_COLORFORMAT),
+		showAdvanced);
 
 	return true;
 }
@@ -249,6 +295,9 @@ void Filter::Blur::Instance::update(obs_data_t *data) {
 	// Bilateral Blur
 	m_bilateralSmoothing = obs_data_get_double(data, P_FILTER_BLUR_BILATERAL_SMOOTHING) / 100.0;
 	m_bilateralSharpness = obs_data_get_double(data, P_FILTER_BLUR_BILATERAL_SHARPNESS) / 100.0;
+
+	// Advanced
+	m_colorFormat = obs_data_get_int(data, P_FILTER_BLUR_ADVANCED_COLORFORMAT);
 }
 
 uint32_t Filter::Blur::Instance::get_width() {
@@ -338,7 +387,59 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 	}
 #pragma endregion Source To Texture
 
+	// Conversion
+	if (m_colorFormat == ColorFormat::YUV) {
+		gs_texrender_reset(m_secondaryRT);
+		if (!gs_texrender_begin(m_secondaryRT, baseW, baseH)) {
+			PLOG_ERROR("<filter-blur> Failed to set up base texture.");
+			obs_source_skip_video_filter(m_source);
+			return;
+		} else {
+			gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
 
+			// Clear to Black
+			vec4 black;
+			vec4_zero(&black);
+			gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
+
+			// Set up camera stuff
+			gs_set_cull_mode(GS_NEITHER);
+			gs_reset_blend_state();
+			gs_blend_function_separate(
+				gs_blend_type::GS_BLEND_ONE,
+				gs_blend_type::GS_BLEND_ZERO,
+				gs_blend_type::GS_BLEND_ONE,
+				gs_blend_type::GS_BLEND_ZERO);
+			gs_enable_depth_test(false);
+			gs_enable_stencil_test(false);
+			gs_enable_stencil_write(false);
+			gs_enable_color(true, true, true, true);
+
+			gs_eparam_t* param = gs_effect_get_param_by_name(g_colorConversionEffect, "image");
+			if (!param) {
+				PLOG_ERROR("<filter-blur:Final> Failed to set image param.");
+				failed = true;
+			} else {
+				gs_effect_set_texture(param, sourceTexture);
+			}
+			while (gs_effect_loop(g_colorConversionEffect, "RGBToYUV")) {
+				gs_draw_sprite(sourceTexture, 0, baseW, baseH);
+			}
+			gs_texrender_end(m_secondaryRT);
+		}
+
+		if (failed) {
+			obs_source_skip_video_filter(m_source);
+			return;
+		}
+
+		sourceTexture = gs_texrender_get_texture(m_secondaryRT);
+		if (!sourceTexture) {
+			PLOG_ERROR("<filter-blur> Failed to get source texture.");
+			obs_source_skip_video_filter(m_source);
+			return;
+		}
+	}
 
 	gs_texture_t *blurred = blur_render(sourceTexture, baseW, baseH);
 	if (blurred == nullptr) {
@@ -348,14 +449,22 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 
 	// Draw final effect
 	{
-		gs_eparam_t* param = gs_effect_get_param_by_name(defaultEffect, "image");
+		gs_effect_t* finalEffect = defaultEffect;
+		const char* technique = "Draw";
+
+		if (m_colorFormat == ColorFormat::YUV) {
+			finalEffect = g_colorConversionEffect;
+			technique = "YUVToRGB";
+		}
+
+		gs_eparam_t* param = gs_effect_get_param_by_name(finalEffect, "image");
 		if (!param) {
 			PLOG_ERROR("<filter-blur:Final> Failed to set image param.");
 			failed = true;
 		} else {
 			gs_effect_set_texture(param, blurred);
 		}
-		while (gs_effect_loop(defaultEffect, "Draw")) {
+		while (gs_effect_loop(finalEffect, technique)) {
 			gs_draw_sprite(blurred, 0, baseW, baseH);
 		}
 	}

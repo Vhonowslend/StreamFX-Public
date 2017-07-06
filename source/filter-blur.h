@@ -32,6 +32,10 @@
 #define P_FILTER_BLUR_BILATERAL_SMOOTHING		"Filter.Blur.Bilateral.Smoothing"
 #define P_FILTER_BLUR_BILATERAL_SHARPNESS		"Filter.Blur.Bilateral.Sharpness"
 
+// Advanced
+#define P_FILTER_BLUR_ADVANCED				"Filter.Blur.Advanced"
+#define P_FILTER_BLUR_ADVANCED_COLORFORMAT		"Filter.Blur.Avanced.ColorFormat"
+
 namespace Filter {
 	class Blur {
 		public:
@@ -98,6 +102,9 @@ namespace Filter {
 			// Bilateral
 			double_t m_bilateralSmoothing;
 			double_t m_bilateralSharpness;
+
+			// Advanced
+			uint64_t m_colorFormat;
 		};
 	};
 }
