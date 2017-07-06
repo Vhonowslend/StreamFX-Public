@@ -27,6 +27,8 @@
 #define P_FILTER_BLUR_TYPE_GAUSSIAN			"Filter.Blur.Type.Gaussian"
 #define P_FILTER_BLUR_TYPE_BILATERAL			"Filter.Blur.Type.Bilateral"
 #define P_FILTER_BLUR_SIZE				"Filter.Blur.Size"
+
+// Bilateral Blur
 #define P_FILTER_BLUR_BILATERAL_SMOOTHING		"Filter.Blur.Bilateral.Smoothing"
 #define P_FILTER_BLUR_BILATERAL_SHARPNESS		"Filter.Blur.Bilateral.Sharpness"
 
@@ -77,6 +79,7 @@ namespace Filter {
 			void hide();
 			void video_tick(float);
 			void video_render(gs_effect_t*);
+			gs_texture_t* blur_render(gs_texture_t* input, size_t baseW, size_t baseH);
 
 			bool apply_effect_param(gs_texture_t* texture, 
 				float uvTexelX, float uvTexelY);
@@ -86,6 +89,7 @@ namespace Filter {
 			gs_effect_t *m_effect;
 			gs_technique_t *m_technique;
 			gs_texrender_t *m_primaryRT, *m_secondaryRT;
+			gs_texrender_t *m_rtHorizontal, *m_rtVertical;
 
 			// Blur
 			Type m_type;

@@ -215,6 +215,8 @@ Filter::Blur::Instance::Instance(obs_data_t *data, obs_source_t *context) : m_so
 	m_effect = g_boxBlurEffect;
 	m_primaryRT = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 	m_secondaryRT = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
+	m_rtHorizontal = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
+	m_rtVertical = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 	obs_leave_graphics();
 
 	update(data);
@@ -224,6 +226,8 @@ Filter::Blur::Instance::~Instance() {
 	obs_enter_graphics();
 	gs_texrender_destroy(m_primaryRT);
 	gs_texrender_destroy(m_secondaryRT);
+	gs_texrender_destroy(m_rtHorizontal);
+	gs_texrender_destroy(m_rtVertical);
 	obs_leave_graphics();
 }
 
@@ -282,7 +286,7 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 	}
 
 	gs_effect_t* defaultEffect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
-	gs_texture_t *sourceTexture = nullptr, *horizontalTexture = nullptr;
+	gs_texture_t *sourceTexture = nullptr;
 
 #pragma region Source To Texture
 	gs_texrender_reset(m_primaryRT);
@@ -334,12 +338,43 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 	}
 #pragma endregion Source To Texture
 
-#pragma region Horizontal Pass
-	gs_texrender_reset(m_secondaryRT);
-	if (!gs_texrender_begin(m_secondaryRT, baseW, baseH)) {
-		PLOG_ERROR("<filter-blur> Failed set up horizontal pass.");
+
+
+	gs_texture_t *blurred = blur_render(sourceTexture, baseW, baseH);
+	if (blurred == nullptr) {
 		obs_source_skip_video_filter(m_source);
 		return;
+	}
+
+	// Draw final effect
+	{
+		gs_eparam_t* param = gs_effect_get_param_by_name(defaultEffect, "image");
+		if (!param) {
+			PLOG_ERROR("<filter-blur:Final> Failed to set image param.");
+			failed = true;
+		} else {
+			gs_effect_set_texture(param, blurred);
+		}
+		while (gs_effect_loop(defaultEffect, "Draw")) {
+			gs_draw_sprite(blurred, 0, baseW, baseH);
+		}
+	}
+
+	if (failed) {
+		obs_source_skip_video_filter(m_source);
+		return;
+	}
+}
+
+gs_texture_t* Filter::Blur::Instance::blur_render(gs_texture_t* input, size_t baseW, size_t baseH) {
+	bool failed = false;
+	gs_texture_t *intermediate;
+
+#pragma region Horizontal Pass
+	gs_texrender_reset(m_rtHorizontal);
+	if (!gs_texrender_begin(m_rtHorizontal, baseW, baseH)) {
+		PLOG_ERROR("<filter-blur:Horizontal> Failed to initialize.");
+		return nullptr;
 	} else {
 		gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
 
@@ -362,73 +397,78 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 		gs_enable_color(true, true, true, true);
 
 		// Prepare Effect
-		if (!apply_effect_param(sourceTexture, (float)(1.0 / baseW), 0)) {
-			PLOG_ERROR("<filter-blur> Failed to apply effect parameters.");
+		if (!apply_effect_param(input, (float)(1.0 / baseW), 0)) {
+			PLOG_ERROR("<filter-blur:Horizontal> Failed to set effect parameters.");
 			failed = true;
 		} else {
 			while (gs_effect_loop(m_effect, "Draw")) {
-				gs_draw_sprite(sourceTexture, 0, baseW, baseH);
+				gs_draw_sprite(input, 0, baseW, baseH);
 			}
-			//// Render
-			//if (gs_technique_begin(m_technique)) {
-			//	PLOG_ERROR("<filter-blur> Failed to render effect.");
-			//	failed = true;
-			//} else {
-			//	if (!gs_technique_begin_pass_by_name(m_technique, "Draw")) {
-			//		PLOG_ERROR("<filter-blur> Failed to render horizontal pass.");
-			//		failed = true;
-			//	} else {
-			//		gs_technique_end_pass(m_technique);
-			//	}
-			//	gs_technique_end(m_technique);
-			//}
 		}
-		gs_texrender_end(m_secondaryRT);
+		gs_texrender_end(m_rtHorizontal);
 	}
 
 	if (failed) {
-		obs_source_skip_video_filter(m_source);
-		return;
+		return nullptr;
 	}
 
-	horizontalTexture = gs_texrender_get_texture(m_secondaryRT);
-	if (!horizontalTexture) {
-		PLOG_ERROR("<filter-blur> Failed to get horizontal pass texture.");
-		obs_source_skip_video_filter(m_source);
-		return;
+	intermediate = gs_texrender_get_texture(m_rtHorizontal);
+	if (!intermediate) {
+		PLOG_ERROR("<filter-blur:Horizontal> Failed to get intermediate texture.");
+		return nullptr;
 	}
 #pragma endregion Horizontal Pass
 
 #pragma region Vertical Pass
-	// Prepare Effect
-	if (!apply_effect_param(horizontalTexture, 0, (float)(1.0 / baseH))) {
-		PLOG_ERROR("<filter-blur> Failed to apply effect parameters.");
-		failed = true;
+	gs_texrender_reset(m_rtVertical);
+	if (!gs_texrender_begin(m_rtVertical, baseW, baseH)) {
+		PLOG_ERROR("<filter-blur:Vertical> Failed to initialize.");
+		return nullptr;
 	} else {
-		while (gs_effect_loop(m_effect, "Draw")) {
-			gs_draw_sprite(horizontalTexture, 0, baseW, baseH);
+		gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
+
+		// Clear to Black
+		vec4 black;
+		vec4_zero(&black);
+		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
+
+		// Set up camera stuff
+		gs_set_cull_mode(GS_NEITHER);
+		gs_reset_blend_state();
+		gs_blend_function_separate(
+			gs_blend_type::GS_BLEND_ONE,
+			gs_blend_type::GS_BLEND_ZERO,
+			gs_blend_type::GS_BLEND_ONE,
+			gs_blend_type::GS_BLEND_ZERO);
+		gs_enable_depth_test(false);
+		gs_enable_stencil_test(false);
+		gs_enable_stencil_write(false);
+		gs_enable_color(true, true, true, true);
+
+		// Prepare Effect
+		if (!apply_effect_param(intermediate, 0, (float)(1.0 / baseH))) {
+			PLOG_ERROR("<filter-blur:Vertical> Failed to set effect parameters.");
+			failed = true;
+		} else {
+			while (gs_effect_loop(m_effect, "Draw")) {
+				gs_draw_sprite(intermediate, 0, baseW, baseH);
+			}
 		}
-		// Render
-		//if (!gs_technique_begin(m_technique)) {
-		//	PLOG_ERROR("<filter-blur> Failed to render effect.");
-		//	failed = true;
-		//} else {
-		//	if (!gs_technique_begin_pass_by_name(m_technique, "Draw")) {
-		//		PLOG_ERROR("<filter-blur> Failed to render vertical pass.");
-		//		failed = true;
-		//	} else {
-		//		gs_draw_sprite(sourceTexture, 0, baseW, baseH);
-		//		gs_technique_end_pass(m_technique);
-		//	}
-		//	gs_technique_end(m_technique);
-		//}
+		gs_texrender_end(m_rtVertical);
 	}
 
 	if (failed) {
-		obs_source_skip_video_filter(m_source);
-		return;
+		return nullptr;
+	}
+
+	intermediate = gs_texrender_get_texture(m_rtVertical);
+	if (!intermediate) {
+		PLOG_ERROR("<filter-blur:Vertical> Failed to get intermediate texture.");
+		return nullptr;
 	}
 #pragma endregion Vertical Pass
+
+	return intermediate;
 }
 
 bool Filter::Blur::Instance::apply_effect_param(gs_texture_t* texture, float uvTexelX, float uvTexelY) {
