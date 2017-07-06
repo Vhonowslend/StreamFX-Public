@@ -47,7 +47,7 @@ SET(obs-stream-effects_LIBRARIES
 ################################################################################
 # Standalone and OBS Studio Build Data
 ################################################################################
-if(DepsPath)
+if(TARGET obs-studio)
 	# OBS Studio Specific
 
 	# Directories
