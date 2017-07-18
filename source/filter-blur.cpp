@@ -29,12 +29,29 @@ extern "C" {
 #pragma warning (pop)
 }
 
+#include <math.h>
+#include <map>
+
 enum ColorFormat : uint64_t {
 	RGB,
 	YUV, // 701
 };
 
-static gs_effect_t *g_boxBlurEffect, *g_gaussianBlurEffect, *g_bilateralBlurEffect, *g_colorConversionEffect;
+struct g_blurEffect {
+	gs_effect_t* effect;
+	std::vector<gs_texture_t*> kernels;
+};
+static g_blurEffect g_gaussianBlur, g_bilateralBlur;
+static gs_effect_t* g_boxBlurEffect, *g_colorConversionEffect;
+
+static size_t g_maxKernelSize = 25;
+
+double_t gaussian1D(double_t x, double_t o) {
+	return (1.0 / (o * sqrt(2 * M_PI))) * exp(-(x*x) / (2 * (o*o)));
+}
+double_t bilateral(double_t x, double_t o) {
+	return 0.39894 * exp(-0.5 * (x * x) / (o * o)) / o;
+}
 
 Filter::Blur::Blur() {
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
@@ -56,6 +73,9 @@ Filter::Blur::Blur() {
 	sourceInfo.video_render = video_render;
 
 	obs_enter_graphics();
+
+	// Blur Effects
+	/// Box Blur
 	{
 		char* loadError = nullptr;
 		char* file = obs_module_file("effects/box-blur.effect");
@@ -68,30 +88,92 @@ Filter::Blur::Blur() {
 			PLOG_ERROR("<filter-blur> Loading box-blur effect failed with unspecified error.");
 		}
 	}
+	/// Gaussian Blur
 	{
+		gs_effect_t* effect;
 		char* loadError = nullptr;
 		char* file = obs_module_file("effects/gaussian-blur.effect");
-		g_gaussianBlurEffect = gs_effect_create_from_file(file, &loadError);
+		effect = gs_effect_create_from_file(file, &loadError);
 		bfree(file);
 		if (loadError != nullptr) {
 			PLOG_ERROR("<filter-blur> Loading gaussian blur effect failed with error(s): %s", loadError);
 			bfree(loadError);
-		} else if (!g_gaussianBlurEffect) {
+		} else if (!effect) {
 			PLOG_ERROR("<filter-blur> Loading gaussian blur effect failed with unspecified error.");
+		} else {
+			g_gaussianBlur.effect = effect;
+			g_gaussianBlur.kernels.resize(g_maxKernelSize);
+			std::vector<float_t> databuf;
+			for (size_t n = 1; n <= g_maxKernelSize; n++) {
+				databuf.resize(n);
+				// Calculate
+				double_t sum = 0.0;
+				for (size_t p = 0; p < n; p ++) {
+					databuf[p] = gaussian1D(p, n);
+					sum += databuf[p];
+					if (p != 0)
+						sum += databuf[p];
+				}
+				// Normalize
+				for (size_t p = 0; p < n; p++) {
+					databuf[p] /= sum;
+				}
+
+				uint8_t* data = reinterpret_cast<uint8_t*>(databuf.data());
+				const uint8_t** pdata = const_cast<const uint8_t**>(&data);
+				gs_texture_t* tex = gs_texture_create(n, 1, gs_color_format::GS_R32F, 1, pdata, 0);
+				if (!tex) {
+					PLOG_ERROR("<filter-blur> Failed to create gaussian kernel for %d width.", n);
+				} else {
+					g_gaussianBlur.kernels[n - 1] = tex;
+				}
+			}
 		}
 	}
+	/// Bilateral Blur
 	{
+		gs_effect_t* effect;
 		char* loadError = nullptr;
 		char* file = obs_module_file("effects/bilateral-blur.effect");
-		g_bilateralBlurEffect = gs_effect_create_from_file(file, &loadError);
+		effect = gs_effect_create_from_file(file, &loadError);
 		bfree(file);
 		if (loadError != nullptr) {
 			PLOG_ERROR("<filter-blur> Loading bilateral blur effect failed with error(s): %s", loadError);
 			bfree(loadError);
-		} else if (!g_bilateralBlurEffect) {
+		} else if (!effect) {
 			PLOG_ERROR("<filter-blur> Loading bilateral blur effect failed with unspecified error.");
+		} else {
+			g_bilateralBlur.effect = effect;
+			g_bilateralBlur.kernels.resize(g_maxKernelSize);
+			std::vector<float_t> databuf;
+			for (size_t n = 1; n <= g_maxKernelSize; n++) {
+				databuf.resize(n);
+				// Calculate
+				double_t sum = 0.0;
+				for (size_t p = 0; p < n; p++) {
+					databuf[p] = gaussian1D(p, M_PI);
+					sum += databuf[p];
+					if (p != 0)
+						sum += databuf[p];
+				}
+				// Normalize
+				for (size_t p = 0; p < n; p++) {
+					databuf[p] /= sum;
+				}
+
+				uint8_t* data = reinterpret_cast<uint8_t*>(databuf.data());
+				const uint8_t** pdata = const_cast<const uint8_t**>(&data);
+				gs_texture_t* tex = gs_texture_create(n, 1, gs_color_format::GS_R32F, 1, pdata, 0);
+				if (!tex) {
+					PLOG_ERROR("<filter-blur> Failed to create bilateral kernel for %d width.", n);
+				} else {
+					g_bilateralBlur.kernels[n - 1] = tex;
+				}
+			}
 		}
 	}
+	
+	// Color Conversion
 	{
 		char* loadError = nullptr;
 		char* file = obs_module_file("effects/color-conversion.effect");
@@ -104,17 +186,21 @@ Filter::Blur::Blur() {
 			PLOG_ERROR("<filter-blur> Loading color conversion effect failed with unspecified error.");
 		}
 	}
+
 	obs_leave_graphics();
 
-	if (g_boxBlurEffect && g_gaussianBlurEffect && g_bilateralBlurEffect && g_colorConversionEffect)
+	if (g_boxBlurEffect && g_gaussianBlur.effect && g_bilateralBlur.effect && g_colorConversionEffect)
 		obs_register_source(&sourceInfo);
 }
 
 Filter::Blur::~Blur() {
 	obs_enter_graphics();
 	gs_effect_destroy(g_colorConversionEffect);
-	gs_effect_destroy(g_bilateralBlurEffect);
-	gs_effect_destroy(g_gaussianBlurEffect);
+	gs_effect_destroy(g_bilateralBlur.effect);
+	gs_effect_destroy(g_gaussianBlur.effect);
+	for (size_t n = 1; n <= g_maxKernelSize; n++) {
+		gs_texture_destroy(g_gaussianBlur.kernels[n - 1]);
+	}
 	gs_effect_destroy(g_boxBlurEffect);
 	obs_leave_graphics();
 }
@@ -284,10 +370,10 @@ void Filter::Blur::Instance::update(obs_data_t *data) {
 			m_effect = g_boxBlurEffect;
 			break;
 		case Filter::Blur::Type::Gaussian:
-			m_effect = g_gaussianBlurEffect;
+			m_effect = g_gaussianBlur.effect;
 			break;
 		case Filter::Blur::Type::Bilateral:
-			m_effect = g_bilateralBlurEffect;
+			m_effect = g_bilateralBlur.effect;
 			break;
 	}
 	m_size = (uint64_t)obs_data_get_int(data, P_FILTER_BLUR_SIZE);
@@ -475,7 +561,7 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 	}
 }
 
-gs_texture_t* Filter::Blur::Instance::blur_render(gs_texture_t* input, size_t baseW, size_t baseH) {
+gs_texture_t* Filter::Blur::Instance::blur_render(gs_texture_t* input, uint32_t baseW, uint32_t baseH) {
 	bool failed = false;
 	gs_texture_t *intermediate;
 

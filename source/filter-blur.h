@@ -83,7 +83,7 @@ namespace Filter {
 			void hide();
 			void video_tick(float);
 			void video_render(gs_effect_t*);
-			gs_texture_t* blur_render(gs_texture_t* input, size_t baseW, size_t baseH);
+			gs_texture_t* blur_render(gs_texture_t* input, uint32_t baseW, uint32_t baseH);
 
 			bool apply_effect_param(gs_texture_t* texture, 
 				float uvTexelX, float uvTexelY);
