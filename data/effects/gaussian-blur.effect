@@ -29,17 +29,22 @@ VertDataOut VSDefault(VertDataIn v_in)
 }
 
 // Gaussian Blur
-float Gaussian(float x, float deviation) {
-	return (1.0 / sqrt(2.0 * 3.141592 * deviation)) * exp(-((x * x) / (2.0 * deviation)));	
+float Gaussian(float x, float o) {
+	const float pivalue = 3.1415926535897932384626433832795;
+	return (1.0 / (o * sqrt(2.0 * pivalue))) * exp((-(x * x)) / (2 * (o * o)));
 }
 
-float4 PSGaussian(VertDataOut v_in) : TARGET
-{
-	float4 rgba = float4(0, 0, 0, 0);	
-	for (int k = -widthHalf; k <= widthHalf; k++) {
-		float4 smpl = image.Sample(textureSampler, v_in.uv + (texel * k));
-		smpl *= Gaussian(k, width / 2.0);
-		rgba += smpl;
+float4 PSGaussian(VertDataOut v_in) : TARGET {
+	const float pivalue = 3.1415926535897932384626433832795;
+	
+	float4 rgba = image.Sample(textureSampler, v_in.uv) * Gaussian(0, width / pivalue);
+	float2 uvoffset = texel;
+	for (int k = 1; k <= widthHalf; k++) {
+		float g = Gaussian(k, width / pivalue);
+		float4 spos = image.Sample(textureSampler, v_in.uv + uvoffset) * g;
+		float4 sneg = image.Sample(textureSampler, v_in.uv - uvoffset) * g;		
+		rgba += spos + sneg;
+		uvoffset += texel;
 	}
 	return rgba;
 }
