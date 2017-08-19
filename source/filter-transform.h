@@ -21,29 +21,29 @@
 #include "plugin.h"
 #include "gs-helper.h"
 
-#define P_FILTER_TRANSFORM				"Filter.Transform"
-#define P_FILTER_TRANSFORM_CAMERA			"Filter.Transform.Camera"
-#define P_FILTER_TRANSFORM_CAMERA_ORTHOGRAPHIC		"Filter.Transform.Camera.Orthographic"
-#define P_FILTER_TRANSFORM_CAMERA_PERSPECTIVE		"Filter.Transform.Camera.Perspective"
-#define P_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW		"Filter.Transform.Camera.FieldOfView"
-#define P_FILTER_TRANSFORM_POSITION			"Filter.Transform.Position"
-#define P_FILTER_TRANSFORM_POSITION_X			"Filter.Transform.Position.X"
-#define P_FILTER_TRANSFORM_POSITION_Y			"Filter.Transform.Position.Y"
-#define P_FILTER_TRANSFORM_POSITION_Z			"Filter.Transform.Position.Z"
-#define P_FILTER_TRANSFORM_ROTATION			"Filter.Transform.Rotation"
-#define P_FILTER_TRANSFORM_ROTATION_ORDER		"Filter.Transform.Rotation.Order"
-#define P_FILTER_TRANSFORM_ROTATION_ORDER_XYZ		"Filter.Transform.Rotation.Order.XYZ"
-#define P_FILTER_TRANSFORM_ROTATION_ORDER_XZY		"Filter.Transform.Rotation.Order.XZY"
-#define P_FILTER_TRANSFORM_ROTATION_ORDER_YXZ		"Filter.Transform.Rotation.Order.YXZ"
-#define P_FILTER_TRANSFORM_ROTATION_ORDER_YZX		"Filter.Transform.Rotation.Order.YZX"
-#define P_FILTER_TRANSFORM_ROTATION_ORDER_ZXY		"Filter.Transform.Rotation.Order.ZXY"
-#define P_FILTER_TRANSFORM_ROTATION_ORDER_ZYX		"Filter.Transform.Rotation.Order.ZYX"
-#define P_FILTER_TRANSFORM_ROTATION_X			"Filter.Transform.Rotation.X"
-#define P_FILTER_TRANSFORM_ROTATION_Y			"Filter.Transform.Rotation.Y"
-#define P_FILTER_TRANSFORM_ROTATION_Z			"Filter.Transform.Rotation.Z"
-#define P_FILTER_TRANSFORM_SCALE			"Filter.Transform.Scale"
-#define P_FILTER_TRANSFORM_SCALE_X			"Filter.Transform.Scale.X"
-#define P_FILTER_TRANSFORM_SCALE_Y			"Filter.Transform.Scale.Y"
+#define S_FILTER_TRANSFORM				"Filter.Transform"
+#define S_FILTER_TRANSFORM_CAMERA			"Filter.Transform.Camera"
+#define S_FILTER_TRANSFORM_CAMERA_ORTHOGRAPHIC		"Filter.Transform.Camera.Orthographic"
+#define S_FILTER_TRANSFORM_CAMERA_PERSPECTIVE		"Filter.Transform.Camera.Perspective"
+#define S_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW		"Filter.Transform.Camera.FieldOfView"
+#define S_FILTER_TRANSFORM_POSITION			"Filter.Transform.Position"
+#define S_FILTER_TRANSFORM_POSITION_X			"Filter.Transform.Position.X"
+#define S_FILTER_TRANSFORM_POSITION_Y			"Filter.Transform.Position.Y"
+#define S_FILTER_TRANSFORM_POSITION_Z			"Filter.Transform.Position.Z"
+#define S_FILTER_TRANSFORM_ROTATION			"Filter.Transform.Rotation"
+#define S_FILTER_TRANSFORM_ROTATION_ORDER		"Filter.Transform.Rotation.Order"
+#define S_FILTER_TRANSFORM_ROTATION_ORDER_XYZ		"Filter.Transform.Rotation.Order.XYZ"
+#define S_FILTER_TRANSFORM_ROTATION_ORDER_XZY		"Filter.Transform.Rotation.Order.XZY"
+#define S_FILTER_TRANSFORM_ROTATION_ORDER_YXZ		"Filter.Transform.Rotation.Order.YXZ"
+#define S_FILTER_TRANSFORM_ROTATION_ORDER_YZX		"Filter.Transform.Rotation.Order.YZX"
+#define S_FILTER_TRANSFORM_ROTATION_ORDER_ZXY		"Filter.Transform.Rotation.Order.ZXY"
+#define S_FILTER_TRANSFORM_ROTATION_ORDER_ZYX		"Filter.Transform.Rotation.Order.ZYX"
+#define S_FILTER_TRANSFORM_ROTATION_X			"Filter.Transform.Rotation.X"
+#define S_FILTER_TRANSFORM_ROTATION_Y			"Filter.Transform.Rotation.Y"
+#define S_FILTER_TRANSFORM_ROTATION_Z			"Filter.Transform.Rotation.Z"
+#define S_FILTER_TRANSFORM_SCALE			"Filter.Transform.Scale"
+#define S_FILTER_TRANSFORM_SCALE_X			"Filter.Transform.Scale.X"
+#define S_FILTER_TRANSFORM_SCALE_Y			"Filter.Transform.Scale.Y"
 
 namespace Filter {
 	class Transform {
@@ -54,7 +54,8 @@ namespace Filter {
 		static const char *get_name(void *);
 		static void get_defaults(obs_data_t *);
 		static obs_properties_t *get_properties(void *);
-		static bool modified_properties(obs_properties_t *, obs_property_t *, obs_data_t *);
+		static bool modified_properties(obs_properties_t *,
+			obs_property_t *, obs_data_t *);
 
 		static void *create(obs_data_t *, obs_source_t *);
 		static void destroy(void *);
@@ -98,6 +99,7 @@ namespace Filter {
 			float_t m_cameraFieldOfView;
 
 			// Source
+			bool m_isInactive, m_isHidden;
 			bool m_isMeshUpdateRequired;
 			uint32_t m_rotationOrder;
 			vec3 m_position,
