@@ -30,11 +30,11 @@ extern "C" {
 
 #include <string>
 
-#define P_FILTER_DISPLACEMENT				"Filter.Displacement"
-#define P_FILTER_DISPLACEMENT_FILE			"Filter.Displacement.File"
-#define P_FILTER_DISPLACEMENT_FILE_TYPES		"Filter.Displacement.File.Types"
-#define P_FILTER_DISPLACEMENT_RATIO			"Filter.Displacement.Ratio"
-#define P_FILTER_DISPLACEMENT_SCALE			"Filter.Displacement.Scale"
+#define S_FILTER_DISPLACEMENT				"Filter.Displacement"
+#define S_FILTER_DISPLACEMENT_FILE			"Filter.Displacement.File"
+#define S_FILTER_DISPLACEMENT_FILE_TYPES		"Filter.Displacement.File.Types"
+#define S_FILTER_DISPLACEMENT_RATIO			"Filter.Displacement.Ratio"
+#define S_FILTER_DISPLACEMENT_SCALE			"Filter.Displacement.Scale"
 
 namespace Filter {
 	class Displacement {

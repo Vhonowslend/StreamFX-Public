@@ -47,7 +47,7 @@ Filter::Displacement::~Displacement() {
 }
 
 const char * Filter::Displacement::get_name(void *) {
-	return P_TRANSLATE(P_FILTER_DISPLACEMENT);
+	return P_TRANSLATE(S_FILTER_DISPLACEMENT);
 }
 
 void * Filter::Displacement::create(obs_data_t *data, obs_source_t *source) {
@@ -68,9 +68,9 @@ uint32_t Filter::Displacement::get_height(void *ptr) {
 
 void Filter::Displacement::get_defaults(obs_data_t *data) {
 	char* disp = obs_module_file("filter-displacement/neutral.png");
-	obs_data_set_default_string(data, P_FILTER_DISPLACEMENT_FILE, disp);
-	obs_data_set_default_double(data, P_FILTER_DISPLACEMENT_RATIO, 0);
-	obs_data_set_default_double(data, P_FILTER_DISPLACEMENT_SCALE, 0);
+	obs_data_set_default_string(data, S_FILTER_DISPLACEMENT_FILE, disp);
+	obs_data_set_default_double(data, S_FILTER_DISPLACEMENT_RATIO, 0);
+	obs_data_set_default_double(data, S_FILTER_DISPLACEMENT_SCALE, 0);
 	bfree(disp);
 }
 
@@ -81,9 +81,14 @@ obs_properties_t * Filter::Displacement::get_properties(void *ptr) {
 	if (ptr)
 		path = reinterpret_cast<Instance*>(ptr)->get_file();
 
-	obs_properties_add_path(pr, P_FILTER_DISPLACEMENT_FILE, P_TRANSLATE(P_FILTER_DISPLACEMENT_FILE), obs_path_type::OBS_PATH_FILE, P_TRANSLATE(P_FILTER_DISPLACEMENT_FILE_TYPES), path.c_str());
-	obs_properties_add_float_slider(pr, P_FILTER_DISPLACEMENT_RATIO, P_TRANSLATE(P_FILTER_DISPLACEMENT_RATIO), 0, 1, 0.01);
-	obs_properties_add_float_slider(pr, P_FILTER_DISPLACEMENT_SCALE, P_TRANSLATE(P_FILTER_DISPLACEMENT_SCALE), -1000, 1000, 0.01);
+	obs_properties_add_path(pr, S_FILTER_DISPLACEMENT_FILE,
+		P_TRANSLATE(S_FILTER_DISPLACEMENT_FILE),
+		obs_path_type::OBS_PATH_FILE,
+		P_TRANSLATE(S_FILTER_DISPLACEMENT_FILE_TYPES), path.c_str());
+	obs_properties_add_float_slider(pr, S_FILTER_DISPLACEMENT_RATIO,
+		P_TRANSLATE(S_FILTER_DISPLACEMENT_RATIO), 0, 1, 0.01);
+	obs_properties_add_float_slider(pr, S_FILTER_DISPLACEMENT_SCALE,
+		P_TRANSLATE(S_FILTER_DISPLACEMENT_SCALE), -1000, 1000, 0.01);
 	return pr;
 }
 
@@ -115,7 +120,8 @@ void Filter::Displacement::video_render(void *ptr, gs_effect_t *effect) {
 	reinterpret_cast<Instance*>(ptr)->video_render(effect);
 }
 
-Filter::Displacement::Instance::Instance(obs_data_t *data, obs_source_t *context) {
+Filter::Displacement::Instance::Instance(obs_data_t *data,
+	obs_source_t *context) {
 	this->dispmap.texture = nullptr;
 	this->dispmap.createTime = 0;
 	this->dispmap.modifiedTime = 0;
@@ -126,10 +132,11 @@ Filter::Displacement::Instance::Instance(obs_data_t *data, obs_source_t *context
 	obs_enter_graphics();
 	char* effectFile = obs_module_file("effects/displacement.effect");
 	char* errorMessage = nullptr;
-	this->customEffect = gs_effect_create_from_file(effectFile, &errorMessage);
+	this->customEffect = gs_effect_create_from_file(effectFile,
+		&errorMessage);
 	bfree(effectFile);
 	if (errorMessage != nullptr) {
-		PLOG_ERROR("%s", errorMessage);
+		P_LOG_ERROR("%s", errorMessage);
 		bfree(errorMessage);
 	}
 	obs_leave_graphics();
@@ -145,12 +152,15 @@ Filter::Displacement::Instance::~Instance() {
 }
 
 void Filter::Displacement::Instance::update(obs_data_t *data) {
-	updateDisplacementMap(obs_data_get_string(data, P_FILTER_DISPLACEMENT_FILE));
+	updateDisplacementMap(obs_data_get_string(data,
+		S_FILTER_DISPLACEMENT_FILE));
 
-	distance = float_t(obs_data_get_double(data, P_FILTER_DISPLACEMENT_RATIO));
+	distance = float_t(obs_data_get_double(data,
+		S_FILTER_DISPLACEMENT_RATIO));
 	vec2_set(&displacementScale,
-		float_t(obs_data_get_double(data, P_FILTER_DISPLACEMENT_SCALE)),
-		float_t(obs_data_get_double(data, P_FILTER_DISPLACEMENT_SCALE)));
+		float_t(obs_data_get_double(data, S_FILTER_DISPLACEMENT_SCALE)),
+		float_t(obs_data_get_double(data, S_FILTER_DISPLACEMENT_SCALE))
+		);
 }
 
 uint32_t Filter::Displacement::Instance::get_width() {
@@ -195,7 +205,8 @@ void Filter::Displacement::Instance::video_render(gs_effect_t *) {
 		return;
 	}
 
-	if (!obs_source_process_filter_begin(context, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING))
+	if (!obs_source_process_filter_begin(context, GS_RGBA,
+		OBS_ALLOW_DIRECT_RENDERING))
 		return;
 
 	gs_eparam_t *param;
@@ -208,19 +219,19 @@ void Filter::Displacement::Instance::video_render(gs_effect_t *) {
 	if (param)
 		gs_effect_set_vec2(param, &texelScale);
 	else
-		PLOG_ERROR("Failed to set texel scale param.");
+		P_LOG_ERROR("Failed to set texel scale param.");
 
 	param = gs_effect_get_param_by_name(customEffect, "displacementScale");
 	if (param)
 		gs_effect_set_vec2(param, &displacementScale);
 	else
-		PLOG_ERROR("Failed to set displacement scale param.");
+		P_LOG_ERROR("Failed to set displacement scale param.");
 
 	param = gs_effect_get_param_by_name(customEffect, "displacementMap");
 	if (param)
 		gs_effect_set_texture(param, dispmap.texture);
 	else
-		PLOG_ERROR("Failed to set texture param.");
+		P_LOG_ERROR("Failed to set texture param.");
 
 	obs_source_process_filter_end(context, customEffect, baseW, baseH);
 }
@@ -254,7 +265,8 @@ void Filter::Displacement::Instance::updateDisplacementMap(std::string file) {
 			dispmap.texture = nullptr;
 		}
 		if (os_file_exists(file.c_str()))
-			dispmap.texture = gs_texture_create_from_file(dispmap.file.c_str());
+			dispmap.texture =
+			gs_texture_create_from_file(dispmap.file.c_str());
 		obs_leave_graphics();
 	}
 }
