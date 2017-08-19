@@ -52,10 +52,15 @@ static void initialize() {
 			P_SHAPE_POINT_V
 		};
 		for (const char* v : vals) {
-			snprintf(handle.data(), handle.size(), "%s.%" PRIu32, v, point);
-			snprintf(name.data(), name.size(), P_TRANSLATE(v), point);
-			cacheValue x = std::make_pair(std::string(handle.data()), std::string(name.data()));
-			cache.insert(std::make_pair(std::make_pair(point, v), x));
+			snprintf(handle.data(), handle.size(), "%s.%" PRIu32, v,
+				point);
+			snprintf(name.data(), name.size(), P_TRANSLATE(v),
+				point);
+			cacheValue x = std::make_pair(
+				std::string(handle.data()),
+				std::string(name.data()));
+			cache.insert(std::make_pair(std::make_pair(point, v),
+				x));
 		}
 	}
 }
@@ -64,7 +69,7 @@ Filter::Shape::Shape() {
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
 	sourceInfo.id = "obs-stream-effects-filter-shape";
 	sourceInfo.type = OBS_SOURCE_TYPE_FILTER;
-	sourceInfo.output_flags = OBS_SOURCE_VIDEO;
+	sourceInfo.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_DEPRECATED;
 	sourceInfo.get_name = get_name;
 	sourceInfo.get_defaults = get_defaults;
 	sourceInfo.get_properties = get_properties;
@@ -80,7 +85,7 @@ Filter::Shape::Shape() {
 	sourceInfo.video_render = video_render;
 
 	// Disabled for the time being. 3D Transform is better for this.
-	//obs_register_source(&sourceInfo);
+	obs_register_source(&sourceInfo);
 
 	initialize();
 }
@@ -107,7 +112,8 @@ void Filter::Shape::get_defaults(obs_data_t *data) {
 		for (const char* v : vals) {
 			auto strings = cache.find(std::make_pair(point, v));
 			if (strings != cache.end()) {
-				obs_data_set_default_double(data, strings->second.first.c_str(), 0);
+				obs_data_set_default_double(data,
+					strings->second.first.c_str(), 0);
 			}
 		}
 	}
@@ -117,30 +123,50 @@ obs_properties_t * Filter::Shape::get_properties(void *) {
 	obs_properties_t *pr = obs_properties_create();
 	obs_property_t* p = NULL;
 
-	p = obs_properties_add_bool(pr, P_SHAPE_LOOP, P_TRANSLATE(P_SHAPE_LOOP));
+	p = obs_properties_add_bool(pr, P_SHAPE_LOOP,
+		P_TRANSLATE(P_SHAPE_LOOP));
 	obs_property_set_long_description(p, P_DESC(P_SHAPE_LOOP));
 
 	p = obs_properties_add_list(pr, P_SHAPE_MODE, P_TRANSLATE(P_SHAPE_MODE),
-		obs_combo_type::OBS_COMBO_TYPE_LIST, obs_combo_format::OBS_COMBO_FORMAT_INT);
+		obs_combo_type::OBS_COMBO_TYPE_LIST,
+		obs_combo_format::OBS_COMBO_FORMAT_INT);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHAPE_MODE)));
 	obs_property_list_add_int(p, P_TRANSLATE(P_SHAPE_MODE_TRIS), GS_TRIS);
-	obs_property_list_add_int(p, P_TRANSLATE(P_SHAPE_MODE_TRISTRIP), GS_TRISTRIP);
+	obs_property_list_add_int(p, P_TRANSLATE(P_SHAPE_MODE_TRISTRIP),
+		GS_TRISTRIP);
 
-	p = obs_properties_add_int_slider(pr, P_SHAPE_POINTS, P_TRANSLATE(P_SHAPE_POINTS), minimumPoints, maximumPoints, 1);
+	p = obs_properties_add_int_slider(pr, P_SHAPE_POINTS,
+		P_TRANSLATE(P_SHAPE_POINTS), minimumPoints, maximumPoints, 1);
 	obs_property_set_long_description(p, P_DESC(P_SHAPE_POINTS));
 	obs_property_set_modified_callback(p, modified_properties);
 
 	for (uint32_t point = 0; point < maximumPoints; point++) {
 		std::pair<const char*, const char*> vals[] = {
-			{ P_SHAPE_POINT_X, P_TRANSLATE(P_DESC(P_SHAPE_POINT_X)) },
-			{ P_SHAPE_POINT_Y, P_TRANSLATE(P_DESC(P_SHAPE_POINT_Y)) },
-			{ P_SHAPE_POINT_U, P_TRANSLATE(P_DESC(P_SHAPE_POINT_U)) },
-			{ P_SHAPE_POINT_V, P_TRANSLATE(P_DESC(P_SHAPE_POINT_V)) }
+			{
+				P_SHAPE_POINT_X,
+				P_TRANSLATE(P_DESC(P_SHAPE_POINT_X))
+			},
+			{
+				P_SHAPE_POINT_Y,
+				P_TRANSLATE(P_DESC(P_SHAPE_POINT_Y))
+			},
+			{
+				P_SHAPE_POINT_U,
+				P_TRANSLATE(P_DESC(P_SHAPE_POINT_U))
+			},
+			{
+				P_SHAPE_POINT_V,
+				P_TRANSLATE(P_DESC(P_SHAPE_POINT_V))
+			}
 		};
 		for (std::pair<const char*, const char*> v : vals) {
-			auto strings = cache.find(std::make_pair(point, v.first));
+			auto strings = cache.find(
+				std::make_pair(point, v.first));
 			if (strings != cache.end()) {
-				p = obs_properties_add_float_slider(pr, strings->second.first.c_str(), strings->second.second.c_str(), 0, 100.0, 0.01);
+				p = obs_properties_add_float_slider(pr,
+					strings->second.first.c_str(),
+					strings->second.second.c_str(),
+					0, 100.0, 0.01);
 				obs_property_set_long_description(p, v.second);
 			}
 		}
@@ -149,7 +175,8 @@ obs_properties_t * Filter::Shape::get_properties(void *) {
 	return pr;
 }
 
-bool Filter::Shape::modified_properties(obs_properties_t *pr, obs_property_t *, obs_data_t *data) {
+bool Filter::Shape::modified_properties(obs_properties_t *pr, obs_property_t *,
+	obs_data_t *data) {
 	uint32_t points = (uint32_t)obs_data_get_int(data, P_SHAPE_POINTS);
 	for (uint32_t point = 0; point < maximumPoints; point++) {
 		bool visible = point < points ? true : false;
@@ -162,7 +189,9 @@ bool Filter::Shape::modified_properties(obs_properties_t *pr, obs_property_t *, 
 		for (const char* v : vals) {
 			auto strings = cache.find(std::make_pair(point, v));
 			if (strings != cache.end()) {
-				obs_property_set_visible(obs_properties_get(pr, strings->second.first.c_str()), visible);
+				obs_property_set_visible(obs_properties_get(pr,
+					strings->second.first.c_str()), visible
+					);
 			}
 		}
 	}
@@ -236,27 +265,35 @@ void Filter::Shape::Instance::update(obs_data_t *data) {
 	for (uint32_t point = 0; point < points; point++) {
 		Helper::Vertex& v = m_vertexHelper->at(point);
 		{
-			auto strings = cache.find(std::make_pair(point, P_SHAPE_POINT_X));
+			auto strings = cache.find(std::make_pair(point,
+				P_SHAPE_POINT_X));
 			if (strings != cache.end()) {
-				v.position.x = (float)(obs_data_get_double(data, strings->second.first.c_str()) / 100.0);
+				v.position.x = (float)(obs_data_get_double(data,
+					strings->second.first.c_str()) / 100.0);
 			}
 		}
 		{
-			auto strings = cache.find(std::make_pair(point, P_SHAPE_POINT_Y));
+			auto strings = cache.find(std::make_pair(point,
+				P_SHAPE_POINT_Y));
 			if (strings != cache.end()) {
-				v.position.y = (float)(obs_data_get_double(data, strings->second.first.c_str()) / 100.0);
+				v.position.y = (float)(obs_data_get_double(data,
+					strings->second.first.c_str()) / 100.0);
 			}
 		}
 		{
-			auto strings = cache.find(std::make_pair(point, P_SHAPE_POINT_U));
+			auto strings = cache.find(std::make_pair(point,
+				P_SHAPE_POINT_U));
 			if (strings != cache.end()) {
-				v.uv[0].x = (float)(obs_data_get_double(data, strings->second.first.c_str()) / 100.0);
+				v.uv[0].x = (float)(obs_data_get_double(data,
+					strings->second.first.c_str()) / 100.0);
 			}
 		}
 		{
-			auto strings = cache.find(std::make_pair(point, P_SHAPE_POINT_V));
+			auto strings = cache.find(std::make_pair(point,
+				P_SHAPE_POINT_V));
 			if (strings != cache.end()) {
-				v.uv[0].y = (float)(obs_data_get_double(data, strings->second.first.c_str()) / 100.0);
+				v.uv[0].y = (float)(obs_data_get_double(data,
+					strings->second.first.c_str()) / 100.0);
 			}
 		}
 		v.color = 0xFFFFFFFF;
@@ -276,25 +313,15 @@ uint32_t Filter::Shape::Instance::get_height() {
 	return 0;
 }
 
-void Filter::Shape::Instance::activate() {
+void Filter::Shape::Instance::activate() {}
 
-}
+void Filter::Shape::Instance::deactivate() {}
 
-void Filter::Shape::Instance::deactivate() {
+void Filter::Shape::Instance::show() {}
 
-}
+void Filter::Shape::Instance::hide() {}
 
-void Filter::Shape::Instance::show() {
-
-}
-
-void Filter::Shape::Instance::hide() {
-
-}
-
-void Filter::Shape::Instance::video_tick(float) {
-
-}
+void Filter::Shape::Instance::video_tick(float) {}
 
 void Filter::Shape::Instance::video_render(gs_effect_t *effect) {
 	obs_source_t *parent = obs_filter_get_parent(context);
@@ -311,17 +338,19 @@ void Filter::Shape::Instance::video_render(gs_effect_t *effect) {
 	}
 
 	gs_texrender_reset(m_texRender);
-	if (gs_texrender_begin(m_texRender, baseW, baseH)) {
-		if (obs_source_process_filter_begin(context, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
-			obs_source_process_filter_end(context, effect ? effect : obs_get_base_effect(OBS_EFFECT_OPAQUE), baseW, baseH);
-		} else {
-			obs_source_skip_video_filter(context);
-		}
-		gs_texrender_end(m_texRender);
-	} else {
+	if (!gs_texrender_begin(m_texRender, baseW, baseH)) {
 		obs_source_skip_video_filter(context);
 		return;
 	}
+	if (!obs_source_process_filter_begin(context, GS_RGBA,
+		OBS_NO_DIRECT_RENDERING)) {
+		obs_source_skip_video_filter(context);
+	} else {
+		obs_source_process_filter_end(context,
+			effect ? effect : obs_get_base_effect(OBS_EFFECT_OPAQUE),
+			baseW, baseH);
+	}
+	gs_texrender_end(m_texRender);
 	gs_texture* tex = gs_texrender_get_texture(m_texRender);
 
 	//gs_projection_push();
@@ -343,7 +372,8 @@ void Filter::Shape::Instance::video_render(gs_effect_t *effect) {
 
 	gs_effect_t* eff = obs_get_base_effect(OBS_EFFECT_OPAQUE);
 	while (gs_effect_loop(eff, "Draw")) {
-		gs_effect_set_texture(gs_effect_get_param_by_name(eff, "image"), tex);
+		gs_effect_set_texture(gs_effect_get_param_by_name(eff, "image"),
+			tex);
 		gs_load_vertexbuffer(m_vertexBuffer);
 		gs_load_indexbuffer(nullptr);
 		gs_draw(drawmode, 0, (uint32_t)m_vertexHelper->size());
