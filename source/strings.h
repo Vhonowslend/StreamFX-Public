@@ -1,6 +1,6 @@
 /*
  * Modern effects for a modern Streamer
- * Copyright (C) 2016 - 2017 Michael Fabian Dirks
+ * Copyright (C) 2017 Michael Fabian Dirks
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,3 +23,4 @@
 #define P_TRANSLATE(x)					obs_module_text(x)
 #define P_DESC(x)					x ".Description"
 
+#define S_ADVANCED					"Advanced"
