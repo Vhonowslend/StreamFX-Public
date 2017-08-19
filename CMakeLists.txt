@@ -41,13 +41,26 @@ SET(obs-stream-effects_SOURCES
 	"${PROJECT_SOURCE_DIR}/source/filter-transform.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-helper.cpp"
 )
+SET(obs-stream-effects_LOCALE
+	"${PROJECT_SOURCE_DIR}/data/locale/en-US.ini"
+)
+SET(obs-stream-effects_EFFECTS
+	"${PROJECT_SOURCE_DIR}/data/effects/bilateral-blur.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/box-blur.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/gaussian-blur.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/displace.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/color-conversion.effect"
+)
 SET(obs-stream-effects_LIBRARIES
 )
+#set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+source_group("Data Files\\Locale" FILES ${obs-stream-effects_LOCALE})
+source_group("Data Files\\Effects" FILES ${obs-stream-effects_EFFECTS})
 
 ################################################################################
 # Standalone and OBS Studio Build Data
 ################################################################################
-if(TARGET obs-studio)
+if(TARGET libobs)
 	# OBS Studio Specific
 
 	# Directories
@@ -71,11 +84,11 @@ else()
 		message(FATAL_ERROR "PATH_OBSStudio invalid!")
 		return()
 	endif()
-	
+
 	# Find OBS Libraries
 	SET(obsPath "${PATH_OBSStudio}")
 	INCLUDE("${PATH_OBSStudio}/cmake/external/Findlibobs.cmake")
-	
+
 	# Compiling
 	INCLUDE_DIRECTORIES(
 		"${PROJECT_BINARY_DIR}"
@@ -93,34 +106,36 @@ endif()
 ADD_LIBRARY(obs-stream-effects MODULE
 	${obs-stream-effects_HEADERS}
 	${obs-stream-effects_SOURCES}
+	${obs-stream-effects_LOCALE}
+	${obs-stream-effects_EFFECTS}
 )
 TARGET_LINK_LIBRARIES(obs-stream-effects
 	${LIBOBS_LIBRARIES}
 	${obs-stream-effects_LIBRARIES}
 )
 
-# All Warnings, Extra Warnings, Pedantic
-if(MSVC)
-  # Force to always compile with W4
-  if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
-    string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-  else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
-  endif()
-elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-  # Update if necessary
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic")
-endif()
-
-if(DepsPath)
+if(TARGET libobs)
 	install_obs_plugin_with_data(obs-stream-effects data)
 else()
+	# All Warnings, Extra Warnings, Pedantic
+	if(MSVC)
+	  # Force to always compile with W4
+	  if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+		string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+	  else()
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+	  endif()
+	elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+	  # Update if necessary
+	  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic")
+	endif()
+
 	math(EXPR BITS "8*${CMAKE_SIZEOF_VOID_P}")
 	add_custom_command(TARGET obs-stream-effects POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_directory
 		"${PROJECT_SOURCE_DIR}/data"
 		"${PROJECT_SOURCE_DIR}/#Build/data/obs-plugins/obs-stream-effects"
-	)	
+	)
 	add_custom_command(TARGET obs-stream-effects POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy
 		"$<TARGET_FILE:obs-stream-effects>"
