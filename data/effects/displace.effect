@@ -41,10 +41,10 @@ float4 PSDisplace(VertDataOut v_in) : TARGET
 	float2 signdisp = disp * float2(281474976710656.0, 281474976710656.0);
 	float2 signs = float2(clamp(disp.r, -1.0, 1.0), clamp(disp.g, -1.0, 1.0));
 	disp = (floor(abs(disp * 127.0)) / 127.0) * signs;
-	
+
 	float2 uv = v_in.uv + (disp * texelScale * displacementScale);
 	float4 rgba = image.Sample(textureSampler, uv);
-	
+
 	return rgba;
 }
 
