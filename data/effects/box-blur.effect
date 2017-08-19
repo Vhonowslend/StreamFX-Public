@@ -1,8 +1,13 @@
+// OBS Default
 uniform float4x4 ViewProj;
-uniform texture2d image;
-uniform float2 texel;
-uniform int widthHalf;
-uniform int width;
+
+// Settings (Shared)
+uniform texture2d u_image;
+uniform float2 u_imageSize;
+uniform float2 u_imageTexelDelta;
+uniform int u_radius;
+uniform int u_diameter;
+uniform float2 u_texelDelta;
 
 sampler_state textureSampler {
 	Filter    = Point;
@@ -31,11 +36,12 @@ VertDataOut VSDefault(VertDataIn v_in)
 // Box Blur
 float4 PSBox(VertDataOut v_in) : TARGET
 {
-	float4 rgba = float4(0,0,0,0);
-	for (int k = -widthHalf; k <= widthHalf; k++) {
-		rgba += image.Sample(textureSampler, v_in.uv + (texel * k));
+	float4 rgba = u_image.Sample(textureSampler, v_in.uv);
+	for (int k = 1; k <= u_radius; k++) {
+		rgba += u_image.Sample(textureSampler, v_in.uv + (u_texelDelta * k));
+		rgba += u_image.Sample(textureSampler, v_in.uv - (u_texelDelta * k));
 	}
-	rgba = rgba / width;
+	rgba = rgba / u_diameter;
 	return rgba;
 }
 

@@ -21,20 +21,19 @@
 #include "plugin.h"
 #include "gs-helper.h"
 
-#define P_FILTER_BLUR					"Filter.Blur"
-#define P_FILTER_BLUR_TYPE				"Filter.Blur.Type"
-#define P_FILTER_BLUR_TYPE_BOX				"Filter.Blur.Type.Box"
-#define P_FILTER_BLUR_TYPE_GAUSSIAN			"Filter.Blur.Type.Gaussian"
-#define P_FILTER_BLUR_TYPE_BILATERAL			"Filter.Blur.Type.Bilateral"
-#define P_FILTER_BLUR_SIZE				"Filter.Blur.Size"
+#define S_FILTER_BLUR					"Filter.Blur"
+#define S_FILTER_BLUR_TYPE				"Filter.Blur.Type"
+#define S_FILTER_BLUR_TYPE_BOX				"Filter.Blur.Type.Box"
+#define S_FILTER_BLUR_TYPE_GAUSSIAN			"Filter.Blur.Type.Gaussian"
+#define S_FILTER_BLUR_TYPE_BILATERAL			"Filter.Blur.Type.Bilateral"
+#define S_FILTER_BLUR_SIZE				"Filter.Blur.Size"
 
 // Bilateral Blur
-#define P_FILTER_BLUR_BILATERAL_SMOOTHING		"Filter.Blur.Bilateral.Smoothing"
-#define P_FILTER_BLUR_BILATERAL_SHARPNESS		"Filter.Blur.Bilateral.Sharpness"
+#define S_FILTER_BLUR_BILATERAL_SMOOTHING		"Filter.Blur.Bilateral.Smoothing"
+#define S_FILTER_BLUR_BILATERAL_SHARPNESS		"Filter.Blur.Bilateral.Sharpness"
 
 // Advanced
-#define P_FILTER_BLUR_ADVANCED				"Filter.Blur.Advanced"
-#define P_FILTER_BLUR_ADVANCED_COLORFORMAT		"Filter.Blur.Avanced.ColorFormat"
+#define S_FILTER_BLUR_COLORFORMAT			"Filter.Blur.ColorFormat"
 
 namespace Filter {
 	class Blur {
@@ -45,7 +44,8 @@ namespace Filter {
 		static const char *get_name(void *);
 		static void get_defaults(obs_data_t *);
 		static obs_properties_t *get_properties(void *);
-		static bool modified_properties(obs_properties_t *, obs_property_t *, obs_data_t *);
+		static bool modified_properties(obs_properties_t *,
+			obs_property_t *, obs_data_t *);
 
 		static void *create(obs_data_t *, obs_source_t *);
 		static void destroy(void *);
@@ -83,10 +83,10 @@ namespace Filter {
 			void hide();
 			void video_tick(float);
 			void video_render(gs_effect_t*);
-			gs_texture_t* blur_render(gs_texture_t* input, uint32_t baseW, uint32_t baseH);
-
-			bool apply_effect_param(gs_texture_t* texture, 
-				float uvTexelX, float uvTexelY);
+			bool apply_shared_param(gs_texture_t* input,
+				float texelX, float texelY);
+			bool apply_bilateral_param();
+			bool apply_gaussian_param();
 
 			private:
 			obs_source_t *m_source;

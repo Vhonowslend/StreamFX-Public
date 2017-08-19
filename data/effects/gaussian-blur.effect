@@ -1,13 +1,32 @@
+// OBS Default
 uniform float4x4 ViewProj;
-uniform texture2d image;
-uniform float2 texel;
-uniform int widthHalf;
-uniform int width;
 
-sampler_state textureSampler {
+// Settings (Shared)
+uniform texture2d u_image;
+uniform float2 u_imageSize;
+uniform float2 u_imageTexelDelta;
+uniform int u_radius;
+uniform int u_diameter;
+uniform float2 u_texelDelta;
+
+// Settings (Private)
+//uniform float registerkernel[25];
+uniform texture2d kernel;
+uniform float2 kernelTexel;
+
+sampler_state pointClampSampler {
 	Filter    = Point;
 	AddressU  = Clamp;
 	AddressV  = Clamp;
+	MinLOD    = 0;
+	MaxLOD    = 0;
+};
+sampler_state bilinearClampSampler {
+	Filter    = Bilinear;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+	MinLOD    = 0;
+	MaxLOD    = 0;
 };
 
 struct VertDataIn {
@@ -34,19 +53,69 @@ float Gaussian(float x, float o) {
 	return (1.0 / (o * sqrt(2.0 * pivalue))) * exp((-(x * x)) / (2 * (o * o)));
 }
 
-float4 PSGaussian(VertDataOut v_in) : TARGET {
-	const float pivalue = 3.1415926535897932384626433832795;
-	
-	float4 rgba = image.Sample(textureSampler, v_in.uv) * Gaussian(0, width / pivalue);
-	float2 uvoffset = texel;
-	for (int k = 1; k <= widthHalf; k++) {
-		float g = Gaussian(k, width / pivalue);
-		float4 spos = image.Sample(textureSampler, v_in.uv + uvoffset) * g;
-		float4 sneg = image.Sample(textureSampler, v_in.uv - uvoffset) * g;		
-		rgba += spos + sneg;
-		uvoffset += texel;
+float4 InternalGaussian(
+	float2 p_uv, float2 p_uvStep, int p_size,
+	texture2d p_source) {
+	float l_gauss = Gaussian(0, p_size);
+	float4 l_value = p_source.Sample(pointClampSampler, p_uv) * gauss;
+	float2 l_uvoffset = p_uvStep;
+	for (int k = 1; k <= p_size; k++) {
+		float l_g = Gaussian(k, p_size);
+		float4 l_p = p_source.Sample(pointClampSampler, p_uv + l_uvoffset) * l_g;
+		float4 l_n = p_source.Sample(pointClampSampler, p_uv - l_uvoffset) * l_g;
+		l_value += l_p + l_n;
+		l_uvoffset += p_uvStep;
+		l_gauss += l_g;
 	}
-	return rgba;
+	l_value = l_value * (1.0 / l_gauss);
+	return l_value;
+}
+
+float4 InternalGaussianPrecalculated(
+	float2 p_uv, float2 p_uvStep, int p_size,
+	texture2d p_source, float2 p_sourceStep,
+	texture2d p_kernel, float2 p_kernelStep) {
+	float4 l_value = p_source.Sample(pointClampSampler, p_uv + imageTexel)
+		* kernel.Sample(pointClampSampler, float2(0, 0)).r;
+	float2 l_uvoffset = p_uvStep;
+	float2 l_koffset = p_kerneltexel;
+	for (int k = 1; k <= p_size; k++) {
+		float l_g = p_kernel.Sample(pointClampSampler, l_koffset).r;
+		float4 l_p = p_source.Sample(pointClampSampler, p_uv + l_uvoffset) * l_g;
+		float4 l_n = p_source.Sample(pointClampSampler, p_uv - l_uvoffset) * l_g;
+		l_value += l_p + l_n;
+		l_uvoffset += p_uvStep;
+		l_koffset += p_kerneltexel;
+	}
+	return l_value;
+}
+
+float4 InternalGaussianPrecalculatedNVOptimized(float2 p_uv, texture2d p_source, float2 p_texel,
+	int p_size, texture2d p_kernel, texture2d p_kerneltexel) {
+	if (p_size % 2 == 0) {
+		float4 l_value = p_source.Sample(pointClampSampler, p_uv)
+			* kernel.Sample(pointClampSampler, float2(0, 0)).r;
+		float2 l_uvoffset = p_texel;
+		float2 l_koffset = p_kerneltexel;
+		for (int k = 1; k <= p_size; k++) {
+			float l_g = p_kernel.Sample(pointClampSampler, l_koffset).r;
+			float4 l_p = p_source.Sample(pointClampSampler, p_uv + l_uvoffset) * l_g;
+			float4 l_n = p_source.Sample(pointClampSampler, p_uv - l_uvoffset) * l_g;
+			l_value += l_p + l_n;
+			l_uvoffset += p_texel;
+			l_koffset += p_kerneltexel;
+		}
+		return l_value;
+	} else {
+		return InternalGaussianPrecalculated(p_uv, p_source, p_texel, p_size, p_kernel, p_kerneltexel);)
+	}
+}
+
+float4 PSGaussian(VertDataOut v_in) : TARGET {
+	//return InternalGaussian(v_in.uv, u_image, u_imageTexelDelta, u_radius);
+	//return InternalGaussianPrecalculated(v_in.uv, image, texel, radius, kernel, kernelTexel);
+	return InternalGaussianPrecalculatedNVOptimize(v_in.uv, u_
+		image, texel, radius, kernel, kernelTexel);
 }
 
 technique Draw

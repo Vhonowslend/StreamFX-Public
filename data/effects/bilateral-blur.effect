@@ -1,8 +1,15 @@
+// OBS Default
 uniform float4x4 ViewProj;
-uniform texture2d image;
-uniform float2 texel;
-uniform int widthHalf;
-uniform int width;
+
+// Settings (Shared)
+uniform texture2d u_image;
+uniform float2 u_imageSize;
+uniform float2 u_imageTexelDelta;
+uniform int u_radius;
+uniform int u_diameter;
+uniform float2 u_texelDelta;
+
+// Settings (Private)
 uniform float bilateralSmoothing;
 uniform float bilateralSharpness;
 
@@ -43,8 +50,8 @@ float Bilateral3(float3 v, float sigma)
 
 float4 PSBilateral(VertDataOut v_in) : TARGET
 {
-	float4 source = image.Sample(textureSampler, v_in.uv);	
-	
+	float4 source = image.Sample(textureSampler, v_in.uv);
+
 	float3 color = float3(0, 0, 0);
 	float2 rootuv = v_in.uv - (texel * widthHalf);
 	float Z = 0.0;
@@ -52,20 +59,20 @@ float4 PSBilateral(VertDataOut v_in) : TARGET
 	for (int k = -widthHalf; k <= widthHalf; k++) {
 		// Sample Color
 		float3 sample = image.Sample(textureSampler, rootuv);
-		
+
 		// Bilateral Stuff
 		float bKernel = Bilateral(abs(k), bilateralSmoothing);
-		bKernel *= bKernel;		
+		bKernel *= bKernel;
 		float factor = Bilateral3(sample - source.rgb, bilateralSharpness) * bZ * bKernel;
 		Z += factor;
-		
+
 		// Store Color
 		color += factor * sample;
-		
+
 		// Advance UV
 		rootuv += texel;
 	}
-	
+
 	return float4(color.rgb / Z, source.a);
 }
 
