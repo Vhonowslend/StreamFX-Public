@@ -27,14 +27,14 @@
 #pragma warning (pop)
 
 // Plugin
-#define PLUGIN_NAME				"Stream Effects"
+#define PLUGIN_NAME					"Stream Effects"
 #include "version.h"
 
-#define PLOG(level, ...)		blog(level, "[" PLUGIN_NAME "] " __VA_ARGS__);
-#define PLOG_ERROR(...)			PLOG(LOG_ERROR,   __VA_ARGS__)
-#define PLOG_WARNING(...)		PLOG(LOG_WARNING, __VA_ARGS__)
-#define PLOG_INFO(...)			PLOG(LOG_INFO,    __VA_ARGS__)
-#define PLOG_DEBUG(...)			PLOG(LOG_DEBUG,   __VA_ARGS__)
+#define P_LOG(level, ...)				blog(level, "[" PLUGIN_NAME "] " __VA_ARGS__);
+#define P_LOG_ERROR(...)				P_LOG(LOG_ERROR,   __VA_ARGS__)
+#define P_LOG_WARNING(...)				P_LOG(LOG_WARNING, __VA_ARGS__)
+#define P_LOG_INFO(...)					P_LOG(LOG_INFO,    __VA_ARGS__)
+#define P_LOG_DEBUG(...)				P_LOG(LOG_DEBUG,   __VA_ARGS__)
 
 // Utility
 #define vstr(s) dstr(s)
@@ -52,8 +52,8 @@
 
 #ifndef __FUNCTION_NAME__
 #if defined(_WIN32) || defined(_WIN64)   //WINDOWS
-#define __FUNCTION_NAME__   __FUNCTION__  
+#define __FUNCTION_NAME__   __FUNCTION__
 #else          //*NIX
-#define __FUNCTION_NAME__   __func__ 
+#define __FUNCTION_NAME__   __func__
 #endif
 #endif
