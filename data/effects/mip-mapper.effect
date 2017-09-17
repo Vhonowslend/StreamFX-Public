@@ -1,0 +1,49 @@
+uniform matrix4 ViewProj;
+
+uniform texture2d image;
+uniform float2 imageTexel;
+uniform int layer;
+
+sampler_state textureSampler {
+	Filter    = Point;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+};
+
+struct VertDataIn {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+struct VertDataOut {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertDataOut VSDefault(VertDataIn v_in)
+{
+	VertDataOut vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+	return vert_out;
+}
+
+float4 PSAverage(VertDataOut v_in) : TARGET
+{
+	float4 rgba = 0;
+	for (float x = -1; x <= 1; x++) {
+		for (float y = -1; y <= 1; y++) {
+			rgba += image.Sample(textureSampler, v_in.uv + vec2(x,y) * imageTexel + imageTexel);
+		}
+	}
+	return rgba / 9.0;
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSAverage(v_in);
+	}
+}
