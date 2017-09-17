@@ -19,7 +19,7 @@
 
 #pragma once
 #include "plugin.h"
-#include "gs-helper.h"
+#include "gs-vertexbuffer.h"
 
 namespace Filter {
 	class Transform {
