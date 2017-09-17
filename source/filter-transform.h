@@ -21,30 +21,6 @@
 #include "plugin.h"
 #include "gs-helper.h"
 
-#define S_FILTER_TRANSFORM				"Filter.Transform"
-#define S_FILTER_TRANSFORM_CAMERA			"Filter.Transform.Camera"
-#define S_FILTER_TRANSFORM_CAMERA_ORTHOGRAPHIC		"Filter.Transform.Camera.Orthographic"
-#define S_FILTER_TRANSFORM_CAMERA_PERSPECTIVE		"Filter.Transform.Camera.Perspective"
-#define S_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW		"Filter.Transform.Camera.FieldOfView"
-#define S_FILTER_TRANSFORM_POSITION			"Filter.Transform.Position"
-#define S_FILTER_TRANSFORM_POSITION_X			"Filter.Transform.Position.X"
-#define S_FILTER_TRANSFORM_POSITION_Y			"Filter.Transform.Position.Y"
-#define S_FILTER_TRANSFORM_POSITION_Z			"Filter.Transform.Position.Z"
-#define S_FILTER_TRANSFORM_ROTATION			"Filter.Transform.Rotation"
-#define S_FILTER_TRANSFORM_ROTATION_ORDER		"Filter.Transform.Rotation.Order"
-#define S_FILTER_TRANSFORM_ROTATION_ORDER_XYZ		"Filter.Transform.Rotation.Order.XYZ"
-#define S_FILTER_TRANSFORM_ROTATION_ORDER_XZY		"Filter.Transform.Rotation.Order.XZY"
-#define S_FILTER_TRANSFORM_ROTATION_ORDER_YXZ		"Filter.Transform.Rotation.Order.YXZ"
-#define S_FILTER_TRANSFORM_ROTATION_ORDER_YZX		"Filter.Transform.Rotation.Order.YZX"
-#define S_FILTER_TRANSFORM_ROTATION_ORDER_ZXY		"Filter.Transform.Rotation.Order.ZXY"
-#define S_FILTER_TRANSFORM_ROTATION_ORDER_ZYX		"Filter.Transform.Rotation.Order.ZYX"
-#define S_FILTER_TRANSFORM_ROTATION_X			"Filter.Transform.Rotation.X"
-#define S_FILTER_TRANSFORM_ROTATION_Y			"Filter.Transform.Rotation.Y"
-#define S_FILTER_TRANSFORM_ROTATION_Z			"Filter.Transform.Rotation.Z"
-#define S_FILTER_TRANSFORM_SCALE			"Filter.Transform.Scale"
-#define S_FILTER_TRANSFORM_SCALE_X			"Filter.Transform.Scale.X"
-#define S_FILTER_TRANSFORM_SCALE_Y			"Filter.Transform.Scale.Y"
-
 namespace Filter {
 	class Transform {
 		public:

@@ -29,6 +29,30 @@ extern "C" {
 #pragma warning (pop)
 }
 
+#define ST					"Filter.Transform"
+#define ST_CAMERA				"Filter.Transform.Camera"
+#define ST_CAMERA_ORTHOGRAPHIC			"Filter.Transform.Camera.Orthographic"
+#define ST_CAMERA_PERSPECTIVE			"Filter.Transform.Camera.Perspective"
+#define ST_CAMERA_FIELDOFVIEW			"Filter.Transform.Camera.FieldOfView"
+#define ST_POSITION				"Filter.Transform.Position"
+#define ST_POSITION_X				"Filter.Transform.Position.X"
+#define ST_POSITION_Y				"Filter.Transform.Position.Y"
+#define ST_POSITION_Z				"Filter.Transform.Position.Z"
+#define ST_ROTATION				"Filter.Transform.Rotation"
+#define ST_ROTATION_X				"Filter.Transform.Rotation.X"
+#define ST_ROTATION_Y				"Filter.Transform.Rotation.Y"
+#define ST_ROTATION_Z				"Filter.Transform.Rotation.Z"
+#define ST_SCALE				"Filter.Transform.Scale"
+#define ST_SCALE_X				"Filter.Transform.Scale.X"
+#define ST_SCALE_Y				"Filter.Transform.Scale.Y"
+#define ST_ROTATION_ORDER			"Filter.Transform.Rotation.Order"
+#define ST_ROTATION_ORDER_XYZ			"Filter.Transform.Rotation.Order.XYZ"
+#define ST_ROTATION_ORDER_XZY			"Filter.Transform.Rotation.Order.XZY"
+#define ST_ROTATION_ORDER_YXZ			"Filter.Transform.Rotation.Order.YXZ"
+#define ST_ROTATION_ORDER_YZX			"Filter.Transform.Rotation.Order.YZX"
+#define ST_ROTATION_ORDER_ZXY			"Filter.Transform.Rotation.Order.ZXY"
+#define ST_ROTATION_ORDER_ZYX			"Filter.Transform.Rotation.Order.ZYX"
+
 static const float PI = 3.1415926535897932384626433832795f;
 static const float farZ = 2097152.0f; // 2 pow 21
 static const float nearZ = 1.0f / farZ;
@@ -68,56 +92,50 @@ Filter::Transform::Transform() {
 Filter::Transform::~Transform() {}
 
 const char* Filter::Transform::get_name(void *) {
-	return P_TRANSLATE(S_FILTER_TRANSFORM);
+	return P_TRANSLATE(ST);
 }
 
 void Filter::Transform::get_defaults(obs_data_t *data) {
-	obs_data_set_default_int(data, S_FILTER_TRANSFORM_CAMERA, 0);
-	obs_data_set_default_double(data, S_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW,
+	obs_data_set_default_int(data, ST_CAMERA, 0);
+	obs_data_set_default_double(data, ST_CAMERA_FIELDOFVIEW,
 		90.0);
-	obs_data_set_default_double(data, S_FILTER_TRANSFORM_POSITION_X, 0);
-	obs_data_set_default_double(data, S_FILTER_TRANSFORM_POSITION_Y, 0);
-	obs_data_set_default_double(data, S_FILTER_TRANSFORM_POSITION_Z, 0);
-	obs_data_set_default_double(data, S_FILTER_TRANSFORM_SCALE_X, 100);
-	obs_data_set_default_double(data, S_FILTER_TRANSFORM_SCALE_Y, 100);
-	obs_data_set_default_int(data, S_FILTER_TRANSFORM_ROTATION_ORDER,
+	obs_data_set_default_double(data, ST_POSITION_X, 0);
+	obs_data_set_default_double(data, ST_POSITION_Y, 0);
+	obs_data_set_default_double(data, ST_POSITION_Z, 0);
+	obs_data_set_default_double(data, ST_ROTATION_X, 0);
+	obs_data_set_default_double(data, ST_ROTATION_Y, 0);
+	obs_data_set_default_double(data, ST_ROTATION_Z, 0);
+	obs_data_set_default_double(data, ST_SCALE_X, 100);
+	obs_data_set_default_double(data, ST_SCALE_Y, 100);
+	obs_data_set_default_bool(data, S_ADVANCED, false);
+	obs_data_set_default_int(data, ST_ROTATION_ORDER,
 		RotationOrder::ZXY); //ZXY
-	obs_data_set_default_double(data, S_FILTER_TRANSFORM_ROTATION_X, 0);
-	obs_data_set_default_double(data, S_FILTER_TRANSFORM_ROTATION_Y, 0);
-	obs_data_set_default_double(data, S_FILTER_TRANSFORM_ROTATION_Z, 0);
 }
 
 obs_properties_t * Filter::Transform::get_properties(void *) {
 	obs_properties_t *pr = obs_properties_create();
 	obs_property_t* p = NULL;
 
-	p = obs_properties_add_list(pr, S_FILTER_TRANSFORM_CAMERA,
-		P_TRANSLATE(S_FILTER_TRANSFORM_CAMERA),
+	p = obs_properties_add_list(pr, ST_CAMERA, P_TRANSLATE(ST_CAMERA),
 		OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-	obs_property_set_long_description(p,
-		P_TRANSLATE(P_DESC(S_FILTER_TRANSFORM_CAMERA)));
-	obs_property_list_add_int(p,
-		P_TRANSLATE(S_FILTER_TRANSFORM_CAMERA_ORTHOGRAPHIC), 0);
-	obs_property_list_add_int(p,
-		P_TRANSLATE(S_FILTER_TRANSFORM_CAMERA_PERSPECTIVE), 1);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(ST_CAMERA)));
+	obs_property_list_add_int(p, P_TRANSLATE(ST_CAMERA_ORTHOGRAPHIC),
+		0);
+	obs_property_list_add_int(p, P_TRANSLATE(ST_CAMERA_PERSPECTIVE),
+		1);
 	obs_property_set_modified_callback(p, modified_properties);
 
-	p = obs_properties_add_float_slider(pr,
-		S_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW,
-		P_TRANSLATE(S_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW),
-		1.0, 179.0, 0.01);
+	p = obs_properties_add_float_slider(pr, ST_CAMERA_FIELDOFVIEW,
+		P_TRANSLATE(ST_CAMERA_FIELDOFVIEW), 1.0, 179.0, 0.01);
 	obs_property_set_long_description(p,
-		P_TRANSLATE(P_DESC(S_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW)));
+		P_TRANSLATE(P_DESC(ST_CAMERA_FIELDOFVIEW)));
 
 	// Position, Scale, Rotation
 	{
 		std::pair<const char*, const char*> entries[] = {
-			std::make_pair(S_FILTER_TRANSFORM_POSITION_X,
-			P_DESC(S_FILTER_TRANSFORM_POSITION_X)),
-			std::make_pair(S_FILTER_TRANSFORM_POSITION_Y,
-			P_DESC(S_FILTER_TRANSFORM_POSITION_Y)),
-			std::make_pair(S_FILTER_TRANSFORM_POSITION_Z,
-			P_DESC(S_FILTER_TRANSFORM_POSITION_Z)),
+			std::make_pair(ST_POSITION_X, P_DESC(ST_POSITION_X)),
+			std::make_pair(ST_POSITION_Y, P_DESC(ST_POSITION_Y)),
+			std::make_pair(ST_POSITION_Z, P_DESC(ST_POSITION_Z)),
 		};
 		for (auto kv : entries) {
 			p = obs_properties_add_float(pr, kv.first,
@@ -125,14 +143,12 @@ obs_properties_t * Filter::Transform::get_properties(void *) {
 			obs_property_set_long_description(p,
 				P_TRANSLATE(kv.second));
 		}
-	}{
+	}
+	{
 		std::pair<const char*, const char*> entries[] = {
-			std::make_pair(S_FILTER_TRANSFORM_ROTATION_X,
-			P_DESC(S_FILTER_TRANSFORM_ROTATION_X)),
-			std::make_pair(S_FILTER_TRANSFORM_ROTATION_Y,
-			P_DESC(S_FILTER_TRANSFORM_ROTATION_Y)),
-			std::make_pair(S_FILTER_TRANSFORM_ROTATION_Z,
-			P_DESC(S_FILTER_TRANSFORM_ROTATION_Z)),
+			std::make_pair(ST_ROTATION_X, P_DESC(ST_ROTATION_X)),
+			std::make_pair(ST_ROTATION_Y, P_DESC(ST_ROTATION_Y)),
+			std::make_pair(ST_ROTATION_Z, P_DESC(ST_ROTATION_Z)),
 		};
 		for (auto kv : entries) {
 			p = obs_properties_add_float_slider(pr, kv.first,
@@ -140,12 +156,11 @@ obs_properties_t * Filter::Transform::get_properties(void *) {
 			obs_property_set_long_description(p,
 				P_TRANSLATE(kv.second));
 		}
-	}{
+	}
+	{
 		std::pair<const char*, const char*> entries[] = {
-			std::make_pair(S_FILTER_TRANSFORM_SCALE_X,
-			P_DESC(S_FILTER_TRANSFORM_SCALE_X)),
-			std::make_pair(S_FILTER_TRANSFORM_SCALE_Y,
-			P_DESC(S_FILTER_TRANSFORM_SCALE_Y)),
+			std::make_pair(ST_SCALE_X, P_DESC(ST_SCALE_X)),
+			std::make_pair(ST_SCALE_Y, P_DESC(ST_SCALE_Y)),
 		};
 		for (auto kv : entries) {
 			p = obs_properties_add_float_slider(pr, kv.first,
@@ -158,28 +173,22 @@ obs_properties_t * Filter::Transform::get_properties(void *) {
 	p = obs_properties_add_bool(pr, S_ADVANCED, P_TRANSLATE(S_ADVANCED));
 	obs_property_set_modified_callback(p, modified_properties);
 
-	p = obs_properties_add_list(pr, S_FILTER_TRANSFORM_ROTATION_ORDER,
-		P_TRANSLATE(S_FILTER_TRANSFORM_ROTATION_ORDER),
-		OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	p = obs_properties_add_list(pr, ST_ROTATION_ORDER,
+		P_TRANSLATE(ST_ROTATION_ORDER), OBS_COMBO_TYPE_LIST,
+		OBS_COMBO_FORMAT_INT);
 	obs_property_set_long_description(p,
-		P_TRANSLATE(P_DESC(S_FILTER_TRANSFORM_ROTATION_ORDER)));
-	obs_property_list_add_int(p,
-		P_TRANSLATE(S_FILTER_TRANSFORM_ROTATION_ORDER_XYZ),
+		P_TRANSLATE(P_DESC(ST_ROTATION_ORDER)));
+	obs_property_list_add_int(p, P_TRANSLATE(ST_ROTATION_ORDER_XYZ),
 		RotationOrder::XYZ);
-	obs_property_list_add_int(p,
-		P_TRANSLATE(S_FILTER_TRANSFORM_ROTATION_ORDER_XZY),
+	obs_property_list_add_int(p, P_TRANSLATE(ST_ROTATION_ORDER_XZY),
 		RotationOrder::XZY);
-	obs_property_list_add_int(p,
-		P_TRANSLATE(S_FILTER_TRANSFORM_ROTATION_ORDER_YXZ),
+	obs_property_list_add_int(p, P_TRANSLATE(ST_ROTATION_ORDER_YXZ),
 		RotationOrder::YXZ);
-	obs_property_list_add_int(p,
-		P_TRANSLATE(S_FILTER_TRANSFORM_ROTATION_ORDER_YZX),
+	obs_property_list_add_int(p, P_TRANSLATE(ST_ROTATION_ORDER_YZX),
 		RotationOrder::YZX);
-	obs_property_list_add_int(p,
-		P_TRANSLATE(S_FILTER_TRANSFORM_ROTATION_ORDER_ZXY),
+	obs_property_list_add_int(p, P_TRANSLATE(ST_ROTATION_ORDER_ZXY),
 		RotationOrder::ZXY);
-	obs_property_list_add_int(p,
-		P_TRANSLATE(S_FILTER_TRANSFORM_ROTATION_ORDER_ZYX),
+	obs_property_list_add_int(p, P_TRANSLATE(ST_ROTATION_ORDER_ZYX),
 		RotationOrder::ZYX);
 
 
@@ -188,24 +197,24 @@ obs_properties_t * Filter::Transform::get_properties(void *) {
 
 bool Filter::Transform::modified_properties(obs_properties_t *pr,
 	obs_property_t *, obs_data_t *d) {
-	switch (obs_data_get_int(d, S_FILTER_TRANSFORM_CAMERA)) {
+	switch (obs_data_get_int(d, ST_CAMERA)) {
 		case 0:
 			obs_property_set_visible(obs_properties_get(pr,
-				S_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW), false);
+				ST_CAMERA_FIELDOFVIEW), false);
 			obs_property_set_visible(obs_properties_get(pr,
-				S_FILTER_TRANSFORM_POSITION_Z), false);
+				ST_POSITION_Z), false);
 			break;
 		case 1:
 			obs_property_set_visible(obs_properties_get(pr,
-				S_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW), true);
+				ST_CAMERA_FIELDOFVIEW), true);
 			obs_property_set_visible(obs_properties_get(pr,
-				S_FILTER_TRANSFORM_POSITION_Z), true);
+				ST_POSITION_Z), true);
 			break;
 	}
 
 	bool advancedVisible = obs_data_get_bool(d, S_ADVANCED);
 	obs_property_set_visible(obs_properties_get(pr,
-		S_FILTER_TRANSFORM_ROTATION_ORDER), advancedVisible);
+		ST_ROTATION_ORDER), advancedVisible);
 
 	return false;
 }
@@ -284,31 +293,24 @@ Filter::Transform::Instance::~Instance() {
 
 void Filter::Transform::Instance::update(obs_data_t *data) {
 	// Camera
-	m_isCameraOrthographic = obs_data_get_int(data,
-		S_FILTER_TRANSFORM_CAMERA) == 0;
+	m_isCameraOrthographic = obs_data_get_int(data, ST_CAMERA) == 0;
 	m_cameraFieldOfView = (float)obs_data_get_double(data,
-		S_FILTER_TRANSFORM_CAMERA_FIELDOFVIEW);
+		ST_CAMERA_FIELDOFVIEW);
 
 	// Source
-	m_position.x = (float)obs_data_get_double(data,
-		S_FILTER_TRANSFORM_POSITION_X) / 100.0f;
-	m_position.y = (float)obs_data_get_double(data,
-		S_FILTER_TRANSFORM_POSITION_Y) / 100.0f;
-	m_position.z = (float)obs_data_get_double(data,
-		S_FILTER_TRANSFORM_POSITION_Z) / 100.0f;
-	m_scale.x = (float)obs_data_get_double(data,
-		S_FILTER_TRANSFORM_SCALE_X) / 100.0f;
-	m_scale.y = (float)obs_data_get_double(data,
-		S_FILTER_TRANSFORM_SCALE_Y) / 100.0f;
+	m_position.x = (float)obs_data_get_double(data, ST_POSITION_X) / 100.0f;
+	m_position.y = (float)obs_data_get_double(data, ST_POSITION_Y) / 100.0f;
+	m_position.z = (float)obs_data_get_double(data, ST_POSITION_Z) / 100.0f;
+	m_scale.x = (float)obs_data_get_double(data, ST_SCALE_X) / 100.0f;
+	m_scale.y = (float)obs_data_get_double(data, ST_SCALE_Y) / 100.0f;
 	m_scale.z = 1.0;
-	m_rotationOrder = (int)obs_data_get_int(data,
-		S_FILTER_TRANSFORM_ROTATION_ORDER);
+	m_rotationOrder = (int)obs_data_get_int(data, ST_ROTATION_ORDER);
 	m_rotation.x = (float)obs_data_get_double(data,
-		S_FILTER_TRANSFORM_ROTATION_X) / 180.0f * PI;
+		ST_ROTATION_X) / 180.0f * PI;
 	m_rotation.y = (float)obs_data_get_double(data,
-		S_FILTER_TRANSFORM_ROTATION_Y) / 180.0f * PI;
+		ST_ROTATION_Y) / 180.0f * PI;
 	m_rotation.z = (float)obs_data_get_double(data,
-		S_FILTER_TRANSFORM_ROTATION_Z) / 180.0f * PI;
+		ST_ROTATION_Z) / 180.0f * PI;
 	m_isMeshUpdateRequired = true;
 }
 
