@@ -59,14 +59,12 @@ namespace Filter {
 			uint32_t get_height();
 			void activate();
 			void deactivate();
-			void show();
-			void hide();
 			void video_tick(float);
 			void video_render(gs_effect_t*);
 
 			private:
 			obs_source_t *m_sourceContext;
-			Helper::VertexBuffer *m_vertexHelper;
+			GS::VertexBuffer *m_vertexHelper;
 			gs_vertbuffer_t *m_vertexBuffer;
 			gs_texrender_t *m_texRender, *m_shapeRender;
 

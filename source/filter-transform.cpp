@@ -21,12 +21,12 @@
 #include "strings.h"
 
 extern "C" {
-#pragma warning (push)
-#pragma warning (disable: 4201)
-#include "libobs/util/platform.h"
-#include "libobs/graphics/graphics.h"
-#include "libobs/graphics/matrix4.h"
-#pragma warning (pop)
+	#pragma warning (push)
+	#pragma warning (disable: 4201)
+	#include "libobs/util/platform.h"
+	#include "libobs/graphics/graphics.h"
+	#include "libobs/graphics/matrix4.h"
+	#pragma warning (pop)
 }
 
 #define ST					"Filter.Transform"
@@ -58,6 +58,11 @@ static const float farZ = 2097152.0f; // 2 pow 21
 static const float nearZ = 1.0f / farZ;
 static const float valueLimit = 65536.0f;
 
+enum class CameraMode : int32_t {
+	Orthographic,
+	Perspective
+};
+
 enum RotationOrder : int64_t {
 	XYZ,
 	XZY,
@@ -81,8 +86,6 @@ Filter::Transform::Transform() {
 	sourceInfo.update = update;
 	sourceInfo.activate = activate;
 	sourceInfo.deactivate = deactivate;
-	sourceInfo.show = show;
-	sourceInfo.hide = hide;
 	sourceInfo.video_tick = video_tick;
 	sourceInfo.video_render = video_render;
 
@@ -96,7 +99,7 @@ const char* Filter::Transform::get_name(void *) {
 }
 
 void Filter::Transform::get_defaults(obs_data_t *data) {
-	obs_data_set_default_int(data, ST_CAMERA, 0);
+	obs_data_set_default_int(data, ST_CAMERA, (int64_t)CameraMode::Orthographic);
 	obs_data_set_default_double(data, ST_CAMERA_FIELDOFVIEW,
 		90.0);
 	obs_data_set_default_double(data, ST_POSITION_X, 0);
@@ -120,9 +123,9 @@ obs_properties_t * Filter::Transform::get_properties(void *) {
 		OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(ST_CAMERA)));
 	obs_property_list_add_int(p, P_TRANSLATE(ST_CAMERA_ORTHOGRAPHIC),
-		0);
+		(int64_t)CameraMode::Orthographic);
 	obs_property_list_add_int(p, P_TRANSLATE(ST_CAMERA_PERSPECTIVE),
-		1);
+		(int64_t)CameraMode::Perspective);
 	obs_property_set_modified_callback(p, modified_properties);
 
 	p = obs_properties_add_float_slider(pr, ST_CAMERA_FIELDOFVIEW,
@@ -197,14 +200,14 @@ obs_properties_t * Filter::Transform::get_properties(void *) {
 
 bool Filter::Transform::modified_properties(obs_properties_t *pr,
 	obs_property_t *, obs_data_t *d) {
-	switch (obs_data_get_int(d, ST_CAMERA)) {
-		case 0:
+	switch ((CameraMode)obs_data_get_int(d, ST_CAMERA)) {
+		case CameraMode::Orthographic:
 			obs_property_set_visible(obs_properties_get(pr,
 				ST_CAMERA_FIELDOFVIEW), false);
 			obs_property_set_visible(obs_properties_get(pr,
 				ST_POSITION_Z), false);
 			break;
-		case 1:
+		case CameraMode::Perspective:
 			obs_property_set_visible(obs_properties_get(pr,
 				ST_CAMERA_FIELDOFVIEW), true);
 			obs_property_set_visible(obs_properties_get(pr,
@@ -216,7 +219,7 @@ bool Filter::Transform::modified_properties(obs_properties_t *pr,
 	obs_property_set_visible(obs_properties_get(pr,
 		ST_ROTATION_ORDER), advancedVisible);
 
-	return false;
+	return true;
 }
 
 void * Filter::Transform::create(obs_data_t *data, obs_source_t *source) {
@@ -247,14 +250,6 @@ void Filter::Transform::deactivate(void *ptr) {
 	reinterpret_cast<Instance*>(ptr)->deactivate();
 }
 
-void Filter::Transform::show(void *ptr) {
-	reinterpret_cast<Instance*>(ptr)->show();
-}
-
-void Filter::Transform::hide(void *ptr) {
-	reinterpret_cast<Instance*>(ptr)->hide();
-}
-
 void Filter::Transform::video_tick(void *ptr, float time) {
 	reinterpret_cast<Instance*>(ptr)->video_tick(time);
 }
@@ -264,10 +259,11 @@ void Filter::Transform::video_render(void *ptr, gs_effect_t *effect) {
 }
 
 Filter::Transform::Instance::Instance(obs_data_t *data, obs_source_t *context) :
-m_sourceContext(context), m_vertexHelper(nullptr), m_vertexBuffer(nullptr),
-m_texRender(nullptr), m_shapeRender(nullptr), m_isCameraOrthographic(true),
-m_cameraFieldOfView(90.0), m_isInactive(false), m_isHidden(false),
-m_isMeshUpdateRequired(false), m_rotationOrder(RotationOrder::ZXY) {
+	m_sourceContext(context), m_vertexHelper(nullptr),
+	m_vertexBuffer(nullptr), m_texRender(nullptr), m_shapeRender(nullptr),
+	m_isCameraOrthographic(true), m_cameraFieldOfView(90.0),
+	m_isInactive(false), m_isHidden(false), m_isMeshUpdateRequired(false),
+	m_rotationOrder(RotationOrder::ZXY) {
 	vec3_set(&m_position, 0, 0, 0);
 	vec3_set(&m_rotation, 0, 0, 0);
 	vec3_set(&m_scale, 1, 1, 1);
@@ -275,7 +271,7 @@ m_isMeshUpdateRequired(false), m_rotationOrder(RotationOrder::ZXY) {
 	obs_enter_graphics();
 	m_texRender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 	m_shapeRender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
-	m_vertexHelper = new Helper::VertexBuffer(4);
+	m_vertexHelper = new GS::VertexBuffer(4);
 	m_vertexHelper->set_uv_layers(1);
 	m_vertexHelper->resize(4);
 	obs_leave_graphics();
@@ -328,14 +324,6 @@ void Filter::Transform::Instance::activate() {
 
 void Filter::Transform::Instance::deactivate() {
 	m_isInactive = true;
-}
-
-void Filter::Transform::Instance::show() {
-	m_isHidden = false;
-}
-
-void Filter::Transform::Instance::hide() {
-	m_isHidden = true;
 }
 
 void Filter::Transform::Instance::video_tick(float) {}
@@ -397,21 +385,13 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 
 	// Update Mesh
 	if (m_isMeshUpdateRequired) {
-		double_t aspectRatioX = double_t(baseW) / double_t(baseH),
-			aspectRatioY = double_t(baseH) / double_t(baseW);
-		if (baseW > baseH) {
-			aspectRatioY = 1.0;
-		} else {
-			aspectRatioX = 1.0;
-		}
+		float_t aspectRatioX = float_t(baseW) / float_t(baseH);
 		if (m_isCameraOrthographic)
-			aspectRatioX = aspectRatioY = 1.0;
+			aspectRatioX = 1.0;
 
 		// Mesh
 		matrix4 ident;
 		matrix4_identity(&ident);
-		matrix4_scale3f(&ident, &ident, (float)aspectRatioX, (float)aspectRatioY, 1.0);
-		matrix4_scale(&ident, &ident, &m_scale);
 		switch (m_rotationOrder) {
 			case RotationOrder::XYZ: // XYZ
 				matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation.x);
@@ -446,43 +426,48 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 		}
 		matrix4_translate3f(&ident, &ident, m_position.x, m_position.y, m_position.z);
 
+		/// Calculate vertex position once only.
+		float_t p_x = aspectRatioX * m_scale.x;
+		float_t p_y = 1.0f * m_scale.y;
+
+		/// Generate mesh
 		{
-			Helper::Vertex& v = m_vertexHelper->at(0);
+			GS::Vertex& v = m_vertexHelper->at(0);
 			v.uv[0].x = 0; v.uv[0].y = 0;
 			v.color = 0xFFFFFFFF;
-			v.position.x = -1.0;
-			v.position.y = -1.0;
+			v.position.x = -p_x;
+			v.position.y = -p_y;
 			v.position.z = 0.0f;
 			vec3_transform(&v.position, &v.position, &ident);
 		}
 		{
-			Helper::Vertex& v = m_vertexHelper->at(1);
+			GS::Vertex& v = m_vertexHelper->at(1);
 			v.uv[0].x = 1; v.uv[0].y = 0;
 			v.color = 0xFFFFFFFF;
-			v.position.x = 1.0;
-			v.position.y = -1.0;
+			v.position.x = p_x;
+			v.position.y = -p_y;
 			v.position.z = 0.0f;
 			vec3_transform(&v.position, &v.position, &ident);
 		}
 		{
-			Helper::Vertex& v = m_vertexHelper->at(2);
+			GS::Vertex& v = m_vertexHelper->at(2);
 			v.uv[0].x = 0; v.uv[0].y = 1;
 			v.color = 0xFFFFFFFF;
-			v.position.x = -1.0;
-			v.position.y = 1.0;
+			v.position.x = -p_x;
+			v.position.y = p_y;
 			v.position.z = 0.0f;
 			vec3_transform(&v.position, &v.position, &ident);
 		}
 		{
-			Helper::Vertex& v = m_vertexHelper->at(3);
+			GS::Vertex& v = m_vertexHelper->at(3);
 			v.uv[0].x = 1; v.uv[0].y = 1;
 			v.color = 0xFFFFFFFF;
-			v.position.x = 1.0;
-			v.position.y = 1.0;
+			v.position.x = p_x;
+			v.position.y = p_y;
 			v.position.z = 0.0f;
 			vec3_transform(&v.position, &v.position, &ident);
 		}
-		m_vertexBuffer = m_vertexHelper->update();
+		m_vertexBuffer = m_vertexHelper->get();
 		if (!m_vertexBuffer) {
 			obs_source_skip_video_filter(m_sourceContext);
 			return;
@@ -518,7 +503,7 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 		while (gs_effect_loop(alphaEffect, "Draw")) {
 			gs_effect_set_texture(
 				gs_effect_get_param_by_name(alphaEffect,
-				"image"), filterTexture);
+					"image"), filterTexture);
 			gs_load_vertexbuffer(m_vertexBuffer);
 			gs_load_indexbuffer(NULL);
 			gs_draw(GS_TRISTRIP, 0, 4);
