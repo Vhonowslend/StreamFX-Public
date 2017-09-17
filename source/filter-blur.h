@@ -54,8 +54,6 @@ namespace Filter {
 		static void update(void *, obs_data_t *);
 		static void activate(void *);
 		static void deactivate(void *);
-		static void show(void *);
-		static void hide(void *);
 		static void video_tick(void *, float);
 		static void video_render(void *, gs_effect_t *);
 

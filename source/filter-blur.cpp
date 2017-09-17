@@ -118,8 +118,6 @@ Filter::Blur::Blur() {
 	sourceInfo.update = update;
 	sourceInfo.activate = activate;
 	sourceInfo.deactivate = deactivate;
-	sourceInfo.show = show;
-	sourceInfo.hide = hide;
 	sourceInfo.video_tick = video_tick;
 	sourceInfo.video_render = video_render;
 
@@ -328,14 +326,6 @@ void Filter::Blur::deactivate(void *ptr) {
 	reinterpret_cast<Instance*>(ptr)->deactivate();
 }
 
-void Filter::Blur::show(void *ptr) {
-	reinterpret_cast<Instance*>(ptr)->show();
-}
-
-void Filter::Blur::hide(void *ptr) {
-	reinterpret_cast<Instance*>(ptr)->hide();
-}
-
 void Filter::Blur::video_tick(void *ptr, float time) {
 	reinterpret_cast<Instance*>(ptr)->video_tick(time);
 }
@@ -399,10 +389,6 @@ uint32_t Filter::Blur::Instance::get_height() {
 void Filter::Blur::Instance::activate() {}
 
 void Filter::Blur::Instance::deactivate() {}
-
-void Filter::Blur::Instance::show() {}
-
-void Filter::Blur::Instance::hide() {}
 
 void Filter::Blur::Instance::video_tick(float) {}
 
@@ -625,80 +611,6 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 		obs_source_skip_video_filter(m_source);
 		return;
 	}
-}
-
-gs_effect_param* gs_effect_get_param(gs_effect_t* effect, const char* name) {
-	gs_effect_param* p = gs_effect_get_param_by_name(effect, name);
-	if (!p)
-		P_LOG_ERROR("<filter-blur> Failed to find parameter %s in effect.", name);
-	return p;
-}
-
-bool gs_set_param_int(gs_effect_t* effect, const char* name, int value) {
-	gs_effect_param* p = nullptr;
-	if (nullptr != (p = gs_effect_get_param(effect, name))) {
-		gs_effect_set_int(p, value);
-		return true;
-	}
-	P_LOG_ERROR("<filter-blur> Failed to set value %d for parameter %s in"
-		" effect.", value, name);
-	return false;
-}
-
-bool gs_set_param_float(gs_effect_t* effect, const char* name, float value) {
-	gs_effect_param* p = nullptr;
-	if (nullptr != (p = gs_effect_get_param(effect, name))) {
-		gs_effect_set_float(p, value);
-		return true;
-	}
-	P_LOG_ERROR("<filter-blur> Failed to set value %f for parameter %s in"
-		" effect.", value, name);
-	return false;
-}
-
-bool gs_set_param_float2(gs_effect_t* effect, const char* name, vec2* value) {
-	gs_effect_param* p = nullptr;
-	if (nullptr != (p = gs_effect_get_param(effect, name))) {
-		gs_effect_set_vec2(p, value);
-		return true;
-	}
-	P_LOG_ERROR("<filter-blur> Failed to set value {%f,%f} for parameter %s"
-		" in effect.", value->x, value->y, name);
-	return false;
-}
-
-bool gs_set_param_float3(gs_effect_t* effect, const char* name, vec3* value) {
-	gs_effect_param* p = nullptr;
-	if (nullptr != (p = gs_effect_get_param(effect, name))) {
-		gs_effect_set_vec3(p, value);
-		return true;
-	}
-	P_LOG_ERROR("<filter-blur> Failed to set value {%f,%f,%f} for parameter"
-		"%s in effect.", value->x, value->y, value->z, name);
-	return false;
-}
-
-bool gs_set_param_float4(gs_effect_t* effect, const char* name, vec4* value) {
-	gs_effect_param* p = nullptr;
-	if (nullptr != (p = gs_effect_get_param(effect, name))) {
-		gs_effect_set_vec4(p, value);
-		return true;
-	}
-	P_LOG_ERROR("<filter-blur> Failed to set value {%f,%f,%f,%f} for"
-		" parameter %s in effect.", value->x, value->y, value->z,
-		value->w, name);
-	return false;
-}
-
-bool gs_set_param_texture(gs_effect_t* effect, const char* name, gs_texture_t* value) {
-	gs_effect_param* p = nullptr;
-	if (nullptr != (p = gs_effect_get_param(effect, name))) {
-		gs_effect_set_texture(p, value);
-		return true;
-	}
-	P_LOG_ERROR("<filter-blur> Failed to set texture for"
-		" parameter %s in effect.", name);
-	return false;
 }
 
 bool Filter::Blur::Instance::apply_shared_param(gs_texture_t* input, float texelX, float texelY) {
