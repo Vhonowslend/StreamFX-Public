@@ -17,4 +17,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#include "gs-helper.h"
+#pragma once
+#include <inttypes.h>
+#include <vector>
+extern "C" {
+	#pragma warning( push )
+	#pragma warning( disable: 4201 )
+	#include <libobs/graphics/graphics.h>
+	#pragma warning( pop )
+}
+
+namespace GS {
+	class IndexBuffer : public std::vector<uint32_t> {
+		public:
+		IndexBuffer(uint32_t maximumVertices);
+		IndexBuffer();
+		IndexBuffer(IndexBuffer& other);
+		IndexBuffer(std::vector<uint32_t>& other);
+		virtual ~IndexBuffer();
+
+		gs_indexbuffer_t* get();
+
+		gs_indexbuffer_t* get(bool refreshGPU);
+
+		protected:
+		gs_indexbuffer_t* m_indexBuffer;
+	};
+}

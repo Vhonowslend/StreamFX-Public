@@ -17,4 +17,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#include "gs-helper.h"
+#pragma once
+#include <inttypes.h>
+extern "C" {
+	#pragma warning( push )
+	#pragma warning( disable: 4201 )
+	#include <libobs/graphics/vec3.h>
+	#pragma warning( pop )
+}
+
+namespace GS {
+	const uint32_t MAXIMUM_UVW_LAYERS = 8u;
+	// ToDo: Optimize for use with GS::VertexBuffer so that it doesn't require in-memory copy.
+	struct Vertex {
+		vec3 position;
+		vec3 normal;
+		vec3 tangent;
+		vec4 uv[MAXIMUM_UVW_LAYERS];
+		uint32_t color;
+	};
+}

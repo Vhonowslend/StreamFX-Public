@@ -30,6 +30,14 @@ SET(obs-stream-effects_HEADERS
 	"${PROJECT_SOURCE_DIR}/source/filter-shape.h"
 	"${PROJECT_SOURCE_DIR}/source/filter-transform.h"
 	"${PROJECT_SOURCE_DIR}/source/gs-helper.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-effect.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-indexbuffer.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-rendertarget.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-texture.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-vertex.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-vertexbuffer.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.h"
 	"${PROJECT_BINARY_DIR}/source/version.h"
 	"${PROJECT_SOURCE_DIR}/source/strings.h"
 )
@@ -40,6 +48,25 @@ SET(obs-stream-effects_SOURCES
 	"${PROJECT_SOURCE_DIR}/source/filter-shape.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filter-transform.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-helper.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gs-effect.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gs-indexbuffer.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gs-rendertarget.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gs-texture.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gs-vertex.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gs-vertexbuffer.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.cpp"
+)
+SET(obs-stream-effects_LOCALE
+	"${PROJECT_SOURCE_DIR}/data/locale/en-US.ini"
+)
+SET(obs-stream-effects_EFFECTS
+	"${PROJECT_SOURCE_DIR}/data/effects/bilateral-blur.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/box-blur.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/gaussian-blur.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/displace.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/color-conversion.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/mip-mapper.effect"
 )
 SET(obs-stream-effects_LOCALE
 	"${PROJECT_SOURCE_DIR}/data/locale/en-US.ini"
