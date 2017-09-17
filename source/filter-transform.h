@@ -78,7 +78,8 @@ namespace Filter {
 			uint32_t m_rotationOrder;
 			vec3 m_position,
 				m_rotation,
-				m_scale;
+				m_scale,
+				m_shear;
 		};
 	};
 }

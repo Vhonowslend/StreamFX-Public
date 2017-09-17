@@ -45,6 +45,9 @@ extern "C" {
 #define ST_SCALE				"Filter.Transform.Scale"
 #define ST_SCALE_X				"Filter.Transform.Scale.X"
 #define ST_SCALE_Y				"Filter.Transform.Scale.Y"
+#define ST_SHEAR				"Filter.Transform.Shear"
+#define ST_SHEAR_X				"Filter.Transform.Shear.X"
+#define ST_SHEAR_Y				"Filter.Transform.Shear.Y"
 #define ST_ROTATION_ORDER			"Filter.Transform.Rotation.Order"
 #define ST_ROTATION_ORDER_XYZ			"Filter.Transform.Rotation.Order.XYZ"
 #define ST_ROTATION_ORDER_XZY			"Filter.Transform.Rotation.Order.XZY"
@@ -110,6 +113,8 @@ void Filter::Transform::get_defaults(obs_data_t *data) {
 	obs_data_set_default_double(data, ST_ROTATION_Z, 0);
 	obs_data_set_default_double(data, ST_SCALE_X, 100);
 	obs_data_set_default_double(data, ST_SCALE_Y, 100);
+	obs_data_set_default_double(data, ST_SHEAR_X, 0);
+	obs_data_set_default_double(data, ST_SHEAR_Y, 0);
 	obs_data_set_default_bool(data, S_ADVANCED, false);
 	obs_data_set_default_int(data, ST_ROTATION_ORDER,
 		RotationOrder::ZXY); //ZXY
@@ -168,6 +173,18 @@ obs_properties_t * Filter::Transform::get_properties(void *) {
 		for (auto kv : entries) {
 			p = obs_properties_add_float_slider(pr, kv.first,
 				P_TRANSLATE(kv.first), -1000, 1000, 0.01);
+			obs_property_set_long_description(p,
+				P_TRANSLATE(kv.second));
+		}
+	}
+	{
+		std::pair<const char*, const char*> entries[] = {
+			std::make_pair(ST_SHEAR_X, P_DESC(ST_SHEAR_X)),
+			std::make_pair(ST_SHEAR_Y, P_DESC(ST_SHEAR_Y)),
+		};
+		for (auto kv : entries) {
+			p = obs_properties_add_float_slider(pr, kv.first,
+				P_TRANSLATE(kv.first), -100.0, 100.0, 0.01);
 			obs_property_set_long_description(p,
 				P_TRANSLATE(kv.second));
 		}
@@ -307,6 +324,9 @@ void Filter::Transform::Instance::update(obs_data_t *data) {
 		ST_ROTATION_Y) / 180.0f * PI;
 	m_rotation.z = (float)obs_data_get_double(data,
 		ST_ROTATION_Z) / 180.0f * PI;
+	m_shear.x = (float)obs_data_get_double(data, ST_SHEAR_X) / 100.0f;
+	m_shear.y = (float)obs_data_get_double(data, ST_SHEAR_Y) / 100.0f;
+	m_shear.z = 0.0;
 	m_isMeshUpdateRequired = true;
 }
 
@@ -435,8 +455,8 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 			GS::Vertex& v = m_vertexHelper->at(0);
 			v.uv[0].x = 0; v.uv[0].y = 0;
 			v.color = 0xFFFFFFFF;
-			v.position.x = -p_x;
-			v.position.y = -p_y;
+			v.position.x = -p_x + m_shear.x;
+			v.position.y = -p_y - m_shear.y;
 			v.position.z = 0.0f;
 			vec3_transform(&v.position, &v.position, &ident);
 		}
@@ -444,8 +464,8 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 			GS::Vertex& v = m_vertexHelper->at(1);
 			v.uv[0].x = 1; v.uv[0].y = 0;
 			v.color = 0xFFFFFFFF;
-			v.position.x = p_x;
-			v.position.y = -p_y;
+			v.position.x = p_x + m_shear.x;
+			v.position.y = -p_y + m_shear.y;
 			v.position.z = 0.0f;
 			vec3_transform(&v.position, &v.position, &ident);
 		}
@@ -453,8 +473,8 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 			GS::Vertex& v = m_vertexHelper->at(2);
 			v.uv[0].x = 0; v.uv[0].y = 1;
 			v.color = 0xFFFFFFFF;
-			v.position.x = -p_x;
-			v.position.y = p_y;
+			v.position.x = -p_x - m_shear.x;
+			v.position.y = p_y - m_shear.y;
 			v.position.z = 0.0f;
 			vec3_transform(&v.position, &v.position, &ident);
 		}
@@ -462,8 +482,8 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 			GS::Vertex& v = m_vertexHelper->at(3);
 			v.uv[0].x = 1; v.uv[0].y = 1;
 			v.color = 0xFFFFFFFF;
-			v.position.x = p_x;
-			v.position.y = p_y;
+			v.position.x = p_x - m_shear.x;
+			v.position.y = p_y + m_shear.y;
 			v.position.z = 0.0f;
 			vec3_transform(&v.position, &v.position, &ident);
 		}
