@@ -19,7 +19,7 @@
 
 #pragma once
 #include "plugin.h"
-#include "gs-helper.h"
+#include "gs-vertexbuffer.h"
 
 #define P_SHAPE						"Shape"
 #define P_SHAPE_LOOP					"Shape.Loop"
@@ -78,7 +78,7 @@ namespace Filter {
 			private:
 			obs_source_t *context;
 			gs_effect_t *customEffect;
-			Helper::VertexBuffer *m_vertexHelper;
+			GS::VertexBuffer *m_vertexHelper;
 			gs_vertbuffer_t *m_vertexBuffer;
 			gs_draw_mode drawmode;
 			gs_texrender_t *m_texRender;
