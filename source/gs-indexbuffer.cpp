@@ -37,11 +37,11 @@ GS::IndexBuffer::IndexBuffer(uint32_t maximumVertices) {
 
 GS::IndexBuffer::IndexBuffer() : IndexBuffer(defaultMaximumVertices) {}
 
-GS::IndexBuffer::IndexBuffer(IndexBuffer& other) : IndexBuffer(other.size()) {
+GS::IndexBuffer::IndexBuffer(IndexBuffer& other) : IndexBuffer((uint32_t)other.size()) {
 	std::copy(other.begin(), other.end(), this->end());
 }
 
-GS::IndexBuffer::IndexBuffer(std::vector<uint32_t>& other) : IndexBuffer(other.size()) {
+GS::IndexBuffer::IndexBuffer(std::vector<uint32_t>& other) : IndexBuffer((uint32_t)other.size()) {
 	std::copy(other.begin(), other.end(), this->end());
 }
 
