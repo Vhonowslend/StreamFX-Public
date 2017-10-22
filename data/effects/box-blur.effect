@@ -4,7 +4,7 @@ uniform float4x4 ViewProj;
 // Settings (Shared)
 uniform texture2d u_image;
 uniform float2 u_imageSize;
-uniform float2 u_imageTexelDelta;
+uniform float2 u_imageTexel;
 uniform int u_radius;
 uniform int u_diameter;
 uniform float2 u_texelDelta;

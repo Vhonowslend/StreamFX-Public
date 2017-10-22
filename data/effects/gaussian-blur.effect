@@ -4,7 +4,7 @@ uniform float4x4 ViewProj;
 // Settings (Shared)
 uniform texture2d u_image;
 uniform float2 u_imageSize;
-uniform float2 u_imageTexelDelta;
+uniform float2 u_imageTexel;
 uniform int u_radius;
 uniform int u_diameter;
 uniform float2 u_texelDelta;
@@ -53,69 +53,75 @@ float Gaussian(float x, float o) {
 	return (1.0 / (o * sqrt(2.0 * pivalue))) * exp((-(x * x)) / (2 * (o * o)));
 }
 
-float4 InternalGaussian(
-	float2 p_uv, float2 p_uvStep, int p_size,
-	texture2d p_source) {
+float4 InternalGaussian(float2 p_uv, float2 p_uvStep, int p_radius,
+  texture2d p_image, float2 p_imageTexel) {
 	float l_gauss = Gaussian(0, p_size);
-	float4 l_value = p_source.Sample(pointClampSampler, p_uv) * gauss;
-	float2 l_uvoffset = p_uvStep;
+	float4 l_value = p_image.Sample(pointClampSampler, p_uv) * gauss;
+	float2 l_uvoffset = float2(0, 0);
 	for (int k = 1; k <= p_size; k++) {
-		float l_g = Gaussian(k, p_size);
-		float4 l_p = p_source.Sample(pointClampSampler, p_uv + l_uvoffset) * l_g;
-		float4 l_n = p_source.Sample(pointClampSampler, p_uv - l_uvoffset) * l_g;
-		l_value += l_p + l_n;
 		l_uvoffset += p_uvStep;
+		float l_g = Gaussian(k, p_size);
+		float4 l_p = p_image.Sample(pointClampSampler, p_uv + l_uvoffset) * l_g;
+		float4 l_n = p_image.Sample(pointClampSampler, p_uv - l_uvoffset) * l_g;
+		l_value += l_p + l_n;
 		l_gauss += l_g;
 	}
 	l_value = l_value * (1.0 / l_gauss);
 	return l_value;
 }
 
-float4 InternalGaussianPrecalculated(
-	float2 p_uv, float2 p_uvStep, int p_size,
-	texture2d p_source, float2 p_sourceStep,
-	texture2d p_kernel, float2 p_kernelStep) {
-	float4 l_value = p_source.Sample(pointClampSampler, p_uv + imageTexel)
+float4 InternalGaussianPrecalculated(float2 p_uv, float2 p_uvStep, int p_radius,
+  texture2d p_image, float2 p_imageTexel,
+  texture2d p_kernel, float2 p_kernelTexel) {
+	float4 l_value = p_image.Sample(pointClampSampler, p_uv)
 		* kernel.Sample(pointClampSampler, float2(0, 0)).r;
-	float2 l_uvoffset = p_uvStep;
-	float2 l_koffset = p_kerneltexel;
-	for (int k = 1; k <= p_size; k++) {
-		float l_g = p_kernel.Sample(pointClampSampler, l_koffset).r;
-		float4 l_p = p_source.Sample(pointClampSampler, p_uv + l_uvoffset) * l_g;
-		float4 l_n = p_source.Sample(pointClampSampler, p_uv - l_uvoffset) * l_g;
-		l_value += l_p + l_n;
+	float2 l_uvoffset = float2(0, 0);
+	for (int k = 1; k <= p_radius; k++) {
 		l_uvoffset += p_uvStep;
-		l_koffset += p_kerneltexel;
+		float l_g = p_kernel.Sample(pointClampSampler, p_kernelTexel * k).r;
+		float4 l_p = p_image.Sample(pointClampSampler, p_uv + l_uvoffset) * l_g;
+		float4 l_n = p_image.Sample(pointClampSampler, p_uv - l_uvoffset) * l_g;
+		l_value += l_p + l_n;
 	}
 	return l_value;
 }
 
-float4 InternalGaussianPrecalculatedNVOptimized(float2 p_uv, texture2d p_source, float2 p_texel,
-	int p_size, texture2d p_kernel, texture2d p_kerneltexel) {
+/*float4 InternalGaussianPrecalculatedNVOptimized(float2 p_uv, int p_size,
+  texture2d p_image, float2 p_imageTexel,
+  texture2d p_kernel, float2 p_kernelTexel) {
 	if (p_size % 2 == 0) {
-		float4 l_value = p_source.Sample(pointClampSampler, p_uv)
+		float4 l_value = p_image.Sample(pointClampSampler, p_uv)
 			* kernel.Sample(pointClampSampler, float2(0, 0)).r;
 		float2 l_uvoffset = p_texel;
-		float2 l_koffset = p_kerneltexel;
+		float2 l_koffset = p_kernelTexel;
 		for (int k = 1; k <= p_size; k++) {
 			float l_g = p_kernel.Sample(pointClampSampler, l_koffset).r;
-			float4 l_p = p_source.Sample(pointClampSampler, p_uv + l_uvoffset) * l_g;
-			float4 l_n = p_source.Sample(pointClampSampler, p_uv - l_uvoffset) * l_g;
+			float4 l_p = p_image.Sample(pointClampSampler, p_uv + l_uvoffset) * l_g;
+			float4 l_n = p_image.Sample(pointClampSampler, p_uv - l_uvoffset) * l_g;
 			l_value += l_p + l_n;
 			l_uvoffset += p_texel;
-			l_koffset += p_kerneltexel;
+			l_koffset += p_kernelTexel;
 		}
 		return l_value;
 	} else {
-		return InternalGaussianPrecalculated(p_uv, p_source, p_texel, p_size, p_kernel, p_kerneltexel);)
+		return InternalGaussianPrecalculated(p_uv, p_image, p_texel, p_size, p_kernel, p_kerneltexel);)
 	}
-}
+}*/
 
 float4 PSGaussian(VertDataOut v_in) : TARGET {
-	//return InternalGaussian(v_in.uv, u_image, u_imageTexelDelta, u_radius);
-	//return InternalGaussianPrecalculated(v_in.uv, image, texel, radius, kernel, kernelTexel);
-	return InternalGaussianPrecalculatedNVOptimize(v_in.uv, u_
-		image, texel, radius, kernel, kernelTexel);
+	//return InternalGaussian(v_in.uv, u_texelDelta, u_image, u_imageTexel, u_radius);
+
+	///*
+	return InternalGaussianPrecalculated(
+		v_in.uv, u_texelDelta, u_radius,
+		u_image, u_imageTexel,
+		kernel, kernelTexel);//*/
+
+	/*
+	return InternalGaussianPrecalculatedNVOptimize(
+		v_in.uv, u_texelDelta, u_radius,
+		u_image, u_imageTexel,
+		kernel, kernelTexel);//*/
 }
 
 technique Draw
