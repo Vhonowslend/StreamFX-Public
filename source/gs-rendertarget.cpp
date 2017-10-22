@@ -44,8 +44,9 @@ GS::RenderTargetOp GS::RenderTarget::Render(uint32_t width, uint32_t height) {
 
 gs_texture_t* GS::RenderTarget::GetTextureObject() {
 	obs_enter_graphics();
-	return gs_texrender_get_texture(m_renderTarget);
+	gs_texture_t* tex = gs_texrender_get_texture(m_renderTarget);
 	obs_leave_graphics();
+	return tex;
 }
 
 GS::RenderTargetOp::RenderTargetOp(GS::RenderTarget* rt, uint32_t width, uint32_t height) : m_renderTarget(rt) {
