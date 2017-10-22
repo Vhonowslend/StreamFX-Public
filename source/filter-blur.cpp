@@ -49,11 +49,10 @@ static size_t g_maxKernelSize = 25;
 const double_t pi = 3.1415926535897932384626433832795;
 const double_t twopi = 6.283185307179586476925286766559;
 const double_t twopisqr = 2.506628274631000502415765284811;
-const double_t half = 0.5;
 
 double_t gaussian1D(double_t x, double_t o) {
 	double_t c = (x / o);
-	double_t b = exp(-half * c * c);
+	double_t b = exp(-0.5 * c * c);
 	double_t a = (1.0 / (o * twopisqr));
 	return a * b;
 }
@@ -64,38 +63,35 @@ double_t bilateral(double_t x, double_t o) {
 static void makeGaussianKernels() {
 	g_gaussianBlur.kernels.resize(g_maxKernelSize);
 
-	std::vector<float_t> textureBuffer;
 	std::vector<double_t> mathBuffer;
+	std::vector<float_t> textureBuffer;
 
 	for (size_t n = 1; n <= g_maxKernelSize; n++) {
-		textureBuffer.resize(n * 4);
-		mathBuffer.resize(n);
+		size_t width = n + 1;
+		mathBuffer.resize(width);
+		textureBuffer.resize(width);
 
-		// Calculate and normalize
-		double_t sum = 0.0;
-		for (size_t p = 0; p < n; p++) {
+		// Calculate
+		double_t gaussianSum = 0.0;
+		for (size_t p = 0; p < width; p++) {
 			double_t g = gaussian1D(double_t(p), double_t(n));
 			mathBuffer[p] = g;
-			sum += g;
+			gaussianSum += g;
 			if (p != 0)
-				sum += g;
-		}
-		for (size_t p = 0; p < n; p++) {
-			mathBuffer[p] /= sum;
+				gaussianSum += g;
 		}
 
-		// Build Texture
-		for (size_t p = 0; p < n; p++) {
-			textureBuffer[p * 4] =
-				textureBuffer[p * 4 + 1] =
-				textureBuffer[p * 4 + 2] =
-				textureBuffer[p * 4 + 3] = (float_t)mathBuffer[p];
+		// Normalize
+		double_t gaussianMult = 1.0 / gaussianSum;
+		for (size_t p = 0; p < width; p++) {
+			textureBuffer[p] = (float_t)(mathBuffer[p] * gaussianMult);
 		}
 
+		// Create Texture
 		uint8_t* data = reinterpret_cast<uint8_t*>(textureBuffer.data());
 		const uint8_t** pdata = const_cast<const uint8_t**>(&data);
 
-		gs_texture_t* tex = gs_texture_create(uint32_t(n), 1, gs_color_format::GS_RGBA32F, 1, pdata, 0);
+		gs_texture_t* tex = gs_texture_create(uint32_t(width), 1, gs_color_format::GS_R32F, 1, pdata, 0);
 		if (!tex) {
 			P_LOG_ERROR("<filter-blur> Failed to create gaussian kernel for %d width.", n);
 		} else {
@@ -240,7 +236,7 @@ obs_properties_t * Filter::Blur::get_properties(void *) {
 	p = obs_properties_add_int_slider(pr, S_FILTER_BLUR_SIZE,
 		P_TRANSLATE(S_FILTER_BLUR_SIZE), 1, 25, 1);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_FILTER_BLUR_SIZE)));
-	obs_property_set_modified_callback(p, modified_properties);
+	//obs_property_set_modified_callback(p, modified_properties);
 
 	// Bilateral Only
 	p = obs_properties_add_float_slider(pr, S_FILTER_BLUR_BILATERAL_SMOOTHING,
@@ -627,7 +623,7 @@ bool Filter::Blur::Instance::apply_shared_param(gs_texture_t* input, float texel
 	vec2 imageTexelDelta;
 	vec2_set(&imageTexelDelta, 1.0f, 1.0f);
 	vec2_div(&imageTexelDelta, &imageTexelDelta, &imageSize);
-	result = result && gs_set_param_float2(m_effect, "u_imageTexelDelta", &imageTexelDelta);
+	result = result && gs_set_param_float2(m_effect, "u_imageTexel", &imageTexelDelta);
 
 	vec2 texel; vec2_set(&texel, texelX, texelY);
 	result = result && gs_set_param_float2(m_effect, "u_texelDelta", &texel);
