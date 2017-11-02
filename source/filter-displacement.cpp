@@ -130,7 +130,7 @@ Filter::Displacement::Instance::Instance(obs_data_t *data,
 	this->context = context;
 
 	obs_enter_graphics();
-	char* effectFile = obs_module_file("effects/displacement.effect");
+	char* effectFile = obs_module_file("effects/displace.effect");
 	char* errorMessage = nullptr;
 	this->customEffect = gs_effect_create_from_file(effectFile,
 		&errorMessage);
