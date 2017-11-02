@@ -1,24 +1,25 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.2)
 PROJECT(obs-stream-effects)
 
 ################################################################################
 # Version
 ################################################################################
 SET(VERSION_MAJOR 0)
-SET(VERSION_MINOR 2)
+SET(VERSION_MINOR 3)
 SET(VERSION_PATCH 0)
-#configure_file(
-#	"${PROJECT_SOURCE_DIR}/#Resources/package.in.bat"
-#	"${PROJECT_SOURCE_DIR}/#Resources/package.bat"
-#)
-#configure_file(
-#	"${PROJECT_SOURCE_DIR}/#Resources/Installer.in.iss"
-#	"${PROJECT_SOURCE_DIR}/#Resources/Installer.iss"
-#)
+SET(VERSION_STR "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
+
 configure_file(
 	"${PROJECT_SOURCE_DIR}/source/version.h.in"
 	"${PROJECT_BINARY_DIR}/source/version.h"
 )
+
+################################################################################
+# Configuration
+################################################################################
+math(EXPR BITS "8*${CMAKE_SIZEOF_VOID_P}")
+
+SET(INSTALL_DIR "${PROJECT_BINARY_DIR}/distribute" CACHE PATH "Installation directory")
 
 ################################################################################
 # Code
@@ -89,8 +90,6 @@ source_group("Data Files\\Effects" FILES ${obs-stream-effects_EFFECTS})
 ################################################################################
 if(TARGET libobs)
 	# OBS Studio Specific
-
-	# Directories
 	INCLUDE_DIRECTORIES(
 		"${CMAKE_SOURCE_DIR}"
 		"${PROJECT_BINARY_DIR}"
@@ -101,7 +100,6 @@ if(TARGET libobs)
 	SET(LIBOBS_LIBRARIES libobs)
 else()
 	# Standlone Specific
-
 	SET(PATH_OBSStudio "" CACHE PATH "OBS Studio Source Code Directory")
 	if(PATH_OBSStudio STREQUAL "")
 		message(FATAL_ERROR "PATH_OBSStudio not set!")
@@ -125,6 +123,19 @@ else()
 		"${PATH_OBSStudio}"
 	)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+	
+	# All Warnings, Extra Warnings, Pedantic
+	if(MSVC)
+	  # Force to always compile with W4
+	  if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+		string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+	  else()
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+	  endif()
+	elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+	  # Update if necessary
+	  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic")
+	endif()
 endif()
 
 ################################################################################
@@ -144,33 +155,22 @@ TARGET_LINK_LIBRARIES(obs-stream-effects
 if(TARGET libobs)
 	install_obs_plugin_with_data(obs-stream-effects data)
 else()
-	# All Warnings, Extra Warnings, Pedantic
-	if(MSVC)
-	  # Force to always compile with W4
-	  if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
-		string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-	  else()
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
-	  endif()
-	elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-	  # Update if necessary
-	  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic")
-	endif()
-
-	math(EXPR BITS "8*${CMAKE_SIZEOF_VOID_P}")
-	add_custom_command(TARGET obs-stream-effects POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy_directory
-		"${PROJECT_SOURCE_DIR}/data"
-		"${PROJECT_SOURCE_DIR}/#Build/data/obs-plugins/obs-stream-effects"
-	)
-	add_custom_command(TARGET obs-stream-effects POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy
-		"$<TARGET_FILE:obs-stream-effects>"
-		"${PROJECT_SOURCE_DIR}/#Build/obs-plugins/${BITS}bit/$<TARGET_FILE_NAME:obs-stream-effects>"
-	)
-	add_custom_command(TARGET obs-stream-effects POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy
-		"$<TARGET_FILE_DIR:obs-stream-effects>/obs-stream-effects.pdb"
-		"${PROJECT_SOURCE_DIR}/#Build/obs-plugins/${BITS}bit/obs-stream-effects.pdb"
-	)
+	INSTALL(TARGETS obs-stream-effects DESTINATION "${INSTALL_DIR}/obs-plugins/${BITS}bit")
+	INSTALL(FILES $<TARGET_PDB_FILE:obs-stream-effects> DESTINATION "${INSTALL_DIR}/obs-plugins/${BITS}bit" OPTIONAL)
+	INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/data" DESTINATION "${INSTALL_DIR}/data/obs-plugins/obs-stream-effects" OPTIONAL)
+	
+	# Zip Generator
+	ADD_CUSTOM_TARGET(PACKAGE_ZIP COMMAND
+		${CMAKE_COMMAND} -E tar "cfv" 
+		"${INSTALL_DIR}/obs-stream-effects.${VERSION_STR}.zip"
+		--format=zip
+		"${INSTALL_DIR}/data" "${INSTALL_DIR}/obs-plugins")
+	
+	# 7-Zip Generator
+	ADD_CUSTOM_TARGET(PACKAGE_7ZIP COMMAND
+		${CMAKE_COMMAND} -E tar "cfv" 
+		"${INSTALL_DIR}/obs-stream-effects.${VERSION_STR}.7z"
+		--format=7zip
+		"${INSTALL_DIR}/data" "${INSTALL_DIR}/obs-plugins")
+	
 endif()
