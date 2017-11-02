@@ -20,10 +20,10 @@
 #include "gs-vertexbuffer.h"
 #include <stdexcept>
 extern "C" {
-	#pragma warning( push )
-	#pragma warning( disable: 4201 )
-	#include <libobs/obs.h>
-	#pragma warning( pop )
+#pragma warning( push )
+#pragma warning( disable: 4201 )
+#include <libobs/obs.h>
+#pragma warning( pop )
 }
 
 const uint32_t defaultMaximumVertices = 65535u;
@@ -78,6 +78,20 @@ GS::VertexBuffer::VertexBuffer(VertexBuffer& other) : VertexBuffer(other.m_maxim
 GS::VertexBuffer::~VertexBuffer() {
 	if (m_vertexbuffer) {
 		std::memset(&m_vertexbufferdata, 0, sizeof(m_vertexbufferdata));
+
+		// Workaround API stupidity in obs-studio.
+		// See PR: https://github.com/jp9000/obs-studio/pull/993
+
+		if (gs_get_device_type() == GS_DEVICE_DIRECT3D_11) {
+		#ifdef _DEBUG
+			*(reinterpret_cast<intptr_t*>(m_vertexbuffer) + 14) = 0;
+		#else
+			*(reinterpret_cast<intptr_t*>(m_vertexbuffer) + 13) = 0;
+		#endif
+		} else {
+			//*(reinterpret_cast<intptr_t*>(m_vertexbuffer)+14) = 0;
+		}
+
 		obs_enter_graphics();
 		gs_vertexbuffer_destroy(m_vertexbuffer);
 		obs_leave_graphics();
