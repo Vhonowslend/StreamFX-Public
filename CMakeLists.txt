@@ -157,20 +157,18 @@ if(TARGET libobs)
 else()
 	INSTALL(TARGETS obs-stream-effects DESTINATION "${INSTALL_DIR}/obs-plugins/${BITS}bit")
 	INSTALL(FILES $<TARGET_PDB_FILE:obs-stream-effects> DESTINATION "${INSTALL_DIR}/obs-plugins/${BITS}bit" OPTIONAL)
-	INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/data" DESTINATION "${INSTALL_DIR}/data/obs-plugins/obs-stream-effects" OPTIONAL)
+	INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/data/" DESTINATION "${INSTALL_DIR}/data/obs-plugins/obs-stream-effects" OPTIONAL)
 	
 	# Zip Generator
 	ADD_CUSTOM_TARGET(PACKAGE_ZIP COMMAND
-		${CMAKE_COMMAND} -E tar "cfv" 
-		"${INSTALL_DIR}/obs-stream-effects.${VERSION_STR}.zip"
-		--format=zip
-		"${INSTALL_DIR}/data" "${INSTALL_DIR}/obs-plugins")
+		${CMAKE_COMMAND} -E tar "cfv" "${INSTALL_DIR}/obs-stream-effects.${VERSION_STR}.zip" --format=zip -- "${INSTALL_DIR}/data/" "${INSTALL_DIR}/obs-plugins"
+		DEPENDS INSTALL obs-stream-effects
+		WORKING_DIRECTORY "${INSTALL_DIR}")
 	
 	# 7-Zip Generator
 	ADD_CUSTOM_TARGET(PACKAGE_7ZIP COMMAND
-		${CMAKE_COMMAND} -E tar "cfv" 
-		"${INSTALL_DIR}/obs-stream-effects.${VERSION_STR}.7z"
-		--format=7zip
-		"${INSTALL_DIR}/data" "${INSTALL_DIR}/obs-plugins")
+		${CMAKE_COMMAND} -E tar "cfv" "${INSTALL_DIR}/obs-stream-effects.${VERSION_STR}.7z" --format=7zip -- "${INSTALL_DIR}/data/" "${INSTALL_DIR}/obs-plugins"
+		DEPENDS INSTALL obs-stream-effects
+		WORKING_DIRECTORY "${INSTALL_DIR}")
 	
 endif()
