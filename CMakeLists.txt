@@ -20,6 +20,12 @@ configure_file(
 math(EXPR BITS "8*${CMAKE_SIZEOF_VOID_P}")
 
 SET(INSTALL_DIR "${PROJECT_BINARY_DIR}/distribute" CACHE PATH "Installation directory")
+IF(NOT DEFINED PACKAGE_PREFIX)
+	SET(PACKAGE_PREFIX "")
+ENDIF()
+IF(NOT DEFINED PACKAGE_SUFFIX)
+	SET(PACKAGE_SUFFIX ".${VERSION_STR}")
+ENDIF()
 
 ################################################################################
 # Code
@@ -161,13 +167,13 @@ else()
 	
 	# Zip Generator
 	ADD_CUSTOM_TARGET(PACKAGE_ZIP COMMAND
-		${CMAKE_COMMAND} -E tar "cfv" "${INSTALL_DIR}/obs-stream-effects.${VERSION_STR}.zip" --format=zip -- "${INSTALL_DIR}/data/" "${INSTALL_DIR}/obs-plugins"
+		${CMAKE_COMMAND} -E tar "cfv" "${INSTALL_DIR}/${PACKAGE_PREFIX}obs-stream-effects${PACKAGE_SUFFIX}.zip" --format=zip -- "${INSTALL_DIR}/data/" "${INSTALL_DIR}/obs-plugins"
 		DEPENDS INSTALL obs-stream-effects
 		WORKING_DIRECTORY "${INSTALL_DIR}")
 	
 	# 7-Zip Generator
 	ADD_CUSTOM_TARGET(PACKAGE_7ZIP COMMAND
-		${CMAKE_COMMAND} -E tar "cfv" "${INSTALL_DIR}/obs-stream-effects.${VERSION_STR}.7z" --format=7zip -- "${INSTALL_DIR}/data/" "${INSTALL_DIR}/obs-plugins"
+		${CMAKE_COMMAND} -E tar "cfv" "${INSTALL_DIR}/${PACKAGE_PREFIX}obs-stream-effects${PACKAGE_SUFFIX}.7z" --format=7zip -- "${INSTALL_DIR}/data/" "${INSTALL_DIR}/obs-plugins"
 		DEPENDS INSTALL obs-stream-effects
 		WORKING_DIRECTORY "${INSTALL_DIR}")
 	
