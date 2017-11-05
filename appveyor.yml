@@ -32,3 +32,15 @@ cache:
 artifacts:
   - path: build/distrib/*.zip
   - path: build/distrib/*.7z
+
+notifications:
+  - provider: Webhook
+    url: 
+      secure: PTtt5ALhmK0q42jYyx4/Qa1Uf18+gLMXKGdzJjDISJt8IE/K0Zyp58UYmDDbbyLp4pBRf/Ylj8rn/zYL/mqBoDVRIH5zasPqIvBD0ZhtvNjTOxQ3QoRkAmxgpWeMowm3A3I1rLizA2H4EctPpoAJGrvQ1G2HEYn9tVsGYeetFTo=
+    on_build_success: true
+    on_build_failure: true
+    on_build_status_changed: true
+    body: >-
+      {
+        "content": "Build {{projectName}} {{buildVersion}} {{status}}: {{buildUrl}}\nCommit #{{commitId}} by {{commitAuthor}} on {{commitDate}}:\n{{commitMessage}}"
+      }
