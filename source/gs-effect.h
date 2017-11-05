@@ -55,7 +55,8 @@ namespace GS {
 
 		public:
 		EffectParameter(gs_eparam_t* param);
-
+		
+		std::string GetName();
 		Type GetType();
 
 		void SetBoolean(bool v);

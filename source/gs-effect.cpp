@@ -107,6 +107,10 @@ GS::EffectParameter::EffectParameter(gs_eparam_t* param) {
 	gs_effect_get_param_info(m_param, &m_paramInfo);
 }
 
+std::string GS::EffectParameter::GetName() {
+	return m_paramInfo.name;
+}
+
 GS::EffectParameter::Type GS::EffectParameter::GetType() {
 	switch (m_paramInfo.type) {
 		case GS_SHADER_PARAM_BOOL:
