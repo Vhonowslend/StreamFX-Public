@@ -32,15 +32,24 @@ Filter::Displacement *filterDisplacement;
 Filter::Shape *filterShape;
 Filter::Transform *filterTransform;
 
+std::list<std::function<void()>> initializerFunctions;
+std::list<std::function<void()>> finalizerFunctions;
+
 MODULE_EXPORT bool obs_module_load(void) {
 	filterDisplacement = new Filter::Displacement();
 	filterShape = new Filter::Shape();
 	filterTransform = new Filter::Transform();
 	filterBlur = new Filter::Blur();
+	for (auto func : initializerFunctions) {
+		func();
+	}
 	return true;
 }
 
 MODULE_EXPORT void obs_module_unload(void) {
+	for (auto func : finalizerFunctions) {
+		func();
+	}
 	delete filterTransform;
 	delete filterShape;
 	delete filterDisplacement;
