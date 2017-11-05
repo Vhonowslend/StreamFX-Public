@@ -62,17 +62,27 @@ gs_effect_t* GS::Effect::GetObject() {
 	return m_effect;
 }
 
-std::vector<GS::EffectParameter> GS::Effect::GetParameters() {
+size_t GS::Effect::CountParameters() {
+	return (size_t)gs_effect_get_num_params(m_effect);
+}
+
+std::list<GS::EffectParameter> GS::Effect::GetParameters() {
 	size_t num = gs_effect_get_num_params(m_effect);
-	std::vector<GS::EffectParameter> ps;
-	ps.reserve(num);
+	std::list<GS::EffectParameter> ps;
 	for (size_t idx = 0; idx < num; idx++) {
-		ps.emplace_back(EffectParameter(gs_effect_get_param_by_idx(m_effect, idx)));
+		ps.emplace_back(GetParameter(idx));
 	}
 	return ps;
 }
 
-GS::EffectParameter GS::Effect::GetParameterByName(std::string name) {
+GS::EffectParameter GS::Effect::GetParameter(size_t idx) {
+	gs_eparam_t* param = gs_effect_get_param_by_idx(m_effect, idx);
+	if (!param)
+		throw std::invalid_argument("parameter with index not found");
+	return EffectParameter(param);
+}
+
+GS::EffectParameter GS::Effect::GetParameter(std::string name) {
 	gs_eparam_t* param = gs_effect_get_param_by_name(m_effect, name.c_str());
 	if (!param)
 		throw std::invalid_argument("parameter with name not found");

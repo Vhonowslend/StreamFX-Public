@@ -22,7 +22,7 @@
 #include <inttypes.h>
 #include <memory>
 #include <string>
-#include <vector>
+#include <list>
 extern "C" {
 	#pragma warning( push )
 	#pragma warning( disable: 4201 )
@@ -90,9 +90,10 @@ namespace GS {
 
 		gs_effect_t* GetObject();
 
-		std::vector<EffectParameter> GetParameters();
-		EffectParameter GetParameterByName(std::string name);
-
+		size_t CountParameters();
+		std::list<EffectParameter> GetParameters();
+		EffectParameter GetParameter(size_t idx);
+		EffectParameter GetParameter(std::string name);
 
 		protected:
 		gs_effect_t* m_effect;
