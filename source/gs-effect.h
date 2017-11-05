@@ -84,6 +84,7 @@ namespace GS {
 
 	class Effect {
 		public:
+		Effect();
 		Effect(std::string file);
 		Effect(std::string code, std::string name);
 		virtual ~Effect();

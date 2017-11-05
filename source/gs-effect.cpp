@@ -26,13 +26,20 @@ extern "C" {
 	#pragma warning( pop )
 }
 
+GS::Effect::Effect() {
+	m_effect = nullptr;
+}
+
 GS::Effect::Effect(std::string file) {
 	obs_enter_graphics();
 	char* errorMessage = nullptr;
 	m_effect = gs_effect_create_from_file(file.c_str(), &errorMessage);
 	if (!m_effect || errorMessage) {
-		std::string error(errorMessage);
-		bfree((void*)errorMessage);
+		std::string error = "Generic Error";
+		if (errorMessage) {
+			error = std::string(errorMessage);
+			bfree((void*)errorMessage);
+		}
 		obs_leave_graphics();
 		throw std::runtime_error(error);
 	}
@@ -44,8 +51,11 @@ GS::Effect::Effect(std::string code, std::string name) {
 	char* errorMessage = nullptr;
 	m_effect = gs_effect_create(code.c_str(), name.c_str(), &errorMessage);
 	if (!m_effect || errorMessage) {
-		std::string error(errorMessage);
-		bfree((void*)errorMessage);
+		std::string error = "Generic Error";
+		if (errorMessage) {
+			error = std::string(errorMessage);
+			bfree((void*)errorMessage);
+		}
 		obs_leave_graphics();
 		throw std::runtime_error(error);
 	}
