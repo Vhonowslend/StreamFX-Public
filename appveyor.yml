@@ -1,0 +1,34 @@
+version: 0.3.0-{build}-{branch}
+
+environment:
+  CURL_VERSION: 7.39.0
+
+pull_requests:
+  do_not_increment_build_number: true
+
+image:
+  - Visual Studio 2013
+  - Visual Studio 2015
+  - Visual Studio 2017
+
+platform: x64
+
+install:
+  - curl -kL https://cdn.xaymar.com/obs/prebuilt/obs-studio-20.1.0.7z -f --retry 5 -o deps-obs.7z -z deps-obs.7z
+  - 7z x deps-obs.7z -odeps/obs
+
+before_build:
+  - cmd: ci/make.bat
+  
+build_script:
+  - call msbuild /m /p:Configuration=RelWithDebInfo C:\projects\obs-stream-effects\build\32\install.vcxproj /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+  - call msbuild /m /p:Configuration=RelWithDebInfo C:\projects\obs-stream-effects\build\64\install.vcxproj /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+  - call msbuild /m /p:Configuration=RelWithDebInfo C:\projects\obs-stream-effects\build\64\PACKAGE_ZIP.vcxproj /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+  - call msbuild /m /p:Configuration=RelWithDebInfo C:\projects\obs-stream-effects\build\64\PACKAGE_7ZIP.vcxproj /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+
+cache:
+  - deps-obs.7z
+
+artifacts:
+  - path: build/distrib/*.zip
+  - path: build/distrib/*.7z
