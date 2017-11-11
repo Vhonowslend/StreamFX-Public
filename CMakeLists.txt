@@ -118,7 +118,7 @@ else()
 
 	# Find OBS Libraries
 	SET(obsPath "${PATH_OBSStudio}")
-	INCLUDE("${PATH_OBSStudio}/cmake/external/Findlibobs.cmake")
+	INCLUDE("${PATH_OBSStudio}/cmake/external/FindLibobs.cmake")
 
 	# Compiling
 	INCLUDE_DIRECTORIES(
