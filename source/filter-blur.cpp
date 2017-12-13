@@ -19,6 +19,8 @@
 
 #include "filter-blur.h"
 #include "strings.h"
+#include <math.h>
+#include <map>
 
 extern "C" {
 #pragma warning (push)
@@ -29,13 +31,23 @@ extern "C" {
 #pragma warning (pop)
 }
 
-#include <math.h>
-#include <map>
+// Initialize & Finalizer
+static Filter::Blur* handler;
+INITIALIZER(HandlerInit) {
+	initializerFunctions.push_back([] {
+		handler = new Filter::Blur();
+	});
+	finalizerFunctions.push_back([] {
+		delete handler;
+	});
+}
+
 
 enum ColorFormat : uint64_t {
 	RGB,
 	YUV, // 701
 };
+
 
 struct g_blurEffect {
 	gs_effect_t* effect;
