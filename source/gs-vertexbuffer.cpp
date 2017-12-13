@@ -54,7 +54,7 @@ GS::VertexBuffer::VertexBuffer(uint32_t maximumVertices) {
 
 	// Allocate GPU
 	obs_enter_graphics();
-	m_vertexbuffer = gs_vertexbuffer_create(&m_vertexbufferdata, GS_DYNAMIC);
+	m_vertexbuffer = gs_vertexbuffer_create(&m_vertexbufferdata, GS_DYNAMIC | GS_DUP_BUFFER);
 	obs_leave_graphics();
 	if (!m_vertexbuffer) {
 		throw std::runtime_error("Failed to create vertex buffer.");
@@ -78,19 +78,6 @@ GS::VertexBuffer::VertexBuffer(VertexBuffer& other) : VertexBuffer(other.m_maxim
 GS::VertexBuffer::~VertexBuffer() {
 	if (m_vertexbuffer) {
 		std::memset(&m_vertexbufferdata, 0, sizeof(m_vertexbufferdata));
-
-		// Workaround API stupidity in obs-studio.
-		// See PR: https://github.com/jp9000/obs-studio/pull/993
-
-		if (gs_get_device_type() == GS_DEVICE_DIRECT3D_11) {
-		#ifdef _DEBUG
-			*(reinterpret_cast<intptr_t*>(m_vertexbuffer) + 14) = 0;
-		#else
-			*(reinterpret_cast<intptr_t*>(m_vertexbuffer) + 13) = 0;
-		#endif
-		} else {
-			//*(reinterpret_cast<intptr_t*>(m_vertexbuffer)+14) = 0;
-		}
 
 		obs_enter_graphics();
 		gs_vertexbuffer_destroy(m_vertexbuffer);
@@ -126,7 +113,7 @@ gs_vertbuffer_t* GS::VertexBuffer::get(bool refreshGPU) {
 		m_vertexbufferdata.num_tex = m_uvwLayers;
 
 		obs_enter_graphics();
-		gs_vertexbuffer_flush(m_vertexbuffer);
+		gs_vertexbuffer_flush_direct(m_vertexbuffer, &m_vertexbufferdata);
 		obs_leave_graphics();
 	}
 	return m_vertexbuffer;
