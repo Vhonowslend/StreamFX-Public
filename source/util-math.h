@@ -33,9 +33,9 @@ inline double_t Gaussian1D(double_t x, double_t o) {
 }
 
 inline size_t GetNearestPowerOfTwoAbove(size_t v) {
-	return 1 << size_t(ceil(log10(v) / log10(2)));
+	return 1ull << size_t(ceil(log10(double(v)) / log10(2.0)));
 }
 
 inline size_t GetNearestPowerOfTwoBelow(size_t v) {
-	return 1 << size_t(floor(log10(v) / log10(2)));
+	return 1ull << size_t(floor(log10(double(v)) / log10(2.0)));
 }
