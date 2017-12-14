@@ -27,6 +27,7 @@ extern "C" {
 }
 
 GS::RenderTarget::RenderTarget(gs_color_format colorFormat, gs_zstencil_format zsFormat) {
+	m_isBeingRendered = false;
 	obs_enter_graphics();
 	m_renderTarget = gs_texrender_create(colorFormat, zsFormat);
 	obs_leave_graphics();
@@ -55,6 +56,7 @@ GS::RenderTargetOp::RenderTargetOp(GS::RenderTarget* rt, uint32_t width, uint32_
 	if (m_renderTarget->m_isBeingRendered)
 		throw std::logic_error("Can't start rendering to the same render target twice.");
 	obs_enter_graphics();
+	gs_texrender_reset(m_renderTarget->m_renderTarget);
 	if (!gs_texrender_begin(m_renderTarget->m_renderTarget, width, height)) {
 		obs_leave_graphics();
 		throw std::runtime_error("Failed to begin rendering to render target.");
