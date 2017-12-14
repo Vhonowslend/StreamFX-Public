@@ -142,7 +142,5 @@ namespace GS {
 
 		protected:
 		gs_texture_t* m_texture;
-
-		void DestroyTexture();
 	};
 }
