@@ -347,17 +347,22 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 		return;
 	}
 	if ((baseW <= 0) || (baseH <= 0)) {
-		P_LOG_ERROR("<filter-blur> Instance '%s' has invalid size source '%s'.",
-			obs_source_get_name(m_source), obs_source_get_name(target));
+		if (!m_errorLogged)
+			P_LOG_ERROR("<filter-blur> Instance '%s' has invalid size source '%s'.",
+				obs_source_get_name(m_source), obs_source_get_name(target));
+		m_errorLogged = true;
 		obs_source_skip_video_filter(m_source);
 		return;
 	}
 	if (!m_primaryRT || !m_technique || !m_effect) {
-		P_LOG_ERROR("<filter-blur> Instance '%s' is unable to render, either the render target, technique or effect is broken.",
-			obs_source_get_name(m_source), obs_source_get_name(target));
+		if (!m_errorLogged)
+			P_LOG_ERROR("<filter-blur> Instance '%s' is unable to render.",
+				obs_source_get_name(m_source), obs_source_get_name(target));
+		m_errorLogged = true;
 		obs_source_skip_video_filter(m_source);
 		return;
 	}
+	m_errorLogged = false;	
 
 	gs_effect_t* defaultEffect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 	gs_texture_t *sourceTexture = nullptr;

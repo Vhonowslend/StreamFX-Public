@@ -105,6 +105,7 @@ namespace Filter {
 			double_t m_bilateralSharpness;
 
 			// Advanced
+			bool m_errorLogged = false;
 			uint64_t m_colorFormat;
 		};
 	};
