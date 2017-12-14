@@ -77,7 +77,7 @@ namespace GS {
 		protected:
 		uint32_t m_maximumVertices;
 		uint32_t m_uvwLayers;
-		gs_vb_data m_vertexbufferdata;
+		gs_vb_data* m_vertexbufferdata;
 		gs_vertbuffer_t* m_vertexbuffer;
 
 		// Data Storage
