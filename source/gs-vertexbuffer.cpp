@@ -109,8 +109,6 @@ gs_vertbuffer_t* GS::VertexBuffer::get(bool refreshGPU) {
 		m_vertexbufferdata->tangents = m_data.tangents.data();
 		m_vertexbufferdata->colors = m_data.colors.data();
 		m_vertexbufferdata->num_tex = m_uvwLayers;
-		m_data.uvws.resize(m_uvwLayers);
-		m_data.uvwdata.resize(m_uvwLayers);
 		for (uint32_t n = 0; n < m_uvwLayers; n++) {
 			m_data.uvwdata[n].width = 4;
 			m_data.uvwdata[n].array = m_data.uvws[n].data();
@@ -132,6 +130,11 @@ gs_vertbuffer_t* GS::VertexBuffer::get(bool refreshGPU) {
 		obs_enter_graphics();
 		gs_vertexbuffer_flush(m_vertexbuffer);
 		std::memset(m_vertexbufferdata, 0, sizeof(gs_vb_data));
+		m_vertexbufferdata->num = m_maximumVertices;
+		m_vertexbufferdata->num_tex = m_uvwLayers;
+		for (uint32_t n = 0; n < m_uvwLayers; n++) {
+			m_data.uvwdata[n].width = 4;
+		}
 		obs_leave_graphics();
 	}
 	return m_vertexbuffer;
