@@ -280,6 +280,15 @@ Filter::Blur::Instance::Instance(obs_data_t *data, obs_source_t *context) : m_so
 	m_rtVertical = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 	obs_leave_graphics();
 
+	if (!m_primaryRT)
+		P_LOG_ERROR("<filter-blur> Instance '%s' failed to create primary rendertarget.", obs_source_get_name(m_source));
+	if (!m_secondaryRT)
+		P_LOG_ERROR("<filter-blur> Instance '%s' failed to create secondary rendertarget.", obs_source_get_name(m_source));
+	if (!m_rtHorizontal)
+		P_LOG_ERROR("<filter-blur> Instance '%s' failed to create horizontal rendertarget.", obs_source_get_name(m_source));
+	if (!m_rtVertical)
+		P_LOG_ERROR("<filter-blur> Instance '%s' failed to create vertical rendertarget.", obs_source_get_name(m_source));
+
 	update(data);
 }
 
@@ -353,7 +362,7 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 		obs_source_skip_video_filter(m_source);
 		return;
 	}
-	if (!m_primaryRT || !m_technique || !m_effect) {
+	if (!m_primaryRT || !m_effect) {
 		if (!m_errorLogged)
 			P_LOG_ERROR("<filter-blur> Instance '%s' is unable to render.",
 				obs_source_get_name(m_source), obs_source_get_name(target));
@@ -627,7 +636,7 @@ bool Filter::Blur::Instance::apply_gaussian_param() {
 
 	std::shared_ptr<GS::Texture> tex;
 	if ((m_size - 1) < MaxKernelSize) {
-		tex = g_gaussianKernels[m_size - 1];
+		tex = g_gaussianKernels[size_t(m_size - 1)];
 		result = result && gs_set_param_texture(m_effect->GetObject(), "kernel", tex->GetObject());
 	}
 

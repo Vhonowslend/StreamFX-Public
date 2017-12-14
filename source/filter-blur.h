@@ -91,7 +91,6 @@ namespace Filter {
 
 			private:
 			obs_source_t *m_source;
-			gs_technique_t *m_technique;
 			gs_texrender_t *m_primaryRT, *m_secondaryRT;
 			gs_texrender_t *m_rtHorizontal, *m_rtVertical;
 			std::shared_ptr<GS::Effect> m_effect;
