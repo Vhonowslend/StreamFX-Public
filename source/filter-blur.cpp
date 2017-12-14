@@ -34,7 +34,7 @@ extern "C" {
 
 // Initialize & Finalizer
 static Filter::Blur* handler;
-INITIALIZER(HandlerInit) {
+INITIALIZER(FilterBlurInit) {
 	initializerFunctions.push_back([] {
 		handler = new Filter::Blur();
 	});
