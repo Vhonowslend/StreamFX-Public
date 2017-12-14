@@ -19,6 +19,7 @@
 
 #include "filter-blur.h"
 #include "strings.h"
+#include "util-math.h"
 #include <math.h>
 #include <map>
 
@@ -48,169 +49,98 @@ enum ColorFormat : uint64_t {
 	YUV, // 701
 };
 
+// Global Data
+const size_t MaxKernelSize = 25;
+std::map<std::string, std::shared_ptr<GS::Effect>> g_effects;
+std::vector<std::shared_ptr<GS::Texture>> g_gaussianKernels;
 
-struct g_blurEffect {
-	gs_effect_t* effect;
-	std::vector<gs_texture_t*> kernels;
-};
-static g_blurEffect g_gaussianBlur, g_bilateralBlur;
-static gs_effect_t* g_boxBlurEffect, *g_colorConversionEffect;
-
-static size_t g_maxKernelSize = 25;
-
-const double_t pi = 3.1415926535897932384626433832795;
-const double_t twopi = 6.283185307179586476925286766559;
-const double_t twopisqr = 2.506628274631000502415765284811;
-
-double_t gaussian1D(double_t x, double_t o) {
-	double_t c = (x / o);
-	double_t b = exp(-0.5 * c * c);
-	double_t a = (1.0 / (o * twopisqr));
-	return a * b;
-}
 double_t bilateral(double_t x, double_t o) {
 	return 0.39894 * exp(-0.5 * (x * x) / (o * o)) / o;
 }
 
-static void makeGaussianKernels() {
-	g_gaussianBlur.kernels.resize(g_maxKernelSize);
+static void GenerateGaussianKernelTextures() {
+	size_t textureBufferSize = GetNearestPowerOfTwoAbove(MaxKernelSize);
 
-	std::vector<double_t> mathBuffer;
-	std::vector<float_t> textureBuffer;
+	g_gaussianKernels.resize(MaxKernelSize);
+	std::vector<double_t> mathBuffer(MaxKernelSize + 1);
+	std::vector<float_t> textureBuffer(textureBufferSize);
 
-	for (size_t n = 1; n <= g_maxKernelSize; n++) {
-		size_t width = n + 1;
-		mathBuffer.resize(width);
-		textureBuffer.resize(width);
+	for (size_t n = 0; n < MaxKernelSize; n++) {
+		size_t width = 2 + n;
+		size_t radius = 1 + (1 + n) * 2;
 
-		// Calculate
-		double_t gaussianSum = 0.0;
+		// Generate Gaussian Gradient and calculate sum.
+		double_t sum = 0;
 		for (size_t p = 0; p < width; p++) {
-			double_t g = gaussian1D(double_t(p), double_t(n));
-			mathBuffer[p] = g;
-			gaussianSum += g;
-			if (p != 0)
-				gaussianSum += g;
+			mathBuffer[p] = Gaussian1D(double_t(p), double_t(n + 1));
+			sum += mathBuffer[p] * (p > 0 ? 2 : 1);
 		}
 
 		// Normalize
-		double_t gaussianMult = 1.0 / gaussianSum;
+		double_t inverseSum = 1.0 / sum;
 		for (size_t p = 0; p < width; p++) {
-			textureBuffer[p] = (float_t)(mathBuffer[p] * gaussianMult);
+			textureBuffer[p] = float_t(mathBuffer[p] * inverseSum);
 		}
 
 		// Create Texture
 		uint8_t* data = reinterpret_cast<uint8_t*>(textureBuffer.data());
 		const uint8_t** pdata = const_cast<const uint8_t**>(&data);
 
-		gs_texture_t* tex = gs_texture_create(uint32_t(width), 1, gs_color_format::GS_R32F, 1, pdata, 0);
-		if (!tex) {
+		try {
+			std::shared_ptr<GS::Texture> tex = std::make_shared<GS::Texture>(textureBufferSize, 1,
+				gs_color_format::GS_R32F, 1, pdata, 0);
+			g_gaussianKernels[n] = tex;
+		} catch (std::runtime_error ex) {
 			P_LOG_ERROR("<filter-blur> Failed to create gaussian kernel for %d width.", n);
-		} else {
-			g_gaussianBlur.kernels[n - 1] = tex;
 		}
 	}
 }
 
 Filter::Blur::Blur() {
-	memset(&sourceInfo, 0, sizeof(obs_source_info));
-	sourceInfo.id = "obs-stream-effects-filter-blur";
-	sourceInfo.type = OBS_SOURCE_TYPE_FILTER;
-	sourceInfo.output_flags = OBS_SOURCE_VIDEO;
-	sourceInfo.get_name = get_name;
-	sourceInfo.get_defaults = get_defaults;
-	sourceInfo.get_properties = get_properties;
+	memset(&m_sourceInfo, 0, sizeof(obs_source_info));
+	m_sourceInfo.id = "obs-stream-effects-filter-blur";
+	m_sourceInfo.type = OBS_SOURCE_TYPE_FILTER;
+	m_sourceInfo.output_flags = OBS_SOURCE_VIDEO;
+	m_sourceInfo.get_name = get_name;
+	m_sourceInfo.get_defaults = get_defaults;
+	m_sourceInfo.get_properties = get_properties;
 
-	sourceInfo.create = create;
-	sourceInfo.destroy = destroy;
-	sourceInfo.update = update;
-	sourceInfo.activate = activate;
-	sourceInfo.deactivate = deactivate;
-	sourceInfo.video_tick = video_tick;
-	sourceInfo.video_render = video_render;
+	m_sourceInfo.create = create;
+	m_sourceInfo.destroy = destroy;
+	m_sourceInfo.update = update;
+	m_sourceInfo.activate = activate;
+	m_sourceInfo.deactivate = deactivate;
+	m_sourceInfo.video_tick = video_tick;
+	m_sourceInfo.video_render = video_render;
 
+	// Load effects once.
 	obs_enter_graphics();
-
-	// Blur Effects
-	/// Box Blur
-	{
-		char* loadError = nullptr;
-		char* file = obs_module_file("effects/box-blur.effect");
-		g_boxBlurEffect = gs_effect_create_from_file(file, &loadError);
-		bfree(file);
-		if (loadError != nullptr) {
-			P_LOG_ERROR("<filter-blur> Loading box-blur effect failed with error(s): %s", loadError);
-			bfree(loadError);
-		} else if (!g_boxBlurEffect) {
-			P_LOG_ERROR("<filter-blur> Loading box-blur effect failed with unspecified error.");
-		}
-	}
-	/// Gaussian Blur
-	{
-		gs_effect_t* effect;
-		char* loadError = nullptr;
-		char* file = obs_module_file("effects/gaussian-blur.effect");
-		effect = gs_effect_create_from_file(file, &loadError);
-		bfree(file);
-		if (loadError != nullptr) {
-			P_LOG_ERROR("<filter-blur> Loading gaussian blur effect failed with error(s): %s", loadError);
-			bfree(loadError);
-		} else if (!effect) {
-			P_LOG_ERROR("<filter-blur> Loading gaussian blur effect failed with unspecified error.");
-		} else {
-			g_gaussianBlur.effect = effect;
-
-		}
-	}
-	/// Bilateral Blur
-	{
-		gs_effect_t* effect;
-		char* loadError = nullptr;
-		char* file = obs_module_file("effects/bilateral-blur.effect");
-		effect = gs_effect_create_from_file(file, &loadError);
-		bfree(file);
-		if (loadError != nullptr) {
-			P_LOG_ERROR("<filter-blur> Loading bilateral blur effect failed with error(s): %s", loadError);
-			bfree(loadError);
-		} else if (!effect) {
-			P_LOG_ERROR("<filter-blur> Loading bilateral blur effect failed with unspecified error.");
-		} else {
-			g_bilateralBlur.effect = effect;
-			makeGaussianKernels();
+	std::pair<std::string, std::string> effects[] = {
+		{ "Box Blur", obs_module_file("effects/box-blur.effect") },
+		{ "Gaussian Blur", obs_module_file("effects/gaussian-blur.effect") },
+		{ "Bilateral Blur", obs_module_file("effects/bilateral-blur.effect") },
+		{ "Color Conversion", obs_module_file("effects/color-conversion.effect") },
+	};
+	for (auto& kv : effects) {
+		try {
+			std::shared_ptr<GS::Effect> effect = std::make_shared<GS::Effect>(kv.second);
+			g_effects.insert(std::make_pair(kv.first, effect));
+		} catch (std::runtime_error ex) {
+			P_LOG_ERROR("<filter-blur> Loading effect '%s' (path: '%s') failed with error(s): %s",
+				kv.first.c_str(), kv.second.c_str(), ex.what());
+			return;
 		}
 	}
 
-	// Color Conversion
-	{
-		char* loadError = nullptr;
-		char* file = obs_module_file("effects/color-conversion.effect");
-		g_colorConversionEffect = gs_effect_create_from_file(file, &loadError);
-		bfree(file);
-		if (loadError != nullptr) {
-			P_LOG_ERROR("<filter-blur> Loading color conversion effect failed with error(s): %s", loadError);
-			bfree(loadError);
-		} else if (!g_colorConversionEffect) {
-			P_LOG_ERROR("<filter-blur> Loading color conversion effect failed with unspecified error.");
-		}
-	}
-
+	GenerateGaussianKernelTextures();
 	obs_leave_graphics();
 
-	if (g_boxBlurEffect && g_gaussianBlur.effect && g_bilateralBlur.effect && g_colorConversionEffect)
-		obs_register_source(&sourceInfo);
+	obs_register_source(&m_sourceInfo);
 }
 
 Filter::Blur::~Blur() {
-	obs_enter_graphics();
-	gs_effect_destroy(g_colorConversionEffect);
-	gs_effect_destroy(g_bilateralBlur.effect);
-	gs_effect_destroy(g_gaussianBlur.effect);
-	for (size_t n = 1; n <= g_maxKernelSize; n++) {
-		if (g_gaussianBlur.kernels.size() > 0)
-			gs_texture_destroy(g_gaussianBlur.kernels[n - 1]);
-	}
-	gs_effect_destroy(g_boxBlurEffect);
-	obs_leave_graphics();
+	g_effects.clear();
+	g_gaussianKernels.clear();
 }
 
 const char * Filter::Blur::get_name(void *) {
@@ -344,7 +274,7 @@ void Filter::Blur::video_render(void *ptr, gs_effect_t *effect) {
 
 Filter::Blur::Instance::Instance(obs_data_t *data, obs_source_t *context) : m_source(context) {
 	obs_enter_graphics();
-	m_effect = g_boxBlurEffect;
+	m_effect = g_effects.at("Box Blur");
 	m_primaryRT = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 	m_secondaryRT = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 	m_rtHorizontal = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
@@ -367,13 +297,13 @@ void Filter::Blur::Instance::update(obs_data_t *data) {
 	m_type = (Type)obs_data_get_int(data, S_FILTER_BLUR_TYPE);
 	switch (m_type) {
 		case Filter::Blur::Type::Box:
-			m_effect = g_boxBlurEffect;
+			m_effect = g_effects.at("Box Blur");
 			break;
 		case Filter::Blur::Type::Gaussian:
-			m_effect = g_gaussianBlur.effect;
+			m_effect = g_effects.at("Gaussian Blur");
 			break;
 		case Filter::Blur::Type::Bilateral:
-			m_effect = g_bilateralBlur.effect;
+			m_effect = g_effects.at("Bilateral Blur");
 			break;
 	}
 	m_size = (uint64_t)obs_data_get_int(data, S_FILTER_BLUR_SIZE);
@@ -409,10 +339,22 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 	uint32_t
 		baseW = obs_source_get_base_width(target),
 		baseH = obs_source_get_base_height(target);
+	gs_effect_t* colorConversionEffect = g_effects.count("Color Conversion") ? g_effects.at("Color Conversion")->GetObject() : nullptr;
 
 	// Skip rendering if our target, parent or context is not valid.
-	if (!target || !parent || !m_source || !m_effect || !m_primaryRT || !m_technique
-		|| !baseW || !baseH) {
+	if (!target || !parent || !m_source) {
+		obs_source_skip_video_filter(m_source);
+		return;
+	}
+	if ((baseW <= 0) || (baseH <= 0)) {
+		P_LOG_ERROR("<filter-blur> Instance '%s' has invalid size source '%s'.",
+			obs_source_get_name(m_source), obs_source_get_name(target));
+		obs_source_skip_video_filter(m_source);
+		return;
+	}
+	if (!m_primaryRT || !m_technique || !m_effect) {
+		P_LOG_ERROR("<filter-blur> Instance '%s' is unable to render, either the render target, technique or effect is broken.",
+			obs_source_get_name(m_source), obs_source_get_name(target));
 		obs_source_skip_video_filter(m_source);
 		return;
 	}
@@ -491,14 +433,14 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 			gs_enable_stencil_write(false);
 			gs_enable_color(true, true, true, true);
 
-			gs_eparam_t* param = gs_effect_get_param_by_name(g_colorConversionEffect, "image");
+			gs_eparam_t* param = gs_effect_get_param_by_name(colorConversionEffect, "image");
 			if (!param) {
 				P_LOG_ERROR("<filter-blur:Final> Failed to set image param.");
 				failed = true;
 			} else {
 				gs_effect_set_texture(param, sourceTexture);
 			}
-			while (gs_effect_loop(g_colorConversionEffect, "RGBToYUV")) {
+			while (gs_effect_loop(colorConversionEffect, "RGBToYUV")) {
 				gs_draw_sprite(sourceTexture, 0, baseW, baseH);
 			}
 			gs_texrender_end(m_secondaryRT);
@@ -562,7 +504,7 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
 
 		// Render
-		while (gs_effect_loop(m_effect, "Draw")) {
+		while (gs_effect_loop(m_effect->GetObject(), "Draw")) {
 			gs_draw_sprite(intermediate, 0, baseW, baseH);
 		}
 
@@ -588,7 +530,7 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 		const char* technique = "Draw";
 
 		if (m_colorFormat == ColorFormat::YUV) {
-			finalEffect = g_colorConversionEffect;
+			finalEffect = colorConversionEffect;
 			technique = "YUVToRGB";
 		}
 
@@ -624,24 +566,24 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 bool Filter::Blur::Instance::apply_shared_param(gs_texture_t* input, float texelX, float texelY) {
 	bool result = true;
 
-	result = result && gs_set_param_texture(m_effect, "u_image", input);
+	result = result && gs_set_param_texture(m_effect->GetObject(), "u_image", input);
 
 	vec2 imageSize;
 	vec2_set(&imageSize,
 		(float)gs_texture_get_width(input),
 		(float)gs_texture_get_height(input));
-	result = result && gs_set_param_float2(m_effect, "u_imageSize", &imageSize);
+	result = result && gs_set_param_float2(m_effect->GetObject(), "u_imageSize", &imageSize);
 
 	vec2 imageTexelDelta;
 	vec2_set(&imageTexelDelta, 1.0f, 1.0f);
 	vec2_div(&imageTexelDelta, &imageTexelDelta, &imageSize);
-	result = result && gs_set_param_float2(m_effect, "u_imageTexel", &imageTexelDelta);
+	result = result && gs_set_param_float2(m_effect->GetObject(), "u_imageTexel", &imageTexelDelta);
 
 	vec2 texel; vec2_set(&texel, texelX, texelY);
-	result = result && gs_set_param_float2(m_effect, "u_texelDelta", &texel);
+	result = result && gs_set_param_float2(m_effect->GetObject(), "u_texelDelta", &texel);
 
-	result = result && gs_set_param_int(m_effect, "u_radius", (int)m_size);
-	result = result && gs_set_param_int(m_effect, "u_diameter", (int)(1 + (m_size * 2)));
+	result = result && gs_set_param_int(m_effect->GetObject(), "u_radius", (int)m_size);
+	result = result && gs_set_param_int(m_effect->GetObject(), "u_diameter", (int)(1 + (m_size * 2)));
 
 	return result;
 }
@@ -653,7 +595,7 @@ bool Filter::Blur::Instance::apply_bilateral_param() {
 		return false;
 
 	// Bilateral Blur
-	param = gs_effect_get_param_by_name(m_effect, "bilateralSmoothing");
+	param = gs_effect_get_param_by_name(m_effect->GetObject(), "bilateralSmoothing");
 	if (!param) {
 		P_LOG_ERROR("<filter-blur> Failed to set bilateralSmoothing param.");
 		return false;
@@ -663,7 +605,7 @@ bool Filter::Blur::Instance::apply_bilateral_param() {
 			(float)(m_bilateralSmoothing * (1 + m_size * 2)));
 	}
 
-	param = gs_effect_get_param_by_name(m_effect, "bilateralSharpness");
+	param = gs_effect_get_param_by_name(m_effect->GetObject(), "bilateralSharpness");
 	if (!param) {
 		P_LOG_ERROR("<filter-blur> Failed to set bilateralSmoothing param.");
 		return false;
@@ -681,14 +623,15 @@ bool Filter::Blur::Instance::apply_gaussian_param() {
 	if (m_type != Type::Gaussian)
 		return false;
 
-	if (g_gaussianBlur.kernels.size() >= m_size) {
-		result = result && gs_set_param_texture(m_effect, "kernel",
-			g_gaussianBlur.kernels[m_size - 1]);
+	std::shared_ptr<GS::Texture> tex;
+	if ((m_size - 1) < MaxKernelSize) {
+		tex = g_gaussianKernels[m_size - 1];
+		result = result && gs_set_param_texture(m_effect->GetObject(), "kernel", tex->GetObject());
 	}
 
 	vec2 kerneltexel;
-	vec2_set(&kerneltexel, 1.0f / (m_size + 1), 0);
-	result = result && gs_set_param_float2(m_effect, "kernelTexel", &kerneltexel);
+	vec2_set(&kerneltexel, 1.0f / gs_texture_get_width(tex->GetObject()), 0);
+	result = result && gs_set_param_float2(m_effect->GetObject(), "kernelTexel", &kerneltexel);
 
 	return result;
 }

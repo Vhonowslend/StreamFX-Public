@@ -21,6 +21,8 @@
 #include "plugin.h"
 #include "gs-helper.h"
 #include "gs-effect.h"
+#include "gs-texture.h"
+#include <memory>
 
 #define S_FILTER_BLUR					"Filter.Blur"
 #define S_FILTER_BLUR_TYPE				"Filter.Blur.Type"
@@ -65,7 +67,7 @@ namespace Filter {
 		};
 
 		private:
-		obs_source_info sourceInfo;
+		obs_source_info m_sourceInfo;
 
 		private:
 		class Instance {
@@ -89,11 +91,10 @@ namespace Filter {
 
 			private:
 			obs_source_t *m_source;
-			gs_effect_t *m_effect;
 			gs_technique_t *m_technique;
 			gs_texrender_t *m_primaryRT, *m_secondaryRT;
 			gs_texrender_t *m_rtHorizontal, *m_rtVertical;
-			std::shared_ptr<GS::Effect> m_effectCache;
+			std::shared_ptr<GS::Effect> m_effect;
 
 			// Blur
 			Type m_type;
