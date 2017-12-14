@@ -30,7 +30,7 @@ extern "C" {
 
 GS::MipMapper::MipMapper() : m_rt(GS_RGBA, GS_ZS_NONE), m_vb(65535) {
 	// Sub layers start here now.
-	double_t size = 0.5, offset = 0.0;
+	float_t size = 0.5, offset = 0.0;
 	for (size_t layer = 0; layer < MAX_LAYERS; layer++) {
 		// Large Block
 		if (layer == 0) {
@@ -139,7 +139,7 @@ gs_texture_t* GS::MipMapper::Render(gs_texture_t* intex) {
 	uint32_t layers = 1, size = height;
 	if (width > height) size = width;
 	layers = static_cast<uint32_t>(ceil(log(double_t(size)) / log(2.0)));
-	size = pow(2, layers);
+	size = (uint32_t)pow(2, layers);
 
 	// Render
 	m_buf = GS::Texture(size, size, GS_RGBA, 1, nullptr, GS_DYNAMIC);
