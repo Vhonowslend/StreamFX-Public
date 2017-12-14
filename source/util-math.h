@@ -31,3 +31,11 @@ inline double_t Gaussian1D(double_t x, double_t o) {
 	double_t a = (1.0 / (o * PI2_SQROOT));
 	return a * b;
 }
+
+inline size_t GetNearestPowerOfTwoAbove(size_t v) {
+	return 1 << size_t(ceil(log10(v) / log10(2)));
+}
+
+inline size_t GetNearestPowerOfTwoBelow(size_t v) {
+	return 1 << size_t(floor(log10(v) / log10(2)));
+}
