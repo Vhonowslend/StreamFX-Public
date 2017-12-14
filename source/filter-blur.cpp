@@ -67,7 +67,6 @@ static void GenerateGaussianKernelTextures() {
 
 	for (size_t n = 0; n < MaxKernelSize; n++) {
 		size_t width = 2 + n;
-		size_t radius = 1 + (1 + n) * 2;
 
 		// Generate Gaussian Gradient and calculate sum.
 		double_t sum = 0;
@@ -87,7 +86,7 @@ static void GenerateGaussianKernelTextures() {
 		const uint8_t** pdata = const_cast<const uint8_t**>(&data);
 
 		try {
-			std::shared_ptr<GS::Texture> tex = std::make_shared<GS::Texture>(textureBufferSize, 1,
+			std::shared_ptr<GS::Texture> tex = std::make_shared<GS::Texture>((uint32_t)textureBufferSize, 1,
 				gs_color_format::GS_R32F, 1, pdata, 0);
 			g_gaussianKernels[n] = tex;
 		} catch (std::runtime_error ex) {
@@ -377,8 +376,6 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 		gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
 
 		// Clear to Black
-		vec4 black;
-		vec4_zero(&black);
 		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
 
 		// Set up camera stuff
