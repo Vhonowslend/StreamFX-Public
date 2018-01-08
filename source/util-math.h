@@ -21,6 +21,12 @@
 #include <math.h>
 #include <inttypes.h>
 
+// OBS
+#include <graphics/vec2.h>
+#include <graphics/vec3.h>
+#include <graphics/vec4.h>
+
+// Constants
 #define PI		3.1415926535897932384626433832795
 #define PI2		6.283185307179586476925286766559
 #define PI2_SQROOT	2.506628274631000502415765284811		
@@ -38,4 +44,21 @@ inline size_t GetNearestPowerOfTwoAbove(size_t v) {
 
 inline size_t GetNearestPowerOfTwoBelow(size_t v) {
 	return 1ull << size_t(floor(log10(double(v)) / log10(2.0)));
+}
+
+
+namespace util {
+	__declspec(align(16)) struct vec3a : public vec3 {
+		static void* vec3a::operator new(size_t count);
+		static void* vec3a::operator new[](size_t count);
+		static void vec3a::operator delete(void* p);
+		static void vec3a::operator delete[](void* p);
+	};
+
+	__declspec(align(16)) struct vec4a : public vec4 {
+		static void* vec4a::operator new(size_t count);
+		static void* vec4a::operator new[](size_t count);
+		static void vec4a::operator delete(void* p);
+		static void vec4a::operator delete[](void* p);
+	};
 }
