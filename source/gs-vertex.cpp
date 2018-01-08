@@ -18,3 +18,48 @@
  */
 
 #include "gs-vertexbuffer.h"
+#include "util-memory.h"
+
+GS::Vertex& GS::Vertex::operator=(const Vertex& r) {
+	vec3_copy(&this->position, &r.position);
+	vec3_copy(&this->normal, &r.normal);
+	vec3_copy(&this->tangent, &r.tangent);
+	for (size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
+		vec4_copy(&this->uv[n], &r.uv[n]);
+	}
+	return *this;
+}
+
+GS::Vertex* GS::Vertex::operator=(const Vertex* r) {
+	vec3_copy(&this->position, &r->position);
+	vec3_copy(&this->normal, &r->normal);
+	vec3_copy(&this->tangent, &r->tangent);
+	for (size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
+		vec4_copy(&this->uv[n], &r->uv[n]);
+	}
+	return this;
+}
+
+void* GS::Vertex::operator new(size_t count) {
+	return util::malloc_aligned(16, count);
+}
+
+void* GS::Vertex::operator new(size_t count, void* d){
+	return d;
+}
+
+void* GS::Vertex::operator new[](size_t count) {
+	return util::malloc_aligned(16, count);
+}
+
+void* GS::Vertex::operator new[](size_t count, void* d) {
+	return d;
+}
+
+void GS::Vertex::operator delete(void* p) {
+	return util::free_aligned(p);
+}
+
+void GS::Vertex::operator delete[](void* p) {
+	return util::free_aligned(p);
+}

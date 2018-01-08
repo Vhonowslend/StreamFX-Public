@@ -29,11 +29,27 @@ extern "C" {
 namespace GS {
 	const uint32_t MAXIMUM_UVW_LAYERS = 8u;
 	// ToDo: Optimize for use with GS::VertexBuffer so that it doesn't require in-memory copy.
-	struct Vertex {
+	__declspec(align(16)) struct Vertex {
 		vec3 position;
 		vec3 normal;
 		vec3 tangent;
 		vec4 uv[MAXIMUM_UVW_LAYERS];
 		uint32_t color;
+
+		// Operators
+		static void* Vertex::operator new(size_t count);
+		static void* Vertex::operator new[](size_t count);
+		static void* Vertex::operator new(size_t count, void* d);
+		static void* Vertex::operator new[](size_t count, void* d);
+		static void Vertex::operator delete(void* p);
+		static void Vertex::operator delete[](void* p);
+		
+		//Vertex& Vertex::operator =(Vertex r);
+		Vertex& Vertex::operator =(const Vertex& r);
+		Vertex* Vertex::operator =(const Vertex* r);
+
+		private:
+		uint32_t padding[3];
 	};
+
 }
