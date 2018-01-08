@@ -46,7 +46,6 @@ inline size_t GetNearestPowerOfTwoBelow(size_t v) {
 	return 1ull << size_t(floor(log10(double(v)) / log10(2.0)));
 }
 
-
 namespace util {
 	__declspec(align(16)) struct vec3a : public vec3 {
 		static void* vec3a::operator new(size_t count);

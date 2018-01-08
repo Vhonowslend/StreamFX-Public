@@ -23,3 +23,4 @@ namespace util {
 	void* malloc_aligned(size_t align, size_t size);
 	void free_aligned(void* mem);
 };
+
