@@ -19,6 +19,7 @@
 
 #include "filter-transform.h"
 #include "strings.h"
+#include "util-math.h"
 
 extern "C" {
 	#pragma warning (push)
@@ -56,7 +57,6 @@ extern "C" {
 #define ST_ROTATION_ORDER_ZXY			"Filter.Transform.Rotation.Order.ZXY"
 #define ST_ROTATION_ORDER_ZYX			"Filter.Transform.Rotation.Order.ZYX"
 
-static const float PI = 3.1415926535897932384626433832795f;
 static const float farZ = 2097152.0f; // 2 pow 21
 static const float nearZ = 1.0f / farZ;
 static const float valueLimit = 65536.0f;
@@ -281,9 +281,14 @@ Filter::Transform::Instance::Instance(obs_data_t *data, obs_source_t *context) :
 	m_isCameraOrthographic(true), m_cameraFieldOfView(90.0),
 	m_isInactive(false), m_isHidden(false), m_isMeshUpdateRequired(false),
 	m_rotationOrder(RotationOrder::ZXY) {
-	vec3_set(&m_position, 0, 0, 0);
-	vec3_set(&m_rotation, 0, 0, 0);
-	vec3_set(&m_scale, 1, 1, 1);
+	m_position = std::make_unique<util::vec3a>();
+	m_rotation = std::make_unique<util::vec3a>();
+	m_scale = std::make_unique<util::vec3a>();
+	m_shear = std::make_unique<util::vec3a>();
+
+	vec3_set(m_position.get(), 0, 0, 0);
+	vec3_set(m_rotation.get(), 0, 0, 0);
+	vec3_set(m_scale.get(), 1, 1, 1);
 
 	obs_enter_graphics();
 	m_texRender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
@@ -311,22 +316,19 @@ void Filter::Transform::Instance::update(obs_data_t *data) {
 		ST_CAMERA_FIELDOFVIEW);
 
 	// Source
-	m_position.x = (float)obs_data_get_double(data, ST_POSITION_X) / 100.0f;
-	m_position.y = (float)obs_data_get_double(data, ST_POSITION_Y) / 100.0f;
-	m_position.z = (float)obs_data_get_double(data, ST_POSITION_Z) / 100.0f;
-	m_scale.x = (float)obs_data_get_double(data, ST_SCALE_X) / 100.0f;
-	m_scale.y = (float)obs_data_get_double(data, ST_SCALE_Y) / 100.0f;
-	m_scale.z = 1.0;
+	m_position->x = (float)obs_data_get_double(data, ST_POSITION_X) / 100.0f;
+	m_position->y = (float)obs_data_get_double(data, ST_POSITION_Y) / 100.0f;
+	m_position->z = (float)obs_data_get_double(data, ST_POSITION_Z) / 100.0f;
+	m_scale->x = (float)obs_data_get_double(data, ST_SCALE_X) / 100.0f;
+	m_scale->y = (float)obs_data_get_double(data, ST_SCALE_Y) / 100.0f;
+	m_scale->z = 1.0f;
 	m_rotationOrder = (int)obs_data_get_int(data, ST_ROTATION_ORDER);
-	m_rotation.x = (float)obs_data_get_double(data,
-		ST_ROTATION_X) / 180.0f * PI;
-	m_rotation.y = (float)obs_data_get_double(data,
-		ST_ROTATION_Y) / 180.0f * PI;
-	m_rotation.z = (float)obs_data_get_double(data,
-		ST_ROTATION_Z) / 180.0f * PI;
-	m_shear.x = (float)obs_data_get_double(data, ST_SHEAR_X) / 100.0f;
-	m_shear.y = (float)obs_data_get_double(data, ST_SHEAR_Y) / 100.0f;
-	m_shear.z = 0.0;
+	m_rotation->x = (float)(obs_data_get_double(data, ST_ROTATION_X) / 180.0f * PI);
+	m_rotation->y = (float)(obs_data_get_double(data, ST_ROTATION_Y) / 180.0f * PI);
+	m_rotation->z = (float)(obs_data_get_double(data, ST_ROTATION_Z) / 180.0f * PI);
+	m_shear->x = (float)obs_data_get_double(data, ST_SHEAR_X) / 100.0f;
+	m_shear->y = (float)obs_data_get_double(data, ST_SHEAR_Y) / 100.0f;
+	m_shear->z = 0.0f;
 	m_isMeshUpdateRequired = true;
 }
 
@@ -414,49 +416,49 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 		matrix4_identity(&ident);
 		switch (m_rotationOrder) {
 			case RotationOrder::XYZ: // XYZ
-				matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation.x);
-				matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation.y);
-				matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation.z);
+				matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
 				break;
 			case RotationOrder::XZY: // XZY
-				matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation.x);
-				matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation.z);
-				matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation.y);
+				matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
 				break;
 			case RotationOrder::YXZ: // YXZ
-				matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation.y);
-				matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation.x);
-				matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation.z);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
+				matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
 				break;
 			case RotationOrder::YZX: // YZX
-				matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation.y);
-				matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation.z);
-				matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation.x);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
+				matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
 				break;
 			case RotationOrder::ZXY: // ZXY
-				matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation.z);
-				matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation.x);
-				matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation.y);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
+				matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
 				break;
 			case RotationOrder::ZYX: // ZYX
-				matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation.z);
-				matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation.y);
-				matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation.x);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
+				matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
+				matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
 				break;
 		}
-		matrix4_translate3f(&ident, &ident, m_position.x, m_position.y, m_position.z);
+		matrix4_translate3f(&ident, &ident, m_position->x, m_position->y, m_position->z);
 
 		/// Calculate vertex position once only.
-		float_t p_x = aspectRatioX * m_scale.x;
-		float_t p_y = 1.0f * m_scale.y;
+		float_t p_x = aspectRatioX * m_scale->x;
+		float_t p_y = 1.0f * m_scale->y;
 
 		/// Generate mesh
 		{
 			GS::Vertex& v = m_vertexHelper->at(0);
 			v.uv[0].x = 0; v.uv[0].y = 0;
 			v.color = 0xFFFFFFFF;
-			v.position.x = -p_x + m_shear.x;
-			v.position.y = -p_y - m_shear.y;
+			v.position.x = -p_x + m_shear->x;
+			v.position.y = -p_y - m_shear->y;
 			v.position.z = 0.0f;
 			vec3_transform(&v.position, &v.position, &ident);
 		}
@@ -464,8 +466,8 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 			GS::Vertex& v = m_vertexHelper->at(1);
 			v.uv[0].x = 1; v.uv[0].y = 0;
 			v.color = 0xFFFFFFFF;
-			v.position.x = p_x + m_shear.x;
-			v.position.y = -p_y + m_shear.y;
+			v.position.x = p_x + m_shear->x;
+			v.position.y = -p_y + m_shear->y;
 			v.position.z = 0.0f;
 			vec3_transform(&v.position, &v.position, &ident);
 		}
@@ -473,8 +475,8 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 			GS::Vertex& v = m_vertexHelper->at(2);
 			v.uv[0].x = 0; v.uv[0].y = 1;
 			v.color = 0xFFFFFFFF;
-			v.position.x = -p_x - m_shear.x;
-			v.position.y = p_y - m_shear.y;
+			v.position.x = -p_x - m_shear->x;
+			v.position.y = p_y - m_shear->y;
 			v.position.z = 0.0f;
 			vec3_transform(&v.position, &v.position, &ident);
 		}
@@ -482,8 +484,8 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 			GS::Vertex& v = m_vertexHelper->at(3);
 			v.uv[0].x = 1; v.uv[0].y = 1;
 			v.color = 0xFFFFFFFF;
-			v.position.x = p_x - m_shear.x;
-			v.position.y = p_y + m_shear.y;
+			v.position.x = p_x - m_shear->x;
+			v.position.y = p_y + m_shear->y;
 			v.position.z = 0.0f;
 			vec3_transform(&v.position, &v.position, &ident);
 		}

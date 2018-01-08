@@ -20,6 +20,7 @@
 #pragma once
 #include "plugin.h"
 #include "gs-vertexbuffer.h"
+#include <memory>
 
 namespace Filter {
 	class Transform {
@@ -75,11 +76,15 @@ namespace Filter {
 			// Source
 			bool m_isInactive, m_isHidden;
 			bool m_isMeshUpdateRequired;
+
+			// 3D Information
 			uint32_t m_rotationOrder;
-			vec3 m_position,
-				m_rotation,
-				m_scale,
-				m_shear;
+			struct {
+				std::unique_ptr<util::vec3a> m_position;
+				std::unique_ptr<util::vec3a> m_rotation;
+				std::unique_ptr<util::vec3a> m_scale;
+				std::unique_ptr<util::vec3a> m_shear;
+			};
 		};
 	};
 }
