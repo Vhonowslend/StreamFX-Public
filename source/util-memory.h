@@ -20,6 +20,6 @@
 #pragma once
 
 namespace util {
-	void* aligned_malloc(size_t align, size_t size);
+	void* malloc_aligned(size_t align, size_t size);
 	void free_aligned(void* mem);
 };

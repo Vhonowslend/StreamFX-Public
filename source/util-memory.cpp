@@ -24,7 +24,7 @@ inline size_t aligned_offset(size_t align, size_t size) {
 	return ((size / align) + 1) * align;
 }
 
-void* util::aligned_malloc(size_t align, size_t size) {
+void* util::malloc_aligned(size_t align, size_t size) {
 	// Ensure that we have space for the pointer and the data.
 	size_t asize = aligned_offset(align, size + sizeof(void*));
 
