@@ -19,6 +19,8 @@
 
 #pragma once
 #include "gs-vertex.h"
+#include "util-math.h"
+#include "util-memory.h"
 #include <inttypes.h>
 #include <vector>
 extern "C" {
@@ -29,7 +31,7 @@ extern "C" {
 }
 
 namespace GS {
-	class VertexBuffer : public std::vector<Vertex> {
+	class VertexBuffer : public std::vector<Vertex, util::AlignmentAllocator<Vertex, 16>> {
 		public:
 		/*!
 		* \brief Create a Vertex Buffer with specific size
@@ -59,7 +61,7 @@ namespace GS {
 		*
 		* \param other The Vertex array to use
 		*/
-		VertexBuffer(std::vector<Vertex>& other);
+		VertexBuffer(std::vector<Vertex*>& other);
 
 
 		VertexBuffer(gs_vertbuffer_t* vb);
@@ -82,11 +84,11 @@ namespace GS {
 
 		// Data Storage
 		struct {
-			std::vector<vec3> positions;
-			std::vector<vec3> normals;
-			std::vector<vec3> tangents;
+			std::vector<util::vec3a> positions;
+			std::vector<util::vec3a> normals;
+			std::vector<util::vec3a> tangents;
 			std::vector<uint32_t> colors;
-			std::vector<std::vector<vec4>> uvws;
+			std::vector<std::vector<util::vec4a>> uvws;
 			std::vector<gs_tvertarray> uvwdata;
 		} m_data;
 	};

@@ -69,7 +69,7 @@ GS::VertexBuffer::VertexBuffer(gs_vertbuffer_t* vb) {
 
 GS::VertexBuffer::VertexBuffer() : VertexBuffer(defaultMaximumVertices) {}
 
-GS::VertexBuffer::VertexBuffer(std::vector<Vertex>& other) : VertexBuffer((uint32_t)other.capacity()) {
+GS::VertexBuffer::VertexBuffer(std::vector<Vertex*>& other) : VertexBuffer((uint32_t)other.capacity()) {
 	std::copy(other.begin(), other.end(), this->end());
 }
 
@@ -101,8 +101,19 @@ gs_vertbuffer_t* GS::VertexBuffer::get(bool refreshGPU) {
 		if (size() > m_maximumVertices)
 			throw std::runtime_error("Too many vertices in Vertex Buffer.");
 
+		// Update data pointer from Graphics Subsystem.
 		m_vertexbufferdata = gs_vertexbuffer_get_data(m_vertexbuffer);
 		std::memset(m_vertexbufferdata, 0, sizeof(gs_vb_data));
+
+		// Resize buffers.
+		m_data.positions.resize(m_maximumVertices);
+		m_data.normals.resize(m_maximumVertices);
+		m_data.tangents.resize(m_maximumVertices);
+		m_data.colors.resize(m_maximumVertices);
+		m_data.uvws.resize(m_uvwLayers);
+		m_data.uvwdata.resize(m_uvwLayers);
+
+		// Assign new data.
 		m_vertexbufferdata->num = m_maximumVertices;
 		m_vertexbufferdata->points = m_data.positions.data();
 		m_vertexbufferdata->normals = m_data.normals.data();
@@ -110,12 +121,15 @@ gs_vertbuffer_t* GS::VertexBuffer::get(bool refreshGPU) {
 		m_vertexbufferdata->colors = m_data.colors.data();
 		m_vertexbufferdata->num_tex = m_uvwLayers;
 		for (uint32_t n = 0; n < m_uvwLayers; n++) {
+			m_data.uvws[n].resize(m_maximumVertices);
 			m_data.uvwdata[n].width = 4;
 			m_data.uvwdata[n].array = m_data.uvws[n].data();
 		}
 		m_vertexbufferdata->tvarray = m_data.uvwdata.data();
+
+		// Copy Data
 		for (size_t vertexIdx = 0; vertexIdx < size(); vertexIdx++) {
-			Vertex& v = this->at(vertexIdx);
+			GS::Vertex& v = this->at(vertexIdx);
 			vec3_copy(&m_data.positions[vertexIdx], &(v.position));
 			vec3_copy(&m_data.normals[vertexIdx], &(v.normal));
 			vec3_copy(&m_data.tangents[vertexIdx], &(v.tangent));
@@ -124,18 +138,20 @@ gs_vertbuffer_t* GS::VertexBuffer::get(bool refreshGPU) {
 			}
 			m_data.colors[vertexIdx] = v.color;
 		}
-		m_vertexbufferdata->num = size();
-		m_vertexbufferdata->num_tex = m_uvwLayers;
 
+		// Update GPU
 		obs_enter_graphics();
 		gs_vertexbuffer_flush(m_vertexbuffer);
+		obs_leave_graphics();
+
+		// WORKAROUND: OBS Studio 20.x and below incorrectly deletes data that it doesn't own.
 		std::memset(m_vertexbufferdata, 0, sizeof(gs_vb_data));
 		m_vertexbufferdata->num = m_maximumVertices;
 		m_vertexbufferdata->num_tex = m_uvwLayers;
 		for (uint32_t n = 0; n < m_uvwLayers; n++) {
 			m_data.uvwdata[n].width = 4;
 		}
-		obs_leave_graphics();
+
 	}
 	return m_vertexbuffer;
 }
