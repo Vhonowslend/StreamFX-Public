@@ -49,6 +49,7 @@ SET(obs-stream-effects_HEADERS
 	"${PROJECT_BINARY_DIR}/source/version.h"
 	"${PROJECT_SOURCE_DIR}/source/strings.h"
 	"${PROJECT_SOURCE_DIR}/source/util-math.h"
+	"${PROJECT_SOURCE_DIR}/source/util-memory.h"
 )
 SET(obs-stream-effects_SOURCES
 	"${PROJECT_SOURCE_DIR}/source/plugin.cpp"
@@ -67,6 +68,7 @@ SET(obs-stream-effects_SOURCES
 	"${PROJECT_SOURCE_DIR}/source/gs-vertexbuffer.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.cpp"
 	"${PROJECT_SOURCE_DIR}/source/util-math.cpp"
+	"${PROJECT_SOURCE_DIR}/source/util-memory.cpp"
 )
 SET(obs-stream-effects_LOCALE
 	"${PROJECT_SOURCE_DIR}/data/locale/en-US.ini"
