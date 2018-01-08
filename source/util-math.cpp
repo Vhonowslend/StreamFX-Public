@@ -19,35 +19,36 @@
 
 #include "util-math.h"
 #include "util-memory.h"
+#include <malloc.h>
 
 void* util::vec3a::operator new(size_t count){
-	return malloc_aligned(16, count);
+	return _aligned_malloc(count, 16);
 }
 
 void* util::vec3a::operator new[](size_t count) {
-	return malloc_aligned(16, count);
+	return _aligned_malloc(count, 16);
 }
 
 void util::vec3a::operator delete(void* p) {
-	free_aligned(p);
+	_aligned_free(p);
 }
 
 void util::vec3a::operator delete[](void* p) {
-	free_aligned(p);
+	_aligned_free(p);
 }
 
-void* util::vec4a::operator new(size_t count) {
-	return malloc_aligned(16, count);
+void* util::vec4a::operator new(size_t count){
+	return _aligned_malloc(count, 16);
 }
 
 void* util::vec4a::operator new[](size_t count) {
-	return malloc_aligned(16, count);
+	return _aligned_malloc(count, 16);
 }
 
 void util::vec4a::operator delete(void* p) {
-	free_aligned(p);
+	_aligned_free(p);
 }
 
 void util::vec4a::operator delete[](void* p) {
-	free_aligned(p);
+	_aligned_free(p);
 }

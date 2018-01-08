@@ -19,6 +19,7 @@
 
 #include "gs-vertexbuffer.h"
 #include "util-memory.h"
+#include <malloc.h>
 
 GS::Vertex& GS::Vertex::operator=(const Vertex& r) {
 	vec3_copy(&this->position, &r.position);
@@ -41,7 +42,7 @@ GS::Vertex* GS::Vertex::operator=(const Vertex* r) {
 }
 
 void* GS::Vertex::operator new(size_t count) {
-	return util::malloc_aligned(16, count);
+	return _aligned_malloc(count, 16);
 }
 
 void* GS::Vertex::operator new(size_t count, void* d){
@@ -49,7 +50,7 @@ void* GS::Vertex::operator new(size_t count, void* d){
 }
 
 void* GS::Vertex::operator new[](size_t count) {
-	return util::malloc_aligned(16, count);
+	return _aligned_malloc(count, 16);
 }
 
 void* GS::Vertex::operator new[](size_t count, void* d) {
@@ -57,9 +58,9 @@ void* GS::Vertex::operator new[](size_t count, void* d) {
 }
 
 void GS::Vertex::operator delete(void* p) {
-	return util::free_aligned(p);
+	return _aligned_free(p);
 }
 
 void GS::Vertex::operator delete[](void* p) {
-	return util::free_aligned(p);
+	return _aligned_free(p);
 }
