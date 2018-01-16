@@ -32,17 +32,16 @@ extern "C" {
 #pragma warning (pop)
 }
 
-// Initialize & Finalizer
-static Filter::Blur* handler;
+// Initializer & Finalizer
+static Filter::Blur* filterBlurInstance;
 INITIALIZER(FilterBlurInit) {
 	initializerFunctions.push_back([] {
-		handler = new Filter::Blur();
+		filterBlurInstance = new Filter::Blur();
 	});
 	finalizerFunctions.push_back([] {
-		delete handler;
+		delete filterBlurInstance;
 	});
 }
-
 
 enum ColorFormat : uint64_t {
 	RGB,

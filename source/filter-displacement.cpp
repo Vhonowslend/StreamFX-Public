@@ -20,6 +20,17 @@
 #include "filter-displacement.h"
 #include "strings.h"
 
+// Initializer & Finalizer
+static Filter::Displacement* filterDisplacementInstance;
+INITIALIZER(FilterDisplacementInit) {
+	initializerFunctions.push_back([] {
+		filterDisplacementInstance = new Filter::Displacement();
+	});
+	finalizerFunctions.push_back([] {
+		delete filterDisplacementInstance;
+	});
+}
+
 Filter::Displacement::Displacement() {
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
 	sourceInfo.id = "obs-stream-effects-filter-displacement";

@@ -19,6 +19,10 @@
 
 #include "filter-shape.h"
 #include "strings.h"
+#include <string>
+#include <vector>
+#include <map>
+#include <memory>
 
 extern "C" {
 #pragma warning (push)
@@ -29,10 +33,16 @@ extern "C" {
 #pragma warning (pop)
 }
 
-#include <string>
-#include <vector>
-#include <map>
-#include <memory>
+// Initializer & Finalizer
+static Filter::Shape* filterShapeInstance;
+INITIALIZER(FilterShapeInit) {
+	initializerFunctions.push_back([] {
+		filterShapeInstance = new Filter::Shape();
+	});
+	finalizerFunctions.push_back([] {
+		delete filterShapeInstance;
+	});
+}
 
 typedef std::pair<uint32_t, std::string> cacheKey;
 typedef std::pair<std::string, std::string> cacheValue;
@@ -66,6 +76,7 @@ static void initialize() {
 }
 
 Filter::Shape::Shape() {
+	return; // Disabled for the time being. 3D Transform is better for this.
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
 	sourceInfo.id = "obs-stream-effects-filter-shape";
 	sourceInfo.type = OBS_SOURCE_TYPE_FILTER;
@@ -84,7 +95,6 @@ Filter::Shape::Shape() {
 	sourceInfo.video_tick = video_tick;
 	sourceInfo.video_render = video_render;
 
-	// Disabled for the time being. 3D Transform is better for this.
 	obs_register_source(&sourceInfo);
 
 	initialize();

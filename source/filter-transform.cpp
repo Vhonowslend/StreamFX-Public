@@ -30,6 +30,17 @@ extern "C" {
 	#pragma warning (pop)
 }
 
+// Initializer & Finalizer
+static Filter::Transform* filterTransformInstance;
+INITIALIZER(FilterTransformInit) {
+	initializerFunctions.push_back([] {
+		filterTransformInstance = new Filter::Transform();
+	});
+	finalizerFunctions.push_back([] {
+		delete filterTransformInstance;
+	});
+}
+
 #define ST					"Filter.Transform"
 #define ST_CAMERA				"Filter.Transform.Camera"
 #define ST_CAMERA_ORTHOGRAPHIC			"Filter.Transform.Camera.Orthographic"

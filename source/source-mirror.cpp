@@ -43,13 +43,14 @@ enum class ScalingMethod : int64_t {
 	Lanczos,
 };
 
-Source::MirrorAddon* inst;
+// Initializer & Finalizer
+Source::MirrorAddon* sourceMirrorInstance;
 INITIALIZER(SourceMirrorInit) {
 	initializerFunctions.push_back([] {
-		inst = new Source::MirrorAddon();
+		sourceMirrorInstance = new Source::MirrorAddon();
 	});
 	finalizerFunctions.push_back([] {
-		delete inst;
+		delete sourceMirrorInstance;
 	});
 }
 
