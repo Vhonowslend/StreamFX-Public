@@ -18,6 +18,7 @@
  */
 
 #pragma once
+#include "gs-limits.h"
 #include <inttypes.h>
 #include <xmmintrin.h>
 extern "C" {
@@ -28,41 +29,11 @@ extern "C" {
 }
 
 namespace GS {
-	const uint32_t MAXIMUM_UVW_LAYERS = 8u;
-	// ToDo: Optimize for use with GS::VertexBuffer so that it doesn't require in-memory copy.
-	__declspec(align(16)) struct Vertex {
-		union {
-			__m128 _positionM;
-			vec3 position;
-		};
-		union {
-			__m128 _normalM;
-			vec3 normal;
-		};
-		union {
-			__m128 _tangentM;
-			vec3 tangent;
-		};
-		union {
-			__m128 _uvM[MAXIMUM_UVW_LAYERS];
-			vec4 uv[MAXIMUM_UVW_LAYERS];
-		};
-		uint32_t color;
-
-		// Operators
-		static void* Vertex::operator new(size_t count);
-		static void* Vertex::operator new[](size_t count);
-		static void* Vertex::operator new(size_t count, void* d);
-		static void* Vertex::operator new[](size_t count, void* d);
-		static void Vertex::operator delete(void* p);
-		static void Vertex::operator delete[](void* p);
-		
-		//Vertex& Vertex::operator =(Vertex r);
-		Vertex& Vertex::operator =(const Vertex& r);
-		Vertex* Vertex::operator =(const Vertex* r);
-
-		private:
-		uint32_t padding[3];
+	struct Vertex {
+		vec3* position;
+		vec3* normal;
+		vec3* tangent;
+		uint32_t* color;
+		vec4* uv[MAXIMUM_UVW_LAYERS];
 	};
-
 }

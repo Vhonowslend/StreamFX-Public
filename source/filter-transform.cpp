@@ -465,41 +465,42 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 
 		/// Generate mesh
 		{
-			GS::Vertex& v = m_vertexHelper->at(0);
-			v.uv[0].x = 0; v.uv[0].y = 0;
-			v.color = 0xFFFFFFFF;
-			v.position.x = -p_x + m_shear->x;
-			v.position.y = -p_y - m_shear->y;
-			v.position.z = 0.0f;
-			vec3_transform(&v.position, &v.position, &ident);
+			GS::Vertex vtx = m_vertexHelper->at(0);
+			*vtx.color = 0xFFFFFFFF;
+			vec4_set(vtx.uv[0], 0, 0, 0, 0);
+			vec3_set(vtx.position, 
+				-p_x + m_shear->x, 
+				-p_y - m_shear->y, 0);
+			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 		{
-			GS::Vertex& v = m_vertexHelper->at(1);
-			v.uv[0].x = 1; v.uv[0].y = 0;
-			v.color = 0xFFFFFFFF;
-			v.position.x = p_x + m_shear->x;
-			v.position.y = -p_y + m_shear->y;
-			v.position.z = 0.0f;
-			vec3_transform(&v.position, &v.position, &ident);
+			GS::Vertex vtx = m_vertexHelper->at(1);
+			*vtx.color = 0xFFFFFFFF;
+			vec4_set(vtx.uv[0], 1, 0, 0, 0);
+			vec3_set(vtx.position,
+				p_x + m_shear->x,
+				-p_y + m_shear->y, 0);
+			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 		{
-			GS::Vertex& v = m_vertexHelper->at(2);
-			v.uv[0].x = 0; v.uv[0].y = 1;
-			v.color = 0xFFFFFFFF;
-			v.position.x = -p_x - m_shear->x;
-			v.position.y = p_y - m_shear->y;
-			v.position.z = 0.0f;
-			vec3_transform(&v.position, &v.position, &ident);
+			GS::Vertex vtx = m_vertexHelper->at(2);
+			*vtx.color = 0xFFFFFFFF;
+			vec4_set(vtx.uv[0], 0, 1, 0, 0);
+			vec3_set(vtx.position,
+				-p_x - m_shear->x,
+				p_y - m_shear->y, 0);
+			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 		{
-			GS::Vertex& v = m_vertexHelper->at(3);
-			v.uv[0].x = 1; v.uv[0].y = 1;
-			v.color = 0xFFFFFFFF;
-			v.position.x = p_x - m_shear->x;
-			v.position.y = p_y + m_shear->y;
-			v.position.z = 0.0f;
-			vec3_transform(&v.position, &v.position, &ident);
+			GS::Vertex vtx = m_vertexHelper->at(3);
+			*vtx.color = 0xFFFFFFFF;
+			vec4_set(vtx.uv[0], 1, 1, 0, 0);
+			vec3_set(vtx.position,
+				p_x - m_shear->x,
+				p_y + m_shear->y, 0);
+			vec3_transform(vtx.position, vtx.position, &ident);
 		}
+
 		m_vertexBuffer = m_vertexHelper->get();
 		if (!m_vertexBuffer) {
 			obs_source_skip_video_filter(m_sourceContext);

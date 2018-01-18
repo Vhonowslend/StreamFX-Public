@@ -273,12 +273,12 @@ void Filter::Shape::Instance::update(obs_data_t *data) {
 	uint32_t points = (uint32_t)obs_data_get_int(data, P_SHAPE_POINTS);
 	m_vertexHelper->resize(points);
 	for (uint32_t point = 0; point < points; point++) {
-		GS::Vertex& v = m_vertexHelper->at(point);
+		GS::Vertex v = m_vertexHelper->at(point);
 		{
 			auto strings = cache.find(std::make_pair(point,
 				P_SHAPE_POINT_X));
 			if (strings != cache.end()) {
-				v.position.x = (float)(obs_data_get_double(data,
+				v.position->x = (float)(obs_data_get_double(data,
 					strings->second.first.c_str()) / 100.0);
 			}
 		}
@@ -286,7 +286,7 @@ void Filter::Shape::Instance::update(obs_data_t *data) {
 			auto strings = cache.find(std::make_pair(point,
 				P_SHAPE_POINT_Y));
 			if (strings != cache.end()) {
-				v.position.y = (float)(obs_data_get_double(data,
+				v.position->y = (float)(obs_data_get_double(data,
 					strings->second.first.c_str()) / 100.0);
 			}
 		}
@@ -294,7 +294,7 @@ void Filter::Shape::Instance::update(obs_data_t *data) {
 			auto strings = cache.find(std::make_pair(point,
 				P_SHAPE_POINT_U));
 			if (strings != cache.end()) {
-				v.uv[0].x = (float)(obs_data_get_double(data,
+				v.uv[0]->x = (float)(obs_data_get_double(data,
 					strings->second.first.c_str()) / 100.0);
 			}
 		}
@@ -302,12 +302,12 @@ void Filter::Shape::Instance::update(obs_data_t *data) {
 			auto strings = cache.find(std::make_pair(point,
 				P_SHAPE_POINT_V));
 			if (strings != cache.end()) {
-				v.uv[0].y = (float)(obs_data_get_double(data,
+				v.uv[0]->y = (float)(obs_data_get_double(data,
 					strings->second.first.c_str()) / 100.0);
 			}
 		}
-		v.color = 0xFFFFFFFF;
-		v.position.z = 0.0f;
+		*v.color = 0xFFFFFFFF;
+		v.position->z = 0.0f;
 	}
 	drawmode = (gs_draw_mode)obs_data_get_int(data, P_SHAPE_MODE);
 	obs_enter_graphics();

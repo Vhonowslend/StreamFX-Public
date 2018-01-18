@@ -18,11 +18,11 @@
  */
 
 #pragma once
+#include "gs-limits.h"
 #include "gs-vertex.h"
 #include "util-math.h"
 #include "util-memory.h"
 #include <inttypes.h>
-#include <vector>
 extern "C" {
 	#pragma warning( push )
 	#pragma warning( disable: 4201 )
@@ -31,8 +31,9 @@ extern "C" {
 }
 
 namespace GS {
-	class VertexBuffer : public std::vector<Vertex, util::AlignmentAllocator<Vertex, 16>> {
+	class VertexBuffer {
 		public:
+#pragma region Constructor & Destructor
 		/*!
 		* \brief Create a Vertex Buffer with specific size
 		*
@@ -47,26 +48,36 @@ namespace GS {
 		*/
 		VertexBuffer();
 
+		virtual ~VertexBuffer();
+#pragma endregion Constructor & Destructor
+
+#pragma region Copy & Move Constructor
 		/*!
-		 * \brief Create a copy of a Vertex Buffer
-		 * Full Description below
-		 *
-		 * \param other The Vertex Buffer to copy
-		 */
+		* \brief Create a copy of a Vertex Buffer
+		* Full Description below
+		*
+		* \param other The Vertex Buffer to copy
+		*/
 		VertexBuffer(VertexBuffer& other);
 
 		/*!
-		* \brief Create a Vertex Buffer from a Vertex array
+		* \brief Create a copy of a Vertex Buffer
 		* Full Description below
 		*
-		* \param other The Vertex array to use
+		* \param other The Vertex Buffer to copy
 		*/
-		VertexBuffer(std::vector<Vertex*>& other);
+		VertexBuffer(gs_vertbuffer_t* other);
+#pragma endregion Copy & Move Constructor
+		
+		void resize(size_t new_size);
 
+		size_t size();
 
-		VertexBuffer(gs_vertbuffer_t* vb);
+		bool empty();
 
-		virtual ~VertexBuffer();
+		const GS::Vertex at(size_t idx);
+
+		const GS::Vertex operator[](const size_t pos);
 
 		void set_uv_layers(uint32_t layers);
 
@@ -76,20 +87,23 @@ namespace GS {
 
 		gs_vertbuffer_t* get(bool refreshGPU);
 
-		protected:
-		uint32_t m_maximumVertices;
-		uint32_t m_uvwLayers;
+		private:
+		uint32_t m_size;
+		uint32_t m_capacity;
+
+
+		uint32_t m_layers;
+
+		// Memory Storage
+		vec3 *m_positions;
+		vec3 *m_normals;
+		vec3 *m_tangents;
+		uint32_t *m_colors;
+		vec4 *m_uvs[MAXIMUM_UVW_LAYERS];
+
+		// OBS GS Data
 		gs_vb_data* m_vertexbufferdata;
 		gs_vertbuffer_t* m_vertexbuffer;
-
-		// Data Storage
-		struct {
-			std::vector<util::vec3a> positions;
-			std::vector<util::vec3a> normals;
-			std::vector<util::vec3a> tangents;
-			std::vector<uint32_t> colors;
-			std::vector<std::vector<util::vec4a>> uvws;
-			std::vector<gs_tvertarray> uvwdata;
-		} m_data;
+		gs_tvertarray* m_layerdata;
 	};
 }
