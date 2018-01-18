@@ -18,14 +18,13 @@
  */
 
 #include "gs-indexbuffer.h"
+#include "gs-limits.h"
 extern "C" {
 	#pragma warning( push )
 	#pragma warning( disable: 4201 )
 	#include <libobs/obs.h>
 	#pragma warning( pop )
 }
-
-const uint32_t defaultMaximumVertices = 65535u;
 
 GS::IndexBuffer::IndexBuffer(uint32_t maximumVertices) {
 	this->reserve(maximumVertices);
@@ -35,7 +34,7 @@ GS::IndexBuffer::IndexBuffer(uint32_t maximumVertices) {
 	obs_leave_graphics();
 }
 
-GS::IndexBuffer::IndexBuffer() : IndexBuffer(defaultMaximumVertices) {}
+GS::IndexBuffer::IndexBuffer() : IndexBuffer(MAXIMUM_VERTICES) {}
 
 GS::IndexBuffer::IndexBuffer(IndexBuffer& other) : IndexBuffer((uint32_t)other.size()) {
 	std::copy(other.begin(), other.end(), this->end());
