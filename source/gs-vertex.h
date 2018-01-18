@@ -19,6 +19,7 @@
 
 #pragma once
 #include <inttypes.h>
+#include <xmmintrin.h>
 extern "C" {
 	#pragma warning( push )
 	#pragma warning( disable: 4201 )
@@ -30,10 +31,22 @@ namespace GS {
 	const uint32_t MAXIMUM_UVW_LAYERS = 8u;
 	// ToDo: Optimize for use with GS::VertexBuffer so that it doesn't require in-memory copy.
 	__declspec(align(16)) struct Vertex {
-		vec3 position;
-		vec3 normal;
-		vec3 tangent;
-		vec4 uv[MAXIMUM_UVW_LAYERS];
+		union {
+			__m128 _positionM;
+			vec3 position;
+		};
+		union {
+			__m128 _normalM;
+			vec3 normal;
+		};
+		union {
+			__m128 _tangentM;
+			vec3 tangent;
+		};
+		union {
+			__m128 _uvM[MAXIMUM_UVW_LAYERS];
+			vec4 uv[MAXIMUM_UVW_LAYERS];
+		};
 		uint32_t color;
 
 		// Operators
