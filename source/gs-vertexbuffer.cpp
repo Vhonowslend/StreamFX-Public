@@ -88,6 +88,10 @@ GS::VertexBuffer::~VertexBuffer() {
 			m_uvs[n] = nullptr;
 		}
 	}
+	if (m_layerdata) {
+		util::free_aligned(m_layerdata);
+		m_layerdata = nullptr;
+	}
 	if (m_vertexbufferdata) {
 		std::memset(m_vertexbufferdata, 0, sizeof(gs_vb_data));
 		if (!m_vertexbuffer) {
