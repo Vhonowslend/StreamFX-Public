@@ -20,8 +20,10 @@
 #pragma once
 #include "plugin.h"
 #include "gs-effect.h"
+#include "gs-rendertarget.h"
 #include <list>
 #include <vector>
+#include <inttypes.h>
 
 namespace Filter {
 	class CustomShader {
@@ -53,7 +55,7 @@ namespace Filter {
 			public:
 			Instance(obs_data_t*, obs_source_t*);
 			~Instance();
-
+			
 			void update(obs_data_t*);
 			uint32_t get_width();
 			uint32_t get_height();
@@ -63,15 +65,15 @@ namespace Filter {
 			void video_render(gs_effect_t*);
 			void get_properties(obs_properties_t *);
 
-			protected:
-			void update_shader_file(std::string file);
-			std::string get_shader_file();
+			private:
+			void CheckShaderFile(std::string file, float_t time);
+			std::string GetShaderFile();
+			void CheckTextures(float_t time);
 
 			bool IsSpecialParameter(std::string name, GS::EffectParameter::Type type);
-			void ApplySpecialParameter();
-
+			
 			private:
-			obs_source_t *m_sourceContext;
+			obs_source_t * m_source;
 			bool m_isActive = true;
 
 			// Shader
@@ -81,28 +83,41 @@ namespace Filter {
 				size_t size;
 				float_t lastCheck;
 			} m_shaderFile;
+
 			GS::Effect m_effect;
 			struct Parameter {
-				std::vector<std::string> names;
-				std::vector<std::string> descs;
-				std::string origName;
-				GS::EffectParameter::Type origType;
+				std::string name;
+				GS::EffectParameter::Type type;
 
-				// Texture Input
-				bool texInputSource = false;
-				struct {
-					std::string path;
-					time_t timeCreated, timeModified;
-					size_t fileSize;
-					float_t lastChecked;
-				} textureFile;
-				struct {
-					obs_source_t* source;
-					std::pair<uint32_t, uint32_t> resolution;
-				} textureSource;
+				std::vector<std::string> uiNames;
+				std::vector<std::string> uiDescriptions;
 
+				struct {
+					union {
+						int32_t i[4];
+						float_t f[4];
+						bool b;
+					};
+					bool textureIsSource = false;
+					struct {
+						bool dirty = false;
+						std::string name;
+						obs_source_t* source = nullptr;
+						std::shared_ptr<GS::RenderTarget> rendertarget;
+					} source;
+					struct {
+						bool dirty = false;
+						std::string path;
+						time_t createTime, modifiedTime;
+						size_t fileSize;
+						float_t lastCheck;
+						std::shared_ptr<GS::Texture> texture;
+					} file;
+				} value;
 			};
 			std::list<Parameter> m_effectParameters;
+
+			std::unique_ptr<GS::RenderTarget> m_renderTarget;
 
 
 			friend class CustomShader;
