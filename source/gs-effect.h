@@ -77,7 +77,9 @@ namespace GS {
 		void SetIntegerArray(int32_t v[], size_t sz);
 		void SetMatrix(matrix4& v);
 		void SetTexture(std::shared_ptr<GS::Texture> v);
+		void SetTexture(gs_texture_t* v);
 		void SetSampler(std::shared_ptr<GS::Sampler> v);
+		void SetSampler(gs_sampler_state* v);
 
 		private:
 		gs_eparam_t* m_param;
