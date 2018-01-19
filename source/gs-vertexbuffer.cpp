@@ -265,6 +265,28 @@ uint32_t GS::VertexBuffer::GetUVLayers() {
 	return m_layers;
 }
 
+vec3* GS::VertexBuffer::GetPositions() {
+	return m_positions;
+}
+
+vec3* GS::VertexBuffer::GetNormals() {
+	return m_normals;
+}
+
+vec3* GS::VertexBuffer::GetTangents() {
+	return m_tangents;
+}
+
+uint32_t* GS::VertexBuffer::GetColors() {
+	return m_colors;
+}
+
+vec4* GS::VertexBuffer::GetUVLayer(size_t idx) {
+	if ((idx < 0) || (idx >= m_layers)) {
+		throw std::out_of_range("idx out of range");
+	}
+	return m_uvs[idx];
+}
 
 gs_vertbuffer_t* GS::VertexBuffer::Update(bool refreshGPU) {
 	if (!refreshGPU)

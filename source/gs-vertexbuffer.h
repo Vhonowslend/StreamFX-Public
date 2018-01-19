@@ -114,6 +114,46 @@ namespace GS {
 
 		uint32_t GetUVLayers();
 
+		/*!
+		* \brief Directly access the positions buffer
+		* Returns the internal memory that is assigned to hold all vertex positions.
+		*
+		* \return A <vec3*> that points at the first vertex's position.
+		*/
+		vec3* GetPositions();
+
+		/*!
+		* \brief Directly access the normals buffer
+		* Returns the internal memory that is assigned to hold all vertex normals.
+		*
+		* \return A <vec3*> that points at the first vertex's normal.
+		*/
+		vec3* GetNormals();
+
+		/*!
+		* \brief Directly access the tangents buffer
+		* Returns the internal memory that is assigned to hold all vertex tangents.
+		*
+		* \return A <vec3*> that points at the first vertex's tangent.
+		*/
+		vec3* GetTangents();
+
+		/*!
+		* \brief Directly access the colors buffer
+		* Returns the internal memory that is assigned to hold all vertex colors.
+		*
+		* \return A <uint32_t*> that points at the first vertex's color.
+		*/
+		uint32_t* GetColors();
+
+		/*!
+		* \brief Directly access the uv buffer
+		* Returns the internal memory that is assigned to hold all vertex uvs.
+		*
+		* \return A <vec4*> that points at the first vertex's uv.
+		*/
+		vec4* GetUVLayer(size_t idx);
+
 	#pragma region Update / Grab GS object
 		gs_vertbuffer_t* Update();
 
