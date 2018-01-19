@@ -22,6 +22,9 @@
 #include <malloc.h>
 
 namespace util {
+	inline size_t aligned_offset(size_t align, size_t pos) {
+		return ((pos / align) + 1) * align;
+	}
 	void* malloc_aligned(size_t align, size_t size);
 	void free_aligned(void* mem);
 
@@ -55,11 +58,11 @@ namespace util {
 		}
 
 		inline pointer allocate(size_type n) {
-			return (pointer)_aligned_malloc(n*sizeof(value_type), N);
+			return (pointer)malloc_aligned(n*sizeof(value_type), N);
 		}
 
 		inline void deallocate(pointer p, size_type) {
-			_aligned_free(p);
+			free_aligned(p);
 		}
 
 		inline void construct(pointer p, const value_type & wert) {
