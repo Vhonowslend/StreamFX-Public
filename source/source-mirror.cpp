@@ -34,6 +34,7 @@
 #define P_SCALING_METHOD_BICUBIC			"Source.Mirror.Scaling.Method.Bicubic"
 #define P_SCALING_METHOD_LANCZOS			"Source.Mirror.Scaling.Method.Lanczos"
 #define P_SCALING_SIZE					"Source.Mirror.Scaling.Size"
+#define P_SCALING_TRANSFORMKEEPORIGINAL			"Source.Mirror.Scaling.TransformKeepOriginal"
 
 enum class ScalingMethod : int64_t {
 	Point,
@@ -154,6 +155,9 @@ obs_properties_t * Source::MirrorAddon::get_properties(void *ptr) {
 		OBS_TEXT_DEFAULT);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_SIZE)));
 
+	p = obs_properties_add_bool(pr, P_SCALING_TRANSFORMKEEPORIGINAL, P_TRANSLATE(P_SCALING_TRANSFORMKEEPORIGINAL));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_TRANSFORMKEEPORIGINAL)));
+
 	return pr;
 }
 
@@ -201,6 +205,7 @@ Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src) {
 	m_rescale = false;
 	m_width = m_height = 1;
 	m_renderTarget = std::make_unique<GS::RenderTarget>(GS_RGBA, GS_ZS_NONE);
+	m_renderTargetScale = std::make_unique<GS::RenderTarget>(GS_RGBA, GS_ZS_NONE);
 	m_scalingEffect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 
 	update(data);
@@ -211,7 +216,7 @@ Source::Mirror::~Mirror() {
 }
 
 uint32_t Source::Mirror::get_width() {
-	if (m_rescale && m_width > 0)
+	if (m_rescale && m_width > 0 && !m_keepOriginalSize)
 		return m_width;
 	if (m_target && m_target != m_source)
 		return obs_source_get_width(m_target);
@@ -219,7 +224,7 @@ uint32_t Source::Mirror::get_width() {
 }
 
 uint32_t Source::Mirror::get_height() {
-	if (m_rescale && m_height > 0)
+	if (m_rescale && m_height > 0 && !m_keepOriginalSize)
 		return m_height;
 	if (m_target && m_target != m_source)
 		return obs_source_get_height(m_target);
@@ -282,6 +287,8 @@ void Source::Mirror::update(obs_data_t* data) {
 				m_scalingEffect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 				break;
 		}
+
+		m_keepOriginalSize = obs_data_get_bool(data, P_SCALING_TRANSFORMKEEPORIGINAL);
 	}
 }
 
@@ -310,27 +317,41 @@ void Source::Mirror::video_render(gs_effect_t* effect) {
 		// Store original Source Texture
 		try {
 			vec4 black; vec4_zero(&black);
-			auto op = m_renderTarget->Render(m_width, m_height);
+			auto op = m_renderTarget->Render(sw, sh);
 			gs_ortho(0, sw, 0, sh, 0, 1);
 			gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
 
-			gs_eparam_t *scale_param = gs_effect_get_param_by_name(m_scalingEffect, "base_dimension_i");
-			if (scale_param) {
-				struct vec2 base_res_i = {
-					1.0f / (float)sw,
-					1.0f / (float)sh
-				};
-				gs_effect_set_vec2(scale_param, &base_res_i);
-			}
-			while (gs_effect_loop(m_scalingEffect, "Draw")) {
-				obs_source_video_render(m_target);
-			}
+			obs_source_video_render(m_target);
 		} catch (...) {
 			return;
 		}
 
-		while (gs_effect_loop(obs_get_base_effect(OBS_EFFECT_DEFAULT), "Draw")) {
-			obs_source_draw(m_renderTarget->GetTextureObject(), 0, 0, m_width, m_height, false);
+		gs_eparam_t *scale_param = gs_effect_get_param_by_name(m_scalingEffect, "base_dimension_i");
+		if (scale_param) {
+			struct vec2 base_res_i = {
+				1.0f / (float)sw,
+				1.0f / (float)sh
+			};
+			gs_effect_set_vec2(scale_param, &base_res_i);
+		}
+
+		if (m_keepOriginalSize) {
+			{
+				vec4 black; vec4_zero(&black);
+				auto op = m_renderTargetScale->Render(m_width, m_height);
+				gs_ortho(0, m_width, 0, m_height, 0, 1);
+				gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
+				while (gs_effect_loop(m_scalingEffect, "Draw")) {
+					obs_source_draw(m_renderTarget->GetTextureObject(), 0, 0, m_width, m_height, false);
+				}
+			}
+			while (gs_effect_loop(obs_get_base_effect(OBS_EFFECT_DEFAULT), "Draw")) {
+				obs_source_draw(m_renderTargetScale->GetTextureObject(), 0, 0, sw, sh, false);
+			}
+		} else {
+			while (gs_effect_loop(m_scalingEffect, "Draw")) {
+				obs_source_draw(m_renderTarget->GetTextureObject(), 0, 0, m_width, m_height, false);
+			}
 		}
 	} else {
 		obs_source_video_render(m_target);

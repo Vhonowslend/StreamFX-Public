@@ -70,8 +70,10 @@ namespace Source {
 		std::string m_targetName;
 
 		bool m_rescale = false;
+		bool m_keepOriginalSize = false;
 		uint32_t m_width, m_height;
 		std::unique_ptr<GS::RenderTarget> m_renderTarget;
+		std::unique_ptr<GS::RenderTarget> m_renderTargetScale;
 		gs_effect_t* m_scalingEffect;
 	};
 };
