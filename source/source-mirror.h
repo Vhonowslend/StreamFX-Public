@@ -66,8 +66,8 @@ namespace Source {
 
 		private:
 		bool m_active;
-		obs_source_t* m_source;
-		obs_source_t* m_target;
+		obs_source_t* m_source = nullptr;
+		obs_source_t* m_target = nullptr;
 		std::string m_targetName;
 
 		bool m_rescale = false;
@@ -76,6 +76,6 @@ namespace Source {
 		std::unique_ptr<GS::RenderTarget> m_renderTarget;
 		std::unique_ptr<GS::RenderTarget> m_renderTargetScale;
 		std::shared_ptr<GS::Sampler> m_sampler;
-		gs_effect_t* m_scalingEffect;
+		gs_effect_t* m_scalingEffect = nullptr;
 	};
 };

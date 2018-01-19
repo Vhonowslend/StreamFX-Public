@@ -113,13 +113,13 @@ bool Source::MirrorAddon::modified_properties(obs_properties_t *pr, obs_property
 	return false;
 }
 
-bool UpdateSourceListCB(void *ptr, obs_source_t* src) {
+static bool UpdateSourceListCB(void *ptr, obs_source_t* src) {
 	obs_property_t* p = (obs_property_t*)ptr;
 	obs_property_list_add_string(p, obs_source_get_name(src), obs_source_get_name(src));
 	return true;
 }
 
-void UpdateSourceList(obs_property_t* p) {
+static void UpdateSourceList(obs_property_t* p) {
 	obs_property_list_clear(p);
 	obs_enum_sources(UpdateSourceListCB, p);
 }
@@ -213,7 +213,8 @@ Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src) {
 }
 
 Source::Mirror::~Mirror() {
-
+	if (m_target)
+		obs_source_release(m_target);
 }
 
 uint32_t Source::Mirror::get_width() {
@@ -235,6 +236,8 @@ uint32_t Source::Mirror::get_height() {
 void Source::Mirror::update(obs_data_t* data) {
 	// Update selected source.
 	const char* source = obs_data_get_string(data, P_SOURCE);
+	if (m_target)
+		obs_source_release(m_target);
 	m_target = obs_get_source_by_name(source);
 	m_targetName = source;
 
@@ -324,7 +327,7 @@ void Source::Mirror::video_render(gs_effect_t* effect) {
 		try {
 			vec4 black; vec4_zero(&black);
 			auto op = m_renderTarget->Render(sw, sh);
-			gs_ortho(0, sw, 0, sh, 0, 1);
+			gs_ortho(0, (float_t)sw, 0, (float_t)sh, 0, 1);
 			gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
 
 			obs_source_video_render(m_target);
@@ -345,7 +348,7 @@ void Source::Mirror::video_render(gs_effect_t* effect) {
 			{
 				vec4 black; vec4_zero(&black);
 				auto op = m_renderTargetScale->Render(m_width, m_height);
-				gs_ortho(0, m_width, 0, m_height, 0, 1);
+				gs_ortho(0, (float_t)m_width, 0, (float_t)m_height, 0, 1);
 				gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
 				while (gs_effect_loop(m_scalingEffect, "Draw")) {
 					gs_eparam_t* image = gs_effect_get_param_by_name(m_scalingEffect, "image");
