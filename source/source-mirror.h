@@ -20,6 +20,7 @@
 #pragma once
 #include "plugin.h"
 #include "gs-rendertarget.h"
+#include "gs-sampler.h"
 #include <memory>
 
 namespace Source {
@@ -74,6 +75,7 @@ namespace Source {
 		uint32_t m_width, m_height;
 		std::unique_ptr<GS::RenderTarget> m_renderTarget;
 		std::unique_ptr<GS::RenderTarget> m_renderTargetScale;
+		std::shared_ptr<GS::Sampler> m_sampler;
 		gs_effect_t* m_scalingEffect;
 	};
 };
