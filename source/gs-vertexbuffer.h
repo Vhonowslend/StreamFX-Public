@@ -24,41 +24,31 @@
 #include "util-memory.h"
 #include <inttypes.h>
 extern "C" {
-	#pragma warning( push )
-	#pragma warning( disable: 4201 )
-	#include <libobs/graphics/graphics.h>
-	#pragma warning( pop )
+#pragma warning( push )
+#pragma warning( disable: 4201 )
+#include <libobs/graphics/graphics.h>
+#pragma warning( pop )
 }
 
 namespace GS {
 	class VertexBuffer {
 		public:
-#pragma region Constructor & Destructor
+	#pragma region Constructor & Destructor
+		virtual ~VertexBuffer();
+
 		/*!
-		* \brief Create a Vertex Buffer with specific size
+		* \brief Create a Vertex Buffer with a specific number of Vertices.
 		*
 		* \param maximumVertices Maximum amount of vertices to store.
 		*/
 		VertexBuffer(uint32_t maximumVertices);
 
 		/*!
-		* \brief Create a Vertex Buffer with default size
-		* This will create a new vertex buffer with the default maximum size.
+		* \brief Create a Vertex Buffer with the maximum number of Vertices.
 		*
+		* \param maximumVertices Maximum amount of vertices to store.
 		*/
-		VertexBuffer();
-
-		virtual ~VertexBuffer();
-#pragma endregion Constructor & Destructor
-
-#pragma region Copy & Move Constructor
-		/*!
-		* \brief Create a copy of a Vertex Buffer
-		* Full Description below
-		*
-		* \param other The Vertex Buffer to copy
-		*/
-		VertexBuffer(VertexBuffer& other);
+		VertexBuffer() : VertexBuffer(MAXIMUM_VERTICES) {};
 
 		/*!
 		* \brief Create a copy of a Vertex Buffer
@@ -67,7 +57,46 @@ namespace GS {
 		* \param other The Vertex Buffer to copy
 		*/
 		VertexBuffer(gs_vertbuffer_t* other);
-#pragma endregion Copy & Move Constructor
+
+	#pragma endregion Constructor & Destructor
+
+	#pragma region Copy/Move Constructors
+		// Copy Constructor & Assignments
+
+		/*!
+		* \brief Copy Constructor
+		* 
+		*
+		* \param other 
+		*/
+		VertexBuffer(VertexBuffer const& other);
+
+		/*!
+		* \brief Copy Assignment
+		* Unsafe operation and as such marked as deleted.
+		*
+		* \param other
+		*/
+		void operator=(VertexBuffer const& other) = delete;
+
+		// Move Constructor & Assignments
+
+		/*!
+		* \brief Move Constructor
+		*
+		*
+		* \param other
+		*/
+		VertexBuffer(VertexBuffer const&& other);
+
+		/*!
+		* \brief Move Assignment
+		*
+		*
+		* \param other
+		*/
+		void operator=(VertexBuffer const&& other);
+	#pragma endregion Copy/Move Constructors
 		
 		void resize(size_t new_size);
 
