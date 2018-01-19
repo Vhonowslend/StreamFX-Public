@@ -305,8 +305,8 @@ Filter::Transform::Instance::Instance(obs_data_t *data, obs_source_t *context) :
 	m_texRender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 	m_shapeRender = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 	m_vertexHelper = new GS::VertexBuffer(4);
-	m_vertexHelper->set_uv_layers(1);
-	m_vertexHelper->resize(4);
+	m_vertexHelper->SetUVLayers(1);
+	m_vertexHelper->Resize(4);
 	obs_leave_graphics();
 
 	update(data);
@@ -465,7 +465,7 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 
 		/// Generate mesh
 		{
-			GS::Vertex vtx = m_vertexHelper->at(0);
+			GS::Vertex vtx = m_vertexHelper->At(0);
 			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 0, 0, 0, 0);
 			vec3_set(vtx.position, 
@@ -474,7 +474,7 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 		{
-			GS::Vertex vtx = m_vertexHelper->at(1);
+			GS::Vertex vtx = m_vertexHelper->At(1);
 			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 1, 0, 0, 0);
 			vec3_set(vtx.position,
@@ -483,7 +483,7 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 		{
-			GS::Vertex vtx = m_vertexHelper->at(2);
+			GS::Vertex vtx = m_vertexHelper->At(2);
 			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 0, 1, 0, 0);
 			vec3_set(vtx.position,
@@ -492,7 +492,7 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 		{
-			GS::Vertex vtx = m_vertexHelper->at(3);
+			GS::Vertex vtx = m_vertexHelper->At(3);
 			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 1, 1, 0, 0);
 			vec3_set(vtx.position,
@@ -501,7 +501,7 @@ void Filter::Transform::Instance::video_render(gs_effect_t *paramEffect) {
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 
-		m_vertexBuffer = m_vertexHelper->get();
+		m_vertexBuffer = m_vertexHelper->Update();
 		if (!m_vertexBuffer) {
 			obs_source_skip_video_filter(m_sourceContext);
 			return;

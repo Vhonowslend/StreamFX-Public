@@ -98,23 +98,27 @@ namespace GS {
 		void operator=(VertexBuffer const&& other);
 	#pragma endregion Copy/Move Constructors
 		
-		void resize(size_t new_size);
 
-		size_t size();
 
-		bool empty();
+		void Resize(uint32_t new_size);
 
-		const GS::Vertex at(size_t idx);
+		uint32_t Size();
 
-		const GS::Vertex operator[](const size_t pos);
+		bool Empty();
 
-		void set_uv_layers(uint32_t layers);
+		const GS::Vertex At(uint32_t idx);
 
-		uint32_t uv_layers();
+		const GS::Vertex operator[](uint32_t const pos);
 
-		gs_vertbuffer_t* get();
+		void SetUVLayers(uint32_t layers);
 
-		gs_vertbuffer_t* get(bool refreshGPU);
+		uint32_t GetUVLayers();
+
+	#pragma region Update / Grab GS object
+		gs_vertbuffer_t* Update();
+
+		gs_vertbuffer_t* Update(bool refreshGPU);
+	#pragma endregion Update / Grab GS object
 
 		private:
 		uint32_t m_size;

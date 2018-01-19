@@ -112,7 +112,7 @@ GS::VertexBuffer::VertexBuffer(uint32_t maximumVertices) {
 GS::VertexBuffer::VertexBuffer(gs_vertbuffer_t* vb) {
 	gs_vb_data* vbd = gs_vertexbuffer_get_data(vb);
 	VertexBuffer((uint32_t)vbd->num);
-	this->set_uv_layers((uint32_t)vbd->num_tex);
+	this->SetUVLayers((uint32_t)vbd->num_tex);
 
 	if (vbd->points != nullptr)
 		std::memcpy(m_positions, vbd->points, vbd->num * sizeof(vec3));
@@ -226,51 +226,47 @@ void GS::VertexBuffer::operator=(VertexBuffer const&& other) {
 	m_layerdata = other.m_layerdata;
 }
 
-void GS::VertexBuffer::resize(size_t new_size) {
+void GS::VertexBuffer::Resize(uint32_t new_size) {
 	if (new_size > m_capacity) {
 		throw std::out_of_range("new_size out of range");
 	}
 	m_size = new_size;
 }
 
-size_t GS::VertexBuffer::size() {
+uint32_t GS::VertexBuffer::Size() {
 	return m_size;
 }
 
-bool GS::VertexBuffer::empty() {
+bool GS::VertexBuffer::Empty() {
 	return m_size == 0;
 }
 
-const GS::Vertex GS::VertexBuffer::at(size_t idx) {
+const GS::Vertex GS::VertexBuffer::At(uint32_t idx) {
 	if ((idx < 0) || (idx >= m_size)) {
 		throw std::out_of_range("idx out of range");
 	}
 
-	GS::Vertex vtx;
-	vtx.position = &m_positions[idx];
-	vtx.normal = &m_normals[idx];
-	vtx.tangent = &m_tangents[idx];
-	vtx.color = &m_colors[idx];
+	GS::Vertex vtx(&m_positions[idx], &m_normals[idx], &m_tangents[idx], &m_colors[idx], nullptr);
 	for (size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
 		vtx.uv[n] = &m_uvs[n][idx];
 	}
 	return vtx;
 }
 
-const GS::Vertex GS::VertexBuffer::operator[](const size_t pos) {
-	return at(pos);
+const GS::Vertex GS::VertexBuffer::operator[](uint32_t const pos) {
+	return At(pos);
 }
 
-void GS::VertexBuffer::set_uv_layers(uint32_t layers) {
+void GS::VertexBuffer::SetUVLayers(uint32_t layers) {
 	m_layers = layers;
 }
 
-uint32_t GS::VertexBuffer::uv_layers() {
+uint32_t GS::VertexBuffer::GetUVLayers() {
 	return m_layers;
 }
 
 
-gs_vertbuffer_t* GS::VertexBuffer::get(bool refreshGPU) {
+gs_vertbuffer_t* GS::VertexBuffer::Update(bool refreshGPU) {
 	if (!refreshGPU)
 		return m_vertexbuffer;
 
@@ -308,6 +304,6 @@ gs_vertbuffer_t* GS::VertexBuffer::get(bool refreshGPU) {
 	return m_vertexbuffer;
 }
 
-gs_vertbuffer_t* GS::VertexBuffer::get() {
-	return get(true);
+gs_vertbuffer_t* GS::VertexBuffer::Update() {
+	return Update(true);
 }

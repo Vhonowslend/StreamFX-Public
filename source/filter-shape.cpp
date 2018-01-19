@@ -256,7 +256,7 @@ Filter::Shape::Instance::Instance(obs_data_t *data, obs_source_t *context)
 	: context(context) {
 	obs_enter_graphics();
 	m_vertexHelper = new GS::VertexBuffer(maximumPoints);
-	m_vertexHelper->set_uv_layers(1);
+	m_vertexHelper->SetUVLayers(1);
 	m_texRender = gs_texrender_create(GS_RGBA, GS_Z32F);
 	obs_leave_graphics();
 
@@ -271,9 +271,9 @@ Filter::Shape::Instance::~Instance() {
 
 void Filter::Shape::Instance::update(obs_data_t *data) {
 	uint32_t points = (uint32_t)obs_data_get_int(data, P_SHAPE_POINTS);
-	m_vertexHelper->resize(points);
+	m_vertexHelper->Resize(points);
 	for (uint32_t point = 0; point < points; point++) {
-		GS::Vertex v = m_vertexHelper->at(point);
+		GS::Vertex v = m_vertexHelper->At(point);
 		{
 			auto strings = cache.find(std::make_pair(point,
 				P_SHAPE_POINT_X));
@@ -311,7 +311,7 @@ void Filter::Shape::Instance::update(obs_data_t *data) {
 	}
 	drawmode = (gs_draw_mode)obs_data_get_int(data, P_SHAPE_MODE);
 	obs_enter_graphics();
-	m_vertexBuffer = m_vertexHelper->get();
+	m_vertexBuffer = m_vertexHelper->Update();
 	obs_leave_graphics();
 }
 
@@ -386,7 +386,7 @@ void Filter::Shape::Instance::video_render(gs_effect_t *effect) {
 			tex);
 		gs_load_vertexbuffer(m_vertexBuffer);
 		gs_load_indexbuffer(nullptr);
-		gs_draw(drawmode, 0, (uint32_t)m_vertexHelper->size());
+		gs_draw(drawmode, 0, (uint32_t)m_vertexHelper->Size());
 	}
 
 	gs_matrix_pop();
