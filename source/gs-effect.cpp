@@ -201,7 +201,7 @@ void GS::EffectParameter::SetFloat4(float_t x, float_t y, float_t z, float_t w) 
 }
 
 void GS::EffectParameter::SetFloatArray(float_t v[], size_t sz) {
-	if (GetType() != Type::Float)
+	if ((GetType() != Type::Float) && (GetType() != Type::Float2) && (GetType() != Type::Float3) && (GetType() != Type::Float4))
 		throw std::bad_cast();
 	gs_effect_set_val(m_param, v, sz);
 }
@@ -234,7 +234,7 @@ void GS::EffectParameter::SetInteger4(int32_t x, int32_t y, int32_t z, int32_t w
 }
 
 void GS::EffectParameter::SetIntegerArray(int32_t v[], size_t sz) {
-	if (GetType() != Type::Integer)
+	if ((GetType() != Type::Integer) && (GetType() != Type::Integer2) && (GetType() != Type::Integer3) && (GetType() != Type::Integer4))
 		throw std::bad_cast();
 	gs_effect_set_val(m_param, v, sz);
 }
