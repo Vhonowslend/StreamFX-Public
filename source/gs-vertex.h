@@ -35,5 +35,13 @@ namespace GS {
 		vec3* tangent;
 		uint32_t* color;
 		vec4* uv[MAXIMUM_UVW_LAYERS];
+
+		Vertex();
+		Vertex(vec3* p, vec3* n, vec3* t, uint32_t* col, vec4* uv[MAXIMUM_UVW_LAYERS]);
+		~Vertex();
+
+		private:
+		bool hasStore;
+		void* store;
 	};
 }
