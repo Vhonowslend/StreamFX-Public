@@ -250,3 +250,9 @@ void GS::EffectParameter::SetTexture(std::shared_ptr<GS::Texture> v) {
 		throw std::bad_cast();
 	gs_effect_set_texture(m_param, v->GetObject());
 }
+
+void GS::EffectParameter::SetSampler(std::shared_ptr<GS::Sampler> v) {
+	if (GetType() != Type::Texture)
+		throw std::bad_cast();
+	gs_effect_set_next_sampler(m_param, v->GetObject());
+}

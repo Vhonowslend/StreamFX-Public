@@ -19,6 +19,7 @@
 
 #pragma once
 #include "gs-texture.h"
+#include "gs-sampler.h"
 #include <inttypes.h>
 #include <memory>
 #include <string>
@@ -76,7 +77,7 @@ namespace GS {
 		void SetIntegerArray(int32_t v[], size_t sz);
 		void SetMatrix(matrix4& v);
 		void SetTexture(std::shared_ptr<GS::Texture> v);
-		void SetTextureSampler();
+		void SetSampler(std::shared_ptr<GS::Sampler> v);
 
 		private:
 		gs_eparam_t* m_param;
