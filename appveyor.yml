@@ -1,4 +1,4 @@
-version: 0.4.1-{build}-{branch}
+version: 0.4.2-{build}-{branch}
 
 environment:
   CURL_VERSION: 7.39.0

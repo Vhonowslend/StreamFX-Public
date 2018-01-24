@@ -6,7 +6,7 @@ PROJECT(obs-stream-effects)
 ################################################################################
 SET(VERSION_MAJOR 0)
 SET(VERSION_MINOR 4)
-SET(VERSION_PATCH 1)
+SET(VERSION_PATCH 2)
 SET(VERSION_STR "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
 configure_file(
