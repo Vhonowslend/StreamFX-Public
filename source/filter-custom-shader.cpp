@@ -21,6 +21,7 @@
 #include "strings.h"
 #include <vector>
 #include <tuple>
+#include <fstream>
 
 extern "C" {
 #pragma warning (push)
@@ -49,7 +50,6 @@ extern "C" {
  * - ViewProj: The current view projection matrix (float4x4).
  * - ViewSize: The current rendered size (float2).
  * - ViewSizeI: The current rendered size as an int (int2).
- * - Pass: The current pass (int).
  * - Time: Time passed during total rendering in seconds (float).
  * - TimeActive: Time since last activation (float).
  * - image: The source being filtered (texture2d).
@@ -197,8 +197,19 @@ void Filter::CustomShader::video_render(void *ptr, gs_effect_t *effect) {
 
 Filter::CustomShader::Instance::Instance(obs_data_t *data, obs_source_t *source) {
 	m_source = source;
-	m_shaderFile.filePath = obs_module_file("effects/displace.effect");
+
+	m_effect.path = obs_module_file("effects/displace.effect");
+	m_effect.createTime = time_t(0);
+	m_effect.modifiedTime = time_t(0);
+	m_effect.size = 0;
+	m_effect.lastCheck = 0;
+	m_effect.effect = nullptr;
+
 	m_renderTarget = std::make_unique<GS::RenderTarget>(GS_RGBA, GS_ZS_NONE);
+
+	m_activeTime = 0.0f;
+	m_renderTime = 0.0f;
+
 	update(data);
 }
 
@@ -209,7 +220,7 @@ void Filter::CustomShader::Instance::update(obs_data_t *data) {
 	if (shaderType == ShaderType::Text) {
 		const char* shaderText = obs_data_get_string(data, S_CONTENT_TEXT);
 		try {
-			m_effect = GS::Effect(shaderText, "Text Shader");
+			m_effect.effect = std::make_unique<GS::Effect>(shaderText, "Text Shader");
 		} catch (std::runtime_error& ex) {
 			const char* filterName = obs_source_get_name(m_source);
 			P_LOG_ERROR("[%s] Shader loading failed with error(s): %s", filterName, ex.what());
@@ -219,8 +230,8 @@ void Filter::CustomShader::Instance::update(obs_data_t *data) {
 	}
 
 	m_effectParameters.clear();
-	if (m_effect.CountParameters() > 0) {
-		for (auto p : m_effect.GetParameters()) {
+	if (m_effect.effect && m_effect.effect->CountParameters() > 0) {
+		for (auto p : m_effect.effect->GetParameters()) {
 			std::string p_name = p.GetName();
 			std::string p_desc = p_name;
 
@@ -247,22 +258,22 @@ void Filter::CustomShader::Instance::update(obs_data_t *data) {
 					{
 						prm.uiNames.push_back(p_name + "0");
 						prm.uiDescriptions.push_back(p_desc + "[0]");
-						prm.value.f[0] = obs_data_get_double(data, prm.uiNames.back().c_str());
+						prm.value.f[0] = (float_t)obs_data_get_double(data, prm.uiNames.back().c_str());
 					}
 					if (p.GetType() >= GS::EffectParameter::Type::Float2) {
 						prm.uiNames.push_back(p_name + "1");
 						prm.uiDescriptions.push_back(p_desc + "[1]");
-						prm.value.f[1] = obs_data_get_double(data, prm.uiNames.back().c_str());
+						prm.value.f[1] = (float_t)obs_data_get_double(data, prm.uiNames.back().c_str());
 					}
 					if (p.GetType() >= GS::EffectParameter::Type::Float3) {
 						prm.uiNames.push_back(p_name + "2");
 						prm.uiDescriptions.push_back(p_desc + "[2]");
-						prm.value.f[2] = obs_data_get_double(data, prm.uiNames.back().c_str());
+						prm.value.f[2] = (float_t)obs_data_get_double(data, prm.uiNames.back().c_str());
 					}
 					if (p.GetType() >= GS::EffectParameter::Type::Float4) {
 						prm.uiNames.push_back(p_name + "3");
 						prm.uiDescriptions.push_back(p_desc + "[3]");
-						prm.value.f[3] = obs_data_get_double(data, prm.uiNames.back().c_str());
+						prm.value.f[3] = (float_t)obs_data_get_double(data, prm.uiNames.back().c_str());
 					}
 					break;
 				}
@@ -274,22 +285,22 @@ void Filter::CustomShader::Instance::update(obs_data_t *data) {
 					{
 						prm.uiNames.push_back(p_name + "0");
 						prm.uiDescriptions.push_back(p_desc + "[0]");
-						prm.value.i[0] = obs_data_get_int(data, prm.uiNames.back().c_str());
+						prm.value.i[0] = (int32_t)obs_data_get_int(data, prm.uiNames.back().c_str());
 					}
 					if (p.GetType() >= GS::EffectParameter::Type::Integer2) {
 						prm.uiNames.push_back(p_name + "1");
 						prm.uiDescriptions.push_back(p_desc + "[1]");
-						prm.value.i[1] = obs_data_get_int(data, prm.uiNames.back().c_str());
+						prm.value.i[1] = (int32_t)obs_data_get_int(data, prm.uiNames.back().c_str());
 					}
 					if (p.GetType() >= GS::EffectParameter::Type::Integer3) {
 						prm.uiNames.push_back(p_name + "2");
 						prm.uiDescriptions.push_back(p_desc + "[2]");
-						prm.value.i[2] = obs_data_get_int(data, prm.uiNames.back().c_str());
+						prm.value.i[2] = (int32_t)obs_data_get_int(data, prm.uiNames.back().c_str());
 					}
 					if (p.GetType() >= GS::EffectParameter::Type::Integer4) {
 						prm.uiNames.push_back(p_name + "3");
 						prm.uiDescriptions.push_back(p_desc + "[3]");
-						prm.value.i[3] = obs_data_get_int(data, prm.uiNames.back().c_str());
+						prm.value.i[3] = (int32_t)obs_data_get_int(data, prm.uiNames.back().c_str());
 					}
 					break;
 				}
@@ -365,6 +376,7 @@ uint32_t Filter::CustomShader::Instance::get_height() {
 
 void Filter::CustomShader::Instance::activate() {
 	m_isActive = true;
+	m_activeTime = 0.0f;
 }
 
 void Filter::CustomShader::Instance::deactivate() {
@@ -372,8 +384,11 @@ void Filter::CustomShader::Instance::deactivate() {
 }
 
 void Filter::CustomShader::Instance::video_tick(float time) {
-	CheckShaderFile(m_shaderFile.filePath, time);
+	CheckShaderFile(m_effect.path, time);
 	CheckTextures(time);
+	if (m_isActive)
+		m_activeTime += time;
+	m_renderTime += time;
 }
 
 void Filter::CustomShader::Instance::video_render(gs_effect_t *effect) {
@@ -384,7 +399,7 @@ void Filter::CustomShader::Instance::video_render(gs_effect_t *effect) {
 
 	obs_source_t *parent = obs_filter_get_parent(m_source);
 	obs_source_t *target = obs_filter_get_target(m_source);
-	if (!parent || !target || !m_effect.GetObject()) {
+	if (!parent || !target || !m_effect.effect) {
 		obs_source_skip_video_filter(m_source);
 		return;
 	}
@@ -405,16 +420,35 @@ void Filter::CustomShader::Instance::video_render(gs_effect_t *effect) {
 		if (obs_source_process_filter_begin(m_source, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
 			obs_source_process_filter_end(m_source,
 				effect ? effect : obs_get_base_effect(OBS_EFFECT_DEFAULT), baseW, baseH);
-		} else {
-			obs_source_skip_video_filter(m_source);
-			return;
 		}
+	}
+	gs_texture_t* sourceTexture = m_renderTarget->GetTextureObject();
+	if (!sourceTexture) {
+		obs_source_skip_video_filter(m_source);
+		return;
 	}
 
 	// Apply Parameters
 	try {
+		if (m_effect.effect->HasParameter("ViewSize", GS::EffectParameter::Type::Float2))
+			m_effect.effect->GetParameter("ViewSize").SetFloat2(float_t(baseW), float_t(baseH));
+		if (m_effect.effect->HasParameter("ViewSizeI", GS::EffectParameter::Type::Integer2))
+			m_effect.effect->GetParameter("ViewSizeI").SetInteger2(baseW, baseH);
+		if (m_effect.effect->HasParameter("Time", GS::EffectParameter::Type::Float))
+			m_effect.effect->GetParameter("Time").SetFloat(m_renderTime);
+		if (m_effect.effect->HasParameter("TimeActive", GS::EffectParameter::Type::Float))
+			m_effect.effect->GetParameter("TimeActive").SetFloat(m_activeTime);
+
+		/// "image" Specials
+		if (m_effect.effect->HasParameter("image_Size", GS::EffectParameter::Type::Float2))
+			m_effect.effect->GetParameter("image_Size").SetFloat2(float_t(baseW), float_t(baseH));
+		if (m_effect.effect->HasParameter("image_SizeI", GS::EffectParameter::Type::Float2))
+			m_effect.effect->GetParameter("image_SizeI").SetInteger2(baseW, baseH);
+		if (m_effect.effect->HasParameter("image_Texel", GS::EffectParameter::Type::Float2))
+			m_effect.effect->GetParameter("image_Texel").SetFloat2(1.0f / float_t(baseW), 1.0f / float_t(baseH));
+
 		for (Parameter& prm : m_effectParameters) {
-			GS::EffectParameter eprm = m_effect.GetParameter(prm.name);
+			GS::EffectParameter eprm = m_effect.effect->GetParameter(prm.name);
 			switch (prm.type) {
 				case GS::EffectParameter::Type::Boolean:
 					eprm.SetBoolean(prm.value.b);
@@ -445,7 +479,7 @@ void Filter::CustomShader::Instance::video_render(gs_effect_t *effect) {
 					break;
 				case GS::EffectParameter::Type::Texture:
 					if (prm.value.textureIsSource) {
-						if (prm.value.source.rendertarget) {
+						if (prm.value.source.rendertarget && prm.value.source.source) {
 							uint32_t w, h;
 							w = obs_source_get_width(prm.value.source.source);
 							h = obs_source_get_height(prm.value.source.source);
@@ -474,8 +508,8 @@ void Filter::CustomShader::Instance::video_render(gs_effect_t *effect) {
 
 	gs_reset_blend_state();
 	gs_enable_depth_test(false);
-	while (gs_effect_loop(obs_get_base_effect(OBS_EFFECT_DEFAULT), "Draw")) {
-		obs_source_draw(m_renderTarget->GetTextureObject(), 0, 0, baseW, baseH, false);
+	while (gs_effect_loop(m_effect.effect->GetObject(), "Draw")) {
+		obs_source_draw(sourceTexture, 0, 0, baseW, baseH, false);
 	}
 }
 
@@ -491,7 +525,7 @@ static void UpdateSourceList(obs_property_t* p) {
 }
 
 void Filter::CustomShader::Instance::get_properties(obs_properties_t *pr) {
-	if (m_effect.GetObject() == nullptr)
+	if (!m_effect.effect)
 		return;
 
 	for (Parameter& prm : m_effectParameters) {
@@ -550,28 +584,58 @@ void Filter::CustomShader::Instance::get_properties(obs_properties_t *pr) {
 
 void Filter::CustomShader::Instance::CheckShaderFile(std::string file, float_t time) {
 	bool doRefresh = false;
-	if (file != m_shaderFile.filePath) {
-		m_shaderFile.filePath = file;
+
+	// Update if the paths are different.
+	if (file != m_effect.path) {
+		m_effect.path = file;
 		doRefresh = true;
 	}
 
-	m_shaderFile.lastCheck += time;
-	if (m_shaderFile.lastCheck < 0.5f && doRefresh == false)
+	if (file.empty()) {
+		m_effect.effect = nullptr;
 		return;
-	m_shaderFile.lastCheck = m_shaderFile.lastCheck - 0.5f;
+	}
+
+	// Don't check for updates if the last update was less than 1/2 seconds away.
+	m_effect.lastCheck += time;
+	if (m_effect.lastCheck < 0.5f) {
+		if (!doRefresh)
+			return;
+	} else {
+		m_effect.lastCheck = m_effect.lastCheck - 0.5f;
+	}
 
 	struct stat stats;
-	if (os_stat(m_shaderFile.filePath.c_str(), &stats) != 0) {
+	if (os_stat(m_effect.path.c_str(), &stats) == 0) {
 		doRefresh = doRefresh ||
-			(m_shaderFile.createTime != stats.st_ctime) ||
-			(m_shaderFile.modifiedTime != stats.st_mtime);
-		m_shaderFile.createTime = stats.st_ctime;
-		m_shaderFile.modifiedTime = stats.st_mtime;
+			(m_effect.createTime != stats.st_ctime) ||
+			(m_effect.modifiedTime != stats.st_mtime);
+		m_effect.createTime = stats.st_ctime;
+		m_effect.modifiedTime = stats.st_mtime;
 	}
+
+	if (!m_effect.effect)
+		doRefresh = true;
 
 	if (doRefresh) {
 		try {
-			m_effect = GS::Effect(m_shaderFile.filePath);
+			std::vector<char> shaderContent;
+
+			{ // gs_effect_create_from_file caches results, which is bad for us.
+				std::ifstream fs(file.c_str(), std::ios::binary);
+				if (fs.bad())
+					throw std::runtime_error("Failed to open file.");
+				size_t beg = fs.tellg();
+				fs.seekg(0, std::ios::end);
+				size_t sz = size_t(fs.tellg()) - beg;
+				shaderContent.resize(sz + 1);
+				fs.seekg(0, std::ios::beg);
+				fs.read(shaderContent.data(), sz);
+				fs.close();
+				shaderContent[sz] = '\0';
+			}
+
+			m_effect.effect = std::make_unique<GS::Effect>(shaderContent.data(), m_effect.path);
 		} catch (std::runtime_error& ex) {
 			const char* filterName = obs_source_get_name(m_source);
 			P_LOG_ERROR("[%s] Shader loading failed with error(s): %s", filterName, ex.what());
@@ -580,36 +644,61 @@ void Filter::CustomShader::Instance::CheckShaderFile(std::string file, float_t t
 }
 
 std::string Filter::CustomShader::Instance::GetShaderFile() {
-	return m_shaderFile.filePath;
+	return m_effect.path;
 }
 
 void Filter::CustomShader::Instance::CheckTextures(float_t time) {
+
 	for (Parameter& prm : m_effectParameters) {
 		if (prm.type != GS::EffectParameter::Type::Texture)
 			continue;
 
 		if (prm.value.textureIsSource) {
-			if (!prm.value.source.rendertarget) {
-				prm.value.source.rendertarget = std::make_shared<GS::RenderTarget>(GS_RGBA, GS_ZS_NONE);
+			// If the source field is empty, simply clear the source reference.
+			if (prm.value.source.name.empty()) {
+				if (prm.value.source.source)
+					obs_source_release(m_source);
+				prm.value.source.source = nullptr;
+				continue;
 			}
+
+			// Ensure that a render target exists.
+			if (!prm.value.source.rendertarget)
+				prm.value.source.rendertarget = std::make_shared<GS::RenderTarget>(GS_RGBA, GS_ZS_NONE);
+
+			// Finally check if the source property was modified or is empty.
 			if (prm.value.source.dirty || !prm.value.source.source) {
+				prm.value.source.dirty = false;
 				if (prm.value.source.source)
 					obs_source_release(prm.value.source.source);
 				prm.value.source.source = obs_get_source_by_name(prm.value.source.name.c_str());
 			}
 		} else {
 			bool doRefresh = false;
+
+			// If the path is empty, don't attempt to update any files and simply null the texture.
+			if (prm.value.file.path.empty()) {
+				prm.value.file.texture = nullptr;
+				continue;
+			}
+
+			// If the property was modified or the texture is empty, force a refresh.
 			if (prm.value.file.dirty || !prm.value.file.texture) {
 				doRefresh = true;
 			}
 
+			// Skip testing if the last test was less than 1/2 of a second away.
 			prm.value.file.lastCheck += time;
-			if (prm.value.file.lastCheck < 0.5f && doRefresh == false)
-				continue;
-			prm.value.file.lastCheck = prm.value.file.lastCheck - 0.5f;
+			if (prm.value.file.lastCheck < 0.5f) {
+				if (!doRefresh)
+					continue;
+			} else {
+				prm.value.file.lastCheck = prm.value.file.lastCheck - 0.5f;
+			}
 
+			// Test if the file was modified.
 			struct stat stats;
-			if (os_stat(m_shaderFile.filePath.c_str(), &stats) != 0) {
+			if (os_stat(prm.value.file.path.c_str(), &stats) == 0) {
 				doRefresh = doRefresh ||
 					(prm.value.file.createTime != stats.st_ctime) ||
 					(prm.value.file.modifiedTime != stats.st_mtime) ||
@@ -620,6 +709,7 @@ void Filter::CustomShader::Instance::CheckTextures(float_t time) {
 			}
 
 			if (doRefresh) {
+				prm.value.file.dirty = false;
 				try {
 					prm.value.file.texture = std::make_shared<GS::Texture>(prm.value.file.path);
 				} catch (std::runtime_error& ex) {
@@ -635,9 +725,8 @@ void Filter::CustomShader::Instance::CheckTextures(float_t time) {
 bool Filter::CustomShader::Instance::IsSpecialParameter(std::string name, GS::EffectParameter::Type type) {
 	std::pair<std::string, GS::EffectParameter::Type> reservedParameters[] = {
 		{ "ViewProj", GS::EffectParameter::Type::Matrix },
-		{ "ViewSize", GS::EffectParameter::Type::Matrix },
+		{ "ViewSize", GS::EffectParameter::Type::Float2 },
 		{ "ViewSizeI", GS::EffectParameter::Type::Integer2 },
-		{ "Pass", GS::EffectParameter::Type::Integer },
 		{ "Time", GS::EffectParameter::Type::Float },
 		{ "TimeActive", GS::EffectParameter::Type::Float },
 		{ "image", GS::EffectParameter::Type::Texture }
@@ -661,7 +750,7 @@ bool Filter::CustomShader::Instance::IsSpecialParameter(std::string name, GS::Ef
 		secondPart = name.substr(posUnderscore + 1);
 
 		try {
-			GS::EffectParameter prm = m_effect.GetParameter(firstPart);
+			GS::EffectParameter prm = m_effect.effect->GetParameter(firstPart);
 			if (prm.GetType() == GS::EffectParameter::Type::Texture) {
 				for (auto& kv : reservedParameters) {
 					if ((secondPart == kv.first) && (type == kv.second))

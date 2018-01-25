@@ -75,16 +75,19 @@ namespace Filter {
 			private:
 			obs_source_t * m_source;
 			bool m_isActive = true;
+			std::unique_ptr<GS::RenderTarget> m_renderTarget;
+
+			float_t m_activeTime, m_renderTime;
 
 			// Shader
-			struct {
-				std::string filePath;
+			struct Effect {
+				std::string path;
 				time_t createTime, modifiedTime;
 				size_t size;
 				float_t lastCheck;
-			} m_shaderFile;
+				std::unique_ptr<GS::Effect> effect;
+			} m_effect;
 
-			GS::Effect m_effect;
 			struct Parameter {
 				std::string name;
 				GS::EffectParameter::Type type;
@@ -99,13 +102,13 @@ namespace Filter {
 						bool b;
 					};
 					bool textureIsSource = false;
-					struct {
+					struct Source {
 						bool dirty = false;
 						std::string name;
 						obs_source_t* source = nullptr;
 						std::shared_ptr<GS::RenderTarget> rendertarget;
 					} source;
-					struct {
+					struct File {
 						bool dirty = false;
 						std::string path;
 						time_t createTime, modifiedTime;
@@ -116,9 +119,6 @@ namespace Filter {
 				} value;
 			};
 			std::list<Parameter> m_effectParameters;
-
-			std::unique_ptr<GS::RenderTarget> m_renderTarget;
-
 
 			friend class CustomShader;
 		};
