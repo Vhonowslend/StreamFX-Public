@@ -30,7 +30,7 @@ GS::Effect::Effect() {
 	m_effect = nullptr;
 }
 
-GS::Effect::Effect(std::string file) {
+GS::Effect::Effect(std::string file) {	
 	obs_enter_graphics();
 	char* errorMessage = nullptr;
 	m_effect = gs_effect_create_from_file(file.c_str(), &errorMessage);
@@ -90,6 +90,19 @@ GS::EffectParameter GS::Effect::GetParameter(size_t idx) {
 	if (!param)
 		throw std::invalid_argument("parameter with index not found");
 	return EffectParameter(param);
+}
+
+bool GS::Effect::HasParameter(std::string name) {
+	gs_eparam_t* param = gs_effect_get_param_by_name(m_effect, name.c_str());
+	return (param != nullptr);
+}
+
+bool GS::Effect::HasParameter(std::string name, EffectParameter::Type type) {
+	gs_eparam_t* param = gs_effect_get_param_by_name(m_effect, name.c_str());
+	if (param == nullptr)
+		return false;
+	GS::EffectParameter eprm(param);
+	return eprm.GetType() == type;
 }
 
 GS::EffectParameter GS::Effect::GetParameter(std::string name) {
@@ -170,8 +183,8 @@ void GS::EffectParameter::SetFloat2(vec2& v) {
 void GS::EffectParameter::SetFloat2(float_t x, float_t y) {
 	if (GetType() != Type::Float2)
 		throw std::bad_cast();
-	float_t v[] = { x, y };
-	SetFloatArray(v, 2);
+	vec2 v = { x, y };
+	gs_effect_set_vec2(m_param, &v);
 }
 
 void GS::EffectParameter::SetFloat3(vec3& v) {
@@ -183,8 +196,8 @@ void GS::EffectParameter::SetFloat3(vec3& v) {
 void GS::EffectParameter::SetFloat3(float_t x, float_t y, float_t z) {
 	if (GetType() != Type::Float3)
 		throw std::bad_cast();
-	float_t v[] = { x, y, z };
-	SetFloatArray(v, 3);
+	vec3 v = { x, y, z };
+	gs_effect_set_vec3(m_param, &v);
 }
 
 void GS::EffectParameter::SetFloat4(vec4& v) {
@@ -196,14 +209,14 @@ void GS::EffectParameter::SetFloat4(vec4& v) {
 void GS::EffectParameter::SetFloat4(float_t x, float_t y, float_t z, float_t w) {
 	if (GetType() != Type::Float4)
 		throw std::bad_cast();
-	float_t v[] = { x, y, z, w };
-	SetFloatArray(v, 4);
+	vec4 v = { x, y, z, w };
+	gs_effect_set_vec4(m_param, &v);
 }
 
 void GS::EffectParameter::SetFloatArray(float_t v[], size_t sz) {
 	if ((GetType() != Type::Float) && (GetType() != Type::Float2) && (GetType() != Type::Float3) && (GetType() != Type::Float4))
 		throw std::bad_cast();
-	gs_effect_set_val(m_param, v, sz);
+	gs_effect_set_val(m_param, v, sizeof(float_t) * sz);
 }
 
 void GS::EffectParameter::SetInteger(int32_t x) {
@@ -216,27 +229,27 @@ void GS::EffectParameter::SetInteger2(int32_t x, int32_t y) {
 	if (GetType() != Type::Integer2)
 		throw std::bad_cast();
 	int32_t v[] = { x, y };
-	gs_effect_set_val(m_param, v, 2);
+	gs_effect_set_val(m_param, v, sizeof(int) * 2);
 }
 
 void GS::EffectParameter::SetInteger3(int32_t x, int32_t y, int32_t z) {
 	if (GetType() != Type::Integer3)
 		throw std::bad_cast();
 	int32_t v[] = { x, y, z };
-	gs_effect_set_val(m_param, v, 3);
+	gs_effect_set_val(m_param, v, sizeof(int) * 3);
 }
 
 void GS::EffectParameter::SetInteger4(int32_t x, int32_t y, int32_t z, int32_t w) {
 	if (GetType() != Type::Integer4)
 		throw std::bad_cast();
 	int32_t v[] = { x, y, z, w };
-	gs_effect_set_val(m_param, v, 4);
+	gs_effect_set_val(m_param, v, sizeof(int) * 4);
 }
 
 void GS::EffectParameter::SetIntegerArray(int32_t v[], size_t sz) {
 	if ((GetType() != Type::Integer) && (GetType() != Type::Integer2) && (GetType() != Type::Integer3) && (GetType() != Type::Integer4))
 		throw std::bad_cast();
-	gs_effect_set_val(m_param, v, sz);
+	gs_effect_set_val(m_param, v, sizeof(int) * sz);
 }
 
 void GS::EffectParameter::SetMatrix(matrix4& v) {
