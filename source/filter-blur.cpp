@@ -386,16 +386,6 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 		// Clear to Black
 		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
 
-		// Set up camera stuff
-		gs_set_cull_mode(GS_NEITHER);
-		gs_reset_blend_state();
-		gs_enable_blending(false);
-		gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
-		gs_enable_depth_test(false);
-		gs_enable_stencil_test(false);
-		gs_enable_stencil_write(false);
-		gs_enable_color(true, true, true, true);
-
 		// Render
 		if (obs_source_process_filter_begin(m_source, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
 			obs_source_process_filter_end(m_source, effect ? effect : defaultEffect, baseW, baseH);
