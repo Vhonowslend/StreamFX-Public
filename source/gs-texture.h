@@ -21,14 +21,18 @@
 #include <inttypes.h>
 #include <string>
 extern "C" {
-	#pragma warning( push )
-	#pragma warning( disable: 4201 )
-	#include <libobs/graphics/graphics.h>
-	#pragma warning( pop )
+#pragma warning( push )
+#pragma warning( disable: 4201 )
+#include <libobs/graphics/graphics.h>
+#pragma warning( pop )
 }
 
 namespace GS {
 	class Texture {
+		protected:
+		gs_texture_t * m_texture;
+		bool m_isOwner = true;
+
 		public:
 		enum Type : uint8_t {
 			Normal,
@@ -54,7 +58,8 @@ namespace GS {
 		 * \param mip_data
 		 * \param flags
 		 */
-		Texture(uint32_t width, uint32_t height, gs_color_format format, uint32_t mip_levels, const uint8_t **mip_data, uint32_t flags);
+		Texture(uint32_t width, uint32_t height, gs_color_format format, uint32_t mip_levels,
+			const uint8_t **mip_data, uint32_t flags);
 
 		/*!
 		 * \brief Create a new volume texture from data
@@ -69,7 +74,8 @@ namespace GS {
 		 * \param mip_data
 		 * \param flags
 		 */
-		Texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_format format, uint32_t mip_levels, const uint8_t **mip_data, uint32_t flags);
+		Texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_format format, uint32_t mip_levels,
+			const uint8_t **mip_data, uint32_t flags);
 
 		/*!
 		 * \brief Create a new cube texture from data
@@ -82,7 +88,8 @@ namespace GS {
 		 * \param mip_data
 		 * \param flags
 		 */
-		Texture(uint32_t size, gs_color_format format, uint32_t mip_levels, const uint8_t **mip_data, uint32_t flags);
+		Texture(uint32_t size, gs_color_format format, uint32_t mip_levels, const uint8_t **mip_data,
+			uint32_t flags);
 
 		/*!
 		* \brief Load a texture from a file
@@ -94,7 +101,12 @@ namespace GS {
 		*
 		* \param file File to create the texture from.
 		*/
-		Texture(std::string file);// { LoadFromFile(file); }
+		Texture(std::string file);
+
+		/*!
+		* \brief Create a texture from an existing gs_texture_t object.
+		*/
+		Texture(gs_texture_t* tex, bool takeOwnership = false) : m_texture(tex), m_isOwner(takeOwnership) {}
 
 		/*!
 		* \brief Copy an existing texture
@@ -139,8 +151,5 @@ namespace GS {
 		 * \return gs_texture_t*
 		 */
 		gs_texture_t* GetObject();
-
-		protected:
-		gs_texture_t* m_texture;
 	};
 }
