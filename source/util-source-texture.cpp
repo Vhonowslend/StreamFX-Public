@@ -29,6 +29,10 @@ util::SourceTexture::SourceTexture() {
 	m_rt = std::make_shared<GS::RenderTarget>(GS_RGBA, GS_ZS_NONE);
 }
 
+obs_source_t* util::SourceTexture::GetObject() {
+	return m_source;
+}
+
 util::SourceTexture::SourceTexture(const char* name) : SourceTexture() {
 	m_source = obs_get_source_by_name(name);
 	if (!m_source) {

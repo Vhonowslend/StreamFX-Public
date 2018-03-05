@@ -34,6 +34,8 @@ namespace util {
 		SourceTexture(std::string name);
 		SourceTexture(obs_source_t* src);
 
+		obs_source_t* GetObject();
+
 		std::shared_ptr<GS::Texture> Render(size_t width, size_t height);
 	};
 }
