@@ -50,6 +50,18 @@ gs_texture_t* GS::RenderTarget::GetTextureObject() {
 	return tex;
 }
 
+void GS::RenderTarget::GetTexture(GS::Texture& tex) {
+	tex = GS::Texture(GetTextureObject(), false);
+}
+
+void GS::RenderTarget::GetTexture(std::shared_ptr<GS::Texture>& tex) {
+	tex = std::make_shared<GS::Texture>(GetTextureObject(), false);
+}
+
+void GS::RenderTarget::GetTexture(std::unique_ptr<GS::Texture>& tex) {
+	tex = std::make_unique<GS::Texture>(GetTextureObject(), false);
+}
+
 GS::RenderTargetOp::RenderTargetOp(GS::RenderTarget* rt, uint32_t width, uint32_t height) : m_renderTarget(rt) {
 	if (m_renderTarget == nullptr)
 		throw std::invalid_argument("rt");
