@@ -21,10 +21,13 @@
 #include "plugin.h"
 #include "gs-rendertarget.h"
 #include "gs-sampler.h"
+#include "util-source-texture.h"
 #include <memory>
 
 namespace Source {
 	class MirrorAddon {
+		obs_source_info osi;
+
 		public:
 		MirrorAddon();
 		~MirrorAddon();
@@ -45,12 +48,23 @@ namespace Source {
 		static void deactivate(void *);
 		static void video_tick(void *, float);
 		static void video_render(void *, gs_effect_t *);
-
-		private:
-		obs_source_info osi;
 	};
 
 	class Mirror {
+		bool m_active;
+		obs_source_t* m_source = nullptr;
+
+
+		bool m_rescale = false;
+		bool m_keepOriginalSize = false;
+		uint32_t m_width, m_height;
+		std::unique_ptr<GS::RenderTarget> m_renderTargetScale;
+		std::shared_ptr<GS::Sampler> m_sampler;
+		gs_effect_t* m_scalingEffect = nullptr;
+
+		std::unique_ptr<util::SourceTexture> m_mirrorSource;
+		std::string m_mirrorName;
+
 		public:
 		Mirror(obs_data_t*, obs_source_t*);
 		~Mirror();
@@ -63,19 +77,5 @@ namespace Source {
 		void deactivate();
 		void video_tick(float);
 		void video_render(gs_effect_t*);
-
-		private:
-		bool m_active;
-		obs_source_t* m_source = nullptr;
-		obs_source_t* m_target = nullptr;
-		std::string m_targetName;
-
-		bool m_rescale = false;
-		bool m_keepOriginalSize = false;
-		uint32_t m_width, m_height;
-		std::unique_ptr<GS::RenderTarget> m_renderTarget;
-		std::unique_ptr<GS::RenderTarget> m_renderTargetScale;
-		std::shared_ptr<GS::Sampler> m_sampler;
-		gs_effect_t* m_scalingEffect = nullptr;
 	};
 };

@@ -19,6 +19,8 @@
 
 #pragma once
 #include <inttypes.h>
+#include <memory>
+#include "gs-texture.h"
 extern "C" {
 	#pragma warning( push )
 	#pragma warning( disable: 4201 )
@@ -35,6 +37,9 @@ namespace GS {
 		virtual ~RenderTarget();
 
 		gs_texture_t* GetTextureObject();
+		void GetTexture(GS::Texture& tex);
+		void GetTexture(std::shared_ptr<GS::Texture>& tex);
+		void GetTexture(std::unique_ptr<GS::Texture>& tex);
 		GS::RenderTargetOp Render(uint32_t width, uint32_t height);
 
 		protected:

@@ -19,25 +19,50 @@
 
 #include "util-memory.h"
 #include <cstdlib>
+#define USE_STD_ALLOC_FREE
 
 void* util::malloc_aligned(size_t align, size_t size) {
+#ifdef USE_STD_ALLOC_FREE
+#if defined(_MSC_VER)
+#ifdef DEBUG
+	return _aligned_malloc_dbg(size, align);
+#else
+	return _aligned_malloc(size, align);
+#endif
+#else
+	return aligned_malloc(align, size);
+#endif
+#else
 	// Ensure that we have space for the pointer and the data.
-	size_t asize = aligned_offset(align, size + sizeof(void*));
+	size_t asize = aligned_offset(align, size + (sizeof(void*) * 2));
 
 	// Allocate memory and store integer representation of pointer.
 	void* ptr = malloc(asize);
 
 	// Calculate actual aligned position
-	intptr_t ptr_off = aligned_offset(align, reinterpret_cast<size_t>(ptr)+sizeof(void*));
+	intptr_t ptr_off = aligned_offset(align, reinterpret_cast<size_t>(ptr) + sizeof(void*));
 
 	// Store actual pointer at ptr_off - sizeof(void*).
 	*reinterpret_cast<intptr_t*>(ptr_off - sizeof(void*)) = reinterpret_cast<intptr_t>(ptr);
 
 	// Return aligned pointer
 	return reinterpret_cast<void*>(ptr_off);
+#endif
 }
 
 void util::free_aligned(void* mem) {
-	void* ptr = reinterpret_cast<void*>(*reinterpret_cast<intptr_t*>(static_cast<char*>(mem)-sizeof(void*)));
+#ifdef USE_STD_ALLOC_FREE
+#if defined(_MSC_VER)
+#ifdef DEBUG
+	_aligned_free_dbg(mem);
+#else
+	_aligned_free(mem);
+#endif
+#else
+	free(mem);
+#endif
+#else
+	void* ptr = reinterpret_cast<void*>(*reinterpret_cast<intptr_t*>(static_cast<char*>(mem) - sizeof(void*)));
 	free(ptr);
+#endif
 }

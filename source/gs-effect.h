@@ -99,6 +99,8 @@ namespace GS {
 		std::list<EffectParameter> GetParameters();
 		EffectParameter GetParameter(size_t idx);
 		EffectParameter GetParameter(std::string name);
+		bool HasParameter(std::string name);
+		bool HasParameter(std::string name, EffectParameter::Type type);
 
 		protected:
 		gs_effect_t* m_effect;

@@ -178,7 +178,7 @@ GS::Texture::Texture(Texture& other) {
 }
 
 GS::Texture::~Texture() {
-	if (m_texture) {
+	if (m_isOwner && m_texture) {
 		obs_enter_graphics();
 		switch (gs_get_texture_type(m_texture)) {
 			case GS_TEXTURE_2D:
