@@ -20,6 +20,8 @@
 #pragma once
 #include <math.h>
 #include <inttypes.h>
+#include <utility>
+#include <string>
 
 // OBS
 #include <libobs/graphics/vec2.h>
@@ -60,4 +62,6 @@ namespace util {
 		static void vec4a::operator delete(void* p);
 		static void vec4a::operator delete[](void* p);
 	};
+
+	std::pair<int64_t, int64_t> SizeFromString(std::string text, bool allowSquare = true);
 }
