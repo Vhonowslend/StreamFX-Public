@@ -233,7 +233,7 @@ void Source::Mirror::update(obs_data_t* data) {
 	const char* sourceName = obs_data_get_string(data, P_SOURCE);
 	if (sourceName != m_mirrorName) {
 		try {
-			m_mirrorSource = std::make_unique<util::SourceTexture>(sourceName);
+			m_mirrorSource = std::make_unique<gfx::SourceTexture>(sourceName);
 			m_mirrorName = sourceName;
 		} catch (...) {
 		}

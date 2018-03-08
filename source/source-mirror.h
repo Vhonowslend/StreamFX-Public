@@ -21,7 +21,7 @@
 #include "plugin.h"
 #include "gs-rendertarget.h"
 #include "gs-sampler.h"
-#include "util-source-texture.h"
+#include "gfx-source-texture.h"
 #include <memory>
 
 namespace Source {
@@ -62,7 +62,7 @@ namespace Source {
 		std::shared_ptr<GS::Sampler> m_sampler;
 		gs_effect_t* m_scalingEffect = nullptr;
 
-		std::unique_ptr<util::SourceTexture> m_mirrorSource;
+		std::unique_ptr<gfx::SourceTexture> m_mirrorSource;
 		std::string m_mirrorName;
 
 		public:

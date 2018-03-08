@@ -22,7 +22,7 @@
 #include "gs-texture.h"
 #include "gs-rendertarget.h"
 
-namespace util {
+namespace gfx {
 	class SourceTexture {
 		obs_source_t* m_source;
 		std::shared_ptr<GS::RenderTarget> m_rt;

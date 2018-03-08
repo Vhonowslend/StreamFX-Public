@@ -15,9 +15,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-#include "util-source-texture.h"
+#include "gfx-source-texture.h"
 
-util::SourceTexture::~SourceTexture() {
+gfx::SourceTexture::~SourceTexture() {
 	if (m_source) {
 		obs_source_release(m_source);
 		m_source = nullptr;
@@ -25,31 +25,31 @@ util::SourceTexture::~SourceTexture() {
 	m_rt = nullptr;
 }
 
-util::SourceTexture::SourceTexture() {
+gfx::SourceTexture::SourceTexture() {
 	m_rt = std::make_shared<GS::RenderTarget>(GS_RGBA, GS_ZS_NONE);
 }
 
-obs_source_t* util::SourceTexture::GetObject() {
+obs_source_t* gfx::SourceTexture::GetObject() {
 	return m_source;
 }
 
-util::SourceTexture::SourceTexture(const char* name) : SourceTexture() {
+gfx::SourceTexture::SourceTexture(const char* name) : SourceTexture() {
 	m_source = obs_get_source_by_name(name);
 	if (!m_source) {
 		throw std::invalid_argument("No such source.");
 	}
 }
 
-util::SourceTexture::SourceTexture(std::string name) : SourceTexture(name.c_str()) {}
+gfx::SourceTexture::SourceTexture(std::string name) : SourceTexture(name.c_str()) {}
 
-util::SourceTexture::SourceTexture(obs_source_t* src) : SourceTexture() {
+gfx::SourceTexture::SourceTexture(obs_source_t* src) : SourceTexture() {
 	m_source = src;
 	if (!m_source) {
 		throw std::invalid_argument("No such source.");
 	}
 }
 
-std::shared_ptr<GS::Texture> util::SourceTexture::Render(size_t width, size_t height) {
+std::shared_ptr<GS::Texture> gfx::SourceTexture::Render(size_t width, size_t height) {
 	if (!m_source) {
 		throw std::invalid_argument("Missing source to render.");
 	}
