@@ -25,7 +25,7 @@
 namespace gfx {
 	class SourceTexture {
 		obs_source_t* m_source;
-		std::shared_ptr<GS::RenderTarget> m_rt;
+		std::shared_ptr<gs::rendertarget> m_rt;
 
 		SourceTexture();
 		public:
@@ -36,6 +36,6 @@ namespace gfx {
 
 		obs_source_t* GetObject();
 
-		std::shared_ptr<GS::Texture> Render(size_t width, size_t height);
+		std::shared_ptr<gs::texture> Render(size_t width, size_t height);
 	};
 }

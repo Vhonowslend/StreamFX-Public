@@ -78,7 +78,7 @@ namespace Filter {
 			private:
 			obs_source_t *context;
 			gs_effect_t *customEffect;
-			GS::VertexBuffer *m_vertexHelper;
+			gs::vertex_buffer *m_vertexHelper;
 			gs_vertbuffer_t *m_vertexBuffer;
 			gs_draw_mode drawmode;
 			gs_texrender_t *m_texRender;

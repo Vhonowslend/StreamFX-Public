@@ -35,10 +35,10 @@ extern "C" {
 	#pragma warning( pop )
 }
 
-namespace GS {
-	class EffectParameter {
+namespace gs {
+	class effect_parameter {
 		public:
-		enum class Type : uint8_t {
+		enum class type : uint8_t {
 			Unknown,
 			Boolean,
 			Float,
@@ -55,52 +55,52 @@ namespace GS {
 		};
 
 		public:
-		EffectParameter(gs_eparam_t* param);
+		effect_parameter(gs_eparam_t* param);
 		
-		std::string GetName();
-		Type GetType();
+		std::string get_name();
+		type get_type();
 
-		void SetBoolean(bool v);
-		void SetBooleanArray(bool v[], size_t sz);
-		void SetFloat(float_t x);
-		void SetFloat2(vec2& v);
-		void SetFloat2(float_t x, float_t y);
-		void SetFloat3(vec3& v);
-		void SetFloat3(float_t x, float_t y, float_t z);
-		void SetFloat4(vec4& v);
-		void SetFloat4(float_t x, float_t y, float_t z, float_t w);
-		void SetFloatArray(float_t v[], size_t sz);
-		void SetInteger(int32_t x);
-		void SetInteger2(int32_t x, int32_t y);
-		void SetInteger3(int32_t x, int32_t y, int32_t z);
-		void SetInteger4(int32_t x, int32_t y, int32_t z, int32_t w);
-		void SetIntegerArray(int32_t v[], size_t sz);
-		void SetMatrix(matrix4& v);
-		void SetTexture(std::shared_ptr<GS::Texture> v);
-		void SetTexture(gs_texture_t* v);
-		void SetSampler(std::shared_ptr<GS::Sampler> v);
-		void SetSampler(gs_sampler_state* v);
+		void set_bool(bool v);
+		void set_bool_array(bool v[], size_t sz);
+		void set_float(float_t x);
+		void set_float2(vec2& v);
+		void set_float2(float_t x, float_t y);
+		void set_float3(vec3& v);
+		void set_float3(float_t x, float_t y, float_t z);
+		void set_float4(vec4& v);
+		void set_float4(float_t x, float_t y, float_t z, float_t w);
+		void set_float_array(float_t v[], size_t sz);
+		void set_int(int32_t x);
+		void set_int2(int32_t x, int32_t y);
+		void set_int3(int32_t x, int32_t y, int32_t z);
+		void set_int4(int32_t x, int32_t y, int32_t z, int32_t w);
+		void set_int_array(int32_t v[], size_t sz);
+		void set_matrix(matrix4& v);
+		void set_texture(std::shared_ptr<gs::texture> v);
+		void set_texture(gs_texture_t* v);
+		void set_sampler(std::shared_ptr<gs::sampler> v);
+		void set_sampler(gs_sampler_state* v);
 
 		private:
 		gs_eparam_t* m_param;
 		gs_effect_param_info m_paramInfo;
 	};
 
-	class Effect {
+	class effect {
 		public:
-		Effect();
-		Effect(std::string file);
-		Effect(std::string code, std::string name);
-		virtual ~Effect();
+		effect();
+		effect(std::string file);
+		effect(std::string code, std::string name);
+		virtual ~effect();
 
-		gs_effect_t* GetObject();
+		gs_effect_t* get_object();
 
-		size_t CountParameters();
-		std::list<EffectParameter> GetParameters();
-		EffectParameter GetParameter(size_t idx);
-		EffectParameter GetParameter(std::string name);
-		bool HasParameter(std::string name);
-		bool HasParameter(std::string name, EffectParameter::Type type);
+		size_t count_parameters();
+		std::list<effect_parameter> get_parameters();
+		effect_parameter get_parameter(size_t idx);
+		effect_parameter get_parameter(std::string name);
+		bool has_parameter(std::string name);
+		bool has_parameter(std::string name, effect_parameter::type type);
 
 		protected:
 		gs_effect_t* m_effect;

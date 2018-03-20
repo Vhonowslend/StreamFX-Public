@@ -28,17 +28,17 @@ extern "C" {
 	#pragma warning( pop )
 }
 
-namespace GS {
-	struct Vertex {
+namespace gs {
+	struct vertex {
 		vec3* position;
 		vec3* normal;
 		vec3* tangent;
 		uint32_t* color;
 		vec4* uv[MAXIMUM_UVW_LAYERS];
 
-		Vertex();
-		Vertex(vec3* p, vec3* n, vec3* t, uint32_t* col, vec4* uv[MAXIMUM_UVW_LAYERS]);
-		~Vertex();
+		vertex();
+		vertex(vec3* p, vec3* n, vec3* t, uint32_t* col, vec4* uv[MAXIMUM_UVW_LAYERS]);
+		~vertex();
 
 		private:
 		bool hasStore;

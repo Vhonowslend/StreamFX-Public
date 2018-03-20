@@ -28,38 +28,38 @@ extern "C" {
 	#pragma warning( pop )
 }
 
-namespace GS {
-	class RenderTarget {
-		friend class RenderTargetOp;
+namespace gs {
+	class rendertarget {
+		friend class rendertarget_op;
 
 		public:
-		RenderTarget(gs_color_format colorFormat, gs_zstencil_format zsFormat);
-		virtual ~RenderTarget();
+		rendertarget(gs_color_format colorFormat, gs_zstencil_format zsFormat);
+		virtual ~rendertarget();
 
-		gs_texture_t* GetTextureObject();
-		void GetTexture(GS::Texture& tex);
-		void GetTexture(std::shared_ptr<GS::Texture>& tex);
-		void GetTexture(std::unique_ptr<GS::Texture>& tex);
-		GS::RenderTargetOp Render(uint32_t width, uint32_t height);
+		gs_texture_t* get_object();
+		void get_texture(gs::texture& tex);
+		void get_texture(std::shared_ptr<gs::texture>& tex);
+		void get_texture(std::unique_ptr<gs::texture>& tex);
+		gs::rendertarget_op render(uint32_t width, uint32_t height);
 
 		protected:
 		gs_texrender_t* m_renderTarget;
 		bool m_isBeingRendered;
 	};
 
-	class RenderTargetOp {
+	class rendertarget_op {
 		public:
-		RenderTargetOp(GS::RenderTarget* rt, uint32_t width, uint32_t height);
-		virtual ~RenderTargetOp();
+		rendertarget_op(gs::rendertarget* rt, uint32_t width, uint32_t height);
+		virtual ~rendertarget_op();
 
 		// Move Constructor
-		RenderTargetOp(GS::RenderTargetOp&&);
+		rendertarget_op(gs::rendertarget_op&&);
 
 		// Copy Constructor
-		RenderTargetOp(const GS::RenderTargetOp&) = delete;
-		RenderTargetOp& operator=(const GS::RenderTargetOp& r) = delete;
+		rendertarget_op(const gs::rendertarget_op&) = delete;
+		rendertarget_op& operator=(const gs::rendertarget_op& r) = delete;
 
 		protected:
-		GS::RenderTarget* m_renderTarget;
+		gs::rendertarget* m_renderTarget;
 	};
 }

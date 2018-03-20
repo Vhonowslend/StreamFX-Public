@@ -30,25 +30,25 @@ extern "C" {
 #pragma warning( pop )
 }
 
-namespace GS {
-	class VertexBuffer {
+namespace gs {
+	class vertex_buffer {
 		public:
 	#pragma region Constructor & Destructor
-		virtual ~VertexBuffer();
+		virtual ~vertex_buffer();
 
 		/*!
 		* \brief Create a Vertex Buffer with a specific number of Vertices.
 		*
 		* \param maximumVertices Maximum amount of vertices to store.
 		*/
-		VertexBuffer(uint32_t maximumVertices);
+		vertex_buffer(uint32_t maximumVertices);
 
 		/*!
 		* \brief Create a Vertex Buffer with the maximum number of Vertices.
 		*
 		* \param maximumVertices Maximum amount of vertices to store.
 		*/
-		VertexBuffer() : VertexBuffer(MAXIMUM_VERTICES) {};
+		vertex_buffer() : vertex_buffer(MAXIMUM_VERTICES) {};
 
 		/*!
 		* \brief Create a copy of a Vertex Buffer
@@ -56,7 +56,7 @@ namespace GS {
 		*
 		* \param other The Vertex Buffer to copy
 		*/
-		VertexBuffer(gs_vertbuffer_t* other);
+		vertex_buffer(gs_vertbuffer_t* other);
 
 	#pragma endregion Constructor & Destructor
 
@@ -69,7 +69,7 @@ namespace GS {
 		*
 		* \param other 
 		*/
-		VertexBuffer(VertexBuffer const& other);
+		vertex_buffer(vertex_buffer const& other);
 
 		/*!
 		* \brief Copy Assignment
@@ -77,7 +77,7 @@ namespace GS {
 		*
 		* \param other
 		*/
-		void operator=(VertexBuffer const& other) = delete;
+		void operator=(vertex_buffer const& other) = delete;
 
 		// Move Constructor & Assignments
 
@@ -87,7 +87,7 @@ namespace GS {
 		*
 		* \param other
 		*/
-		VertexBuffer(VertexBuffer const&& other);
+		vertex_buffer(vertex_buffer const&& other);
 
 		/*!
 		* \brief Move Assignment
@@ -95,24 +95,24 @@ namespace GS {
 		*
 		* \param other
 		*/
-		void operator=(VertexBuffer const&& other);
+		void operator=(vertex_buffer const&& other);
 	#pragma endregion Copy/Move Constructors
 		
 
 
-		void Resize(uint32_t new_size);
+		void resize(uint32_t new_size);
 
-		uint32_t Size();
+		uint32_t size();
 
-		bool Empty();
+		bool empty();
 
-		const GS::Vertex At(uint32_t idx);
+		const gs::vertex at(uint32_t idx);
 
-		const GS::Vertex operator[](uint32_t const pos);
+		const gs::vertex operator[](uint32_t const pos);
 
-		void SetUVLayers(uint32_t layers);
+		void set_uv_layers(uint32_t layers);
 
-		uint32_t GetUVLayers();
+		uint32_t get_uv_layers();
 
 		/*!
 		* \brief Directly access the positions buffer
@@ -120,7 +120,7 @@ namespace GS {
 		*
 		* \return A <vec3*> that points at the first vertex's position.
 		*/
-		vec3* GetPositions();
+		vec3* get_positions();
 
 		/*!
 		* \brief Directly access the normals buffer
@@ -128,7 +128,7 @@ namespace GS {
 		*
 		* \return A <vec3*> that points at the first vertex's normal.
 		*/
-		vec3* GetNormals();
+		vec3* get_normals();
 
 		/*!
 		* \brief Directly access the tangents buffer
@@ -136,7 +136,7 @@ namespace GS {
 		*
 		* \return A <vec3*> that points at the first vertex's tangent.
 		*/
-		vec3* GetTangents();
+		vec3* get_tangents();
 
 		/*!
 		* \brief Directly access the colors buffer
@@ -144,7 +144,7 @@ namespace GS {
 		*
 		* \return A <uint32_t*> that points at the first vertex's color.
 		*/
-		uint32_t* GetColors();
+		uint32_t* get_colors();
 
 		/*!
 		* \brief Directly access the uv buffer
@@ -152,12 +152,12 @@ namespace GS {
 		*
 		* \return A <vec4*> that points at the first vertex's uv.
 		*/
-		vec4* GetUVLayer(size_t idx);
+		vec4* get_uv_layer(size_t idx);
 
 	#pragma region Update / Grab GS object
-		gs_vertbuffer_t* Update();
+		gs_vertbuffer_t* update();
 
-		gs_vertbuffer_t* Update(bool refreshGPU);
+		gs_vertbuffer_t* update(bool refreshGPU);
 	#pragma endregion Update / Grab GS object
 
 		private:

@@ -26,35 +26,35 @@ extern "C" {
 	#pragma warning( pop )
 }
 
-namespace GS {
-	class Sampler {
+namespace gs {
+	class sampler {
 		public:
-		Sampler();
-		~Sampler();
+		sampler();
+		~sampler();
 
-		void SetSampleFilter(gs_sample_filter v);
-		gs_sample_filter GetSampleFilter();
+		void set_filter(gs_sample_filter v);
+		gs_sample_filter get_filter();
 
-		void SetAddressModeU(gs_address_mode v);
-		gs_address_mode GetAddressModeU();
+		void set_address_mode_u(gs_address_mode v);
+		gs_address_mode get_address_mode_u();
 
-		void SetAddressModeV(gs_address_mode v);
-		gs_address_mode GetAddressModeV();
+		void set_address_mode_v(gs_address_mode v);
+		gs_address_mode get_address_mode_v();
 
-		void SetAddressModeW(gs_address_mode v);
-		gs_address_mode GetAddressModeW();
+		void set_address_mode_w(gs_address_mode v);
+		gs_address_mode get_address_mode_w();
 
-		void SetMaxAnisotropy(int v);
-		int GetMaxAnisotropy();
+		void set_max_anisotropy(int v);
+		int get_max_anisotropy();
 
-		void SetBorderColor(uint32_t v);
-		void SetBorderColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-		uint32_t GetBorderColor();
-		uint8_t GetBorderColor(bool r, bool g, bool b, bool a);
+		void set_border_color(uint32_t v);
+		void set_border_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+		uint32_t get_border_color();
+		uint8_t get_border_color(bool r, bool g, bool b, bool a);
 
-		gs_sampler_state* Refresh();
+		gs_sampler_state* refresh();
 
-		gs_sampler_state* GetObject();
+		gs_sampler_state* get_object();
 
 		private:
 		bool m_dirty;

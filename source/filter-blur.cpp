@@ -50,8 +50,8 @@ enum ColorFormat : uint64_t {
 
 // Global Data
 const size_t MaxKernelSize = 25;
-std::map<std::string, std::shared_ptr<GS::Effect>> g_effects;
-std::vector<std::shared_ptr<GS::Texture>> g_gaussianKernels;
+std::map<std::string, std::shared_ptr<gs::effect>> g_effects;
+std::vector<std::shared_ptr<gs::texture>> g_gaussianKernels;
 
 double_t bilateral(double_t x, double_t o) {
 	return 0.39894 * exp(-0.5 * (x * x) / (o * o)) / o;
@@ -85,7 +85,7 @@ static void GenerateGaussianKernelTextures() {
 		const uint8_t** pdata = const_cast<const uint8_t**>(&data);
 
 		try {
-			std::shared_ptr<GS::Texture> tex = std::make_shared<GS::Texture>((uint32_t)textureBufferSize, 1,
+			std::shared_ptr<gs::texture> tex = std::make_shared<gs::texture>((uint32_t)textureBufferSize, 1,
 				gs_color_format::GS_R32F, 1, pdata, 0);
 			g_gaussianKernels[n] = tex;
 		} catch (std::runtime_error ex) {
@@ -121,7 +121,7 @@ Filter::Blur::Blur() {
 	};
 	for (auto& kv : effects) {
 		try {
-			std::shared_ptr<GS::Effect> effect = std::make_shared<GS::Effect>(kv.second);
+			std::shared_ptr<gs::effect> effect = std::make_shared<gs::effect>(kv.second);
 			g_effects.insert(std::make_pair(kv.first, effect));
 		} catch (std::runtime_error ex) {
 			P_LOG_ERROR("<filter-blur> Loading effect '%s' (path: '%s') failed with error(s): %s",
@@ -623,7 +623,7 @@ bool Filter::Blur::Instance::apply_gaussian_param() {
 	if (m_type != Type::Gaussian)
 		return false;
 
-	std::shared_ptr<GS::Texture> tex;
+	std::shared_ptr<gs::texture> tex;
 	if ((m_size - 1) < MaxKernelSize) {
 		tex = g_gaussianKernels[size_t(m_size - 1)];
 		result = result && gs_set_param_texture(m_effect->GetObject(), "kernel", tex->GetObject());

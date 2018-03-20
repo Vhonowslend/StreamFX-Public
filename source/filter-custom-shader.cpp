@@ -147,7 +147,7 @@ bool Filter::CustomShader::modified_properties(obs_properties_t *pr, obs_propert
 	Instance* ptr = static_cast<Instance*>(obs_properties_get_param(pr));
 	for (Instance::Parameter& prm : ptr->m_effectParameters) {
 		switch (prm.type) {
-			case GS::EffectParameter::Type::Texture:
+			case gs::effect_parameter::type::Texture:
 				bool isSource = obs_data_get_int(data, prm.uiNames[0].c_str()) == 1;
 				obs_property_set_visible(obs_properties_get(pr, prm.uiNames[1].c_str()), isSource);
 				obs_property_set_visible(obs_properties_get(pr, prm.uiNames[2].c_str()), !isSource);
@@ -205,7 +205,7 @@ Filter::CustomShader::Instance::Instance(obs_data_t *data, obs_source_t *source)
 	m_effect.lastCheck = 0;
 	m_effect.effect = nullptr;
 
-	m_renderTarget = std::make_unique<GS::RenderTarget>(GS_RGBA, GS_ZS_NONE);
+	m_renderTarget = std::make_unique<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 
 	m_activeTime = 0.0f;
 	m_renderTime = 0.0f;
@@ -220,7 +220,7 @@ void Filter::CustomShader::Instance::update(obs_data_t *data) {
 	if (shaderType == ShaderType::Text) {
 		const char* shaderText = obs_data_get_string(data, S_CONTENT_TEXT);
 		try {
-			m_effect.effect = std::make_unique<GS::Effect>(shaderText, "Text Shader");
+			m_effect.effect = std::make_unique<gs::effect>(shaderText, "Text Shader");
 		} catch (std::runtime_error& ex) {
 			const char* filterName = obs_source_get_name(m_source);
 			P_LOG_ERROR("[%s] Shader loading failed with error(s): %s", filterName, ex.what());
@@ -230,81 +230,81 @@ void Filter::CustomShader::Instance::update(obs_data_t *data) {
 	}
 
 	m_effectParameters.clear();
-	if (m_effect.effect && m_effect.effect->CountParameters() > 0) {
-		for (auto p : m_effect.effect->GetParameters()) {
-			std::string p_name = p.GetName();
+	if (m_effect.effect && m_effect.effect->count_parameters() > 0) {
+		for (auto p : m_effect.effect->get_parameters()) {
+			std::string p_name = p.get_name();
 			std::string p_desc = p_name;
 
-			if (IsSpecialParameter(p_name, p.GetType()))
+			if (IsSpecialParameter(p_name, p.get_type()))
 				continue;
 
 			Parameter prm;
 			prm.name = p_name;
-			prm.type = p.GetType();
+			prm.type = p.get_type();
 
-			switch (p.GetType()) {
-				case GS::EffectParameter::Type::Boolean:
+			switch (p.get_type()) {
+				case gs::effect_parameter::type::Boolean:
 				{
 					prm.uiNames.push_back(p_name);
 					prm.uiDescriptions.push_back(p_desc);
 					prm.value.b = obs_data_get_bool(data, p_name.c_str());
 					break;
 				}
-				case GS::EffectParameter::Type::Float:
-				case GS::EffectParameter::Type::Float2:
-				case GS::EffectParameter::Type::Float3:
-				case GS::EffectParameter::Type::Float4:
+				case gs::effect_parameter::type::Float:
+				case gs::effect_parameter::type::Float2:
+				case gs::effect_parameter::type::Float3:
+				case gs::effect_parameter::type::Float4:
 				{
 					{
 						prm.uiNames.push_back(p_name + "0");
 						prm.uiDescriptions.push_back(p_desc + "[0]");
 						prm.value.f[0] = (float_t)obs_data_get_double(data, prm.uiNames.back().c_str());
 					}
-					if (p.GetType() >= GS::EffectParameter::Type::Float2) {
+					if (p.get_type() >= gs::effect_parameter::type::Float2) {
 						prm.uiNames.push_back(p_name + "1");
 						prm.uiDescriptions.push_back(p_desc + "[1]");
 						prm.value.f[1] = (float_t)obs_data_get_double(data, prm.uiNames.back().c_str());
 					}
-					if (p.GetType() >= GS::EffectParameter::Type::Float3) {
+					if (p.get_type() >= gs::effect_parameter::type::Float3) {
 						prm.uiNames.push_back(p_name + "2");
 						prm.uiDescriptions.push_back(p_desc + "[2]");
 						prm.value.f[2] = (float_t)obs_data_get_double(data, prm.uiNames.back().c_str());
 					}
-					if (p.GetType() >= GS::EffectParameter::Type::Float4) {
+					if (p.get_type() >= gs::effect_parameter::type::Float4) {
 						prm.uiNames.push_back(p_name + "3");
 						prm.uiDescriptions.push_back(p_desc + "[3]");
 						prm.value.f[3] = (float_t)obs_data_get_double(data, prm.uiNames.back().c_str());
 					}
 					break;
 				}
-				case GS::EffectParameter::Type::Integer:
-				case GS::EffectParameter::Type::Integer2:
-				case GS::EffectParameter::Type::Integer3:
-				case GS::EffectParameter::Type::Integer4:
+				case gs::effect_parameter::type::Integer:
+				case gs::effect_parameter::type::Integer2:
+				case gs::effect_parameter::type::Integer3:
+				case gs::effect_parameter::type::Integer4:
 				{
 					{
 						prm.uiNames.push_back(p_name + "0");
 						prm.uiDescriptions.push_back(p_desc + "[0]");
 						prm.value.i[0] = (int32_t)obs_data_get_int(data, prm.uiNames.back().c_str());
 					}
-					if (p.GetType() >= GS::EffectParameter::Type::Integer2) {
+					if (p.get_type() >= gs::effect_parameter::type::Integer2) {
 						prm.uiNames.push_back(p_name + "1");
 						prm.uiDescriptions.push_back(p_desc + "[1]");
 						prm.value.i[1] = (int32_t)obs_data_get_int(data, prm.uiNames.back().c_str());
 					}
-					if (p.GetType() >= GS::EffectParameter::Type::Integer3) {
+					if (p.get_type() >= gs::effect_parameter::type::Integer3) {
 						prm.uiNames.push_back(p_name + "2");
 						prm.uiDescriptions.push_back(p_desc + "[2]");
 						prm.value.i[2] = (int32_t)obs_data_get_int(data, prm.uiNames.back().c_str());
 					}
-					if (p.GetType() >= GS::EffectParameter::Type::Integer4) {
+					if (p.get_type() >= gs::effect_parameter::type::Integer4) {
 						prm.uiNames.push_back(p_name + "3");
 						prm.uiDescriptions.push_back(p_desc + "[3]");
 						prm.value.i[3] = (int32_t)obs_data_get_int(data, prm.uiNames.back().c_str());
 					}
 					break;
 				}
-				case GS::EffectParameter::Type::Texture:
+				case gs::effect_parameter::type::Texture:
 				{
 					prm.uiNames.push_back(p_name + "_type");
 					prm.uiDescriptions.push_back(p_desc + " Type");
@@ -328,28 +328,28 @@ void Filter::CustomShader::Instance::update(obs_data_t *data) {
 
 	for (Parameter& prm : m_effectParameters) {
 		switch (prm.type) {
-			case GS::EffectParameter::Type::Boolean:
+			case gs::effect_parameter::type::Boolean:
 				prm.value.b = obs_data_get_bool(data, prm.uiNames[0].c_str());
 				break;
-			case GS::EffectParameter::Type::Float4:
+			case gs::effect_parameter::type::Float4:
 				prm.value.f[3] = (float_t)obs_data_get_double(data, prm.uiNames[3].c_str());
-			case GS::EffectParameter::Type::Float3:
+			case gs::effect_parameter::type::Float3:
 				prm.value.f[2] = (float_t)obs_data_get_double(data, prm.uiNames[2].c_str());
-			case GS::EffectParameter::Type::Float2:
+			case gs::effect_parameter::type::Float2:
 				prm.value.f[1] = (float_t)obs_data_get_double(data, prm.uiNames[1].c_str());
-			case GS::EffectParameter::Type::Float:
+			case gs::effect_parameter::type::Float:
 				prm.value.f[0] = (float_t)obs_data_get_double(data, prm.uiNames[0].c_str());
 				break;
-			case GS::EffectParameter::Type::Integer4:
+			case gs::effect_parameter::type::Integer4:
 				prm.value.i[3] = (int32_t)obs_data_get_int(data, prm.uiNames[3].c_str());
-			case GS::EffectParameter::Type::Integer3:
+			case gs::effect_parameter::type::Integer3:
 				prm.value.i[2] = (int32_t)obs_data_get_int(data, prm.uiNames[2].c_str());
-			case GS::EffectParameter::Type::Integer2:
+			case gs::effect_parameter::type::Integer2:
 				prm.value.i[1] = (int32_t)obs_data_get_int(data, prm.uiNames[1].c_str());
-			case GS::EffectParameter::Type::Integer:
+			case gs::effect_parameter::type::Integer:
 				prm.value.i[0] = (int32_t)obs_data_get_int(data, prm.uiNames[0].c_str());
 				break;
-			case GS::EffectParameter::Type::Texture:
+			case gs::effect_parameter::type::Texture:
 				prm.value.textureIsSource = obs_data_get_int(data, prm.uiNames[0].c_str()) == 1;
 				std::string nName = obs_data_get_string(data, prm.uiNames[1].c_str());
 				if (nName != prm.value.source.name) {
@@ -413,7 +413,7 @@ void Filter::CustomShader::Instance::video_render(gs_effect_t *effect) {
 
 	// Render original source to texture.
 	{
-		auto op = m_renderTarget->Render(baseW, baseH);
+		auto op = m_renderTarget->render(baseW, baseH);
 		vec4 black; vec4_zero(&black);
 		gs_ortho(0, (float_t)baseW, 0, (float_t)baseH, 0, 1);
 		gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
@@ -422,7 +422,7 @@ void Filter::CustomShader::Instance::video_render(gs_effect_t *effect) {
 				effect ? effect : obs_get_base_effect(OBS_EFFECT_DEFAULT), baseW, baseH);
 		}
 	}
-	gs_texture_t* sourceTexture = m_renderTarget->GetTextureObject();
+	gs_texture_t* sourceTexture = m_renderTarget->get_object();
 	if (!sourceTexture) {
 		obs_source_skip_video_filter(m_source);
 		return;
@@ -430,54 +430,54 @@ void Filter::CustomShader::Instance::video_render(gs_effect_t *effect) {
 
 	// Apply Parameters
 	try {
-		if (m_effect.effect->HasParameter("ViewSize", GS::EffectParameter::Type::Float2))
-			m_effect.effect->GetParameter("ViewSize").SetFloat2(float_t(baseW), float_t(baseH));
-		if (m_effect.effect->HasParameter("ViewSizeI", GS::EffectParameter::Type::Integer2))
-			m_effect.effect->GetParameter("ViewSizeI").SetInteger2(baseW, baseH);
-		if (m_effect.effect->HasParameter("Time", GS::EffectParameter::Type::Float))
-			m_effect.effect->GetParameter("Time").SetFloat(m_renderTime);
-		if (m_effect.effect->HasParameter("TimeActive", GS::EffectParameter::Type::Float))
-			m_effect.effect->GetParameter("TimeActive").SetFloat(m_activeTime);
+		if (m_effect.effect->has_parameter("ViewSize", gs::effect_parameter::type::Float2))
+			m_effect.effect->get_parameter("ViewSize").set_float2(float_t(baseW), float_t(baseH));
+		if (m_effect.effect->has_parameter("ViewSizeI", gs::effect_parameter::type::Integer2))
+			m_effect.effect->get_parameter("ViewSizeI").set_int2(baseW, baseH);
+		if (m_effect.effect->has_parameter("Time", gs::effect_parameter::type::Float))
+			m_effect.effect->get_parameter("Time").set_float(m_renderTime);
+		if (m_effect.effect->has_parameter("TimeActive", gs::effect_parameter::type::Float))
+			m_effect.effect->get_parameter("TimeActive").set_float(m_activeTime);
 
 		/// "image" Specials
-		if (m_effect.effect->HasParameter("image_Size", GS::EffectParameter::Type::Float2))
-			m_effect.effect->GetParameter("image_Size").SetFloat2(float_t(baseW), float_t(baseH));
-		if (m_effect.effect->HasParameter("image_SizeI", GS::EffectParameter::Type::Float2))
-			m_effect.effect->GetParameter("image_SizeI").SetInteger2(baseW, baseH);
-		if (m_effect.effect->HasParameter("image_Texel", GS::EffectParameter::Type::Float2))
-			m_effect.effect->GetParameter("image_Texel").SetFloat2(1.0f / float_t(baseW), 1.0f / float_t(baseH));
+		if (m_effect.effect->has_parameter("image_Size", gs::effect_parameter::type::Float2))
+			m_effect.effect->get_parameter("image_Size").set_float2(float_t(baseW), float_t(baseH));
+		if (m_effect.effect->has_parameter("image_SizeI", gs::effect_parameter::type::Float2))
+			m_effect.effect->get_parameter("image_SizeI").set_int2(baseW, baseH);
+		if (m_effect.effect->has_parameter("image_Texel", gs::effect_parameter::type::Float2))
+			m_effect.effect->get_parameter("image_Texel").set_float2(1.0f / float_t(baseW), 1.0f / float_t(baseH));
 
 		for (Parameter& prm : m_effectParameters) {
-			GS::EffectParameter eprm = m_effect.effect->GetParameter(prm.name);
+			gs::effect_parameter eprm = m_effect.effect->get_parameter(prm.name);
 			switch (prm.type) {
-				case GS::EffectParameter::Type::Boolean:
-					eprm.SetBoolean(prm.value.b);
+				case gs::effect_parameter::type::Boolean:
+					eprm.set_bool(prm.value.b);
 					break;
-				case GS::EffectParameter::Type::Integer:
-					eprm.SetInteger(prm.value.i[0]);
+				case gs::effect_parameter::type::Integer:
+					eprm.set_int(prm.value.i[0]);
 					break;
-				case GS::EffectParameter::Type::Integer2:
-					eprm.SetInteger2(prm.value.i[0], prm.value.i[1]);
+				case gs::effect_parameter::type::Integer2:
+					eprm.set_int2(prm.value.i[0], prm.value.i[1]);
 					break;
-				case GS::EffectParameter::Type::Integer3:
-					eprm.SetInteger3(prm.value.i[0], prm.value.i[1], prm.value.i[2]);
+				case gs::effect_parameter::type::Integer3:
+					eprm.set_int3(prm.value.i[0], prm.value.i[1], prm.value.i[2]);
 					break;
-				case GS::EffectParameter::Type::Integer4:
-					eprm.SetInteger4(prm.value.i[0], prm.value.i[1], prm.value.i[2], prm.value.i[3]);
+				case gs::effect_parameter::type::Integer4:
+					eprm.set_int4(prm.value.i[0], prm.value.i[1], prm.value.i[2], prm.value.i[3]);
 					break;
-				case GS::EffectParameter::Type::Float:
-					eprm.SetFloat(prm.value.f[0]);
+				case gs::effect_parameter::type::Float:
+					eprm.set_float(prm.value.f[0]);
 					break;
-				case GS::EffectParameter::Type::Float2:
-					eprm.SetFloat2(prm.value.f[0], prm.value.f[1]);
+				case gs::effect_parameter::type::Float2:
+					eprm.set_float2(prm.value.f[0], prm.value.f[1]);
 					break;
-				case GS::EffectParameter::Type::Float3:
-					eprm.SetFloat3(prm.value.f[0], prm.value.f[1], prm.value.f[2]);
+				case gs::effect_parameter::type::Float3:
+					eprm.set_float3(prm.value.f[0], prm.value.f[1], prm.value.f[2]);
 					break;
-				case GS::EffectParameter::Type::Float4:
-					eprm.SetFloat4(prm.value.f[0], prm.value.f[1], prm.value.f[2], prm.value.f[3]);
+				case gs::effect_parameter::type::Float4:
+					eprm.set_float4(prm.value.f[0], prm.value.f[1], prm.value.f[2], prm.value.f[3]);
 					break;
-				case GS::EffectParameter::Type::Texture:
+				case gs::effect_parameter::type::Texture:
 					if (prm.value.textureIsSource) {
 						if (prm.value.source.rendertarget && prm.value.source.source) {
 							uint32_t w, h;
@@ -490,11 +490,11 @@ void Filter::CustomShader::Instance::video_render(gs_effect_t *effect) {
 								gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
 								obs_source_video_render(prm.value.source.source);
 							}
-							eprm.SetTexture(prm.value.source.rendertarget->GetTextureObject());
+							eprm.set_texture(prm.value.source.rendertarget->GetTextureObject());
 						}
 					} else {
 						if (prm.value.file.texture) {
-							eprm.SetTexture(prm.value.file.texture);
+							eprm.set_texture(prm.value.file.texture);
 						}
 					}
 					break;
@@ -508,7 +508,7 @@ void Filter::CustomShader::Instance::video_render(gs_effect_t *effect) {
 
 	gs_reset_blend_state();
 	gs_enable_depth_test(false);
-	while (gs_effect_loop(m_effect.effect->GetObject(), "Draw")) {
+	while (gs_effect_loop(m_effect.effect->get_object(), "Draw")) {
 		obs_source_draw(sourceTexture, 0, 0, baseW, baseH, false);
 	}
 }
@@ -530,34 +530,34 @@ void Filter::CustomShader::Instance::get_properties(obs_properties_t *pr) {
 
 	for (Parameter& prm : m_effectParameters) {
 		switch (prm.type) {
-			case GS::EffectParameter::Type::Boolean:
+			case gs::effect_parameter::type::Boolean:
 				obs_properties_add_bool(pr, prm.uiNames[0].c_str(), prm.uiDescriptions[0].c_str());
 				break;
-			case GS::EffectParameter::Type::Float:
-			case GS::EffectParameter::Type::Float2:
-			case GS::EffectParameter::Type::Float3:
-			case GS::EffectParameter::Type::Float4:
+			case gs::effect_parameter::type::Float:
+			case gs::effect_parameter::type::Float2:
+			case gs::effect_parameter::type::Float3:
+			case gs::effect_parameter::type::Float4:
 				obs_properties_add_float(pr, prm.uiNames[0].c_str(), prm.uiDescriptions[0].c_str(), FLT_MIN, FLT_MAX, FLT_EPSILON);
-				if (prm.type >= GS::EffectParameter::Type::Float2)
+				if (prm.type >= gs::effect_parameter::type::Float2)
 					obs_properties_add_float(pr, prm.uiNames[1].c_str(), prm.uiDescriptions[1].c_str(), FLT_MIN, FLT_MAX, FLT_EPSILON);
-				if (prm.type >= GS::EffectParameter::Type::Float3)
+				if (prm.type >= gs::effect_parameter::type::Float3)
 					obs_properties_add_float(pr, prm.uiNames[2].c_str(), prm.uiDescriptions[2].c_str(), FLT_MIN, FLT_MAX, FLT_EPSILON);
-				if (prm.type >= GS::EffectParameter::Type::Float4)
+				if (prm.type >= gs::effect_parameter::type::Float4)
 					obs_properties_add_float(pr, prm.uiNames[3].c_str(), prm.uiDescriptions[3].c_str(), FLT_MIN, FLT_MAX, FLT_EPSILON);
 				break;
-			case GS::EffectParameter::Type::Integer:
-			case GS::EffectParameter::Type::Integer2:
-			case GS::EffectParameter::Type::Integer3:
-			case GS::EffectParameter::Type::Integer4:
+			case gs::effect_parameter::type::Integer:
+			case gs::effect_parameter::type::Integer2:
+			case gs::effect_parameter::type::Integer3:
+			case gs::effect_parameter::type::Integer4:
 				obs_properties_add_int(pr, prm.uiNames[0].c_str(), prm.uiDescriptions[0].c_str(), INT_MIN, INT_MAX, 1);
-				if (prm.type >= GS::EffectParameter::Type::Integer2)
+				if (prm.type >= gs::effect_parameter::type::Integer2)
 					obs_properties_add_int(pr, prm.uiNames[1].c_str(), prm.uiDescriptions[1].c_str(), INT_MIN, INT_MAX, 1);
-				if (prm.type >= GS::EffectParameter::Type::Integer3)
+				if (prm.type >= gs::effect_parameter::type::Integer3)
 					obs_properties_add_int(pr, prm.uiNames[2].c_str(), prm.uiDescriptions[2].c_str(), INT_MIN, INT_MAX, 1);
-				if (prm.type >= GS::EffectParameter::Type::Integer4)
+				if (prm.type >= gs::effect_parameter::type::Integer4)
 					obs_properties_add_int(pr, prm.uiNames[3].c_str(), prm.uiDescriptions[3].c_str(), INT_MIN, INT_MAX, 1);
 				break;
-			case GS::EffectParameter::Type::Texture:
+			case gs::effect_parameter::type::Texture:
 				obs_property * pt = obs_properties_add_list(pr,
 					prm.uiNames[0].c_str(),
 					prm.uiDescriptions[0].c_str(),
@@ -635,7 +635,7 @@ void Filter::CustomShader::Instance::CheckShaderFile(std::string file, float_t t
 				shaderContent[sz] = '\0';
 			}
 
-			m_effect.effect = std::make_unique<GS::Effect>(shaderContent.data(), m_effect.path);
+			m_effect.effect = std::make_unique<gs::effect>(shaderContent.data(), m_effect.path);
 		} catch (std::runtime_error& ex) {
 			const char* filterName = obs_source_get_name(m_source);
 			P_LOG_ERROR("[%s] Shader loading failed with error(s): %s", filterName, ex.what());
@@ -650,7 +650,7 @@ std::string Filter::CustomShader::Instance::GetShaderFile() {
 void Filter::CustomShader::Instance::CheckTextures(float_t time) {
 
 	for (Parameter& prm : m_effectParameters) {
-		if (prm.type != GS::EffectParameter::Type::Texture)
+		if (prm.type != gs::effect_parameter::type::Texture)
 			continue;
 
 		if (prm.value.textureIsSource) {
@@ -664,7 +664,7 @@ void Filter::CustomShader::Instance::CheckTextures(float_t time) {
 
 			// Ensure that a render target exists.
 			if (!prm.value.source.rendertarget)
-				prm.value.source.rendertarget = std::make_shared<GS::RenderTarget>(GS_RGBA, GS_ZS_NONE);
+				prm.value.source.rendertarget = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 
 			// Finally check if the source property was modified or is empty.
 			if (prm.value.source.dirty || !prm.value.source.source) {
@@ -711,7 +711,7 @@ void Filter::CustomShader::Instance::CheckTextures(float_t time) {
 			if (doRefresh) {
 				prm.value.file.dirty = false;
 				try {
-					prm.value.file.texture = std::make_shared<GS::Texture>(prm.value.file.path);
+					prm.value.file.texture = std::make_shared<gs::texture>(prm.value.file.path);
 				} catch (std::runtime_error& ex) {
 					const char* filterName = obs_source_get_name(m_source);
 					P_LOG_ERROR("[%s] Loading texture file '%s' failed with error(s): %s",
@@ -722,19 +722,19 @@ void Filter::CustomShader::Instance::CheckTextures(float_t time) {
 	}
 }
 
-bool Filter::CustomShader::Instance::IsSpecialParameter(std::string name, GS::EffectParameter::Type type) {
-	std::pair<std::string, GS::EffectParameter::Type> reservedParameters[] = {
-		{ "ViewProj", GS::EffectParameter::Type::Matrix },
-		{ "ViewSize", GS::EffectParameter::Type::Float2 },
-		{ "ViewSizeI", GS::EffectParameter::Type::Integer2 },
-		{ "Time", GS::EffectParameter::Type::Float },
-		{ "TimeActive", GS::EffectParameter::Type::Float },
-		{ "image", GS::EffectParameter::Type::Texture }
+bool Filter::CustomShader::Instance::IsSpecialParameter(std::string name, gs::effect_parameter::type type) {
+	std::pair<std::string, gs::effect_parameter::type> reservedParameters[] = {
+		{ "ViewProj", gs::effect_parameter::type::Matrix },
+		{ "ViewSize", gs::effect_parameter::type::Float2 },
+		{ "ViewSizeI", gs::effect_parameter::type::Integer2 },
+		{ "Time", gs::effect_parameter::type::Float },
+		{ "TimeActive", gs::effect_parameter::type::Float },
+		{ "image", gs::effect_parameter::type::Texture }
 	};
-	std::pair<std::string, GS::EffectParameter::Type> textureParameters[] = {
-		{ "Size", GS::EffectParameter::Type::Float2 },
-		{ "SizeI", GS::EffectParameter::Type::Integer2 },
-		{ "Texel", GS::EffectParameter::Type::Float2 }
+	std::pair<std::string, gs::effect_parameter::type> textureParameters[] = {
+		{ "Size", gs::effect_parameter::type::Float2 },
+		{ "SizeI", gs::effect_parameter::type::Integer2 },
+		{ "Texel", gs::effect_parameter::type::Float2 }
 	};
 
 	for (auto& kv : reservedParameters) {
@@ -750,8 +750,8 @@ bool Filter::CustomShader::Instance::IsSpecialParameter(std::string name, GS::Ef
 		secondPart = name.substr(posUnderscore + 1);
 
 		try {
-			GS::EffectParameter prm = m_effect.effect->GetParameter(firstPart);
-			if (prm.GetType() == GS::EffectParameter::Type::Texture) {
+			gs::effect_parameter prm = m_effect.effect->get_parameter(firstPart);
+			if (prm.get_type() == gs::effect_parameter::type::Texture) {
 				for (auto& kv : reservedParameters) {
 					if ((secondPart == kv.first) && (type == kv.second))
 						return true;

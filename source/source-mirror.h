@@ -58,8 +58,8 @@ namespace Source {
 		bool m_rescale = false;
 		bool m_keepOriginalSize = false;
 		uint32_t m_width, m_height;
-		std::unique_ptr<GS::RenderTarget> m_renderTargetScale;
-		std::shared_ptr<GS::Sampler> m_sampler;
+		std::unique_ptr<gs::rendertarget> m_renderTargetScale;
+		std::shared_ptr<gs::sampler> m_sampler;
 		gs_effect_t* m_scalingEffect = nullptr;
 
 		std::unique_ptr<gfx::SourceTexture> m_mirrorSource;

@@ -26,7 +26,7 @@ gfx::SourceTexture::~SourceTexture() {
 }
 
 gfx::SourceTexture::SourceTexture() {
-	m_rt = std::make_shared<GS::RenderTarget>(GS_RGBA, GS_ZS_NONE);
+	m_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
 obs_source_t* gfx::SourceTexture::GetObject() {
@@ -49,7 +49,7 @@ gfx::SourceTexture::SourceTexture(obs_source_t* src) : SourceTexture() {
 	}
 }
 
-std::shared_ptr<GS::Texture> gfx::SourceTexture::Render(size_t width, size_t height) {
+std::shared_ptr<gs::texture> gfx::SourceTexture::Render(size_t width, size_t height) {
 	if (!m_source) {
 		throw std::invalid_argument("Missing source to render.");
 	}
@@ -68,7 +68,7 @@ std::shared_ptr<GS::Texture> gfx::SourceTexture::Render(size_t width, size_t hei
 		obs_source_video_render(m_source);
 	}
 
-	std::shared_ptr<GS::Texture> tex;
+	std::shared_ptr<gs::texture> tex;
 	m_rt->GetTexture(tex);
 	return tex;
 }

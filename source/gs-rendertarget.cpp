@@ -26,43 +26,43 @@ extern "C" {
 	#pragma warning( pop )
 }
 
-GS::RenderTarget::RenderTarget(gs_color_format colorFormat, gs_zstencil_format zsFormat) {
+gs::rendertarget::rendertarget(gs_color_format colorFormat, gs_zstencil_format zsFormat) {
 	m_isBeingRendered = false;
 	obs_enter_graphics();
 	m_renderTarget = gs_texrender_create(colorFormat, zsFormat);
 	obs_leave_graphics();
 }
 
-GS::RenderTarget::~RenderTarget() {
+gs::rendertarget::~rendertarget() {
 	obs_enter_graphics();
 	gs_texrender_destroy(m_renderTarget);
 	obs_leave_graphics();
 }
 
-GS::RenderTargetOp GS::RenderTarget::Render(uint32_t width, uint32_t height) {
+gs::rendertarget_op gs::rendertarget::render(uint32_t width, uint32_t height) {
 	return { this, width, height };
 }
 
-gs_texture_t* GS::RenderTarget::GetTextureObject() {
+gs_texture_t* gs::rendertarget::get_object() {
 	obs_enter_graphics();
 	gs_texture_t* tex = gs_texrender_get_texture(m_renderTarget);
 	obs_leave_graphics();
 	return tex;
 }
 
-void GS::RenderTarget::GetTexture(GS::Texture& tex) {
-	tex = GS::Texture(GetTextureObject(), false);
+void gs::rendertarget::get_texture(gs::texture& tex) {
+	tex = gs::texture(get_object(), false);
 }
 
-void GS::RenderTarget::GetTexture(std::shared_ptr<GS::Texture>& tex) {
-	tex = std::make_shared<GS::Texture>(GetTextureObject(), false);
+void gs::rendertarget::get_texture(std::shared_ptr<gs::texture>& tex) {
+	tex = std::make_shared<gs::texture>(get_object(), false);
 }
 
-void GS::RenderTarget::GetTexture(std::unique_ptr<GS::Texture>& tex) {
-	tex = std::make_unique<GS::Texture>(GetTextureObject(), false);
+void gs::rendertarget::get_texture(std::unique_ptr<gs::texture>& tex) {
+	tex = std::make_unique<gs::texture>(get_object(), false);
 }
 
-GS::RenderTargetOp::RenderTargetOp(GS::RenderTarget* rt, uint32_t width, uint32_t height) : m_renderTarget(rt) {
+gs::rendertarget_op::rendertarget_op(gs::rendertarget* rt, uint32_t width, uint32_t height) : m_renderTarget(rt) {
 	if (m_renderTarget == nullptr)
 		throw std::invalid_argument("rt");
 	if (m_renderTarget->m_isBeingRendered)
@@ -77,12 +77,12 @@ GS::RenderTargetOp::RenderTargetOp(GS::RenderTarget* rt, uint32_t width, uint32_
 	m_renderTarget->m_isBeingRendered = true;
 }
 
-GS::RenderTargetOp::RenderTargetOp(GS::RenderTargetOp&& r) {
+gs::rendertarget_op::rendertarget_op(gs::rendertarget_op&& r) {
 	this->m_renderTarget = r.m_renderTarget;
 	r.m_renderTarget = nullptr;
 }
 
-GS::RenderTargetOp::~RenderTargetOp() {
+gs::rendertarget_op::~rendertarget_op() {
 	if (m_renderTarget == nullptr)
 		return;
 	obs_enter_graphics();

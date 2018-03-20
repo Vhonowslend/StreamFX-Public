@@ -26,7 +26,7 @@ extern "C" {
 	#pragma warning( pop )
 }
 
-GS::IndexBuffer::IndexBuffer(uint32_t maximumVertices) {
+gs::index_buffer::index_buffer(uint32_t maximumVertices) {
 	this->reserve(maximumVertices);
 
 	obs_enter_graphics();
@@ -34,27 +34,27 @@ GS::IndexBuffer::IndexBuffer(uint32_t maximumVertices) {
 	obs_leave_graphics();
 }
 
-GS::IndexBuffer::IndexBuffer() : IndexBuffer(MAXIMUM_VERTICES) {}
+gs::index_buffer::index_buffer() : index_buffer(MAXIMUM_VERTICES) {}
 
-GS::IndexBuffer::IndexBuffer(IndexBuffer& other) : IndexBuffer((uint32_t)other.size()) {
+gs::index_buffer::index_buffer(index_buffer& other) : index_buffer((uint32_t)other.size()) {
 	std::copy(other.begin(), other.end(), this->end());
 }
 
-GS::IndexBuffer::IndexBuffer(std::vector<uint32_t>& other) : IndexBuffer((uint32_t)other.size()) {
+gs::index_buffer::index_buffer(std::vector<uint32_t>& other) : index_buffer((uint32_t)other.size()) {
 	std::copy(other.begin(), other.end(), this->end());
 }
 
-GS::IndexBuffer::~IndexBuffer() {
+gs::index_buffer::~index_buffer() {
 	obs_enter_graphics();
 	gs_indexbuffer_destroy(m_indexBuffer);
 	obs_leave_graphics();
 }
 
-gs_indexbuffer_t* GS::IndexBuffer::get() {
+gs_indexbuffer_t* gs::index_buffer::get() {
 	return get(true);
 }
 
-gs_indexbuffer_t* GS::IndexBuffer::get(bool refreshGPU) {
+gs_indexbuffer_t* gs::index_buffer::get(bool refreshGPU) {
 	if (refreshGPU) {
 		obs_enter_graphics();
 		gs_indexbuffer_flush(m_indexBuffer);

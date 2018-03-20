@@ -203,8 +203,8 @@ Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src) {
 
 	m_rescale = false;
 	m_width = m_height = 1;
-	m_renderTargetScale = std::make_unique<GS::RenderTarget>(GS_RGBA, GS_ZS_NONE);
-	m_sampler = std::make_shared<GS::Sampler>();
+	m_renderTargetScale = std::make_unique<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	m_sampler = std::make_shared<gs::sampler>();
 	m_scalingEffect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 
 	update(data);
@@ -323,7 +323,7 @@ void Source::Mirror::video_render(gs_effect_t* effect) {
 		sh = obs_source_get_height(m_mirrorSource->GetObject());
 
 		// Store original Source Texture
-		std::shared_ptr<GS::Texture> tex = m_mirrorSource->Render(sw, sh);
+		std::shared_ptr<gs::texture> tex = m_mirrorSource->Render(sw, sh);
 
 		gs_eparam_t *scale_param = gs_effect_get_param_by_name(m_scalingEffect, "base_dimension_i");
 		if (scale_param) {
@@ -337,7 +337,7 @@ void Source::Mirror::video_render(gs_effect_t* effect) {
 		if (m_keepOriginalSize) {
 			{
 				vec4 black; vec4_zero(&black);
-				auto op = m_renderTargetScale->Render(m_width, m_height);
+				auto op = m_renderTargetScale->render(m_width, m_height);
 				gs_ortho(0, (float_t)m_width, 0, (float_t)m_height, 0, 1);
 				gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
 				while (gs_effect_loop(m_scalingEffect, "Draw")) {
@@ -349,7 +349,7 @@ void Source::Mirror::video_render(gs_effect_t* effect) {
 			while (gs_effect_loop(obs_get_base_effect(OBS_EFFECT_DEFAULT), "Draw")) {
 				gs_eparam_t* image = gs_effect_get_param_by_name(obs_get_base_effect(OBS_EFFECT_DEFAULT), "image");
 				gs_effect_set_next_sampler(image, m_sampler->GetObject());
-				obs_source_draw(m_renderTargetScale->GetTextureObject(), 0, 0, sw, sh, false);
+				obs_source_draw(m_renderTargetScale->get_object(), 0, 0, sw, sh, false);
 			}
 		} else {
 			while (gs_effect_loop(m_scalingEffect, "Draw")) {

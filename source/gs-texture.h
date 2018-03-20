@@ -27,20 +27,20 @@ extern "C" {
 #pragma warning( pop )
 }
 
-namespace GS {
-	class Texture {
+namespace gs {
+	class texture {
 		protected:
 		gs_texture_t * m_texture;
 		bool m_isOwner = true;
 
 		public:
-		enum Type : uint8_t {
+		enum type : uint8_t {
 			Normal,
 			Volume,
 			Cube
 		};
 
-		enum Flags : uint32_t {
+		enum flags : uint32_t {
 			Dynamic,
 			BuildMipMaps,
 		};
@@ -58,7 +58,7 @@ namespace GS {
 		 * \param mip_data
 		 * \param flags
 		 */
-		Texture(uint32_t width, uint32_t height, gs_color_format format, uint32_t mip_levels,
+		texture(uint32_t width, uint32_t height, gs_color_format format, uint32_t mip_levels,
 			const uint8_t **mip_data, uint32_t flags);
 
 		/*!
@@ -74,7 +74,7 @@ namespace GS {
 		 * \param mip_data
 		 * \param flags
 		 */
-		Texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_format format, uint32_t mip_levels,
+		texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_format format, uint32_t mip_levels,
 			const uint8_t **mip_data, uint32_t flags);
 
 		/*!
@@ -88,7 +88,7 @@ namespace GS {
 		 * \param mip_data
 		 * \param flags
 		 */
-		Texture(uint32_t size, gs_color_format format, uint32_t mip_levels, const uint8_t **mip_data,
+		texture(uint32_t size, gs_color_format format, uint32_t mip_levels, const uint8_t **mip_data,
 			uint32_t flags);
 
 		/*!
@@ -101,12 +101,12 @@ namespace GS {
 		*
 		* \param file File to create the texture from.
 		*/
-		Texture(std::string file);
+		texture(std::string file);
 
 		/*!
 		* \brief Create a texture from an existing gs_texture_t object.
 		*/
-		Texture(gs_texture_t* tex, bool takeOwnership = false) : m_texture(tex), m_isOwner(takeOwnership) {}
+		texture(gs_texture_t* tex, bool takeOwnership = false) : m_texture(tex), m_isOwner(takeOwnership) {}
 
 		/*!
 		* \brief Copy an existing texture
@@ -117,12 +117,12 @@ namespace GS {
 		* \param other
 		* \return
 		*/
-		Texture(Texture& other);
+		texture(texture& other);
 
 		/*!
 		* \brief Default constructor
 		*/
-		Texture() : m_texture(nullptr) {}
+		texture() : m_texture(nullptr) {}
 
 		/*!
 		 * \brief Destructor
@@ -131,7 +131,7 @@ namespace GS {
 		 *
 		 * \return
 		 */
-		virtual ~Texture();
+		virtual ~texture();
 
 		/*!
 		 * \brief
@@ -141,7 +141,7 @@ namespace GS {
 		 * \param unit
 		 * \return void
 		 */
-		void Load(int unit);
+		void load(int unit);
 
 		/*!
 		 * \brief
@@ -150,6 +150,6 @@ namespace GS {
 		 *
 		 * \return gs_texture_t*
 		 */
-		gs_texture_t* GetObject();
+		gs_texture_t* get_object();
 	};
 }

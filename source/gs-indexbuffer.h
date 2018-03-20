@@ -27,14 +27,14 @@ extern "C" {
 	#pragma warning( pop )
 }
 
-namespace GS {
-	class IndexBuffer : public std::vector<uint32_t> {
+namespace gs {
+	class index_buffer : public std::vector<uint32_t> {
 		public:
-		IndexBuffer(uint32_t maximumVertices);
-		IndexBuffer();
-		IndexBuffer(IndexBuffer& other);
-		IndexBuffer(std::vector<uint32_t>& other);
-		virtual ~IndexBuffer();
+		index_buffer(uint32_t maximumVertices);
+		index_buffer();
+		index_buffer(index_buffer& other);
+		index_buffer(std::vector<uint32_t>& other);
+		virtual ~index_buffer();
 
 		gs_indexbuffer_t* get();
 

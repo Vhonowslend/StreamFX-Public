@@ -19,77 +19,77 @@
 
 #include "gs-sampler.h"
 
-GS::Sampler::Sampler() {
+gs::sampler::sampler() {
 	m_dirty = true;
 	m_samplerInfo = { GS_FILTER_LINEAR, GS_ADDRESS_WRAP, GS_ADDRESS_WRAP, GS_ADDRESS_WRAP, 1, 0 };
 	m_samplerState = nullptr;
 }
 
-GS::Sampler::~Sampler() {
+gs::sampler::~sampler() {
 	if (m_samplerState)
 		gs_samplerstate_destroy(m_samplerState);
 }
 
-void GS::Sampler::SetSampleFilter(gs_sample_filter v) {
+void gs::sampler::set_filter(gs_sample_filter v) {
 	m_dirty = true;
 	m_samplerInfo.filter = v;
 }
 
-gs_sample_filter GS::Sampler::GetSampleFilter() {
+gs_sample_filter gs::sampler::get_filter() {
 	return m_samplerInfo.filter;
 }
 
-void GS::Sampler::SetAddressModeU(gs_address_mode v) {
+void gs::sampler::set_address_mode_u(gs_address_mode v) {
 	m_dirty = true;
 	m_samplerInfo.address_u = v;
 }
 
-gs_address_mode GS::Sampler::GetAddressModeU() {
+gs_address_mode gs::sampler::get_address_mode_u() {
 	return m_samplerInfo.address_u;
 }
 
-void GS::Sampler::SetAddressModeV(gs_address_mode v) {
+void gs::sampler::set_address_mode_v(gs_address_mode v) {
 	m_dirty = true;
 	m_samplerInfo.address_v = v;
 }
 
-gs_address_mode GS::Sampler::GetAddressModeV() {
+gs_address_mode gs::sampler::get_address_mode_v() {
 	return m_samplerInfo.address_v;
 }
 
-void GS::Sampler::SetAddressModeW(gs_address_mode v) {
+void gs::sampler::set_address_mode_w(gs_address_mode v) {
 	m_dirty = true;
 	m_samplerInfo.address_w = v;
 }
 
-gs_address_mode GS::Sampler::GetAddressModeW() {
+gs_address_mode gs::sampler::get_address_mode_w() {
 	return m_samplerInfo.address_w;
 }
 
-void GS::Sampler::SetMaxAnisotropy(int v) {
+void gs::sampler::set_max_anisotropy(int v) {
 	m_dirty = true;
 	m_samplerInfo.max_anisotropy = v;
 }
 
-int GS::Sampler::GetMaxAnisotropy() {
+int gs::sampler::get_max_anisotropy() {
 	return m_samplerInfo.max_anisotropy;
 }
 
-void GS::Sampler::SetBorderColor(uint32_t v) {
+void gs::sampler::set_border_color(uint32_t v) {
 	m_dirty = true;
 	m_samplerInfo.border_color = v;
 }
 
-void GS::Sampler::SetBorderColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+void gs::sampler::set_border_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 	m_dirty = true;
 	m_samplerInfo.border_color = a << 24 | r << 16 | g << 8 | b;
 }
 
-uint32_t GS::Sampler::GetBorderColor() {
+uint32_t gs::sampler::get_border_color() {
 	return m_samplerInfo.border_color;
 }
 
-uint8_t GS::Sampler::GetBorderColor(bool r, bool g, bool b, bool a) {
+uint8_t gs::sampler::get_border_color(bool r, bool g, bool b, bool a) {
 	if (a)
 		return (m_samplerInfo.border_color >> 24) & 0xFF;
 	if (r)
@@ -101,15 +101,15 @@ uint8_t GS::Sampler::GetBorderColor(bool r, bool g, bool b, bool a) {
 	return 0;
 }
 
-gs_sampler_state* GS::Sampler::Refresh() {
+gs_sampler_state* gs::sampler::refresh() {
 	gs_samplerstate_destroy(m_samplerState);
 	m_samplerState = gs_samplerstate_create(&m_samplerInfo);
 	m_dirty = false;
 	return m_samplerState;
 }
 
-gs_sampler_state* GS::Sampler::GetObject() {
+gs_sampler_state* gs::sampler::get_object() {
 	if (m_dirty)
-		return Refresh();
+		return refresh();
 	return m_samplerState;
 }

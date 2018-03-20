@@ -70,12 +70,12 @@ namespace Filter {
 			std::string GetShaderFile();
 			void CheckTextures(float_t time);
 
-			bool IsSpecialParameter(std::string name, GS::EffectParameter::Type type);
+			bool IsSpecialParameter(std::string name, gs::effect_parameter::type type);
 			
 			private:
 			obs_source_t * m_source;
 			bool m_isActive = true;
-			std::unique_ptr<GS::RenderTarget> m_renderTarget;
+			std::unique_ptr<gs::rendertarget> m_renderTarget;
 
 			float_t m_activeTime, m_renderTime;
 
@@ -85,12 +85,12 @@ namespace Filter {
 				time_t createTime, modifiedTime;
 				size_t size;
 				float_t lastCheck;
-				std::unique_ptr<GS::Effect> effect;
+				std::unique_ptr<gs::effect> effect;
 			} m_effect;
 
 			struct Parameter {
 				std::string name;
-				GS::EffectParameter::Type type;
+				gs::effect_parameter::type type;
 
 				std::vector<std::string> uiNames;
 				std::vector<std::string> uiDescriptions;
@@ -106,7 +106,7 @@ namespace Filter {
 						bool dirty = false;
 						std::string name;
 						obs_source_t* source = nullptr;
-						std::shared_ptr<GS::RenderTarget> rendertarget;
+						std::shared_ptr<gs::rendertarget> rendertarget;
 					} source;
 					struct File {
 						bool dirty = false;
@@ -114,7 +114,7 @@ namespace Filter {
 						time_t createTime, modifiedTime;
 						size_t fileSize;
 						float_t lastCheck;
-						std::shared_ptr<GS::Texture> texture;
+						std::shared_ptr<gs::texture> texture;
 					} file;
 				} value;
 			};

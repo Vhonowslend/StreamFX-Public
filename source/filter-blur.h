@@ -93,7 +93,7 @@ namespace Filter {
 			obs_source_t *m_source;
 			gs_texrender_t *m_primaryRT, *m_secondaryRT;
 			gs_texrender_t *m_rtHorizontal, *m_rtVertical;
-			std::shared_ptr<GS::Effect> m_effect;
+			std::shared_ptr<gs::effect> m_effect;
 
 			// Blur
 			Type m_type;

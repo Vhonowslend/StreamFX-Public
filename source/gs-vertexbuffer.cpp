@@ -27,7 +27,7 @@ extern "C" {
 #pragma warning( pop )
 }
 
-GS::VertexBuffer::~VertexBuffer() {
+gs::vertex_buffer::~vertex_buffer() {
 	if (m_positions) {
 		util::free_aligned(m_positions);
 		m_positions = nullptr;
@@ -69,7 +69,7 @@ GS::VertexBuffer::~VertexBuffer() {
 	}
 }
 
-GS::VertexBuffer::VertexBuffer(uint32_t maximumVertices) {
+gs::vertex_buffer::vertex_buffer(uint32_t maximumVertices) {
 	if (maximumVertices > MAXIMUM_VERTICES) {
 		throw std::out_of_range("maximumVertices out of range");
 	}
@@ -109,10 +109,10 @@ GS::VertexBuffer::VertexBuffer(uint32_t maximumVertices) {
 	}
 }
 
-GS::VertexBuffer::VertexBuffer(gs_vertbuffer_t* vb) {
+gs::vertex_buffer::vertex_buffer(gs_vertbuffer_t* vb) {
 	gs_vb_data* vbd = gs_vertexbuffer_get_data(vb);
-	VertexBuffer((uint32_t)vbd->num);
-	this->SetUVLayers((uint32_t)vbd->num_tex);
+	vertex_buffer((uint32_t)vbd->num);
+	this->set_uv_layers((uint32_t)vbd->num_tex);
 
 	if (vbd->points != nullptr)
 		std::memcpy(m_positions, vbd->points, vbd->num * sizeof(vec3));
@@ -141,7 +141,7 @@ GS::VertexBuffer::VertexBuffer(gs_vertbuffer_t* vb) {
 }
 
 
-GS::VertexBuffer::VertexBuffer(VertexBuffer const& other) : VertexBuffer(other.m_capacity) {
+gs::vertex_buffer::vertex_buffer(vertex_buffer const& other) : vertex_buffer(other.m_capacity) {
 	// Copy Constructor
 	std::memcpy(m_positions, other.m_positions, m_capacity * sizeof(vec3));
 	std::memcpy(m_normals, other.m_normals, m_capacity * sizeof(vec3));
@@ -152,7 +152,7 @@ GS::VertexBuffer::VertexBuffer(VertexBuffer const& other) : VertexBuffer(other.m
 	}
 }
 
-GS::VertexBuffer::VertexBuffer(VertexBuffer const&& other) {
+gs::vertex_buffer::vertex_buffer(vertex_buffer const&& other) {
 	// Move Constructor
 	m_capacity = other.m_capacity;
 	m_size = other.m_size;
@@ -168,7 +168,7 @@ GS::VertexBuffer::VertexBuffer(VertexBuffer const&& other) {
 	m_layerdata = other.m_layerdata;
 }
 
-void GS::VertexBuffer::operator=(VertexBuffer const&& other) {
+void gs::vertex_buffer::operator=(vertex_buffer const&& other) {
 	// Move Assignment
 	/// First self-destruct (semi-destruct itself).
 	if (m_positions) {
@@ -226,69 +226,69 @@ void GS::VertexBuffer::operator=(VertexBuffer const&& other) {
 	m_layerdata = other.m_layerdata;
 }
 
-void GS::VertexBuffer::Resize(uint32_t new_size) {
+void gs::vertex_buffer::resize(uint32_t new_size) {
 	if (new_size > m_capacity) {
 		throw std::out_of_range("new_size out of range");
 	}
 	m_size = new_size;
 }
 
-uint32_t GS::VertexBuffer::Size() {
+uint32_t gs::vertex_buffer::size() {
 	return m_size;
 }
 
-bool GS::VertexBuffer::Empty() {
+bool gs::vertex_buffer::empty() {
 	return m_size == 0;
 }
 
-const GS::Vertex GS::VertexBuffer::At(uint32_t idx) {
+const gs::vertex gs::vertex_buffer::at(uint32_t idx) {
 	if ((idx < 0) || (idx >= m_size)) {
 		throw std::out_of_range("idx out of range");
 	}
 
-	GS::Vertex vtx(&m_positions[idx], &m_normals[idx], &m_tangents[idx], &m_colors[idx], nullptr);
+	gs::vertex vtx(&m_positions[idx], &m_normals[idx], &m_tangents[idx], &m_colors[idx], nullptr);
 	for (size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
 		vtx.uv[n] = &m_uvs[n][idx];
 	}
 	return vtx;
 }
 
-const GS::Vertex GS::VertexBuffer::operator[](uint32_t const pos) {
-	return At(pos);
+const gs::vertex gs::vertex_buffer::operator[](uint32_t const pos) {
+	return at(pos);
 }
 
-void GS::VertexBuffer::SetUVLayers(uint32_t layers) {
+void gs::vertex_buffer::set_uv_layers(uint32_t layers) {
 	m_layers = layers;
 }
 
-uint32_t GS::VertexBuffer::GetUVLayers() {
+uint32_t gs::vertex_buffer::get_uv_layers() {
 	return m_layers;
 }
 
-vec3* GS::VertexBuffer::GetPositions() {
+vec3* gs::vertex_buffer::get_positions() {
 	return m_positions;
 }
 
-vec3* GS::VertexBuffer::GetNormals() {
+vec3* gs::vertex_buffer::get_normals() {
 	return m_normals;
 }
 
-vec3* GS::VertexBuffer::GetTangents() {
+vec3* gs::vertex_buffer::get_tangents() {
 	return m_tangents;
 }
 
-uint32_t* GS::VertexBuffer::GetColors() {
+uint32_t* gs::vertex_buffer::get_colors() {
 	return m_colors;
 }
 
-vec4* GS::VertexBuffer::GetUVLayer(size_t idx) {
+vec4* gs::vertex_buffer::get_uv_layer(size_t idx) {
 	if ((idx < 0) || (idx >= m_layers)) {
 		throw std::out_of_range("idx out of range");
 	}
 	return m_uvs[idx];
 }
 
-gs_vertbuffer_t* GS::VertexBuffer::Update(bool refreshGPU) {
+gs_vertbuffer_t* gs::vertex_buffer::update(bool refreshGPU) {
 	if (!refreshGPU)
 		return m_vertexbuffer;
 
@@ -326,6 +326,6 @@ gs_vertbuffer_t* GS::VertexBuffer::Update(bool refreshGPU) {
 	return m_vertexbuffer;
 }
 
-gs_vertbuffer_t* GS::VertexBuffer::Update() {
-	return Update(true);
+gs_vertbuffer_t* gs::vertex_buffer::update() {
+	return update(true);
 }
