@@ -23,19 +23,19 @@
 #include "gs-rendertarget.h"
 
 namespace gfx {
-	class SourceTexture {
+	class source_texture {
 		obs_source_t* m_source;
 		std::shared_ptr<gs::rendertarget> m_rt;
 
-		SourceTexture();
+		source_texture();
 		public:
-		~SourceTexture();
-		SourceTexture(const char* name);
-		SourceTexture(std::string name);
-		SourceTexture(obs_source_t* src);
+		~source_texture();
+		source_texture(const char* name);
+		source_texture(std::string name);
+		source_texture(obs_source_t* src);
 
-		obs_source_t* GetObject();
+		obs_source_t* get_object();
 
-		std::shared_ptr<gs::texture> Render(size_t width, size_t height);
+		std::shared_ptr<gs::texture> render(size_t width, size_t height);
 	};
 }

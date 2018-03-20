@@ -216,7 +216,7 @@ uint32_t Source::Mirror::get_width() {
 	if (m_rescale && m_width > 0 && !m_keepOriginalSize)
 		return m_width;
 	if (m_mirrorSource)
-		return obs_source_get_width(m_mirrorSource->GetObject());
+		return obs_source_get_width(m_mirrorSource->get_object());
 	return 1;
 }
 
@@ -224,7 +224,7 @@ uint32_t Source::Mirror::get_height() {
 	if (m_rescale && m_height > 0 && !m_keepOriginalSize)
 		return m_height;
 	if (m_mirrorSource)
-		return obs_source_get_height(m_mirrorSource->GetObject());
+		return obs_source_get_height(m_mirrorSource->get_object());
 	return 1;
 }
 
@@ -233,7 +233,7 @@ void Source::Mirror::update(obs_data_t* data) {
 	const char* sourceName = obs_data_get_string(data, P_SOURCE);
 	if (sourceName != m_mirrorName) {
 		try {
-			m_mirrorSource = std::make_unique<gfx::SourceTexture>(sourceName);
+			m_mirrorSource = std::make_unique<gfx::source_texture>(sourceName);
 			m_mirrorName = sourceName;
 		} catch (...) {
 		}
@@ -275,23 +275,23 @@ void Source::Mirror::update(obs_data_t* data) {
 			case ScalingMethod::Point:
 			default:
 				m_scalingEffect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
-				m_sampler->SetSampleFilter(GS_FILTER_POINT);
+				m_sampler->set_filter(GS_FILTER_POINT);
 				break;
 			case ScalingMethod::Bilinear:
 				m_scalingEffect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
-				m_sampler->SetSampleFilter(GS_FILTER_LINEAR);
+				m_sampler->set_filter(GS_FILTER_LINEAR);
 				break;
 			case ScalingMethod::BilinearLowRes:
 				m_scalingEffect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_BILINEAR_LOWRES);
-				m_sampler->SetSampleFilter(GS_FILTER_LINEAR);
+				m_sampler->set_filter(GS_FILTER_LINEAR);
 				break;
 			case ScalingMethod::Bicubic:
 				m_scalingEffect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_BICUBIC);
-				m_sampler->SetSampleFilter(GS_FILTER_LINEAR);
+				m_sampler->set_filter(GS_FILTER_LINEAR);
 				break;
 			case ScalingMethod::Lanczos:
 				m_scalingEffect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_LANCZOS);
-				m_sampler->SetSampleFilter(GS_FILTER_LINEAR);
+				m_sampler->set_filter(GS_FILTER_LINEAR);
 				break;
 		}
 
@@ -309,7 +309,7 @@ void Source::Mirror::deactivate() {
 
 void Source::Mirror::video_tick(float) {
 	if (m_mirrorSource)
-		m_mirrorName = obs_source_get_name(m_mirrorSource->GetObject());
+		m_mirrorName = obs_source_get_name(m_mirrorSource->get_object());
 }
 
 void Source::Mirror::video_render(gs_effect_t* effect) {
@@ -319,11 +319,11 @@ void Source::Mirror::video_render(gs_effect_t* effect) {
 
 	if (m_rescale && m_width > 0 && m_height > 0 && m_scalingEffect) {
 		uint32_t sw, sh;
-		sw = obs_source_get_width(m_mirrorSource->GetObject());
-		sh = obs_source_get_height(m_mirrorSource->GetObject());
+		sw = obs_source_get_width(m_mirrorSource->get_object());
+		sh = obs_source_get_height(m_mirrorSource->get_object());
 
 		// Store original Source Texture
-		std::shared_ptr<gs::texture> tex = m_mirrorSource->Render(sw, sh);
+		std::shared_ptr<gs::texture> tex = m_mirrorSource->render(sw, sh);
 
 		gs_eparam_t *scale_param = gs_effect_get_param_by_name(m_scalingEffect, "base_dimension_i");
 		if (scale_param) {
@@ -342,23 +342,23 @@ void Source::Mirror::video_render(gs_effect_t* effect) {
 				gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
 				while (gs_effect_loop(m_scalingEffect, "Draw")) {
 					gs_eparam_t* image = gs_effect_get_param_by_name(m_scalingEffect, "image");
-					gs_effect_set_next_sampler(image, m_sampler->GetObject());
-					obs_source_draw(tex->GetObject(), 0, 0, m_width, m_height, false);
+					gs_effect_set_next_sampler(image, m_sampler->get_object());
+					obs_source_draw(tex->get_object(), 0, 0, m_width, m_height, false);
 				}
 			}
 			while (gs_effect_loop(obs_get_base_effect(OBS_EFFECT_DEFAULT), "Draw")) {
 				gs_eparam_t* image = gs_effect_get_param_by_name(obs_get_base_effect(OBS_EFFECT_DEFAULT), "image");
-				gs_effect_set_next_sampler(image, m_sampler->GetObject());
+				gs_effect_set_next_sampler(image, m_sampler->get_object());
 				obs_source_draw(m_renderTargetScale->get_object(), 0, 0, sw, sh, false);
 			}
 		} else {
 			while (gs_effect_loop(m_scalingEffect, "Draw")) {
 				gs_eparam_t* image = gs_effect_get_param_by_name(m_scalingEffect, "image");
-				gs_effect_set_next_sampler(image, m_sampler->GetObject());
-				obs_source_draw(tex->GetObject(), 0, 0, m_width, m_height, false);
+				gs_effect_set_next_sampler(image, m_sampler->get_object());
+				obs_source_draw(tex->get_object(), 0, 0, m_width, m_height, false);
 			}
 		}
 	} else {
-		obs_source_video_render(m_mirrorSource->GetObject());
+		obs_source_video_render(m_mirrorSource->get_object());
 	}
 }

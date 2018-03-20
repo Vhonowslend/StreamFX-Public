@@ -17,7 +17,7 @@
 
 #include "gfx-source-texture.h"
 
-gfx::SourceTexture::~SourceTexture() {
+gfx::source_texture::~source_texture() {
 	if (m_source) {
 		obs_source_release(m_source);
 		m_source = nullptr;
@@ -25,31 +25,31 @@ gfx::SourceTexture::~SourceTexture() {
 	m_rt = nullptr;
 }
 
-gfx::SourceTexture::SourceTexture() {
+gfx::source_texture::source_texture() {
 	m_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
-obs_source_t* gfx::SourceTexture::GetObject() {
+obs_source_t* gfx::source_texture::get_object() {
 	return m_source;
 }
 
-gfx::SourceTexture::SourceTexture(const char* name) : SourceTexture() {
+gfx::source_texture::source_texture(const char* name) : source_texture() {
 	m_source = obs_get_source_by_name(name);
 	if (!m_source) {
 		throw std::invalid_argument("No such source.");
 	}
 }
 
-gfx::SourceTexture::SourceTexture(std::string name) : SourceTexture(name.c_str()) {}
+gfx::source_texture::source_texture(std::string name) : source_texture(name.c_str()) {}
 
-gfx::SourceTexture::SourceTexture(obs_source_t* src) : SourceTexture() {
+gfx::source_texture::source_texture(obs_source_t* src) : source_texture() {
 	m_source = src;
 	if (!m_source) {
 		throw std::invalid_argument("No such source.");
 	}
 }
 
-std::shared_ptr<gs::texture> gfx::SourceTexture::Render(size_t width, size_t height) {
+std::shared_ptr<gs::texture> gfx::source_texture::render(size_t width, size_t height) {
 	if (!m_source) {
 		throw std::invalid_argument("Missing source to render.");
 	}
@@ -61,7 +61,7 @@ std::shared_ptr<gs::texture> gfx::SourceTexture::Render(size_t width, size_t hei
 	}
 
 	{
-		auto op = m_rt->Render((uint32_t)width, (uint32_t)height);
+		auto op = m_rt->render((uint32_t)width, (uint32_t)height);
 		vec4 black; vec4_zero(&black);
 		gs_ortho(0, (float_t)width, 0, (float_t)height, 0, 1);
 		gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
@@ -69,6 +69,6 @@ std::shared_ptr<gs::texture> gfx::SourceTexture::Render(size_t width, size_t hei
 	}
 
 	std::shared_ptr<gs::texture> tex;
-	m_rt->GetTexture(tex);
+	m_rt->get_texture(tex);
 	return tex;
 }

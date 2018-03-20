@@ -38,28 +38,13 @@
 #define T_INPUT_FILE		"CustomShader.Input.File"
 
 namespace gfx {
-	struct ShaderParameter {
-
-	};
-
-	struct ShaderTextureParameter : ShaderParameter {
-		bool is_source = false;
-
-		// File / Texture
-		std::shared_ptr<GS::Texture> texture;
-
-		// Source
-		std::shared_ptr<gfx::SourceTexture> source;
-
-	};
-
-	class ShaderSource {
+	class effect_source {
 		obs_source_t* m_source;
-		std::unique_ptr<GS::RenderTarget> m_renderTarget;
+		std::unique_ptr<gs::rendertarget> m_renderTarget;
 
 		// Effect Information
 		struct {
-			std::unique_ptr<GS::Effect> effect;
+			std::unique_ptr<gs::effect> effect;
 			std::string text;
 			std::string path;
 			struct {
@@ -71,18 +56,6 @@ namespace gfx {
 			} file_info;
 		} effect;
 
-		struct Parameter {
-			GS::EffectParameter parameter;
-
-			std::vector<char> data_names;
-			std::vector<char> 
-
-			struct {
-
-			} value;
-		};
-
-
 		// Status
 		float_t time_existing;
 		float_t time_active;
@@ -92,8 +65,8 @@ namespace gfx {
 		static bool property_input_modified(void* priv, obs_properties_t* props, obs_property_t* prop, obs_data_t* sett);
 		
 		public:
-		ShaderSource(obs_data_t* data, obs_source_t* owner);
-		~ShaderSource();
+		effect_source(obs_data_t* data, obs_source_t* owner);
+		~effect_source();
 
 		void get_properties(obs_properties_t* properties);
 		void get_defaults(obs_data_t* data);
@@ -114,7 +87,5 @@ namespace gfx {
 			Text,
 			File
 		};
-
-
 	};
 }

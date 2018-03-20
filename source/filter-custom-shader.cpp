@@ -484,13 +484,13 @@ void Filter::CustomShader::Instance::video_render(gs_effect_t *effect) {
 							w = obs_source_get_width(prm.value.source.source);
 							h = obs_source_get_height(prm.value.source.source);
 							{
-								auto op = prm.value.source.rendertarget->Render(w, h);
+								auto op = prm.value.source.rendertarget->render(w, h);
 								vec4 black; vec4_zero(&black);
 								gs_ortho(0, (float_t)w, 0, (float_t)h, 0, 1);
 								gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
 								obs_source_video_render(prm.value.source.source);
 							}
-							eprm.set_texture(prm.value.source.rendertarget->GetTextureObject());
+							eprm.set_texture(prm.value.source.rendertarget->get_object());
 						}
 					} else {
 						if (prm.value.file.texture) {

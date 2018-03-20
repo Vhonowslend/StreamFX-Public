@@ -62,7 +62,7 @@ namespace Source {
 		std::shared_ptr<gs::sampler> m_sampler;
 		gs_effect_t* m_scalingEffect = nullptr;
 
-		std::unique_ptr<gfx::SourceTexture> m_mirrorSource;
+		std::unique_ptr<gfx::source_texture> m_mirrorSource;
 		std::string m_mirrorName;
 
 		public:

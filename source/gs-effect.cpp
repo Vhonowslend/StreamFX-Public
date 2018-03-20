@@ -261,7 +261,7 @@ void gs::effect_parameter::set_matrix(matrix4& v) {
 void gs::effect_parameter::set_texture(std::shared_ptr<gs::texture> v) {
 	if (get_type() != type::Texture)
 		throw std::bad_cast();
-	gs_effect_set_texture(m_param, v->GetObject());
+	gs_effect_set_texture(m_param, v->get_object());
 }
 
 void gs::effect_parameter::set_texture(gs_texture_t* v) {
@@ -273,7 +273,7 @@ void gs::effect_parameter::set_texture(gs_texture_t* v) {
 void gs::effect_parameter::set_sampler(std::shared_ptr<gs::sampler> v) {
 	if (get_type() != type::Texture)
 		throw std::bad_cast();
-	gs_effect_set_next_sampler(m_param, v->GetObject());
+	gs_effect_set_next_sampler(m_param, v->get_object());
 }
 
 void gs::effect_parameter::set_sampler(gs_sampler_state* v) {

@@ -346,7 +346,7 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 	uint32_t
 		baseW = obs_source_get_base_width(target),
 		baseH = obs_source_get_base_height(target);
-	gs_effect_t* colorConversionEffect = g_effects.count("Color Conversion") ? g_effects.at("Color Conversion")->GetObject() : nullptr;
+	gs_effect_t* colorConversionEffect = g_effects.count("Color Conversion") ? g_effects.at("Color Conversion")->get_object() : nullptr;
 
 	// Skip rendering if our target, parent or context is not valid.
 	if (!target || !parent || !m_source) {
@@ -504,7 +504,7 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
 
 		// Render
-		while (gs_effect_loop(m_effect->GetObject(), "Draw")) {
+		while (gs_effect_loop(m_effect->get_object(), "Draw")) {
 			gs_draw_sprite(intermediate, 0, baseW, baseH);
 		}
 
@@ -566,24 +566,24 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 bool Filter::Blur::Instance::apply_shared_param(gs_texture_t* input, float texelX, float texelY) {
 	bool result = true;
 
-	result = result && gs_set_param_texture(m_effect->GetObject(), "u_image", input);
+	result = result && gs_set_param_texture(m_effect->get_object(), "u_image", input);
 
 	vec2 imageSize;
 	vec2_set(&imageSize,
 		(float)gs_texture_get_width(input),
 		(float)gs_texture_get_height(input));
-	result = result && gs_set_param_float2(m_effect->GetObject(), "u_imageSize", &imageSize);
+	result = result && gs_set_param_float2(m_effect->get_object(), "u_imageSize", &imageSize);
 
 	vec2 imageTexelDelta;
 	vec2_set(&imageTexelDelta, 1.0f, 1.0f);
 	vec2_div(&imageTexelDelta, &imageTexelDelta, &imageSize);
-	result = result && gs_set_param_float2(m_effect->GetObject(), "u_imageTexel", &imageTexelDelta);
+	result = result && gs_set_param_float2(m_effect->get_object(), "u_imageTexel", &imageTexelDelta);
 
 	vec2 texel; vec2_set(&texel, texelX, texelY);
-	result = result && gs_set_param_float2(m_effect->GetObject(), "u_texelDelta", &texel);
+	result = result && gs_set_param_float2(m_effect->get_object(), "u_texelDelta", &texel);
 
-	result = result && gs_set_param_int(m_effect->GetObject(), "u_radius", (int)m_size);
-	result = result && gs_set_param_int(m_effect->GetObject(), "u_diameter", (int)(1 + (m_size * 2)));
+	result = result && gs_set_param_int(m_effect->get_object(), "u_radius", (int)m_size);
+	result = result && gs_set_param_int(m_effect->get_object(), "u_diameter", (int)(1 + (m_size * 2)));
 
 	return result;
 }
@@ -595,7 +595,7 @@ bool Filter::Blur::Instance::apply_bilateral_param() {
 		return false;
 
 	// Bilateral Blur
-	param = gs_effect_get_param_by_name(m_effect->GetObject(), "bilateralSmoothing");
+	param = gs_effect_get_param_by_name(m_effect->get_object(), "bilateralSmoothing");
 	if (!param) {
 		P_LOG_ERROR("<filter-blur> Failed to set bilateralSmoothing param.");
 		return false;
@@ -605,7 +605,7 @@ bool Filter::Blur::Instance::apply_bilateral_param() {
 			(float)(m_bilateralSmoothing * (1 + m_size * 2)));
 	}
 
-	param = gs_effect_get_param_by_name(m_effect->GetObject(), "bilateralSharpness");
+	param = gs_effect_get_param_by_name(m_effect->get_object(), "bilateralSharpness");
 	if (!param) {
 		P_LOG_ERROR("<filter-blur> Failed to set bilateralSmoothing param.");
 		return false;
@@ -626,12 +626,12 @@ bool Filter::Blur::Instance::apply_gaussian_param() {
 	std::shared_ptr<gs::texture> tex;
 	if ((m_size - 1) < MaxKernelSize) {
 		tex = g_gaussianKernels[size_t(m_size - 1)];
-		result = result && gs_set_param_texture(m_effect->GetObject(), "kernel", tex->GetObject());
+		result = result && gs_set_param_texture(m_effect->get_object(), "kernel", tex->get_object());
 	}
 
 	vec2 kerneltexel;
-	vec2_set(&kerneltexel, 1.0f / gs_texture_get_width(tex->GetObject()), 0);
-	result = result && gs_set_param_float2(m_effect->GetObject(), "kernelTexel", &kerneltexel);
+	vec2_set(&kerneltexel, 1.0f / gs_texture_get_width(tex->get_object()), 0);
+	result = result && gs_set_param_float2(m_effect->get_object(), "kernelTexel", &kerneltexel);
 
 	return result;
 }

@@ -20,7 +20,7 @@
 #include <libobs/util/platform.h>
 #include <fstream>
 
-bool gfx::ShaderSource::property_type_modified(void* priv, obs_properties_t* props, obs_property_t* prop, obs_data_t* sett) {
+bool gfx::effect_source::property_type_modified(void* priv, obs_properties_t* props, obs_property_t* prop, obs_data_t* sett) {
 	switch ((InputTypes)obs_data_get_int(sett, D_TYPE)) {
 		default:
 		case InputTypes::Text:
@@ -35,11 +35,11 @@ bool gfx::ShaderSource::property_type_modified(void* priv, obs_properties_t* pro
 	return true;
 }
 
-bool gfx::ShaderSource::property_input_modified(void* priv, obs_properties_t* props, obs_property_t* prop, obs_data_t* sett) {
+bool gfx::effect_source::property_input_modified(void* priv, obs_properties_t* props, obs_property_t* prop, obs_data_t* sett) {
 	return true;
 }
 
-gfx::ShaderSource::ShaderSource(obs_data_t* data, obs_source_t* owner) {
+gfx::effect_source::effect_source(obs_data_t* data, obs_source_t* owner) {
 	obs_source_addref(owner);
 	m_source = owner;
 	time_existing = 0;
@@ -48,11 +48,11 @@ gfx::ShaderSource::ShaderSource(obs_data_t* data, obs_source_t* owner) {
 	update(data);
 }
 
-gfx::ShaderSource::~ShaderSource() {
+gfx::effect_source::~effect_source() {
 	obs_source_release(m_source);
 }
 
-void gfx::ShaderSource::get_properties(obs_properties_t* properties) {
+void gfx::effect_source::get_properties(obs_properties_t* properties) {
 	obs_property_t* p = nullptr;
 
 	p = obs_properties_add_list(properties, D_TYPE, P_TRANSLATE(T_TYPE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
@@ -77,7 +77,7 @@ void gfx::ShaderSource::get_properties(obs_properties_t* properties) {
 	// ToDo: Place updated properties here or somewhere else?
 }
 
-void gfx::ShaderSource::update(obs_data_t* data) {
+void gfx::effect_source::update(obs_data_t* data) {
 	obs_data_addref(data);
 
 	// Update Shader
@@ -93,7 +93,7 @@ void gfx::ShaderSource::update(obs_data_t* data) {
 	obs_data_release(data);
 }
 
-bool gfx::ShaderSource::test_for_updates(const char* text, const char* path) {
+bool gfx::effect_source::test_for_updates(const char* text, const char* path) {
 	bool is_shader_different = false;
 	if (text != nullptr) {
 		if (text != effect.text) {
@@ -102,7 +102,7 @@ bool gfx::ShaderSource::test_for_updates(const char* text, const char* path) {
 		}
 
 		if (is_shader_different) {
-			effect.effect = std::make_unique<GS::Effect>(effect.text, "Text");
+			effect.effect = std::make_unique<gs::effect>(effect.text, "Text");
 		}
 	} else if (path != nullptr) {
 		if (path != this->effect.path) {
@@ -134,7 +134,7 @@ bool gfx::ShaderSource::test_for_updates(const char* text, const char* path) {
 			}
 
 			// Increment timer so that the next check is a reasonable timespan away.
-			effect.file_info.time_updated += 0.1;
+			effect.file_info.time_updated += 0.1f;
 		}
 
 		if (is_shader_different || effect.file_info.modified) {
@@ -152,7 +152,7 @@ bool gfx::ShaderSource::test_for_updates(const char* text, const char* path) {
 				fs.close();
 				content[sz] = '\0';
 
-				effect.effect = std::make_unique<GS::Effect>(content, effect.path);
+				effect.effect = std::make_unique<gs::effect>(std::string(content.data()), effect.path);
 			}
 		}
 	}
@@ -166,23 +166,23 @@ bool gfx::ShaderSource::test_for_updates(const char* text, const char* path) {
 	return is_shader_different;
 }
 
-void gfx::ShaderSource::active() {
+void gfx::effect_source::active() {
 	time_active = 0;
 }
 
-void gfx::ShaderSource::deactivate() {
+void gfx::effect_source::deactivate() {
 	time_active = 0;
 }
 
-uint32_t gfx::ShaderSource::get_width() {
+uint32_t gfx::effect_source::get_width() {
 	return 0;
 }
 
-uint32_t gfx::ShaderSource::get_height() {
+uint32_t gfx::effect_source::get_height() {
 	return 0;
 }
 
-void gfx::ShaderSource::video_tick(float time) {
+void gfx::effect_source::video_tick(float time) {
 	// Shader Timers
 	time_existing += time;
 	time_active += time;
@@ -191,6 +191,6 @@ void gfx::ShaderSource::video_tick(float time) {
 	effect.file_info.time_updated -= time;
 }
 
-void gfx::ShaderSource::video_render(gs_effect_t* parent_effect) {
+void gfx::effect_source::video_render(gs_effect_t* parent_effect) {
 
 }
