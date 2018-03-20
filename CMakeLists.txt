@@ -38,6 +38,8 @@ SET(obs-stream-effects_HEADERS
 	"${PROJECT_SOURCE_DIR}/source/filter-transform.h"
 	"${PROJECT_SOURCE_DIR}/source/filter-custom-shader.h"
 	"${PROJECT_SOURCE_DIR}/source/source-mirror.h"
+	"${PROJECT_SOURCE_DIR}/source/gfx-effect-source.h"
+	"${PROJECT_SOURCE_DIR}/source/gfx-source-texture.h"
 	"${PROJECT_SOURCE_DIR}/source/gs-helper.h"
 	"${PROJECT_SOURCE_DIR}/source/gs-effect.h"
 	"${PROJECT_SOURCE_DIR}/source/gs-indexbuffer.h"
@@ -52,7 +54,6 @@ SET(obs-stream-effects_HEADERS
 	"${PROJECT_SOURCE_DIR}/source/strings.h"
 	"${PROJECT_SOURCE_DIR}/source/util-math.h"
 	"${PROJECT_SOURCE_DIR}/source/util-memory.h"
-	"${PROJECT_SOURCE_DIR}/source/gfx-source-texture.h"
 )
 SET(obs-stream-effects_SOURCES
 	"${PROJECT_SOURCE_DIR}/source/plugin.cpp"
@@ -62,6 +63,8 @@ SET(obs-stream-effects_SOURCES
 	"${PROJECT_SOURCE_DIR}/source/filter-transform.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filter-custom-shader.cpp"
 	"${PROJECT_SOURCE_DIR}/source/source-mirror.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx-effect-source.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx-source-texture.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-helper.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-effect.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-indexbuffer.cpp"
@@ -73,7 +76,6 @@ SET(obs-stream-effects_SOURCES
 	"${PROJECT_SOURCE_DIR}/source/gs-vertexbuffer.cpp"
 	"${PROJECT_SOURCE_DIR}/source/util-math.cpp"
 	"${PROJECT_SOURCE_DIR}/source/util-memory.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx-source-texture.cpp"
 )
 SET(obs-stream-effects_LOCALE
 	"${PROJECT_SOURCE_DIR}/data/locale/en-US.ini"
