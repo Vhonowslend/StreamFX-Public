@@ -1,0 +1,73 @@
+// Input Parameters (Auto)
+uniform float4x4 ViewProj;
+uniform float2 ViewSize;
+//uniform int2 ViewSizeI;
+uniform float Time;
+uniform float TimeActive;
+
+// Default Texture Parameter
+uniform texture2d image;
+uniform float2 image_Size;
+//uniform int2 image_SizeI;
+//uniform float2 image_Texel;
+
+// Custom Parameters (these show up in the UI)
+uniform float4 colr;
+uniform float waveScale;
+
+sampler_state textureSampler {
+	AddressU  = Wrap;
+	AddressV  = Wrap;
+	Filter    = Linear;
+};
+
+struct VertData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+struct FragData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+FragData VSDefault(VertData v_in) {
+	FragData vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+
+	return vert_out;
+}
+
+float4 PSDefault(FragData v_in) : TARGET {
+	float4 smp = image.Sample(textureSampler, v_in.uv).rgba;
+	return lerp(colr, smp, sin(fmod(TimeActive / 3.0, 1.0) * 3.14));
+}
+
+float4 PSRotate(FragData v_in) : TARGET {
+	float angle = TimeActive * 3.141 / 16.0;
+	
+	float cp = cos(angle);
+	float sp = sin(angle);
+	float sn = -sp;
+	float2 uv = float2((v_in.uv.x * cp) + (v_in.uv.y * sn), (v_in.uv.x * sp) + (v_in.uv.y * cp));
+	
+	return image.Sample(textureSampler, uv);	
+}
+
+float4 PSWave(FragData v_in) : TARGET {
+	float2 realPos = v_in.uv * ViewSize;
+	
+	float yoff = sin(realPos.x / 36.0 + TimeActive) * ((waveScale / 100.0) * image_Size.y);
+	
+	return image.Sample(textureSampler, v_in.uv + float2(0, yoff));
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSWave(v_in);
+	}
+}
