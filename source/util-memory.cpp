@@ -24,11 +24,7 @@
 void* util::malloc_aligned(size_t align, size_t size) {
 #ifdef USE_STD_ALLOC_FREE
 #if defined(_MSC_VER)
-#ifdef DEBUG
-	return _aligned_malloc_dbg(size, align);
-#else
 	return _aligned_malloc(size, align);
-#endif
 #else
 	return aligned_malloc(align, size);
 #endif
@@ -53,11 +49,7 @@ void* util::malloc_aligned(size_t align, size_t size) {
 void util::free_aligned(void* mem) {
 #ifdef USE_STD_ALLOC_FREE
 #if defined(_MSC_VER)
-#ifdef DEBUG
-	_aligned_free_dbg(mem);
-#else
 	_aligned_free(mem);
-#endif
 #else
 	free(mem);
 #endif
