@@ -24,6 +24,7 @@
 #include <list>
 #include <vector>
 #include <inttypes.h>
+#include "gfx-effect-source.h"
 
 namespace Filter {
 	class CustomShader {
@@ -34,8 +35,6 @@ namespace Filter {
 		static const char *get_name(void *);
 		static void get_defaults(obs_data_t *);
 		static obs_properties_t *get_properties(void *);
-		static bool modified_properties(obs_properties_t *,
-			obs_property_t *, obs_data_t *);
 
 		static void *create(obs_data_t *, obs_source_t *);
 		static void destroy(void *);
@@ -51,76 +50,30 @@ namespace Filter {
 		obs_source_info sourceInfo;
 
 		private:
-		class Instance {
+		class Instance : public gfx::effect_source {
+			friend class CustomShader;
+
+
+
 			public:
 			Instance(obs_data_t*, obs_source_t*);
 			~Instance();
 			
-			void update(obs_data_t*);
 			uint32_t get_width();
 			uint32_t get_height();
-			void activate();
-			void deactivate();
-			void video_tick(float);
-			void video_render(gs_effect_t*);
-			void get_properties(obs_properties_t *);
 
-			private:
-			void CheckShaderFile(std::string file, float_t time);
-			std::string GetShaderFile();
-			void CheckTextures(float_t time);
+			protected:
+			virtual bool is_special_parameter(std::string name, gs::effect_parameter::type type) override;
 
-			bool IsSpecialParameter(std::string name, gs::effect_parameter::type type);
-			
-			private:
-			obs_source_t * m_source;
-			bool m_isActive = true;
-			std::unique_ptr<gs::rendertarget> m_renderTarget;
 
-			float_t m_activeTime, m_renderTime;
+			virtual bool apply_special_parameters() override;
 
-			// Shader
-			struct Effect {
-				std::string path;
-				time_t createTime, modifiedTime;
-				size_t size;
-				float_t lastCheck;
-				std::unique_ptr<gs::effect> effect;
-			} m_effect;
 
-			struct Parameter {
-				std::string name;
-				gs::effect_parameter::type type;
+			virtual void video_tick_impl(float time) override;
 
-				std::vector<std::string> uiNames;
-				std::vector<std::string> uiDescriptions;
 
-				struct {
-					union {
-						int32_t i[4];
-						float_t f[4];
-						bool b;
-					};
-					bool textureIsSource = false;
-					struct Source {
-						bool dirty = false;
-						std::string name;
-						obs_source_t* source = nullptr;
-						std::shared_ptr<gs::rendertarget> rendertarget;
-					} source;
-					struct File {
-						bool dirty = false;
-						std::string path;
-						time_t createTime, modifiedTime;
-						size_t fileSize;
-						float_t lastCheck;
-						std::shared_ptr<gs::texture> texture;
-					} file;
-				} value;
-			};
-			std::list<Parameter> m_effectParameters;
+			virtual void video_render_impl(gs_effect_t* parent_effect) override;
 
-			friend class CustomShader;
 		};
 	};
 }
