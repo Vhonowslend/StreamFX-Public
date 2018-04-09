@@ -124,7 +124,7 @@ static void UpdateSourceList(obs_property_t* p) {
 	obs_enum_sources(UpdateSourceListCB, p);
 }
 
-obs_properties_t * Source::MirrorAddon::get_properties(void *ptr) {
+obs_properties_t * Source::MirrorAddon::get_properties(void *) {
 	obs_properties_t* pr = obs_properties_create();
 	obs_property_t* p = nullptr;
 
@@ -312,7 +312,7 @@ void Source::Mirror::video_tick(float) {
 		m_mirrorName = obs_source_get_name(m_mirrorSource->get_object());
 }
 
-void Source::Mirror::video_render(gs_effect_t* effect) {
+void Source::Mirror::video_render(gs_effect_t* ) {
 	if ((m_width == 0) || (m_height == 0) || !m_mirrorSource) {
 		return;
 	}
@@ -323,7 +323,12 @@ void Source::Mirror::video_render(gs_effect_t* effect) {
 		sh = obs_source_get_height(m_mirrorSource->get_object());
 
 		// Store original Source Texture
-		std::shared_ptr<gs::texture> tex = m_mirrorSource->render(sw, sh);
+		std::shared_ptr<gs::texture> tex;
+		try {
+			tex = m_mirrorSource->render(sw, sh);
+		} catch (...) {
+			return;
+		}
 
 		gs_eparam_t *scale_param = gs_effect_get_param_by_name(m_scalingEffect, "base_dimension_i");
 		if (scale_param) {
