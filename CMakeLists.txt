@@ -88,21 +88,19 @@ SET(obs-stream-effects_EFFECTS
 	"${PROJECT_SOURCE_DIR}/data/effects/color-conversion.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mip-mapper.effect"
 )
-SET(obs-stream-effects_LOCALE
-	"${PROJECT_SOURCE_DIR}/data/locale/en-US.ini"
+SET(obs-stream-effects_SHADERS
+#	"${PROJECT_SOURCE_DIR}/data/shaders/name.effect"
 )
-SET(obs-stream-effects_EFFECTS
-	"${PROJECT_SOURCE_DIR}/data/effects/bilateral-blur.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/box-blur.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/gaussian-blur.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/displace.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/color-conversion.effect"
+SET(obs-stream-effects_SHADERS_FILTER
+	"${PROJECT_SOURCE_DIR}/data/shaders/filter/example.effect"
 )
 SET(obs-stream-effects_LIBRARIES
 )
 #set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 source_group("Data Files\\Locale" FILES ${obs-stream-effects_LOCALE})
 source_group("Data Files\\Effects" FILES ${obs-stream-effects_EFFECTS})
+source_group("Data Files\\Shaders" FILES ${obs-stream-effects_SHADERS})
+source_group("Data Files\\Shaders\\Filter" FILES ${obs-stream-effects_SHADERS_FILTER})
 
 ################################################################################
 # Standalone and OBS Studio Build Data
@@ -165,6 +163,8 @@ ADD_LIBRARY(obs-stream-effects MODULE
 	${obs-stream-effects_SOURCES}
 	${obs-stream-effects_LOCALE}
 	${obs-stream-effects_EFFECTS}
+	${obs-stream-effects_SHADERS}
+	${obs-stream-effects_SHADERS_FILTER}
 )
 TARGET_LINK_LIBRARIES(obs-stream-effects
 	${LIBOBS_LIBRARIES}
