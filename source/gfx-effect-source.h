@@ -17,7 +17,7 @@
 
 #pragma once
 #include <string>
-#include <libobs/obs.h>
+#include <obs.h>
 #include <memory>
 #include "gs-effect.h"
 #include "gs-rendertarget.h"

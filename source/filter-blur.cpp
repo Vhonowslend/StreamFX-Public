@@ -26,9 +26,9 @@
 extern "C" {
 #pragma warning (push)
 #pragma warning (disable: 4201)
-#include "libobs/util/platform.h"
-#include "libobs/graphics/graphics.h"
-#include "libobs/graphics/matrix4.h"
+#include "util/platform.h"
+#include "graphics/graphics.h"
+#include "graphics/matrix4.h"
 #pragma warning (pop)
 }
 

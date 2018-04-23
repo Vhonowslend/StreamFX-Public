@@ -23,7 +23,7 @@
 extern "C" {
 	#pragma warning( push )
 	#pragma warning( disable: 4201 )
-	#include <libobs/graphics/graphics.h>
+	#include <graphics/graphics.h>
 	#pragma warning( pop )
 }
 

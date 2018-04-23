@@ -22,7 +22,7 @@
 extern "C" {
 	#pragma warning( push )
 	#pragma warning( disable: 4201 )
-	#include <libobs/obs.h>
+	#include <obs.h>
 	#pragma warning( pop )
 }
 

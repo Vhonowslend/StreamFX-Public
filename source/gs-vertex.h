@@ -24,7 +24,7 @@
 extern "C" {
 	#pragma warning( push )
 	#pragma warning( disable: 4201 )
-	#include <libobs/graphics/vec3.h>
+	#include <graphics/vec3.h>
 	#pragma warning( pop )
 }
 

@@ -23,8 +23,8 @@
 extern "C" {
 #pragma warning (push)
 #pragma warning (disable: 4201)
-#include <libobs/obs-source.h>
-#include <libobs/util/platform.h>
+#include <obs-source.h>
+#include <util/platform.h>
 #pragma warning (pop)
 }
 

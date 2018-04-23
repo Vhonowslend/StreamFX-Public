@@ -24,8 +24,8 @@
 extern "C" {
 	#pragma warning( push )
 	#pragma warning( disable: 4201 )
-	#include <libobs/util/platform.h>
-	#include <libobs/obs.h>
+	#include <util/platform.h>
+	#include <obs.h>
 	#pragma warning( pop )
 }
 

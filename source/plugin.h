@@ -24,8 +24,8 @@
 
 #pragma warning (push)
 #pragma warning (disable: 4201)
-#include "libobs/obs-module.h"
-#include "libobs/util/platform.h"
+#include "obs-module.h"
+#include "util/platform.h"
 #pragma warning (pop)
 
 // Plugin
