@@ -1,31 +1,76 @@
 cmake_minimum_required(VERSION 3.2)
-PROJECT(obs-stream-effects)
+PROJECT(obs-stream-effects VERSION 0.4.2.0)
+
+################################################################################
+# CMake Setup
+################################################################################
+
+math(EXPR BITS "8*${CMAKE_SIZEOF_VOID_P}")
+
+# Modules
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
+include(ExternalProject)
+include(DownloadProject)
+
+################################################################################
+# Dependencies
+################################################################################
+
+# OBS Studio / libOBS
+IF(NOT TARGET libobs)
+	SET(LIBOBS_EXISTS FALSE)
+	SET(LIBOBS_CUSTOM FALSE CACHE BOOL "Use custom libOBS")
+	IF(NOT LIBOBS_CUSTOM)
+		IF (${BITS} STREQUAL "64")
+			SET(LIBOBS_URL "https://ci.appveyor.com/api/buildjobs/jp18y3sc5icoq8qs/artifacts/build%2Fobs-studio-x64-vs2017-x64.7z" CACHE STRING "URL to libobs Cpack")
+		ELSE()
+			SET(LIBOBS_URL "https://ci.appveyor.com/api/buildjobs/nj276esfv3ho0j49/artifacts/build%2Fobs-studio-x86-vs2017-x86.7z" CACHE STRING "URL to libobs Cpack")
+		ENDIF()
+		
+		# OBS Studio (CPack Release)
+		download_project(
+			PROJ libobs
+			URL "${LIBOBS_URL}"
+			UPDATE_DISCONNECTED 1
+		)
+		INCLUDE("${libobs_SOURCE_DIR}/cmake/LibObs/LibObsConfig.cmake")
+	ELSE()
+		SET(LIBOBS_PATH "" CACHE STRING "Path to libOBS")
+	ENDIF()
+ELSE()
+	SET(LIBOBS_EXISTS TRUE)
+ENDIF()
 
 ################################################################################
 # Version
 ################################################################################
-SET(VERSION_MAJOR 0)
-SET(VERSION_MINOR 4)
-SET(VERSION_PATCH 2)
-SET(VERSION_STR "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
+
+# Retrieve Tweak version from git.
+if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
+	SET(GIT_RESULT "")
+	SET(GIT_OUTPUT "")
+	EXECUTE_PROCESS(
+		COMMAND git rev-list --count --topo-order ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}..HEAD
+		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+		RESULT_VARIABLE GIT_RESULT
+		OUTPUT_VARIABLE GIT_OUTPUT
+		OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE ERROR_QUIET
+	)
+	IF(GIT_RESULT EQUAL 0)
+		SET(PROJECT_VERSION_TWEAK ${GIT_OUTPUT})
+	ENDIF()
+endif()
+
+SET(VERSION_MAJOR PROJECT_VERSION_MAJOR)
+SET(VERSION_MINOR PROJECT_VERSION_MINOR)
+SET(VERSION_PATCH PROJECT_VERSION_PATCH)
+SET(VERSION_TWEAK PROJECT_VERSION_TWEAK)
+SET(VERSION_STR "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}")
 
 configure_file(
 	"${PROJECT_SOURCE_DIR}/source/version.h.in"
 	"${PROJECT_BINARY_DIR}/source/version.h"
 )
-
-################################################################################
-# Configuration
-################################################################################
-math(EXPR BITS "8*${CMAKE_SIZEOF_VOID_P}")
-
-SET(INSTALL_DIR "${PROJECT_BINARY_DIR}/distribute" CACHE PATH "Installation directory")
-IF(NOT DEFINED PACKAGE_PREFIX)
-	SET(PACKAGE_PREFIX "")
-ENDIF()
-IF(NOT DEFINED PACKAGE_SUFFIX)
-	SET(PACKAGE_SUFFIX ".${VERSION_STR}")
-ENDIF()
 
 ################################################################################
 # Code
@@ -105,7 +150,7 @@ source_group("Data Files\\Shaders\\Filter" FILES ${obs-stream-effects_SHADERS_FI
 ################################################################################
 # Standalone and OBS Studio Build Data
 ################################################################################
-if(TARGET libobs)
+if(LIBOBS_EXISTS)
 	# OBS Studio Specific
 	INCLUDE_DIRECTORIES(
 		"${CMAKE_SOURCE_DIR}"
@@ -116,28 +161,13 @@ if(TARGET libobs)
 	)
 	SET(LIBOBS_LIBRARIES libobs)
 else()
-	# Standlone Specific
-	SET(PATH_OBSStudio "" CACHE PATH "OBS Studio Source Code Directory")
-	if(PATH_OBSStudio STREQUAL "")
-		message(FATAL_ERROR "PATH_OBSStudio not set!")
-		return()
-	endif()
-	if(NOT EXISTS "${PATH_OBSStudio}/libobs/obs-module.h")
-		message(FATAL_ERROR "PATH_OBSStudio invalid!")
-		return()
-	endif()
-
-	# Find OBS Libraries
-	SET(obsPath "${PATH_OBSStudio}")
-	INCLUDE("${PATH_OBSStudio}/cmake/external/FindLibobs.cmake")
-
 	# Compiling
 	INCLUDE_DIRECTORIES(
 		"${PROJECT_BINARY_DIR}"
 		"${PROJECT_BINARY_DIR}/source"
 		"${PROJECT_SOURCE_DIR}"
 		"${PROJECT_SOURCE_DIR}/source"
-		"${PATH_OBSStudio}"
+		${LIBOBS_INCLUDE_DIRS}
 	)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
@@ -171,23 +201,30 @@ TARGET_LINK_LIBRARIES(obs-stream-effects
 	${obs-stream-effects_LIBRARIES}
 )
 
-if(TARGET libobs)
+if(LIBOBS_EXISTS)
 	install_obs_plugin_with_data(obs-stream-effects data)
 else()
-	INSTALL(TARGETS obs-stream-effects DESTINATION "${INSTALL_DIR}/obs-plugins/${BITS}bit")
-	INSTALL(FILES $<TARGET_PDB_FILE:obs-stream-effects> DESTINATION "${INSTALL_DIR}/obs-plugins/${BITS}bit" OPTIONAL)
-	INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/data/" DESTINATION "${INSTALL_DIR}/data/obs-plugins/obs-stream-effects" OPTIONAL)
+	# Install
+	INSTALL(
+		TARGETS obs-stream-effects
+		RUNTIME DESTINATION "obs-plugins/${BITS}bit" COMPONENT Runtime
+		LIBRARY DESTINATION "obs-plugins/${BITS}bit" COMPONENT Runtime
+	)
+	INSTALL(FILES $<TARGET_PDB_FILE:obs-stream-effects> DESTINATION "obs-plugins/${BITS}bit" OPTIONAL)
+	INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/data/" DESTINATION "data/obs-plugins/obs-stream-effects" OPTIONAL)
 	
-	# Zip Generator
-	ADD_CUSTOM_TARGET(PACKAGE_ZIP COMMAND
-		${CMAKE_COMMAND} -E tar "cfv" "${INSTALL_DIR}/${PACKAGE_PREFIX}obs-stream-effects${PACKAGE_SUFFIX}.zip" --format=zip -- "${INSTALL_DIR}/data/" "${INSTALL_DIR}/obs-plugins"
-		DEPENDS INSTALL obs-stream-effects
-		WORKING_DIRECTORY "${INSTALL_DIR}")
+	# CPack
+	SET(CPACK_PACKAGE_NAME ${PROJECT_NAME})
+	SET(CPACK_PACKAGE_VENDOR "Xaymar")
 	
-	# 7-Zip Generator
-	ADD_CUSTOM_TARGET(PACKAGE_7ZIP COMMAND
-		${CMAKE_COMMAND} -E tar "cfv" "${INSTALL_DIR}/${PACKAGE_PREFIX}obs-stream-effects${PACKAGE_SUFFIX}.7z" --format=7zip -- "${INSTALL_DIR}/data/" "${INSTALL_DIR}/obs-plugins"
-		DEPENDS INSTALL obs-stream-effects
-		WORKING_DIRECTORY "${INSTALL_DIR}")
+	SET(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+	SET(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+	SET(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+	SET(CPACK_PACKAGE_VERSION_TWEAK ${PROJECT_VERSION_TWEAK})
+	SET(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}.${CPACK_PACKAGE_VERSION_TWEAK}")
 	
+	SET(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_SYSTEM_NAME}")
+	SET(CPACK_SOURCE_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_SYSTEM_NAME}-source")
+	SET(CPACK_PACKAGE_CHECKSUM SHA512)
+	include(CPack)
 endif()
