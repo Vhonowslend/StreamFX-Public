@@ -29,7 +29,7 @@ install:
 before_build:
   - mkdir build
   - cd build
-  - cmake -G "%CMAKE_COMPILER%" -T "%CMAKE_COMPILER_TARGET%" -DCMAKE_SYSTEM_VERSION="%CMAKE_SYSTEM_VERSION%" -DINSTALL_DIR="%CD%/distrib" -DCPACK_SYSTEM_NAME="%CPACK_SYSTEM_NAME%" ..
+  - cmake -G "%CMAKE_COMPILER%" -T "%CMAKE_COMPILER_TARGET%" -DCMAKE_SYSTEM_VERSION="%CMAKE_SYSTEM_VERSION%" -DCMAKE_INSTALL_PREFIX="%CD%/distrib" -DCPACK_GENERATOR="7Z;ZIP" -DCPACK_SYSTEM_NAME="%CPACK_SYSTEM_NAME%" ..
 
 build_script:
   - cmake --build . --config RelWithDebInfo
