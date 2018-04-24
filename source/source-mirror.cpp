@@ -319,9 +319,18 @@ void Source::Mirror::deactivate() {
 	m_active = false;
 }
 
-void Source::Mirror::video_tick(float) {
+void Source::Mirror::video_tick(float time) {
+	m_tick += time;
+
 	if (m_mirrorSource) {
 		m_mirrorName = obs_source_get_name(m_mirrorSource->get_object());
+	} else {
+		if (m_tick > 0.1f) {
+			obs_data_t* ref = obs_source_get_settings(m_source);
+			update(ref);
+			obs_data_release(ref);
+			m_tick -= 0.1f;
+		}
 	}
 }
 

@@ -55,6 +55,7 @@ namespace Source {
 	class Mirror {
 		bool m_active;
 		obs_source_t* m_source = nullptr;
+		float_t m_tick = 0;
 
 		// Input Source
 		std::string m_mirrorName;
