@@ -35,9 +35,6 @@ build_script:
   - cmake --build . --config RelWithDebInfo
   - cmake --build . --target PACKAGE --config RelWithDebInfo
 
-cache:
-  - deps.7z
-
 artifacts:
   - path: build/*.zip
   - path: build/*.7z
