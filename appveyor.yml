@@ -1,37 +1,47 @@
 version: 0.4.2-{build}-{branch}
 
+platform: x64
+image: Visual Studio 2017
+
+matrix:
+  fast_finish: true
+
 environment:
   CURL_VERSION: 7.39.0
+  matrix:
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      CMAKE_COMPILER: Visual Studio 15 2017
+      CMAKE_COMPILER_TARGET: host=x64
+      CMAKE_SYSTEM_VERSION: 10.0.16299.91
+      CPACK_SYSTEM_NAME: win32
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      CMAKE_COMPILER: Visual Studio 15 2017 Win64
+      CMAKE_COMPILER_TARGET: host=x64
+      CMAKE_SYSTEM_VERSION: 10.0.16299.91
+      CPACK_SYSTEM_NAME: win64
 
 pull_requests:
   do_not_increment_build_number: true
 
-image:
-  - Visual Studio 2013
-  - Visual Studio 2015
-  - Visual Studio 2017
-
-platform: x64
-
 install:
-  - curl -kL https://cdn.xaymar.com/obs/prebuilt/obs-studio-20.1.0.7z -f --retry 5 -o deps-obs.7z -z deps-obs.7z
-  - 7z x deps-obs.7z -odeps/obs
+  - git submodule update --init --recursive
 
 before_build:
-  - cmd: ci/make.bat
-  
+  - mkdir build
+  - cd build
+  - cmake -G "%CMAKE_COMPILER%" -T "%CMAKE_COMPILER_TARGET%" -DCMAKE_SYSTEM_VERSION="%CMAKE_SYSTEM_VERSION%" -DINSTALL_DIR="%CD%/distrib" -DCPACK_SYSTEM_NAME="%CPACK_SYSTEM_NAME%" ..
+
 build_script:
-  - call msbuild /m /p:Configuration=RelWithDebInfo C:\projects\obs-stream-effects\build\32\install.vcxproj /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
-  - call msbuild /m /p:Configuration=RelWithDebInfo C:\projects\obs-stream-effects\build\64\install.vcxproj /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
-  - call msbuild /m /p:Configuration=RelWithDebInfo C:\projects\obs-stream-effects\build\64\PACKAGE_ZIP.vcxproj /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
-  - call msbuild /m /p:Configuration=RelWithDebInfo C:\projects\obs-stream-effects\build\64\PACKAGE_7ZIP.vcxproj /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+  - cmake --build . --config RelWithDebInfo
+  - cmake --build . --target PACKAGE --config RelWithDebInfo
 
 cache:
-  - deps-obs.7z
+  - deps.7z
 
 artifacts:
-  - path: build/distrib/*.zip
-  - path: build/distrib/*.7z
+  - path: build/*.zip
+  - path: build/*.7z
+  - path: build/*.sha512
 
 notifications:
   - provider: Webhook
@@ -42,5 +52,5 @@ notifications:
     on_build_status_changed: true
     body: >-
       {
-        "content": "Build {{projectName}} {{buildVersion}} {{status}}: {{buildUrl}}\nCommit #{{commitId}} by {{commitAuthor}} on {{commitDate}}:\n{{commitMessage}}"
+        "content": "**Build {{status}}**: {{buildUrl}}\n[{{commitId}}] {{commitMessage}}\nBy {{commitAuthor}} on {{commitDate}}"
       }
