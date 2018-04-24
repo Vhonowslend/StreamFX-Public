@@ -62,13 +62,14 @@ void gfx::effect_source::video_tick_impl(float time) {
 }
 
 void gfx::effect_source::video_render_impl(gs_effect_t* parent_effect) {
-
+	parent_effect;
 }
 
 gfx::effect_source::effect_source(obs_data_t* data, obs_source_t* owner) {
 	m_source = owner;
 	time_existing = 0;
 	time_active = 0;
+	update(data);
 }
 
 gfx::effect_source::~effect_source() {}
@@ -205,138 +206,139 @@ bool gfx::effect_source::test_for_updates(const char* text, const char* path) {
 
 	// If the shader is different, rebuild the parameter list.
 	if (is_shader_different) {
-		std::map<paramident_t, std::shared_ptr<parameter>> new_params;
+		if (shader.effect) {
+			// ToDo: Figure out if a recycling approach would work.
+			//  Might improve stability in low memory situations.
+			std::map<paramident_t, std::shared_ptr<parameter>> new_params;
+			auto effect_param_list = shader.effect->get_parameters();
+			for (auto effect_param : effect_param_list) {
+				paramident_t ident;
+				ident.first = effect_param.get_name();
+				ident.second = effect_param.get_type();
 
-		// ToDo: Figure out if a recycling approach would work.
-		//  Might improve stability in low memory situations.
+				if (is_special_parameter(ident.first, ident.second))
+					continue;
 
-		auto effect_param_list = shader.effect->get_parameters();
-		for (auto effect_param : effect_param_list) {
-			paramident_t ident;
-			ident.first = effect_param.get_name();
-			ident.second = effect_param.get_type();
-
-			if (is_special_parameter(ident.first, ident.second))
-				continue;
-
-			auto entry = parameters.find(ident);
-			if (entry != parameters.end()) {
-				entry->second->param = std::make_shared<gs::effect_parameter>(effect_param);
-				new_params.insert_or_assign(ident, entry->second);
-				parameters.erase(entry);
-			} else {
-				std::shared_ptr<parameter> param;
-
-				if (ident.second == gs::effect_parameter::type::Boolean) {
-					std::shared_ptr<bool_parameter> nparam = std::make_shared<bool_parameter>();
-
-					std::string ui_name, ui_desc;
-					ui_name = ident.first;
-					ui_desc = ident.first;
-
-					nparam->ui.buffer.resize(ui_name.size() + 1 + ui_desc.size() + 1);
-					memset(nparam->ui.buffer.data(), 0, nparam->ui.buffer.size());
-					memcpy(nparam->ui.buffer.data(), ui_name.c_str(), ui_name.size());
-					memcpy(nparam->ui.buffer.data() + ui_name.size() + 1, ui_desc.c_str(), ui_desc.size());
-
-					nparam->ui.names.resize(1);
-					nparam->ui.names[0] = nparam->ui.buffer.data();
-
-					nparam->ui.descs.resize(1);
-					nparam->ui.descs[0] = nparam->ui.buffer.data() + ui_name.size() + 1;
-
-					param = std::dynamic_pointer_cast<parameter>(nparam);
-				} else if (ident.second >= gs::effect_parameter::type::Integer && ident.second <= gs::effect_parameter::type::Integer4) {
-					std::shared_ptr<int_parameter> nparam = std::make_shared<int_parameter>();
-
-					size_t cnt = (size_t)ident.second - (size_t)gs::effect_parameter::type::Integer;
-
-					std::string ui_name[4], ui_desc[4];
-					size_t bufsize = 0;
-					if (cnt > 0) {
-						for (size_t idx = 0; idx <= cnt; idx++) {
-							ui_name[idx] = ident.first + (char)(48 + idx);
-							ui_desc[idx] = ident.first + "[" + (char)(48 + idx) + "]";
-
-							bufsize += ui_name[idx].size() + 1;
-							bufsize += ui_desc[idx].size() + 1;
-						}
-					} else {
-						ui_name[0] = ident.first;
-						ui_desc[0] = ident.first;
-						bufsize += ui_name[0].size() + 1;
-						bufsize += ui_desc[0].size() + 1;
-					}
-
-					nparam->ui.names.resize(cnt + 1);
-					nparam->ui.descs.resize(cnt + 1);
-
-					nparam->ui.buffer.resize(bufsize);
-					memset(nparam->ui.buffer.data(), 0, bufsize);
-					size_t off = 0;
-					for (size_t idx = 0; idx <= cnt; idx++) {
-						memcpy(nparam->ui.buffer.data() + off, ui_name[idx].c_str(), ui_name[idx].size());
-						nparam->ui.names[idx] = nparam->ui.buffer.data() + off;
-						off += ui_name[idx].size() + 1;
-
-						memcpy(nparam->ui.buffer.data() + off, ui_desc[idx].c_str(), ui_desc[idx].size());
-						nparam->ui.descs[idx] = nparam->ui.buffer.data() + off;
-						off += ui_desc[idx].size() + 1;
-					}
-
-					param = std::dynamic_pointer_cast<parameter>(nparam);
-				} else if (ident.second >= gs::effect_parameter::type::Float && ident.second <= gs::effect_parameter::type::Float4) {
-					std::shared_ptr<float_parameter> nparam = std::make_shared<float_parameter>();
-
-					size_t cnt = (size_t)ident.second - (size_t)gs::effect_parameter::type::Float;
-
-					std::string ui_name[4], ui_desc[4];
-					size_t bufsize = 0;
-					if (cnt > 0) {
-						for (size_t idx = 0; idx <= cnt; idx++) {
-							ui_name[idx] = ident.first + (char)(48 + idx);
-							ui_desc[idx] = ident.first + "[" + (char)(48 + idx) + "]";
-
-							bufsize += ui_name[idx].size() + 1;
-							bufsize += ui_desc[idx].size() + 1;
-						}
-					} else {
-						ui_name[0] = ident.first;
-						ui_desc[0] = ident.first;
-						bufsize += ui_name[0].size() + 1;
-						bufsize += ui_desc[0].size() + 1;
-					}
-
-					nparam->ui.names.resize(cnt + 1);
-					nparam->ui.descs.resize(cnt + 1);
-
-					nparam->ui.buffer.resize(bufsize);
-					memset(nparam->ui.buffer.data(), 0, bufsize);
-					size_t off = 0;
-					for (size_t idx = 0; idx <= cnt; idx++) {
-						memcpy(nparam->ui.buffer.data() + off, ui_name[idx].c_str(), ui_name[idx].size());
-						nparam->ui.names[idx] = nparam->ui.buffer.data() + off;
-						off += ui_name[idx].size() + 1;
-
-						memcpy(nparam->ui.buffer.data() + off, ui_desc[idx].c_str(), ui_desc[idx].size());
-						nparam->ui.descs[idx] = nparam->ui.buffer.data() + off;
-						off += ui_desc[idx].size() + 1;
-					}
-
-					param = std::dynamic_pointer_cast<parameter>(nparam);
+				auto entry = parameters.find(ident);
+				if (entry != parameters.end()) {
+					entry->second->param = std::make_shared<gs::effect_parameter>(effect_param);
+					new_params.insert_or_assign(ident, entry->second);
+					parameters.erase(entry);
 				} else {
+					std::shared_ptr<parameter> param;
 
-				}
+					if (ident.second == gs::effect_parameter::type::Boolean) {
+						std::shared_ptr<bool_parameter> nparam = std::make_shared<bool_parameter>();
 
-				if (param) {
-					param->name = ident.first;
-					param->param = std::make_shared<gs::effect_parameter>(effect_param);
-					new_params.insert_or_assign(ident, param);
+						std::string ui_name, ui_desc;
+						ui_name = ident.first;
+						ui_desc = ident.first;
+
+						nparam->ui.buffer.resize(ui_name.size() + 1 + ui_desc.size() + 1);
+						memset(nparam->ui.buffer.data(), 0, nparam->ui.buffer.size());
+						memcpy(nparam->ui.buffer.data(), ui_name.c_str(), ui_name.size());
+						memcpy(nparam->ui.buffer.data() + ui_name.size() + 1, ui_desc.c_str(), ui_desc.size());
+
+						nparam->ui.names.resize(1);
+						nparam->ui.names[0] = nparam->ui.buffer.data();
+
+						nparam->ui.descs.resize(1);
+						nparam->ui.descs[0] = nparam->ui.buffer.data() + ui_name.size() + 1;
+
+						param = std::dynamic_pointer_cast<parameter>(nparam);
+					} else if (ident.second >= gs::effect_parameter::type::Integer && ident.second <= gs::effect_parameter::type::Integer4) {
+						std::shared_ptr<int_parameter> nparam = std::make_shared<int_parameter>();
+
+						size_t cnt = (size_t)ident.second - (size_t)gs::effect_parameter::type::Integer;
+
+						std::string ui_name[4], ui_desc[4];
+						size_t bufsize = 0;
+						if (cnt > 0) {
+							for (size_t idx = 0; idx <= cnt; idx++) {
+								ui_name[idx] = ident.first + (char)(48 + idx);
+								ui_desc[idx] = ident.first + "[" + (char)(48 + idx) + "]";
+
+								bufsize += ui_name[idx].size() + 1;
+								bufsize += ui_desc[idx].size() + 1;
+							}
+						} else {
+							ui_name[0] = ident.first;
+							ui_desc[0] = ident.first;
+							bufsize += ui_name[0].size() + 1;
+							bufsize += ui_desc[0].size() + 1;
+						}
+
+						nparam->ui.names.resize(cnt + 1);
+						nparam->ui.descs.resize(cnt + 1);
+
+						nparam->ui.buffer.resize(bufsize);
+						memset(nparam->ui.buffer.data(), 0, bufsize);
+						size_t off = 0;
+						for (size_t idx = 0; idx <= cnt; idx++) {
+							memcpy(nparam->ui.buffer.data() + off, ui_name[idx].c_str(), ui_name[idx].size());
+							nparam->ui.names[idx] = nparam->ui.buffer.data() + off;
+							off += ui_name[idx].size() + 1;
+
+							memcpy(nparam->ui.buffer.data() + off, ui_desc[idx].c_str(), ui_desc[idx].size());
+							nparam->ui.descs[idx] = nparam->ui.buffer.data() + off;
+							off += ui_desc[idx].size() + 1;
+						}
+
+						param = std::dynamic_pointer_cast<parameter>(nparam);
+					} else if (ident.second >= gs::effect_parameter::type::Float && ident.second <= gs::effect_parameter::type::Float4) {
+						std::shared_ptr<float_parameter> nparam = std::make_shared<float_parameter>();
+
+						size_t cnt = (size_t)ident.second - (size_t)gs::effect_parameter::type::Float;
+
+						std::string ui_name[4], ui_desc[4];
+						size_t bufsize = 0;
+						if (cnt > 0) {
+							for (size_t idx = 0; idx <= cnt; idx++) {
+								ui_name[idx] = ident.first + (char)(48 + idx);
+								ui_desc[idx] = ident.first + "[" + (char)(48 + idx) + "]";
+
+								bufsize += ui_name[idx].size() + 1;
+								bufsize += ui_desc[idx].size() + 1;
+							}
+						} else {
+							ui_name[0] = ident.first;
+							ui_desc[0] = ident.first;
+							bufsize += ui_name[0].size() + 1;
+							bufsize += ui_desc[0].size() + 1;
+						}
+
+						nparam->ui.names.resize(cnt + 1);
+						nparam->ui.descs.resize(cnt + 1);
+
+						nparam->ui.buffer.resize(bufsize);
+						memset(nparam->ui.buffer.data(), 0, bufsize);
+						size_t off = 0;
+						for (size_t idx = 0; idx <= cnt; idx++) {
+							memcpy(nparam->ui.buffer.data() + off, ui_name[idx].c_str(), ui_name[idx].size());
+							nparam->ui.names[idx] = nparam->ui.buffer.data() + off;
+							off += ui_name[idx].size() + 1;
+
+							memcpy(nparam->ui.buffer.data() + off, ui_desc[idx].c_str(), ui_desc[idx].size());
+							nparam->ui.descs[idx] = nparam->ui.buffer.data() + off;
+							off += ui_desc[idx].size() + 1;
+						}
+
+						param = std::dynamic_pointer_cast<parameter>(nparam);
+					} else {
+
+					}
+
+					if (param) {
+						param->name = ident.first;
+						param->param = std::make_shared<gs::effect_parameter>(effect_param);
+						new_params.insert_or_assign(ident, param);
+					}
 				}
 			}
+			parameters = std::move(new_params);
+		} else {
+			parameters.clear();
 		}
-
-		parameters = std::move(new_params);
 	}
 
 	return is_shader_different;
