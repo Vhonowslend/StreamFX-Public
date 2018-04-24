@@ -23,6 +23,7 @@
 #include "gs-sampler.h"
 #include "gfx-source-texture.h"
 #include <memory>
+#include <obs-source.h>
 
 namespace Source {
 	class MirrorAddon {
@@ -48,23 +49,24 @@ namespace Source {
 		static void deactivate(void *);
 		static void video_tick(void *, float);
 		static void video_render(void *, gs_effect_t *);
-		static void enum_active_sources(void *data, obs_source_enum_proc_t enum_callback, void *param);
+		static void enum_active_sources(void *, obs_source_enum_proc_t, void *);
 	};
 
 	class Mirror {
 		bool m_active;
 		obs_source_t* m_source = nullptr;
 
+		// Input Source
+		std::string m_mirrorName;
+		std::unique_ptr<gfx::source_texture> m_mirrorSource;
 
+		// Scaling
 		bool m_rescale = false;
-		bool m_keepOriginalSize = false;
 		uint32_t m_width, m_height;
+		gs_effect_t* m_scalingEffect = nullptr;
+		bool m_keepOriginalSize = false;
 		std::unique_ptr<gs::rendertarget> m_renderTargetScale;
 		std::shared_ptr<gs::sampler> m_sampler;
-		gs_effect_t* m_scalingEffect = nullptr;
-
-		std::unique_ptr<gfx::source_texture> m_mirrorSource;
-		std::string m_mirrorName;
 
 		public:
 		Mirror(obs_data_t*, obs_source_t*);
@@ -78,6 +80,6 @@ namespace Source {
 		void deactivate();
 		void video_tick(float);
 		void video_render(gs_effect_t*);
-		void enum_active_sources(obs_source_enum_proc_t enum_callback, void *param);
+		void enum_active_sources(obs_source_enum_proc_t, void *);
 	};
 };

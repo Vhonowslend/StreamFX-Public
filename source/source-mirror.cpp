@@ -308,6 +308,11 @@ void Source::Mirror::update(obs_data_t* data) {
 
 void Source::Mirror::activate() {
 	m_active = true;
+	if (!m_mirrorSource) {
+		obs_data_t* ref = obs_source_get_settings(m_source);
+		update(ref);
+		obs_data_release(ref);
+	}
 }
 
 void Source::Mirror::deactivate() {
@@ -315,8 +320,9 @@ void Source::Mirror::deactivate() {
 }
 
 void Source::Mirror::video_tick(float) {
-	if (m_mirrorSource)
+	if (m_mirrorSource) {
 		m_mirrorName = obs_source_get_name(m_mirrorSource->get_object());
+	}
 }
 
 void Source::Mirror::video_render(gs_effect_t*) {
