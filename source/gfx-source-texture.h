@@ -25,16 +25,18 @@
 namespace gfx {
 	class source_texture {
 		obs_source_t* m_source;
+		obs_source_t* m_parent;
 		std::shared_ptr<gs::rendertarget> m_rt;
 
-		source_texture();
+		source_texture(obs_source_t* parent);
 		public:
 		~source_texture();
-		source_texture(const char* name);
-		source_texture(std::string name);
-		source_texture(obs_source_t* src);
+		source_texture(const char* name, obs_source_t* parent);
+		source_texture(std::string name, obs_source_t* parent);
+		source_texture(obs_source_t* src, obs_source_t* parent);
 
 		obs_source_t* get_object();
+		obs_source_t* get_parent();
 
 		std::shared_ptr<gs::texture> render(size_t width, size_t height);
 	};

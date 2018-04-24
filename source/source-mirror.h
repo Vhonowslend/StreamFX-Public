@@ -48,6 +48,7 @@ namespace Source {
 		static void deactivate(void *);
 		static void video_tick(void *, float);
 		static void video_render(void *, gs_effect_t *);
+		static void enum_active_sources(void *data, obs_source_enum_proc_t enum_callback, void *param);
 	};
 
 	class Mirror {
@@ -77,5 +78,6 @@ namespace Source {
 		void deactivate();
 		void video_tick(float);
 		void video_render(gs_effect_t*);
+		void enum_active_sources(obs_source_enum_proc_t enum_callback, void *param);
 	};
 };

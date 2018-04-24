@@ -73,6 +73,7 @@ Source::MirrorAddon::MirrorAddon() {
 	osi.deactivate = deactivate;
 	osi.video_tick = video_tick;
 	osi.video_render = video_render;
+	osi.enum_active_sources = enum_active_sources;
 
 	obs_register_source(&osi);
 }
@@ -197,6 +198,10 @@ void Source::MirrorAddon::video_render(void *p, gs_effect_t *ef) {
 	static_cast<Source::Mirror*>(p)->video_render(ef);
 }
 
+void Source::MirrorAddon::enum_active_sources(void *p, obs_source_enum_proc_t enum_callback, void *param) {
+	static_cast<Source::Mirror*>(p)->enum_active_sources(enum_callback, param);
+}
+
 Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src) {
 	m_active = true;
 	m_source = src;
@@ -213,17 +218,19 @@ Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src) {
 Source::Mirror::~Mirror() {}
 
 uint32_t Source::Mirror::get_width() {
-	if (m_rescale && m_width > 0 && !m_keepOriginalSize)
+	if (m_rescale && m_width > 0 && !m_keepOriginalSize) {
 		return m_width;
-	if (m_mirrorSource)
+	}
+	if (m_mirrorSource && (m_mirrorSource->get_object() != m_source)) {
 		return obs_source_get_width(m_mirrorSource->get_object());
+	}
 	return 1;
 }
 
 uint32_t Source::Mirror::get_height() {
 	if (m_rescale && m_height > 0 && !m_keepOriginalSize)
 		return m_height;
-	if (m_mirrorSource)
+	if (m_mirrorSource && (m_mirrorSource->get_object() != m_source))
 		return obs_source_get_height(m_mirrorSource->get_object());
 	return 1;
 }
@@ -233,7 +240,7 @@ void Source::Mirror::update(obs_data_t* data) {
 	const char* sourceName = obs_data_get_string(data, P_SOURCE);
 	if (sourceName != m_mirrorName) {
 		try {
-			m_mirrorSource = std::make_unique<gfx::source_texture>(sourceName);
+			m_mirrorSource = std::make_unique<gfx::source_texture>(sourceName, m_source);
 			m_mirrorName = sourceName;
 		} catch (...) {
 		}
@@ -312,8 +319,8 @@ void Source::Mirror::video_tick(float) {
 		m_mirrorName = obs_source_get_name(m_mirrorSource->get_object());
 }
 
-void Source::Mirror::video_render(gs_effect_t* ) {
-	if ((m_width == 0) || (m_height == 0) || !m_mirrorSource) {
+void Source::Mirror::video_render(gs_effect_t*) {
+	if ((m_width == 0) || (m_height == 0) || !m_mirrorSource || (m_mirrorSource->get_object() == m_source)) {
 		return;
 	}
 
@@ -365,5 +372,11 @@ void Source::Mirror::video_render(gs_effect_t* ) {
 		}
 	} else {
 		obs_source_video_render(m_mirrorSource->get_object());
+	}
+}
+
+void Source::Mirror::enum_active_sources(obs_source_enum_proc_t enum_callback, void *param) {
+	if (m_mirrorSource) {
+		enum_callback(m_source, m_mirrorSource->get_object(), param);
 	}
 }
