@@ -1,7 +1,10 @@
 # OBS Stream Effects
 Bring your stream to life with more modern effects! Stream Effects adds several much needed features to OBS Studio, such as real time Blur and 3D Transform. Now you can blur out sources you think may be questionable, add sick 3D effects or recreate the Heroes of the Storm displacement overlay with the Displacement filter.
 
-Build Status: [![AppVeyor Status](https://ci.appveyor.com/api/projects/status/github/Xaymar/obs-stream-effects?branch=master&svg=true)](https://ci.appveyor.com/project/Xaymar/obs-stream-effects)
+## Build Status
+| Windows | Linux & Mac |
+|---------|-------------|
+| [![AppVeyor Status](https://ci.appveyor.com/api/projects/status/github/Xaymar/obs-stream-effects?branch=master&svg=true)](https://ci.appveyor.com/project/Xaymar/obs-stream-effects) | [![Build Status](https://travis-ci.org/Xaymar/obs-stream-effects.svg?branch=master)](https://travis-ci.org/Xaymar/obs-stream-effects) |
 
 # Features & Stuff
 ## New Filters
