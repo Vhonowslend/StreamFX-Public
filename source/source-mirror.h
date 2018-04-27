@@ -22,8 +22,13 @@
 #include "gs-rendertarget.h"
 #include "gs-sampler.h"
 #include "gfx-source-texture.h"
+#include "obs-audio-capture.h"
 #include <memory>
 #include <obs-source.h>
+#include <vector>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 namespace Source {
 	class MirrorAddon {
@@ -69,6 +74,17 @@ namespace Source {
 		std::unique_ptr<gs::rendertarget> m_renderTargetScale;
 		std::shared_ptr<gs::sampler> m_sampler;
 
+		// Audio
+		bool m_enableAudio = false;
+		std::unique_ptr<obs::audio_capture> m_mirrorAudio;
+		std::mutex m_audioLock;
+		std::condition_variable m_audioNotify;
+		obs_source_audio m_audioOutput;
+		std::vector<std::vector<float_t>> m_audioData;
+		std::thread m_audioThread;
+		bool m_audioKill = false;
+		bool m_audioExists = false;
+
 		public:
 		Mirror(obs_data_t*, obs_source_t*);
 		~Mirror();
@@ -81,6 +97,8 @@ namespace Source {
 		void deactivate();
 		void video_tick(float);
 		void video_render(gs_effect_t*);
+		void audio_capture_cb(void* data, const audio_data* audio, bool muted);
+		void audio_output_cb();
 		void enum_active_sources(obs_source_enum_proc_t, void *);
 	};
 };

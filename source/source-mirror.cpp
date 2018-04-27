@@ -22,10 +22,14 @@
 #include <memory>
 #include <cstring>
 #include <vector>
+#include <bitset>
+#include <media-io/audio-io.h>
+#include <functional>
 
 #define S_SOURCE_MIRROR					"Source.Mirror"
 #define P_SOURCE					"Source.Mirror.Source"
 #define P_SOURCE_SIZE					"Source.Mirror.Source.Size"
+#define P_SOURCE_AUDIO					"Source.Mirror.Source.Audio"
 #define P_SCALING					"Source.Mirror.Scaling"
 #define P_SCALING_METHOD				"Source.Mirror.Scaling.Method"
 #define P_SCALING_METHOD_POINT				"Source.Mirror.Scaling.Method.Point"
@@ -59,7 +63,7 @@ Source::MirrorAddon::MirrorAddon() {
 	memset(&osi, 0, sizeof(obs_source_info));
 	osi.id = "obs-stream-effects-source-mirror";
 	osi.type = OBS_SOURCE_TYPE_INPUT;
-	osi.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
+	osi.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_AUDIO | OBS_SOURCE_CUSTOM_DRAW;
 
 	osi.get_name = get_name;
 	osi.get_defaults = get_defaults;
@@ -86,6 +90,7 @@ const char * Source::MirrorAddon::get_name(void *) {
 
 void Source::MirrorAddon::get_defaults(obs_data_t *data) {
 	obs_data_set_default_string(data, P_SOURCE, "");
+	obs_data_set_default_bool(data, P_SOURCE_AUDIO, false);
 	obs_data_set_default_bool(data, P_SCALING, false);
 	obs_data_set_default_string(data, P_SCALING_SIZE, "100x100");
 	obs_data_set_default_int(data, P_SCALING_METHOD, (int64_t)ScalingMethod::Bilinear);
@@ -139,6 +144,9 @@ obs_properties_t * Source::MirrorAddon::get_properties(void *) {
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SOURCE_SIZE)));
 	obs_property_set_enabled(p, false);
 
+	p = obs_properties_add_bool(pr, P_SOURCE_AUDIO, P_TRANSLATE(P_SOURCE_AUDIO));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SOURCE_AUDIO)));
+
 	p = obs_properties_add_bool(pr, P_SCALING, P_TRANSLATE(P_SCALING));
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING)));
 	obs_property_set_modified_callback(p, modified_properties);
@@ -167,39 +175,60 @@ void * Source::MirrorAddon::create(obs_data_t *data, obs_source_t *source) {
 }
 
 void Source::MirrorAddon::destroy(void *p) {
-	delete static_cast<Source::Mirror*>(p);
+	if (p) {
+		delete static_cast<Source::Mirror*>(p);
+	}
 }
 
 uint32_t Source::MirrorAddon::get_width(void *p) {
-	return static_cast<Source::Mirror*>(p)->get_width();
+	if (p) {
+		return static_cast<Source::Mirror*>(p)->get_width();
+	}
+	return 0;
 }
 
 uint32_t Source::MirrorAddon::get_height(void *p) {
-	return static_cast<Source::Mirror*>(p)->get_height();
+	if (p) {
+		return static_cast<Source::Mirror*>(p)->get_height();
+	}
+	return 0;
 }
 
 void Source::MirrorAddon::update(void *p, obs_data_t *data) {
-	static_cast<Source::Mirror*>(p)->update(data);
+	if (p) {
+		static_cast<Source::Mirror*>(p)->update(data);
+	}
 }
 
 void Source::MirrorAddon::activate(void *p) {
-	static_cast<Source::Mirror*>(p)->activate();
+	if (p) {
+		static_cast<Source::Mirror*>(p)->activate();
+	}
 }
 
 void Source::MirrorAddon::deactivate(void *p) {
-	static_cast<Source::Mirror*>(p)->deactivate();
+	if (p) {
+		static_cast<Source::Mirror*>(p)->deactivate();
+	}
 }
 
 void Source::MirrorAddon::video_tick(void *p, float t) {
-	static_cast<Source::Mirror*>(p)->video_tick(t);
+	if (p) {
+		static_cast<Source::Mirror*>(p)->video_tick(t);
+	}
 }
 
 void Source::MirrorAddon::video_render(void *p, gs_effect_t *ef) {
-	static_cast<Source::Mirror*>(p)->video_render(ef);
+	if (p) {
+		static_cast<Source::Mirror*>(p)->video_render(ef);
+	}
 }
 
+
 void Source::MirrorAddon::enum_active_sources(void *p, obs_source_enum_proc_t enum_callback, void *param) {
-	static_cast<Source::Mirror*>(p)->enum_active_sources(enum_callback, param);
+	if (p) {
+		static_cast<Source::Mirror*>(p)->enum_active_sources(enum_callback, param);
+	}
 }
 
 Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src) {
@@ -212,10 +241,21 @@ Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src) {
 	m_sampler = std::make_shared<gs::sampler>();
 	m_scalingEffect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 
+	m_audioData.resize(MAX_AUDIO_CHANNELS);
+	for (size_t idx = 0; idx < m_audioData.size(); idx++) {
+		m_audioData[idx].resize(AUDIO_OUTPUT_FRAMES);
+	}
+	m_audioThread = std::thread(std::bind(&Source::Mirror::audio_output_cb, this));
+
 	update(data);
 }
 
-Source::Mirror::~Mirror() {}
+Source::Mirror::~Mirror() {
+	m_audioKill = true;
+	m_audioNotify.notify_all();
+	if (m_audioThread.joinable())
+		m_audioThread.join();
+}
 
 uint32_t Source::Mirror::get_width() {
 	if (m_rescale && m_width > 0 && !m_keepOriginalSize) {
@@ -241,10 +281,14 @@ void Source::Mirror::update(obs_data_t* data) {
 	if (sourceName != m_mirrorName) {
 		try {
 			m_mirrorSource = std::make_unique<gfx::source_texture>(sourceName, m_source);
+			m_mirrorAudio = std::make_unique<obs::audio_capture>(m_mirrorSource->get_object());
+			m_mirrorAudio->set_callback(std::bind(&Source::Mirror::audio_capture_cb, this,
+				std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 			m_mirrorName = sourceName;
 		} catch (...) {
 		}
 	}
+	m_enableAudio = obs_data_get_bool(data, P_SOURCE_AUDIO);
 
 	// Rescaling
 	m_rescale = obs_data_get_bool(data, P_SCALING);
@@ -319,6 +363,16 @@ void Source::Mirror::deactivate() {
 	m_active = false;
 }
 
+static inline void mix_audio(float *p_out, float *p_in,
+	size_t pos, size_t count) {
+	register float *out = p_out;
+	register float *in = p_in + pos;
+	register float *end = in + count;
+
+	while (in < end)
+		*(out++) += *(in++);
+}
+
 void Source::Mirror::video_tick(float time) {
 	m_tick += time;
 
@@ -387,6 +441,49 @@ void Source::Mirror::video_render(gs_effect_t*) {
 		}
 	} else {
 		obs_source_video_render(m_mirrorSource->get_object());
+	}
+}
+
+void Source::Mirror::audio_capture_cb(void* data, const audio_data* audio, bool muted) {
+	std::unique_lock<std::mutex> ulock(m_audioLock);
+	if (!m_enableAudio) {
+		return;
+	}
+
+	audio_t* aud = obs_get_audio();
+	audio_output_info const* aoi = audio_output_get_info(aud);
+
+	std::bitset<8> layout;
+	for (size_t plane = 0; plane < MAX_AV_PLANES; plane++) {
+		float *samples = (float*)audio->data[plane];
+		if (!samples) {
+			m_audioOutput.data[plane] = nullptr;
+			continue;
+		}
+		layout.set(plane);
+
+		memcpy(m_audioData[plane].data(), audio->data[plane], audio->frames * sizeof(float_t));
+		m_audioOutput.data[plane] = (uint8_t*)m_audioData[plane].data();
+	}
+	m_audioOutput.format = aoi->format;
+	m_audioOutput.frames = audio->frames;
+	m_audioOutput.timestamp = audio->timestamp;
+	m_audioOutput.samples_per_sec = aoi->samples_per_sec;
+	m_audioOutput.speakers = aoi->speakers;
+
+	m_audioExists = true;
+	m_audioNotify.notify_all();
+}
+
+void Source::Mirror::audio_output_cb() {
+	std::unique_lock<std::mutex> ulock(m_audioLock);
+
+	while (!m_audioKill) {
+		if (m_audioExists) {
+			obs_source_output_audio(m_source, &m_audioOutput);
+			m_audioExists = false;
+		}
+		m_audioNotify.wait(ulock, [this]() { return m_audioExists || m_audioKill; });
 	}
 }
 
