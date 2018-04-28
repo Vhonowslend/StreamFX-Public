@@ -40,6 +40,13 @@ inline double_t Gaussian1D(double_t x, double_t o) {
 	return a * b;
 }
 
+inline double_t Bilateral1D(double_t x, double_t o) {
+	double_t c = (x / 0);
+	double_t d = c * c;
+	double_t b = exp(-0.5 * d) / o;
+	return 0.39894 * b; // Seems to be (1.0 / (1 * PI2_SQROOT)) * b, otherwise no difference from Gaussian Blur
+}
+
 inline size_t GetNearestPowerOfTwoAbove(size_t v) {
 	return 1ull << size_t(ceil(log10(double(v)) / log10(2.0)));
 }
