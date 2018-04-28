@@ -22,14 +22,18 @@
 #include <sys/stat.h>
 #include <fstream>
 extern "C" {
-	#pragma warning( push )
-	#pragma warning( disable: 4201 )
-	#include <util/platform.h>
-	#include <obs.h>
-	#pragma warning( pop )
+#pragma warning( push )
+#pragma warning( disable: 4201 )
+#include <util/platform.h>
+#include <obs.h>
+#pragma warning( pop )
 }
 
-gs::texture::texture(uint32_t width, uint32_t height, gs_color_format format, uint32_t mip_levels, const uint8_t **mip_data, uint32_t flags) {
+gs::texture::texture(uint32_t width, uint32_t height,
+	gs_color_format format, uint32_t mip_levels,
+	const uint8_t **mip_data,
+	gs::texture::flags texture_flags) {
+
 	if (width == 0)
 		throw std::logic_error("width must be at least 1");
 	if (height == 0)
@@ -39,7 +43,7 @@ gs::texture::texture(uint32_t width, uint32_t height, gs_color_format format, ui
 	if (!mip_data)
 		throw std::logic_error("mip_data is invalid");
 
-	if (mip_levels > 1 || flags & flags::BuildMipMaps) {
+	if (mip_levels > 1 || ((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps)) {
 		bool isPOT = (pow(2, (int64_t)floor(log(width) / log(2))) == width)
 			&& (pow(2, (int64_t)floor(log(height) / log(2))) == height);
 		if (!isPOT)
@@ -47,14 +51,22 @@ gs::texture::texture(uint32_t width, uint32_t height, gs_color_format format, ui
 	}
 
 	obs_enter_graphics();
-	m_texture = gs_texture_create(width, height, format, mip_levels, mip_data, (flags & flags::Dynamic) ? GS_DYNAMIC : 0 | (flags & flags::BuildMipMaps) ? GS_BUILD_MIPMAPS : 0);
+	m_texture = gs_texture_create(width, height, format, mip_levels, mip_data,
+		(((texture_flags & flags::Dynamic) == flags::Dynamic) ? GS_DYNAMIC : 0)
+		| (((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps) ? GS_BUILD_MIPMAPS : 0)
+	);
 	obs_leave_graphics();
 
 	if (!m_texture)
 		throw std::runtime_error("Failed to create texture.");
+
+	m_textureType = type::Normal;
 }
 
-gs::texture::texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_format format, uint32_t mip_levels, const uint8_t **mip_data, uint32_t flags) {
+gs::texture::texture(uint32_t width, uint32_t height, uint32_t depth,
+	gs_color_format format, uint32_t mip_levels,
+	const uint8_t **mip_data,
+	gs::texture::flags texture_flags) {
 	if (width == 0)
 		throw std::logic_error("width must be at least 1");
 	if (height == 0)
@@ -66,7 +78,7 @@ gs::texture::texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_f
 	if (!mip_data)
 		throw std::logic_error("mip_data is invalid");
 
-	if (mip_levels > 1 || flags & flags::BuildMipMaps) {
+	if (mip_levels > 1 || ((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps)) {
 		bool isPOT = (pow(2, (int64_t)floor(log(width) / log(2))) == width)
 			&& (pow(2, (int64_t)floor(log(height) / log(2))) == height)
 			&& (pow(2, (int64_t)floor(log(depth) / log(2))) == depth);
@@ -75,14 +87,22 @@ gs::texture::texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_f
 	}
 
 	obs_enter_graphics();
-	m_texture = gs_voltexture_create(width, height, depth, format, mip_levels, mip_data, (flags & flags::Dynamic) ? GS_DYNAMIC : 0 | (flags & flags::BuildMipMaps) ? GS_BUILD_MIPMAPS : 0);
+	m_texture = gs_voltexture_create(width, height, depth, format, mip_levels, mip_data,
+		(((texture_flags & flags::Dynamic) == flags::Dynamic) ? GS_DYNAMIC : 0)
+		| (((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps) ? GS_BUILD_MIPMAPS : 0)
+	);
 	obs_leave_graphics();
 
 	if (!m_texture)
 		throw std::runtime_error("Failed to create texture.");
+
+	m_textureType = type::Volume;
 }
 
-gs::texture::texture(uint32_t size, gs_color_format format, uint32_t mip_levels, const uint8_t **mip_data, uint32_t flags) {
+gs::texture::texture(uint32_t size, gs_color_format format, uint32_t mip_levels, const
+	uint8_t **mip_data,
+	gs::texture::flags texture_flags) {
+
 	if (size == 0)
 		throw std::logic_error("size must be at least 1");
 	if (mip_levels == 0)
@@ -90,18 +110,23 @@ gs::texture::texture(uint32_t size, gs_color_format format, uint32_t mip_levels,
 	if (!mip_data)
 		throw std::logic_error("mip_data is invalid");
 
-	if (mip_levels > 1 || flags & flags::BuildMipMaps) {
+	if (mip_levels > 1 || ((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps)) {
 		bool isPOT = (pow(2, (int64_t)floor(log(size) / log(2))) == size);
 		if (!isPOT)
 			throw std::logic_error("mip mapping requires power of two dimensions");
 	}
 
 	obs_enter_graphics();
-	m_texture = gs_cubetexture_create(size, format, mip_levels, mip_data, (flags & flags::Dynamic) ? GS_DYNAMIC : 0 | (flags & flags::BuildMipMaps) ? GS_BUILD_MIPMAPS : 0);
+	m_texture = gs_cubetexture_create(size, format, mip_levels, mip_data,
+		(((texture_flags & flags::Dynamic) == flags::Dynamic) ? GS_DYNAMIC : 0)
+		| (((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps) ? GS_BUILD_MIPMAPS : 0)
+	);
 	obs_leave_graphics();
 
 	if (!m_texture)
 		throw std::runtime_error("Failed to create texture.");
+
+	m_textureType = type::Cube;
 }
 
 gs::texture::texture(std::string file) {
@@ -204,4 +229,40 @@ void gs::texture::load(int unit) {
 
 gs_texture_t* gs::texture::get_object() {
 	return m_texture;
+}
+
+uint32_t gs::texture::get_width() {
+	switch (m_textureType) {
+		case type::Normal:
+			return gs_texture_get_width(m_texture);
+		case type::Volume:
+			return gs_voltexture_get_width(m_texture);
+		case type::Cube:
+			return gs_cubetexture_get_size(m_texture);
+	}
+	return 0;
+}
+
+uint32_t gs::texture::get_height() {
+	switch (m_textureType) {
+		case type::Normal:
+			return gs_texture_get_height(m_texture);
+		case type::Volume:
+			return gs_voltexture_get_height(m_texture);
+		case type::Cube:
+			return gs_cubetexture_get_size(m_texture);
+	}
+	return 0;
+}
+
+uint32_t gs::texture::get_depth() {
+	switch (m_textureType) {
+		case type::Normal:
+			return 1;
+		case type::Volume:
+			return gs_voltexture_get_depth(m_texture);
+		case type::Cube:
+			return 6;
+	}
+	return 0;
 }

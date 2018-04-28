@@ -148,7 +148,9 @@ void Filter::Blur::generate_gaussian_kernels() {
 	try {
 		auto buf = reinterpret_cast<uint8_t*>(textureBuffer.data());
 		auto rbuf = const_cast<const uint8_t**>(&buf);
-		m_gaussianKernelTexture = std::make_shared<gs::texture>(uint32_t(textureSizePOT), uint32_t(textureSizePOT), GS_R32F, 1, rbuf, 0);
+		m_gaussianKernelTexture = std::make_shared<gs::texture>(
+			uint32_t(textureSizePOT), uint32_t(textureSizePOT), GS_R32F, 1, rbuf,
+			gs::texture::flags::None);
 	} catch (std::runtime_error ex) {
 		P_LOG_ERROR("<filter-blur> Failed to create gaussian kernel texture.");
 	}

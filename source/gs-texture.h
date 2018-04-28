@@ -20,6 +20,7 @@
 #pragma once
 #include <inttypes.h>
 #include <string>
+#include <utility.h>
 extern "C" {
 #pragma warning( push )
 #pragma warning( disable: 4201 )
@@ -29,67 +30,69 @@ extern "C" {
 
 namespace gs {
 	class texture {
-		protected:
-		gs_texture_t * m_texture;
-		bool m_isOwner = true;
-
 		public:
-		enum type : uint8_t {
+		enum class type {
 			Normal,
 			Volume,
 			Cube
 		};
 
-		enum flags : uint32_t {
+		enum class flags : size_t {
+			None,
 			Dynamic,
 			BuildMipMaps,
 		};
 
+		protected:
+		gs_texture_t * m_texture;
+		bool m_isOwner = true;
+		type m_textureType = type::Normal;
+
 		public:
 		/*!
-		 * \brief Create a new texture from data
+		 * \brief Create a 2D Texture
 		 *
-		 *
-		 *
-		 * \param width
-		 * \param height
-		 * \param format
-		 * \param mip_levels
-		 * \param mip_data
-		 * \param flags
+		 * \param width Width of the 2D Texture
+		 * \param height Height of the 2D Texture
+		 * \param format Color Format to use
+		 * \param mip_levels Number of Mip Levels available
+		 * \param mip_data Texture data including mipmaps
+		 * \param flags Texture Flags
 		 */
-		texture(uint32_t width, uint32_t height, gs_color_format format, uint32_t mip_levels,
-			const uint8_t **mip_data, uint32_t flags);
+		texture(uint32_t width, uint32_t height,
+			gs_color_format format, uint32_t mip_levels,
+			const uint8_t **mip_data,
+			gs::texture::flags texture_flags);
 
 		/*!
-		 * \brief Create a new volume texture from data
+		 * \brief Create a 3D Texture
 		 *
-		 *
-		 *
-		 * \param width
-		 * \param height
-		 * \param depth
-		 * \param format
-		 * \param mip_levels
-		 * \param mip_data
-		 * \param flags
+		 * \param width Width of the 3D Texture
+		 * \param height Height of the 3D Texture
+		 * \param depth Depth of the 3D Texture
+		 * \param format Color Format to use
+		 * \param mip_levels Number of Mip Levels available
+		 * \param mip_data Texture data including mipmaps
+		 * \param flags Texture Flags
 		 */
-		texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_format format, uint32_t mip_levels,
-			const uint8_t **mip_data, uint32_t flags);
+		texture(uint32_t width, uint32_t height, uint32_t depth,
+			gs_color_format format, uint32_t mip_levels,
+			const uint8_t **mip_data,
+			gs::texture::flags texture_flags);
 
 		/*!
-		 * \brief Create a new cube texture from data
+		 * \brief Create a Cube Texture
 		 *
-		 *
-		 *
-		 * \param size
-		 * \param format
-		 * \param mip_levels
-		 * \param mip_data
-		 * \param flags
+		 * \param size Size of each Cube Maps face
+		 * \param format Color Format to use
+		 * \param mip_levels Number of Mip Levels available
+		 * \param mip_data Texture data including mipmaps
+		 * \param flags Texture Flags
 		 */
-		texture(uint32_t size, gs_color_format format, uint32_t mip_levels, const uint8_t **mip_data,
-			uint32_t flags);
+		texture(uint32_t size,
+			gs_color_format format, uint32_t mip_levels,
+			const uint8_t **mip_data,
+			gs::texture::flags texture_flags);
 
 		/*!
 		* \brief Load a texture from a file
@@ -119,37 +122,20 @@ namespace gs {
 		*/
 		texture(texture& other);
 
-		/*!
-		* \brief Default constructor
-		*/
 		texture() : m_texture(nullptr) {}
 
-		/*!
-		 * \brief Destructor
-		 *
-		 *
-		 *
-		 * \return
-		 */
 		virtual ~texture();
 
-		/*!
-		 * \brief
-		 *
-		 *
-		 *
-		 * \param unit
-		 * \return void
-		 */
 		void load(int unit);
 
-		/*!
-		 * \brief
-		 *
-		 *
-		 *
-		 * \return gs_texture_t*
-		 */
 		gs_texture_t* get_object();
+
+		uint32_t get_width();
+
+		uint32_t get_height();
+
+		uint32_t get_depth();
 	};
+
+	ENABLE_BITMASK_OPERATORS(gs::texture::flags)
 }
