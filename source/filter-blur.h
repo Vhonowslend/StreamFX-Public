@@ -98,6 +98,18 @@ namespace Filter {
 			double_t m_bilateralSmoothing;
 			double_t m_bilateralSharpness;
 
+			// Regional
+			struct Region {
+				bool enabled;
+				float_t left;
+				float_t top;
+				float_t right;
+				float_t bottom;
+				float_t feather;
+				float_t feather_shift;
+				bool invert;
+			} m_region;
+
 			// Advanced
 			bool m_errorLogged = false;
 			uint64_t m_colorFormat;

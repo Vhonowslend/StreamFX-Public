@@ -9,6 +9,14 @@ uniform int u_radius;
 uniform int u_diameter;
 uniform float2 u_texelDelta;
 
+/// Region
+uniform float regionLeft;
+uniform float regionTop;
+uniform float regionRight;
+uniform float regionBottom;
+uniform float regionFeather;
+uniform float regionFeatherShift;
+
 // Settings (Private)
 uniform float bilateralSmoothing;
 uniform float bilateralSharpness;
@@ -17,6 +25,8 @@ sampler_state textureSampler {
 	Filter    = Point;
 	AddressU  = Clamp;
 	AddressV  = Clamp;
+	MinLOD    = 0;
+	MaxLOD    = 0;
 };
 
 struct VertDataIn {
@@ -38,33 +48,23 @@ VertDataOut VSDefault(VertDataIn v_in)
 }
 
 // Bilateral Blur
-float Bilateral(float x, float sigma)
-{
+float Bilateral(float x, float sigma) {
 	return 0.39894 * exp(-0.5 * (x*x) / (sigma*sigma)) / sigma;
 }
 
-float Bilateral3(float3 v, float sigma)
-{
-	// First part is Gaussian function (1.0 / (o * sqrt(2.0 * pivalue))) with o = 1
+float Bilateral3(float3 v, float sigma) {
+	// First part is Bilateral function (1.0 / (o * sqrt(2.0 * pivalue))) with o = 1
 	return 0.39894 * exp(-0.5 * dot(v,v) / (sigma*sigma)) / sigma;
 }
 
-float4 BilateralBlur(float2 p_uv, float2 p_radius,
- texture2d p_image, float2 p_imageTexel) {
-	float2 l_uvoffset = float2(0, 0);
-}
-
-float4 PSBilateral(VertDataOut v_in) : TARGET
-{
-	float2 l_uv = float2(0, 0);
+float4 BlurFunc(float2 uv, float4 rgba) {
+	float2 uvOffset = float2(0, 0);
 
 	float Z = 0.0;
 	float bZ = 1.0 / Bilateral(0.0, bilateralSharpness);
-	float4 source = u_image.Sample(textureSampler, v_in.uv);
 	float3 color = float3(0, 0, 0);
 	for (int k = 1; k <= u_radius; k++) {
-		// Advance UV by one texel.
-		l_uv += u_texelDelta;
+		uvOffset += u_texelDelta;
 
 		// Bilateral Kernel
 		float bKernel = Bilateral(abs(k), bilateralSmoothing);
@@ -72,12 +72,12 @@ float4 PSBilateral(VertDataOut v_in) : TARGET
 		float bZKernel = bZ  * bKernel;
 
 		// Sample Color
-		float3 l_p = u_image.Sample(textureSampler, v_in.uv + l_uv).rgb;
-		float3 l_n = u_image.Sample(textureSampler, v_in.uv - l_uv).rgb;
+		float3 l_p = u_image.SampleLevel(textureSampler, uv + uvOffset, 0).rgb;
+		float3 l_n = u_image.SampleLevel(textureSampler, uv - uvOffset, 0).rgb;
 
 		// Bilateral Stuff
-		float l_factor_p = Bilateral3(l_p - source.rgb, bilateralSharpness) * bZKernel;
-		float l_factor_n = Bilateral3(l_n - source.rgb, bilateralSharpness) * bZKernel;
+		float l_factor_p = Bilateral3(l_p - rgba.rgb, bilateralSharpness) * bZKernel;
+		float l_factor_n = Bilateral3(l_n - rgba.rgb, bilateralSharpness) * bZKernel;
 		Z = Z + l_factor_p + l_factor_n;
 
 		// Store Color
@@ -85,7 +85,74 @@ float4 PSBilateral(VertDataOut v_in) : TARGET
 		color += l_n * l_factor_n;
 	}
 
-	return float4(color.rgb / Z, source.a);
+	return float4(color.rgb / Z, rgba.a);
+}
+
+float4 PSBilateral(VertDataOut v_in) : TARGET {
+	float4 rgba = u_image.SampleLevel(textureSampler, v_in.uv, 0);	
+	return BlurFunc(v_in.uv, rgba);
+}
+
+float4 PSBilateralRegion(VertDataOut v_in) : TARGET {
+	float4 rgba = u_image.SampleLevel(textureSampler, v_in.uv, 0);
+	if ((v_in.uv.x < regionLeft)
+		|| (v_in.uv.x > regionRight)
+		|| (v_in.uv.y < regionTop)
+		|| (v_in.uv.y > regionBottom)) {
+		return rgba;
+	}
+
+	return BlurFunc(v_in.uv, rgba);
+}
+
+float4 PSBilateralRegionInvert(VertDataOut v_in) : TARGET {
+	float4 rgba = u_image.SampleLevel(textureSampler, v_in.uv, 0);
+	if ((v_in.uv.x > regionLeft)
+		&& (v_in.uv.x < regionRight)
+		&& (v_in.uv.y > regionTop)
+		&& (v_in.uv.y < regionBottom)) {
+		return rgba;
+	}
+	
+	return BlurFunc(v_in.uv, rgba);
+}
+
+float4 PSBilateralRegionFeather(VertDataOut v_in) : TARGET {
+	float halfFeather = (regionFeather / 2.0);
+	float feather = max(regionFeather, 0.00000001);
+	float leftFeather = clamp(((v_in.uv.x - regionLeft + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float rightFeather = clamp(((-(v_in.uv.x - regionRight) + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float topFeather = clamp(((v_in.uv.y - regionTop + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float bottomFeather = clamp(((-(v_in.uv.y - regionBottom) + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float finalFeather = min(min(leftFeather, rightFeather), min(topFeather, bottomFeather));
+	
+	float4 rgba = u_image.SampleLevel(textureSampler, v_in.uv, 0);
+	if (finalFeather <= 0.00001) {
+		return rgba;
+	} else if (finalFeather >= 0.99999) {
+		return BlurFunc(v_in.uv, rgba);
+	}
+
+	return lerp(rgba, BlurFunc(v_in.uv, rgba), finalFeather);
+}
+
+float4 PSBilateralRegionFeatherInvert(VertDataOut v_in) : TARGET {
+	float halfFeather = (regionFeather / 2.0);
+	float feather = max(regionFeather, 0.00000001);
+	float leftFeather = clamp(((v_in.uv.x - regionLeft + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float rightFeather = clamp(((-(v_in.uv.x - regionRight) + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float topFeather = clamp(((v_in.uv.y - regionTop + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float bottomFeather = clamp(((-(v_in.uv.y - regionBottom) + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float finalFeather = 1.0 - min(min(leftFeather, rightFeather), min(topFeather, bottomFeather));
+	
+	float4 rgba = u_image.SampleLevel(textureSampler, v_in.uv, 0);
+	if (finalFeather <= 0.00001) {
+		return rgba;
+	} else if (finalFeather >= 0.99999) {
+		return BlurFunc(v_in.uv, rgba);
+	}
+
+	return lerp(rgba, BlurFunc(v_in.uv, rgba), finalFeather);
 }
 
 technique Draw
@@ -94,5 +161,39 @@ technique Draw
 	{
 		vertex_shader = VSDefault(v_in);
 		pixel_shader  = PSBilateral(v_in);
+	}
+}
+
+technique DrawRegion
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBilateralRegion(v_in);
+	}
+}
+technique DrawRegionInvert
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBilateralRegionInvert(v_in);
+	}
+}
+
+technique DrawRegionFeather
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBilateralRegionFeather(v_in);
+	}
+}
+technique DrawRegionFeatherInvert
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBilateralRegionFeatherInvert(v_in);
 	}
 }

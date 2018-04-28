@@ -9,10 +9,21 @@ uniform int u_radius;
 uniform int u_diameter;
 uniform float2 u_texelDelta;
 
+/// Region
+uniform float regionLeft;
+uniform float regionTop;
+uniform float regionRight;
+uniform float regionBottom;
+uniform float regionFeather;
+uniform float regionFeatherShift;
+
+// Data
 sampler_state textureSampler {
 	Filter    = Point;
 	AddressU  = Clamp;
 	AddressV  = Clamp;
+	MinLOD    = 0;
+	MaxLOD    = 0;
 };
 
 struct VertDataIn {
@@ -34,15 +45,80 @@ VertDataOut VSDefault(VertDataIn v_in)
 }
 
 // Box Blur
-float4 PSBox(VertDataOut v_in) : TARGET
-{
-	float4 rgba = u_image.Sample(textureSampler, v_in.uv);
+float4 BlurFunc(float2 uv, float4 rgba) {
+	float4 final = rgba;
 	for (int k = 1; k <= u_radius; k++) {
-		rgba += u_image.Sample(textureSampler, v_in.uv + (u_texelDelta * k));
-		rgba += u_image.Sample(textureSampler, v_in.uv - (u_texelDelta * k));
+		final += u_image.SampleLevel(textureSampler, uv + (u_texelDelta * k), 0);
+		final += u_image.SampleLevel(textureSampler, uv - (u_texelDelta * k), 0);
 	}
-	rgba = rgba / u_diameter;
-	return rgba;
+	return final / u_diameter;
+}
+
+float4 PSBox(VertDataOut v_in) : TARGET {
+	float4 rgba = u_image.SampleLevel(textureSampler, v_in.uv, 0);
+	return BlurFunc(v_in.uv, rgba);
+}
+
+float4 PSBoxRegion(VertDataOut v_in) : TARGET {
+	float4 rgba = u_image.SampleLevel(textureSampler, v_in.uv, 0);
+	if ((v_in.uv.x < regionLeft)
+		|| (v_in.uv.x > regionRight)
+		|| (v_in.uv.y < regionTop)
+		|| (v_in.uv.y > regionBottom)) {
+		return rgba;
+	}
+
+	return BlurFunc(v_in.uv, rgba);
+}
+
+float4 PSBoxRegionInvert(VertDataOut v_in) : TARGET {
+	float4 rgba = u_image.SampleLevel(textureSampler, v_in.uv, 0);
+	if ((v_in.uv.x > regionLeft)
+		&& (v_in.uv.x < regionRight)
+		&& (v_in.uv.y > regionTop)
+		&& (v_in.uv.y < regionBottom)) {
+		return rgba;
+	}
+	
+	return BlurFunc(v_in.uv, rgba);
+}
+
+float4 PSBoxRegionFeather(VertDataOut v_in) : TARGET {
+	float halfFeather = (regionFeather / 2.0);
+	float feather = max(regionFeather, 0.00000001);
+	float leftFeather = clamp(((v_in.uv.x - regionLeft + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float rightFeather = clamp(((-(v_in.uv.x - regionRight) + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float topFeather = clamp(((v_in.uv.y - regionTop + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float bottomFeather = clamp(((-(v_in.uv.y - regionBottom) + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float finalFeather = min(min(leftFeather, rightFeather), min(topFeather, bottomFeather));
+	
+	float4 rgba = u_image.SampleLevel(textureSampler, v_in.uv, 0);
+	if (finalFeather <= 0.00001) {
+		return rgba;
+	} else if (finalFeather >= 0.99999) {
+		return BlurFunc(v_in.uv, rgba);
+	}
+
+	return lerp(rgba, BlurFunc(v_in.uv, rgba), finalFeather);
+}
+
+float4 PSBoxRegionFeatherInvert(VertDataOut v_in) : TARGET {
+	float halfFeather = (regionFeather / 2.0);
+	float feather = max(regionFeather, 0.00000001);
+	float leftFeather = clamp(((v_in.uv.x - regionLeft + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float rightFeather = clamp(((-(v_in.uv.x - regionRight) + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float topFeather = clamp(((v_in.uv.y - regionTop + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float bottomFeather = clamp(((-(v_in.uv.y - regionBottom) + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float finalFeather = 1.0 - min(min(leftFeather, rightFeather), min(topFeather, bottomFeather));
+	
+	float4 rgba = u_image.SampleLevel(textureSampler, v_in.uv, 0);
+	if (finalFeather <= 0.00001) {
+		return rgba;
+	} else if (finalFeather >= 0.99999) {
+		return BlurFunc(v_in.uv, rgba);
+	}
+
+	return lerp(rgba, BlurFunc(v_in.uv, rgba), finalFeather);
 }
 
 technique Draw
@@ -51,5 +127,41 @@ technique Draw
 	{
 		vertex_shader = VSDefault(v_in);
 		pixel_shader  = PSBox(v_in);
+	}
+}
+
+technique DrawRegion
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBoxRegion(v_in);
+	}
+}
+
+technique DrawRegionInvert
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBoxRegionInvert(v_in);
+	}
+}
+
+technique DrawRegionFeather
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBoxRegionFeather(v_in);
+	}
+}
+
+technique DrawRegionFeatherInvert
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBoxRegionFeatherInvert(v_in);
 	}
 }

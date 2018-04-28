@@ -44,6 +44,16 @@ extern "C" {
 #define S_BILATERAL_SMOOTHING				"Filter.Blur.Bilateral.Smoothing"
 #define S_BILATERAL_SHARPNESS				"Filter.Blur.Bilateral.Sharpness"
 
+// Region
+#define S_REGION					"Filter.Blur.Region"
+#define S_REGION_LEFT					"Filter.Blur.Region.Left"
+#define S_REGION_TOP					"Filter.Blur.Region.Top"
+#define S_REGION_RIGHT					"Filter.Blur.Region.Right"
+#define S_REGION_BOTTOM					"Filter.Blur.Region.Bottom"
+#define S_REGION_FEATHER				"Filter.Blur.Region.Feather"
+#define S_REGION_FEATHER_SHIFT				"Filter.Blur.Region.Feather.Shift"
+#define S_REGION_INVERT					"Filter.Blur.Region.Invert"
+
 // Advanced
 #define S_FILTER_BLUR_COLORFORMAT			"Filter.Blur.ColorFormat"	
 
@@ -96,6 +106,7 @@ Filter::Blur::Blur() {
 		} catch (std::runtime_error ex) {
 			P_LOG_ERROR("<filter-blur> Loading effect '%s' (path: '%s') failed with error(s): %s",
 				kv.first.c_str(), kv.second.c_str(), ex.what());
+			obs_leave_graphics();
 			return;
 		}
 	}
@@ -160,6 +171,16 @@ void Filter::Blur::get_defaults(obs_data_t *data) {
 	obs_data_set_default_double(data, S_BILATERAL_SMOOTHING, 50.0);
 	obs_data_set_default_double(data, S_BILATERAL_SHARPNESS, 90.0);
 
+	// Region
+	obs_data_set_default_bool(data, S_REGION, false);
+	obs_data_set_default_double(data, S_REGION_LEFT, 0.0f);
+	obs_data_set_default_double(data, S_REGION_TOP, 0.0f);
+	obs_data_set_default_double(data, S_REGION_RIGHT, 0.0f);
+	obs_data_set_default_double(data, S_REGION_BOTTOM, 0.0f);
+	obs_data_set_default_double(data, S_REGION_FEATHER, 0.0f);
+	obs_data_set_default_double(data, S_REGION_FEATHER_SHIFT, 0.0f);
+	obs_data_set_default_bool(data, S_REGION_INVERT, false);
+
 	// Advanced
 	obs_data_set_default_bool(data, S_ADVANCED, false);
 	obs_data_set_default_int(data, S_FILTER_BLUR_COLORFORMAT, ColorFormat::RGB);
@@ -185,6 +206,25 @@ obs_properties_t * Filter::Blur::get_properties(void *) {
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_BILATERAL_SMOOTHING)));
 	p = obs_properties_add_float_slider(pr, S_BILATERAL_SHARPNESS, P_TRANSLATE(S_BILATERAL_SHARPNESS), 0, 99.99, 0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_BILATERAL_SHARPNESS)));
+
+	// Region
+	p = obs_properties_add_bool(pr, S_REGION, P_TRANSLATE(S_REGION));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_REGION)));
+	obs_property_set_modified_callback(p, modified_properties);
+	p = obs_properties_add_float_slider(pr, S_REGION_LEFT, P_TRANSLATE(S_REGION_LEFT), 0.0, 100.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_REGION_LEFT)));
+	p = obs_properties_add_float_slider(pr, S_REGION_TOP, P_TRANSLATE(S_REGION_TOP), 0.0, 100.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_REGION_TOP)));
+	p = obs_properties_add_float_slider(pr, S_REGION_RIGHT, P_TRANSLATE(S_REGION_RIGHT), 0.0, 100.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_REGION_RIGHT)));
+	p = obs_properties_add_float_slider(pr, S_REGION_BOTTOM, P_TRANSLATE(S_REGION_BOTTOM), 0.0, 100.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_REGION_BOTTOM)));
+	p = obs_properties_add_float_slider(pr, S_REGION_FEATHER, P_TRANSLATE(S_REGION_FEATHER), 0.0, 50.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_REGION_FEATHER)));
+	p = obs_properties_add_float_slider(pr, S_REGION_FEATHER_SHIFT, P_TRANSLATE(S_REGION_FEATHER_SHIFT), -100.0, 100.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_REGION_FEATHER_SHIFT)));
+	p = obs_properties_add_bool(pr, S_REGION_INVERT, P_TRANSLATE(S_REGION_INVERT));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_REGION_INVERT)));
 
 	// Advanced
 	p = obs_properties_add_bool(pr, S_ADVANCED, P_TRANSLATE(S_ADVANCED));
@@ -215,6 +255,16 @@ bool Filter::Blur::modified_properties(obs_properties_t *pr, obs_property_t *, o
 	// Bilateral Blur
 	obs_property_set_visible(obs_properties_get(pr, S_BILATERAL_SMOOTHING), showBilateral);
 	obs_property_set_visible(obs_properties_get(pr, S_BILATERAL_SHARPNESS), showBilateral);
+
+	// Region
+	bool showRegion = obs_data_get_bool(d, S_REGION);
+	obs_property_set_visible(obs_properties_get(pr, S_REGION_LEFT), showRegion);
+	obs_property_set_visible(obs_properties_get(pr, S_REGION_TOP), showRegion);
+	obs_property_set_visible(obs_properties_get(pr, S_REGION_RIGHT), showRegion);
+	obs_property_set_visible(obs_properties_get(pr, S_REGION_BOTTOM), showRegion);
+	obs_property_set_visible(obs_properties_get(pr, S_REGION_FEATHER), showRegion);
+	obs_property_set_visible(obs_properties_get(pr, S_REGION_FEATHER_SHIFT), showRegion);
+	obs_property_set_visible(obs_properties_get(pr, S_REGION_INVERT), showRegion);
 
 	// Advanced
 	bool showAdvanced = false;
@@ -312,8 +362,24 @@ void Filter::Blur::Instance::update(obs_data_t *data) {
 	m_bilateralSmoothing = obs_data_get_double(data, S_BILATERAL_SMOOTHING) / 100.0;
 	m_bilateralSharpness = obs_data_get_double(data, S_BILATERAL_SHARPNESS) / 100.0;
 
+	// Region
+	m_region.enabled = obs_data_get_bool(data, S_REGION);
+	if (m_region.enabled) {
+		m_region.left = float_t(obs_data_get_double(data, S_REGION_LEFT) / 100.0);
+		m_region.top = float_t(obs_data_get_double(data, S_REGION_TOP) / 100.0);
+		m_region.right = 1.0 - float_t(obs_data_get_double(data, S_REGION_RIGHT) / 100.0);
+		m_region.bottom = 1.0 - float_t(obs_data_get_double(data, S_REGION_BOTTOM) / 100.0);
+		m_region.feather = float_t(obs_data_get_double(data, S_REGION_FEATHER) / 100.0);
+		m_region.feather_shift = float_t(obs_data_get_double(data, S_REGION_FEATHER_SHIFT) / 100.0);
+		m_region.invert = obs_data_get_bool(data, S_REGION_INVERT);
+	}
+
 	// Advanced
-	m_colorFormat = obs_data_get_int(data, S_FILTER_BLUR_COLORFORMAT);
+	if (obs_data_get_bool(data, S_ADVANCED)) {
+		m_colorFormat = obs_data_get_int(data, S_FILTER_BLUR_COLORFORMAT);
+	} else {
+		m_colorFormat = obs_data_get_default_int(data, S_FILTER_BLUR_COLORFORMAT);
+	}
 }
 
 uint32_t Filter::Blur::Instance::get_width() {
@@ -469,6 +535,17 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 		std::make_tuple("Horizontal", m_rtHorizontal, 1.0f / baseW, 0.0f),
 		std::make_tuple("Vertical", m_rtVertical, 0.0f, 1.0f / baseH),
 	};
+	std::string pass = "Draw";
+	if (m_region.enabled) {
+		if (m_region.feather > 0) {
+			pass = "DrawRegionFeather";
+		} else {
+			pass = "DrawRegion";
+		}
+		if (m_region.invert) {
+			pass += "Invert";
+		}
+	}
 	for (auto v : kvs) {
 		const char* name = std::get<0>(v);
 		gs_texrender_t* rt = std::get<1>(v);
@@ -497,7 +574,7 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
 
 		// Render
-		while (gs_effect_loop(m_effect->get_object(), "Draw")) {
+		while (gs_effect_loop(m_effect->get_object(), pass.c_str())) {
 			gs_draw_sprite(intermediate, 0, baseW, baseH);
 		}
 
@@ -577,6 +654,27 @@ bool Filter::Blur::Instance::apply_shared_param(gs_texture_t* input, float texel
 
 	result = result && gs_set_param_int(m_effect->get_object(), "u_radius", (int)m_size);
 	result = result && gs_set_param_int(m_effect->get_object(), "u_diameter", (int)(1 + (m_size * 2)));
+
+	if (m_region.enabled) {
+		if (m_effect->has_parameter("regionLeft")) {
+			m_effect->get_parameter("regionLeft").set_float(m_region.left);
+		}
+		if (m_effect->has_parameter("regionTop")) {
+			m_effect->get_parameter("regionTop").set_float(m_region.top);
+		}
+		if (m_effect->has_parameter("regionRight")) {
+			m_effect->get_parameter("regionRight").set_float(m_region.right);
+		}
+		if (m_effect->has_parameter("regionBottom")) {
+			m_effect->get_parameter("regionBottom").set_float(m_region.bottom);
+		}
+		if (m_effect->has_parameter("regionFeather")) {
+			m_effect->get_parameter("regionFeather").set_float(m_region.feather);
+		}
+		if (m_effect->has_parameter("regionFeatherShift")) {
+			m_effect->get_parameter("regionFeatherShift").set_float(m_region.feather_shift);
+		}
+	}
 
 	return result;
 }

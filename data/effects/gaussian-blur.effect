@@ -9,6 +9,14 @@ uniform int u_radius;
 uniform int u_diameter;
 uniform float2 u_texelDelta;
 
+/// Region
+uniform float regionLeft;
+uniform float regionTop;
+uniform float regionRight;
+uniform float regionBottom;
+uniform float regionFeather;
+uniform float regionFeatherShift;
+
 // Settings (Private)
 //uniform float registerkernel[25];
 uniform texture2d kernel;
@@ -40,18 +48,84 @@ VertDataOut VSDefault(VertDataIn v_in)
 	return vert_out;
 }
 
-float4 PSGaussian(VertDataOut v_in) : TARGET {
+float4 BlurFunc(float2 uv, float4 rgba) {
 	float2 uvOffset = float2(0, 0);
-	float4 rgba = u_image.SampleLevel(textureSampler, v_in.uv, 0)
-		* kernel.SampleLevel(textureSampler, (float2(0, u_radius - 1) * kernelTexel), 0).r;
+	float4 final = rgba * kernel.SampleLevel(textureSampler, (float2(0, u_radius - 1) * kernelTexel), 0).r;
 	for (int k = 1; k <= u_radius; k++) {
 		uvOffset += u_texelDelta;
 		float l_g = kernel.SampleLevel(textureSampler, (float2(k, u_radius - 1) * kernelTexel), 0).r;
-		float4 l_p = u_image.SampleLevel(textureSampler, v_in.uv + uvOffset, 0) * l_g;
-		float4 l_n = u_image.SampleLevel(textureSampler, v_in.uv - uvOffset, 0) * l_g;
-		rgba += l_p + l_n;
+		float4 l_p = u_image.SampleLevel(textureSampler, uv + uvOffset, 0);
+		float4 l_n = u_image.SampleLevel(textureSampler, uv - uvOffset, 0);
+		final += (l_p + l_n) * l_g;
 	}
-	return rgba;
+	return final;
+}
+
+float4 PSGaussian(VertDataOut v_in) : TARGET {
+	float4 rgba = u_image.SampleLevel(textureSampler, v_in.uv, 0);	
+	return BlurFunc(v_in.uv, rgba);
+}
+
+float4 PSGaussianRegion(VertDataOut v_in) : TARGET {
+	float4 rgba = u_image.SampleLevel(textureSampler, v_in.uv, 0);
+	if ((v_in.uv.x < regionLeft)
+		|| (v_in.uv.x > regionRight)
+		|| (v_in.uv.y < regionTop)
+		|| (v_in.uv.y > regionBottom)) {
+		return rgba;
+	}
+
+	return BlurFunc(v_in.uv, rgba);
+}
+
+float4 PSGaussianRegionInvert(VertDataOut v_in) : TARGET {
+	float4 rgba = u_image.SampleLevel(textureSampler, v_in.uv, 0);
+	if ((v_in.uv.x > regionLeft)
+		&& (v_in.uv.x < regionRight)
+		&& (v_in.uv.y > regionTop)
+		&& (v_in.uv.y < regionBottom)) {
+		return rgba;
+	}
+	
+	return BlurFunc(v_in.uv, rgba);
+}
+
+float4 PSGaussianRegionFeather(VertDataOut v_in) : TARGET {
+	float halfFeather = (regionFeather / 2.0);
+	float feather = max(regionFeather, 0.00000001);
+	float leftFeather = clamp(((v_in.uv.x - regionLeft + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float rightFeather = clamp(((-(v_in.uv.x - regionRight) + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float topFeather = clamp(((v_in.uv.y - regionTop + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float bottomFeather = clamp(((-(v_in.uv.y - regionBottom) + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float finalFeather = min(min(leftFeather, rightFeather), min(topFeather, bottomFeather));
+	
+	float4 rgba = u_image.SampleLevel(textureSampler, v_in.uv, 0);
+	if (finalFeather <= 0.00001) {
+		return rgba;
+	} else if (finalFeather >= 0.99999) {
+		return BlurFunc(v_in.uv, rgba);
+	}
+
+	return lerp(rgba, BlurFunc(v_in.uv, rgba), finalFeather);
+}
+
+float4 PSGaussianRegionFeatherInvert(VertDataOut v_in) : TARGET {
+	float halfFeather = (regionFeather / 2.0);
+	float feather = max(regionFeather, 0.00000001);
+	float leftFeather = clamp(((v_in.uv.x - regionLeft + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float rightFeather = clamp(((-(v_in.uv.x - regionRight) + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float topFeather = clamp(((v_in.uv.y - regionTop + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float bottomFeather = clamp(((-(v_in.uv.y - regionBottom) + halfFeather) / feather) + regionFeatherShift, 0.0, 1.0);
+	float finalFeather = 1.0 - min(min(leftFeather, rightFeather), min(topFeather, bottomFeather));
+	
+	float4 rgba = u_image.SampleLevel(textureSampler, v_in.uv, 0);
+	if (finalFeather <= 0.00001) {
+		return rgba;
+	} else if (finalFeather >= 0.99999) {
+		return BlurFunc(v_in.uv, rgba);
+	}
+
+	return lerp(rgba, BlurFunc(v_in.uv, rgba), finalFeather);
 }
 
 technique Draw
@@ -60,5 +134,39 @@ technique Draw
 	{
 		vertex_shader = VSDefault(v_in);
 		pixel_shader  = PSGaussian(v_in);
+	}
+}
+
+technique DrawRegion
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSGaussianRegion(v_in);
+	}
+}
+technique DrawRegionInvert
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSGaussianRegionInvert(v_in);
+	}
+}
+
+technique DrawRegionFeather
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSGaussianRegionFeather(v_in);
+	}
+}
+technique DrawRegionFeatherInvert
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSGaussianRegionFeatherInvert(v_in);
 	}
 }
