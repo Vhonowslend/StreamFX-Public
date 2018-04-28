@@ -31,6 +31,9 @@ namespace Filter {
 		Blur();
 		~Blur();
 
+		void generate_gaussian_kernels();
+		void generate_kernel_textures();
+
 		public:
 		enum Type : int64_t {
 			Box,
@@ -38,8 +41,13 @@ namespace Filter {
 			Bilateral,
 		};
 
+		std::shared_ptr<gs::texture> m_gaussianKernelTexture;
+		std::map<std::string, std::shared_ptr<gs::effect>> m_effects;
+
 		private:
 		obs_source_info m_sourceInfo;
+
+		static const size_t max_kernel_size = 25;
 
 		public /*static*/:
 		static const char *get_name(void *);
