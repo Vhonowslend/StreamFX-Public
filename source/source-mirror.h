@@ -76,14 +76,14 @@ namespace Source {
 
 		// Audio
 		bool m_enableAudio = false;
-		std::unique_ptr<obs::audio_capture> m_mirrorAudio;
+		std::unique_ptr<obs::audio_capture> m_audioCapture;
 		std::mutex m_audioLock;
 		std::condition_variable m_audioNotify;
 		obs_source_audio m_audioOutput;
 		std::vector<std::vector<float_t>> m_audioData;
 		std::thread m_audioThread;
-		bool m_audioKill = false;
-		bool m_audioExists = false;
+		bool m_killAudioThread = false;
+		bool m_haveAudioOutput = false;
 
 		public:
 		Mirror(obs_data_t*, obs_source_t*);

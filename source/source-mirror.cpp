@@ -251,7 +251,7 @@ Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src) {
 }
 
 Source::Mirror::~Mirror() {
-	m_audioKill = true;
+	m_killAudioThread = true;
 	m_audioNotify.notify_all();
 	if (m_audioThread.joinable())
 		m_audioThread.join();
@@ -281,8 +281,8 @@ void Source::Mirror::update(obs_data_t* data) {
 	if (sourceName != m_mirrorName) {
 		try {
 			m_mirrorSource = std::make_unique<gfx::source_texture>(sourceName, m_source);
-			m_mirrorAudio = std::make_unique<obs::audio_capture>(m_mirrorSource->get_object());
-			m_mirrorAudio->set_callback(std::bind(&Source::Mirror::audio_capture_cb, this,
+			m_audioCapture = std::make_unique<obs::audio_capture>(m_mirrorSource->get_object());
+			m_audioCapture->set_callback(std::bind(&Source::Mirror::audio_capture_cb, this,
 				std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 			m_mirrorName = sourceName;
 		} catch (...) {
@@ -471,19 +471,19 @@ void Source::Mirror::audio_capture_cb(void* data, const audio_data* audio, bool 
 	m_audioOutput.samples_per_sec = aoi->samples_per_sec;
 	m_audioOutput.speakers = aoi->speakers;
 
-	m_audioExists = true;
+	m_haveAudioOutput = true;
 	m_audioNotify.notify_all();
 }
 
 void Source::Mirror::audio_output_cb() {
 	std::unique_lock<std::mutex> ulock(m_audioLock);
 
-	while (!m_audioKill) {
-		if (m_audioExists) {
+	while (!m_killAudioThread) {
+		if (m_haveAudioOutput) {
 			obs_source_output_audio(m_source, &m_audioOutput);
-			m_audioExists = false;
+			m_haveAudioOutput = false;
 		}
-		m_audioNotify.wait(ulock, [this]() { return m_audioExists || m_audioKill; });
+		m_audioNotify.wait(ulock, [this]() { return m_haveAudioOutput || m_killAudioThread; });
 	}
 }
 
