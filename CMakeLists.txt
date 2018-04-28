@@ -112,6 +112,7 @@ SET(obs-stream-effects_HEADERS
 	"${PROJECT_SOURCE_DIR}/source/obs-audio-capture.h"
 	"${PROJECT_BINARY_DIR}/source/version.h"
 	"${PROJECT_SOURCE_DIR}/source/strings.h"
+	"${PROJECT_SOURCE_DIR}/source/utility.h"
 	"${PROJECT_SOURCE_DIR}/source/util-math.h"
 	"${PROJECT_SOURCE_DIR}/source/util-memory.h"
 )
@@ -135,6 +136,7 @@ SET(obs-stream-effects_SOURCES
 	"${PROJECT_SOURCE_DIR}/source/gs-vertex.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-vertexbuffer.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs-audio-capture.cpp"
+	"${PROJECT_SOURCE_DIR}/source/utility.cpp"
 	"${PROJECT_SOURCE_DIR}/source/util-math.cpp"
 	"${PROJECT_SOURCE_DIR}/source/util-memory.cpp"
 )
