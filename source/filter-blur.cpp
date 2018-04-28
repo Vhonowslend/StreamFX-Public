@@ -1,6 +1,6 @@
 /*
  * Modern effects for a modern Streamer
- * Copyright (C) 2017 Michael Fabian Dirks
+ * Copyright (C) 2017-2018 Michael Fabian Dirks
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,20 @@ extern "C" {
 #include "graphics/matrix4.h"
 #pragma warning (pop)
 }
+
+#define S_FILTER_BLUR					"Filter.Blur"
+#define S_TYPE						"Filter.Blur.Type"
+#define S_TYPE_BOX					"Filter.Blur.Type.Box"
+#define S_TYPE_GAUSSIAN					"Filter.Blur.Type.Gaussian"
+#define S_TYPE_BILATERAL				"Filter.Blur.Type.Bilateral"
+#define S_SIZE						"Filter.Blur.Size"
+
+// Bilateral Blur
+#define S_BILATERAL_SMOOTHING				"Filter.Blur.Bilateral.Smoothing"
+#define S_BILATERAL_SHARPNESS				"Filter.Blur.Bilateral.Sharpness"
+
+// Advanced
+#define S_FILTER_BLUR_COLORFORMAT			"Filter.Blur.ColorFormat"	
 
 // Initializer & Finalizer
 static Filter::Blur* filterBlurInstance;
@@ -93,7 +107,6 @@ static void GenerateGaussianKernelTextures() {
 		}
 	}
 }
-
 Filter::Blur::Blur() {
 	memset(&m_sourceInfo, 0, sizeof(obs_source_info));
 	m_sourceInfo.id = "obs-stream-effects-filter-blur";
@@ -146,12 +159,12 @@ const char * Filter::Blur::get_name(void *) {
 }
 
 void Filter::Blur::get_defaults(obs_data_t *data) {
-	obs_data_set_default_int(data, S_FILTER_BLUR_TYPE, Filter::Blur::Type::Box);
-	obs_data_set_default_int(data, S_FILTER_BLUR_SIZE, 5);
+	obs_data_set_default_int(data, S_TYPE, Filter::Blur::Type::Box);
+	obs_data_set_default_int(data, S_SIZE, 5);
 
 	// Bilateral Only
-	obs_data_set_default_double(data, S_FILTER_BLUR_BILATERAL_SMOOTHING, 50.0);
-	obs_data_set_default_double(data, S_FILTER_BLUR_BILATERAL_SHARPNESS, 90.0);
+	obs_data_set_default_double(data, S_BILATERAL_SMOOTHING, 50.0);
+	obs_data_set_default_double(data, S_BILATERAL_SHARPNESS, 90.0);
 
 	// Advanced
 	obs_data_set_default_bool(data, S_ADVANCED, false);
@@ -162,44 +175,32 @@ obs_properties_t * Filter::Blur::get_properties(void *) {
 	obs_properties_t *pr = obs_properties_create();
 	obs_property_t* p = NULL;
 
-	p = obs_properties_add_list(pr, S_FILTER_BLUR_TYPE, P_TRANSLATE(S_FILTER_BLUR_TYPE),
-		obs_combo_type::OBS_COMBO_TYPE_LIST, obs_combo_format::OBS_COMBO_FORMAT_INT);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_FILTER_BLUR_TYPE)));
+	p = obs_properties_add_list(pr, S_TYPE, P_TRANSLATE(S_TYPE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_TYPE)));
 	obs_property_set_modified_callback(p, modified_properties);
-	obs_property_list_add_int(p, P_TRANSLATE(S_FILTER_BLUR_TYPE_BOX),
-		Filter::Blur::Type::Box);
-	obs_property_list_add_int(p, P_TRANSLATE(S_FILTER_BLUR_TYPE_GAUSSIAN),
-		Filter::Blur::Type::Gaussian);
-	obs_property_list_add_int(p, P_TRANSLATE(S_FILTER_BLUR_TYPE_BILATERAL),
-		Filter::Blur::Type::Bilateral);
+	obs_property_list_add_int(p, P_TRANSLATE(S_TYPE_BOX), Filter::Blur::Type::Box);
+	obs_property_list_add_int(p, P_TRANSLATE(S_TYPE_GAUSSIAN), Filter::Blur::Type::Gaussian);
+	obs_property_list_add_int(p, P_TRANSLATE(S_TYPE_BILATERAL), Filter::Blur::Type::Bilateral);
 
-	p = obs_properties_add_int_slider(pr, S_FILTER_BLUR_SIZE,
-		P_TRANSLATE(S_FILTER_BLUR_SIZE), 1, 25, 1);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_FILTER_BLUR_SIZE)));
+	p = obs_properties_add_int_slider(pr, S_SIZE, P_TRANSLATE(S_SIZE), 1, 25, 1);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_SIZE)));
 	//obs_property_set_modified_callback(p, modified_properties);
 
 	// Bilateral Only
-	p = obs_properties_add_float_slider(pr, S_FILTER_BLUR_BILATERAL_SMOOTHING,
-		P_TRANSLATE(S_FILTER_BLUR_BILATERAL_SMOOTHING), 0.01, 100.0, 0.01);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_FILTER_BLUR_BILATERAL_SMOOTHING)));
-	p = obs_properties_add_float_slider(pr, S_FILTER_BLUR_BILATERAL_SHARPNESS,
-		P_TRANSLATE(S_FILTER_BLUR_BILATERAL_SHARPNESS), 0, 99.99, 0.01);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_FILTER_BLUR_BILATERAL_SHARPNESS)));
+	p = obs_properties_add_float_slider(pr, S_BILATERAL_SMOOTHING, P_TRANSLATE(S_BILATERAL_SMOOTHING), 0.01, 100.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_BILATERAL_SMOOTHING)));
+	p = obs_properties_add_float_slider(pr, S_BILATERAL_SHARPNESS, P_TRANSLATE(S_BILATERAL_SHARPNESS), 0, 99.99, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_BILATERAL_SHARPNESS)));
 
 	// Advanced
 	p = obs_properties_add_bool(pr, S_ADVANCED, P_TRANSLATE(S_ADVANCED));
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_ADVANCED)));
 	obs_property_set_modified_callback(p, modified_properties);
 
-	p = obs_properties_add_list(pr, S_FILTER_BLUR_COLORFORMAT,
-		P_TRANSLATE(S_FILTER_BLUR_COLORFORMAT),
-		obs_combo_type::OBS_COMBO_TYPE_LIST, obs_combo_format::OBS_COMBO_FORMAT_INT);
-	obs_property_set_long_description(p,
-		P_TRANSLATE(P_DESC(S_FILTER_BLUR_COLORFORMAT)));
-	obs_property_list_add_int(p, "RGB",
-		ColorFormat::RGB);
-	obs_property_list_add_int(p, "YUV",
-		ColorFormat::YUV);
+	p = obs_properties_add_list(pr, S_FILTER_BLUR_COLORFORMAT, P_TRANSLATE(S_FILTER_BLUR_COLORFORMAT), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_FILTER_BLUR_COLORFORMAT)));
+	obs_property_list_add_int(p, "RGB", ColorFormat::RGB);
+	obs_property_list_add_int(p, "YUV", ColorFormat::YUV);
 
 	return pr;
 }
@@ -207,7 +208,7 @@ obs_properties_t * Filter::Blur::get_properties(void *) {
 bool Filter::Blur::modified_properties(obs_properties_t *pr, obs_property_t *, obs_data_t *d) {
 	bool showBilateral = false;
 
-	switch (obs_data_get_int(d, S_FILTER_BLUR_TYPE)) {
+	switch (obs_data_get_int(d, S_TYPE)) {
 		case Filter::Blur::Type::Box:
 			break;
 		case Filter::Blur::Type::Gaussian:
@@ -218,10 +219,8 @@ bool Filter::Blur::modified_properties(obs_properties_t *pr, obs_property_t *, o
 	}
 
 	// Bilateral Blur
-	obs_property_set_visible(obs_properties_get(pr, S_FILTER_BLUR_BILATERAL_SMOOTHING),
-		showBilateral);
-	obs_property_set_visible(obs_properties_get(pr, S_FILTER_BLUR_BILATERAL_SHARPNESS),
-		showBilateral);
+	obs_property_set_visible(obs_properties_get(pr, S_BILATERAL_SMOOTHING), showBilateral);
+	obs_property_set_visible(obs_properties_get(pr, S_BILATERAL_SHARPNESS), showBilateral);
 
 	// Advanced
 	bool showAdvanced = false;
@@ -301,7 +300,7 @@ Filter::Blur::Instance::~Instance() {
 }
 
 void Filter::Blur::Instance::update(obs_data_t *data) {
-	m_type = (Type)obs_data_get_int(data, S_FILTER_BLUR_TYPE);
+	m_type = (Type)obs_data_get_int(data, S_TYPE);
 	switch (m_type) {
 		case Filter::Blur::Type::Box:
 			m_effect = g_effects.at("Box Blur");
@@ -313,11 +312,11 @@ void Filter::Blur::Instance::update(obs_data_t *data) {
 			m_effect = g_effects.at("Bilateral Blur");
 			break;
 	}
-	m_size = (uint64_t)obs_data_get_int(data, S_FILTER_BLUR_SIZE);
+	m_size = (uint64_t)obs_data_get_int(data, S_SIZE);
 
 	// Bilateral Blur
-	m_bilateralSmoothing = obs_data_get_double(data, S_FILTER_BLUR_BILATERAL_SMOOTHING) / 100.0;
-	m_bilateralSharpness = obs_data_get_double(data, S_FILTER_BLUR_BILATERAL_SHARPNESS) / 100.0;
+	m_bilateralSmoothing = obs_data_get_double(data, S_BILATERAL_SMOOTHING) / 100.0;
+	m_bilateralSharpness = obs_data_get_double(data, S_BILATERAL_SHARPNESS) / 100.0;
 
 	// Advanced
 	m_colorFormat = obs_data_get_int(data, S_FILTER_BLUR_COLORFORMAT);
@@ -369,7 +368,7 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 		obs_source_skip_video_filter(m_source);
 		return;
 	}
-	m_errorLogged = false;	
+	m_errorLogged = false;
 
 	gs_effect_t* defaultEffect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 	gs_texture_t *sourceTexture = nullptr;
@@ -411,7 +410,7 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 
 	// Conversion
 #pragma region RGB -> YUV
-	if (m_colorFormat == ColorFormat::YUV) {
+	if ((m_colorFormat == ColorFormat::YUV) && colorConversionEffect) {
 		gs_texrender_reset(m_secondaryRT);
 		if (!gs_texrender_begin(m_secondaryRT, baseW, baseH)) {
 			P_LOG_ERROR("<filter-blur> Failed to set up base texture.");
@@ -529,7 +528,7 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 		gs_effect_t* finalEffect = defaultEffect;
 		const char* technique = "Draw";
 
-		if (m_colorFormat == ColorFormat::YUV) {
+		if ((m_colorFormat == ColorFormat::YUV) && colorConversionEffect) {
 			finalEffect = colorConversionEffect;
 			technique = "YUVToRGB";
 		}
@@ -600,7 +599,6 @@ bool Filter::Blur::Instance::apply_bilateral_param() {
 		P_LOG_ERROR("<filter-blur> Failed to set bilateralSmoothing param.");
 		return false;
 	} else {
-		P_LOG_DEBUG("<filter-blur> Applying bilateralSmoothing parameter.");
 		gs_effect_set_float(param,
 			(float)(m_bilateralSmoothing * (1 + m_size * 2)));
 	}
@@ -610,7 +608,6 @@ bool Filter::Blur::Instance::apply_bilateral_param() {
 		P_LOG_ERROR("<filter-blur> Failed to set bilateralSmoothing param.");
 		return false;
 	} else {
-		P_LOG_DEBUG("<filter-blur> Applying bilateralSharpness parameter.");
 		gs_effect_set_float(param, (float)(1.0 - m_bilateralSharpness));
 	}
 

@@ -1,6 +1,6 @@
 /*
  * Modern effects for a modern Streamer
- * Copyright (C) 2017 Michael Fabian Dirks
+ * Copyright (C) 2017-2018 Michael Fabian Dirks
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,20 +23,7 @@
 #include "gs-effect.h"
 #include "gs-texture.h"
 #include <memory>
-
-#define S_FILTER_BLUR					"Filter.Blur"
-#define S_FILTER_BLUR_TYPE				"Filter.Blur.Type"
-#define S_FILTER_BLUR_TYPE_BOX				"Filter.Blur.Type.Box"
-#define S_FILTER_BLUR_TYPE_GAUSSIAN			"Filter.Blur.Type.Gaussian"
-#define S_FILTER_BLUR_TYPE_BILATERAL			"Filter.Blur.Type.Bilateral"
-#define S_FILTER_BLUR_SIZE				"Filter.Blur.Size"
-
-// Bilateral Blur
-#define S_FILTER_BLUR_BILATERAL_SMOOTHING		"Filter.Blur.Bilateral.Smoothing"
-#define S_FILTER_BLUR_BILATERAL_SHARPNESS		"Filter.Blur.Bilateral.Sharpness"
-
-// Advanced
-#define S_FILTER_BLUR_COLORFORMAT			"Filter.Blur.ColorFormat"
+#include <map>
 
 namespace Filter {
 	class Blur {
@@ -44,12 +31,21 @@ namespace Filter {
 		Blur();
 		~Blur();
 
+		public:
+		enum Type : int64_t {
+			Box,
+			Gaussian,
+			Bilateral,
+		};
+
+		private:
+		obs_source_info m_sourceInfo;
+
+		public /*static*/:
 		static const char *get_name(void *);
 		static void get_defaults(obs_data_t *);
 		static obs_properties_t *get_properties(void *);
-		static bool modified_properties(obs_properties_t *,
-			obs_property_t *, obs_data_t *);
-
+		static bool modified_properties(obs_properties_t *, obs_property_t *, obs_data_t *);
 		static void *create(obs_data_t *, obs_source_t *);
 		static void destroy(void *);
 		static uint32_t get_width(void *);
@@ -59,15 +55,6 @@ namespace Filter {
 		static void deactivate(void *);
 		static void video_tick(void *, float);
 		static void video_render(void *, gs_effect_t *);
-
-		enum Type : int64_t {
-			Box,
-			Gaussian,
-			Bilateral,
-		};
-
-		private:
-		obs_source_info m_sourceInfo;
 
 		private:
 		class Instance {
