@@ -444,7 +444,7 @@ void Source::Mirror::video_render(gs_effect_t*) {
 	}
 }
 
-void Source::Mirror::audio_capture_cb(void* data, const audio_data* audio, bool muted) {
+void Source::Mirror::audio_capture_cb(void*, const audio_data* audio, bool) {
 	std::unique_lock<std::mutex> ulock(m_audioLock);
 	if (!m_enableAudio) {
 		return;
