@@ -76,6 +76,7 @@ gs::vertex_buffer::vertex_buffer(uint32_t maximumVertices) {
 
 	// Assign limits.
 	m_capacity = maximumVertices;
+	m_size = m_capacity;
 	m_layers = MAXIMUM_UVW_LAYERS;
 
 	// Allocate memory for data.
@@ -110,7 +111,11 @@ gs::vertex_buffer::vertex_buffer(uint32_t maximumVertices) {
 }
 
 gs::vertex_buffer::vertex_buffer(gs_vertbuffer_t* vb) {
+	obs_enter_graphics();
 	gs_vb_data* vbd = gs_vertexbuffer_get_data(vb);
+	if (!vbd)
+		throw std::runtime_error("vertex buffer with no data");
+
 	vertex_buffer((uint32_t)vbd->num);
 	this->set_uv_layers((uint32_t)vbd->num_tex);
 
@@ -138,8 +143,8 @@ gs::vertex_buffer::vertex_buffer(gs_vertbuffer_t* vb) {
 			}
 		}
 	}
+	obs_leave_graphics();
 }
-
 
 gs::vertex_buffer::vertex_buffer(vertex_buffer const& other) : vertex_buffer(other.m_capacity) {
 	// Copy Constructor
@@ -296,6 +301,7 @@ gs_vertbuffer_t* gs::vertex_buffer::update(bool refreshGPU) {
 		throw std::out_of_range("size is larger than capacity");
 
 	// Update VertexBuffer data.
+	obs_enter_graphics();
 	m_vertexbufferdata = gs_vertexbuffer_get_data(m_vertexbuffer);
 	std::memset(m_vertexbufferdata, 0, sizeof(gs_vb_data));
 	m_vertexbufferdata->num = m_capacity;
@@ -311,7 +317,6 @@ gs_vertbuffer_t* gs::vertex_buffer::update(bool refreshGPU) {
 	}
 
 	// Update GPU
-	obs_enter_graphics();
 	gs_vertexbuffer_flush(m_vertexbuffer);
 	obs_leave_graphics();
 
