@@ -220,34 +220,34 @@ void gs::effect_parameter::set_float_array(float_t v[], size_t sz) {
 }
 
 void gs::effect_parameter::set_int(int32_t x) {
-	if (get_type() != type::Integer)
+	if ((get_type() != type::Integer) && (get_type() != type::Unknown))
 		throw std::bad_cast();
 	gs_effect_set_int(m_param, x);
 }
 
 void gs::effect_parameter::set_int2(int32_t x, int32_t y) {
-	if (get_type() != type::Integer2)
+	if ((get_type() != type::Integer2) && (get_type() != type::Unknown))
 		throw std::bad_cast();
-	int32_t v[] = { x, y };
+	int32_t v[2] = { x, y };
 	gs_effect_set_val(m_param, v, sizeof(int) * 2);
 }
 
 void gs::effect_parameter::set_int3(int32_t x, int32_t y, int32_t z) {
-	if (get_type() != type::Integer3)
+	if ((get_type() != type::Integer3) && (get_type() != type::Unknown))
 		throw std::bad_cast();
-	int32_t v[] = { x, y, z };
+	int32_t v[3] = { x, y, z };
 	gs_effect_set_val(m_param, v, sizeof(int) * 3);
 }
 
 void gs::effect_parameter::set_int4(int32_t x, int32_t y, int32_t z, int32_t w) {
-	if (get_type() != type::Integer4)
+	if ((get_type() != type::Integer4) && (get_type() != type::Unknown))
 		throw std::bad_cast();
-	int32_t v[] = { x, y, z, w };
+	int32_t v[4] = { x, y, z, w };
 	gs_effect_set_val(m_param, v, sizeof(int) * 4);
 }
 
 void gs::effect_parameter::set_int_array(int32_t v[], size_t sz) {
-	if ((get_type() != type::Integer) && (get_type() != type::Integer2) && (get_type() != type::Integer3) && (get_type() != type::Integer4))
+	if ((get_type() != type::Integer) && (get_type() != type::Integer2) && (get_type() != type::Integer3) && (get_type() != type::Integer4) && (get_type() != type::Unknown))
 		throw std::bad_cast();
 	gs_effect_set_val(m_param, v, sizeof(int) * sz);
 }
