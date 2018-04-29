@@ -141,8 +141,8 @@ void Filter::CustomShader::video_render(void *ptr, gs_effect_t *effect) {
 }
 
 Filter::CustomShader::Instance::Instance(obs_data_t *data, obs_source_t *source) : gfx::effect_source(data, source) {
-	default_shader_path = "shaders/filter/example.effect";
-
+	m_defaultShaderPath = "shaders/filter/example.effect";
+	m_renderTarget = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	update(data);
 }
 
@@ -314,7 +314,7 @@ bool Filter::CustomShader::Instance::is_special_parameter(std::string name, gs::
 		{ "ViewSizeI", gs::effect_parameter::type::Integer2 },
 		{ "Time", gs::effect_parameter::type::Float },
 		{ "TimeActive", gs::effect_parameter::type::Float },
-		{ "image", gs::effect_parameter::type::Texture }
+		{ "Image", gs::effect_parameter::type::Texture },
 	};
 	std::pair<std::string, gs::effect_parameter::type> textureParameters[] = {
 		{ "Size", gs::effect_parameter::type::Float2 },
@@ -335,7 +335,7 @@ bool Filter::CustomShader::Instance::is_special_parameter(std::string name, gs::
 		secondPart = name.substr(posUnderscore + 1);
 
 		try {
-			gs::effect_parameter prm = shader.effect->get_parameter(firstPart);
+			gs::effect_parameter prm = m_shader.effect->get_parameter(firstPart);
 			if (prm.get_type() == gs::effect_parameter::type::Texture) {
 				for (auto& kv : textureParameters) {
 					if ((secondPart == kv.first) && (type == kv.second))
@@ -350,104 +350,66 @@ bool Filter::CustomShader::Instance::is_special_parameter(std::string name, gs::
 	return false;
 }
 
-bool Filter::CustomShader::Instance::apply_special_parameters() {
-	throw std::logic_error("The method or operation is not implemented.");
+bool Filter::CustomShader::Instance::apply_special_parameters(uint32_t viewW, uint32_t viewH) {
+	std::unique_ptr<gs::texture> imageTexture;
+	m_renderTarget->get_texture(imageTexture);
+
+	if (m_shader.effect->has_parameter("Image", gs::effect_parameter::type::Texture)) {
+		m_shader.effect->get_parameter("Image").set_texture(imageTexture->get_object());
+	} else {
+		return false;
+	}
+	if (m_shader.effect->has_parameter("Image_Size", gs::effect_parameter::type::Float2)) {
+		m_shader.effect->get_parameter("Image_Size").set_float2(
+			float_t(imageTexture->get_width()),
+			float_t(imageTexture->get_height()));
+	}
+	if (m_shader.effect->has_parameter("Image_SizeI"/*, gs::effect_parameter::type::Integer2*/)) {
+		m_shader.effect->get_parameter("Image_SizeI").set_int2(
+			imageTexture->get_width(),
+			imageTexture->get_height());
+	}
+	if (m_shader.effect->has_parameter("Image_Texel", gs::effect_parameter::type::Float2)) {
+		m_shader.effect->get_parameter("Image_Texel").set_float2(
+			float_t(1.0 / imageTexture->get_width()),
+			float_t(1.0 / imageTexture->get_height()));
+	}
+
+	return true;
 }
 
-void Filter::CustomShader::Instance::video_tick_impl(float time) {
-	throw std::logic_error("The method or operation is not implemented.");
+bool Filter::CustomShader::Instance::video_tick_impl(float_t time) {
+	return true;
 }
 
-void Filter::CustomShader::Instance::video_render_impl(gs_effect_t* parent_effect) {
-	throw std::logic_error("The method or operation is not implemented.");
+bool Filter::CustomShader::Instance::video_render_impl(gs_effect_t* parent_effect, uint32_t viewW, uint32_t viewH) {
+	// Render original source to render target.
+	{
+		auto op = m_renderTarget->render(viewW, viewH);
+		vec4 black; vec4_zero(&black);
+		gs_ortho(0, (float_t)viewW, 0, (float_t)viewH, 0, 1);
+		gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
+		if (obs_source_process_filter_begin(m_source, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
+			obs_source_process_filter_end(m_source,
+				parent_effect ? parent_effect : obs_get_base_effect(OBS_EFFECT_DEFAULT), viewW, viewH);
+		}
+	}
+	gs_texture_t* sourceTexture = m_renderTarget->get_object();
+	if (!sourceTexture) {
+		return false;
+	}
+
+	if (!apply_special_parameters(viewW, viewH)) {
+		return false;
+	}
+
+	return true;
 }
 
 //void Filter::CustomShader::Instance::video_render(gs_effect_t *effect) {
-//	if (!m_source || !m_isActive) {
-//		obs_source_skip_video_filter(m_source);
-//		return;
-//	}
-//
-//	obs_source_t *parent = obs_filter_get_parent(m_source);
-//	obs_source_t *target = obs_filter_get_target(m_source);
-//	if (!parent || !target || !m_effect.effect) {
-//		obs_source_skip_video_filter(m_source);
-//		return;
-//	}
-//
-//	uint32_t baseW = obs_source_get_base_width(target),
-//		baseH = obs_source_get_base_height(target);
-//	if (!baseW || !baseH) {
-//		obs_source_skip_video_filter(m_source);
-//		return;
-//	}
-//
-//	// Render original source to texture.
-//	{
-//		auto op = m_renderTarget->render(baseW, baseH);
-//		vec4 black; vec4_zero(&black);
-//		gs_ortho(0, (float_t)baseW, 0, (float_t)baseH, 0, 1);
-//		gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
-//		if (obs_source_process_filter_begin(m_source, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
-//			obs_source_process_filter_end(m_source,
-//				effect ? effect : obs_get_base_effect(OBS_EFFECT_DEFAULT), baseW, baseH);
-//		}
-//	}
-//	gs_texture_t* sourceTexture = m_renderTarget->get_object();
-//	if (!sourceTexture) {
-//		obs_source_skip_video_filter(m_source);
-//		return;
-//	}
-//
-//	// Apply Parameters
-//	try {
-//		if (m_effect.effect->has_parameter("ViewSize", gs::effect_parameter::type::Float2))
-//			m_effect.effect->get_parameter("ViewSize").set_float2(float_t(baseW), float_t(baseH));
-//		if (m_effect.effect->has_parameter("ViewSizeI", gs::effect_parameter::type::Integer2))
-//			m_effect.effect->get_parameter("ViewSizeI").set_int2(baseW, baseH);
-//		if (m_effect.effect->has_parameter("Time", gs::effect_parameter::type::Float))
-//			m_effect.effect->get_parameter("Time").set_float(m_renderTime);
-//		if (m_effect.effect->has_parameter("TimeActive", gs::effect_parameter::type::Float))
-//			m_effect.effect->get_parameter("TimeActive").set_float(m_activeTime);
-//
-//		/// "image" Specials
-//		if (m_effect.effect->has_parameter("image_Size", gs::effect_parameter::type::Float2))
-//			m_effect.effect->get_parameter("image_Size").set_float2(float_t(baseW), float_t(baseH));
-//		if (m_effect.effect->has_parameter("image_SizeI", gs::effect_parameter::type::Float2))
-//			m_effect.effect->get_parameter("image_SizeI").set_int2(baseW, baseH);
-//		if (m_effect.effect->has_parameter("image_Texel", gs::effect_parameter::type::Float2))
-//			m_effect.effect->get_parameter("image_Texel").set_float2(1.0f / float_t(baseW), 1.0f / float_t(baseH));
-//
 //		for (Parameter& prm : m_effectParameters) {
 //			gs::effect_parameter eprm = m_effect.effect->get_parameter(prm.name);
 //			switch (prm.type) {
-//				case gs::effect_parameter::type::Boolean:
-//					eprm.set_bool(prm.value.b);
-//					break;
-//				case gs::effect_parameter::type::Integer:
-//					eprm.set_int(prm.value.i[0]);
-//					break;
-//				case gs::effect_parameter::type::Integer2:
-//					eprm.set_int2(prm.value.i[0], prm.value.i[1]);
-//					break;
-//				case gs::effect_parameter::type::Integer3:
-//					eprm.set_int3(prm.value.i[0], prm.value.i[1], prm.value.i[2]);
-//					break;
-//				case gs::effect_parameter::type::Integer4:
-//					eprm.set_int4(prm.value.i[0], prm.value.i[1], prm.value.i[2], prm.value.i[3]);
-//					break;
-//				case gs::effect_parameter::type::Float:
-//					eprm.set_float(prm.value.f[0]);
-//					break;
-//				case gs::effect_parameter::type::Float2:
-//					eprm.set_float2(prm.value.f[0], prm.value.f[1]);
-//					break;
-//				case gs::effect_parameter::type::Float3:
-//					eprm.set_float3(prm.value.f[0], prm.value.f[1], prm.value.f[2]);
-//					break;
-//				case gs::effect_parameter::type::Float4:
-//					eprm.set_float4(prm.value.f[0], prm.value.f[1], prm.value.f[2], prm.value.f[3]);
-//					break;
 //				case gs::effect_parameter::type::Texture:
 //					if (prm.value.textureIsSource) {
 //						if (prm.value.source.rendertarget && prm.value.source.source) {
@@ -472,62 +434,6 @@ void Filter::CustomShader::Instance::video_render_impl(gs_effect_t* parent_effec
 //			}
 //		}
 //
-//	} catch (...) {
-//		obs_source_skip_video_filter(m_source);
-//		return;
-//	}
-//
-//	gs_reset_blend_state();
-//	gs_enable_depth_test(false);
-//	while (gs_effect_loop(m_effect.effect->get_object(), "Draw")) {
-//		obs_source_draw(sourceTexture, 0, 0, baseW, baseH, false);
-//	}
-//}
-//
-//static bool UpdateSourceListCB(void *ptr, obs_source_t* src) {
-//	obs_property_t* p = (obs_property_t*)ptr;
-//	obs_property_list_add_string(p, obs_source_get_name(src), obs_source_get_name(src));
-//	return true;
-//}
-//
-//static void UpdateSourceList(obs_property_t* p) {
-//	obs_property_list_clear(p);
-//	obs_enum_sources(UpdateSourceListCB, p);
-//}
-//
-//void Filter::CustomShader::Instance::get_properties(obs_properties_t *pr) {
-//	if (!m_effect.effect)
-//		return;
-//
-//	for (Parameter& prm : m_effectParameters) {
-//		switch (prm.type) {
-//			case gs::effect_parameter::type::Texture:
-//				obs_property * pt = obs_properties_add_list(pr,
-//					prm.uiNames[0].c_str(),
-//					prm.uiDescriptions[0].c_str(),
-//					OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-//				obs_property_list_add_int(pt, "File", 0);
-//				obs_property_list_add_int(pt, "Source", 1);
-//				obs_property_set_modified_callback(pt, modified_properties);
-//
-//				pt = obs_properties_add_list(pr,
-//					prm.uiNames[1].c_str(),
-//					prm.uiDescriptions[1].c_str(),
-//					OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
-//				UpdateSourceList(pt);
-//
-//				obs_properties_add_path(pr,
-//					prm.uiNames[2].c_str(),
-//					prm.uiDescriptions[2].c_str(),
-//					OBS_PATH_FILE, "", prm.value.file.path.c_str());
-//				break;
-//		}
-//	}
-//	return;
-//}
-
-//std::string Filter::CustomShader::Instance::GetShaderFile() {
-//	return m_effect.path;
 //}
 
 //void Filter::CustomShader::Instance::CheckTextures(float_t time) {

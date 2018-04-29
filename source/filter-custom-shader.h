@@ -53,27 +53,20 @@ namespace Filter {
 		class Instance : public gfx::effect_source {
 			friend class CustomShader;
 
+			std::shared_ptr<gs::rendertarget> m_renderTarget;
 
+			protected:
+			bool apply_special_parameters(uint32_t viewW, uint32_t viewH);
+			virtual bool is_special_parameter(std::string name, gs::effect_parameter::type type) override;
+			virtual bool video_tick_impl(float_t time) override;
+			virtual bool video_render_impl(gs_effect_t* parent_effect, uint32_t viewW, uint32_t viewH) override;
 
 			public:
 			Instance(obs_data_t*, obs_source_t*);
 			~Instance();
 			
 			uint32_t get_width();
-			uint32_t get_height();
-
-			protected:
-			virtual bool is_special_parameter(std::string name, gs::effect_parameter::type type) override;
-
-
-			virtual bool apply_special_parameters() override;
-
-
-			virtual void video_tick_impl(float time) override;
-
-
-			virtual void video_render_impl(gs_effect_t* parent_effect) override;
-
+			uint32_t get_height();					
 		};
 	};
 }
