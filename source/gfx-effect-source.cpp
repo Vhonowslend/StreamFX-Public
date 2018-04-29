@@ -52,27 +52,31 @@ bool gfx::effect_source::property_input_modified(void* obj, obs_properties_t*, o
 	return reinterpret_cast<gfx::effect_source*>(obj)->test_for_updates(text, file);
 }
 
-void gfx::effect_source::video_tick_impl(float time) {
-	// Shader Timers
-	time_existing += time;
-	time_active += time;
-
-	// File Timer
-	shader.file_info.time_updated -= time;
-}
-
-void gfx::effect_source::video_render_impl(gs_effect_t* parent_effect) {
-	parent_effect;
-}
-
 gfx::effect_source::effect_source(obs_data_t* data, obs_source_t* owner) {
 	m_source = owner;
-	time_existing = 0;
-	time_active = 0;
-	update(data);
+	m_timeExisting = 0;
+	m_timeActive = 0;
+
+	m_quadBuffer = std::make_shared<gs::vertex_buffer>(4);
+	m_quadBuffer->set_uv_layers(1);
+	auto vtx = m_quadBuffer->at(0);
+	vec3_set(vtx.position, 0, 0, 0);
+	vec4_set(vtx.uv[0], 0, 0, 0, 0);
+	vtx = m_quadBuffer->at(2);
+	vec3_set(vtx.position, 1, 0, 0);
+	vec4_set(vtx.uv[0], 1, 0, 0, 0);
+	vtx = m_quadBuffer->at(1);
+	vec3_set(vtx.position, 0, 1, 0);
+	vec4_set(vtx.uv[0], 0, 1, 0, 0);
+	vtx = m_quadBuffer->at(3);
+	vec3_set(vtx.position, 1, 1, 0);
+	vec4_set(vtx.uv[0], 1, 1, 0, 0);
+	m_quadBuffer->update(true);
 }
 
-gfx::effect_source::~effect_source() {}
+gfx::effect_source::~effect_source() {
+	m_quadBuffer = nullptr;
+}
 
 void gfx::effect_source::get_properties(obs_properties_t* properties) {
 	obs_property_t* p = nullptr;
@@ -88,7 +92,7 @@ void gfx::effect_source::get_properties(obs_properties_t* properties) {
 	obs_property_set_modified_callback2(p, property_input_modified, this);
 
 	{
-		char* tmp_path = obs_module_file(default_shader_path.c_str());
+		char* tmp_path = obs_module_file(m_defaultShaderPath.c_str());
 		p = obs_properties_add_path(properties, D_INPUT_FILE, P_TRANSLATE(T_INPUT_FILE), OBS_PATH_FILE,
 			"Any (*.effect *.shader *.hlsl);;Effect (*.effect);;Shader (*.shader);;DirectX (*.hlsl)", tmp_path);
 		obs_property_set_long_description(p, P_TRANSLATE(P_DESC(T_INPUT_FILE)));
@@ -97,7 +101,7 @@ void gfx::effect_source::get_properties(obs_properties_t* properties) {
 	}
 
 	// ToDo: Place updated properties here or somewhere else?
-	for (auto prm : parameters) {
+	for (auto prm : m_parameters) {
 		if (prm.first.second == gs::effect_parameter::type::Boolean) {
 			obs_properties_add_bool(properties, prm.second->ui.names[0], prm.second->ui.descs[0]);
 		} else if (prm.first.second >= gs::effect_parameter::type::Integer && prm.first.second <= gs::effect_parameter::type::Integer4) {
@@ -110,7 +114,7 @@ void gfx::effect_source::get_properties(obs_properties_t* properties) {
 			size_t cnt = (size_t)prm.first.second - (size_t)gs::effect_parameter::type::Float;
 
 			for (size_t idx = 0; idx <= cnt; idx++) {
-				obs_properties_add_float(properties, prm.second->ui.names[idx], prm.second->ui.descs[idx], FLT_MIN, FLT_MAX, 1);
+				obs_properties_add_float(properties, prm.second->ui.names[idx], prm.second->ui.descs[idx], FLT_MIN, FLT_MAX, 0.01);
 			}
 		}
 	}
@@ -143,51 +147,55 @@ void gfx::effect_source::update(obs_data_t* data) {
 bool gfx::effect_source::test_for_updates(const char* text, const char* path) {
 	bool is_shader_different = false;
 	if (text != nullptr) {
-		if (text != shader.text) {
-			shader.text = text;
+		if (text != m_shader.text) {
+			m_shader.text = text;
 			is_shader_different = true;
 		}
 
 		if (is_shader_different) {
-			shader.effect = std::make_unique<gs::effect>(shader.text, "Text");
+			try {
+				m_shader.effect = std::make_unique<gs::effect>(m_shader.text, "Text");
+			} catch (...) {
+				m_shader.effect = nullptr;
+			}
 		}
 	} else if (path != nullptr) {
-		if (path != this->shader.path) {
-			this->shader.path = path;
-			this->shader.file_info.time_updated = 0;
-			this->shader.file_info.time_create = 0;
-			this->shader.file_info.time_modified = 0;
-			this->shader.file_info.file_size = 0;
+		if (path != this->m_shader.path) {
+			this->m_shader.path = path;
+			this->m_shader.file_info.time_updated = 0;
+			this->m_shader.file_info.time_create = 0;
+			this->m_shader.file_info.time_modified = 0;
+			this->m_shader.file_info.file_size = 0;
 			is_shader_different = true;
 		}
 
 		// If the update timer is 0 or less, grab new file information.
-		if (shader.file_info.time_updated <= 0) {
+		if (m_shader.file_info.time_updated <= 0) {
 			struct stat stats;
-			if (os_stat(shader.path.c_str(), &stats) == 0) {
-				shader.file_info.modified = (shader.file_info.time_create != stats.st_ctime)
-					| (shader.file_info.time_modified != stats.st_mtime)
-					| (shader.file_info.file_size != stats.st_size);
+			if (os_stat(m_shader.path.c_str(), &stats) == 0) {
+				m_shader.file_info.modified = (m_shader.file_info.time_create != stats.st_ctime)
+					| (m_shader.file_info.time_modified != stats.st_mtime)
+					| (m_shader.file_info.file_size != stats.st_size);
 
 				// Mark shader as different if the file was changed.
 				is_shader_different =
 					is_shader_different
-					| shader.file_info.modified;
+					| m_shader.file_info.modified;
 
 				// Update own information
-				shader.file_info.time_create = stats.st_ctime;
-				shader.file_info.time_modified = stats.st_mtime;
-				shader.file_info.file_size = stats.st_size;
+				m_shader.file_info.time_create = stats.st_ctime;
+				m_shader.file_info.time_modified = stats.st_mtime;
+				m_shader.file_info.file_size = stats.st_size;
 			}
 
 			// Increment timer so that the next check is a reasonable timespan away.
-			shader.file_info.time_updated += 0.1f;
+			m_shader.file_info.time_updated += 0.1f;
 		}
 
-		if (is_shader_different || shader.file_info.modified) {
+		if (is_shader_different || m_shader.file_info.modified) {
 			// gs_effect_create_from_file caches results, which is bad for us.
 			std::vector<char> content;
-			std::ifstream fs(shader.path.c_str(), std::ios::binary);
+			std::ifstream fs(m_shader.path.c_str(), std::ios::binary);
 
 			if (fs.good()) {
 				size_t beg = fs.tellg();
@@ -199,18 +207,22 @@ bool gfx::effect_source::test_for_updates(const char* text, const char* path) {
 				fs.close();
 				content[sz] = '\0';
 
-				shader.effect = std::make_unique<gs::effect>(std::string(content.data()), shader.path);
+				try {
+					m_shader.effect = std::make_unique<gs::effect>(std::string(content.data()), m_shader.path);
+				} catch (...) {
+					m_shader.effect = nullptr;
+				}
 			}
 		}
 	}
 
 	// If the shader is different, rebuild the parameter list.
 	if (is_shader_different) {
-		if (shader.effect) {
+		if (m_shader.effect) {
 			// ToDo: Figure out if a recycling approach would work.
 			//  Might improve stability in low memory situations.
 			std::map<paramident_t, std::shared_ptr<parameter>> new_params;
-			auto effect_param_list = shader.effect->get_parameters();
+			auto effect_param_list = m_shader.effect->get_parameters();
 			for (auto effect_param : effect_param_list) {
 				paramident_t ident;
 				ident.first = effect_param.get_name();
@@ -219,11 +231,11 @@ bool gfx::effect_source::test_for_updates(const char* text, const char* path) {
 				if (is_special_parameter(ident.first, ident.second))
 					continue;
 
-				auto entry = parameters.find(ident);
-				if (entry != parameters.end()) {
+				auto entry = m_parameters.find(ident);
+				if (entry != m_parameters.end()) {
 					entry->second->param = std::make_shared<gs::effect_parameter>(effect_param);
 					new_params.insert_or_assign(ident, entry->second);
-					parameters.erase(entry);
+					m_parameters.erase(entry);
 				} else {
 					std::shared_ptr<parameter> param;
 
@@ -335,9 +347,9 @@ bool gfx::effect_source::test_for_updates(const char* text, const char* path) {
 					}
 				}
 			}
-			parameters = std::move(new_params);
+			m_parameters = std::move(new_params);
 		} else {
-			parameters.clear();
+			m_parameters.clear();
 		}
 	}
 
@@ -345,7 +357,7 @@ bool gfx::effect_source::test_for_updates(const char* text, const char* path) {
 }
 
 void gfx::effect_source::update_parameters(obs_data_t* data) {
-	for (auto prm : parameters) {
+	for (auto prm : m_parameters) {
 		if (prm.first.second == gs::effect_parameter::type::Boolean) {
 			auto param = std::static_pointer_cast<bool_parameter>(prm.second);
 			param->value = obs_data_get_bool(data, prm.second->ui.names[0]);
@@ -364,30 +376,56 @@ void gfx::effect_source::update_parameters(obs_data_t* data) {
 }
 
 void gfx::effect_source::apply_parameters() {
-	for (auto prm : parameters) {
+	for (auto prm : m_parameters) {
 		if (prm.first.second == gs::effect_parameter::type::Boolean) {
 			auto param = std::static_pointer_cast<bool_parameter>(prm.second);
-
+			param->param->set_bool(param->value);
 		} else if (prm.first.second >= gs::effect_parameter::type::Integer && prm.first.second <= gs::effect_parameter::type::Integer4) {
 			auto param = std::static_pointer_cast<int_parameter>(prm.second);
-
+			switch (prm.first.second) {
+				case gs::effect_parameter::type::Integer:
+					param->param->set_int(param->value[0]);
+					break;
+				case gs::effect_parameter::type::Integer2:
+					param->param->set_int2(param->value[0], param->value[1]);
+					break;
+				case gs::effect_parameter::type::Integer3:
+					param->param->set_int3(param->value[0], param->value[1], param->value[2]);
+					break;
+				case gs::effect_parameter::type::Integer4:
+					param->param->set_int4(param->value[0], param->value[1], param->value[2], param->value[3]);
+					break;
+			}
 		} else if (prm.first.second >= gs::effect_parameter::type::Float && prm.first.second <= gs::effect_parameter::type::Float4) {
 			auto param = std::static_pointer_cast<float_parameter>(prm.second);
-
+			switch (prm.first.second) {
+				case gs::effect_parameter::type::Float:
+					param->param->set_float(param->value[0]);
+					break;
+				case gs::effect_parameter::type::Float2:
+					param->param->set_float2(param->value[0], param->value[1]);
+					break;
+				case gs::effect_parameter::type::Float3:
+					param->param->set_float3(param->value[0], param->value[1], param->value[2]);
+					break;
+				case gs::effect_parameter::type::Float4:
+					param->param->set_float4(param->value[0], param->value[1], param->value[2], param->value[3]);
+					break;
+			}
 		}
 	}
 }
 
 void gfx::effect_source::activate() {
-	time_active = 0;
+	m_timeActive = 0;
 }
 
 void gfx::effect_source::deactivate() {
-	time_active = 0;
+	m_timeActive = 0;
 }
 
 std::string gfx::effect_source::get_shader_file() {
-	return shader.path;
+	return m_shader.path;
 }
 
 uint32_t gfx::effect_source::get_width() {
@@ -399,9 +437,66 @@ uint32_t gfx::effect_source::get_height() {
 }
 
 void gfx::effect_source::video_tick(float time) {
+	// Shader Timers
+	m_timeExisting += time;
+	m_timeActive += time;
+
+	// File Timer
+	m_shader.file_info.time_updated -= time;
+
 	video_tick_impl(time);
 }
 
 void gfx::effect_source::video_render(gs_effect_t* parent_effect) {
-	video_render_impl(parent_effect);
+	if (!m_source) {
+		obs_source_skip_video_filter(m_source);
+		return;
+	}
+
+	obs_source_t *parent = obs_filter_get_parent(m_source);
+	obs_source_t *target = obs_filter_get_target(m_source);
+	if (!parent || !target || !m_shader.effect) {
+		obs_source_skip_video_filter(m_source);
+		return;
+	}
+
+	uint32_t viewW = obs_source_get_base_width(target),
+		viewH = obs_source_get_base_height(target);
+	if (!viewW || !viewH) {
+		obs_source_skip_video_filter(m_source);
+		return;
+	}
+
+	apply_parameters();
+	if (!video_render_impl(parent_effect, viewW, viewH)) {
+		obs_source_skip_video_filter(m_source);
+		return;
+	}
+	if (m_shader.effect->has_parameter("ViewSize", gs::effect_parameter::type::Float2)) {
+		m_shader.effect->get_parameter("ViewSize").set_float2(float_t(viewW), float_t(viewH));
+	}
+	if (m_shader.effect->has_parameter("ViewSizeI"/*, gs::effect_parameter::type::Integer2*/)) {
+		m_shader.effect->get_parameter("ViewSizeI").set_int2(int32_t(viewW), int32_t(viewH));
+	}
+	if (m_shader.effect->has_parameter("Time", gs::effect_parameter::type::Float)) {
+		m_shader.effect->get_parameter("Time").set_float(m_timeExisting);
+	}
+	if (m_shader.effect->has_parameter("TimeActive", gs::effect_parameter::type::Float)) {
+		m_shader.effect->get_parameter("TimeActive").set_float(m_timeActive);
+	}
+
+	gs_load_indexbuffer(nullptr);
+	gs_load_vertexbuffer(m_quadBuffer->update());
+
+	gs_reset_blend_state();
+	gs_enable_depth_test(false);
+	gs_matrix_push();
+	gs_matrix_scale3f(viewW, viewH, 1);
+	while (gs_effect_loop(m_shader.effect->get_object(), "Draw")) {
+		gs_draw(gs_draw_mode::GS_TRISTRIP, 0, 4);
+	}
+	gs_matrix_pop();
+
+	gs_load_indexbuffer(nullptr);
+	gs_load_vertexbuffer(nullptr);
 }

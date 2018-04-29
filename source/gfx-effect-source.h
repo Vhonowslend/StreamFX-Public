@@ -22,6 +22,7 @@
 #include "gs-effect.h"
 #include "gs-rendertarget.h"
 #include "gs-texture.h"
+#include "gs-vertexbuffer.h"
 #include "gfx-source-texture.h"
 #include <vector>
 #include <map>
@@ -41,28 +42,11 @@
 
 namespace gfx {
 	class effect_source {
-		protected:
-		obs_source_t* m_source;
-		std::unique_ptr<gs::rendertarget> m_renderTarget;
-
-		// Effect Information
-		struct {
-			std::shared_ptr<gs::effect> effect;
-			std::string text;
-			std::string path;
-			struct {
-				float_t time_updated;
-				time_t time_create;
-				time_t time_modified;
-				size_t file_size;
-				bool modified;
-			} file_info;
-		} shader;
-
+		public:
 		struct parameter {
 			std::string name = "";
 			std::shared_ptr<gs::effect_parameter> param;
-			
+
 			struct {
 				std::vector<char> buffer;
 				std::vector<const char*> names;
@@ -104,26 +88,45 @@ namespace gfx {
 			} resample;
 		};
 		struct matrix_parameter : parameter {
-			
-		};
 
+		};
 		typedef std::pair<std::string, gs::effect_parameter::type> paramident_t;
-		std::map<paramident_t, std::shared_ptr<parameter>> parameters;
+
+		private:
+
+
+		protected:
+		obs_source_t* m_source;
+		std::shared_ptr<gs::vertex_buffer> m_quadBuffer;
+
+		// Effect Information
+		struct {
+			std::shared_ptr<gs::effect> effect;
+			std::string text;
+			std::string path;
+			struct {
+				float_t time_updated;
+				time_t time_create;
+				time_t time_modified;
+				size_t file_size;
+				bool modified;
+			} file_info;
+		} m_shader;
+		std::map<paramident_t, std::shared_ptr<parameter>> m_parameters;
 
 		// Status
-		float_t time_existing;
-		float_t time_active;
+		float_t m_timeExisting;
+		float_t m_timeActive;
 
-		std::string default_shader_path = "shaders/";
+		std::string m_defaultShaderPath = "shaders/";
 
 		static bool property_type_modified(void* priv, obs_properties_t* props, obs_property_t* prop, obs_data_t* sett);
 		static bool property_input_modified(void* priv, obs_properties_t* props, obs_property_t* prop, obs_data_t* sett);
 		
 		virtual bool is_special_parameter(std::string name, gs::effect_parameter::type type) = 0;
-		virtual bool apply_special_parameters() = 0;
 
-		virtual void video_tick_impl(float time) = 0;
-		virtual void video_render_impl(gs_effect_t* parent_effect) = 0;
+		virtual bool video_tick_impl(float_t time) = 0;
+		virtual bool video_render_impl(gs_effect_t* parent_effect, uint32_t viewW, uint32_t viewH) = 0;
 
 		public:
 		effect_source(obs_data_t* data, obs_source_t* owner);
@@ -145,6 +148,7 @@ namespace gfx {
 		uint32_t get_height();
 		void video_tick(float time);
 		void video_render(gs_effect_t* parent_effect);
+
 
 		public:
 		enum class InputTypes {
