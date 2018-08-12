@@ -35,6 +35,9 @@ std::list<std::function<void()>> initializerFunctions;
 std::list<std::function<void()>> finalizerFunctions;
 
 MODULE_EXPORT bool obs_module_load(void) {
+	P_LOG_INFO("[" PLUGIN_NAME "] Loading Version %u.%u.%u (Build %u)",
+		PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH,
+		PROJECT_VERSION_TWEAK);
 	for (auto func : initializerFunctions) {
 		func();
 	}
@@ -42,6 +45,9 @@ MODULE_EXPORT bool obs_module_load(void) {
 }
 
 MODULE_EXPORT void obs_module_unload(void) {
+	P_LOG_INFO("[" PLUGIN_NAME "] Unloading Version %u.%u.%u (Build %u)",
+		PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH,
+		PROJECT_VERSION_TWEAK);
 	for (auto func : finalizerFunctions) {
 		func();
 	}
