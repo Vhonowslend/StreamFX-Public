@@ -1,0 +1,55 @@
+#pragma code_page(65001)
+#include <windows.h>
+#include <winver.h>
+
+#define VER_FILEVERSION             @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,@PROJECT_VERSION_TWEAK@
+#define VER_FILEVERSION_STR         "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@.@PROJECT_VERSION_TWEAK@\0"
+
+#define VER_PRODUCTVERSION          @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,@PROJECT_VERSION_TWEAK@
+#define VER_PRODUCTVERSION_STR      "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@.@PROJECT_VERSION_TWEAK@\0"
+
+#ifndef DEBUG
+#define VER_DEBUG                   0
+#else
+#define VER_DEBUG                   VS_FF_DEBUG
+#endif
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     VER_FILEVERSION
+PRODUCTVERSION  VER_PRODUCTVERSION
+FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+FILEFLAGS       (VER_DEBUG)
+FILEOS          VOS__WINDOWS32
+FILETYPE        VFT_DLL
+FILESUBTYPE     VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN
+            VALUE "CompanyName",      "@PROJECT_COMPANY_NAME@\0"
+            VALUE "FileDescription",  "@PROJECT_DESCRIPTION@\0"
+            VALUE "FileVersion",      VER_FILEVERSION_STR
+            VALUE "InternalName",     "@PROJECT_NAME@\0"
+            VALUE "LegalCopyright",   "@PROJECT_COPYRIGHT@\0"
+            VALUE "LegalTrademarks1", "@PROJECT_LEGAL_TRADEMARKS_1@\0"
+            VALUE "LegalTrademarks2", "@PROJECT_LEGAL_TRADEMARKS_1@\0"
+            VALUE "OriginalFilename", "@PROJECT_NAME@\0"
+            VALUE "ProductName",      "@PROJECT_PRODUCT_NAME@\0"
+            VALUE "ProductVersion",   VER_PRODUCTVERSION_STR
+        END
+    END
+
+    BLOCK "VarFileInfo"
+    BEGIN
+        /* The following line should only be modified for localized versions.     */
+        /* It consists of any number of WORD,WORD pairs, with each pair           */
+        /* describing a language,codepage combination supported by the file.      */
+        /*                                                                        */
+        /* For example, a file might have values "0x409,1252" indicating that it  */
+        /* supports English language (0x409) in the Windows ANSI codepage (1252). */
+
+        VALUE "Translation", 0x409, 1252
+
+    END
+END
