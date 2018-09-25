@@ -57,7 +57,7 @@ PROJECT(
 	obs-stream-effects
 	VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}
 	DESCRIPTION ""
-	HOMEPAGE_URL "about:blank"
+	HOMEPAGE_URL "https://www.xaymar.com/portfolio/obs-stream-effects/"
 )
 
 ################################################################################
@@ -99,7 +99,7 @@ If(WIN32)
 	Set(PROJECT_LEGAL_TRADEMARKS_1 "")
 	Set(PROJECT_LEGAL_TRADEMARKS_2 "")
 	Set(PROJECT_DESCRIPTION "Stream Effects for OBS Studio")
-		
+	
 	Configure_File(
 		"${PROJECT_SOURCE_DIR}/cmake/version.rc.in"
 		"${PROJECT_BINARY_DIR}/cmake/version.rc"

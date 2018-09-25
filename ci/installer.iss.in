@@ -4,7 +4,7 @@
 #define MyAppName "Stream Effects for OBS Studio"
 #define MyAppVersion "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@.@PROJECT_VERSION_TWEAK@"
 #define MyAppPublisher "Xaymars Technology Workshop"
-#define MyAppURL "http://www.xaymar.com/portfolio/plugin-amd-vce-plugin-for-obs-studio/"
+#define MyAppURL "https://www.xaymar.com/portfolio/obs-stream-effects/"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
