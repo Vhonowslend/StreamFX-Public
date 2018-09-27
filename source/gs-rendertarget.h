@@ -37,6 +37,9 @@ namespace gs {
 		gs_texrender_t* render_target;
 		bool            is_being_rendered;
 
+		gs_color_format color_format;
+		gs_zstencil_format zstencil_format;
+
 		public:
 		~rendertarget();
 
@@ -49,6 +52,10 @@ namespace gs {
 		void get_texture(std::shared_ptr<gs::texture>& tex);
 
 		void get_texture(std::unique_ptr<gs::texture>& tex);
+
+		gs_color_format get_color_format();
+
+		gs_zstencil_format get_zstencil_format();
 
 		gs::rendertarget_op render(uint32_t width, uint32_t height);
 	};

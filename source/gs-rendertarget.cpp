@@ -23,6 +23,7 @@
 extern "C" {
 #pragma warning(push)
 #pragma warning(disable : 4201)
+#include <graphics/graphics.h>
 #include <obs.h>
 #pragma warning(pop)
 }
@@ -35,6 +36,7 @@ gs::rendertarget::~rendertarget()
 }
 
 gs::rendertarget::rendertarget(gs_color_format colorFormat, gs_zstencil_format zsFormat)
+	: color_format(colorFormat), zstencil_format(zsFormat)
 {
 	is_being_rendered = false;
 	obs_enter_graphics();
@@ -68,6 +70,16 @@ void gs::rendertarget::get_texture(std::shared_ptr<gs::texture>& tex)
 void gs::rendertarget::get_texture(std::unique_ptr<gs::texture>& tex)
 {
 	tex = std::make_unique<gs::texture>(get_object(), false);
+}
+
+gs_color_format gs::rendertarget::get_color_format()
+{
+	return color_format;
+}
+
+gs_zstencil_format gs::rendertarget::get_zstencil_format()
+{
+	return zstencil_format;
 }
 
 gs::rendertarget_op::rendertarget_op(gs::rendertarget* rt, uint32_t width, uint32_t height) : parent(rt)
