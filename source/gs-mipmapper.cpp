@@ -161,10 +161,15 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> texture,
 	gs_load_vertexbuffer(vertexBuffer->update());
 	gs_load_indexbuffer(nullptr);
 
+	if (texture->get_type() == gs::texture::type::Normal) {
+		size_t  texture_width  = texture->get_width();
+		size_t  texture_height = texture->get_height();
+		float_t texel_width    = 1.0 / texture_width;
+		float_t texel_height   = 1.0 / texture_height;
+
 #if defined(WIN32) || defined(WIN64)
-	if (device_type == GS_DEVICE_DIRECT3D_11) {
-		// We definitely have a Direct3D11 resource.
-		if (texture->get_type() == gs::texture::type::Normal) {
+		if (device_type == GS_DEVICE_DIRECT3D_11) {
+			// We definitely have a Direct3D11 resource.
 			D3D11_TEXTURE2D_DESC t2dsc;
 			ID3D11Texture2D*     t2 = reinterpret_cast<ID3D11Texture2D*>(obj);
 
@@ -176,14 +181,11 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> texture,
 				return;
 			}
 
-			size_t  texture_width  = texture->get_width();
-			size_t  texture_height = texture->get_height();
-			float_t texel_width    = 1.0 / texture_width;
-			float_t texel_height   = 1.0 / texture_height;
-
 			for (size_t mip = 1; mip < t2dsc.MipLevels; mip++) {
 				texture_width /= 2;
 				texture_height /= 2;
+				texel_width *= 2;
+				texel_height *= 2;
 
 				// Draw mipmap layer
 				{
@@ -204,10 +206,10 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> texture,
 				dev->context->CopySubresourceRegion(t2, mip, 0, 0, 0, rt, 0, nullptr);
 			}
 		}
-	}
 #endif
-	if (device_type == GS_DEVICE_OPENGL) {
-		// This is an OpenGL resource.
+		if (device_type == GS_DEVICE_OPENGL) {
+			// This is an OpenGL resource.
+		}
 	}
 
 	gs_load_indexbuffer(nullptr);
