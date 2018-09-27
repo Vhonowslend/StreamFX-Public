@@ -26,14 +26,16 @@ function(cppcheck)
 	set(CPPCHECK_FORCE_CPP OFF CACHE BOOL "Force checking with C++ language (overrides CPPCHECK_FORCE_C)")
 	set(CPPCHECK_VERBOSE ON CACHE BOOL "Show more detailed error reports")
 	set(CPPCHECK_QUIET ON CACHE BOOL "Hide progress reports")
+	set(CPPCHECK_ENABLE_INLINE_SUPPRESSION ON CACHE BOOL "Enable inline suppression of warnings via '// cppcheck-suppress id' comments")
 	set(CPPCHECK_LIBRARIES "" CACHE STRING "List of Libraries to load separated by semicolon")
 	set(CPPCHECK_EXCLUDE_DIRECTORIES "" CACHE STRING "List of directories to exclude separated by semicolon")
 	set(CPPCHECK_PARALLEL_TASKS "4" CACHE STRING "Number of threads to use for cppcheck")
+	set(CPPCHECK_TEMPLATE "{file}({line}:{column}): {severity} {id}: {message}" CACHE STRING "Template for reported messages")
 	if(WIN32)
 		set(CPPCHECK_WIN32_UNICODE ON CACHE BOOL "Use Unicode character encoding for Win32")
 	endif()
 	
-	mark_as_advanced(CPPCHECK_BIN CPPCHECK_QUIET CPPCHECK_VERBOSE CPPCHECK_LIBRARIES CPPCHECK_ENABLE_INCONCLUSIVE CPPCHECK_PARALLEL_TASKS)
+	mark_as_advanced(CPPCHECK_BIN CPPCHECK_QUIET CPPCHECK_VERBOSE CPPCHECK_LIBRARIES CPPCHECK_ENABLE_INCONCLUSIVE CPPCHECK_PARALLEL_TASKS CPPCHECK_TEMPLATE)
 	
 	# Parse arguments
 	set(cppcheck_options )
@@ -82,9 +84,7 @@ function(cppcheck)
 	set(CPPCHECK_ARGUMENTS "")
 	
 	# Compiler
-	if(MSVC)
-		#list(APPEND CPPCHECK_ARGUMENTS --template="{file}|{line}|{severity}|{id}|{message}")
-	endif()
+	list(APPEND CPPCHECK_ARGUMENTS --template=${CPPCHECK_TEMPLATE})
 	
 	# Flags
 	if(CPPCHECK_ENABLE_INCONCLUSIVE)
@@ -101,6 +101,9 @@ function(cppcheck)
 	endif()
 	if(CPPCHECK_PARALLEL_TASKS)
 		list(APPEND CPPCHECK_ARGUMENTS -j ${CPPCHECK_PARALLEL_TASKS})
+	endif()
+	if(CPPCHECK_ENABLE_INLINE_SUPPRESSION)
+		list(APPEND CPPCHECK_ARGUMENTS --inline-suppr)
 	endif()
 	
 	# Libraries
