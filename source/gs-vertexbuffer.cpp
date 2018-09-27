@@ -278,7 +278,7 @@ const gs::vertex gs::vertex_buffer::at(uint32_t idx)
 	}
 
 	gs::vertex vtx(&m_positions[idx], &m_normals[idx], &m_tangents[idx], &m_colors[idx], nullptr);
-	for (size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
+	for (size_t n = 0; n < m_layers; n++) {
 		vtx.uv[n] = &m_uvs[n][idx];
 	}
 	return vtx;
