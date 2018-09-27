@@ -1,0 +1,191 @@
+uniform matrix4 ViewProj;
+uniform texture2d image;
+uniform float2 imageTexel;
+uniform float strength;
+
+sampler_state pointSampler {
+	Filter    = Point;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+};
+
+sampler_state linearSampler {
+	Filter    = Linear;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+};
+
+sampler_state bilinearSampler {
+	Filter    = Bilinear;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+};
+
+struct VertDataIn {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+struct VertDataOut {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertDataOut VSDefault(VertDataIn v_in)
+{
+	VertDataOut vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+	return vert_out;
+}
+
+float4 PSPoint(VertDataOut v_in) : TARGET
+{
+	return pointSampler(image, v_in.uv);
+}
+
+float4 PSLinear(VertDataOut v_in) : TARGET
+{
+	return linearSampler(image, v_in.uv);
+}
+
+float4 PSBilinear(VertDataOut v_in) : TARGET
+{
+	return bilinearSampler(image, v_in.uv);
+}
+
+float4 PSSharpen(VertDataOut v_in) : TARGET
+{
+	float2 ul, ur, dl, dr, u, d, l, r;
+	ul = float2(-imageTexel.x, -imageTexel.y);
+	ur = float2(imageTexel.x, -imageTexel.y);
+	dl = -ur;
+	dr = -ul;
+	u = float2(0, -imageTexel.y);
+	d = -u;
+	l = float2(-imageTexel.x, 0);
+	r = -l;
+	
+	float4 tl, tc, tr, cl, cc, cr, bl, bc, br;
+	tl = pointSampler(image, v_in.uv + ul);
+	tc = pointSampler(image, v_in.uv + u);
+	tr = pointSampler(image, v_in.uv + ur);
+	cl = pointSampler(image, v_in.uv + l);
+	cc = pointSampler(image, v_in.uv);
+	cr = pointSampler(image, v_in.uv + r);
+	bl = pointSampler(image, v_in.uv + dl);
+	bc = pointSampler(image, v_in.uv + d);
+	br = pointSampler(image, v_in.uv + dr);
+
+	float kernel1, kernel2, kernel3;
+	kernel1 = -0.25 * strength;
+	kernel2 = -0.50 * strength;
+	kernel3 = abs(kernel1 * 4) + abs(kernel2 * 4);
+
+	return (tl * kernel1) + (tr * kernel1) + (bl * kernel1) + (br * kernel1) + (cl * kernel2) + (cr * kernel2) + (uc * kernel2) + (dc * kernel2) + (cc * kernel3);
+}
+
+float4 PSSmoothen(VertDataOut v_in) : TARGET
+{
+	// If we use bilinear and linear sampling, we can get away with just 4 total sampler queries.
+	// However this is not a cheap implementation, it's just meant to be accurate so we do each sampler query and rely on the compiler.
+
+	float3 smoothKernel3 = float3(0.0574428, 0.0947072, 0.3914000);
+	float2 ul, ur, dl, dr, u, d, l, r;
+	float4 tl, tc, tr, cl, cc, cr, bl, bc, br;
+	float limitstr = clamp(strength, 0.0, 1.0);
+
+	ul = float2(-imageTexel.x, -imageTexel.y);
+	ur = float2(imageTexel.x, -imageTexel.y);
+	dl = -ur;
+	dr = -ul;
+	u = float2(0, -imageTexel.y);
+	d = -u;
+	l = float2(-imageTexel.x, 0);
+	r = -l;
+	
+	tl = pointSampler(image, v_in.uv + ul) * smoothKernel3[0];
+	tc = pointSampler(image, v_in.uv + u) * smoothKernel3[1];
+	tr = pointSampler(image, v_in.uv + ur) * smoothKernel3[0];
+	cl = pointSampler(image, v_in.uv + l) * smoothKernel3[1];
+	cc = pointSampler(image, v_in.uv) * smoothKernel3[2];
+	cr = pointSampler(image, v_in.uv + r) * smoothKernel3[1];
+	bl = pointSampler(image, v_in.uv + dl) * smoothKernel3[0];
+	bc = pointSampler(image, v_in.uv + d) * smoothKernel3[1];
+	br = pointSampler(image, v_in.uv + dr) * smoothKernel3[0];
+
+	return tl + tc + tr + cl + cc + cr + bl + bc + br;
+}
+
+float4 PSBicubic(VertDataOut v_in) : TARGET
+{
+	return float4(1.0, 0.0, 1.0, 1.0);
+}
+
+float4 PSLanczos(VertDataOut v_in) : TARGET
+{
+	return float4(1.0, 0.0, 1.0, 1.0);
+}
+
+technique Point
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSPoint(v_in);
+	}
+}
+
+technique Linear
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSLinear(v_in);
+	}
+}
+
+technique Bilinear
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSBilinear(v_in);
+	}
+}
+
+technique Sharpen
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSSharpen(v_in);
+	}
+}
+
+technique Smoothen
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSSmoothen(v_in);
+	}
+}
+
+technique Bicubic
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSBicubic(v_in);
+	}
+}
+
+technique Lanczos
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSLanczos(v_in);
+	}
+}

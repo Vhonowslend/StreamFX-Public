@@ -215,3 +215,8 @@ gs::texture::type gs::texture::get_type()
 {
 	return m_textureType;
 }
+
+gs_color_format gs::texture::get_color_format()
+{
+	return gs_texture_get_color_format(m_texture);
+}
