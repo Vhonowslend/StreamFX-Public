@@ -34,7 +34,6 @@ extern "C" {
 namespace gs {
 	class vertex_buffer {
 		public:
-#pragma region Constructor& Destructor
 		virtual ~vertex_buffer();
 
 		/*!
@@ -65,9 +64,6 @@ namespace gs {
 		*/
 		vertex_buffer(gs_vertbuffer_t* other);
 
-#pragma endregion Constructor& Destructor
-
-#pragma region Copy / Move Constructors
 		// Copy Constructor & Assignments
 
 		/*!
@@ -103,7 +99,6 @@ namespace gs {
 		* \param other
 		*/
 		void operator=(vertex_buffer const&& other);
-#pragma endregion Copy / Move Constructors
 
 		void resize(uint32_t new_size);
 
@@ -159,11 +154,9 @@ namespace gs {
 		*/
 		vec4* get_uv_layer(size_t idx);
 
-#pragma region Update / Grab GS object
 		gs_vertbuffer_t* update();
 
 		gs_vertbuffer_t* update(bool refreshGPU);
-#pragma endregion Update / Grab GS object
 
 		private:
 		uint32_t m_size;
