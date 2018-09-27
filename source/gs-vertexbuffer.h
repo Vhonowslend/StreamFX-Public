@@ -45,9 +45,17 @@ namespace gs {
 		/*!
 		* \brief Create a Vertex Buffer with a specific number of Vertices.
 		*
-		* \param maximumVertices Maximum amount of vertices to store.
+		* \param vertices Number of vertices to store.
 		*/
-		vertex_buffer(uint32_t maximumVertices);
+		vertex_buffer(uint32_t vertices);
+
+		/*!
+		* \brief Create a Vertex Buffer with a specific number of Vertices and uv layers.
+		*
+		* \param vertices Number of vertices to store.
+		* \param layers Number of uv layers to store.
+		*/
+		vertex_buffer(uint32_t vertices, uint8_t layers);
 
 		/*!
 		* \brief Create a copy of a Vertex Buffer

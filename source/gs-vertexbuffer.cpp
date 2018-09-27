@@ -70,16 +70,19 @@ gs::vertex_buffer::~vertex_buffer()
 	}
 }
 
-// cppcheck-suppress uninitMemberVar
-gs::vertex_buffer::vertex_buffer() : vertex_buffer(MAXIMUM_VERTICES) {}
+gs::vertex_buffer::vertex_buffer() : vertex_buffer(MAXIMUM_VERTICES, MAXIMUM_UVW_LAYERS) {}
 
-gs::vertex_buffer::vertex_buffer(uint32_t maximumVertices)
-	: m_size(maximumVertices), m_capacity(maximumVertices), m_layers(MAXIMUM_UVW_LAYERS), m_positions(nullptr),
-	  m_normals(nullptr), m_tangents(nullptr), m_colors(nullptr), m_vertexbufferdata(nullptr), m_vertexbuffer(nullptr),
-	  m_layerdata(nullptr)
+gs::vertex_buffer::vertex_buffer(uint32_t vertices) : vertex_buffer(vertices, MAXIMUM_UVW_LAYERS) {}
+
+gs::vertex_buffer::vertex_buffer(uint32_t vertices, uint8_t uvlayers)
+	: m_size(vertices), m_capacity(vertices), m_layers(uvlayers), m_positions(nullptr), m_normals(nullptr),
+	  m_tangents(nullptr), m_colors(nullptr), m_vertexbufferdata(nullptr), m_vertexbuffer(nullptr), m_layerdata(nullptr)
 {
-	if (maximumVertices > MAXIMUM_VERTICES) {
-		throw std::out_of_range("maximumVertices out of range");
+	if (vertices > MAXIMUM_VERTICES) {
+		throw std::out_of_range("vertices out of range");
+	}
+	if (uvlayers > MAXIMUM_UVW_LAYERS) {
+		throw std::out_of_range("uvlayers out of range");
 	}
 
 	// Allocate memory for data.
@@ -99,12 +102,16 @@ gs::vertex_buffer::vertex_buffer(uint32_t maximumVertices)
 	std::memset(m_colors, 0, sizeof(uint32_t) * m_capacity);
 
 	m_vertexbufferdata->num_tex = m_layers;
-	m_vertexbufferdata->tvarray = m_layerdata =
-		(gs_tvertarray*)util::malloc_aligned(16, sizeof(gs_tvertarray) * m_layers);
-	for (size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
-		m_layerdata[n].array = m_uvs[n] = (vec4*)util::malloc_aligned(16, sizeof(vec4) * m_capacity);
-		m_layerdata[n].width            = 4;
-		std::memset(m_uvs[n], 0, sizeof(vec4) * m_capacity);
+	if (m_layers > 0) {
+		m_vertexbufferdata->tvarray = m_layerdata =
+			(gs_tvertarray*)util::malloc_aligned(16, sizeof(gs_tvertarray) * m_layers);
+		for (size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
+			m_layerdata[n].array = m_uvs[n] = (vec4*)util::malloc_aligned(16, sizeof(vec4) * m_capacity);
+			m_layerdata[n].width            = 4;
+			std::memset(m_uvs[n], 0, sizeof(vec4) * m_capacity);
+		}
+	} else {
+		m_vertexbufferdata->tvarray = nullptr;
 	}
 
 	// Allocate GPU
