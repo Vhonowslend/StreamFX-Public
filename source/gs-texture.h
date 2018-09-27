@@ -40,16 +40,6 @@ namespace gs {
 			BuildMipMaps,
 		};
 
-		enum class mip_method : uint8_t {
-			Point,
-			Linear,
-			Bilinear,
-			Sharpen,
-			Smoothen,
-			Bicubic,
-			Lanczos,
-		};
-
 		protected:
 		gs_texture_t* m_texture;
 		bool          m_isOwner     = true;
