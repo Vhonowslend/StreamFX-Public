@@ -1,7 +1,3 @@
-# EditorConfig is awesome: http://EditorConfig.org
-# Since OBS follows the Linux kernel coding style I have started this file to
-# help with automatically setting various text editors to those requirements.
-
 # top-most EditorConfig file
 root = true
 
@@ -11,9 +7,4 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 charset = utf-8
 indent_style = tab
-indent_size = 8
-
-# As per notr1ch, for 3rd party code that's a part of obs-outputs.
-[plugins/obs-outputs/librtmp/*.{cpp,c,h}]
-indent_style = space
 indent_size = 4
