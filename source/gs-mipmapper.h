@@ -18,28 +18,39 @@
  */
 
 #pragma once
-#include "gs-vertexbuffer.h"
+#include "gs-effect.h"
 #include "gs-rendertarget.h"
 #include "gs-texture.h"
+#include "gs-vertexbuffer.h"
 
 extern "C" {
-	#pragma warning (push)
-	#pragma warning (disable: 4201)
-	#include "libobs/graphics/graphics.h"
-	#pragma warning (pop)
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#include <graphics/graphics.h>
+#pragma warning(pop)
 }
 
-namespace GS {
-	class MipMapper {
+namespace gs {
+	class mipmapper {
+		std::unique_ptr<gs::vertex_buffer> vertexBuffer;
+		std::unique_ptr<gs::rendertarget>  renderTarget;
+		std::unique_ptr<gs::effect>        effect;
+
 		public:
-		MipMapper();
-		~MipMapper();
+		enum class generator : uint8_t {
+			Point,
+			Linear,
+			Bilinear,
+			Sharpen,
+			Smoothen,
+			Bicubic,
+			Lanczos,
+		};
 
-		gs_texture_t* Render(gs_texture_t*);
+		public:
+		~mipmapper();
+		mipmapper();
 
-		private:
-		GS::VertexBuffer m_vb;
-		GS::RenderTarget m_rt;
-		GS::Texture m_buf;
+		void rebuild(std::shared_ptr<gs::texture> texture, gs::mipmapper::generator generator, float_t strength);
 	};
-}
+} // namespace gs

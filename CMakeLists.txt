@@ -201,6 +201,7 @@ SET(PROJECT_DATA_EFFECTS
 	"${PROJECT_SOURCE_DIR}/data/effects/displace.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/color-conversion.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mip-mapper.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/mipgen.effect"
 )
 SET(PROJECT_DATA_SHADERS
 #	"${PROJECT_SOURCE_DIR}/data/shaders/name.effect"
@@ -242,7 +243,8 @@ SET(PROJECT_PRIVATE
 	"${PROJECT_SOURCE_DIR}/source/gs-indexbuffer.h"
 	"${PROJECT_SOURCE_DIR}/source/gs-indexbuffer.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-limits.h"
-#	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-rendertarget.h"
 	"${PROJECT_SOURCE_DIR}/source/gs-rendertarget.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-sampler.h"
@@ -263,7 +265,6 @@ SET(PROJECT_PRIVATE
 	"${PROJECT_SOURCE_DIR}/source/util-math.cpp"
 	"${PROJECT_SOURCE_DIR}/source/util-memory.h"
 	"${PROJECT_SOURCE_DIR}/source/util-memory.cpp"
-#	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.cpp"
 )
 
 Source_Group("Data Files\\Locale" FILES ${PROJECT_DATA_LOCALE})
@@ -350,13 +351,13 @@ If (WIN32)
 			NODRAWTEXT
 			NOGDI
 			NOKERNEL
-			NOUSER
+			#NOUSER
 			NONLS
 			NOMB
 			NOMEMMGR
 			NOMETAFILE
 			NOMINMAX
-			NOMSG
+			#NOMSG
 			NOOPENFILE
 			NOSCROLL
 			NOSERVICE
