@@ -18,23 +18,29 @@
  */
 
 #pragma once
+#include <cinttypes>
 #include "gs-limits.h"
 #include "gs-vertex.h"
 #include "util-math.h"
 #include "util-memory.h"
-#include <inttypes.h>
+
 extern "C" {
-#pragma warning( push )
-#pragma warning( disable: 4201 )
+#pragma warning(push)
+#pragma warning(disable : 4201)
 #include <graphics/graphics.h>
-#pragma warning( pop )
+#pragma warning(pop)
 }
 
 namespace gs {
 	class vertex_buffer {
 		public:
-	#pragma region Constructor & Destructor
+#pragma region Constructor& Destructor
 		virtual ~vertex_buffer();
+
+		/*!
+		* \brief Create a Vertex Buffer with the default number of Vertices.
+		*/
+		vertex_buffer();
 
 		/*!
 		* \brief Create a Vertex Buffer with a specific number of Vertices.
@@ -44,13 +50,6 @@ namespace gs {
 		vertex_buffer(uint32_t maximumVertices);
 
 		/*!
-		* \brief Create a Vertex Buffer with the maximum number of Vertices.
-		*
-		* \param maximumVertices Maximum amount of vertices to store.
-		*/
-		vertex_buffer() : vertex_buffer(MAXIMUM_VERTICES) {};
-
-		/*!
 		* \brief Create a copy of a Vertex Buffer
 		* Full Description below
 		*
@@ -58,9 +57,9 @@ namespace gs {
 		*/
 		vertex_buffer(gs_vertbuffer_t* other);
 
-	#pragma endregion Constructor & Destructor
+#pragma endregion Constructor& Destructor
 
-	#pragma region Copy/Move Constructors
+#pragma region Copy / Move Constructors
 		// Copy Constructor & Assignments
 
 		/*!
@@ -96,9 +95,7 @@ namespace gs {
 		* \param other
 		*/
 		void operator=(vertex_buffer const&& other);
-	#pragma endregion Copy/Move Constructors
-		
-
+#pragma endregion Copy / Move Constructors
 
 		void resize(uint32_t new_size);
 
@@ -154,11 +151,11 @@ namespace gs {
 		*/
 		vec4* get_uv_layer(size_t idx);
 
-	#pragma region Update / Grab GS object
+#pragma region Update / Grab GS object
 		gs_vertbuffer_t* update();
 
 		gs_vertbuffer_t* update(bool refreshGPU);
-	#pragma endregion Update / Grab GS object
+#pragma endregion Update / Grab GS object
 
 		private:
 		uint32_t m_size;
@@ -166,15 +163,15 @@ namespace gs {
 		uint32_t m_layers;
 
 		// Memory Storage
-		vec3 *m_positions;
-		vec3 *m_normals;
-		vec3 *m_tangents;
-		uint32_t *m_colors;
-		vec4 *m_uvs[MAXIMUM_UVW_LAYERS];
+		vec3*     m_positions;
+		vec3*     m_normals;
+		vec3*     m_tangents;
+		uint32_t* m_colors;
+		vec4*     m_uvs[MAXIMUM_UVW_LAYERS];
 
 		// OBS GS Data
-		gs_vb_data* m_vertexbufferdata;
+		gs_vb_data*      m_vertexbufferdata;
 		gs_vertbuffer_t* m_vertexbuffer;
-		gs_tvertarray* m_layerdata;
+		gs_tvertarray*   m_layerdata;
 	};
-}
+} // namespace gs
