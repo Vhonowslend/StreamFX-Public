@@ -103,7 +103,7 @@ namespace gs {
 		* \brief Create a texture from an existing gs_texture_t object.
 		*/
 		texture(gs_texture_t* tex, bool takeOwnership = false) : m_texture(tex), m_isOwner(takeOwnership) {}
-		
+
 		void load(int unit);
 
 		gs_texture_t* get_object();
