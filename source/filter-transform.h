@@ -18,9 +18,9 @@
  */
 
 #pragma once
-#include "plugin.h"
-#include "gs-vertexbuffer.h"
 #include <memory>
+#include "gs-vertexbuffer.h"
+#include "plugin.h"
 
 namespace Filter {
 	class Transform {
@@ -28,23 +28,22 @@ namespace Filter {
 		Transform();
 		~Transform();
 
-		static const char *get_name(void *);
-		static void get_defaults(obs_data_t *);
-		static obs_properties_t *get_properties(void *);
-		static bool modified_properties(obs_properties_t *,
-			obs_property_t *, obs_data_t *);
+		static const char*       get_name(void*);
+		static void              get_defaults(obs_data_t*);
+		static obs_properties_t* get_properties(void*);
+		static bool              modified_properties(obs_properties_t*, obs_property_t*, obs_data_t*);
 
-		static void *create(obs_data_t *, obs_source_t *);
-		static void destroy(void *);
-		static uint32_t get_width(void *);
-		static uint32_t get_height(void *);
-		static void update(void *, obs_data_t *);
-		static void activate(void *);
-		static void deactivate(void *);
-		static void show(void *);
-		static void hide(void *);
-		static void video_tick(void *, float);
-		static void video_render(void *, gs_effect_t *);
+		static void*    create(obs_data_t*, obs_source_t*);
+		static void     destroy(void*);
+		static uint32_t get_width(void*);
+		static uint32_t get_height(void*);
+		static void     update(void*, obs_data_t*);
+		static void     activate(void*);
+		static void     deactivate(void*);
+		static void     show(void*);
+		static void     hide(void*);
+		static void     video_tick(void*, float);
+		static void     video_render(void*, gs_effect_t*);
 
 		private:
 		obs_source_info sourceInfo;
@@ -55,22 +54,22 @@ namespace Filter {
 			Instance(obs_data_t*, obs_source_t*);
 			~Instance();
 
-			void update(obs_data_t*);
+			void     update(obs_data_t*);
 			uint32_t get_width();
 			uint32_t get_height();
-			void activate();
-			void deactivate();
-			void video_tick(float);
-			void video_render(gs_effect_t*);
+			void     activate();
+			void     deactivate();
+			void     video_tick(float);
+			void     video_render(gs_effect_t*);
 
 			private:
-			obs_source_t *m_sourceContext;
-			gs::vertex_buffer *m_vertexHelper;
-			gs_vertbuffer_t *m_vertexBuffer;
-			gs_texrender_t *m_texRender, *m_shapeRender;
+			obs_source_t*      m_sourceContext;
+			gs::vertex_buffer* m_vertexHelper;
+			gs_vertbuffer_t*   m_vertexBuffer;
+			gs_texrender_t *   m_texRender, *m_shapeRender;
 
 			// Camera
-			bool m_isCameraOrthographic;
+			bool    m_isCameraOrthographic;
 			float_t m_cameraFieldOfView;
 
 			// Source
@@ -87,4 +86,4 @@ namespace Filter {
 			};
 		};
 	};
-}
+} // namespace Filter
