@@ -199,7 +199,7 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 			target_t2->GetDesc(&target_t2desc);
 
 			// If we do not have any miplevels, just stop now.
-			if (target_t2desc.MipLevels == 0) {
+			if (target_t2desc.MipLevels == 1) {
 				obs_leave_graphics();
 				return;
 			}
