@@ -45,7 +45,7 @@ gs::vertex_buffer::~vertex_buffer()
 		util::free_aligned(m_colors);
 		m_colors = nullptr;
 	}
-	for (size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
+	for (size_t n = 0; n < m_layers; n++) {
 		if (m_uvs[n]) {
 			util::free_aligned(m_uvs[n]);
 			m_uvs[n] = nullptr;
@@ -105,7 +105,7 @@ gs::vertex_buffer::vertex_buffer(uint32_t vertices, uint8_t uvlayers)
 	if (m_layers > 0) {
 		m_vertexbufferdata->tvarray = m_layerdata =
 			(gs_tvertarray*)util::malloc_aligned(16, sizeof(gs_tvertarray) * m_layers);
-		for (size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
+		for (size_t n = 0; n < m_layers; n++) {
 			m_layerdata[n].array = m_uvs[n] = (vec4*)util::malloc_aligned(16, sizeof(vec4) * m_capacity);
 			m_layerdata[n].width            = 4;
 			std::memset(m_uvs[n], 0, sizeof(vec4) * m_capacity);
@@ -346,7 +346,7 @@ gs_vertbuffer_t* gs::vertex_buffer::update(bool refreshGPU)
 	m_vertexbufferdata->colors   = m_colors;
 	m_vertexbufferdata->num_tex  = m_layers;
 	m_vertexbufferdata->tvarray  = m_layerdata;
-	for (size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
+	for (size_t n = 0; n < m_layers; n++) {
 		m_layerdata[n].array = m_uvs[n];
 		m_layerdata[n].width = 4;
 	}
