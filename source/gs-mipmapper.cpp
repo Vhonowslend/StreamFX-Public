@@ -98,40 +98,65 @@ gs::mipmapper::mipmapper()
 	bfree(effect_file);
 }
 
-void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> texture,
-							gs::mipmapper::generator     generator = gs::mipmapper::generator::Bilinear,
-							float_t                      strength  = 1.0)
+void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr<gs::texture> target,
+							gs::mipmapper::generator generator = gs::mipmapper::generator::Linear,
+							float_t                  strength  = 1.0)
 {
 	// Here be dragons! You have been warned.
 
 	// Do nothing if there is no texture given.
-	if (!texture) {
+	if (!source) {
 #ifdef _DEBUG
-		assert(!texture);
+		assert(!source);
+#endif
+		return;
+	}
+	if (!target) {
+#ifdef _DEBUG
+		assert(!target);
 #endif
 		return;
 	}
 
+	// Ensure texture sizes match
+	if ((source->get_width() != target->get_width()) || (source->get_height() != target->get_height())) {
+		throw std::invalid_argument("source and target must have same size");
+	}
+
+	// Ensure texture types match
+	if ((source->get_type() != target->get_type())) {
+		throw std::invalid_argument("source and target must have same type");
+	}
+
+	// Ensure texture formats match
+	if ((source->get_color_format() != target->get_color_format())) {
+		throw std::invalid_argument("source and target must have same format");
+	}
+	
 	obs_enter_graphics();
+
+	// Copy original texture
+	gs_copy_texture(target->get_object(), source->get_object());
 
 	// Test if we actually need to recreate the render target for a different format.
 	bool recreate = false;
 	if (renderTarget) {
-		recreate = (texture->get_color_format() != renderTarget->get_color_format());
+		recreate = (source->get_color_format() != renderTarget->get_color_format());
 	} else {
 		recreate = true;
 	}
 
 	// Re-create the render target if necessary.
 	if (recreate) {
-		renderTarget = std::make_unique<gs::rendertarget>(texture->get_color_format(), GS_ZS_NONE);
+		renderTarget = std::make_unique<gs::rendertarget>(source->get_color_format(), GS_ZS_NONE);
 	}
 
 	// Render
 	graphics_t*      ctx         = gs_get_context();
 	gs_d3d11_device* dev         = reinterpret_cast<gs_d3d11_device*>(ctx->device);
 	int              device_type = gs_get_device_type();
-	void*            obj         = gs_texture_get_obj(texture->get_object());
+	void*            sobj        = gs_texture_get_obj(source->get_object());
+	void*            tobj        = gs_texture_get_obj(target->get_object());
 	std::string      technique   = "Draw";
 
 	switch (generator) {
@@ -140,9 +165,6 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> texture,
 		break;
 	case generator::Linear:
 		technique = "Linear";
-		break;
-	case generator::Bilinear:
-		technique = "Bilinear";
 		break;
 	case generator::Sharpen:
 		technique = "Sharpen";
@@ -161,27 +183,28 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> texture,
 	gs_load_vertexbuffer(vertexBuffer->update());
 	gs_load_indexbuffer(nullptr);
 
-	if (texture->get_type() == gs::texture::type::Normal) {
-		size_t  texture_width  = texture->get_width();
-		size_t  texture_height = texture->get_height();
+	if (source->get_type() == gs::texture::type::Normal) {
+		size_t  texture_width  = source->get_width();
+		size_t  texture_height = source->get_height();
 		float_t texel_width    = 1.0 / texture_width;
 		float_t texel_height   = 1.0 / texture_height;
 
 #if defined(WIN32) || defined(WIN64)
 		if (device_type == GS_DEVICE_DIRECT3D_11) {
 			// We definitely have a Direct3D11 resource.
-			D3D11_TEXTURE2D_DESC t2dsc;
-			ID3D11Texture2D*     t2 = reinterpret_cast<ID3D11Texture2D*>(obj);
+			D3D11_TEXTURE2D_DESC target_t2desc;
+			ID3D11Texture2D*     target_t2 = reinterpret_cast<ID3D11Texture2D*>(tobj);
+			ID3D11Texture2D*     source_t2 = reinterpret_cast<ID3D11Texture2D*>(sobj);
 
-			t2->GetDesc(&t2dsc);
+			target_t2->GetDesc(&target_t2desc);
 
 			// If we do not have any miplevels, just stop now.
-			if (t2dsc.MipLevels == 0) {
+			if (target_t2desc.MipLevels == 0) {
 				obs_leave_graphics();
 				return;
 			}
 
-			for (size_t mip = 1; mip < t2dsc.MipLevels; mip++) {
+			for (size_t mip = 1; mip < target_t2desc.MipLevels; mip++) {
 				texture_width /= 2;
 				texture_height /= 2;
 				texel_width *= 2;
@@ -191,7 +214,8 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> texture,
 				{
 					auto op = renderTarget->render(texture_width, texture_height);
 
-					effect->get_parameter("image").set_texture(texture);
+					effect->get_parameter("image").set_texture(target);
+					effect->get_parameter("level").set_int(mip - 1);
 					effect->get_parameter("imageTexel").set_float2(texel_width, texel_height);
 					effect->get_parameter("strength").set_float(strength);
 
@@ -203,7 +227,7 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> texture,
 				// Copy
 				ID3D11Texture2D* rt =
 					reinterpret_cast<ID3D11Texture2D*>(gs_texture_get_obj(renderTarget->get_object()));
-				dev->context->CopySubresourceRegion(t2, mip, 0, 0, 0, rt, 0, nullptr);
+				dev->context->CopySubresourceRegion(target_t2, mip, 0, 0, 0, rt, 0, nullptr);
 			}
 		}
 #endif

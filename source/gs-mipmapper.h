@@ -40,7 +40,6 @@ namespace gs {
 		enum class generator : uint8_t {
 			Point,
 			Linear,
-			Bilinear,
 			Sharpen,
 			Smoothen,
 			Bicubic,
@@ -51,6 +50,6 @@ namespace gs {
 		~mipmapper();
 		mipmapper();
 
-		void rebuild(std::shared_ptr<gs::texture> texture, gs::mipmapper::generator generator, float_t strength);
+		void rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr<gs::texture> target, gs::mipmapper::generator generator, float_t strength);
 	};
 } // namespace gs
