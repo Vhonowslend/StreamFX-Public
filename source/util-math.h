@@ -84,7 +84,7 @@ namespace util {
 		template<typename T>
 		inline bool is_power_of_two(T v)
 		{
-			return T(1ull << uint64_t(log10(T(size)) / log10(2.0))) == v;
+			return T(1ull << uint64_t(floor(log10(T(v)) / log10(2.0)))) == v;
 		};
 
 		template<typename T>
@@ -103,7 +103,7 @@ namespace util {
 		}
 
 #pragma push_macro("is_power_of_two_as_loop")
-#define is_power_of_two_as_loop(x)                        \
+#define is_power_of_two_as_loop(x)      \
 	template<>                          \
 	inline bool is_power_of_two(x v)    \
 	{                                   \
@@ -118,5 +118,17 @@ namespace util {
 		is_power_of_two_as_loop(int64_t);
 		is_power_of_two_as_loop(uint64_t);
 #pragma pop_macro("is_power_of_two_as_loop")
+
+		template<typename T>
+		inline uint64_t get_power_of_two_floor(T v)
+		{
+			return uint64_t(floor(log10(T(v)) / log10(2.0)));
+		}
+
+		template<typename T>
+		inline uint64_t get_power_of_two_ceil(T v)
+		{
+			return uint64_t(ceil(log10(T(v)) / log10(2.0)));
+		}
 	} // namespace math
 } // namespace util
