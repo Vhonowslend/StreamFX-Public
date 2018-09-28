@@ -16,19 +16,24 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #pragma once
-#include <string>
-#include <obs.h>
 #include <memory>
-#include "gs-texture.h"
+#include <string>
 #include "gs-rendertarget.h"
+#include "gs-texture.h"
+
+extern "C" {
+#include <obs.h>
+}
 
 namespace gfx {
 	class source_texture {
-		obs_source_t* m_source;
-		obs_source_t* m_parent;
+		obs_source_t* source;
+		obs_source_t* target;
+
 		std::shared_ptr<gs::rendertarget> m_rt;
 
 		source_texture(obs_source_t* parent);
+
 		public:
 		~source_texture();
 		source_texture(const char* name, obs_source_t* parent);
@@ -40,4 +45,4 @@ namespace gfx {
 
 		std::shared_ptr<gs::texture> render(size_t width, size_t height);
 	};
-}
+} // namespace gfx

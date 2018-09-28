@@ -17,52 +17,59 @@
 
 #include "gfx-source-texture.h"
 
-gfx::source_texture::~source_texture() {
-	obs_source_remove_active_child(m_parent, m_source);
-	if (m_source) {
-		obs_source_release(m_source);
-		m_source = nullptr;
+gfx::source_texture::~source_texture()
+{
+	obs_source_remove_active_child(target, source);
+	if (source) {
+		obs_source_release(source);
+		source = nullptr;
 	}
 	m_rt = nullptr;
 }
 
-gfx::source_texture::source_texture(obs_source_t* parent) {
-	m_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	m_parent = parent;
+gfx::source_texture::source_texture(obs_source_t* parent)
+{
+	m_rt   = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	target = parent;
 }
 
-obs_source_t* gfx::source_texture::get_object() {
-	return m_source;
+obs_source_t* gfx::source_texture::get_object()
+{
+	return source;
 }
 
-obs_source_t* gfx::source_texture::get_parent() {
-	return m_parent;
+obs_source_t* gfx::source_texture::get_parent()
+{
+	return target;
 }
 
-gfx::source_texture::source_texture(const char* name, obs_source_t* parent) : source_texture(parent) {
-	m_source = obs_get_source_by_name(name);
-	if (!m_source) {
+gfx::source_texture::source_texture(const char* name, obs_source_t* parent) : source_texture(parent)
+{
+	source = obs_get_source_by_name(name);
+	if (!source) {
 		throw std::invalid_argument("No such source.");
 	}
-	if (!obs_source_add_active_child(m_parent, m_source)) {
+	if (!obs_source_add_active_child(target, source)) {
 		throw std::runtime_error("Recursion is not allowed.");
 	}
 }
 
 gfx::source_texture::source_texture(std::string name, obs_source_t* parent) : source_texture(name.c_str(), parent) {}
 
-gfx::source_texture::source_texture(obs_source_t* src, obs_source_t* parent) : source_texture(parent) {
-	m_source = src;
-	if (!m_source) {
+gfx::source_texture::source_texture(obs_source_t* src, obs_source_t* parent) : source_texture(parent)
+{
+	source = src;
+	if (!source) {
 		throw std::invalid_argument("No such source.");
 	}
-	if (!obs_source_add_active_child(m_parent, m_source)) {
+	if (!obs_source_add_active_child(target, source)) {
 		throw std::runtime_error("Recursion is not allowed.");
 	}
 }
 
-std::shared_ptr<gs::texture> gfx::source_texture::render(size_t width, size_t height) {
-	if (!m_source) {
+std::shared_ptr<gs::texture> gfx::source_texture::render(size_t width, size_t height)
+{
+	if (!source) {
 		throw std::invalid_argument("Missing source to render.");
 	}
 	if ((width == 0) || (width >= 16384)) {
@@ -74,10 +81,11 @@ std::shared_ptr<gs::texture> gfx::source_texture::render(size_t width, size_t he
 
 	{
 		auto op = m_rt->render((uint32_t)width, (uint32_t)height);
-		vec4 black; vec4_zero(&black);
+		vec4 black;
+		vec4_zero(&black);
 		gs_ortho(0, (float_t)width, 0, (float_t)height, 0, 1);
 		gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
-		obs_source_video_render(m_source);
+		obs_source_video_render(source);
 	}
 
 	std::shared_ptr<gs::texture> tex;
