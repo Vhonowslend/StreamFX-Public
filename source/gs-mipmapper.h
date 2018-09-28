@@ -32,8 +32,8 @@ extern "C" {
 
 namespace gs {
 	class mipmapper {
-		std::unique_ptr<gs::vertex_buffer> vertexBuffer;
-		std::unique_ptr<gs::rendertarget>  renderTarget;
+		std::unique_ptr<gs::vertex_buffer> vertex_buffer;
+		std::unique_ptr<gs::rendertarget>  render_target;
 		std::unique_ptr<gs::effect>        effect;
 
 		public:
@@ -50,6 +50,7 @@ namespace gs {
 		~mipmapper();
 		mipmapper();
 
-		void rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr<gs::texture> target, gs::mipmapper::generator generator, float_t strength);
+		void rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr<gs::texture> target,
+					 gs::mipmapper::generator generator, float_t strength);
 	};
 } // namespace gs
