@@ -21,6 +21,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <sys/stat.h>
+#include "util-math.h"
 
 extern "C" {
 #pragma warning(push)
@@ -39,12 +40,11 @@ gs::texture::texture(uint32_t width, uint32_t height, gs_color_format format, ui
 		throw std::logic_error("height must be at least 1");
 	if (mip_levels == 0)
 		throw std::logic_error("mip_levels must be at least 1");
-	if (!mip_data)
-		throw std::logic_error("mip_data is invalid");
+	//if (!mip_data)
+	//	throw std::logic_error("mip_data is invalid");
 
 	if (mip_levels > 1 || ((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps)) {
-		bool isPOT = (pow(2, (int64_t)floor(log(width) / log(2))) == width)
-					 && (pow(2, (int64_t)floor(log(height) / log(2))) == height);
+		bool isPOT = util::math::is_power_of_two(width) && util::math::is_power_of_two(height);
 		if (!isPOT)
 			throw std::logic_error("mip mapping requires power of two dimensions");
 	}
