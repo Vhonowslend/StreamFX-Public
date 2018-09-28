@@ -91,7 +91,7 @@ namespace util {
 		inline bool is_power_of_two_loop(T v)
 		{
 			bool have_bit = false;
-			for (size_t index = 63; index >= 0; index--) {
+			for (size_t index = 0; index < (sizeof(T) * 8); index++) {
 				bool cur = (v & (1ull << index)) != 0;
 				if (cur) {
 					if (have_bit)
