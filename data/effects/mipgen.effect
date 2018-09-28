@@ -77,7 +77,7 @@ float4 PSSharpen(VertDataOut v_in) : TARGET
 
 float4 PSSmoothen(VertDataOut v_in) : TARGET
 {
-	// If we use bilinear and linear sampling, we can get away with just 4 total sampler queries.
+	// If we use linear sampling, we can get away with just 4 total sampler queries.
 	// However this is not a cheap implementation, it's just meant to be accurate so we do each sampler query and rely on the compiler.
 
 	float3 smoothKernel3 = float3(0.0574428, 0.0947072, 0.3914000);

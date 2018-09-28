@@ -181,56 +181,76 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 		size_t  texture_height = source->get_height();
 		float_t texel_width    = 1.0 / texture_width;
 		float_t texel_height   = 1.0 / texture_height;
+		size_t  mip_levels     = 1;
 
 #if defined(WIN32) || defined(WIN64)
+		ID3D11Texture2D* target_t2;
+		ID3D11Texture2D* source_t2;
 		if (device_type == GS_DEVICE_DIRECT3D_11) {
 			// We definitely have a Direct3D11 resource.
 			D3D11_TEXTURE2D_DESC target_t2desc;
-			ID3D11Texture2D*     target_t2 = reinterpret_cast<ID3D11Texture2D*>(tobj);
-			ID3D11Texture2D*     source_t2 = reinterpret_cast<ID3D11Texture2D*>(sobj);
-
+			target_t2 = reinterpret_cast<ID3D11Texture2D*>(tobj);
+			source_t2 = reinterpret_cast<ID3D11Texture2D*>(sobj);
 			target_t2->GetDesc(&target_t2desc);
-
 			dev->context->CopySubresourceRegion(target_t2, 0, 0, 0, 0, source_t2, 0, nullptr);
-
-			// If we do not have any miplevels, just stop now.
-			if (target_t2desc.MipLevels == 1) {
-				obs_leave_graphics();
-				return;
-			}
-
-			for (size_t mip = 1; mip <= target_t2desc.MipLevels; mip++) {
-				texture_width /= 2;
-				texture_height /= 2;
-				texel_width *= 2;
-				texel_height *= 2;
-
-				// Draw mipmap layer
-				try {
-					auto op = render_target->render(texture_width, texture_height);
-
-					effect->get_parameter("image").set_texture(target);
-					effect->get_parameter("level").set_int(mip);
-					effect->get_parameter("imageTexel").set_float2(texel_width, texel_height);
-					effect->get_parameter("strength").set_float(strength);
-
-					while (gs_effect_loop(effect->get_object(), technique.c_str())) {
-						gs_draw(gs_draw_mode::GS_TRIS, 0, vertex_buffer->size());
-					}
-				} catch (...) {
-					P_LOG_ERROR("Failed to render mipmap layer.");
-				}
-
-				// Copy
-				ID3D11Texture2D* rt =
-					reinterpret_cast<ID3D11Texture2D*>(gs_texture_get_obj(render_target->get_object()));
-				uint32_t level = D3D11CalcSubresource(mip, 0, target_t2desc.MipLevels);
-				dev->context->CopySubresourceRegion(target_t2, level, 0, 0, 0, rt, 0, NULL);
-			}
+			mip_levels = target_t2desc.MipLevels;
 		}
 #endif
 		if (device_type == GS_DEVICE_OPENGL) {
 			// This is an OpenGL resource.
+		}
+
+		// If we do not have any miplevels, just stop now.
+		if (mip_levels == 1) {
+			obs_leave_graphics();
+			return;
+		}
+
+		for (size_t mip = 1; mip < mip_levels; mip++) {
+			texture_width /= 2;
+			texture_height /= 2;
+			texel_width *= 2;
+			texel_height *= 2;
+
+			// Draw mipmap layer
+			try {
+				auto op = render_target->render(texture_width, texture_height);
+
+				gs_set_cull_mode(GS_NEITHER);
+				gs_reset_blend_state();
+				gs_blend_function_separate(gs_blend_type::GS_BLEND_ONE, gs_blend_type::GS_BLEND_ZERO,
+										   gs_blend_type::GS_BLEND_ONE, gs_blend_type::GS_BLEND_ZERO);
+				gs_enable_depth_test(false);
+				gs_enable_stencil_test(false);
+				gs_enable_stencil_write(false);
+				gs_enable_color(true, true, true, true);
+				gs_ortho(0, 1, 0, 1, -1, 1);
+
+				vec4 black;
+				vec4_zero(&black);
+				gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
+
+				effect->get_parameter("image").set_texture(target);
+				effect->get_parameter("level").set_int(mip - 1);
+				effect->get_parameter("imageTexel").set_float2(texel_width, texel_height);
+				effect->get_parameter("strength").set_float(strength);
+
+				while (gs_effect_loop(effect->get_object(), technique.c_str())) {
+					gs_draw(gs_draw_mode::GS_TRIS, 0, vertex_buffer->size());
+				}
+			} catch (...) {
+				P_LOG_ERROR("Failed to render mipmap layer.");
+			}
+
+#if defined(WIN32) || defined(WIN64)
+			if (device_type == GS_DEVICE_DIRECT3D_11) {
+				// Copy
+				ID3D11Texture2D* rt =
+					reinterpret_cast<ID3D11Texture2D*>(gs_texture_get_obj(render_target->get_object()));
+				uint32_t level = D3D11CalcSubresource(mip, 0, mip_levels);
+				dev->context->CopySubresourceRegion(target_t2, level, 0, 0, 0, rt, 0, NULL);
+			}
+#endif
 		}
 	}
 
