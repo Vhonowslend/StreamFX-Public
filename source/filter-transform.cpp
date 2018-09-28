@@ -24,9 +24,9 @@
 extern "C" {
 #pragma warning(push)
 #pragma warning(disable : 4201)
-#include "util/platform.h"
 #include "graphics/graphics.h"
 #include "graphics/matrix4.h"
+#include "util/platform.h"
 #pragma warning(pop)
 }
 
@@ -267,25 +267,22 @@ void Filter::Transform::video_render(void* ptr, gs_effect_t* effect)
 }
 
 Filter::Transform::Instance::Instance(obs_data_t* data, obs_source_t* context)
-	: m_sourceContext(context), m_vertexHelper(nullptr), m_vertexBuffer(nullptr), m_texRender(nullptr),
-	  m_shapeRender(nullptr), m_isCameraOrthographic(true), m_cameraFieldOfView(90.0), m_isInactive(false),
-	  m_isHidden(false), m_isMeshUpdateRequired(false), m_rotationOrder(RotationOrder::ZXY)
+	: source_context(context), is_orthographic(true), field_of_view(90.0), is_inactive(false), is_hidden(false),
+	  is_mesh_update_required(false), m_rotation_order(RotationOrder::ZXY)
 {
-	m_position = std::make_unique<util::vec3a>();
-	m_rotation = std::make_unique<util::vec3a>();
-	m_scale    = std::make_unique<util::vec3a>();
-	m_shear    = std::make_unique<util::vec3a>();
+	position = std::make_unique<util::vec3a>();
+	rotation = std::make_unique<util::vec3a>();
+	scale    = std::make_unique<util::vec3a>();
+	shear    = std::make_unique<util::vec3a>();
 
-	vec3_set(m_position.get(), 0, 0, 0);
-	vec3_set(m_rotation.get(), 0, 0, 0);
-	vec3_set(m_scale.get(), 1, 1, 1);
+	vec3_set(position.get(), 0, 0, 0);
+	vec3_set(rotation.get(), 0, 0, 0);
+	vec3_set(scale.get(), 1, 1, 1);
 
 	obs_enter_graphics();
-	m_texRender    = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
-	m_shapeRender  = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
-	m_vertexHelper = new gs::vertex_buffer(4);
-	m_vertexHelper->set_uv_layers(1);
-	m_vertexHelper->resize(4);
+	source_rt     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	shape_rt      = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	vertex_buffer = std::make_shared<gs::vertex_buffer>(4, 1);
 	obs_leave_graphics();
 
 	update(data);
@@ -294,33 +291,34 @@ Filter::Transform::Instance::Instance(obs_data_t* data, obs_source_t* context)
 Filter::Transform::Instance::~Instance()
 {
 	obs_enter_graphics();
-	delete m_vertexHelper;
-	gs_texrender_destroy(m_texRender);
-	gs_texrender_destroy(m_shapeRender);
+	shape_rt.reset();
+	source_rt.reset();
+	vertex_buffer.reset();
 	obs_leave_graphics();
 }
 
 void Filter::Transform::Instance::update(obs_data_t* data)
 {
 	// Camera
-	m_isCameraOrthographic = obs_data_get_int(data, ST_CAMERA) == 0;
-	m_cameraFieldOfView    = (float)obs_data_get_double(data, ST_CAMERA_FIELDOFVIEW);
+	is_orthographic = obs_data_get_int(data, ST_CAMERA) == 0;
+	field_of_view   = (float)obs_data_get_double(data, ST_CAMERA_FIELDOFVIEW);
 
 	// Source
-	m_position->x          = (float)obs_data_get_double(data, ST_POSITION_X) / 100.0f;
-	m_position->y          = (float)obs_data_get_double(data, ST_POSITION_Y) / 100.0f;
-	m_position->z          = (float)obs_data_get_double(data, ST_POSITION_Z) / 100.0f;
-	m_scale->x             = (float)obs_data_get_double(data, ST_SCALE_X) / 100.0f;
-	m_scale->y             = (float)obs_data_get_double(data, ST_SCALE_Y) / 100.0f;
-	m_scale->z             = 1.0f;
-	m_rotationOrder        = (int)obs_data_get_int(data, ST_ROTATION_ORDER);
-	m_rotation->x          = (float)(obs_data_get_double(data, ST_ROTATION_X) / 180.0f * PI);
-	m_rotation->y          = (float)(obs_data_get_double(data, ST_ROTATION_Y) / 180.0f * PI);
-	m_rotation->z          = (float)(obs_data_get_double(data, ST_ROTATION_Z) / 180.0f * PI);
-	m_shear->x             = (float)obs_data_get_double(data, ST_SHEAR_X) / 100.0f;
-	m_shear->y             = (float)obs_data_get_double(data, ST_SHEAR_Y) / 100.0f;
-	m_shear->z             = 0.0f;
-	m_isMeshUpdateRequired = true;
+	position->x      = (float)obs_data_get_double(data, ST_POSITION_X) / 100.0f;
+	position->y      = (float)obs_data_get_double(data, ST_POSITION_Y) / 100.0f;
+	position->z      = (float)obs_data_get_double(data, ST_POSITION_Z) / 100.0f;
+	scale->x         = (float)obs_data_get_double(data, ST_SCALE_X) / 100.0f;
+	scale->y         = (float)obs_data_get_double(data, ST_SCALE_Y) / 100.0f;
+	scale->z         = 1.0f;
+	m_rotation_order = (int)obs_data_get_int(data, ST_ROTATION_ORDER);
+	rotation->x      = (float)(obs_data_get_double(data, ST_ROTATION_X) / 180.0f * PI);
+	rotation->y      = (float)(obs_data_get_double(data, ST_ROTATION_Y) / 180.0f * PI);
+	rotation->z      = (float)(obs_data_get_double(data, ST_ROTATION_Z) / 180.0f * PI);
+	shear->x         = (float)obs_data_get_double(data, ST_SHEAR_X) / 100.0f;
+	shear->y         = (float)obs_data_get_double(data, ST_SHEAR_Y) / 100.0f;
+	shear->z         = 0.0f;
+
+	is_mesh_update_required = true;
 }
 
 uint32_t Filter::Transform::Instance::get_width()
@@ -335,154 +333,176 @@ uint32_t Filter::Transform::Instance::get_height()
 
 void Filter::Transform::Instance::activate()
 {
-	m_isInactive = false;
+	is_inactive = false;
 }
 
 void Filter::Transform::Instance::deactivate()
 {
-	m_isInactive = true;
+	is_inactive = true;
 }
 
 void Filter::Transform::Instance::video_tick(float) {}
 
 void Filter::Transform::Instance::video_render(gs_effect_t* paramEffect)
 {
-	obs_source_t* parent = obs_filter_get_parent(m_sourceContext);
-	obs_source_t* target = obs_filter_get_target(m_sourceContext);
-	uint32_t      baseW = obs_source_get_base_width(target), baseH = obs_source_get_base_height(target);
+	std::shared_ptr<gs::texture> source_tex;
+	std::shared_ptr<gs::texture> shape_tex;
+
+	obs_source_t* parent = obs_filter_get_parent(source_context);
+	obs_source_t* target = obs_filter_get_target(source_context);
+
+	uint32_t width = obs_source_get_base_width(target);
+	uint32_t height = obs_source_get_base_height(target);
+
+	gs_effect_t* default_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
 
 	// Skip rendering if our target, parent or context is not valid.
-	if (!target || !parent || !m_sourceContext || !baseW || !baseH || !m_texRender || !m_shapeRender || m_isInactive
-		|| m_isHidden) {
-		obs_source_skip_video_filter(m_sourceContext);
+	if (!target || !parent || !source_context || !width || !height || is_inactive || is_hidden) {
+		obs_source_skip_video_filter(source_context);
 		return;
 	}
-
-	gs_effect_t* alphaEffect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
-
-	// Draw previous filters to texture.
-	gs_texrender_reset(m_texRender);
-	if (!gs_texrender_begin(m_texRender, baseW, baseH)) {
-		obs_source_skip_video_filter(m_sourceContext);
-		return;
-	}
-	gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
-
-	/// Set up the Scene
-	vec4 black;
-	vec4_zero(&black);
-	gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
-	gs_set_cull_mode(GS_NEITHER);
-	gs_reset_blend_state();
-	gs_blend_function_separate(gs_blend_type::GS_BLEND_ONE, gs_blend_type::GS_BLEND_ZERO, gs_blend_type::GS_BLEND_ONE,
-							   gs_blend_type::GS_BLEND_ZERO);
-	gs_enable_depth_test(false);
-	gs_enable_stencil_test(false);
-	gs_enable_stencil_write(false);
-	gs_enable_color(true, true, true, true);
-
-	/// Render original source
-	if (obs_source_process_filter_begin(m_sourceContext, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
-		obs_source_process_filter_end(m_sourceContext, paramEffect ? paramEffect : alphaEffect, baseW, baseH);
-	} else {
-		obs_source_skip_video_filter(m_sourceContext);
-	}
-
-	gs_texrender_end(m_texRender);
-	gs_texture* filterTexture = gs_texrender_get_texture(m_texRender);
 
 	// Update Mesh
-	if (m_isMeshUpdateRequired) {
-		float_t aspectRatioX = float_t(baseW) / float_t(baseH);
-		if (m_isCameraOrthographic)
+	if (is_mesh_update_required) {
+		float_t aspectRatioX = float_t(width) / float_t(height);
+		if (is_orthographic)
 			aspectRatioX = 1.0;
 
 		// Mesh
 		matrix4 ident;
 		matrix4_identity(&ident);
-		switch (m_rotationOrder) {
+		switch (m_rotation_order) {
 		case RotationOrder::XYZ: // XYZ
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rotation->z);
 			break;
 		case RotationOrder::XZY: // XZY
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rotation->y);
 			break;
 		case RotationOrder::YXZ: // YXZ
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rotation->z);
 			break;
 		case RotationOrder::YZX: // YZX
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rotation->x);
 			break;
 		case RotationOrder::ZXY: // ZXY
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rotation->y);
 			break;
 		case RotationOrder::ZYX: // ZYX
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rotation->x);
 			break;
 		}
-		matrix4_translate3f(&ident, &ident, m_position->x, m_position->y, m_position->z);
+		matrix4_translate3f(&ident, &ident, position->x, position->y, position->z);
 
 		/// Calculate vertex position once only.
-		float_t p_x = aspectRatioX * m_scale->x;
-		float_t p_y = 1.0f * m_scale->y;
+		float_t p_x = aspectRatioX * scale->x;
+		float_t p_y = 1.0f * scale->y;
 
 		/// Generate mesh
 		{
-			gs::vertex vtx = m_vertexHelper->at(0);
-			*vtx.color     = 0xFFFFFFFF;
+			auto vtx   = vertex_buffer->at(0);
+			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 0, 0, 0, 0);
-			vec3_set(vtx.position, -p_x + m_shear->x, -p_y - m_shear->y, 0);
+			vec3_set(vtx.position, -p_x + shear->x, -p_y - shear->y, 0);
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 		{
-			gs::vertex vtx = m_vertexHelper->at(1);
-			*vtx.color     = 0xFFFFFFFF;
+			auto vtx   = vertex_buffer->at(1);
+			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 1, 0, 0, 0);
-			vec3_set(vtx.position, p_x + m_shear->x, -p_y + m_shear->y, 0);
+			vec3_set(vtx.position, p_x + shear->x, -p_y + shear->y, 0);
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 		{
-			gs::vertex vtx = m_vertexHelper->at(2);
-			*vtx.color     = 0xFFFFFFFF;
+			auto vtx   = vertex_buffer->at(2);
+			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 0, 1, 0, 0);
-			vec3_set(vtx.position, -p_x - m_shear->x, p_y - m_shear->y, 0);
+			vec3_set(vtx.position, -p_x - shear->x, p_y - shear->y, 0);
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 		{
-			gs::vertex vtx = m_vertexHelper->at(3);
-			*vtx.color     = 0xFFFFFFFF;
+			auto vtx   = vertex_buffer->at(3);
+			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 1, 1, 0, 0);
-			vec3_set(vtx.position, p_x - m_shear->x, p_y + m_shear->y, 0);
+			vec3_set(vtx.position, p_x - shear->x, p_y + shear->y, 0);
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 
-		m_vertexBuffer = m_vertexHelper->update();
-		if (!m_vertexBuffer) {
-			obs_source_skip_video_filter(m_sourceContext);
-			return;
-		}
-		m_isMeshUpdateRequired = false;
+		vertex_buffer->update(true);
+		is_mesh_update_required = false;
 	}
 
+	// Draw previous filters to texture.
+	try {
+		auto op = source_rt->render(width, height);
+
+		gs_set_cull_mode(GS_NEITHER);
+		gs_reset_blend_state();
+		gs_blend_function_separate(gs_blend_type::GS_BLEND_ONE, gs_blend_type::GS_BLEND_ZERO,
+								   gs_blend_type::GS_BLEND_ONE, gs_blend_type::GS_BLEND_ZERO);
+		gs_enable_depth_test(false);
+		gs_enable_stencil_test(false);
+		gs_enable_stencil_write(false);
+		gs_enable_color(true, true, true, true);
+		gs_ortho(0, (float)width, 0, (float)height, -1, 1);
+
+		vec4 black;
+		vec4_zero(&black);
+		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
+
+		/// Render original source
+		if (obs_source_process_filter_begin(source_context, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
+			obs_source_process_filter_end(source_context, paramEffect ? paramEffect : default_effect, width, height);
+		} else {
+			obs_source_skip_video_filter(source_context);
+		}
+	} catch (...) {
+		obs_source_skip_video_filter(source_context);
+		return;
+	}
+	source_rt->get_texture(source_tex);
+
+	if ((!source_texture) || (source_texture->get_width() != width) || (source_texture->get_height() != height)) {
+		size_t mip_levels = 1;
+		if (util::math::is_power_of_two(width) && util::math::is_power_of_two(height)) {
+			size_t w_level = util::math::get_power_of_two_floor(width);
+			size_t h_level = util::math::get_power_of_two_floor(height);
+			if (h_level < w_level) {
+				mip_levels = h_level;
+			} else {
+				mip_levels = w_level;
+			}
+		}
+		// OBS does not allow creating an uninitalized texture, which means that we actually have to give it mip_data.
+		size_t store_size = (width * height * sizeof(uint32_t));
+		source_texture_store.resize(store_size * mip_levels);
+
+		const uint8_t* data = (uint8_t*)source_texture_store.data();
+		source_texture = std::make_shared<gs::texture>(width, height, GS_RGBA, mip_levels, nullptr,
+													   gs::texture::flags::BuildMipMaps);
+	}
+
+	mipmapper.rebuild(source_tex, source_texture, gs::mipmapper::generator::Linear, 0.5);
+
 	// Draw shape to texture
-	gs_texrender_reset(m_shapeRender);
-	if (gs_texrender_begin(m_shapeRender, baseW, baseH)) {
-		if (m_isCameraOrthographic) {
+	try {
+		auto op = shape_rt->render(width, height);
+
+		if (is_orthographic) {
 			gs_ortho(-1.0, 1.0, -1.0, 1.0, -farZ, farZ);
 		} else {
-			gs_perspective(m_cameraFieldOfView, float_t(baseW) / float_t(baseH), nearZ, farZ);
+			gs_perspective(field_of_view, float_t(width) / float_t(height), nearZ, farZ);
 			// Fix camera pointing at -Z instead of +Z.
 			gs_matrix_scale3f(1.0, 1.0, -1.0);
 			// Move backwards so we can actually see stuff.
@@ -500,25 +520,24 @@ void Filter::Transform::Instance::video_render(gs_effect_t* paramEffect)
 		gs_enable_stencil_test(false);
 		gs_enable_stencil_write(false);
 		gs_enable_color(true, true, true, true);
-		while (gs_effect_loop(alphaEffect, "Draw")) {
-			gs_effect_set_texture(gs_effect_get_param_by_name(alphaEffect, "image"), filterTexture);
-			gs_load_vertexbuffer(m_vertexBuffer);
-			gs_load_indexbuffer(NULL);
+		gs_load_vertexbuffer(vertex_buffer->update(false));
+		gs_load_indexbuffer(nullptr);
+		while (gs_effect_loop(default_effect, "Draw")) {
+			gs_effect_set_texture(gs_effect_get_param_by_name(default_effect, "image"), source_texture->get_object());
 			gs_draw(GS_TRISTRIP, 0, 4);
 		}
-
-		gs_texrender_end(m_shapeRender);
-	} else {
-		obs_source_skip_video_filter(m_sourceContext);
+		gs_load_vertexbuffer(nullptr);
+	} catch (...) {
+		obs_source_skip_video_filter(source_context);
 		return;
 	}
-	gs_texture* shapeTexture = gs_texrender_get_texture(m_shapeRender);
+	shape_rt->get_texture(shape_tex);
 
 	// Draw final shape
 	gs_reset_blend_state();
 	gs_enable_depth_test(false);
-	while (gs_effect_loop(alphaEffect, "Draw")) {
-		gs_effect_set_texture(gs_effect_get_param_by_name(alphaEffect, "image"), shapeTexture);
-		gs_draw_sprite(shapeTexture, 0, 0, 0);
+	while (gs_effect_loop(default_effect, "Draw")) {
+		gs_effect_set_texture(gs_effect_get_param_by_name(default_effect, "image"), shape_tex->get_object());
+		gs_draw_sprite(shape_tex->get_object(), 0, 0, 0);
 	}
 }

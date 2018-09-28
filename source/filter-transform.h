@@ -19,6 +19,10 @@
 
 #pragma once
 #include <memory>
+#include <vector>
+#include "gs-mipmapper.h"
+#include "gs-rendertarget.h"
+#include "gs-texture.h"
 #include "gs-vertexbuffer.h"
 #include "plugin.h"
 
@@ -63,26 +67,31 @@ namespace Filter {
 			void     video_render(gs_effect_t*);
 
 			private:
-			obs_source_t*      m_sourceContext;
-			gs::vertex_buffer* m_vertexHelper;
-			gs_vertbuffer_t*   m_vertexBuffer;
-			gs_texrender_t *   m_texRender, *m_shapeRender;
+			obs_source_t* source_context;
+
+			std::shared_ptr<gs::vertex_buffer> vertex_buffer;
+			std::shared_ptr<gs::rendertarget>  source_rt;
+			std::shared_ptr<gs::rendertarget>  shape_rt;
+			std::shared_ptr<gs::texture>       source_texture;
+			std::vector<char>                  source_texture_store;
+			gs::mipmapper                      mipmapper;
 
 			// Camera
-			bool    m_isCameraOrthographic;
-			float_t m_cameraFieldOfView;
+			bool    is_orthographic;
+			float_t field_of_view;
 
 			// Source
-			bool m_isInactive, m_isHidden;
-			bool m_isMeshUpdateRequired;
+			bool is_inactive;
+			bool is_hidden;
+			bool is_mesh_update_required;
 
 			// 3D Information
-			uint32_t m_rotationOrder;
+			uint32_t m_rotation_order;
 			struct {
-				std::unique_ptr<util::vec3a> m_position;
-				std::unique_ptr<util::vec3a> m_rotation;
-				std::unique_ptr<util::vec3a> m_scale;
-				std::unique_ptr<util::vec3a> m_shear;
+				std::unique_ptr<util::vec3a> position;
+				std::unique_ptr<util::vec3a> rotation;
+				std::unique_ptr<util::vec3a> scale;
+				std::unique_ptr<util::vec3a> shear;
 			};
 		};
 	};
