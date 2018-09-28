@@ -1,4 +1,4 @@
-uniform matrix4 ViewProj;
+uniform float4x4 ViewProj;
 uniform texture2d image;
 uniform float2 imageTexel;
 uniform float strength;
@@ -41,17 +41,17 @@ VertDataOut VSDefault(VertDataIn v_in)
 
 float4 PSPoint(VertDataOut v_in) : TARGET
 {
-	return pointSampler(image, v_in.uv);
+	return image.Sample(pointSampler, v_in.uv);
 }
 
 float4 PSLinear(VertDataOut v_in) : TARGET
 {
-	return linearSampler(image, v_in.uv);
+	return image.Sample(linearSampler, v_in.uv);
 }
 
 float4 PSBilinear(VertDataOut v_in) : TARGET
 {
-	return bilinearSampler(image, v_in.uv);
+	return image.Sample(bilinearSampler, v_in.uv);
 }
 
 float4 PSSharpen(VertDataOut v_in) : TARGET
@@ -67,22 +67,22 @@ float4 PSSharpen(VertDataOut v_in) : TARGET
 	r = -l;
 	
 	float4 tl, tc, tr, cl, cc, cr, bl, bc, br;
-	tl = pointSampler(image, v_in.uv + ul);
-	tc = pointSampler(image, v_in.uv + u);
-	tr = pointSampler(image, v_in.uv + ur);
-	cl = pointSampler(image, v_in.uv + l);
-	cc = pointSampler(image, v_in.uv);
-	cr = pointSampler(image, v_in.uv + r);
-	bl = pointSampler(image, v_in.uv + dl);
-	bc = pointSampler(image, v_in.uv + d);
-	br = pointSampler(image, v_in.uv + dr);
+	tl = image.Sample(pointSampler, v_in.uv + ul);
+	tc = image.Sample(pointSampler, v_in.uv + u);
+	tr = image.Sample(pointSampler, v_in.uv + ur);
+	cl = image.Sample(pointSampler, v_in.uv + l);
+	cc = image.Sample(pointSampler, v_in.uv);
+	cr = image.Sample(pointSampler, v_in.uv + r);
+	bl = image.Sample(pointSampler, v_in.uv + dl);
+	bc = image.Sample(pointSampler, v_in.uv + d);
+	br = image.Sample(pointSampler, v_in.uv + dr);
 
 	float kernel1, kernel2, kernel3;
 	kernel1 = -0.25 * strength;
 	kernel2 = -0.50 * strength;
 	kernel3 = abs(kernel1 * 4) + abs(kernel2 * 4);
 
-	return (tl * kernel1) + (tr * kernel1) + (bl * kernel1) + (br * kernel1) + (cl * kernel2) + (cr * kernel2) + (uc * kernel2) + (dc * kernel2) + (cc * kernel3);
+	return (tl * kernel1) + (tr * kernel1) + (bl * kernel1) + (br * kernel1) + (cl * kernel2) + (cr * kernel2) + (tc * kernel2) + (bc * kernel2) + (cc * kernel3);
 }
 
 float4 PSSmoothen(VertDataOut v_in) : TARGET
@@ -104,15 +104,15 @@ float4 PSSmoothen(VertDataOut v_in) : TARGET
 	l = float2(-imageTexel.x, 0);
 	r = -l;
 	
-	tl = pointSampler(image, v_in.uv + ul) * smoothKernel3[0];
-	tc = pointSampler(image, v_in.uv + u) * smoothKernel3[1];
-	tr = pointSampler(image, v_in.uv + ur) * smoothKernel3[0];
-	cl = pointSampler(image, v_in.uv + l) * smoothKernel3[1];
-	cc = pointSampler(image, v_in.uv) * smoothKernel3[2];
-	cr = pointSampler(image, v_in.uv + r) * smoothKernel3[1];
-	bl = pointSampler(image, v_in.uv + dl) * smoothKernel3[0];
-	bc = pointSampler(image, v_in.uv + d) * smoothKernel3[1];
-	br = pointSampler(image, v_in.uv + dr) * smoothKernel3[0];
+	tl = image.Sample(pointSampler, v_in.uv + ul) * smoothKernel3[0];
+	tc = image.Sample(pointSampler, v_in.uv + u) * smoothKernel3[1];
+	tr = image.Sample(pointSampler, v_in.uv + ur) * smoothKernel3[0];
+	cl = image.Sample(pointSampler, v_in.uv + l) * smoothKernel3[1];
+	cc = image.Sample(pointSampler, v_in.uv) * smoothKernel3[2];
+	cr = image.Sample(pointSampler, v_in.uv + r) * smoothKernel3[1];
+	bl = image.Sample(pointSampler, v_in.uv + dl) * smoothKernel3[0];
+	bc = image.Sample(pointSampler, v_in.uv + d) * smoothKernel3[1];
+	br = image.Sample(pointSampler, v_in.uv + dr) * smoothKernel3[0];
 
 	return tl + tc + tr + cl + cc + cr + bl + bc + br;
 }
