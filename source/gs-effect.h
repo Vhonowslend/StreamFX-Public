@@ -18,21 +18,22 @@
  */
 
 #pragma once
-#include "gs-texture.h"
-#include "gs-sampler.h"
 #include <inttypes.h>
+#include <list>
 #include <memory>
 #include <string>
-#include <list>
+#include "gs-sampler.h"
+#include "gs-texture.h"
+
 extern "C" {
-	#pragma warning( push )
-	#pragma warning( disable: 4201 )
-	#include <graphics/graphics.h>
-	#include <graphics/matrix4.h>
-	#include <graphics/vec4.h>
-	#include <graphics/vec3.h>
-	#include <graphics/vec2.h>
-	#pragma warning( pop )
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#include <graphics/graphics.h>
+#include <graphics/matrix4.h>
+#include <graphics/vec4.h>
+#include <graphics/vec3.h>
+#include <graphics/vec2.h>
+#pragma warning(pop)
 }
 
 namespace gs {
@@ -56,9 +57,9 @@ namespace gs {
 
 		public:
 		effect_parameter(gs_eparam_t* param);
-		
+
 		std::string get_name();
-		type get_type();
+		type        get_type();
 
 		void set_bool(bool v);
 		void set_bool_array(bool v[], size_t sz);
@@ -82,7 +83,7 @@ namespace gs {
 		void set_sampler(gs_sampler_state* v);
 
 		private:
-		gs_eparam_t* m_param;
+		gs_eparam_t*         m_param;
 		gs_effect_param_info m_paramInfo;
 	};
 
@@ -95,14 +96,14 @@ namespace gs {
 
 		gs_effect_t* get_object();
 
-		size_t count_parameters();
+		size_t                      count_parameters();
 		std::list<effect_parameter> get_parameters();
-		effect_parameter get_parameter(size_t idx);
-		effect_parameter get_parameter(std::string name);
-		bool has_parameter(std::string name);
-		bool has_parameter(std::string name, effect_parameter::type type);
+		effect_parameter            get_parameter(size_t idx);
+		effect_parameter            get_parameter(std::string name);
+		bool                        has_parameter(std::string name);
+		bool                        has_parameter(std::string name, effect_parameter::type type);
 
 		protected:
 		gs_effect_t* m_effect;
 	};
-}
+} // namespace gs
