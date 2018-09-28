@@ -87,7 +87,6 @@ namespace gfx {
 				std::string                          name = "";
 				std::shared_ptr<gfx::source_texture> tex;
 				std::shared_ptr<gs::texture>         final_tex;
-				gs::mipmapper                        mipmapper;
 			} source;
 
 			struct {
