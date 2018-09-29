@@ -184,8 +184,8 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 		size_t  mip_levels     = 1;
 
 #if defined(WIN32) || defined(WIN64)
-		ID3D11Texture2D* target_t2;
-		ID3D11Texture2D* source_t2;
+		ID3D11Texture2D* target_t2 = nullptr;
+		ID3D11Texture2D* source_t2 = nullptr;
 		if (device_type == GS_DEVICE_DIRECT3D_11) {
 			// We definitely have a Direct3D11 resource.
 			D3D11_TEXTURE2D_DESC target_t2desc;
@@ -209,8 +209,15 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 		for (size_t mip = 1; mip < mip_levels; mip++) {
 			texture_width /= 2;
 			texture_height /= 2;
-			texel_width *= 2;
-			texel_height *= 2;
+			if (texture_width == 0) {
+				texture_width = 1;
+			}
+			if (texture_height == 0) {
+				texture_height = 1;
+			}
+
+			texel_width = 1.0 / texture_width;
+			texel_height = 1.0 / texture_height;
 
 			// Draw mipmap layer
 			try {
