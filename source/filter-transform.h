@@ -28,6 +28,8 @@
 
 namespace Filter {
 	class Transform {
+		obs_source_info sourceInfo;
+
 		public:
 		Transform();
 		~Transform();
@@ -50,31 +52,20 @@ namespace Filter {
 		static void     video_render(void*, gs_effect_t*);
 
 		private:
-		obs_source_info sourceInfo;
-
-		private:
 		class Instance {
-			public:
-			Instance(obs_data_t*, obs_source_t*);
-			~Instance();
-
-			void     update(obs_data_t*);
-			uint32_t get_width();
-			uint32_t get_height();
-			void     activate();
-			void     deactivate();
-			void     video_tick(float);
-			void     video_render(gs_effect_t*);
-
-			private:
 			obs_source_t* source_context;
 
+			// Graphics Data
 			std::shared_ptr<gs::vertex_buffer> vertex_buffer;
 			std::shared_ptr<gs::rendertarget>  source_rt;
 			std::shared_ptr<gs::rendertarget>  shape_rt;
-			std::shared_ptr<gs::texture>       source_texture;
-			std::vector<char>                  source_texture_store;
-			gs::mipmapper                      mipmapper;
+
+			// Mipmapping
+			bool                         enable_mipmapping;
+			double_t                     generator_strength;
+			gs::mipmapper::generator     generator;
+			std::shared_ptr<gs::texture> source_texture;
+			gs::mipmapper                mipmapper;
 
 			// Camera
 			bool    is_orthographic;
@@ -86,13 +77,25 @@ namespace Filter {
 			bool is_mesh_update_required;
 
 			// 3D Information
-			uint32_t m_rotation_order;
+			uint32_t rotation_order;
 			struct {
 				std::unique_ptr<util::vec3a> position;
 				std::unique_ptr<util::vec3a> rotation;
 				std::unique_ptr<util::vec3a> scale;
 				std::unique_ptr<util::vec3a> shear;
 			};
+
+			public:
+			Instance(obs_data_t*, obs_source_t*);
+			~Instance();
+
+			void     update(obs_data_t*);
+			uint32_t get_width();
+			uint32_t get_height();
+			void     activate();
+			void     deactivate();
+			void     video_tick(float);
+			void     video_render(gs_effect_t*);
 		};
 	};
 } // namespace Filter

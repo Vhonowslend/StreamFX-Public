@@ -64,6 +64,7 @@ INITIALIZER(FilterTransformInit)
 #define ST_ROTATION_ORDER_YZX "Filter.Transform.Rotation.Order.YZX"
 #define ST_ROTATION_ORDER_ZXY "Filter.Transform.Rotation.Order.ZXY"
 #define ST_ROTATION_ORDER_ZYX "Filter.Transform.Rotation.Order.ZYX"
+#define ST_MIPMAPPING "Filter.Transform.Mipmapping"
 
 static const float farZ       = 2097152.0f; // 2 pow 21
 static const float nearZ      = 1.0f / farZ;
@@ -199,6 +200,31 @@ obs_properties_t* Filter::Transform::get_properties(void*)
 	obs_property_list_add_int(p, P_TRANSLATE(ST_ROTATION_ORDER_ZXY), RotationOrder::ZXY);
 	obs_property_list_add_int(p, P_TRANSLATE(ST_ROTATION_ORDER_ZYX), RotationOrder::ZYX);
 
+	p = obs_properties_add_bool(pr, ST_MIPMAPPING, P_TRANSLATE(ST_MIPMAPPING));
+	obs_property_set_modified_callback(p, modified_properties);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(ST_MIPMAPPING)));
+
+	p = obs_properties_add_list(pr, plugin::strings::MipGenerator::Name,
+								P_TRANSLATE(plugin::strings::MipGenerator::Name), OBS_COMBO_TYPE_LIST,
+								OBS_COMBO_FORMAT_INT);
+	obs_property_set_long_description(p, P_TRANSLATE(plugin::strings::MipGenerator::Description));
+
+	obs_property_list_add_int(p, P_TRANSLATE(plugin::strings::MipGenerator::Point),
+							  (long long)gs::mipmapper::generator::Point);
+	obs_property_list_add_int(p, P_TRANSLATE(plugin::strings::MipGenerator::Linear),
+							  (long long)gs::mipmapper::generator::Linear);
+	obs_property_list_add_int(p, P_TRANSLATE(plugin::strings::MipGenerator::Sharpen),
+							  (long long)gs::mipmapper::generator::Sharpen);
+	obs_property_list_add_int(p, P_TRANSLATE(plugin::strings::MipGenerator::Smoothen),
+							  (long long)gs::mipmapper::generator::Smoothen);
+	obs_property_list_add_int(p, P_TRANSLATE(plugin::strings::MipGenerator::Bicubic),
+							  (long long)gs::mipmapper::generator::Bicubic);
+	obs_property_list_add_int(p, P_TRANSLATE(plugin::strings::MipGenerator::Lanczos),
+							  (long long)gs::mipmapper::generator::Lanczos);
+
+	p = obs_properties_add_float(pr, plugin::strings::MipGenerator::Strength,
+								 P_TRANSLATE(plugin::strings::MipGenerator::Strength), 0.0, 100.0, 0.01);
+
 	return pr;
 }
 
@@ -217,6 +243,11 @@ bool Filter::Transform::modified_properties(obs_properties_t* pr, obs_property_t
 
 	bool advancedVisible = obs_data_get_bool(d, S_ADVANCED);
 	obs_property_set_visible(obs_properties_get(pr, ST_ROTATION_ORDER), advancedVisible);
+	obs_property_set_visible(obs_properties_get(pr, ST_MIPMAPPING), advancedVisible);
+
+	bool mipmappingVisible = obs_data_get_bool(d, ST_MIPMAPPING) && advancedVisible;
+	obs_property_set_visible(obs_properties_get(pr, plugin::strings::MipGenerator::Name), mipmappingVisible);
+	obs_property_set_visible(obs_properties_get(pr, plugin::strings::MipGenerator::Strength), mipmappingVisible);
 
 	return true;
 }
@@ -268,7 +299,7 @@ void Filter::Transform::video_render(void* ptr, gs_effect_t* effect)
 
 Filter::Transform::Instance::Instance(obs_data_t* data, obs_source_t* context)
 	: source_context(context), is_orthographic(true), field_of_view(90.0), is_inactive(false), is_hidden(false),
-	  is_mesh_update_required(false), m_rotation_order(RotationOrder::ZXY)
+	  is_mesh_update_required(false), rotation_order(RotationOrder::ZXY)
 {
 	position = std::make_unique<util::vec3a>();
 	rotation = std::make_unique<util::vec3a>();
@@ -278,6 +309,10 @@ Filter::Transform::Instance::Instance(obs_data_t* data, obs_source_t* context)
 	vec3_set(position.get(), 0, 0, 0);
 	vec3_set(rotation.get(), 0, 0, 0);
 	vec3_set(scale.get(), 1, 1, 1);
+
+	enable_mipmapping = false;
+	generator = gs::mipmapper::generator::Linear;
+	generator_strength = 50.0;
 
 	obs_enter_graphics();
 	source_rt     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
@@ -304,19 +339,24 @@ void Filter::Transform::Instance::update(obs_data_t* data)
 	field_of_view   = (float)obs_data_get_double(data, ST_CAMERA_FIELDOFVIEW);
 
 	// Source
-	position->x      = (float)obs_data_get_double(data, ST_POSITION_X) / 100.0f;
-	position->y      = (float)obs_data_get_double(data, ST_POSITION_Y) / 100.0f;
-	position->z      = (float)obs_data_get_double(data, ST_POSITION_Z) / 100.0f;
-	scale->x         = (float)obs_data_get_double(data, ST_SCALE_X) / 100.0f;
-	scale->y         = (float)obs_data_get_double(data, ST_SCALE_Y) / 100.0f;
-	scale->z         = 1.0f;
-	m_rotation_order = (int)obs_data_get_int(data, ST_ROTATION_ORDER);
-	rotation->x      = (float)(obs_data_get_double(data, ST_ROTATION_X) / 180.0f * PI);
-	rotation->y      = (float)(obs_data_get_double(data, ST_ROTATION_Y) / 180.0f * PI);
-	rotation->z      = (float)(obs_data_get_double(data, ST_ROTATION_Z) / 180.0f * PI);
-	shear->x         = (float)obs_data_get_double(data, ST_SHEAR_X) / 100.0f;
-	shear->y         = (float)obs_data_get_double(data, ST_SHEAR_Y) / 100.0f;
-	shear->z         = 0.0f;
+	position->x    = (float)obs_data_get_double(data, ST_POSITION_X) / 100.0f;
+	position->y    = (float)obs_data_get_double(data, ST_POSITION_Y) / 100.0f;
+	position->z    = (float)obs_data_get_double(data, ST_POSITION_Z) / 100.0f;
+	scale->x       = (float)obs_data_get_double(data, ST_SCALE_X) / 100.0f;
+	scale->y       = (float)obs_data_get_double(data, ST_SCALE_Y) / 100.0f;
+	scale->z       = 1.0f;
+	rotation_order = (int)obs_data_get_int(data, ST_ROTATION_ORDER);
+	rotation->x    = (float)(obs_data_get_double(data, ST_ROTATION_X) / 180.0f * PI);
+	rotation->y    = (float)(obs_data_get_double(data, ST_ROTATION_Y) / 180.0f * PI);
+	rotation->z    = (float)(obs_data_get_double(data, ST_ROTATION_Z) / 180.0f * PI);
+	shear->x       = (float)obs_data_get_double(data, ST_SHEAR_X) / 100.0f;
+	shear->y       = (float)obs_data_get_double(data, ST_SHEAR_Y) / 100.0f;
+	shear->z       = 0.0f;
+
+	// Mipmapping
+	enable_mipmapping = obs_data_get_bool(data, ST_MIPMAPPING);
+	generator_strength = obs_data_get_double(data, plugin::strings::MipGenerator::Strength);
+	generator          = (gs::mipmapper::generator)obs_data_get_int(data, plugin::strings::MipGenerator::Name);
 
 	is_mesh_update_required = true;
 }
@@ -351,7 +391,7 @@ void Filter::Transform::Instance::video_render(gs_effect_t* paramEffect)
 	obs_source_t* parent = obs_filter_get_parent(source_context);
 	obs_source_t* target = obs_filter_get_target(source_context);
 
-	uint32_t width = obs_source_get_base_width(target);
+	uint32_t width  = obs_source_get_base_width(target);
 	uint32_t height = obs_source_get_base_height(target);
 
 	gs_effect_t* default_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
@@ -371,7 +411,7 @@ void Filter::Transform::Instance::video_render(gs_effect_t* paramEffect)
 		// Mesh
 		matrix4 ident;
 		matrix4_identity(&ident);
-		switch (m_rotation_order) {
+		switch (rotation_order) {
 		case RotationOrder::XYZ: // XYZ
 			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rotation->x);
 			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rotation->y);
@@ -473,27 +513,25 @@ void Filter::Transform::Instance::video_render(gs_effect_t* paramEffect)
 	}
 	source_rt->get_texture(source_tex);
 
-	if ((!source_texture) || (source_texture->get_width() != width) || (source_texture->get_height() != height)) {
-		size_t mip_levels = 1;
-		if (util::math::is_power_of_two(width) && util::math::is_power_of_two(height)) {
-			size_t w_level = util::math::get_power_of_two_floor(width);
-			size_t h_level = util::math::get_power_of_two_floor(height);
-			if (h_level < w_level) {
-				mip_levels = h_level;
-			} else {
-				mip_levels = w_level;
+	if (enable_mipmapping) {
+		if ((!source_texture) || (source_texture->get_width() != width) || (source_texture->get_height() != height)) {
+			size_t mip_levels = 1;
+			if (util::math::is_power_of_two(width) && util::math::is_power_of_two(height)) {
+				size_t w_level = util::math::get_power_of_two_floor(width);
+				size_t h_level = util::math::get_power_of_two_floor(height);
+				if (h_level < w_level) {
+					mip_levels = h_level;
+				} else {
+					mip_levels = w_level;
+				}
 			}
+
+			source_texture = std::make_shared<gs::texture>(width, height, GS_RGBA, mip_levels, nullptr,
+														   gs::texture::flags::BuildMipMaps);
 		}
-		// OBS does not allow creating an uninitalized texture, which means that we actually have to give it mip_data.
-		size_t store_size = (width * height * sizeof(uint32_t));
-		source_texture_store.resize(store_size * mip_levels);
 
-		const uint8_t* data = (uint8_t*)source_texture_store.data();
-		source_texture = std::make_shared<gs::texture>(width, height, GS_RGBA, mip_levels, nullptr,
-													   gs::texture::flags::BuildMipMaps);
+		mipmapper.rebuild(source_tex, source_texture, generator, generator_strength);
 	}
-
-	mipmapper.rebuild(source_tex, source_texture, gs::mipmapper::generator::Linear, 0.5);
 
 	// Draw shape to texture
 	try {
@@ -523,7 +561,8 @@ void Filter::Transform::Instance::video_render(gs_effect_t* paramEffect)
 		gs_load_vertexbuffer(vertex_buffer->update(false));
 		gs_load_indexbuffer(nullptr);
 		while (gs_effect_loop(default_effect, "Draw")) {
-			gs_effect_set_texture(gs_effect_get_param_by_name(default_effect, "image"), source_texture->get_object());
+			gs_effect_set_texture(gs_effect_get_param_by_name(default_effect, "image"),
+								  enable_mipmapping ? source_texture->get_object() : source_tex->get_object());
 			gs_draw(GS_TRISTRIP, 0, 4);
 		}
 		gs_load_vertexbuffer(nullptr);
