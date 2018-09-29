@@ -120,13 +120,13 @@ namespace util {
 #pragma pop_macro("is_power_of_two_as_loop")
 
 		template<typename T>
-		inline uint64_t get_power_of_two_floor(T v)
+		inline uint64_t get_power_of_two_exponent_floor(T v)
 		{
 			return uint64_t(floor(log10(T(v)) / log10(2.0)));
 		}
 
 		template<typename T>
-		inline uint64_t get_power_of_two_ceil(T v)
+		inline uint64_t get_power_of_two_exponent_ceil(T v)
 		{
 			return uint64_t(ceil(log10(T(v)) / log10(2.0)));
 		}
