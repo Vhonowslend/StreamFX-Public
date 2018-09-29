@@ -70,7 +70,7 @@ float4 PSSharpen(VertDataOut v_in) : TARGET
 	float kernel1, kernel2, kernel3;
 	kernel1 = -0.25 * strength;
 	kernel2 = -0.50 * strength;
-	kernel3 = abs(kernel1 * 4) + abs(kernel2 * 4);
+	kernel3 = abs(kernel1 * 4) + abs(kernel2 * 4) + 1;
 
 	return (tl * kernel1) + (tr * kernel1) + (bl * kernel1) + (br * kernel1) + (cl * kernel2) + (cr * kernel2) + (tc * kernel2) + (bc * kernel2) + (cc * kernel3);
 }
@@ -94,15 +94,15 @@ float4 PSSmoothen(VertDataOut v_in) : TARGET
 	l = float2(-imageTexel.x, 0);
 	r = -l;
 	
-	tl = image.SampleLevel(pointSampler, v_in.uv + ul, level) * smoothKernel3[0];
-	tc = image.SampleLevel(pointSampler, v_in.uv + u, level) * smoothKernel3[1];
-	tr = image.SampleLevel(pointSampler, v_in.uv + ur, level) * smoothKernel3[0];
-	cl = image.SampleLevel(pointSampler, v_in.uv + l, level) * smoothKernel3[1];
+	tl = image.SampleLevel(pointSampler, v_in.uv + ul * limitstr, level) * smoothKernel3[0];
+	tc = image.SampleLevel(pointSampler, v_in.uv + u * limitstr, level) * smoothKernel3[1];
+	tr = image.SampleLevel(pointSampler, v_in.uv + ur * limitstr, level) * smoothKernel3[0];
+	cl = image.SampleLevel(pointSampler, v_in.uv + l * limitstr, level) * smoothKernel3[1];
 	cc = image.SampleLevel(pointSampler, v_in.uv, level) * smoothKernel3[2];
-	cr = image.SampleLevel(pointSampler, v_in.uv + r, level) * smoothKernel3[1];
-	bl = image.SampleLevel(pointSampler, v_in.uv + dl, level) * smoothKernel3[0];
-	bc = image.SampleLevel(pointSampler, v_in.uv + d, level) * smoothKernel3[1];
-	br = image.SampleLevel(pointSampler, v_in.uv + dr, level) * smoothKernel3[0];
+	cr = image.SampleLevel(pointSampler, v_in.uv + r * limitstr, level) * smoothKernel3[1];
+	bl = image.SampleLevel(pointSampler, v_in.uv + dl * limitstr, level) * smoothKernel3[0];
+	bc = image.SampleLevel(pointSampler, v_in.uv + d * limitstr, level) * smoothKernel3[1];
+	br = image.SampleLevel(pointSampler, v_in.uv + dr * limitstr, level) * smoothKernel3[0];
 
 	return tl + tc + tr + cl + cc + cr + bl + bc + br;
 }
