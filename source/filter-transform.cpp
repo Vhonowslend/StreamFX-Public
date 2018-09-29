@@ -393,6 +393,8 @@ void Filter::Transform::Instance::video_render(gs_effect_t* paramEffect)
 
 	uint32_t width  = obs_source_get_base_width(target);
 	uint32_t height = obs_source_get_base_height(target);
+	uint32_t real_width = width;
+	uint32_t real_height = height;
 
 	gs_effect_t* default_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
 
@@ -483,9 +485,26 @@ void Filter::Transform::Instance::video_render(gs_effect_t* paramEffect)
 		is_mesh_update_required = false;
 	}
 
+	// Make texture a power of two compatible texture if mipmapping is enabled.
+	if (enable_mipmapping) {
+		real_width  = pow(2, util::math::get_power_of_two_exponent_ceil(width));
+		real_height = pow(2, util::math::get_power_of_two_exponent_ceil(height));
+		if ((real_width >= 8192) || (real_height >= 8192)) {
+			// Most GPUs cap out here, so let's not go higher.
+			double_t aspect = double_t(width) / double_t(height);
+			if (aspect > 1.0) { // height < width
+				real_width = 8192;
+				real_height = real_width / aspect;
+			} else if (aspect < 1.0) { // width > height
+				real_height = 8192;
+				real_width  = real_height * aspect;
+			}
+		}
+	}
+
 	// Draw previous filters to texture.
 	try {
-		auto op = source_rt->render(width, height);
+		auto op = source_rt->render(real_width, real_height);
 
 		gs_set_cull_mode(GS_NEITHER);
 		gs_reset_blend_state();
@@ -514,19 +533,20 @@ void Filter::Transform::Instance::video_render(gs_effect_t* paramEffect)
 	source_rt->get_texture(source_tex);
 
 	if (enable_mipmapping) {
-		if ((!source_texture) || (source_texture->get_width() != width) || (source_texture->get_height() != height)) {
-			size_t mip_levels = 1;
-			if (util::math::is_power_of_two(width) && util::math::is_power_of_two(height)) {
-				size_t w_level = util::math::get_power_of_two_floor(width);
-				size_t h_level = util::math::get_power_of_two_floor(height);
-				if (h_level < w_level) {
+		if ((!source_texture) || (source_texture->get_width() != real_width)
+			|| (source_texture->get_height() != real_height)) {
+			size_t mip_levels = 0;
+			if (util::math::is_power_of_two(real_width) && util::math::is_power_of_two(real_height)) {
+				size_t w_level = util::math::get_power_of_two_exponent_ceil(real_width);
+				size_t h_level = util::math::get_power_of_two_exponent_ceil(real_height);
+				if (h_level > w_level) {
 					mip_levels = h_level;
 				} else {
 					mip_levels = w_level;
 				}
 			}
 
-			source_texture = std::make_shared<gs::texture>(width, height, GS_RGBA, mip_levels, nullptr,
+			source_texture = std::make_shared<gs::texture>(real_width, real_height, GS_RGBA, 1 + mip_levels, nullptr,
 														   gs::texture::flags::BuildMipMaps);
 		}
 
