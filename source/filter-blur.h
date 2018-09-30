@@ -21,6 +21,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include "gfx-source-texture.h"
 #include "gs-effect.h"
 #include "gs-helper.h"
 #include "gs-texture.h"
@@ -32,6 +33,12 @@ namespace filter {
 			Box,
 			Gaussian,
 			Bilateral,
+		};
+
+		enum mask_type : int64_t {
+			Region,
+			Image,
+			Source,
 		};
 
 		class instance {
@@ -51,16 +58,31 @@ namespace filter {
 			double_t bilateral_sharpness;
 
 			// Regional
-			struct Region {
-				bool    enabled;
-				float_t left;
-				float_t top;
-				float_t right;
-				float_t bottom;
-				float_t feather;
-				float_t feather_shift;
-				bool    invert;
-			} region;
+			struct {
+				bool      enabled;
+				mask_type type;
+				struct {
+					float_t left;
+					float_t top;
+					float_t right;
+					float_t bottom;
+					float_t feather;
+					float_t feather_shift;
+					bool    invert;
+				} region;
+				struct {
+					std::string                  path;
+					std::shared_ptr<gs::texture> texture;
+				} image;
+				struct {
+					std::string                          name;
+					obs_source_t*                        object;
+					std::shared_ptr<gfx::source_texture> source_texture;
+					std::shared_ptr<gs::texture>         texture;
+				} source;
+				uint32_t color;
+				float_t  multiplier;
+			} mask;
 
 			// advanced
 			bool     have_logged_error = false;
@@ -69,6 +91,7 @@ namespace filter {
 			bool apply_shared_param(gs_texture_t* input, float texelX, float texelY);
 			bool apply_bilateral_param();
 			bool apply_gaussian_param();
+			bool apply_mask_parameters(std::shared_ptr<gs::effect> effect, gs_texture_t * original_texture, gs_texture_t* blurred_texture);
 
 			static bool modified_properties(void* ptr, obs_properties_t* props, obs_property* prop,
 											obs_data_t* settings);
@@ -94,6 +117,7 @@ namespace filter {
 			obs_source_info             source_info;
 			std::list<instance*>        sources;
 			std::shared_ptr<gs::effect> color_converter_effect;
+			std::shared_ptr<gs::effect> mask_effect;
 
 			std::map<filter::blur::type, std::shared_ptr<gs::effect>>  effects;
 			std::map<filter::blur::type, std::shared_ptr<gs::texture>> kernels;
@@ -130,6 +154,8 @@ namespace filter {
 			std::shared_ptr<gs::effect> get_effect(filter::blur::type type);
 
 			std::shared_ptr<gs::effect> get_color_converter_effect();
+
+			std::shared_ptr<gs::effect> get_mask_effect();
 
 			std::shared_ptr<gs::texture> get_kernel(filter::blur::type type);
 

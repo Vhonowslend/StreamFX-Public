@@ -43,15 +43,23 @@ extern "C" {
 #define P_SIZE "Filter.Blur.Size"
 #define P_BILATERAL_SMOOTHING "Filter.Blur.Bilateral.Smoothing"
 #define P_BILATERAL_SHARPNESS "Filter.Blur.Bilateral.Sharpness"
-#define P_REGION "Filter.Blur.Region"
-#define P_REGION_LEFT "Filter.Blur.Region.Left"
-#define P_REGION_RIGHT "Filter.Blur.Region.Right"
-#define P_REGION_TOP "Filter.Blur.Region.Top"
-#define P_REGION_BOTTOM "Filter.Blur.Region.Bottom"
-#define P_REGION_FEATHER "Filter.Blur.Region.Feather"
-#define P_REGION_FEATHER_SHIFT "Filter.Blur.Region.Feather.Shift"
-#define P_REGION_INVERT "Filter.Blur.Region.Invert"
 #define P_COLORFORMAT "Filter.Blur.ColorFormat"
+#define P_MASK "Filter.Blur.Mask"
+#define P_MASK_TYPE "Filter.Blur.Mask.Type"
+#define P_MASK_TYPE_REGION "Filter.Blur.Mask.Type.Region"
+#define P_MASK_TYPE_IMAGE "Filter.Blur.Mask.Type.Image"
+#define P_MASK_TYPE_SOURCE "Filter.Blur.Mask.Type.Source"
+#define P_MASK_REGION_LEFT "Filter.Blur.Mask.Region.Left"
+#define P_MASK_REGION_RIGHT "Filter.Blur.Mask.Region.Right"
+#define P_MASK_REGION_TOP "Filter.Blur.Mask.Region.Top"
+#define P_MASK_REGION_BOTTOM "Filter.Blur.Mask.Region.Bottom"
+#define P_MASK_REGION_FEATHER "Filter.Blur.Mask.Region.Feather"
+#define P_MASK_REGION_FEATHER_SHIFT "Filter.Blur.Mask.Region.Feather.Shift"
+#define P_MASK_REGION_INVERT "Filter.Blur.Mask.Region.Invert"
+#define P_MASK_IMAGE "Filter.Blur.Mask.Image"
+#define P_MASK_SOURCE "Filter.Blur.Mask.Source"
+#define P_MASK_COLOR "Filter.Blur.Mask.Color"
+#define P_MASK_MULTIPLIER "Filter.Blur.Mask.Multiplier"
 
 // Initializer & Finalizer
 INITIALIZER(filterBlurFactoryInitializer)
@@ -89,34 +97,12 @@ bool filter::blur::instance::apply_shared_param(gs_texture_t* input, float texel
 	result = result && gs_set_param_int(blur_effect->get_object(), "u_radius", (int)size);
 	result = result && gs_set_param_int(blur_effect->get_object(), "u_diameter", (int)(1 + (size * 2)));
 
-	if (region.enabled) {
-		if (blur_effect->has_parameter("regionLeft")) {
-			blur_effect->get_parameter("regionLeft").set_float(region.left);
-		}
-		if (blur_effect->has_parameter("regionTop")) {
-			blur_effect->get_parameter("regionTop").set_float(region.top);
-		}
-		if (blur_effect->has_parameter("regionRight")) {
-			blur_effect->get_parameter("regionRight").set_float(region.right);
-		}
-		if (blur_effect->has_parameter("regionBottom")) {
-			blur_effect->get_parameter("regionBottom").set_float(region.bottom);
-		}
-		if (blur_effect->has_parameter("regionFeather")) {
-			blur_effect->get_parameter("regionFeather").set_float(region.feather);
-		}
-		if (blur_effect->has_parameter("regionFeatherShift")) {
-			blur_effect->get_parameter("regionFeatherShift").set_float(region.feather_shift);
-		}
-	}
 
 	return result;
 }
 
 bool filter::blur::instance::apply_bilateral_param()
 {
-	gs_eparam_t* param;
-
 	if (type != type::Bilateral)
 		return false;
 
@@ -150,24 +136,103 @@ bool filter::blur::instance::apply_gaussian_param()
 	return true;
 }
 
+bool filter::blur::instance::apply_mask_parameters(std::shared_ptr<gs::effect> effect, gs_texture_t * original_texture, gs_texture_t* blurred_texture)
+{
+	if (effect->has_parameter("image_orig")) {
+		effect->get_parameter("image_orig").set_texture(original_texture);
+	}
+	if (effect->has_parameter("image_blur")) {
+		effect->get_parameter("image_blur").set_texture(blurred_texture);
+	}
+
+	// Region
+	if (mask.type == mask_type::Region) {
+		if (effect->has_parameter("mask_region_left")) {
+			effect->get_parameter("mask_region_left").set_float(mask.region.left);
+		}
+		if (effect->has_parameter("mask_region_right")) {
+			effect->get_parameter("mask_region_right").set_float(mask.region.right);
+		}
+		if (effect->has_parameter("mask_region_top")) {
+			effect->get_parameter("mask_region_top").set_float(mask.region.top);
+		}
+		if (effect->has_parameter("mask_region_bottom")) {
+			effect->get_parameter("mask_region_bottom").set_float(mask.region.bottom);
+		}
+		if (effect->has_parameter("mask_region_feather")) {
+			effect->get_parameter("mask_region_feather").set_float(mask.region.feather);
+		}
+		if (effect->has_parameter("mask_region_feather_shift")) {
+			effect->get_parameter("mask_region_feather_shift").set_float(mask.region.feather_shift);
+		}
+	}
+
+	// Image
+	if (mask.type == mask_type::Image) {
+		if (effect->has_parameter("mask_image")) {
+			if (mask.image.texture) {
+				effect->get_parameter("mask_image").set_texture(mask.image.texture);
+			} else {
+				effect->get_parameter("mask_image").set_texture(nullptr);
+			}
+		}
+	}
+
+	// Source
+	if (mask.type == mask_type::Source) {
+		if (effect->has_parameter("mask_image")) {
+			if (mask.source.texture) {
+				effect->get_parameter("mask_image").set_texture(mask.source.texture);
+			} else {
+				effect->get_parameter("mask_image").set_texture(nullptr);
+			}
+		}
+	}
+
+	// Shared
+	if (effect->has_parameter("mask_color")) {
+		effect->get_parameter("mask_color")
+			.set_float4((mask.color & 0xFF) / 255.0f, ((mask.color >> 8) & 0xFF) / 255.0f,
+						((mask.color >> 16) & 0xFF) / 255.0f, ((mask.color >> 24) & 0xFF) / 255.0f);
+	}
+	if (effect->has_parameter("mask_multiplier")) {
+		effect->get_parameter("mask_multiplier").set_float(mask.multiplier);
+	}
+
+	return true;
+}
+
 bool filter::blur::instance::modified_properties(void* ptr, obs_properties_t* props, obs_property* prop,
 												 obs_data_t* settings)
 {
 	bool showBilateral = (obs_data_get_int(settings, P_TYPE) == type::Bilateral);
+
+	prop;
+	ptr;
 
 	// bilateral blur
 	obs_property_set_visible(obs_properties_get(props, P_BILATERAL_SMOOTHING), showBilateral);
 	obs_property_set_visible(obs_properties_get(props, P_BILATERAL_SHARPNESS), showBilateral);
 
 	// region
-	bool showRegion = obs_data_get_bool(settings, P_REGION);
-	obs_property_set_visible(obs_properties_get(props, P_REGION_LEFT), showRegion);
-	obs_property_set_visible(obs_properties_get(props, P_REGION_TOP), showRegion);
-	obs_property_set_visible(obs_properties_get(props, P_REGION_RIGHT), showRegion);
-	obs_property_set_visible(obs_properties_get(props, P_REGION_BOTTOM), showRegion);
-	obs_property_set_visible(obs_properties_get(props, P_REGION_FEATHER), showRegion);
-	obs_property_set_visible(obs_properties_get(props, P_REGION_FEATHER_SHIFT), showRegion);
-	obs_property_set_visible(obs_properties_get(props, P_REGION_INVERT), showRegion);
+	bool      show_mask   = obs_data_get_bool(settings, P_MASK);
+	mask_type mtype       = static_cast<mask_type>(obs_data_get_int(settings, P_MASK_TYPE));
+	bool      show_region = (mtype == mask_type::Region) && show_mask;
+	bool      show_image  = (mtype == mask_type::Image) && show_mask;
+	bool      show_source = (mtype == mask_type::Source) && show_mask;
+
+	obs_property_set_visible(obs_properties_get(props, P_MASK_REGION_LEFT), show_region);
+	obs_property_set_visible(obs_properties_get(props, P_MASK_REGION_TOP), show_region);
+	obs_property_set_visible(obs_properties_get(props, P_MASK_REGION_RIGHT), show_region);
+	obs_property_set_visible(obs_properties_get(props, P_MASK_REGION_BOTTOM), show_region);
+	obs_property_set_visible(obs_properties_get(props, P_MASK_REGION_FEATHER), show_region);
+	obs_property_set_visible(obs_properties_get(props, P_MASK_REGION_FEATHER_SHIFT), show_region);
+	obs_property_set_visible(obs_properties_get(props, P_MASK_REGION_INVERT), show_region);
+
+	obs_property_set_visible(obs_properties_get(props, P_MASK_IMAGE), show_image);
+	obs_property_set_visible(obs_properties_get(props, P_MASK_SOURCE), show_source);
+	obs_property_set_visible(obs_properties_get(props, P_MASK_COLOR), show_image || show_source);
+	obs_property_set_visible(obs_properties_get(props, P_MASK_MULTIPLIER), show_image || show_source);
 
 	// advanced
 	bool showAdvanced = obs_data_get_bool(settings, S_ADVANCED);
@@ -245,25 +310,52 @@ obs_properties_t* filter::blur::instance::get_properties()
 										0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_BILATERAL_SHARPNESS)));
 
-	// region
-	p = obs_properties_add_bool(pr, P_REGION, P_TRANSLATE(P_REGION));
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_REGION)));
+	// Mask
+	p = obs_properties_add_bool(pr, P_MASK, P_TRANSLATE(P_MASK));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK)));
 	obs_property_set_modified_callback2(p, modified_properties, this);
-	p = obs_properties_add_float_slider(pr, P_REGION_LEFT, P_TRANSLATE(P_REGION_LEFT), 0.0, 100.0, 0.01);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_REGION_LEFT)));
-	p = obs_properties_add_float_slider(pr, P_REGION_TOP, P_TRANSLATE(P_REGION_TOP), 0.0, 100.0, 0.01);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_REGION_TOP)));
-	p = obs_properties_add_float_slider(pr, P_REGION_RIGHT, P_TRANSLATE(P_REGION_RIGHT), 0.0, 100.0, 0.01);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_REGION_RIGHT)));
-	p = obs_properties_add_float_slider(pr, P_REGION_BOTTOM, P_TRANSLATE(P_REGION_BOTTOM), 0.0, 100.0, 0.01);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_REGION_BOTTOM)));
-	p = obs_properties_add_float_slider(pr, P_REGION_FEATHER, P_TRANSLATE(P_REGION_FEATHER), 0.0, 50.0, 0.01);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_REGION_FEATHER)));
-	p = obs_properties_add_float_slider(pr, P_REGION_FEATHER_SHIFT, P_TRANSLATE(P_REGION_FEATHER_SHIFT), -100.0, 100.0,
-										0.01);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_REGION_FEATHER_SHIFT)));
-	p = obs_properties_add_bool(pr, P_REGION_INVERT, P_TRANSLATE(P_REGION_INVERT));
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_REGION_INVERT)));
+	p = obs_properties_add_list(pr, P_MASK_TYPE, P_TRANSLATE(P_MASK_TYPE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_TYPE)));
+	obs_property_set_modified_callback2(p, modified_properties, this);
+	obs_property_list_add_int(p, P_TRANSLATE(P_MASK_TYPE_REGION), mask_type::Region);
+	obs_property_list_add_int(p, P_TRANSLATE(P_MASK_TYPE_IMAGE), mask_type::Image);
+	obs_property_list_add_int(p, P_TRANSLATE(P_MASK_TYPE_SOURCE), mask_type::Source);
+	/// Region
+	p = obs_properties_add_float_slider(pr, P_MASK_REGION_LEFT, P_TRANSLATE(P_MASK_REGION_LEFT), 0.0, 100.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_REGION_LEFT)));
+	p = obs_properties_add_float_slider(pr, P_MASK_REGION_TOP, P_TRANSLATE(P_MASK_REGION_TOP), 0.0, 100.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_REGION_TOP)));
+	p = obs_properties_add_float_slider(pr, P_MASK_REGION_RIGHT, P_TRANSLATE(P_MASK_REGION_RIGHT), 0.0, 100.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_REGION_RIGHT)));
+	p = obs_properties_add_float_slider(pr, P_MASK_REGION_BOTTOM, P_TRANSLATE(P_MASK_REGION_BOTTOM), 0.0, 100.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_REGION_BOTTOM)));
+	p = obs_properties_add_float_slider(pr, P_MASK_REGION_FEATHER, P_TRANSLATE(P_MASK_REGION_FEATHER), 0.0, 50.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_REGION_FEATHER)));
+	p = obs_properties_add_float_slider(pr, P_MASK_REGION_FEATHER_SHIFT, P_TRANSLATE(P_MASK_REGION_FEATHER_SHIFT),
+										-100.0, 100.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_REGION_FEATHER_SHIFT)));
+	p = obs_properties_add_bool(pr, P_MASK_REGION_INVERT, P_TRANSLATE(P_MASK_REGION_INVERT));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_REGION_INVERT)));
+	/// Image
+	p = obs_properties_add_path(pr, P_MASK_IMAGE, P_TRANSLATE(P_MASK_IMAGE), OBS_PATH_FILE,
+								P_TRANSLATE(S_FILEFILTERS_IMAGES), nullptr);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_IMAGE)));
+	/// Source
+	p = obs_properties_add_list(pr, P_MASK_SOURCE, P_TRANSLATE(P_MASK_SOURCE), OBS_COMBO_TYPE_LIST,
+								OBS_COMBO_FORMAT_STRING);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_SOURCE)));
+	obs_enum_sources(
+		[](void* ptr, obs_source_t* source) {
+			obs_property_t* p = reinterpret_cast<obs_property_t*>(ptr);
+			obs_property_list_add_string(p, obs_source_get_name(source), obs_source_get_name(source));
+			return true;
+		},
+		p);
+	/// Shared
+	p = obs_properties_add_color(pr, P_MASK_COLOR, P_TRANSLATE(P_MASK_COLOR));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_COLOR)));
+	p = obs_properties_add_float_slider(pr, P_MASK_MULTIPLIER, P_TRANSLATE(P_MASK_MULTIPLIER), 0.0, 10.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_MULTIPLIER)));
 
 	// advanced
 	p = obs_properties_add_bool(pr, S_ADVANCED, P_TRANSLATE(S_ADVANCED));
@@ -290,15 +382,30 @@ void filter::blur::instance::update(obs_data_t* settings)
 	bilateral_sharpness = obs_data_get_double(settings, P_BILATERAL_SHARPNESS) / 100.0;
 
 	// region
-	region.enabled = obs_data_get_bool(settings, P_REGION);
-	if (region.enabled) {
-		region.left          = float_t(obs_data_get_double(settings, P_REGION_LEFT) / 100.0);
-		region.top           = float_t(obs_data_get_double(settings, P_REGION_TOP) / 100.0);
-		region.right         = 1.0 - float_t(obs_data_get_double(settings, P_REGION_RIGHT) / 100.0);
-		region.bottom        = 1.0 - float_t(obs_data_get_double(settings, P_REGION_BOTTOM) / 100.0);
-		region.feather       = float_t(obs_data_get_double(settings, P_REGION_FEATHER) / 100.0);
-		region.feather_shift = float_t(obs_data_get_double(settings, P_REGION_FEATHER_SHIFT) / 100.0);
-		region.invert        = obs_data_get_bool(settings, P_REGION_INVERT);
+	mask.enabled = obs_data_get_bool(settings, P_MASK);
+	if (mask.enabled) {
+		mask.type = static_cast<mask_type>(obs_data_get_int(settings, P_MASK_TYPE));
+		switch (mask.type) {
+		case mask_type::Region:
+			mask.region.left          = float_t(obs_data_get_double(settings, P_MASK_REGION_LEFT) / 100.0);
+			mask.region.top           = float_t(obs_data_get_double(settings, P_MASK_REGION_TOP) / 100.0);
+			mask.region.right         = 1.0f - float_t(obs_data_get_double(settings, P_MASK_REGION_RIGHT) / 100.0);
+			mask.region.bottom        = 1.0f - float_t(obs_data_get_double(settings, P_MASK_REGION_BOTTOM) / 100.0);
+			mask.region.feather       = float_t(obs_data_get_double(settings, P_MASK_REGION_FEATHER) / 100.0);
+			mask.region.feather_shift = float_t(obs_data_get_double(settings, P_MASK_REGION_FEATHER_SHIFT) / 100.0);
+			mask.region.invert        = obs_data_get_bool(settings, P_MASK_REGION_INVERT);
+			break;
+		case mask_type::Image:
+			mask.image.path = obs_data_get_string(settings, P_MASK_IMAGE);
+			break;
+		case mask_type::Source:
+			mask.source.name = obs_data_get_string(settings, P_MASK_SOURCE);
+			break;
+		}
+		if ((mask.type == mask_type::Image) || (mask.type == mask_type::Source)) {
+			mask.color      = static_cast<uint32_t>(obs_data_get_int(settings, P_MASK_COLOR));
+			mask.multiplier = float_t(obs_data_get_double(settings, P_MASK_MULTIPLIER));
+		}
 	}
 
 	// advanced
@@ -465,16 +572,7 @@ void filter::blur::instance::video_render(gs_effect_t* effect)
 	};
 
 	std::string pass = "Draw";
-	if (region.enabled) {
-		if (region.feather > 0) {
-			pass = "DrawRegionFeather";
-		} else {
-			pass = "DrawRegion";
-		}
-		if (region.invert) {
-			pass += "Invert";
-		}
-	}
+
 	for (auto v : kvs) {
 		const char*     name = std::get<0>(v);
 		gs_texrender_t* rt   = std::get<1>(v);
@@ -519,6 +617,53 @@ void filter::blur::instance::video_render(gs_effect_t* effect)
 		return;
 	}
 #pragma endregion blur
+
+#pragma region Mask
+	if (mask.enabled) {
+		std::string technique = "";
+		switch (mask.type) {
+		case Region:
+			if (mask.region.feather > 0.001) {
+				if (mask.region.invert) {
+					technique = "RegionFeatherInverted";
+				} else {
+					technique = "RegionFeather";
+				}
+			} else {
+				if (mask.region.invert) {
+					technique = "RegionInverted";
+				} else {
+					technique = "Region";
+				}
+			}
+			break;
+		case Image:
+		case Source:
+			technique = "Image";
+			break;
+		}
+
+		gs_texrender_reset(horizontal_rendertarget);
+		if (gs_texrender_begin(horizontal_rendertarget, baseW, baseH)) {
+			std::shared_ptr<gs::effect> mask_effect = factory::get()->get_mask_effect();
+			apply_mask_parameters(mask_effect, sourceTexture, blurred);
+
+			// Camera
+			gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
+			gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
+
+			// Render
+			while (gs_effect_loop(mask_effect->get_object(), technique.c_str())) {
+				gs_draw_sprite(blurred, 0, baseW, baseH);
+			}
+
+			gs_texrender_end(horizontal_rendertarget);
+
+			blurred = gs_texrender_get_texture(horizontal_rendertarget);
+		}
+	}
+
+#pragma endregion
 
 #pragma region YUV->RGB or straight draw
 	// Draw final effect
@@ -586,22 +731,52 @@ filter::blur::factory::~factory() {}
 void filter::blur::factory::on_list_fill()
 {
 	obs_enter_graphics();
-	std::pair<blur::type, std::string> shader_list[] = {
-		{type::Box, obs_module_file("effects/box-blur.effect")},
-		{type::Gaussian, obs_module_file("effects/gaussian-blur.effect")},
-		{type::Bilateral, obs_module_file("effects/bilateral-blur.effect")},
-	};
-	for (auto& kv : shader_list) {
+
+	{
+		char* file = obs_module_file("effects/box-blur.effect");
 		try {
-			std::shared_ptr<gs::effect> effect = std::make_shared<gs::effect>(kv.second);
-			effects.insert(std::make_pair(kv.first, effect));
+			effects.insert_or_assign(type::Box, std::make_shared<gs::effect>(file));
 		} catch (std::runtime_error ex) {
-			P_LOG_ERROR("<filter-blur> Loading effect '%s' failed with error(s): %s", kv.second.c_str(), ex.what());
-			obs_leave_graphics();
-			return;
+			P_LOG_ERROR("<filter-blur> Loading effect '%s' failed with error(s): %s", file, ex.what());
 		}
+		bfree(file);
 	}
-	color_converter_effect = std::make_shared<gs::effect>(obs_module_file("effects/color-conversion.effect")),
+	{
+		char* file = obs_module_file("effects/gaussian-blur.effect");
+		try {
+			effects.insert_or_assign(type::Gaussian, std::make_shared<gs::effect>(file));
+		} catch (std::runtime_error ex) {
+			P_LOG_ERROR("<filter-blur> Loading effect '%s' failed with error(s): %s", file, ex.what());
+		}
+		bfree(file);
+	}
+	{
+		char* file = obs_module_file("effects/bilateral-blur.effect");
+		try {
+			effects.insert_or_assign(type::Bilateral, std::make_shared<gs::effect>(file));
+		} catch (std::runtime_error ex) {
+			P_LOG_ERROR("<filter-blur> Loading effect '%s' failed with error(s): %s", file, ex.what());
+		}
+		bfree(file);
+	}
+	{
+		char* file = obs_module_file("effects/color-conversion.effect");
+		try {
+			color_converter_effect = std::make_shared<gs::effect>(file);
+		} catch (std::runtime_error ex) {
+			P_LOG_ERROR("<filter-blur> Loading effect '%s' failed with error(s): %s", file, ex.what());
+		}
+		bfree(file);
+	}
+	{
+		char* file = obs_module_file("effects/mask.effect");
+		try {
+			mask_effect = std::make_shared<gs::effect>(file);
+		} catch (std::runtime_error ex) {
+			P_LOG_ERROR("<filter-blur> Loading effect '%s' failed with error(s): %s", file, ex.what());
+		}
+		bfree(file);
+	}
 
 	generate_kernel_textures();
 	obs_leave_graphics();
@@ -612,13 +787,15 @@ void filter::blur::factory::on_list_empty()
 	obs_enter_graphics();
 	effects.clear();
 	kernels.clear();
+	color_converter_effect.reset();
+	mask_effect.reset();
 	obs_leave_graphics();
 }
 
 void filter::blur::factory::generate_gaussian_kernels()
 {
 	// 2D texture, horizontal is value, vertical is kernel size.
-	size_t size_power_of_two = pow(2, util::math::get_power_of_two_exponent_ceil(max_kernel_size));
+	size_t size_power_of_two = size_t(pow(2, util::math::get_power_of_two_exponent_ceil(max_kernel_size)));
 
 	std::vector<float_t> texture_Data(size_power_of_two * size_power_of_two);
 	std::vector<float_t> math_data(size_power_of_two);
@@ -687,14 +864,21 @@ void filter::blur::factory::get_defaults(obs_data_t* data)
 	obs_data_set_default_double(data, P_BILATERAL_SHARPNESS, 90.0);
 
 	// region
-	obs_data_set_default_bool(data, P_REGION, false);
-	obs_data_set_default_double(data, P_REGION_LEFT, 0.0f);
-	obs_data_set_default_double(data, P_REGION_TOP, 0.0f);
-	obs_data_set_default_double(data, P_REGION_RIGHT, 0.0f);
-	obs_data_set_default_double(data, P_REGION_BOTTOM, 0.0f);
-	obs_data_set_default_double(data, P_REGION_FEATHER, 0.0f);
-	obs_data_set_default_double(data, P_REGION_FEATHER_SHIFT, 0.0f);
-	obs_data_set_default_bool(data, P_REGION_INVERT, false);
+	obs_data_set_default_bool(data, P_MASK, false);
+	obs_data_set_default_int(data, P_MASK_TYPE, mask_type::Region);
+	obs_data_set_default_double(data, P_MASK_REGION_LEFT, 0.0f);
+	obs_data_set_default_double(data, P_MASK_REGION_RIGHT, 0.0f);
+	obs_data_set_default_double(data, P_MASK_REGION_TOP, 0.0f);
+	obs_data_set_default_double(data, P_MASK_REGION_BOTTOM, 0.0f);
+	obs_data_set_default_double(data, P_MASK_REGION_FEATHER, 0.0f);
+	obs_data_set_default_double(data, P_MASK_REGION_FEATHER_SHIFT, 0.0f);
+	obs_data_set_default_bool(data, P_MASK_REGION_INVERT, false);
+	char* default_file = obs_module_file("white.png");
+	obs_data_set_default_string(data, P_MASK_IMAGE, default_file);
+	bfree(default_file);
+	obs_data_set_default_string(data, P_MASK_SOURCE, "");
+	obs_data_set_default_int(data, P_MASK_COLOR, 0xFFFFFFFF);
+	obs_data_set_default_double(data, P_MASK_MULTIPLIER, 1.0);
 
 	// advanced
 	obs_data_set_default_bool(data, S_ADVANCED, false);
@@ -713,6 +897,7 @@ void filter::blur::factory::update(void* inptr, obs_data_t* settings)
 
 const char* filter::blur::factory::get_name(void* inptr)
 {
+	inptr;
 	return P_TRANSLATE(SOURCE_NAME);
 }
 
@@ -754,6 +939,11 @@ std::shared_ptr<gs::effect> filter::blur::factory::get_effect(filter::blur::type
 std::shared_ptr<gs::effect> filter::blur::factory::get_color_converter_effect()
 {
 	return color_converter_effect;
+}
+
+std::shared_ptr<gs::effect> filter::blur::factory::get_mask_effect()
+{
+	return mask_effect;
 }
 
 std::shared_ptr<gs::texture> filter::blur::factory::get_kernel(filter::blur::type type)
