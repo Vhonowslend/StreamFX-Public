@@ -18,101 +18,127 @@
  */
 
 #pragma once
-#include "plugin.h"
-#include "gs-helper.h"
-#include "gs-effect.h"
-#include "gs-texture.h"
-#include <memory>
+#include <list>
 #include <map>
+#include <memory>
+#include "gs-effect.h"
+#include "gs-helper.h"
+#include "gs-texture.h"
+#include "plugin.h"
 
 namespace filter {
-	class Blur {
-		public:
-		Blur();
-		~Blur();
-
-		void generate_gaussian_kernels();
-		void generate_kernel_textures();
-
-		public:
-		enum Type : int64_t {
+	namespace blur {
+		enum type : int64_t {
 			Box,
 			Gaussian,
 			Bilateral,
 		};
 
-		std::shared_ptr<gs::texture> m_gaussianKernelTexture;
-		std::map<std::string, std::shared_ptr<gs::effect>> m_effects;
+		class instance {
+			obs_source_t*   m_source;
+			gs_texrender_t* primary_rendertarget;
+			gs_texrender_t* secondary_rendertarget;
+			gs_texrender_t* horizontal_rendertarget;
+			gs_texrender_t* vertical_rendertarget;
 
-		private:
-		obs_source_info m_sourceInfo;
+			// blur
+			std::shared_ptr<gs::effect> blur_effect;
+			filter::blur::type          type;
+			uint64_t                    size;
 
-		static const size_t max_kernel_size = 25;
-
-		public /*static*/:
-		static const char *get_name(void *);
-		static void get_defaults(obs_data_t *);
-		static obs_properties_t *get_properties(void *);
-		static bool modified_properties(obs_properties_t *, obs_property_t *, obs_data_t *);
-		static void *create(obs_data_t *, obs_source_t *);
-		static void destroy(void *);
-		static uint32_t get_width(void *);
-		static uint32_t get_height(void *);
-		static void update(void *, obs_data_t *);
-		static void activate(void *);
-		static void deactivate(void *);
-		static void video_tick(void *, float);
-		static void video_render(void *, gs_effect_t *);
-
-		private:
-		class Instance {
-			public:
-			Instance(obs_data_t*, obs_source_t*);
-			~Instance();
-
-			void update(obs_data_t*);
-			uint32_t get_width();
-			uint32_t get_height();
-			void activate();
-			void deactivate();
-			void show();
-			void hide();
-			void video_tick(float);
-			void video_render(gs_effect_t*);
-			bool apply_shared_param(gs_texture_t* input,
-				float texelX, float texelY);
-			bool apply_bilateral_param();
-			bool apply_gaussian_param();
-
-			private:
-			obs_source_t *m_source;
-			gs_texrender_t *m_primaryRT, *m_secondaryRT;
-			gs_texrender_t *m_rtHorizontal, *m_rtVertical;
-			std::shared_ptr<gs::effect> m_effect;
-
-			// Blur
-			Type m_type;
-			uint64_t m_size;
-
-			// Bilateral
-			double_t m_bilateralSmoothing;
-			double_t m_bilateralSharpness;
+			// bilateral
+			double_t bilateral_smoothing;
+			double_t bilateral_sharpness;
 
 			// Regional
 			struct Region {
-				bool enabled;
+				bool    enabled;
 				float_t left;
 				float_t top;
 				float_t right;
 				float_t bottom;
 				float_t feather;
 				float_t feather_shift;
-				bool invert;
-			} m_region;
+				bool    invert;
+			} region;
 
-			// Advanced
-			bool m_errorLogged = false;
-			uint64_t m_colorFormat;
+			// advanced
+			bool     have_logged_error = false;
+			uint64_t color_format;
+
+			bool apply_shared_param(gs_texture_t* input, float texelX, float texelY);
+			bool apply_bilateral_param();
+			bool apply_gaussian_param();
+
+			static bool modified_properties(void* ptr, obs_properties_t* props, obs_property* prop,
+											obs_data_t* settings);
+
+			public:
+			instance(obs_data_t* settings, obs_source_t* parent);
+			~instance();
+
+			obs_properties_t* get_properties();
+			void              update(obs_data_t*);
+
+			uint32_t get_width();
+			uint32_t get_height();
+
+			void activate();
+			void deactivate();
+
+			void video_tick(float);
+			void video_render(gs_effect_t*);
 		};
-	};
-}
+
+		class factory {
+			obs_source_info             source_info;
+			std::list<instance*>        sources;
+			std::shared_ptr<gs::effect> color_converter_effect;
+
+			std::map<filter::blur::type, std::shared_ptr<gs::effect>>  effects;
+			std::map<filter::blur::type, std::shared_ptr<gs::texture>> kernels;
+
+			private:
+			factory();
+			~factory();
+
+			void on_list_fill();
+			void on_list_empty();
+
+			void generate_gaussian_kernels();
+			void generate_kernel_textures();
+
+			protected:
+			static void* create(obs_data_t* settings, obs_source_t* parent);
+			static void  destroy(void* source);
+
+			static void              get_defaults(obs_data_t* settings);
+			static obs_properties_t* get_properties(void* source);
+			static void              update(void* source, obs_data_t* settings);
+
+			static const char* get_name(void* source);
+			static uint32_t    get_width(void* source);
+			static uint32_t    get_height(void* source);
+
+			static void activate(void* source);
+			static void deactivate(void* source);
+
+			static void video_tick(void* source, float delta);
+			static void video_render(void* source, gs_effect_t* effect);
+
+			public:
+			std::shared_ptr<gs::effect> get_effect(filter::blur::type type);
+
+			std::shared_ptr<gs::effect> get_color_converter_effect();
+
+			std::shared_ptr<gs::texture> get_kernel(filter::blur::type type);
+
+			public: // Singleton
+			static void     initialize();
+			static void     finalize();
+			static factory* get();
+		};
+
+	} // namespace blur
+
+} // namespace filter
