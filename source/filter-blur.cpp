@@ -59,6 +59,7 @@ extern "C" {
 #define P_MASK_IMAGE "Filter.Blur.Mask.Image"
 #define P_MASK_SOURCE "Filter.Blur.Mask.Source"
 #define P_MASK_COLOR "Filter.Blur.Mask.Color"
+#define P_MASK_ALPHA "Filter.Blur.Mask.Alpha"
 #define P_MASK_MULTIPLIER "Filter.Blur.Mask.Multiplier"
 
 // Initializer & Finalizer
@@ -96,7 +97,6 @@ bool filter::blur::instance::apply_shared_param(gs_texture_t* input, float texel
 
 	result = result && gs_set_param_int(blur_effect->get_object(), "u_radius", (int)size);
 	result = result && gs_set_param_int(blur_effect->get_object(), "u_diameter", (int)(1 + (size * 2)));
-
 
 	return result;
 }
@@ -136,7 +136,8 @@ bool filter::blur::instance::apply_gaussian_param()
 	return true;
 }
 
-bool filter::blur::instance::apply_mask_parameters(std::shared_ptr<gs::effect> effect, gs_texture_t * original_texture, gs_texture_t* blurred_texture)
+bool filter::blur::instance::apply_mask_parameters(std::shared_ptr<gs::effect> effect, gs_texture_t* original_texture,
+												   gs_texture_t* blurred_texture)
 {
 	if (effect->has_parameter("image_orig")) {
 		effect->get_parameter("image_orig").set_texture(original_texture);
@@ -191,9 +192,7 @@ bool filter::blur::instance::apply_mask_parameters(std::shared_ptr<gs::effect> e
 
 	// Shared
 	if (effect->has_parameter("mask_color")) {
-		effect->get_parameter("mask_color")
-			.set_float4((mask.color & 0xFF) / 255.0f, ((mask.color >> 8) & 0xFF) / 255.0f,
-						((mask.color >> 16) & 0xFF) / 255.0f, ((mask.color >> 24) & 0xFF) / 255.0f);
+		effect->get_parameter("mask_color").set_float4(mask.color.r, mask.color.g, mask.color.b, mask.color.a);
 	}
 	if (effect->has_parameter("mask_multiplier")) {
 		effect->get_parameter("mask_multiplier").set_float(mask.multiplier);
@@ -221,6 +220,7 @@ bool filter::blur::instance::modified_properties(void* ptr, obs_properties_t* pr
 	bool      show_image  = (mtype == mask_type::Image) && show_mask;
 	bool      show_source = (mtype == mask_type::Source) && show_mask;
 
+	obs_property_set_visible(obs_properties_get(props, P_MASK_TYPE), show_mask);
 	obs_property_set_visible(obs_properties_get(props, P_MASK_REGION_LEFT), show_region);
 	obs_property_set_visible(obs_properties_get(props, P_MASK_REGION_TOP), show_region);
 	obs_property_set_visible(obs_properties_get(props, P_MASK_REGION_RIGHT), show_region);
@@ -232,6 +232,7 @@ bool filter::blur::instance::modified_properties(void* ptr, obs_properties_t* pr
 	obs_property_set_visible(obs_properties_get(props, P_MASK_IMAGE), show_image);
 	obs_property_set_visible(obs_properties_get(props, P_MASK_SOURCE), show_source);
 	obs_property_set_visible(obs_properties_get(props, P_MASK_COLOR), show_image || show_source);
+	obs_property_set_visible(obs_properties_get(props, P_MASK_ALPHA), show_image || show_source);
 	obs_property_set_visible(obs_properties_get(props, P_MASK_MULTIPLIER), show_image || show_source);
 
 	// advanced
@@ -354,6 +355,8 @@ obs_properties_t* filter::blur::instance::get_properties()
 	/// Shared
 	p = obs_properties_add_color(pr, P_MASK_COLOR, P_TRANSLATE(P_MASK_COLOR));
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_COLOR)));
+	p = obs_properties_add_float_slider(pr, P_MASK_ALPHA, P_TRANSLATE(P_MASK_ALPHA), 0.0, 100.0, 0.1);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_ALPHA)));
 	p = obs_properties_add_float_slider(pr, P_MASK_MULTIPLIER, P_TRANSLATE(P_MASK_MULTIPLIER), 0.0, 10.0, 0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_MULTIPLIER)));
 
@@ -403,7 +406,11 @@ void filter::blur::instance::update(obs_data_t* settings)
 			break;
 		}
 		if ((mask.type == mask_type::Image) || (mask.type == mask_type::Source)) {
-			mask.color      = static_cast<uint32_t>(obs_data_get_int(settings, P_MASK_COLOR));
+			uint32_t color  = static_cast<uint32_t>(obs_data_get_int(settings, P_MASK_COLOR));
+			mask.color.r    = ((color >> 0) & 0xFF) / 255.0f;
+			mask.color.g    = ((color >> 8) & 0xFF) / 255.0f;
+			mask.color.b    = ((color >> 16) & 0xFF) / 255.0f;
+			mask.color.a    = static_cast<float_t>(obs_data_get_double(settings, P_MASK_ALPHA));
 			mask.multiplier = float_t(obs_data_get_double(settings, P_MASK_MULTIPLIER));
 		}
 	}
@@ -418,12 +425,12 @@ void filter::blur::instance::update(obs_data_t* settings)
 
 uint32_t filter::blur::instance::get_width()
 {
-	return uint32_t();
+	return uint32_t(0);
 }
 
 uint32_t filter::blur::instance::get_height()
 {
-	return uint32_t();
+	return uint32_t(0);
 }
 
 void filter::blur::instance::activate() {}
@@ -449,7 +456,7 @@ void filter::blur::instance::video_render(gs_effect_t* effect)
 		obs_source_skip_video_filter(m_source);
 		return;
 	}
-	if ((baseW <= 0) || (baseH <= 0)) {
+	if ((baseW == 0) || (baseH == 0)) {
 		if (!have_logged_error)
 			P_LOG_ERROR("<filter-blur> Instance '%s' has invalid size source '%s'.", obs_source_get_name(m_source),
 						obs_source_get_name(target));
@@ -877,7 +884,7 @@ void filter::blur::factory::get_defaults(obs_data_t* data)
 	obs_data_set_default_string(data, P_MASK_IMAGE, default_file);
 	bfree(default_file);
 	obs_data_set_default_string(data, P_MASK_SOURCE, "");
-	obs_data_set_default_int(data, P_MASK_COLOR, 0xFFFFFFFF);
+	obs_data_set_default_int(data, P_MASK_COLOR, 0xFFFFFFFFull);
 	obs_data_set_default_double(data, P_MASK_MULTIPLIER, 1.0);
 
 	// advanced

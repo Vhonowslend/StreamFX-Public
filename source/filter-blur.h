@@ -80,8 +80,13 @@ namespace filter {
 					std::shared_ptr<gfx::source_texture> source_texture;
 					std::shared_ptr<gs::texture>         texture;
 				} source;
-				uint32_t color;
-				float_t  multiplier;
+				struct {
+					float_t r;
+					float_t g;
+					float_t b;
+					float_t a;
+				} color;
+				float_t multiplier;
 			} mask;
 
 			// advanced
@@ -91,13 +96,14 @@ namespace filter {
 			bool apply_shared_param(gs_texture_t* input, float texelX, float texelY);
 			bool apply_bilateral_param();
 			bool apply_gaussian_param();
-			bool apply_mask_parameters(std::shared_ptr<gs::effect> effect, gs_texture_t * original_texture, gs_texture_t* blurred_texture);
+			bool apply_mask_parameters(std::shared_ptr<gs::effect> effect, gs_texture_t* original_texture,
+									   gs_texture_t* blurred_texture);
 
 			static bool modified_properties(void* ptr, obs_properties_t* props, obs_property* prop,
 											obs_data_t* settings);
 
 			public:
-			instance(obs_data_t* settings, obs_source_t* parent);
+			instance(obs_data_t* settings, obs_source_t* self);
 			~instance();
 
 			obs_properties_t* get_properties();
@@ -133,7 +139,7 @@ namespace filter {
 			void generate_kernel_textures();
 
 			protected:
-			static void* create(obs_data_t* settings, obs_source_t* parent);
+			static void* create(obs_data_t* settings, obs_source_t* self);
 			static void  destroy(void* source);
 
 			static void              get_defaults(obs_data_t* settings);
