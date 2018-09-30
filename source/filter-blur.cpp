@@ -348,7 +348,8 @@ obs_properties_t* filter::blur::instance::get_properties()
 	obs_enum_sources(
 		[](void* ptr, obs_source_t* source) {
 			obs_property_t* p = reinterpret_cast<obs_property_t*>(ptr);
-			obs_property_list_add_string(p, obs_source_get_name(source), obs_source_get_name(source));
+			obs_property_list_add_string(p, std::string(std::string(obs_source_get_name(source)) + " (Source)").c_str(),
+										 obs_source_get_name(source));
 			return true;
 		},
 		p);
@@ -437,7 +438,30 @@ void filter::blur::instance::activate() {}
 
 void filter::blur::instance::deactivate() {}
 
-void filter::blur::instance::video_tick(float) {}
+void filter::blur::instance::video_tick(float)
+{
+	if (mask.type == mask_type::Image) {
+		if (mask.image.path_old != mask.image.path) {
+			try {
+				mask.image.texture  = std::make_shared<gs::texture>(mask.image.path);
+				mask.image.path_old = mask.image.path;
+			} catch (...) {
+				P_LOG_ERROR("<filter-blur> Instance '%s' failed to load image '%s'.", obs_source_get_name(m_source),
+							mask.image.path.c_str());
+			}
+		}
+	} else if (mask.type == mask_type::Source) {
+		if (mask.source.name_old != mask.source.name) {
+			try {
+				mask.source.source_texture = std::make_shared<gfx::source_texture>(mask.source.name, m_source);
+				mask.source.name_old = mask.source.name;
+			} catch (...) {
+				P_LOG_ERROR("<filter-blur> Instance '%s' failed to grab source '%s'.", obs_source_get_name(m_source),
+							mask.source.name.c_str());
+			}
+		}
+	}
+}
 
 void filter::blur::instance::video_render(gs_effect_t* effect)
 {
@@ -650,11 +674,25 @@ void filter::blur::instance::video_render(gs_effect_t* effect)
 			break;
 		}
 
+		if (mask.source.source_texture) {
+			uint32_t source_width  = obs_source_get_width(mask.source.source_texture->get_object());
+			uint32_t source_height = obs_source_get_height(mask.source.source_texture->get_object());
+
+			if (source_width == 0) {
+				source_width = baseW;
+			}
+			if (source_height == 0) {
+				source_height = baseH;
+			}
+
+			mask.source.texture = mask.source.source_texture->render(source_width, source_height);
+		}
+
+		std::shared_ptr<gs::effect> mask_effect = factory::get()->get_mask_effect();
+		apply_mask_parameters(mask_effect, sourceTexture, blurred);
+
 		gs_texrender_reset(horizontal_rendertarget);
 		if (gs_texrender_begin(horizontal_rendertarget, baseW, baseH)) {
-			std::shared_ptr<gs::effect> mask_effect = factory::get()->get_mask_effect();
-			apply_mask_parameters(mask_effect, sourceTexture, blurred);
-
 			// Camera
 			gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
 			gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);

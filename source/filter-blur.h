@@ -72,11 +72,12 @@ namespace filter {
 				} region;
 				struct {
 					std::string                  path;
+					std::string                  path_old;
 					std::shared_ptr<gs::texture> texture;
 				} image;
 				struct {
+					std::string                          name_old;
 					std::string                          name;
-					obs_source_t*                        object;
 					std::shared_ptr<gfx::source_texture> source_texture;
 					std::shared_ptr<gs::texture>         texture;
 				} source;
