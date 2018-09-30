@@ -24,6 +24,7 @@
 #define P_DESC(x) x ".Description"
 
 #define S_ADVANCED "Advanced"
+#define S_FILEFILTERS_IMAGES "FileFilters.Images"
 
 namespace strings {
 	static const char* Advanced = "Advanced";
