@@ -117,6 +117,7 @@ namespace util {
 		is_power_of_two_as_loop(uint32_t);
 		is_power_of_two_as_loop(int64_t);
 		is_power_of_two_as_loop(uint64_t);
+#undef is_power_of_two_as_loop
 #pragma pop_macro("is_power_of_two_as_loop")
 
 		template<typename T>
