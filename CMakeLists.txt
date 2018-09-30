@@ -200,6 +200,7 @@ SET(PROJECT_DATA_EFFECTS
 	"${PROJECT_SOURCE_DIR}/data/effects/gaussian-blur.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/displace.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/color-conversion.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/mask.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mip-mapper.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mipgen.effect"
 )

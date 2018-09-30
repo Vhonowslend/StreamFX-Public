@@ -1,0 +1,153 @@
+// Parameters
+/// OBS
+uniform float4x4 ViewProj;
+/// Input
+uniform texture2d image_blur;
+uniform texture2d image_orig;
+/// Mask
+uniform float mask_region_left;
+uniform float mask_region_top;
+uniform float mask_region_right;
+uniform float mask_region_bottom;
+uniform float mask_region_feather;
+uniform float mask_region_feather_shift;
+uniform texture2d mask_image;
+uniform float4 mask_color;
+uniform float mask_multiplier;
+
+// Data
+sampler_state pointSampler {
+	Filter    = Point;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+	MinLOD    = 0;
+	MaxLOD    = 0;
+};
+
+sampler_state linearSampler {
+	Filter    = Linear;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+	MinLOD    = 0;
+	MaxLOD    = 0;
+};
+
+struct VertDataIn {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+struct VertDataOut {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertDataOut VSDefault(VertDataIn v_out)
+{
+	VertDataOut vert_out;
+	vert_out.pos = mul(float4(v_out.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_out.uv;
+	return vert_out;
+}
+
+float Region(float2 uv) {
+	if ((uv.x < mask_region_left)
+		|| (uv.x > mask_region_right)
+		|| (uv.y < mask_region_top)
+		|| (uv.y > mask_region_bottom)) {
+		return 0.0;
+	}
+	return 1.0;
+}
+
+float RegionFeathered(float2 uv) {
+	float halfFeather = (mask_region_feather / 2.0);
+	float feather = max(mask_region_feather, 0.00000001);
+	float leftFeather = clamp(((uv.x - mask_region_left + halfFeather) / feather) + mask_region_feather_shift, 0.0, 1.0);
+	float rightFeather = clamp(((-(uv.x - mask_region_right) + halfFeather) / feather) + mask_region_feather_shift, 0.0, 1.0);
+	float topFeather = clamp(((uv.y - mask_region_top + halfFeather) / feather) + mask_region_feather_shift, 0.0, 1.0);
+	float bottomFeather = clamp(((-(uv.y - mask_region_bottom) + halfFeather) / feather) + mask_region_feather_shift, 0.0, 1.0);
+	float finalFeather = min(min(leftFeather, rightFeather), min(topFeather, bottomFeather));
+	return clamp(finalFeather, 0.0, 1.0);
+}
+
+float4 PSRegion(VertDataOut v_out) : TARGET {
+	float alpha = Region(v_out.uv);
+	float4 orig = image_orig.Sample(pointSampler, v_out.uv);
+	float4 blur = image_blur.Sample(pointSampler, v_out.uv);	
+	return lerp(orig, blur, alpha);
+}
+
+float4 PSRegionInverted(VertDataOut v_out) : TARGET {
+	float alpha = 1.0 - Region(v_out.uv);
+	float4 orig = image_orig.Sample(pointSampler, v_out.uv);
+	float4 blur = image_blur.Sample(pointSampler, v_out.uv);	
+	return lerp(orig, blur, alpha);
+}
+
+float4 PSRegionFeather(VertDataOut v_out) : TARGET {
+	float alpha = RegionFeathered(v_out.uv);
+	float4 orig = image_orig.Sample(pointSampler, v_out.uv);
+	float4 blur = image_blur.Sample(pointSampler, v_out.uv);	
+	return lerp(orig, blur, alpha);
+}
+
+float4 PSRegionFeatherInverted(VertDataOut v_out) : TARGET {
+	float alpha = 1.0 - RegionFeathered(v_out.uv);
+	float4 orig = image_orig.Sample(pointSampler, v_out.uv);
+	float4 blur = image_blur.Sample(pointSampler, v_out.uv);	
+	return lerp(orig, blur, alpha);
+}
+
+float4 PSImage(VertDataOut v_out) : TARGET {
+	float4 mask = mask_image.Sample(linearSampler, v_out.uv) * mask_color * mask_multiplier;
+	float alpha = clamp(mask.r + mask.g + mask.b + mask.a, 0.0, 1.0);
+	float4 orig = image_orig.Sample(pointSampler, v_out.uv);
+	float4 blur = image_blur.Sample(pointSampler, v_out.uv);	
+	return lerp(orig, blur, alpha);
+}
+
+technique Region
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_out);
+		pixel_shader = PSRegion(v_out);
+	}
+}
+
+technique RegionInverted
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_out);
+		pixel_shader = PSRegionInverted(v_out);
+	}
+}
+
+technique RegionFeather
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_out);
+		pixel_shader = PSRegionFeather(v_out);
+	}
+}
+
+technique RegionFeatherInverted
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_out);
+		pixel_shader = PSRegionFeatherInverted(v_out);
+	}
+}
+
+technique Image
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_out);
+		pixel_shader = PSImage(v_out);		
+	}
+}
