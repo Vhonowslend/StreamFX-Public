@@ -27,10 +27,10 @@ extern "C" {
 
 namespace gfx {
 	class source_texture {
-		obs_source_t* source;
-		obs_source_t* target;
+		obs_source_t* parent;
+		obs_source_t* child;
 
-		std::shared_ptr<gs::rendertarget> m_rt;
+		std::shared_ptr<gs::rendertarget> render_target;
 
 		source_texture(obs_source_t* parent);
 
