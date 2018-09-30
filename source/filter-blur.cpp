@@ -27,6 +27,7 @@
 extern "C" {
 #pragma warning(push)
 #pragma warning(disable : 4201)
+#include "callback/signal.h"
 #include "graphics/graphics.h"
 #include "graphics/matrix4.h"
 #include "util/platform.h"
@@ -353,6 +354,22 @@ obs_properties_t* filter::blur::instance::get_properties()
 			return true;
 		},
 		p);
+	factory::get()->enum_scenes([this, p](obs_scene_t* scene) {
+		struct data {
+			instance*       self;
+			obs_property_t* prop;
+			std::string     parent_name;
+		};
+
+		obs_source_t* scene_source = obs_scene_get_source(scene);
+		P_LOG_DEBUG("<filter-blur> Instance '%s' adding scene '%s'.", obs_source_get_name(m_source),
+					obs_source_get_name(scene_source));
+		obs_property_list_add_string(p,
+									 std::string(std::string(obs_source_get_name(scene_source)) + " (Scene)").c_str(),
+									 obs_source_get_name(scene_source));
+		return true;
+	});
+
 	/// Shared
 	p = obs_properties_add_color(pr, P_MASK_COLOR, P_TRANSLATE(P_MASK_COLOR));
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_COLOR)));
@@ -454,6 +471,7 @@ void filter::blur::instance::video_tick(float)
 		if (mask.source.name_old != mask.source.name) {
 			try {
 				mask.source.source_texture = std::make_shared<gfx::source_texture>(mask.source.name, m_source);
+				mask.source.is_scene = (obs_scene_from_source(mask.source.source_texture->get_object()) != nullptr);
 				mask.source.name_old = mask.source.name;
 			} catch (...) {
 				P_LOG_ERROR("<filter-blur> Instance '%s' failed to grab source '%s'.", obs_source_get_name(m_source),
@@ -684,6 +702,13 @@ void filter::blur::instance::video_render(gs_effect_t* effect)
 			if (source_height == 0) {
 				source_height = baseH;
 			}
+			if (mask.source.is_scene) {
+				obs_video_info ovi;
+				if (obs_get_video_info(&ovi)) {
+					source_width  = ovi.base_width;
+					source_height = ovi.base_height;
+				}
+			}
 
 			mask.source.texture = mask.source.source_texture->render(source_width, source_height);
 		}
@@ -769,9 +794,18 @@ filter::blur::factory::factory()
 	source_info.video_render = video_render;
 
 	obs_register_source(&source_info);
+
+	auto osi = obs_get_signal_handler();
+	signal_handler_connect(osi, "source_create", scene_create_handler, this);
+	signal_handler_connect(osi, "source_destroy", scene_destroy_handler, this);
 }
 
-filter::blur::factory::~factory() {}
+filter::blur::factory::~factory()
+{
+	auto osi = obs_get_signal_handler();
+	signal_handler_disconnect(osi, "source_create", scene_create_handler, this);
+	signal_handler_disconnect(osi, "source_destroy", scene_destroy_handler, this);
+}
 
 void filter::blur::factory::on_list_fill()
 {
@@ -976,6 +1010,28 @@ void filter::blur::factory::video_render(void* inptr, gs_effect_t* effect)
 	reinterpret_cast<filter::blur::instance*>(inptr)->video_render(effect);
 }
 
+void filter::blur::factory::scene_create_handler(void* ptr, calldata_t* data)
+{
+	filter::blur::factory* self   = reinterpret_cast<filter::blur::factory*>(ptr);
+	obs_source_t*          source = nullptr;
+	calldata_get_ptr(data, "source", &source);
+	obs_scene_t* scene = obs_scene_from_source(source);
+	if (scene) {
+		self->scenes.insert_or_assign(std::string(obs_source_get_name(source)), scene);
+	}
+}
+
+void filter::blur::factory::scene_destroy_handler(void* ptr, calldata_t* data)
+{
+	filter::blur::factory* self   = reinterpret_cast<filter::blur::factory*>(ptr);
+	obs_source_t*          source = nullptr;
+	calldata_get_ptr(data, "source", &source);
+	obs_scene_t* scene = obs_scene_from_source(source);
+	if (scene) {
+		self->scenes.erase(std::string(obs_source_get_name(source)));
+	}
+}
+
 std::shared_ptr<gs::effect> filter::blur::factory::get_effect(filter::blur::type type)
 {
 	return effects.at(type);
@@ -994,6 +1050,24 @@ std::shared_ptr<gs::effect> filter::blur::factory::get_mask_effect()
 std::shared_ptr<gs::texture> filter::blur::factory::get_kernel(filter::blur::type type)
 {
 	return kernels.at(type);
+}
+
+obs_scene_t* filter::blur::factory::get_scene(std::string name)
+{
+	auto kv = scenes.find(name);
+	if (kv != scenes.end()) {
+		return kv->second;
+	}
+	return nullptr;
+}
+
+void filter::blur::factory::enum_scenes(std::function<bool(obs_scene_t*)> fnc)
+{
+	for (auto kv : scenes) {
+		if (!fnc(kv.second)) {
+			break;
+		}
+	}
 }
 
 static filter::blur::factory* factory_instance = nullptr;

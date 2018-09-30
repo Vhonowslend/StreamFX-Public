@@ -18,6 +18,7 @@
  */
 
 #pragma once
+#include <functional>
 #include <list>
 #include <map>
 #include <memory>
@@ -26,6 +27,13 @@
 #include "gs-helper.h"
 #include "gs-texture.h"
 #include "plugin.h"
+
+extern "C" {
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#include "callback/signal.h"
+#pragma warning(pop)
+}
 
 namespace filter {
 	namespace blur {
@@ -78,6 +86,7 @@ namespace filter {
 				struct {
 					std::string                          name_old;
 					std::string                          name;
+					bool                                 is_scene;
 					std::shared_ptr<gfx::source_texture> source_texture;
 					std::shared_ptr<gs::texture>         texture;
 				} source;
@@ -129,6 +138,8 @@ namespace filter {
 			std::map<filter::blur::type, std::shared_ptr<gs::effect>>  effects;
 			std::map<filter::blur::type, std::shared_ptr<gs::texture>> kernels;
 
+			std::map<std::string, obs_scene_t*> scenes;
+
 			private:
 			factory();
 			~factory();
@@ -157,6 +168,9 @@ namespace filter {
 			static void video_tick(void* source, float delta);
 			static void video_render(void* source, gs_effect_t* effect);
 
+			static void scene_create_handler(void* ptr, calldata_t* data);
+			static void scene_destroy_handler(void* ptr, calldata_t* data);
+
 			public:
 			std::shared_ptr<gs::effect> get_effect(filter::blur::type type);
 
@@ -165,6 +179,10 @@ namespace filter {
 			std::shared_ptr<gs::effect> get_mask_effect();
 
 			std::shared_ptr<gs::texture> get_kernel(filter::blur::type type);
+
+			obs_scene_t* get_scene(std::string name);
+
+			void enum_scenes(std::function<bool(obs_scene_t*)> fnc);
 
 			public: // Singleton
 			static void     initialize();
