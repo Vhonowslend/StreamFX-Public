@@ -26,7 +26,7 @@
 #include <inttypes.h>
 #include "gfx-effect-source.h"
 
-namespace Filter {
+namespace filter {
 	class CustomShader {
 		public:
 		CustomShader();

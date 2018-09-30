@@ -58,17 +58,17 @@ enum class ShaderType : int64_t {
 	File
 };
 
-static Filter::CustomShader* handler;
+static filter::CustomShader* handler;
 INITIALIZER(HandlerInit) {
 	initializerFunctions.push_back([] {
-		handler = new Filter::CustomShader();
+		handler = new filter::CustomShader();
 	});
 	finalizerFunctions.push_back([] {
 		delete handler;
 	});
 }
 
-Filter::CustomShader::CustomShader() {
+filter::CustomShader::CustomShader() {
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
 	sourceInfo.id = "obs-stream-effects-filter-custom-shader";
 	sourceInfo.type = OBS_SOURCE_TYPE_FILTER;
@@ -88,74 +88,74 @@ Filter::CustomShader::CustomShader() {
 	obs_register_source(&sourceInfo);
 }
 
-Filter::CustomShader::~CustomShader() {}
+filter::CustomShader::~CustomShader() {}
 
-const char * Filter::CustomShader::get_name(void *) {
+const char * filter::CustomShader::get_name(void *) {
 	return P_TRANSLATE(S);
 }
 
-void Filter::CustomShader::get_defaults(obs_data_t *data) {
+void filter::CustomShader::get_defaults(obs_data_t *data) {
 	gfx::effect_source::get_defaults(data);
 }
 
-obs_properties_t * Filter::CustomShader::get_properties(void *ptr) {
+obs_properties_t * filter::CustomShader::get_properties(void *ptr) {
 	obs_properties_t *pr = obs_properties_create_param(ptr, nullptr);
 	reinterpret_cast<Instance*>(ptr)->get_properties(pr);
 	return pr;
 }
 
-void * Filter::CustomShader::create(obs_data_t *data, obs_source_t *src) {
+void * filter::CustomShader::create(obs_data_t *data, obs_source_t *src) {
 	return new Instance(data, src);
 }
 
-void Filter::CustomShader::destroy(void *ptr) {
+void filter::CustomShader::destroy(void *ptr) {
 	delete reinterpret_cast<Instance*>(ptr);
 }
 
-uint32_t Filter::CustomShader::get_width(void *ptr) {
+uint32_t filter::CustomShader::get_width(void *ptr) {
 	return reinterpret_cast<Instance*>(ptr)->get_width();
 }
 
-uint32_t Filter::CustomShader::get_height(void *ptr) {
+uint32_t filter::CustomShader::get_height(void *ptr) {
 	return reinterpret_cast<Instance*>(ptr)->get_height();
 }
 
-void Filter::CustomShader::update(void *ptr, obs_data_t *data) {
+void filter::CustomShader::update(void *ptr, obs_data_t *data) {
 	reinterpret_cast<Instance*>(ptr)->update(data);
 }
 
-void Filter::CustomShader::activate(void *ptr) {
+void filter::CustomShader::activate(void *ptr) {
 	reinterpret_cast<Instance*>(ptr)->activate();
 }
 
-void Filter::CustomShader::deactivate(void *ptr) {
+void filter::CustomShader::deactivate(void *ptr) {
 	reinterpret_cast<Instance*>(ptr)->deactivate();
 }
 
-void Filter::CustomShader::video_tick(void *ptr, float time) {
+void filter::CustomShader::video_tick(void *ptr, float time) {
 	reinterpret_cast<Instance*>(ptr)->video_tick(time);
 }
 
-void Filter::CustomShader::video_render(void *ptr, gs_effect_t *effect) {
+void filter::CustomShader::video_render(void *ptr, gs_effect_t *effect) {
 	reinterpret_cast<Instance*>(ptr)->video_render(effect);
 }
 
-Filter::CustomShader::Instance::Instance(obs_data_t *data, obs_source_t *source) : gfx::effect_source(data, source) {
+filter::CustomShader::Instance::Instance(obs_data_t *data, obs_source_t *source) : gfx::effect_source(data, source) {
 	m_defaultShaderPath = "shaders/filter/example.effect";
 	m_renderTarget = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	update(data);
 }
 
-Filter::CustomShader::Instance::~Instance() {}
+filter::CustomShader::Instance::~Instance() {}
 
-//void Filter::CustomShader::Instance::update(obs_data_t *data) {
+//void filter::CustomShader::Instance::update(obs_data_t *data) {
 //	ShaderType shaderType = (ShaderType)obs_data_get_int(data, S_TYPE);
 //	if (shaderType == ShaderType::Text) {
 //		const char* shaderText = obs_data_get_string(data, S_CONTENT_TEXT);
 //		try {
 //			m_effect.effect = std::make_unique<gs::effect>(shaderText, "Text Shader");
 //		} catch (std::runtime_error& ex) {
-//			const char* filterName = obs_source_get_name(m_source);
+//			const char* filterName = obs_source_get_name(source);
 //			P_LOG_ERROR("[%s] Shader loading failed with error(s): %s", filterName, ex.what());
 //		}
 //	} else if (shaderType == ShaderType::File) {
@@ -299,15 +299,15 @@ Filter::CustomShader::Instance::~Instance() {}
 //	}
 //}
 
-uint32_t Filter::CustomShader::Instance::get_width() {
+uint32_t filter::CustomShader::Instance::get_width() {
 	return 0;
 }
 
-uint32_t Filter::CustomShader::Instance::get_height() {
+uint32_t filter::CustomShader::Instance::get_height() {
 	return 0;
 }
 
-bool Filter::CustomShader::Instance::is_special_parameter(std::string name, gs::effect_parameter::type type) {
+bool filter::CustomShader::Instance::is_special_parameter(std::string name, gs::effect_parameter::type type) {
 	std::pair<std::string, gs::effect_parameter::type> reservedParameters[] = {
 		{ "ViewProj", gs::effect_parameter::type::Matrix },
 		{ "ViewSize", gs::effect_parameter::type::Float2 },
@@ -350,7 +350,7 @@ bool Filter::CustomShader::Instance::is_special_parameter(std::string name, gs::
 	return false;
 }
 
-bool Filter::CustomShader::Instance::apply_special_parameters(uint32_t viewW, uint32_t viewH) {
+bool filter::CustomShader::Instance::apply_special_parameters(uint32_t viewW, uint32_t viewH) {
 	std::unique_ptr<gs::texture> imageTexture;
 	m_renderTarget->get_texture(imageTexture);
 
@@ -378,11 +378,11 @@ bool Filter::CustomShader::Instance::apply_special_parameters(uint32_t viewW, ui
 	return true;
 }
 
-bool Filter::CustomShader::Instance::video_tick_impl(float_t time) {
+bool filter::CustomShader::Instance::video_tick_impl(float_t time) {
 	return true;
 }
 
-bool Filter::CustomShader::Instance::video_render_impl(gs_effect_t* parent_effect, uint32_t viewW, uint32_t viewH) {
+bool filter::CustomShader::Instance::video_render_impl(gs_effect_t* parent_effect, uint32_t viewW, uint32_t viewH) {
 	// Render original source to render target.
 	{
 		auto op = m_renderTarget->render(viewW, viewH);
@@ -406,7 +406,7 @@ bool Filter::CustomShader::Instance::video_render_impl(gs_effect_t* parent_effec
 	return true;
 }
 
-//void Filter::CustomShader::Instance::video_render(gs_effect_t *effect) {
+//void filter::CustomShader::Instance::video_render(gs_effect_t *effect) {
 //		for (Parameter& prm : m_effectParameters) {
 //			gs::effect_parameter eprm = m_effect.effect->get_parameter(prm.name);
 //			switch (prm.type) {
@@ -436,7 +436,7 @@ bool Filter::CustomShader::Instance::video_render_impl(gs_effect_t* parent_effec
 //
 //}
 
-//void Filter::CustomShader::Instance::CheckTextures(float_t time) {
+//void filter::CustomShader::Instance::CheckTextures(float_t time) {
 //
 //	for (Parameter& prm : m_effectParameters) {
 //		if (prm.type != gs::effect_parameter::type::Texture)
@@ -446,7 +446,7 @@ bool Filter::CustomShader::Instance::video_render_impl(gs_effect_t* parent_effec
 //			// If the source field is empty, simply clear the source reference.
 //			if (prm.value.source.name.empty()) {
 //				if (prm.value.source.source)
-//					obs_source_release(m_source);
+//					obs_source_release(source);
 //				prm.value.source.source = nullptr;
 //				continue;
 //			}
@@ -502,7 +502,7 @@ bool Filter::CustomShader::Instance::video_render_impl(gs_effect_t* parent_effec
 //				try {
 //					prm.value.file.texture = std::make_shared<gs::texture>(prm.value.file.path);
 //				} catch (std::runtime_error& ex) {
-//					const char* filterName = obs_source_get_name(m_source);
+//					const char* filterName = obs_source_get_name(source);
 //					P_LOG_ERROR("[%s] Loading texture file '%s' failed with error(s): %s",
 //						filterName, prm.value.file.path.c_str(), ex.what());
 //				}

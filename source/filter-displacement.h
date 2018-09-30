@@ -36,7 +36,7 @@ extern "C" {
 #define S_FILTER_DISPLACEMENT_RATIO			"Filter.Displacement.Ratio"
 #define S_FILTER_DISPLACEMENT_SCALE			"Filter.Displacement.Scale"
 
-namespace Filter {
+namespace filter {
 	class Displacement {
 		public:
 		Displacement();

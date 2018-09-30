@@ -27,9 +27,9 @@ OBS_DECLARE_MODULE();
 OBS_MODULE_AUTHOR("Michael Fabian Dirks");
 OBS_MODULE_USE_DEFAULT_LOCALE("obs-stream-effects", "en-US");
 
-Filter::Displacement *filterDisplacement;
-Filter::Shape *filterShape;
-Filter::Transform *filterTransform;
+filter::Displacement *filterDisplacement;
+filter::Shape *filterShape;
+filter::Transform *filterTransform;
 
 std::list<std::function<void()>> initializerFunctions;
 std::list<std::function<void()>> finalizerFunctions;

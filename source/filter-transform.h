@@ -26,7 +26,7 @@
 #include "gs-vertexbuffer.h"
 #include "plugin.h"
 
-namespace Filter {
+namespace filter {
 	class Transform {
 		obs_source_info sourceInfo;
 
@@ -98,4 +98,4 @@ namespace Filter {
 			void     video_render(gs_effect_t*);
 		};
 	};
-} // namespace Filter
+} // namespace filter

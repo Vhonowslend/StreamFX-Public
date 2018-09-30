@@ -21,17 +21,17 @@
 #include "strings.h"
 
 // Initializer & Finalizer
-static Filter::Displacement* filterDisplacementInstance;
+static filter::Displacement* filterDisplacementInstance;
 INITIALIZER(FilterDisplacementInit) {
 	initializerFunctions.push_back([] {
-		filterDisplacementInstance = new Filter::Displacement();
+		filterDisplacementInstance = new filter::Displacement();
 	});
 	finalizerFunctions.push_back([] {
 		delete filterDisplacementInstance;
 	});
 }
 
-Filter::Displacement::Displacement() {
+filter::Displacement::Displacement() {
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
 	sourceInfo.id = "obs-stream-effects-filter-displacement";
 	sourceInfo.type = OBS_SOURCE_TYPE_FILTER;
@@ -53,31 +53,31 @@ Filter::Displacement::Displacement() {
 	obs_register_source(&sourceInfo);
 }
 
-Filter::Displacement::~Displacement() {
+filter::Displacement::~Displacement() {
 
 }
 
-const char * Filter::Displacement::get_name(void *) {
+const char * filter::Displacement::get_name(void *) {
 	return P_TRANSLATE(S_FILTER_DISPLACEMENT);
 }
 
-void * Filter::Displacement::create(obs_data_t *data, obs_source_t *source) {
+void * filter::Displacement::create(obs_data_t *data, obs_source_t *source) {
 	return new Instance(data, source);
 }
 
-void Filter::Displacement::destroy(void *ptr) {
+void filter::Displacement::destroy(void *ptr) {
 	delete reinterpret_cast<Instance*>(ptr);
 }
 
-uint32_t Filter::Displacement::get_width(void *ptr) {
+uint32_t filter::Displacement::get_width(void *ptr) {
 	return reinterpret_cast<Instance*>(ptr)->get_width();
 }
 
-uint32_t Filter::Displacement::get_height(void *ptr) {
+uint32_t filter::Displacement::get_height(void *ptr) {
 	return reinterpret_cast<Instance*>(ptr)->get_height();
 }
 
-void Filter::Displacement::get_defaults(obs_data_t *data) {
+void filter::Displacement::get_defaults(obs_data_t *data) {
 	char* disp = obs_module_file("filter-displacement/neutral.png");
 	obs_data_set_default_string(data, S_FILTER_DISPLACEMENT_FILE, disp);
 	obs_data_set_default_double(data, S_FILTER_DISPLACEMENT_RATIO, 0);
@@ -85,7 +85,7 @@ void Filter::Displacement::get_defaults(obs_data_t *data) {
 	bfree(disp);
 }
 
-obs_properties_t * Filter::Displacement::get_properties(void *ptr) {
+obs_properties_t * filter::Displacement::get_properties(void *ptr) {
 	obs_properties_t *pr = obs_properties_create();
 
 	std::string path = "";
@@ -103,35 +103,35 @@ obs_properties_t * Filter::Displacement::get_properties(void *ptr) {
 	return pr;
 }
 
-void Filter::Displacement::update(void *ptr, obs_data_t *data) {
+void filter::Displacement::update(void *ptr, obs_data_t *data) {
 	reinterpret_cast<Instance*>(ptr)->update(data);
 }
 
-void Filter::Displacement::activate(void *ptr) {
+void filter::Displacement::activate(void *ptr) {
 	reinterpret_cast<Instance*>(ptr)->activate();
 }
 
-void Filter::Displacement::deactivate(void *ptr) {
+void filter::Displacement::deactivate(void *ptr) {
 	reinterpret_cast<Instance*>(ptr)->deactivate();
 }
 
-void Filter::Displacement::show(void *ptr) {
+void filter::Displacement::show(void *ptr) {
 	reinterpret_cast<Instance*>(ptr)->show();
 }
 
-void Filter::Displacement::hide(void *ptr) {
+void filter::Displacement::hide(void *ptr) {
 	reinterpret_cast<Instance*>(ptr)->hide();
 }
 
-void Filter::Displacement::video_tick(void *ptr, float time) {
+void filter::Displacement::video_tick(void *ptr, float time) {
 	reinterpret_cast<Instance*>(ptr)->video_tick(time);
 }
 
-void Filter::Displacement::video_render(void *ptr, gs_effect_t *effect) {
+void filter::Displacement::video_render(void *ptr, gs_effect_t *effect) {
 	reinterpret_cast<Instance*>(ptr)->video_render(effect);
 }
 
-Filter::Displacement::Instance::Instance(obs_data_t *data,
+filter::Displacement::Instance::Instance(obs_data_t *data,
 	obs_source_t *context) {
 	this->dispmap.texture = nullptr;
 	this->dispmap.createTime = 0;
@@ -155,14 +155,14 @@ Filter::Displacement::Instance::Instance(obs_data_t *data,
 	update(data);
 }
 
-Filter::Displacement::Instance::~Instance() {
+filter::Displacement::Instance::~Instance() {
 	obs_enter_graphics();
 	gs_effect_destroy(customEffect);
 	gs_texture_destroy(dispmap.texture);
 	obs_leave_graphics();
 }
 
-void Filter::Displacement::Instance::update(obs_data_t *data) {
+void filter::Displacement::Instance::update(obs_data_t *data) {
 	updateDisplacementMap(obs_data_get_string(data,
 		S_FILTER_DISPLACEMENT_FILE));
 
@@ -174,23 +174,23 @@ void Filter::Displacement::Instance::update(obs_data_t *data) {
 		);
 }
 
-uint32_t Filter::Displacement::Instance::get_width() {
+uint32_t filter::Displacement::Instance::get_width() {
 	return 0;
 }
 
-uint32_t Filter::Displacement::Instance::get_height() {
+uint32_t filter::Displacement::Instance::get_height() {
 	return 0;
 }
 
-void Filter::Displacement::Instance::activate() {}
+void filter::Displacement::Instance::activate() {}
 
-void Filter::Displacement::Instance::deactivate() {}
+void filter::Displacement::Instance::deactivate() {}
 
-void Filter::Displacement::Instance::show() {}
+void filter::Displacement::Instance::show() {}
 
-void Filter::Displacement::Instance::hide() {}
+void filter::Displacement::Instance::hide() {}
 
-void Filter::Displacement::Instance::video_tick(float time) {
+void filter::Displacement::Instance::video_tick(float time) {
 	timer += time;
 	if (timer >= 1.0) {
 		timer -= 1.0;
@@ -202,7 +202,7 @@ float interp(float a, float b, float v) {
 	return (a * (1.0f - v)) + (b * v);
 }
 
-void Filter::Displacement::Instance::video_render(gs_effect_t *) {
+void filter::Displacement::Instance::video_render(gs_effect_t *) {
 	obs_source_t *parent = obs_filter_get_parent(context);
 	obs_source_t *target = obs_filter_get_target(context);
 	uint32_t
@@ -247,11 +247,11 @@ void Filter::Displacement::Instance::video_render(gs_effect_t *) {
 	obs_source_process_filter_end(context, customEffect, baseW, baseH);
 }
 
-std::string Filter::Displacement::Instance::get_file() {
+std::string filter::Displacement::Instance::get_file() {
 	return dispmap.file;
 }
 
-void Filter::Displacement::Instance::updateDisplacementMap(std::string file) {
+void filter::Displacement::Instance::updateDisplacementMap(std::string file) {
 	bool shouldUpdateTexture = false;
 
 	// Different File

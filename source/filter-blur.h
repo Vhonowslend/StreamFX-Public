@@ -25,7 +25,7 @@
 #include <memory>
 #include <map>
 
-namespace Filter {
+namespace filter {
 	class Blur {
 		public:
 		Blur();

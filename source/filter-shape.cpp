@@ -34,10 +34,10 @@ extern "C" {
 }
 
 // Initializer & Finalizer
-static Filter::Shape* filterShapeInstance;
+static filter::Shape* filterShapeInstance;
 INITIALIZER(FilterShapeInit) {
 	initializerFunctions.push_back([] {
-		filterShapeInstance = new Filter::Shape();
+		filterShapeInstance = new filter::Shape();
 	});
 	finalizerFunctions.push_back([] {
 		delete filterShapeInstance;
@@ -75,7 +75,7 @@ static void initialize() {
 	}
 }
 
-Filter::Shape::Shape() {
+filter::Shape::Shape() {
 	return; // Disabled for the time being. 3D Transform is better for this.
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
 	sourceInfo.id = "obs-stream-effects-filter-shape";
@@ -100,15 +100,15 @@ Filter::Shape::Shape() {
 	initialize();
 }
 
-Filter::Shape::~Shape() {
+filter::Shape::~Shape() {
 
 }
 
-const char * Filter::Shape::get_name(void *) {
+const char * filter::Shape::get_name(void *) {
 	return "Shape";
 }
 
-void Filter::Shape::get_defaults(obs_data_t *data) {
+void filter::Shape::get_defaults(obs_data_t *data) {
 	obs_data_set_default_bool(data, P_SHAPE_LOOP, true);
 	obs_data_set_default_int(data, P_SHAPE_POINTS, minimumPoints);
 
@@ -129,7 +129,7 @@ void Filter::Shape::get_defaults(obs_data_t *data) {
 	}
 }
 
-obs_properties_t * Filter::Shape::get_properties(void *) {
+obs_properties_t * filter::Shape::get_properties(void *) {
 	obs_properties_t *pr = obs_properties_create();
 	obs_property_t* p = NULL;
 
@@ -185,7 +185,7 @@ obs_properties_t * Filter::Shape::get_properties(void *) {
 	return pr;
 }
 
-bool Filter::Shape::modified_properties(obs_properties_t *pr, obs_property_t *,
+bool filter::Shape::modified_properties(obs_properties_t *pr, obs_property_t *,
 	obs_data_t *data) {
 	uint32_t points = (uint32_t)obs_data_get_int(data, P_SHAPE_POINTS);
 	for (uint32_t point = 0; point < maximumPoints; point++) {
@@ -208,51 +208,51 @@ bool Filter::Shape::modified_properties(obs_properties_t *pr, obs_property_t *,
 	return true;
 }
 
-void * Filter::Shape::create(obs_data_t *data, obs_source_t *source) {
+void * filter::Shape::create(obs_data_t *data, obs_source_t *source) {
 	return new Instance(data, source);
 }
 
-void Filter::Shape::destroy(void *ptr) {
+void filter::Shape::destroy(void *ptr) {
 	delete reinterpret_cast<Instance*>(ptr);
 }
 
-uint32_t Filter::Shape::get_width(void *ptr) {
+uint32_t filter::Shape::get_width(void *ptr) {
 	return reinterpret_cast<Instance*>(ptr)->get_width();
 }
 
-uint32_t Filter::Shape::get_height(void *ptr) {
+uint32_t filter::Shape::get_height(void *ptr) {
 	return reinterpret_cast<Instance*>(ptr)->get_height();
 }
 
-void Filter::Shape::update(void *ptr, obs_data_t *data) {
+void filter::Shape::update(void *ptr, obs_data_t *data) {
 	reinterpret_cast<Instance*>(ptr)->update(data);
 }
 
-void Filter::Shape::activate(void *ptr) {
+void filter::Shape::activate(void *ptr) {
 	reinterpret_cast<Instance*>(ptr)->activate();
 }
 
-void Filter::Shape::deactivate(void *ptr) {
+void filter::Shape::deactivate(void *ptr) {
 	reinterpret_cast<Instance*>(ptr)->deactivate();
 }
 
-void Filter::Shape::show(void *ptr) {
+void filter::Shape::show(void *ptr) {
 	reinterpret_cast<Instance*>(ptr)->show();
 }
 
-void Filter::Shape::hide(void *ptr) {
+void filter::Shape::hide(void *ptr) {
 	reinterpret_cast<Instance*>(ptr)->hide();
 }
 
-void Filter::Shape::video_tick(void *ptr, float time) {
+void filter::Shape::video_tick(void *ptr, float time) {
 	reinterpret_cast<Instance*>(ptr)->video_tick(time);
 }
 
-void Filter::Shape::video_render(void *ptr, gs_effect_t *effect) {
+void filter::Shape::video_render(void *ptr, gs_effect_t *effect) {
 	reinterpret_cast<Instance*>(ptr)->video_render(effect);
 }
 
-Filter::Shape::Instance::Instance(obs_data_t *data, obs_source_t *context)
+filter::Shape::Instance::Instance(obs_data_t *data, obs_source_t *context)
 	: context(context) {
 	obs_enter_graphics();
 	m_vertexHelper = new gs::vertex_buffer(maximumPoints);
@@ -263,13 +263,13 @@ Filter::Shape::Instance::Instance(obs_data_t *data, obs_source_t *context)
 	update(data);
 }
 
-Filter::Shape::Instance::~Instance() {
+filter::Shape::Instance::~Instance() {
 	obs_enter_graphics();
 	delete m_vertexHelper;
 	obs_leave_graphics();
 }
 
-void Filter::Shape::Instance::update(obs_data_t *data) {
+void filter::Shape::Instance::update(obs_data_t *data) {
 	uint32_t points = (uint32_t)obs_data_get_int(data, P_SHAPE_POINTS);
 	m_vertexHelper->resize(points);
 	for (uint32_t point = 0; point < points; point++) {
@@ -315,25 +315,25 @@ void Filter::Shape::Instance::update(obs_data_t *data) {
 	obs_leave_graphics();
 }
 
-uint32_t Filter::Shape::Instance::get_width() {
+uint32_t filter::Shape::Instance::get_width() {
 	return 0;
 }
 
-uint32_t Filter::Shape::Instance::get_height() {
+uint32_t filter::Shape::Instance::get_height() {
 	return 0;
 }
 
-void Filter::Shape::Instance::activate() {}
+void filter::Shape::Instance::activate() {}
 
-void Filter::Shape::Instance::deactivate() {}
+void filter::Shape::Instance::deactivate() {}
 
-void Filter::Shape::Instance::show() {}
+void filter::Shape::Instance::show() {}
 
-void Filter::Shape::Instance::hide() {}
+void filter::Shape::Instance::hide() {}
 
-void Filter::Shape::Instance::video_tick(float) {}
+void filter::Shape::Instance::video_tick(float) {}
 
-void Filter::Shape::Instance::video_render(gs_effect_t *effect) {
+void filter::Shape::Instance::video_render(gs_effect_t *effect) {
 	obs_source_t *parent = obs_filter_get_parent(context);
 	obs_source_t *target = obs_filter_get_target(context);
 	uint32_t

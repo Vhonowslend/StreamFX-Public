@@ -58,10 +58,10 @@ extern "C" {
 #define S_FILTER_BLUR_COLORFORMAT			"Filter.Blur.ColorFormat"	
 
 // Initializer & Finalizer
-static Filter::Blur* filterBlurInstance;
+static filter::Blur* filterBlurInstance;
 INITIALIZER(FilterBlurInit) {
 	initializerFunctions.push_back([] {
-		filterBlurInstance = new Filter::Blur();
+		filterBlurInstance = new filter::Blur();
 	});
 	finalizerFunctions.push_back([] {
 		delete filterBlurInstance;
@@ -74,7 +74,7 @@ enum ColorFormat : uint64_t {
 };
 
 // Global Data
-Filter::Blur::Blur() {
+filter::Blur::Blur() {
 	memset(&m_sourceInfo, 0, sizeof(obs_source_info));
 	m_sourceInfo.id = "obs-stream-effects-filter-blur";
 	m_sourceInfo.type = OBS_SOURCE_TYPE_FILTER;
@@ -117,11 +117,11 @@ Filter::Blur::Blur() {
 	obs_register_source(&m_sourceInfo);
 }
 
-Filter::Blur::~Blur() {
+filter::Blur::~Blur() {
 	m_effects.clear();
 }
 
-void Filter::Blur::generate_gaussian_kernels() {
+void filter::Blur::generate_gaussian_kernels() {
 	// 2D texture, horizontal is value, vertical is kernel size.
 	size_t textureSizePOT = GetNearestPowerOfTwoAbove(max_kernel_size);
 	std::vector<float_t> textureBuffer(textureSizePOT * textureSizePOT);
@@ -156,17 +156,17 @@ void Filter::Blur::generate_gaussian_kernels() {
 	}
 }
 
-void Filter::Blur::generate_kernel_textures() {
+void filter::Blur::generate_kernel_textures() {
 	generate_gaussian_kernels();
 
 }
 
-const char * Filter::Blur::get_name(void *) {
+const char * filter::Blur::get_name(void *) {
 	return P_TRANSLATE(S_FILTER_BLUR);
 }
 
-void Filter::Blur::get_defaults(obs_data_t *data) {
-	obs_data_set_default_int(data, S_TYPE, Filter::Blur::Type::Box);
+void filter::Blur::get_defaults(obs_data_t *data) {
+	obs_data_set_default_int(data, S_TYPE, filter::Blur::Type::Box);
 	obs_data_set_default_int(data, S_SIZE, 5);
 
 	// Bilateral Only
@@ -188,16 +188,16 @@ void Filter::Blur::get_defaults(obs_data_t *data) {
 	obs_data_set_default_int(data, S_FILTER_BLUR_COLORFORMAT, ColorFormat::RGB);
 }
 
-obs_properties_t * Filter::Blur::get_properties(void *) {
+obs_properties_t * filter::Blur::get_properties(void *) {
 	obs_properties_t *pr = obs_properties_create();
 	obs_property_t* p = NULL;
 
 	p = obs_properties_add_list(pr, S_TYPE, P_TRANSLATE(S_TYPE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_TYPE)));
 	obs_property_set_modified_callback(p, modified_properties);
-	obs_property_list_add_int(p, P_TRANSLATE(S_TYPE_BOX), Filter::Blur::Type::Box);
-	obs_property_list_add_int(p, P_TRANSLATE(S_TYPE_GAUSSIAN), Filter::Blur::Type::Gaussian);
-	obs_property_list_add_int(p, P_TRANSLATE(S_TYPE_BILATERAL), Filter::Blur::Type::Bilateral);
+	obs_property_list_add_int(p, P_TRANSLATE(S_TYPE_BOX), filter::Blur::Type::Box);
+	obs_property_list_add_int(p, P_TRANSLATE(S_TYPE_GAUSSIAN), filter::Blur::Type::Gaussian);
+	obs_property_list_add_int(p, P_TRANSLATE(S_TYPE_BILATERAL), filter::Blur::Type::Bilateral);
 
 	p = obs_properties_add_int_slider(pr, S_SIZE, P_TRANSLATE(S_SIZE), 1, 25, 1);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_SIZE)));
@@ -241,15 +241,15 @@ obs_properties_t * Filter::Blur::get_properties(void *) {
 	return pr;
 }
 
-bool Filter::Blur::modified_properties(obs_properties_t *pr, obs_property_t *, obs_data_t *d) {
+bool filter::Blur::modified_properties(obs_properties_t *pr, obs_property_t *, obs_data_t *d) {
 	bool showBilateral = false;
 
 	switch (obs_data_get_int(d, S_TYPE)) {
-		case Filter::Blur::Type::Box:
+		case filter::Blur::Type::Box:
 			break;
-		case Filter::Blur::Type::Gaussian:
+		case filter::Blur::Type::Gaussian:
 			break;
-		case Filter::Blur::Type::Bilateral:
+		case filter::Blur::Type::Bilateral:
 			showBilateral = true;
 			break;
 	}
@@ -279,43 +279,43 @@ bool Filter::Blur::modified_properties(obs_properties_t *pr, obs_property_t *, o
 	return true;
 }
 
-void * Filter::Blur::create(obs_data_t *data, obs_source_t *source) {
+void * filter::Blur::create(obs_data_t *data, obs_source_t *source) {
 	return new Instance(data, source);
 }
 
-void Filter::Blur::destroy(void *ptr) {
+void filter::Blur::destroy(void *ptr) {
 	delete reinterpret_cast<Instance*>(ptr);
 }
 
-uint32_t Filter::Blur::get_width(void *ptr) {
+uint32_t filter::Blur::get_width(void *ptr) {
 	return reinterpret_cast<Instance*>(ptr)->get_width();
 }
 
-uint32_t Filter::Blur::get_height(void *ptr) {
+uint32_t filter::Blur::get_height(void *ptr) {
 	return reinterpret_cast<Instance*>(ptr)->get_height();
 }
 
-void Filter::Blur::update(void *ptr, obs_data_t *data) {
+void filter::Blur::update(void *ptr, obs_data_t *data) {
 	reinterpret_cast<Instance*>(ptr)->update(data);
 }
 
-void Filter::Blur::activate(void *ptr) {
+void filter::Blur::activate(void *ptr) {
 	reinterpret_cast<Instance*>(ptr)->activate();
 }
 
-void Filter::Blur::deactivate(void *ptr) {
+void filter::Blur::deactivate(void *ptr) {
 	reinterpret_cast<Instance*>(ptr)->deactivate();
 }
 
-void Filter::Blur::video_tick(void *ptr, float time) {
+void filter::Blur::video_tick(void *ptr, float time) {
 	reinterpret_cast<Instance*>(ptr)->video_tick(time);
 }
 
-void Filter::Blur::video_render(void *ptr, gs_effect_t *effect) {
+void filter::Blur::video_render(void *ptr, gs_effect_t *effect) {
 	reinterpret_cast<Instance*>(ptr)->video_render(effect);
 }
 
-Filter::Blur::Instance::Instance(obs_data_t *data, obs_source_t *context) : m_source(context) {
+filter::Blur::Instance::Instance(obs_data_t *data, obs_source_t *context) : m_source(context) {
 	obs_enter_graphics();
 	m_effect = filterBlurInstance->m_effects.at("Box Blur");
 	m_primaryRT = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
@@ -336,7 +336,7 @@ Filter::Blur::Instance::Instance(obs_data_t *data, obs_source_t *context) : m_so
 	update(data);
 }
 
-Filter::Blur::Instance::~Instance() {
+filter::Blur::Instance::~Instance() {
 	obs_enter_graphics();
 	gs_texrender_destroy(m_primaryRT);
 	gs_texrender_destroy(m_secondaryRT);
@@ -345,16 +345,16 @@ Filter::Blur::Instance::~Instance() {
 	obs_leave_graphics();
 }
 
-void Filter::Blur::Instance::update(obs_data_t *data) {
+void filter::Blur::Instance::update(obs_data_t *data) {
 	m_type = (Type)obs_data_get_int(data, S_TYPE);
 	switch (m_type) {
-		case Filter::Blur::Type::Box:
+		case filter::Blur::Type::Box:
 			m_effect = filterBlurInstance->m_effects.at("Box Blur");
 			break;
-		case Filter::Blur::Type::Gaussian:
+		case filter::Blur::Type::Gaussian:
 			m_effect = filterBlurInstance->m_effects.at("Gaussian Blur");
 			break;
-		case Filter::Blur::Type::Bilateral:
+		case filter::Blur::Type::Bilateral:
 			m_effect = filterBlurInstance->m_effects.at("Bilateral Blur");
 			break;
 	}
@@ -384,21 +384,21 @@ void Filter::Blur::Instance::update(obs_data_t *data) {
 	}
 }
 
-uint32_t Filter::Blur::Instance::get_width() {
+uint32_t filter::Blur::Instance::get_width() {
 	return 0;
 }
 
-uint32_t Filter::Blur::Instance::get_height() {
+uint32_t filter::Blur::Instance::get_height() {
 	return 0;
 }
 
-void Filter::Blur::Instance::activate() {}
+void filter::Blur::Instance::activate() {}
 
-void Filter::Blur::Instance::deactivate() {}
+void filter::Blur::Instance::deactivate() {}
 
-void Filter::Blur::Instance::video_tick(float) {}
+void filter::Blur::Instance::video_tick(float) {}
 
-void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
+void filter::Blur::Instance::video_render(gs_effect_t *effect) {
 	bool failed = false;
 	vec4 black; vec4_zero(&black);
 	obs_source_t
@@ -635,7 +635,7 @@ void Filter::Blur::Instance::video_render(gs_effect_t *effect) {
 	}
 }
 
-bool Filter::Blur::Instance::apply_shared_param(gs_texture_t* input, float texelX, float texelY) {
+bool filter::Blur::Instance::apply_shared_param(gs_texture_t* input, float texelX, float texelY) {
 	bool result = true;
 
 	result = result && gs_set_param_texture(m_effect->get_object(), "u_image", input);
@@ -681,7 +681,7 @@ bool Filter::Blur::Instance::apply_shared_param(gs_texture_t* input, float texel
 	return result;
 }
 
-bool Filter::Blur::Instance::apply_bilateral_param() {
+bool filter::Blur::Instance::apply_bilateral_param() {
 	gs_eparam_t *param;
 
 	if (m_type != Type::Bilateral)
@@ -708,7 +708,7 @@ bool Filter::Blur::Instance::apply_bilateral_param() {
 	return true;
 }
 
-bool Filter::Blur::Instance::apply_gaussian_param() {
+bool filter::Blur::Instance::apply_gaussian_param() {
 	if (m_effect->has_parameter("kernel")) {
 		m_effect->get_parameter("kernel").set_texture(filterBlurInstance->m_gaussianKernelTexture);
 	} else {

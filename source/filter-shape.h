@@ -33,7 +33,7 @@
 #define P_SHAPE_POINT_U					"Shape.Point.U"
 #define P_SHAPE_POINT_V					"Shape.Point.V"
 
-namespace Filter {
+namespace filter {
 	class Shape {
 		public:
 		Shape();

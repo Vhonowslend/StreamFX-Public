@@ -31,10 +31,10 @@ extern "C" {
 }
 
 // Initializer & Finalizer
-static Filter::Transform* filterTransformInstance;
+static filter::Transform* filterTransformInstance;
 INITIALIZER(FilterTransformInit)
 {
-	initializerFunctions.push_back([] { filterTransformInstance = new Filter::Transform(); });
+	initializerFunctions.push_back([] { filterTransformInstance = new filter::Transform(); });
 	finalizerFunctions.push_back([] { delete filterTransformInstance; });
 }
 
@@ -81,7 +81,7 @@ enum RotationOrder : int64_t {
 	ZYX,
 };
 
-Filter::Transform::Transform()
+filter::Transform::Transform()
 {
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
 	sourceInfo.id             = "obs-stream-effects-filter-transform";
@@ -102,14 +102,14 @@ Filter::Transform::Transform()
 	obs_register_source(&sourceInfo);
 }
 
-Filter::Transform::~Transform() {}
+filter::Transform::~Transform() {}
 
-const char* Filter::Transform::get_name(void*)
+const char* filter::Transform::get_name(void*)
 {
 	return P_TRANSLATE(ST);
 }
 
-void Filter::Transform::get_defaults(obs_data_t* data)
+void filter::Transform::get_defaults(obs_data_t* data)
 {
 	obs_data_set_default_int(data, ST_CAMERA, (int64_t)CameraMode::Orthographic);
 	obs_data_set_default_double(data, ST_CAMERA_FIELDOFVIEW, 90.0);
@@ -128,7 +128,7 @@ void Filter::Transform::get_defaults(obs_data_t* data)
 							 RotationOrder::ZXY); //ZXY
 }
 
-obs_properties_t* Filter::Transform::get_properties(void*)
+obs_properties_t* filter::Transform::get_properties(void*)
 {
 	obs_properties_t* pr = obs_properties_create();
 	obs_property_t*   p  = NULL;
@@ -228,7 +228,7 @@ obs_properties_t* Filter::Transform::get_properties(void*)
 	return pr;
 }
 
-bool Filter::Transform::modified_properties(obs_properties_t* pr, obs_property_t*, obs_data_t* d)
+bool filter::Transform::modified_properties(obs_properties_t* pr, obs_property_t*, obs_data_t* d)
 {
 	switch ((CameraMode)obs_data_get_int(d, ST_CAMERA)) {
 	case CameraMode::Orthographic:
@@ -252,52 +252,52 @@ bool Filter::Transform::modified_properties(obs_properties_t* pr, obs_property_t
 	return true;
 }
 
-void* Filter::Transform::create(obs_data_t* data, obs_source_t* source)
+void* filter::Transform::create(obs_data_t* data, obs_source_t* source)
 {
 	return new Instance(data, source);
 }
 
-void Filter::Transform::destroy(void* ptr)
+void filter::Transform::destroy(void* ptr)
 {
 	delete reinterpret_cast<Instance*>(ptr);
 }
 
-uint32_t Filter::Transform::get_width(void* ptr)
+uint32_t filter::Transform::get_width(void* ptr)
 {
 	return reinterpret_cast<Instance*>(ptr)->get_width();
 }
 
-uint32_t Filter::Transform::get_height(void* ptr)
+uint32_t filter::Transform::get_height(void* ptr)
 {
 	return reinterpret_cast<Instance*>(ptr)->get_height();
 }
 
-void Filter::Transform::update(void* ptr, obs_data_t* data)
+void filter::Transform::update(void* ptr, obs_data_t* data)
 {
 	reinterpret_cast<Instance*>(ptr)->update(data);
 }
 
-void Filter::Transform::activate(void* ptr)
+void filter::Transform::activate(void* ptr)
 {
 	reinterpret_cast<Instance*>(ptr)->activate();
 }
 
-void Filter::Transform::deactivate(void* ptr)
+void filter::Transform::deactivate(void* ptr)
 {
 	reinterpret_cast<Instance*>(ptr)->deactivate();
 }
 
-void Filter::Transform::video_tick(void* ptr, float time)
+void filter::Transform::video_tick(void* ptr, float time)
 {
 	reinterpret_cast<Instance*>(ptr)->video_tick(time);
 }
 
-void Filter::Transform::video_render(void* ptr, gs_effect_t* effect)
+void filter::Transform::video_render(void* ptr, gs_effect_t* effect)
 {
 	reinterpret_cast<Instance*>(ptr)->video_render(effect);
 }
 
-Filter::Transform::Instance::Instance(obs_data_t* data, obs_source_t* context)
+filter::Transform::Instance::Instance(obs_data_t* data, obs_source_t* context)
 	: source_context(context), is_orthographic(true), field_of_view(90.0), is_inactive(false), is_hidden(false),
 	  is_mesh_update_required(false), rotation_order(RotationOrder::ZXY)
 {
@@ -323,7 +323,7 @@ Filter::Transform::Instance::Instance(obs_data_t* data, obs_source_t* context)
 	update(data);
 }
 
-Filter::Transform::Instance::~Instance()
+filter::Transform::Instance::~Instance()
 {
 	obs_enter_graphics();
 	shape_rt.reset();
@@ -332,7 +332,7 @@ Filter::Transform::Instance::~Instance()
 	obs_leave_graphics();
 }
 
-void Filter::Transform::Instance::update(obs_data_t* data)
+void filter::Transform::Instance::update(obs_data_t* data)
 {
 	// Camera
 	is_orthographic = obs_data_get_int(data, ST_CAMERA) == 0;
@@ -361,29 +361,29 @@ void Filter::Transform::Instance::update(obs_data_t* data)
 	is_mesh_update_required = true;
 }
 
-uint32_t Filter::Transform::Instance::get_width()
+uint32_t filter::Transform::Instance::get_width()
 {
 	return 0;
 }
 
-uint32_t Filter::Transform::Instance::get_height()
+uint32_t filter::Transform::Instance::get_height()
 {
 	return 0;
 }
 
-void Filter::Transform::Instance::activate()
+void filter::Transform::Instance::activate()
 {
 	is_inactive = false;
 }
 
-void Filter::Transform::Instance::deactivate()
+void filter::Transform::Instance::deactivate()
 {
 	is_inactive = true;
 }
 
-void Filter::Transform::Instance::video_tick(float) {}
+void filter::Transform::Instance::video_tick(float) {}
 
-void Filter::Transform::Instance::video_render(gs_effect_t* paramEffect)
+void filter::Transform::Instance::video_render(gs_effect_t* paramEffect)
 {
 	std::shared_ptr<gs::texture> source_tex;
 	std::shared_ptr<gs::texture> shape_tex;
