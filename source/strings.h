@@ -25,20 +25,18 @@
 
 #define S_ADVANCED "Advanced"
 
-namespace plugin {
-	namespace strings {
-		static const char* Advanced = "Advanced";
-		namespace MipGenerator {
-			static const char* Name        = "MipGenerator";
-			static const char* Description = "MipGenerator.Description";
-			static const char* Point       = "MipGenerator.Point";
-			static const char* Linear      = "MipGenerator.Linear";
-			static const char* Sharpen     = "MipGenerator.Sharpen";
-			static const char* Smoothen    = "MipGenerator.Smoothen";
-			static const char* Bicubic     = "MipGenerator.Bicubic";
-			static const char* Lanczos     = "MipGenerator.Lanczos";
-			static const char* Strength    = "MipGenerator.Strength";
-		} // namespace MipGenerator
+namespace strings {
+	static const char* Advanced = "Advanced";
+	namespace MipGenerator {
+		static const char* Name        = "MipGenerator";
+		static const char* Description = "MipGenerator.Description";
+		static const char* Point       = "MipGenerator.Point";
+		static const char* Linear      = "MipGenerator.Linear";
+		static const char* Sharpen     = "MipGenerator.Sharpen";
+		static const char* Smoothen    = "MipGenerator.Smoothen";
+		static const char* Bicubic     = "MipGenerator.Bicubic";
+		static const char* Lanczos     = "MipGenerator.Lanczos";
+		static const char* Strength    = "MipGenerator.Strength";
+	} // namespace MipGenerator
 
-	} // namespace strings
-} // namespace plugin
+} // namespace strings

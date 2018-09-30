@@ -204,26 +204,26 @@ obs_properties_t* filter::Transform::get_properties(void*)
 	obs_property_set_modified_callback(p, modified_properties);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(ST_MIPMAPPING)));
 
-	p = obs_properties_add_list(pr, plugin::strings::MipGenerator::Name,
-								P_TRANSLATE(plugin::strings::MipGenerator::Name), OBS_COMBO_TYPE_LIST,
+	p = obs_properties_add_list(pr, strings::MipGenerator::Name,
+								P_TRANSLATE(strings::MipGenerator::Name), OBS_COMBO_TYPE_LIST,
 								OBS_COMBO_FORMAT_INT);
-	obs_property_set_long_description(p, P_TRANSLATE(plugin::strings::MipGenerator::Description));
+	obs_property_set_long_description(p, P_TRANSLATE(strings::MipGenerator::Description));
 
-	obs_property_list_add_int(p, P_TRANSLATE(plugin::strings::MipGenerator::Point),
+	obs_property_list_add_int(p, P_TRANSLATE(strings::MipGenerator::Point),
 							  (long long)gs::mipmapper::generator::Point);
-	obs_property_list_add_int(p, P_TRANSLATE(plugin::strings::MipGenerator::Linear),
+	obs_property_list_add_int(p, P_TRANSLATE(strings::MipGenerator::Linear),
 							  (long long)gs::mipmapper::generator::Linear);
-	obs_property_list_add_int(p, P_TRANSLATE(plugin::strings::MipGenerator::Sharpen),
+	obs_property_list_add_int(p, P_TRANSLATE(strings::MipGenerator::Sharpen),
 							  (long long)gs::mipmapper::generator::Sharpen);
-	obs_property_list_add_int(p, P_TRANSLATE(plugin::strings::MipGenerator::Smoothen),
+	obs_property_list_add_int(p, P_TRANSLATE(strings::MipGenerator::Smoothen),
 							  (long long)gs::mipmapper::generator::Smoothen);
-	obs_property_list_add_int(p, P_TRANSLATE(plugin::strings::MipGenerator::Bicubic),
+	obs_property_list_add_int(p, P_TRANSLATE(strings::MipGenerator::Bicubic),
 							  (long long)gs::mipmapper::generator::Bicubic);
-	obs_property_list_add_int(p, P_TRANSLATE(plugin::strings::MipGenerator::Lanczos),
+	obs_property_list_add_int(p, P_TRANSLATE(strings::MipGenerator::Lanczos),
 							  (long long)gs::mipmapper::generator::Lanczos);
 
-	p = obs_properties_add_float(pr, plugin::strings::MipGenerator::Strength,
-								 P_TRANSLATE(plugin::strings::MipGenerator::Strength), 0.0, 100.0, 0.01);
+	p = obs_properties_add_float(pr, strings::MipGenerator::Strength,
+								 P_TRANSLATE(strings::MipGenerator::Strength), 0.0, 100.0, 0.01);
 
 	return pr;
 }
@@ -246,8 +246,8 @@ bool filter::Transform::modified_properties(obs_properties_t* pr, obs_property_t
 	obs_property_set_visible(obs_properties_get(pr, ST_MIPMAPPING), advancedVisible);
 
 	bool mipmappingVisible = obs_data_get_bool(d, ST_MIPMAPPING) && advancedVisible;
-	obs_property_set_visible(obs_properties_get(pr, plugin::strings::MipGenerator::Name), mipmappingVisible);
-	obs_property_set_visible(obs_properties_get(pr, plugin::strings::MipGenerator::Strength), mipmappingVisible);
+	obs_property_set_visible(obs_properties_get(pr, strings::MipGenerator::Name), mipmappingVisible);
+	obs_property_set_visible(obs_properties_get(pr, strings::MipGenerator::Strength), mipmappingVisible);
 
 	return true;
 }
@@ -355,8 +355,8 @@ void filter::Transform::Instance::update(obs_data_t* data)
 
 	// Mipmapping
 	enable_mipmapping = obs_data_get_bool(data, ST_MIPMAPPING);
-	generator_strength = obs_data_get_double(data, plugin::strings::MipGenerator::Strength);
-	generator          = (gs::mipmapper::generator)obs_data_get_int(data, plugin::strings::MipGenerator::Name);
+	generator_strength = obs_data_get_double(data, strings::MipGenerator::Strength);
+	generator          = (gs::mipmapper::generator)obs_data_get_int(data, strings::MipGenerator::Name);
 
 	is_mesh_update_required = true;
 }
