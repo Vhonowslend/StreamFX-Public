@@ -317,7 +317,7 @@ filter::Transform::Instance::Instance(obs_data_t* data, obs_source_t* context)
 	obs_enter_graphics();
 	source_rt     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	shape_rt      = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	vertex_buffer = std::make_shared<gs::vertex_buffer>(4, 1);
+	vertex_buffer = std::make_shared<gs::vertex_buffer>(4u, 1u);
 	obs_leave_graphics();
 
 	update(data);
@@ -487,17 +487,17 @@ void filter::Transform::Instance::video_render(gs_effect_t* paramEffect)
 
 	// Make texture a power of two compatible texture if mipmapping is enabled.
 	if (enable_mipmapping) {
-		real_width  = pow(2, util::math::get_power_of_two_exponent_ceil(width));
-		real_height = pow(2, util::math::get_power_of_two_exponent_ceil(height));
+		real_width  = uint32_t(pow(2, util::math::get_power_of_two_exponent_ceil(width)));
+		real_height = uint32_t(pow(2, util::math::get_power_of_two_exponent_ceil(height)));
 		if ((real_width >= 8192) || (real_height >= 8192)) {
 			// Most GPUs cap out here, so let's not go higher.
 			double_t aspect = double_t(width) / double_t(height);
 			if (aspect > 1.0) { // height < width
 				real_width = 8192;
-				real_height = real_width / aspect;
+				real_height = uint32_t(real_width / aspect);
 			} else if (aspect < 1.0) { // width > height
 				real_height = 8192;
-				real_width  = real_height * aspect;
+				real_width  = uint32_t(real_height * aspect);
 			}
 		}
 	}
@@ -546,11 +546,11 @@ void filter::Transform::Instance::video_render(gs_effect_t* paramEffect)
 				}
 			}
 
-			source_texture = std::make_shared<gs::texture>(real_width, real_height, GS_RGBA, 1 + mip_levels, nullptr,
+			source_texture = std::make_shared<gs::texture>(real_width, real_height, GS_RGBA, uint32_t(1u + mip_levels), nullptr,
 														   gs::texture::flags::BuildMipMaps);
 		}
 
-		mipmapper.rebuild(source_tex, source_texture, generator, generator_strength);
+		mipmapper.rebuild(source_tex, source_texture, generator, float_t(generator_strength));
 	}
 
 	// Draw shape to texture
