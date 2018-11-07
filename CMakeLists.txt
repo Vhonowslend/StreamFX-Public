@@ -258,6 +258,8 @@ SET(PROJECT_PRIVATE
 	"${PROJECT_SOURCE_DIR}/source/gs-vertexbuffer.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs-audio-capture.h"
 	"${PROJECT_SOURCE_DIR}/source/obs-audio-capture.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs-tools.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs-tools.cpp"
 	"${PROJECT_BINARY_DIR}/source/version.h"
 	"${PROJECT_SOURCE_DIR}/source/strings.h"
 	"${PROJECT_SOURCE_DIR}/source/utility.h"
@@ -266,6 +268,8 @@ SET(PROJECT_PRIVATE
 	"${PROJECT_SOURCE_DIR}/source/util-math.cpp"
 	"${PROJECT_SOURCE_DIR}/source/util-memory.h"
 	"${PROJECT_SOURCE_DIR}/source/util-memory.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs-source.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs-source.cpp"
 )
 
 Source_Group("Data Files\\Locale" FILES ${PROJECT_DATA_LOCALE})
