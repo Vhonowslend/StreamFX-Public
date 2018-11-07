@@ -20,6 +20,7 @@
 #include <string>
 #include "gs-rendertarget.h"
 #include "gs-texture.h"
+#include "obs-source.hpp"
 
 extern "C" {
 #include <obs.h>
@@ -27,8 +28,8 @@ extern "C" {
 
 namespace gfx {
 	class source_texture {
-		obs_source_t* parent;
-		obs_source_t* child;
+		std::shared_ptr<obs::source> parent;
+		std::shared_ptr<obs::source> child;
 
 		std::shared_ptr<gs::rendertarget> render_target;
 
@@ -36,13 +37,19 @@ namespace gfx {
 
 		public:
 		~source_texture();
+		source_texture(obs_source_t* src, obs_source_t* parent);
 		source_texture(const char* name, obs_source_t* parent);
 		source_texture(std::string name, obs_source_t* parent);
-		source_texture(obs_source_t* src, obs_source_t* parent);
+
+		source_texture(std::shared_ptr<obs::source> child, std::shared_ptr<obs::source> parent);
+		source_texture(std::shared_ptr<obs::source> child, obs_source_t* parent);
+
+		std::shared_ptr<gs::texture> render(size_t width, size_t height);
+
+		public: // Unsafe Methods
+		void clear();
 
 		obs_source_t* get_object();
 		obs_source_t* get_parent();
-
-		std::shared_ptr<gs::texture> render(size_t width, size_t height);
 	};
 } // namespace gfx
