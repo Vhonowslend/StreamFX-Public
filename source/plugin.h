@@ -22,11 +22,13 @@
 #include <list>
 #include <functional>
 
+extern "C" {
 #pragma warning (push)
 #pragma warning (disable: 4201)
 #include "obs-module.h"
 #include "util/platform.h"
 #pragma warning (pop)
+}
 
 // Plugin
 #define PLUGIN_NAME					"Stream Effects"
