@@ -268,17 +268,17 @@ Source::Mirror::~Mirror()
 	if (this->m_audio_capture) {
 		this->m_audio_capture.reset();
 	}
+	this->m_kill_audio_thread = true;
+	this->m_audio_notify.notify_all();
+	if (this->m_audio_thread.joinable()) {
+		this->m_audio_thread.join();
+	}
+
 	if (this->m_source_texture) {
 		this->m_source_texture.reset();
 	}
 	if (this->m_scene) {
 		obs_scene_release(this->m_scene);
-	}
-
-	this->m_kill_audio_thread = true;
-	this->m_audio_notify.notify_all();
-	if (this->m_audio_thread.joinable()) {
-		this->m_audio_thread.join();
 	}
 }
 
@@ -318,6 +318,7 @@ void Source::Mirror::update(obs_data_t* data)
 	if (new_source_name != m_source_name) {
 		if (m_scene) {
 			if (this->m_sceneitem) {
+				this->m_audio_capture.reset();
 				obs_sceneitem_remove(this->m_sceneitem);
 				this->m_sceneitem = nullptr;
 			}
