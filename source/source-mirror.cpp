@@ -25,6 +25,7 @@
 #include <bitset>
 #include <media-io/audio-io.h>
 #include <functional>
+#include "obs-tools.hpp"
 
 #define S_SOURCE_MIRROR					"Source.Mirror"
 #define P_SOURCE					"Source.Mirror.Source"
@@ -128,6 +129,7 @@ static bool UpdateSourceListCB(void *ptr, obs_source_t* src) {
 static void UpdateSourceList(obs_property_t* p) {
 	obs_property_list_clear(p);
 	obs_enum_sources(UpdateSourceListCB, p);
+	obs_enum_scenes(UpdateSourceListCB, p);
 }
 
 obs_properties_t * Source::MirrorAddon::get_properties(void *) {
@@ -305,13 +307,21 @@ void Source::Mirror::update(obs_data_t* data) {
 			}
 			obs_source_t* source = obs_get_source_by_name(sourceName);
 			if (source) {
-				m_sceneitem    = obs_scene_add(m_scene, source);
-				try {
-					m_audioCapture = std::make_unique<obs::audio_capture>(source);
-					m_audioCapture->set_callback(std::bind(&Source::Mirror::audio_capture_cb, this,
-														   std::placeholders::_1, std::placeholders::_2,
-														   std::placeholders::_3));
-				} catch(...) {
+				bool allow  = true;
+				if (strcmp(obs_source_get_id(source), "scene") == 0) {
+					if (obs::tools::scene_contains_source(obs_scene_from_source(source), m_source)) {
+						allow = false;
+					}
+				}
+				if (allow) {				
+					m_sceneitem    = obs_scene_add(m_scene, source);
+					try {
+						m_audioCapture = std::make_unique<obs::audio_capture>(source);
+						m_audioCapture->set_callback(std::bind(&Source::Mirror::audio_capture_cb, this,
+															   std::placeholders::_1, std::placeholders::_2,
+															   std::placeholders::_3));
+					} catch(...) {
+					}
 				}
 				obs_source_release(source);
 			}
@@ -381,7 +391,7 @@ void Source::Mirror::update(obs_data_t* data) {
 
 void Source::Mirror::activate() {
 	m_active = true;
-	if (!m_mirrorSource) {
+	if (!m_sceneitem) {
 		obs_data_t* ref = obs_source_get_settings(m_source);
 		update(ref);
 		obs_data_release(ref);
@@ -405,8 +415,8 @@ static inline void mix_audio(float *p_out, float *p_in,
 void Source::Mirror::video_tick(float time) {
 	m_tick += time;
 
-	if (m_mirrorSource) {
-		m_mirrorName = obs_source_get_name(m_mirrorSource->get_object());
+	if (m_sceneitem) {
+		m_mirrorName = obs_source_get_name(obs_sceneitem_get_source(m_sceneitem));
 	} else {
 		if (m_tick > 0.1f) {
 			obs_data_t* ref = obs_source_get_settings(m_source);
@@ -439,7 +449,7 @@ void Source::Mirror::video_render(gs_effect_t*) {
 		// Store original Source Texture
 		std::shared_ptr<gs::texture> tex;
 		try {
-			tex = m_mirrorSource->render(sw, sh);
+			tex = m_source_texture->render(sw, sh);
 		} catch (...) {
 			return;
 		}
@@ -478,7 +488,7 @@ void Source::Mirror::video_render(gs_effect_t*) {
 			}
 		}
 	} else {
-		obs_source_video_render(m_mirrorSource->get_object());
+		obs_source_video_render(m_source_texture->get_object());
 	}
 }
 
@@ -526,7 +536,7 @@ void Source::Mirror::audio_output_cb() {
 }
 
 void Source::Mirror::enum_active_sources(obs_source_enum_proc_t enum_callback, void *param) {
-	if (m_mirrorSource) {
-		enum_callback(m_source, m_mirrorSource->get_object(), param);
+	if (m_sceneitem) {
+		enum_callback(m_source, obs_sceneitem_get_source(m_sceneitem), param);
 	}
 }
