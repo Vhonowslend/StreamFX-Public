@@ -499,7 +499,13 @@ void Source::Mirror::audio_capture_cb(void*, const audio_data* audio, bool) {
 	}
 
 	audio_t* aud = obs_get_audio();
+	if (!aud) {
+		return;
+	}
 	audio_output_info const* aoi = audio_output_get_info(aud);
+	if (!aoi) {
+		return;
+	}
 
 	std::bitset<8> layout;
 	for (size_t plane = 0; plane < MAX_AV_PLANES; plane++) {
