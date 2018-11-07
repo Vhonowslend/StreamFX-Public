@@ -86,11 +86,16 @@ bool gfx::effect_source::property_texture_type_modified(void* priv, obs_properti
 bool gfx::effect_source::property_texture_input_modified(void* priv, obs_properties_t* props, obs_property_t* prop,
 														 obs_data_t* sett)
 {
+	priv;
+	props;
+	prop;
+	sett;
 	return false;
 }
 
 gfx::effect_source::effect_source(obs_data_t* data, obs_source_t* owner)
 {
+	data;
 	m_source       = owner;
 	m_timeExisting = 0;
 	m_timeActive   = 0;
@@ -468,13 +473,13 @@ void gfx::effect_source::update_parameters(obs_data_t* data)
 				   && prm.first.second <= gs::effect_parameter::type::Integer4) {
 			auto param = std::static_pointer_cast<int_parameter>(prm.second);
 			for (size_t idx = 0; idx < prm.second->ui.names.size(); idx++) {
-				param->value[idx] = obs_data_get_int(data, prm.second->ui.names[idx]);
+				param->value[idx] = int32_t(obs_data_get_int(data, prm.second->ui.names[idx]));
 			}
 		} else if (prm.first.second >= gs::effect_parameter::type::Float
 				   && prm.first.second <= gs::effect_parameter::type::Float4) {
 			auto param = std::static_pointer_cast<float_parameter>(prm.second);
 			for (size_t idx = 0; idx < prm.second->ui.names.size(); idx++) {
-				param->value[idx] = obs_data_get_double(data, prm.second->ui.names[idx]);
+				param->value[idx] = float_t(obs_data_get_double(data, prm.second->ui.names[idx]));
 			}
 		}
 	}
@@ -605,7 +610,7 @@ void gfx::effect_source::video_render(gs_effect_t* parent_effect)
 	gs_reset_blend_state();
 	gs_enable_depth_test(false);
 	gs_matrix_push();
-	gs_matrix_scale3f(viewW, viewH, 1);
+	gs_matrix_scale3f(float_t(viewW), float_t(viewH), 1.0f);
 	while (gs_effect_loop(m_shader.effect->get_object(), "Draw")) {
 		gs_draw(gs_draw_mode::GS_TRISTRIP, 0, 4);
 	}
