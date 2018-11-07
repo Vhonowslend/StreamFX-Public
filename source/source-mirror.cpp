@@ -232,7 +232,6 @@ void Source::MirrorAddon::enum_active_sources(void *p, obs_source_enum_proc_t en
 }
 
 Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src) {
-	m_active = true;
 	m_source = src;
 
 	m_rescale = false;
@@ -248,9 +247,20 @@ Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src) {
 	m_audioThread = std::thread(std::bind(&Source::Mirror::audio_output_cb, this));
 
 	update(data);
+	m_active = true;
 }
 
 Source::Mirror::~Mirror() {
+	if (m_audioCapture) {
+		m_audioCapture.reset();
+	}
+	if (m_source_texture) {
+		m_source_texture.reset();
+	}
+	if (m_scene) {
+		obs_scene_release(m_scene);
+	}
+
 	m_killAudioThread = true;
 	m_audioNotify.notify_all();
 	if (m_audioThread.joinable())
@@ -261,8 +271,9 @@ uint32_t Source::Mirror::get_width() {
 	if (m_rescale && m_width > 0 && !m_keepOriginalSize) {
 		return m_width;
 	}
-	if (m_mirrorSource && (m_mirrorSource->get_object() != m_source)) {
-		return obs_source_get_width(m_mirrorSource->get_object());
+	obs_source_t* source = obs_sceneitem_get_source(m_sceneitem);
+	if (source) {
+		return obs_source_get_width(source);
 	}
 	return 1;
 }
@@ -270,22 +281,40 @@ uint32_t Source::Mirror::get_width() {
 uint32_t Source::Mirror::get_height() {
 	if (m_rescale && m_height > 0 && !m_keepOriginalSize)
 		return m_height;
-	if (m_mirrorSource && (m_mirrorSource->get_object() != m_source))
-		return obs_source_get_height(m_mirrorSource->get_object());
+	obs_source_t* source = obs_sceneitem_get_source(m_sceneitem);
+	if (source) {
+		return obs_source_get_height(source);
+	}
 	return 1;
 }
 
 void Source::Mirror::update(obs_data_t* data) {
+	if (!this->m_scene && m_active) {
+		m_scene          = obs_scene_create_private("localscene");
+		m_scene_source   = std::make_shared<obs::source>(obs_scene_get_source(m_scene), false, false);
+		m_source_texture = std::make_unique<gfx::source_texture>(m_scene_source, m_source);
+	}
+
 	// Update selected source.
 	const char* sourceName = obs_data_get_string(data, P_SOURCE);
 	if (sourceName != m_mirrorName) {
-		try {
-			m_mirrorSource = std::make_unique<gfx::source_texture>(sourceName, m_source);
-			m_audioCapture = std::make_unique<obs::audio_capture>(m_mirrorSource->get_object());
-			m_audioCapture->set_callback(std::bind(&Source::Mirror::audio_capture_cb, this,
-				std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-			m_mirrorName = sourceName;
-		} catch (...) {
+		if (m_scene) {
+			if (m_sceneitem) {
+				obs_sceneitem_remove(m_sceneitem);
+				m_sceneitem = nullptr;
+			}
+			obs_source_t* source = obs_get_source_by_name(sourceName);
+			if (source) {
+				m_sceneitem    = obs_scene_add(m_scene, source);
+				try {
+					m_audioCapture = std::make_unique<obs::audio_capture>(source);
+					m_audioCapture->set_callback(std::bind(&Source::Mirror::audio_capture_cb, this,
+														   std::placeholders::_1, std::placeholders::_2,
+														   std::placeholders::_3));
+				} catch(...) {
+				}
+				obs_source_release(source);
+			}
 		}
 	}
 	m_enableAudio = obs_data_get_bool(data, P_SOURCE_AUDIO);
@@ -389,14 +418,23 @@ void Source::Mirror::video_tick(float time) {
 }
 
 void Source::Mirror::video_render(gs_effect_t*) {
-	if ((m_width == 0) || (m_height == 0) || !m_mirrorSource || (m_mirrorSource->get_object() == m_source)) {
+	if ((m_width == 0) || (m_height == 0) || !m_source_texture || (m_source_texture->get_object() == m_source)
+		|| !m_scene || !m_sceneitem) {
 		return;
 	}
 
 	if (m_rescale && m_width > 0 && m_height > 0 && m_scalingEffect) {
+		// Get Size of source.
+		obs_source_t* source = obs_sceneitem_get_source(m_sceneitem);
+
 		uint32_t sw, sh;
-		sw = obs_source_get_width(m_mirrorSource->get_object());
-		sh = obs_source_get_height(m_mirrorSource->get_object());
+		sw = obs_source_get_width(source);
+		sh = obs_source_get_height(source);
+
+		vec2 bounds;
+		bounds.x = sw;
+		bounds.y = sh;
+		obs_sceneitem_set_bounds(m_sceneitem, &bounds);
 
 		// Store original Source Texture
 		std::shared_ptr<gs::texture> tex;

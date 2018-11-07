@@ -18,17 +18,21 @@
 */
 
 #pragma once
-#include "plugin.h"
+#include <condition_variable>
+#include <memory>
+#include <mutex>
+#include <thread>
+#include <vector>
+#include "gfx-source-texture.h"
 #include "gs-rendertarget.h"
 #include "gs-sampler.h"
-#include "gfx-source-texture.h"
 #include "obs-audio-capture.h"
-#include <memory>
+#include "obs-source.hpp"
+#include "plugin.h"
+
+extern "C" {
 #include <obs-source.h>
-#include <vector>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
+}
 
 namespace Source {
 	class MirrorAddon {
@@ -58,13 +62,18 @@ namespace Source {
 	};
 
 	class Mirror {
-		bool m_active;
+		bool m_active = false;
 		obs_source_t* m_source = nullptr;
 		float_t m_tick = 0;
 
+		// Input
+		obs_scene_t* m_scene = nullptr;
+		std::shared_ptr<obs::source> m_scene_source;
+		std::unique_ptr<gfx::source_texture> m_source_texture;
+
 		// Input Source
+		obs_sceneitem_t* m_sceneitem = nullptr;
 		std::string m_mirrorName;
-		std::unique_ptr<gfx::source_texture> m_mirrorSource;
 
 		// Scaling
 		bool m_rescale = false;
