@@ -27,37 +27,39 @@ OBS_DECLARE_MODULE();
 OBS_MODULE_AUTHOR("Michael Fabian Dirks");
 OBS_MODULE_USE_DEFAULT_LOCALE("obs-stream-effects", "en-US");
 
-filter::Displacement *filterDisplacement;
-filter::Shape *filterShape;
-filter::Transform *filterTransform;
+filter::Displacement* filterDisplacement;
+filter::Shape*        filterShape;
+filter::Transform*    filterTransform;
 
 std::list<std::function<void()>> initializerFunctions;
 std::list<std::function<void()>> finalizerFunctions;
 
-MODULE_EXPORT bool obs_module_load(void) {
-	P_LOG_INFO("[" PLUGIN_NAME "] Loading Version %u.%u.%u (Build %u)",
-		PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH,
-		PROJECT_VERSION_TWEAK);
+MODULE_EXPORT bool obs_module_load(void)
+{
+	P_LOG_INFO("[" PLUGIN_NAME "] Loading Version %u.%u.%u (Build %u)", PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR,
+			   PROJECT_VERSION_PATCH, PROJECT_VERSION_TWEAK);
 	for (auto func : initializerFunctions) {
 		func();
 	}
 	return true;
 }
 
-MODULE_EXPORT void obs_module_unload(void) {
-	P_LOG_INFO("[" PLUGIN_NAME "] Unloading Version %u.%u.%u (Build %u)",
-		PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH,
-		PROJECT_VERSION_TWEAK);
+MODULE_EXPORT void obs_module_unload(void)
+{
+	P_LOG_INFO("[" PLUGIN_NAME "] Unloading Version %u.%u.%u (Build %u)", PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR,
+			   PROJECT_VERSION_PATCH, PROJECT_VERSION_TWEAK);
 	for (auto func : finalizerFunctions) {
 		func();
 	}
 }
 
-MODULE_EXPORT const char* obs_module_name() {
+MODULE_EXPORT const char* obs_module_name()
+{
 	return PLUGIN_NAME;
 }
 
-MODULE_EXPORT const char* obs_module_description() {
+MODULE_EXPORT const char* obs_module_description()
+{
 	return PLUGIN_NAME;
 }
 
@@ -67,8 +69,8 @@ MODULE_EXPORT const char* obs_module_description() {
 
 #include <windows.h>
 
-BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID) {
+BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID)
+{
 	return TRUE;
 }
 #endif
-

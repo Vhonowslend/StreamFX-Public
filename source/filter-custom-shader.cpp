@@ -18,21 +18,21 @@
  */
 
 #include "filter-custom-shader.h"
-#include "strings.h"
-#include <vector>
-#include <tuple>
 #include <fstream>
+#include <tuple>
+#include <vector>
+#include "strings.h"
 
 extern "C" {
-#pragma warning (push)
-#pragma warning (disable: 4201)
-#include "util/platform.h"
+#pragma warning(push)
+#pragma warning(disable : 4201)
 #include "graphics/graphics.h"
 #include "graphics/matrix4.h"
-#pragma warning (pop)
+#include "util/platform.h"
+#pragma warning(pop)
 }
 
-#define S			"Filter.CustomShader"
+#define S "Filter.CustomShader"
 
 /** Shader Definitions
  * - Only one technique, any number of passes.
@@ -53,36 +53,31 @@ extern "C" {
  * - $(name)_Texel: Texture Texel Size (1/Texture Size) (float2).
 **/
 
-enum class ShaderType : int64_t {
-	Text,
-	File
-};
+enum class ShaderType : int64_t { Text, File };
 
 static filter::CustomShader* handler;
-INITIALIZER(HandlerInit) {
-	initializerFunctions.push_back([] {
-		handler = new filter::CustomShader();
-	});
-	finalizerFunctions.push_back([] {
-		delete handler;
-	});
+INITIALIZER(HandlerInit)
+{
+	initializerFunctions.push_back([] { handler = new filter::CustomShader(); });
+	finalizerFunctions.push_back([] { delete handler; });
 }
 
-filter::CustomShader::CustomShader() {
+filter::CustomShader::CustomShader()
+{
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
-	sourceInfo.id = "obs-stream-effects-filter-custom-shader";
-	sourceInfo.type = OBS_SOURCE_TYPE_FILTER;
-	sourceInfo.output_flags = OBS_SOURCE_VIDEO;
-	sourceInfo.get_name = get_name;
-	sourceInfo.get_defaults = get_defaults;
+	sourceInfo.id             = "obs-stream-effects-filter-custom-shader";
+	sourceInfo.type           = OBS_SOURCE_TYPE_FILTER;
+	sourceInfo.output_flags   = OBS_SOURCE_VIDEO;
+	sourceInfo.get_name       = get_name;
+	sourceInfo.get_defaults   = get_defaults;
 	sourceInfo.get_properties = get_properties;
 
-	sourceInfo.create = create;
-	sourceInfo.destroy = destroy;
-	sourceInfo.update = update;
-	sourceInfo.activate = activate;
-	sourceInfo.deactivate = deactivate;
-	sourceInfo.video_tick = video_tick;
+	sourceInfo.create       = create;
+	sourceInfo.destroy      = destroy;
+	sourceInfo.update       = update;
+	sourceInfo.activate     = activate;
+	sourceInfo.deactivate   = deactivate;
+	sourceInfo.video_tick   = video_tick;
 	sourceInfo.video_render = video_render;
 
 	obs_register_source(&sourceInfo);
@@ -90,59 +85,72 @@ filter::CustomShader::CustomShader() {
 
 filter::CustomShader::~CustomShader() {}
 
-const char * filter::CustomShader::get_name(void *) {
+const char* filter::CustomShader::get_name(void*)
+{
 	return P_TRANSLATE(S);
 }
 
-void filter::CustomShader::get_defaults(obs_data_t *data) {
+void filter::CustomShader::get_defaults(obs_data_t* data)
+{
 	gfx::effect_source::get_defaults(data);
 }
 
-obs_properties_t * filter::CustomShader::get_properties(void *ptr) {
-	obs_properties_t *pr = obs_properties_create_param(ptr, nullptr);
+obs_properties_t* filter::CustomShader::get_properties(void* ptr)
+{
+	obs_properties_t* pr = obs_properties_create_param(ptr, nullptr);
 	reinterpret_cast<Instance*>(ptr)->get_properties(pr);
 	return pr;
 }
 
-void * filter::CustomShader::create(obs_data_t *data, obs_source_t *src) {
+void* filter::CustomShader::create(obs_data_t* data, obs_source_t* src)
+{
 	return new Instance(data, src);
 }
 
-void filter::CustomShader::destroy(void *ptr) {
+void filter::CustomShader::destroy(void* ptr)
+{
 	delete reinterpret_cast<Instance*>(ptr);
 }
 
-uint32_t filter::CustomShader::get_width(void *ptr) {
+uint32_t filter::CustomShader::get_width(void* ptr)
+{
 	return reinterpret_cast<Instance*>(ptr)->get_width();
 }
 
-uint32_t filter::CustomShader::get_height(void *ptr) {
+uint32_t filter::CustomShader::get_height(void* ptr)
+{
 	return reinterpret_cast<Instance*>(ptr)->get_height();
 }
 
-void filter::CustomShader::update(void *ptr, obs_data_t *data) {
+void filter::CustomShader::update(void* ptr, obs_data_t* data)
+{
 	reinterpret_cast<Instance*>(ptr)->update(data);
 }
 
-void filter::CustomShader::activate(void *ptr) {
+void filter::CustomShader::activate(void* ptr)
+{
 	reinterpret_cast<Instance*>(ptr)->activate();
 }
 
-void filter::CustomShader::deactivate(void *ptr) {
+void filter::CustomShader::deactivate(void* ptr)
+{
 	reinterpret_cast<Instance*>(ptr)->deactivate();
 }
 
-void filter::CustomShader::video_tick(void *ptr, float time) {
+void filter::CustomShader::video_tick(void* ptr, float time)
+{
 	reinterpret_cast<Instance*>(ptr)->video_tick(time);
 }
 
-void filter::CustomShader::video_render(void *ptr, gs_effect_t *effect) {
+void filter::CustomShader::video_render(void* ptr, gs_effect_t* effect)
+{
 	reinterpret_cast<Instance*>(ptr)->video_render(effect);
 }
 
-filter::CustomShader::Instance::Instance(obs_data_t *data, obs_source_t *source) : gfx::effect_source(data, source) {
+filter::CustomShader::Instance::Instance(obs_data_t* data, obs_source_t* source) : gfx::effect_source(data, source)
+{
 	m_defaultShaderPath = "shaders/filter/example.effect";
-	m_renderTarget = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	m_renderTarget      = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	update(data);
 }
 
@@ -299,28 +307,27 @@ filter::CustomShader::Instance::~Instance() {}
 //	}
 //}
 
-uint32_t filter::CustomShader::Instance::get_width() {
+uint32_t filter::CustomShader::Instance::get_width()
+{
 	return 0;
 }
 
-uint32_t filter::CustomShader::Instance::get_height() {
+uint32_t filter::CustomShader::Instance::get_height()
+{
 	return 0;
 }
 
-bool filter::CustomShader::Instance::is_special_parameter(std::string name, gs::effect_parameter::type type) {
+bool filter::CustomShader::Instance::is_special_parameter(std::string name, gs::effect_parameter::type type)
+{
 	std::pair<std::string, gs::effect_parameter::type> reservedParameters[] = {
-		{ "ViewProj", gs::effect_parameter::type::Matrix },
-		{ "ViewSize", gs::effect_parameter::type::Float2 },
-		{ "ViewSizeI", gs::effect_parameter::type::Integer2 },
-		{ "Time", gs::effect_parameter::type::Float },
-		{ "TimeActive", gs::effect_parameter::type::Float },
-		{ "Image", gs::effect_parameter::type::Texture },
+		{"ViewProj", gs::effect_parameter::type::Matrix},    {"ViewSize", gs::effect_parameter::type::Float2},
+		{"ViewSizeI", gs::effect_parameter::type::Integer2}, {"Time", gs::effect_parameter::type::Float},
+		{"TimeActive", gs::effect_parameter::type::Float},   {"Image", gs::effect_parameter::type::Texture},
 	};
 	std::pair<std::string, gs::effect_parameter::type> textureParameters[] = {
-		{ "Size", gs::effect_parameter::type::Float2 },
-		{ "SizeI", gs::effect_parameter::type::Integer2 },
-		{ "Texel", gs::effect_parameter::type::Float2 }
-	};
+		{"Size", gs::effect_parameter::type::Float2},
+		{"SizeI", gs::effect_parameter::type::Integer2},
+		{"Texel", gs::effect_parameter::type::Float2}};
 
 	for (auto& kv : reservedParameters) {
 		if ((name == kv.first) && (type == kv.second))
@@ -331,7 +338,7 @@ bool filter::CustomShader::Instance::is_special_parameter(std::string name, gs::
 	size_t posUnderscore = name.find_last_of('_');
 	if (posUnderscore != std::string::npos) {
 		std::string firstPart, secondPart;
-		firstPart = name.substr(0, posUnderscore);
+		firstPart  = name.substr(0, posUnderscore);
 		secondPart = name.substr(posUnderscore + 1);
 
 		try {
@@ -350,7 +357,8 @@ bool filter::CustomShader::Instance::is_special_parameter(std::string name, gs::
 	return false;
 }
 
-bool filter::CustomShader::Instance::apply_special_parameters(uint32_t viewW, uint32_t viewH) {
+bool filter::CustomShader::Instance::apply_special_parameters(uint32_t viewW, uint32_t viewH)
+{
 	std::unique_ptr<gs::texture> imageTexture;
 	m_renderTarget->get_texture(imageTexture);
 
@@ -360,38 +368,37 @@ bool filter::CustomShader::Instance::apply_special_parameters(uint32_t viewW, ui
 		return false;
 	}
 	if (m_shader.effect->has_parameter("Image_Size", gs::effect_parameter::type::Float2)) {
-		m_shader.effect->get_parameter("Image_Size").set_float2(
-			float_t(imageTexture->get_width()),
-			float_t(imageTexture->get_height()));
+		m_shader.effect->get_parameter("Image_Size")
+			.set_float2(float_t(imageTexture->get_width()), float_t(imageTexture->get_height()));
 	}
-	if (m_shader.effect->has_parameter("Image_SizeI"/*, gs::effect_parameter::type::Integer2*/)) {
-		m_shader.effect->get_parameter("Image_SizeI").set_int2(
-			imageTexture->get_width(),
-			imageTexture->get_height());
+	if (m_shader.effect->has_parameter("Image_SizeI" /*, gs::effect_parameter::type::Integer2*/)) {
+		m_shader.effect->get_parameter("Image_SizeI").set_int2(imageTexture->get_width(), imageTexture->get_height());
 	}
 	if (m_shader.effect->has_parameter("Image_Texel", gs::effect_parameter::type::Float2)) {
-		m_shader.effect->get_parameter("Image_Texel").set_float2(
-			float_t(1.0 / imageTexture->get_width()),
-			float_t(1.0 / imageTexture->get_height()));
+		m_shader.effect->get_parameter("Image_Texel")
+			.set_float2(float_t(1.0 / imageTexture->get_width()), float_t(1.0 / imageTexture->get_height()));
 	}
 
 	return true;
 }
 
-bool filter::CustomShader::Instance::video_tick_impl(float_t time) {
+bool filter::CustomShader::Instance::video_tick_impl(float_t time)
+{
 	return true;
 }
 
-bool filter::CustomShader::Instance::video_render_impl(gs_effect_t* parent_effect, uint32_t viewW, uint32_t viewH) {
+bool filter::CustomShader::Instance::video_render_impl(gs_effect_t* parent_effect, uint32_t viewW, uint32_t viewH)
+{
 	// Render original source to render target.
 	{
 		auto op = m_renderTarget->render(viewW, viewH);
-		vec4 black; vec4_zero(&black);
+		vec4 black;
+		vec4_zero(&black);
 		gs_ortho(0, (float_t)viewW, 0, (float_t)viewH, 0, 1);
 		gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
 		if (obs_source_process_filter_begin(m_source, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
-			obs_source_process_filter_end(m_source,
-				parent_effect ? parent_effect : obs_get_base_effect(OBS_EFFECT_DEFAULT), viewW, viewH);
+			obs_source_process_filter_end(
+				m_source, parent_effect ? parent_effect : obs_get_base_effect(OBS_EFFECT_DEFAULT), viewW, viewH);
 		}
 	}
 	gs_texture_t* sourceTexture = m_renderTarget->get_object();

@@ -37,7 +37,7 @@ namespace gs {
 		gs_texrender_t* render_target;
 		bool            is_being_rendered;
 
-		gs_color_format color_format;
+		gs_color_format    color_format;
 		gs_zstencil_format zstencil_format;
 
 		public:

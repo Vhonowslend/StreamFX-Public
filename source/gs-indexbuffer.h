@@ -21,10 +21,10 @@
 #include <inttypes.h>
 #include <vector>
 extern "C" {
-	#pragma warning( push )
-	#pragma warning( disable: 4201 )
-	#include <graphics/graphics.h>
-	#pragma warning( pop )
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#include <graphics/graphics.h>
+#pragma warning(pop)
 }
 
 namespace gs {
@@ -43,4 +43,4 @@ namespace gs {
 		protected:
 		gs_indexbuffer_t* m_indexBuffer;
 	};
-}
+} // namespace gs

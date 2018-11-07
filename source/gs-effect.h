@@ -30,9 +30,9 @@ extern "C" {
 #pragma warning(disable : 4201)
 #include <graphics/graphics.h>
 #include <graphics/matrix4.h>
-#include <graphics/vec4.h>
-#include <graphics/vec3.h>
 #include <graphics/vec2.h>
+#include <graphics/vec3.h>
+#include <graphics/vec4.h>
 #pragma warning(pop)
 }
 

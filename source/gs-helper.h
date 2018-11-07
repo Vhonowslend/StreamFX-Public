@@ -18,19 +18,19 @@
  */
 
 #pragma once
-#include "plugin.h"
 #include <vector>
+#include "plugin.h"
 extern "C" {
-	#pragma warning (push)
-	#pragma warning (disable: 4201)
-	#include "graphics/graphics.h"
-	#pragma warning (pop)
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#include "graphics/graphics.h"
+#pragma warning(pop)
 }
 
 gs_effect_param* gs_effect_get_param(gs_effect_t* effect, const char* name);
-bool gs_set_param_int(gs_effect_t* effect, const char* name, int value);
-bool gs_set_param_float(gs_effect_t* effect, const char* name, float value);
-bool gs_set_param_float2(gs_effect_t* effect, const char* name, vec2* value);
-bool gs_set_param_float3(gs_effect_t* effect, const char* name, vec3* value);
-bool gs_set_param_float4(gs_effect_t* effect, const char* name, vec4* value);
-bool gs_set_param_texture(gs_effect_t* effect, const char* name, gs_texture_t* value);
+bool             gs_set_param_int(gs_effect_t* effect, const char* name, int value);
+bool             gs_set_param_float(gs_effect_t* effect, const char* name, float value);
+bool             gs_set_param_float2(gs_effect_t* effect, const char* name, vec2* value);
+bool             gs_set_param_float3(gs_effect_t* effect, const char* name, vec3* value);
+bool             gs_set_param_float4(gs_effect_t* effect, const char* name, vec4* value);
+bool             gs_set_param_texture(gs_effect_t* effect, const char* name, gs_texture_t* value);

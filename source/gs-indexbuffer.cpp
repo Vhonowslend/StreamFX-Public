@@ -20,13 +20,14 @@
 #include "gs-indexbuffer.h"
 #include "gs-limits.h"
 extern "C" {
-	#pragma warning( push )
-	#pragma warning( disable: 4201 )
-	#include <obs.h>
-	#pragma warning( pop )
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#include <obs.h>
+#pragma warning(pop)
 }
 
-gs::index_buffer::index_buffer(uint32_t maximumVertices) {
+gs::index_buffer::index_buffer(uint32_t maximumVertices)
+{
 	this->reserve(maximumVertices);
 
 	obs_enter_graphics();
@@ -36,25 +37,30 @@ gs::index_buffer::index_buffer(uint32_t maximumVertices) {
 
 gs::index_buffer::index_buffer() : index_buffer(MAXIMUM_VERTICES) {}
 
-gs::index_buffer::index_buffer(index_buffer& other) : index_buffer((uint32_t)other.size()) {
+gs::index_buffer::index_buffer(index_buffer& other) : index_buffer((uint32_t)other.size())
+{
 	std::copy(other.begin(), other.end(), this->end());
 }
 
-gs::index_buffer::index_buffer(std::vector<uint32_t>& other) : index_buffer((uint32_t)other.size()) {
+gs::index_buffer::index_buffer(std::vector<uint32_t>& other) : index_buffer((uint32_t)other.size())
+{
 	std::copy(other.begin(), other.end(), this->end());
 }
 
-gs::index_buffer::~index_buffer() {
+gs::index_buffer::~index_buffer()
+{
 	obs_enter_graphics();
 	gs_indexbuffer_destroy(m_indexBuffer);
 	obs_leave_graphics();
 }
 
-gs_indexbuffer_t* gs::index_buffer::get() {
+gs_indexbuffer_t* gs::index_buffer::get()
+{
 	return get(true);
 }
 
-gs_indexbuffer_t* gs::index_buffer::get(bool refreshGPU) {
+gs_indexbuffer_t* gs::index_buffer::get(bool refreshGPU)
+{
 	if (refreshGPU) {
 		obs_enter_graphics();
 		gs_indexbuffer_flush(m_indexBuffer);

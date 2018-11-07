@@ -77,7 +77,7 @@ bool gfx::effect_source::property_texture_type_modified(void* priv, obs_properti
 		obs_property_set_visible(obs_properties_get(props, tpm->ui.names[2]), false);
 	} else { // Source
 		obs_property_set_visible(obs_properties_get(props, tpm->ui.names[1]), false);
-		obs_property_set_visible(obs_properties_get(props, tpm->ui.names[2]), true);		
+		obs_property_set_visible(obs_properties_get(props, tpm->ui.names[2]), true);
 	}
 
 	return true;
@@ -427,7 +427,7 @@ bool gfx::effect_source::test_for_updates(const char* text, const char* path)
 						for (size_t i = 0; i <= 2; i++) {
 							bufsize += ui_name[i].size() + ui_desc[i].size() + 2;
 						}
-						
+
 						nparam->ui.names.resize(3);
 						nparam->ui.descs.resize(3);
 

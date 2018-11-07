@@ -18,20 +18,20 @@
  */
 
 #pragma once
-#include "plugin.h"
 #include "gs-vertexbuffer.h"
+#include "plugin.h"
 
-#define P_SHAPE						"Shape"
-#define P_SHAPE_LOOP					"Shape.Loop"
-#define P_SHAPE_MODE					"Shape.Mode"
-#define P_SHAPE_MODE_TRIS				"Shape.Mode.Tris"
-#define P_SHAPE_MODE_TRISTRIP				"Shape.Mode.TriStrip"
-#define P_SHAPE_MODE					"Shape.Mode"
-#define P_SHAPE_POINTS					"Shape.Points"
-#define P_SHAPE_POINT_X					"Shape.Point.X"
-#define P_SHAPE_POINT_Y					"Shape.Point.Y"
-#define P_SHAPE_POINT_U					"Shape.Point.U"
-#define P_SHAPE_POINT_V					"Shape.Point.V"
+#define P_SHAPE "Shape"
+#define P_SHAPE_LOOP "Shape.Loop"
+#define P_SHAPE_MODE "Shape.Mode"
+#define P_SHAPE_MODE_TRIS "Shape.Mode.Tris"
+#define P_SHAPE_MODE_TRISTRIP "Shape.Mode.TriStrip"
+#define P_SHAPE_MODE "Shape.Mode"
+#define P_SHAPE_POINTS "Shape.Points"
+#define P_SHAPE_POINT_X "Shape.Point.X"
+#define P_SHAPE_POINT_Y "Shape.Point.Y"
+#define P_SHAPE_POINT_U "Shape.Point.U"
+#define P_SHAPE_POINT_V "Shape.Point.V"
 
 namespace filter {
 	class Shape {
@@ -39,22 +39,22 @@ namespace filter {
 		Shape();
 		~Shape();
 
-		static const char *get_name(void *);
-		static void get_defaults(obs_data_t *);
-		static obs_properties_t *get_properties(void *);
-		static bool modified_properties(obs_properties_t *, obs_property_t *, obs_data_t *);
+		static const char*       get_name(void*);
+		static void              get_defaults(obs_data_t*);
+		static obs_properties_t* get_properties(void*);
+		static bool              modified_properties(obs_properties_t*, obs_property_t*, obs_data_t*);
 
-		static void *create(obs_data_t *, obs_source_t *);
-		static void destroy(void *);
-		static uint32_t get_width(void *);
-		static uint32_t get_height(void *);
-		static void update(void *, obs_data_t *);
-		static void activate(void *);
-		static void deactivate(void *);
-		static void show(void *);
-		static void hide(void *);
-		static void video_tick(void *, float);
-		static void video_render(void *, gs_effect_t *);
+		static void*    create(obs_data_t*, obs_source_t*);
+		static void     destroy(void*);
+		static uint32_t get_width(void*);
+		static uint32_t get_height(void*);
+		static void     update(void*, obs_data_t*);
+		static void     activate(void*);
+		static void     deactivate(void*);
+		static void     show(void*);
+		static void     hide(void*);
+		static void     video_tick(void*, float);
+		static void     video_render(void*, gs_effect_t*);
 
 		private:
 		obs_source_info sourceInfo;
@@ -65,23 +65,23 @@ namespace filter {
 			Instance(obs_data_t*, obs_source_t*);
 			~Instance();
 
-			void update(obs_data_t*);
+			void     update(obs_data_t*);
 			uint32_t get_width();
 			uint32_t get_height();
-			void activate();
-			void deactivate();
-			void show();
-			void hide();
-			void video_tick(float);
-			void video_render(gs_effect_t*);
+			void     activate();
+			void     deactivate();
+			void     show();
+			void     hide();
+			void     video_tick(float);
+			void     video_render(gs_effect_t*);
 
 			private:
-			obs_source_t *context;
-			gs_effect_t *customEffect;
-			gs::vertex_buffer *m_vertexHelper;
-			gs_vertbuffer_t *m_vertexBuffer;
-			gs_draw_mode drawmode;
-			gs_texrender_t *m_texRender;
+			obs_source_t*      context;
+			gs_effect_t*       customEffect;
+			gs::vertex_buffer* m_vertexHelper;
+			gs_vertbuffer_t*   m_vertexBuffer;
+			gs_draw_mode       drawmode;
+			gs_texrender_t*    m_texRender;
 		};
 	};
-}
+} // namespace filter

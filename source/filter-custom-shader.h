@@ -18,13 +18,13 @@
  */
 
 #pragma once
-#include "plugin.h"
-#include "gs-effect.h"
-#include "gs-rendertarget.h"
+#include <inttypes.h>
 #include <list>
 #include <vector>
-#include <inttypes.h>
 #include "gfx-effect-source.h"
+#include "gs-effect.h"
+#include "gs-rendertarget.h"
+#include "plugin.h"
 
 namespace filter {
 	class CustomShader {
@@ -32,19 +32,19 @@ namespace filter {
 		CustomShader();
 		~CustomShader();
 
-		static const char *get_name(void *);
-		static void get_defaults(obs_data_t *);
-		static obs_properties_t *get_properties(void *);
+		static const char*       get_name(void*);
+		static void              get_defaults(obs_data_t*);
+		static obs_properties_t* get_properties(void*);
 
-		static void *create(obs_data_t *, obs_source_t *);
-		static void destroy(void *);
-		static uint32_t get_width(void *);
-		static uint32_t get_height(void *);
-		static void update(void *, obs_data_t *);
-		static void activate(void *);
-		static void deactivate(void *);
-		static void video_tick(void *, float);
-		static void video_render(void *, gs_effect_t *);
+		static void*    create(obs_data_t*, obs_source_t*);
+		static void     destroy(void*);
+		static uint32_t get_width(void*);
+		static uint32_t get_height(void*);
+		static void     update(void*, obs_data_t*);
+		static void     activate(void*);
+		static void     deactivate(void*);
+		static void     video_tick(void*, float);
+		static void     video_render(void*, gs_effect_t*);
 
 		private:
 		obs_source_info sourceInfo;
@@ -56,7 +56,7 @@ namespace filter {
 			std::shared_ptr<gs::rendertarget> m_renderTarget;
 
 			protected:
-			bool apply_special_parameters(uint32_t viewW, uint32_t viewH);
+			bool         apply_special_parameters(uint32_t viewW, uint32_t viewH);
 			virtual bool is_special_parameter(std::string name, gs::effect_parameter::type type) override;
 			virtual bool video_tick_impl(float_t time) override;
 			virtual bool video_render_impl(gs_effect_t* parent_effect, uint32_t viewW, uint32_t viewH) override;
@@ -64,9 +64,9 @@ namespace filter {
 			public:
 			Instance(obs_data_t*, obs_source_t*);
 			~Instance();
-			
+
 			uint32_t get_width();
-			uint32_t get_height();					
+			uint32_t get_height();
 		};
 	};
-}
+} // namespace filter

@@ -42,57 +42,58 @@ namespace Source {
 		MirrorAddon();
 		~MirrorAddon();
 
-		static const char *get_name(void *);
-		static void get_defaults(obs_data_t *);
-		static bool modified_properties(obs_properties_t *, obs_property_t *, obs_data_t *);
-		static obs_properties_t *get_properties(void *);
+		static const char*       get_name(void*);
+		static void              get_defaults(obs_data_t*);
+		static bool              modified_properties(obs_properties_t*, obs_property_t*, obs_data_t*);
+		static obs_properties_t* get_properties(void*);
 
-		static void *create(obs_data_t *, obs_source_t *);
-		static void destroy(void *);
+		static void* create(obs_data_t*, obs_source_t*);
+		static void  destroy(void*);
 
-		static uint32_t get_width(void *);
-		static uint32_t get_height(void *);
+		static uint32_t get_width(void*);
+		static uint32_t get_height(void*);
 
-		static void update(void *, obs_data_t *);
-		static void activate(void *);
-		static void deactivate(void *);
-		static void video_tick(void *, float);
-		static void video_render(void *, gs_effect_t *);
-		static void enum_active_sources(void *, obs_source_enum_proc_t, void *);
+		static void update(void*, obs_data_t*);
+		static void activate(void*);
+		static void deactivate(void*);
+		static void video_tick(void*, float);
+		static void video_render(void*, gs_effect_t*);
+		static void enum_active_sources(void*, obs_source_enum_proc_t, void*);
 	};
 
 	class Mirror {
-		bool m_active = false;
+		bool          m_active = false;
 		obs_source_t* m_source = nullptr;
-		float_t m_tick = 0;
+		float_t       m_tick   = 0;
 
 		// Input
-		obs_scene_t* m_scene = nullptr;
-		std::shared_ptr<obs::source> m_scene_source;
+		obs_scene_t*                         m_scene = nullptr;
+		std::shared_ptr<obs::source>         m_scene_source;
 		std::unique_ptr<gfx::source_texture> m_source_texture;
 
 		// Input Source
 		obs_sceneitem_t* m_sceneitem = nullptr;
-		std::string m_mirrorName;
+		std::string      m_source_name;
 
 		// Scaling
-		bool m_rescale = false;
-		uint32_t m_width, m_height;
-		gs_effect_t* m_scalingEffect = nullptr;
-		bool m_keepOriginalSize = false;
-		std::unique_ptr<gs::rendertarget> m_renderTargetScale;
-		std::shared_ptr<gs::sampler> m_sampler;
+		bool                              m_rescale = false;
+		uint32_t                          m_width;
+		uint32_t                          m_height;
+		gs_effect_t*                      m_scaling_effect     = nullptr;
+		bool                              m_keep_original_size = false;
+		std::unique_ptr<gs::rendertarget> m_render_target_scale;
+		std::shared_ptr<gs::sampler>      m_sampler;
 
 		// Audio
-		bool m_enableAudio = false;
-		std::unique_ptr<obs::audio_capture> m_audioCapture;
-		std::mutex m_audioLock;
-		std::condition_variable m_audioNotify;
-		obs_source_audio m_audioOutput;
-		std::vector<std::vector<float_t>> m_audioData;
-		std::thread m_audioThread;
-		bool m_killAudioThread = false;
-		bool m_haveAudioOutput = false;
+		bool                                m_enable_audio = false;
+		std::unique_ptr<obs::audio_capture> m_audio_capture;
+		std::mutex                          m_audio_lock;
+		std::condition_variable             m_audio_notify;
+		obs_source_audio                    m_audio_output;
+		std::vector<std::vector<float_t>>   m_audio_data;
+		std::thread                         m_audio_thread;
+		bool                                m_kill_audio_thread = false;
+		bool                                m_have_audio_output = false;
 
 		public:
 		Mirror(obs_data_t*, obs_source_t*);
@@ -108,6 +109,6 @@ namespace Source {
 		void video_render(gs_effect_t*);
 		void audio_capture_cb(void* data, const audio_data* audio, bool muted);
 		void audio_output_cb();
-		void enum_active_sources(obs_source_enum_proc_t, void *);
+		void enum_active_sources(obs_source_enum_proc_t, void*);
 	};
-};
+}; // namespace Source

@@ -29,7 +29,7 @@ obs::source::~source()
 
 obs::source::source(std::string name, bool track_ownership, bool add_reference)
 {
-	this->self  = obs_get_source_by_name(name.c_str());
+	this->self            = obs_get_source_by_name(name.c_str());
 	this->track_ownership = track_ownership;
 	if (!add_reference) {
 		obs_source_release(this->self);
@@ -86,7 +86,8 @@ uint32_t obs::source::height()
 	return obs_source_get_height(self);
 }
 
-void obs::source::clear() {
+void obs::source::clear()
+{
 	self = nullptr;
 }
 

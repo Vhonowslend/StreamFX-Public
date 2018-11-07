@@ -20,10 +20,10 @@
 #pragma once
 #include <inttypes.h>
 extern "C" {
-	#pragma warning( push )
-	#pragma warning( disable: 4201 )
-	#include <graphics/graphics.h>
-	#pragma warning( pop )
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#include <graphics/graphics.h>
+#pragma warning(pop)
 }
 
 namespace gs {
@@ -32,33 +32,33 @@ namespace gs {
 		sampler();
 		~sampler();
 
-		void set_filter(gs_sample_filter v);
+		void             set_filter(gs_sample_filter v);
 		gs_sample_filter get_filter();
 
-		void set_address_mode_u(gs_address_mode v);
+		void            set_address_mode_u(gs_address_mode v);
 		gs_address_mode get_address_mode_u();
 
-		void set_address_mode_v(gs_address_mode v);
+		void            set_address_mode_v(gs_address_mode v);
 		gs_address_mode get_address_mode_v();
 
-		void set_address_mode_w(gs_address_mode v);
+		void            set_address_mode_w(gs_address_mode v);
 		gs_address_mode get_address_mode_w();
 
 		void set_max_anisotropy(int v);
-		int get_max_anisotropy();
+		int  get_max_anisotropy();
 
-		void set_border_color(uint32_t v);
-		void set_border_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+		void     set_border_color(uint32_t v);
+		void     set_border_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 		uint32_t get_border_color();
-		uint8_t get_border_color(bool r, bool g, bool b, bool a);
+		uint8_t  get_border_color(bool r, bool g, bool b, bool a);
 
 		gs_sampler_state* refresh();
 
 		gs_sampler_state* get_object();
 
 		private:
-		bool m_dirty;
-		gs_sampler_info m_samplerInfo;
+		bool              m_dirty;
+		gs_sampler_info   m_samplerInfo;
 		gs_sampler_state* m_samplerState;
 	};
-}
+} // namespace gs

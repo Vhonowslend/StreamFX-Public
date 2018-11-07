@@ -216,7 +216,7 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 				texture_height = 1;
 			}
 
-			texel_width = 1.0 / texture_width;
+			texel_width  = 1.0 / texture_width;
 			texel_height = 1.0 / texture_height;
 
 			// Draw mipmap layer

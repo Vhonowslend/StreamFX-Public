@@ -18,18 +18,18 @@
  */
 
 #pragma once
-#include <obs.h>
 #include <functional>
+#include <obs.h>
 
 namespace obs {
-	typedef std::function<void(void* data, struct audio_data const *audio, bool muted)> audio_capture_callback_t;
+	typedef std::function<void(void* data, struct audio_data const* audio, bool muted)> audio_capture_callback_t;
 
 	class audio_capture {
-		obs_source_t* source;
+		obs_source_t*            source;
 		audio_capture_callback_t cb;
-		void* cb_data;
+		void*                    cb_data;
 
-		static void audio_capture_cb(void*, obs_source_t*, struct audio_data const *, bool);
+		static void audio_capture_cb(void*, obs_source_t*, struct audio_data const*, bool);
 
 		public:
 		audio_capture(obs_source_t* source);
@@ -38,4 +38,4 @@ namespace obs {
 		void set_callback(audio_capture_callback_t cb, void* data);
 		void set_callback(audio_capture_callback_t cb);
 	};
-}
+} // namespace obs

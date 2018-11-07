@@ -21,7 +21,8 @@
 #include <cstdlib>
 #define USE_STD_ALLOC_FREE
 
-void* util::malloc_aligned(size_t align, size_t size) {
+void* util::malloc_aligned(size_t align, size_t size)
+{
 #ifdef USE_STD_ALLOC_FREE
 #if defined(_MSC_VER)
 	return _aligned_malloc(size, align);
@@ -46,7 +47,8 @@ void* util::malloc_aligned(size_t align, size_t size) {
 #endif
 }
 
-void util::free_aligned(void* mem) {
+void util::free_aligned(void* mem)
+{
 #ifdef USE_STD_ALLOC_FREE
 #if defined(_MSC_VER)
 	_aligned_free(mem);

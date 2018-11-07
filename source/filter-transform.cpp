@@ -204,13 +204,11 @@ obs_properties_t* filter::Transform::get_properties(void*)
 	obs_property_set_modified_callback(p, modified_properties);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(ST_MIPMAPPING)));
 
-	p = obs_properties_add_list(pr, strings::MipGenerator::Name,
-								P_TRANSLATE(strings::MipGenerator::Name), OBS_COMBO_TYPE_LIST,
-								OBS_COMBO_FORMAT_INT);
+	p = obs_properties_add_list(pr, strings::MipGenerator::Name, P_TRANSLATE(strings::MipGenerator::Name),
+								OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	obs_property_set_long_description(p, P_TRANSLATE(strings::MipGenerator::Description));
 
-	obs_property_list_add_int(p, P_TRANSLATE(strings::MipGenerator::Point),
-							  (long long)gs::mipmapper::generator::Point);
+	obs_property_list_add_int(p, P_TRANSLATE(strings::MipGenerator::Point), (long long)gs::mipmapper::generator::Point);
 	obs_property_list_add_int(p, P_TRANSLATE(strings::MipGenerator::Linear),
 							  (long long)gs::mipmapper::generator::Linear);
 	obs_property_list_add_int(p, P_TRANSLATE(strings::MipGenerator::Sharpen),
@@ -222,8 +220,8 @@ obs_properties_t* filter::Transform::get_properties(void*)
 	obs_property_list_add_int(p, P_TRANSLATE(strings::MipGenerator::Lanczos),
 							  (long long)gs::mipmapper::generator::Lanczos);
 
-	p = obs_properties_add_float(pr, strings::MipGenerator::Strength,
-								 P_TRANSLATE(strings::MipGenerator::Strength), 0.0, 100.0, 0.01);
+	p = obs_properties_add_float(pr, strings::MipGenerator::Strength, P_TRANSLATE(strings::MipGenerator::Strength), 0.0,
+								 100.0, 0.01);
 
 	return pr;
 }
@@ -310,8 +308,8 @@ filter::Transform::Instance::Instance(obs_data_t* data, obs_source_t* context)
 	vec3_set(rotation.get(), 0, 0, 0);
 	vec3_set(scale.get(), 1, 1, 1);
 
-	enable_mipmapping = false;
-	generator = gs::mipmapper::generator::Linear;
+	enable_mipmapping  = false;
+	generator          = gs::mipmapper::generator::Linear;
 	generator_strength = 50.0;
 
 	obs_enter_graphics();
@@ -354,7 +352,7 @@ void filter::Transform::Instance::update(obs_data_t* data)
 	shear->z       = 0.0f;
 
 	// Mipmapping
-	enable_mipmapping = obs_data_get_bool(data, ST_MIPMAPPING);
+	enable_mipmapping  = obs_data_get_bool(data, ST_MIPMAPPING);
 	generator_strength = obs_data_get_double(data, strings::MipGenerator::Strength);
 	generator          = (gs::mipmapper::generator)obs_data_get_int(data, strings::MipGenerator::Name);
 
@@ -391,9 +389,9 @@ void filter::Transform::Instance::video_render(gs_effect_t* paramEffect)
 	obs_source_t* parent = obs_filter_get_parent(source_context);
 	obs_source_t* target = obs_filter_get_target(source_context);
 
-	uint32_t width  = obs_source_get_base_width(target);
-	uint32_t height = obs_source_get_base_height(target);
-	uint32_t real_width = width;
+	uint32_t width       = obs_source_get_base_width(target);
+	uint32_t height      = obs_source_get_base_height(target);
+	uint32_t real_width  = width;
 	uint32_t real_height = height;
 
 	gs_effect_t* default_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
@@ -493,7 +491,7 @@ void filter::Transform::Instance::video_render(gs_effect_t* paramEffect)
 			// Most GPUs cap out here, so let's not go higher.
 			double_t aspect = double_t(width) / double_t(height);
 			if (aspect > 1.0) { // height < width
-				real_width = 8192;
+				real_width  = 8192;
 				real_height = uint32_t(real_width / aspect);
 			} else if (aspect < 1.0) { // width > height
 				real_height = 8192;
@@ -546,8 +544,8 @@ void filter::Transform::Instance::video_render(gs_effect_t* paramEffect)
 				}
 			}
 
-			source_texture = std::make_shared<gs::texture>(real_width, real_height, GS_RGBA, uint32_t(1u + mip_levels), nullptr,
-														   gs::texture::flags::BuildMipMaps);
+			source_texture = std::make_shared<gs::texture>(real_width, real_height, GS_RGBA, uint32_t(1u + mip_levels),
+														   nullptr, gs::texture::flags::BuildMipMaps);
 		}
 
 		mipmapper.rebuild(source_tex, source_texture, generator, float_t(generator_strength));

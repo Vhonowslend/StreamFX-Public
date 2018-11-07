@@ -19,26 +19,31 @@
 
 #include "obs-audio-capture.h"
 
-void obs::audio_capture::audio_capture_cb(void* data, obs_source_t*, const struct audio_data* audio, bool muted) {
+void obs::audio_capture::audio_capture_cb(void* data, obs_source_t*, const struct audio_data* audio, bool muted)
+{
 	auto self = reinterpret_cast<obs::audio_capture*>(data);
 	self->cb(self->cb_data, audio, muted);
 }
 
-obs::audio_capture::audio_capture(obs_source_t* source) {
+obs::audio_capture::audio_capture(obs_source_t* source)
+{
 	this->source = source;
 	obs_source_add_audio_capture_callback(this->source, audio_capture_cb, this);
 }
 
-obs::audio_capture::~audio_capture() {
+obs::audio_capture::~audio_capture()
+{
 	obs_source_remove_audio_capture_callback(this->source, audio_capture_cb, this);
 }
 
-void obs::audio_capture::set_callback(audio_capture_callback_t cb, void* data) {
-	this->cb = cb;
+void obs::audio_capture::set_callback(audio_capture_callback_t cb, void* data)
+{
+	this->cb      = cb;
 	this->cb_data = data;
 }
 
-void obs::audio_capture::set_callback(audio_capture_callback_t cb) {
-	this->cb = cb;
+void obs::audio_capture::set_callback(audio_capture_callback_t cb)
+{
+	this->cb      = cb;
 	this->cb_data = nullptr;
 }

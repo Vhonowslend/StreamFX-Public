@@ -131,7 +131,7 @@ namespace gfx {
 		static bool property_texture_type_modified(void* priv, obs_properties_t* props, obs_property_t* prop,
 												   obs_data_t* sett);
 		static bool property_texture_input_modified(void* priv, obs_properties_t* props, obs_property_t* prop,
-												   obs_data_t* sett);
+													obs_data_t* sett);
 
 		virtual bool is_special_parameter(std::string name, gs::effect_parameter::type type) = 0;
 

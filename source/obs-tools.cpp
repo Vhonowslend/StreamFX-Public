@@ -21,8 +21,8 @@
 #include <map>
 
 struct scs_searchdata {
-	obs_source_t* source;
-	bool          found = false;
+	obs_source_t*                 source;
+	bool                          found = false;
 	std::map<obs_source_t*, bool> visited;
 };
 
