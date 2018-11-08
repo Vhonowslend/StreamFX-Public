@@ -1,0 +1,75 @@
+// OBS Default
+uniform float4x4 ViewProj;
+
+// Inputs
+uniform texture2d _sdf;
+uniform texture2d _image;
+uniform float _inner_min;
+uniform float _inner_max;
+uniform float2 _inner_offset;
+uniform float4 _inner_color;
+uniform float _outer_min;
+uniform float _outer_max;
+uniform float2 _outer_offset;
+uniform float4 _outer_color;
+uniform float _threshold;
+
+#define NEAR_INFINITE 18446744073709551616.0
+
+sampler_state sdfSampler {
+	Filter    = Trilinear;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+};
+sampler_state imageSampler {
+	Filter    = Trilinear;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+};
+
+struct VertDataIn {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+struct VertDataOut {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertDataOut VSDefault(VertDataIn v_in)
+{
+	VertDataOut vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+	return vert_out;
+}
+
+float4 PS_SDFShadow_v1(VertDataOut v_in) : TARGET
+{
+	float4 final = _image.Sample(imageSampler, v_in.uv);
+
+	if (_inner_max > 0 && final.a >= _threshold) {
+		float inner_dist = _sdf.Sample(sdfSampler, v_in.uv + _inner_offset).g;
+		float range = (_inner_max - _inner_min);
+		float str = clamp(inner_dist - _inner_min, 0, range) / range;
+		final = lerp(_inner_color, final, str);
+	}
+	if (_outer_max > 0 && final.a < _threshold) {
+		float outer_dist = _sdf.Sample(sdfSampler, v_in.uv + _outer_offset).r;
+		float range = (_outer_max - _outer_min);
+		float str = clamp(outer_dist - _outer_min, 0, range) / range;
+		final = lerp(_outer_color, float4(_outer_color.r, _outer_color.g, _outer_color.b, 0.0), str);
+	}
+	
+	return final;
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PS_SDFShadow_v1(v_in);
+	}
+}

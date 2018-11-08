@@ -203,6 +203,7 @@ SET(PROJECT_DATA_EFFECTS
 	"${PROJECT_SOURCE_DIR}/data/effects/mask.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mip-mapper.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mipgen.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/sdf-generator.effect"
 )
 SET(PROJECT_DATA_SHADERS
 #	"${PROJECT_SOURCE_DIR}/data/shaders/name.effect"
@@ -225,6 +226,8 @@ SET(PROJECT_PRIVATE
 	"${PROJECT_SOURCE_DIR}/source/filter-displacement.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filter-blur.h"
 	"${PROJECT_SOURCE_DIR}/source/filter-blur.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filter-shadow-sdf.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filter-shadow-sdf.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filter-shape.h"
 	"${PROJECT_SOURCE_DIR}/source/filter-shape.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filter-transform.h"

@@ -1,0 +1,119 @@
+// OBS Default
+uniform float4x4 ViewProj;
+
+// Inputs
+uniform texture2d _image;
+uniform float2 _size;
+uniform texture2d _sdf; // in, out - swap rendering
+uniform float _threshold;
+
+#define NEAR_INFINITE 18446744073709551616.0
+#define RANGE 4
+
+sampler_state sdfSampler {
+	Filter    = Point;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+};
+sampler_state imageSampler {
+	Filter    = Point;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+};
+
+struct VertDataIn {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+struct VertDataOut {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertDataOut VSDefault(VertDataIn v_in)
+{
+	VertDataOut vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+	return vert_out;
+}
+
+float4 PS_SDFGenerator_v1(VertDataOut v_in) : TARGET
+{
+	float4 outval = float4(0.0, 0.0, v_in.uv.x, v_in.uv.y);
+	
+	// utility values
+	float2 uv_step = 1.0 / _size;
+	float lowest = NEAR_INFINITE;
+	float2 lowest_source = float2(NEAR_INFINITE, NEAR_INFINITE);
+	float2 lowest_origin = float2(NEAR_INFINITE, NEAR_INFINITE);
+	
+	// inputs	
+	float imageA = _image.Sample(imageSampler, v_in.uv).a;	
+	// sdf contains 4 values: R = Positive Distance, G = Negative Distance, BA = UV of nearest edge.
+		
+	if (imageA > _threshold) {
+		// Inside
+		// TODO: Optimize to be O(n*n) instead of (2n*2n)
+		for (int x = -RANGE; x < RANGE; x++) {
+			for (int y = -RANGE; y < RANGE; y++) {
+				if ((x == 0) && (y == 0)) {
+					continue;
+				}
+				
+				float2 dtr = float2(x, y);
+				float2 dt = uv_step * dtr;
+				float4 here = _sdf.Sample(sdfSampler, v_in.uv + dt);
+				float dst = abs(distance(float2(0., 0.), dtr));
+				
+				if (lowest > (here.g + dst)) {
+					lowest = here.g + dst;
+					lowest_source = v_in.uv + dt;
+					lowest_origin = here.ba;
+				}
+			}
+		}
+        if (lowest < NEAR_INFINITE) {
+            outval.g = lowest;
+            outval.ba = lowest_origin;
+        }
+	} else {
+		// Outside
+		// TODO: Optimize to be O(n*n) instead of (2n*2n)
+		for (int x = -RANGE; x < RANGE; x++) {
+			for (int y = -RANGE; y < RANGE; y++) {
+				if ((x == 0) && (y == 0)) {
+					continue;
+				}
+				
+				float2 dtr = float2(x, y);
+				float2 dt = uv_step * dtr;
+				float4 here = _sdf.Sample(sdfSampler, v_in.uv + dt);
+				float dst = abs(distance(float2(0., 0.), dtr));
+				
+				if (lowest > (here.r + dst)) {
+					lowest = here.r + dst;
+					lowest_source = v_in.uv + dt;
+					lowest_origin = here.ba;
+				}
+			}
+		}
+        if (lowest < NEAR_INFINITE) {
+            outval.r = lowest;
+            outval.ba = lowest_origin;
+        }
+	}
+	
+	return outval;
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PS_SDFGenerator_v1(v_in);
+	}
+}
+
