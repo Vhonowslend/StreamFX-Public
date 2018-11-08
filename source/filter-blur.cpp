@@ -66,8 +66,8 @@ extern "C" {
 // Initializer & Finalizer
 INITIALIZER(filterBlurFactoryInitializer)
 {
-	initializerFunctions.push_back([] { filter::blur::factory::initialize(); });
-	finalizerFunctions.push_back([] { filter::blur::factory::finalize(); });
+	initializerFunctions.push_back([] { filter::blur::blur_factory::initialize(); });
+	finalizerFunctions.push_back([] { filter::blur::blur_factory::finalize(); });
 }
 
 enum ColorFormat : uint64_t { // ToDo: Refactor into full class.
@@ -77,7 +77,7 @@ enum ColorFormat : uint64_t { // ToDo: Refactor into full class.
 
 static uint8_t const max_kernel_size = 25;
 
-bool filter::blur::instance::apply_shared_param(gs_texture_t* input, float texelX, float texelY)
+bool filter::blur::blur_instance::apply_shared_param(gs_texture_t* input, float texelX, float texelY)
 {
 	bool result = true;
 
@@ -102,7 +102,7 @@ bool filter::blur::instance::apply_shared_param(gs_texture_t* input, float texel
 	return result;
 }
 
-bool filter::blur::instance::apply_bilateral_param()
+bool filter::blur::blur_instance::apply_bilateral_param()
 {
 	if (type != type::Bilateral)
 		return false;
@@ -118,9 +118,9 @@ bool filter::blur::instance::apply_bilateral_param()
 	return true;
 }
 
-bool filter::blur::instance::apply_gaussian_param()
+bool filter::blur::blur_instance::apply_gaussian_param()
 {
-	std::shared_ptr<gs::texture> kernel = filter::blur::factory::get()->get_kernel(filter::blur::type::Gaussian);
+	std::shared_ptr<gs::texture> kernel = filter::blur::blur_factory::get()->get_kernel(filter::blur::type::Gaussian);
 
 	if (blur_effect->has_parameter("kernel")) {
 		blur_effect->get_parameter("kernel").set_texture(kernel);
@@ -137,7 +137,7 @@ bool filter::blur::instance::apply_gaussian_param()
 	return true;
 }
 
-bool filter::blur::instance::apply_mask_parameters(std::shared_ptr<gs::effect> effect, gs_texture_t* original_texture,
+bool filter::blur::blur_instance::apply_mask_parameters(std::shared_ptr<gs::effect> effect, gs_texture_t* original_texture,
 												   gs_texture_t* blurred_texture)
 {
 	if (effect->has_parameter("image_orig")) {
@@ -202,7 +202,7 @@ bool filter::blur::instance::apply_mask_parameters(std::shared_ptr<gs::effect> e
 	return true;
 }
 
-bool filter::blur::instance::modified_properties(void* ptr, obs_properties_t* props, obs_property* prop,
+bool filter::blur::blur_instance::modified_properties(void* ptr, obs_properties_t* props, obs_property* prop,
 												 obs_data_t* settings)
 {
 	bool showBilateral = (obs_data_get_int(settings, P_TYPE) == type::Bilateral);
@@ -243,12 +243,12 @@ bool filter::blur::instance::modified_properties(void* ptr, obs_properties_t* pr
 	return true;
 }
 
-filter::blur::instance::instance(obs_data_t* settings, obs_source_t* parent)
+filter::blur::blur_instance::blur_instance(obs_data_t* settings, obs_source_t* parent)
 {
 	m_source = parent;
 
 	obs_enter_graphics();
-	blur_effect             = filter::blur::factory::get()->get_effect(filter::blur::type::Box);
+	blur_effect             = filter::blur::blur_factory::get()->get_effect(filter::blur::type::Box);
 	primary_rendertarget    = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 	secondary_rendertarget  = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 	horizontal_rendertarget = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
@@ -278,7 +278,7 @@ filter::blur::instance::instance(obs_data_t* settings, obs_source_t* parent)
 	update(settings);
 }
 
-filter::blur::instance::~instance()
+filter::blur::blur_instance::~blur_instance()
 {
 	obs_enter_graphics();
 	gs_texrender_destroy(primary_rendertarget);
@@ -288,7 +288,7 @@ filter::blur::instance::~instance()
 	obs_leave_graphics();
 }
 
-obs_properties_t* filter::blur::instance::get_properties()
+obs_properties_t* filter::blur::blur_instance::get_properties()
 {
 	obs_properties_t* pr = obs_properties_create();
 	obs_property_t*   p  = NULL;
@@ -354,9 +354,9 @@ obs_properties_t* filter::blur::instance::get_properties()
 			return true;
 		},
 		p);
-	factory::get()->enum_scenes([this, p](obs_scene_t* scene) {
+	blur_factory::get()->enum_scenes([this, p](obs_scene_t* scene) {
 		struct data {
-			instance*       self;
+			blur_instance*       self;
 			obs_property_t* prop;
 			std::string     parent_name;
 		};
@@ -392,10 +392,10 @@ obs_properties_t* filter::blur::instance::get_properties()
 	return pr;
 }
 
-void filter::blur::instance::update(obs_data_t* settings)
+void filter::blur::blur_instance::update(obs_data_t* settings)
 {
 	type        = (blur::type)obs_data_get_int(settings, P_TYPE);
-	blur_effect = factory::get()->get_effect(type);
+	blur_effect = blur_factory::get()->get_effect(type);
 	size        = (uint64_t)obs_data_get_int(settings, P_SIZE);
 
 	// bilateral blur
@@ -441,21 +441,21 @@ void filter::blur::instance::update(obs_data_t* settings)
 	}
 }
 
-uint32_t filter::blur::instance::get_width()
+uint32_t filter::blur::blur_instance::get_width()
 {
 	return uint32_t(0);
 }
 
-uint32_t filter::blur::instance::get_height()
+uint32_t filter::blur::blur_instance::get_height()
 {
 	return uint32_t(0);
 }
 
-void filter::blur::instance::activate() {}
+void filter::blur::blur_instance::activate() {}
 
-void filter::blur::instance::deactivate() {}
+void filter::blur::blur_instance::deactivate() {}
 
-void filter::blur::instance::video_tick(float)
+void filter::blur::blur_instance::video_tick(float)
 {
 	if (mask.type == mask_type::Image) {
 		if (mask.image.path_old != mask.image.path) {
@@ -481,7 +481,7 @@ void filter::blur::instance::video_tick(float)
 	}
 }
 
-void filter::blur::instance::video_render(gs_effect_t* effect)
+void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 {
 	obs_source_t* parent = obs_filter_get_parent(m_source);
 	obs_source_t* target = obs_filter_get_target(m_source);
@@ -491,7 +491,7 @@ void filter::blur::instance::video_render(gs_effect_t* effect)
 
 	bool failed = false;
 
-	std::shared_ptr<gs::effect> colorConversionEffect = factory::get()->get_color_converter_effect();
+	std::shared_ptr<gs::effect> colorConversionEffect = blur_factory::get()->get_color_converter_effect();
 
 	// Skip rendering if our target, parent or context is not valid.
 	if (!target || !parent || !m_source) {
@@ -713,7 +713,7 @@ void filter::blur::instance::video_render(gs_effect_t* effect)
 			mask.source.texture = mask.source.source_texture->render(source_width, source_height);
 		}
 
-		std::shared_ptr<gs::effect> mask_effect = factory::get()->get_mask_effect();
+		std::shared_ptr<gs::effect> mask_effect = blur_factory::get()->get_mask_effect();
 		apply_mask_parameters(mask_effect, sourceTexture, blurred);
 
 		gs_texrender_reset(horizontal_rendertarget);
@@ -775,7 +775,7 @@ void filter::blur::instance::video_render(gs_effect_t* effect)
 	}
 }
 
-filter::blur::factory::factory()
+filter::blur::blur_factory::blur_factory()
 {
 	memset(&source_info, 0, sizeof(obs_source_info));
 	source_info.id             = "obs-stream-effects-filter-blur";
@@ -800,14 +800,14 @@ filter::blur::factory::factory()
 	signal_handler_connect(osi, "source_destroy", scene_destroy_handler, this);
 }
 
-filter::blur::factory::~factory()
+filter::blur::blur_factory::~blur_factory()
 {
 	auto osi = obs_get_signal_handler();
 	signal_handler_disconnect(osi, "source_create", scene_create_handler, this);
 	signal_handler_disconnect(osi, "source_destroy", scene_destroy_handler, this);
 }
 
-void filter::blur::factory::on_list_fill()
+void filter::blur::blur_factory::on_list_fill()
 {
 	obs_enter_graphics();
 
@@ -861,7 +861,7 @@ void filter::blur::factory::on_list_fill()
 	obs_leave_graphics();
 }
 
-void filter::blur::factory::on_list_empty()
+void filter::blur::blur_factory::on_list_empty()
 {
 	obs_enter_graphics();
 	effects.clear();
@@ -871,7 +871,7 @@ void filter::blur::factory::on_list_empty()
 	obs_leave_graphics();
 }
 
-void filter::blur::factory::generate_gaussian_kernels()
+void filter::blur::blur_factory::generate_gaussian_kernels()
 {
 	// 2D texture, horizontal is value, vertical is kernel size.
 	size_t size_power_of_two = size_t(pow(2, util::math::get_power_of_two_exponent_ceil(max_kernel_size)));
@@ -909,31 +909,31 @@ void filter::blur::factory::generate_gaussian_kernels()
 	}
 }
 
-void filter::blur::factory::generate_kernel_textures()
+void filter::blur::blur_factory::generate_kernel_textures()
 {
 	generate_gaussian_kernels();
 }
 
-void* filter::blur::factory::create(obs_data_t* data, obs_source_t* parent)
+void* filter::blur::blur_factory::create(obs_data_t* data, obs_source_t* parent)
 {
 	if (get()->sources.empty()) {
 		get()->on_list_fill();
 	}
-	filter::blur::instance* ptr = new filter::blur::instance(data, parent);
+	filter::blur::blur_instance* ptr = new filter::blur::blur_instance(data, parent);
 	get()->sources.push_back(ptr);
 	return ptr;
 }
 
-void filter::blur::factory::destroy(void* inptr)
+void filter::blur::blur_factory::destroy(void* inptr)
 {
-	filter::blur::instance* ptr = reinterpret_cast<filter::blur::instance*>(inptr);
+	filter::blur::blur_instance* ptr = reinterpret_cast<filter::blur::blur_instance*>(inptr);
 	get()->sources.remove(ptr);
 	if (get()->sources.empty()) {
 		get()->on_list_empty();
 	}
 }
 
-void filter::blur::factory::get_defaults(obs_data_t* data)
+void filter::blur::blur_factory::get_defaults(obs_data_t* data)
 {
 	obs_data_set_default_int(data, P_TYPE, filter::blur::type::Box);
 	obs_data_set_default_int(data, P_SIZE, 5);
@@ -964,55 +964,55 @@ void filter::blur::factory::get_defaults(obs_data_t* data)
 	obs_data_set_default_int(data, P_COLORFORMAT, ColorFormat::RGB);
 }
 
-obs_properties_t* filter::blur::factory::get_properties(void* inptr)
+obs_properties_t* filter::blur::blur_factory::get_properties(void* inptr)
 {
-	return reinterpret_cast<filter::blur::instance*>(inptr)->get_properties();
+	return reinterpret_cast<filter::blur::blur_instance*>(inptr)->get_properties();
 }
 
-void filter::blur::factory::update(void* inptr, obs_data_t* settings)
+void filter::blur::blur_factory::update(void* inptr, obs_data_t* settings)
 {
-	reinterpret_cast<filter::blur::instance*>(inptr)->update(settings);
+	reinterpret_cast<filter::blur::blur_instance*>(inptr)->update(settings);
 }
 
-const char* filter::blur::factory::get_name(void* inptr)
+const char* filter::blur::blur_factory::get_name(void* inptr)
 {
 	inptr;
 	return P_TRANSLATE(SOURCE_NAME);
 }
 
-uint32_t filter::blur::factory::get_width(void* inptr)
+uint32_t filter::blur::blur_factory::get_width(void* inptr)
 {
-	return reinterpret_cast<filter::blur::instance*>(inptr)->get_width();
+	return reinterpret_cast<filter::blur::blur_instance*>(inptr)->get_width();
 }
 
-uint32_t filter::blur::factory::get_height(void* inptr)
+uint32_t filter::blur::blur_factory::get_height(void* inptr)
 {
-	return reinterpret_cast<filter::blur::instance*>(inptr)->get_height();
+	return reinterpret_cast<filter::blur::blur_instance*>(inptr)->get_height();
 }
 
-void filter::blur::factory::activate(void* inptr)
+void filter::blur::blur_factory::activate(void* inptr)
 {
-	reinterpret_cast<filter::blur::instance*>(inptr)->activate();
+	reinterpret_cast<filter::blur::blur_instance*>(inptr)->activate();
 }
 
-void filter::blur::factory::deactivate(void* inptr)
+void filter::blur::blur_factory::deactivate(void* inptr)
 {
-	reinterpret_cast<filter::blur::instance*>(inptr)->deactivate();
+	reinterpret_cast<filter::blur::blur_instance*>(inptr)->deactivate();
 }
 
-void filter::blur::factory::video_tick(void* inptr, float delta)
+void filter::blur::blur_factory::video_tick(void* inptr, float delta)
 {
-	reinterpret_cast<filter::blur::instance*>(inptr)->video_tick(delta);
+	reinterpret_cast<filter::blur::blur_instance*>(inptr)->video_tick(delta);
 }
 
-void filter::blur::factory::video_render(void* inptr, gs_effect_t* effect)
+void filter::blur::blur_factory::video_render(void* inptr, gs_effect_t* effect)
 {
-	reinterpret_cast<filter::blur::instance*>(inptr)->video_render(effect);
+	reinterpret_cast<filter::blur::blur_instance*>(inptr)->video_render(effect);
 }
 
-void filter::blur::factory::scene_create_handler(void* ptr, calldata_t* data)
+void filter::blur::blur_factory::scene_create_handler(void* ptr, calldata_t* data)
 {
-	filter::blur::factory* self   = reinterpret_cast<filter::blur::factory*>(ptr);
+	filter::blur::blur_factory* self   = reinterpret_cast<filter::blur::blur_factory*>(ptr);
 	obs_source_t*          source = nullptr;
 	calldata_get_ptr(data, "source", &source);
 	obs_scene_t* scene = obs_scene_from_source(source);
@@ -1021,9 +1021,9 @@ void filter::blur::factory::scene_create_handler(void* ptr, calldata_t* data)
 	}
 }
 
-void filter::blur::factory::scene_destroy_handler(void* ptr, calldata_t* data)
+void filter::blur::blur_factory::scene_destroy_handler(void* ptr, calldata_t* data)
 {
-	filter::blur::factory* self   = reinterpret_cast<filter::blur::factory*>(ptr);
+	filter::blur::blur_factory* self   = reinterpret_cast<filter::blur::blur_factory*>(ptr);
 	obs_source_t*          source = nullptr;
 	calldata_get_ptr(data, "source", &source);
 	obs_scene_t* scene = obs_scene_from_source(source);
@@ -1032,27 +1032,27 @@ void filter::blur::factory::scene_destroy_handler(void* ptr, calldata_t* data)
 	}
 }
 
-std::shared_ptr<gs::effect> filter::blur::factory::get_effect(filter::blur::type type)
+std::shared_ptr<gs::effect> filter::blur::blur_factory::get_effect(filter::blur::type type)
 {
 	return effects.at(type);
 }
 
-std::shared_ptr<gs::effect> filter::blur::factory::get_color_converter_effect()
+std::shared_ptr<gs::effect> filter::blur::blur_factory::get_color_converter_effect()
 {
 	return color_converter_effect;
 }
 
-std::shared_ptr<gs::effect> filter::blur::factory::get_mask_effect()
+std::shared_ptr<gs::effect> filter::blur::blur_factory::get_mask_effect()
 {
 	return mask_effect;
 }
 
-std::shared_ptr<gs::texture> filter::blur::factory::get_kernel(filter::blur::type type)
+std::shared_ptr<gs::texture> filter::blur::blur_factory::get_kernel(filter::blur::type type)
 {
 	return kernels.at(type);
 }
 
-obs_scene_t* filter::blur::factory::get_scene(std::string name)
+obs_scene_t* filter::blur::blur_factory::get_scene(std::string name)
 {
 	auto kv = scenes.find(name);
 	if (kv != scenes.end()) {
@@ -1061,7 +1061,7 @@ obs_scene_t* filter::blur::factory::get_scene(std::string name)
 	return nullptr;
 }
 
-void filter::blur::factory::enum_scenes(std::function<bool(obs_scene_t*)> fnc)
+void filter::blur::blur_factory::enum_scenes(std::function<bool(obs_scene_t*)> fnc)
 {
 	for (auto kv : scenes) {
 		if (!fnc(kv.second)) {
@@ -1070,19 +1070,19 @@ void filter::blur::factory::enum_scenes(std::function<bool(obs_scene_t*)> fnc)
 	}
 }
 
-static filter::blur::factory* factory_instance = nullptr;
+static filter::blur::blur_factory* factory_instance = nullptr;
 
-void filter::blur::factory::initialize()
+void filter::blur::blur_factory::initialize()
 {
-	factory_instance = new filter::blur::factory();
+	factory_instance = new filter::blur::blur_factory();
 }
 
-void filter::blur::factory::finalize()
+void filter::blur::blur_factory::finalize()
 {
 	delete factory_instance;
 }
 
-filter::blur::factory* filter::blur::factory::get()
+filter::blur::blur_factory* filter::blur::blur_factory::get()
 {
 	return factory_instance;
 }

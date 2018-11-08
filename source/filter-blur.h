@@ -17,7 +17,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+#ifndef OBS_STREAM_EFFECTS_FILTER_BLUR_HPP
+#define OBS_STREAM_EFFECTS_FILTER_BLUR_HPP
 #pragma once
+
 #include <functional>
 #include <list>
 #include <map>
@@ -49,7 +52,7 @@ namespace filter {
 			Source,
 		};
 
-		class instance {
+		class blur_instance {
 			obs_source_t*   m_source;
 			gs_texrender_t* primary_rendertarget;
 			gs_texrender_t* secondary_rendertarget;
@@ -113,8 +116,8 @@ namespace filter {
 											obs_data_t* settings);
 
 			public:
-			instance(obs_data_t* settings, obs_source_t* self);
-			~instance();
+			blur_instance(obs_data_t* settings, obs_source_t* self);
+			~blur_instance();
 
 			obs_properties_t* get_properties();
 			void              update(obs_data_t*);
@@ -129,9 +132,9 @@ namespace filter {
 			void video_render(gs_effect_t*);
 		};
 
-		class factory {
+		class blur_factory {
 			obs_source_info             source_info;
-			std::list<instance*>        sources;
+			std::list<blur_instance*>        sources;
 			std::shared_ptr<gs::effect> color_converter_effect;
 			std::shared_ptr<gs::effect> mask_effect;
 
@@ -141,8 +144,8 @@ namespace filter {
 			std::map<std::string, obs_scene_t*> scenes;
 
 			private:
-			factory();
-			~factory();
+			blur_factory();
+			~blur_factory();
 
 			void on_list_fill();
 			void on_list_empty();
@@ -187,9 +190,11 @@ namespace filter {
 			public: // Singleton
 			static void     initialize();
 			static void     finalize();
-			static factory* get();
+			static blur_factory* get();
 		};
 
 	} // namespace blur
 
 } // namespace filter
+
+#endif
