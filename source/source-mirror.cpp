@@ -21,11 +21,15 @@
 #include <bitset>
 #include <cstring>
 #include <functional>
-#include <media-io/audio-io.h>
 #include <memory>
 #include <vector>
 #include "obs-tools.hpp"
 #include "strings.h"
+
+extern "C" {
+#include <media-io/audio-io.h>
+#include <obs-config.h>
+}
 
 #define S_SOURCE_MIRROR "Source.Mirror"
 #define P_SOURCE "Source.Mirror.Source"
@@ -77,6 +81,8 @@ Source::MirrorAddon::MirrorAddon()
 	osi.video_tick          = video_tick;
 	osi.video_render        = video_render;
 	osi.enum_active_sources = enum_active_sources;
+	osi.load                = load;
+	osi.save                = save;
 
 	obs_register_source(&osi);
 }
@@ -131,7 +137,9 @@ static void UpdateSourceList(obs_property_t* p)
 {
 	obs_property_list_clear(p);
 	obs_enum_sources(UpdateSourceListCB, p);
+#if LIBOBS_API_MAJOR_VER >= 23
 	obs_enum_scenes(UpdateSourceListCB, p);
+#endif
 }
 
 obs_properties_t* Source::MirrorAddon::get_properties(void*)
@@ -243,6 +251,20 @@ void Source::MirrorAddon::enum_active_sources(void* p, obs_source_enum_proc_t en
 	}
 }
 
+void Source::MirrorAddon::load(void* p, obs_data_t* d)
+{
+	if (p) {
+		static_cast<Source::Mirror*>(p)->load(d);
+	}
+}
+
+void Source::MirrorAddon::save(void* p, obs_data_t* d)
+{
+	if (p) {
+		static_cast<Source::Mirror*>(p)->save(d);
+	}
+}
+
 Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src)
 {
 	this->m_source              = src;
@@ -310,7 +332,8 @@ void Source::Mirror::update(obs_data_t* data)
 	if (!this->m_scene && this->m_active) {
 		this->m_scene          = obs_scene_create_private("localscene");
 		this->m_scene_source   = std::make_shared<obs::source>(obs_scene_get_source(this->m_scene), false, false);
-		this->m_source_texture = std::make_unique<gfx::source_texture>(this->m_scene_source, this->m_source);
+		this->m_source_texture = std::make_unique<gfx::source_texture>(
+			this->m_scene_source, std::make_shared<obs::source>(this->m_source, false, false));
 	}
 
 	// Update selected source.
@@ -319,12 +342,16 @@ void Source::Mirror::update(obs_data_t* data)
 		if (m_scene) {
 			if (this->m_sceneitem) {
 				this->m_audio_capture.reset();
+				this->m_source_target.reset();
 				obs_sceneitem_remove(this->m_sceneitem);
 				this->m_sceneitem = nullptr;
 			}
 			obs_source_t* source = obs_get_source_by_name(new_source_name);
 			if (source) {
 				bool allow = true;
+				if (source == m_source) {
+					allow = false;
+				}
 				if (strcmp(obs_source_get_id(source), "scene") == 0) {
 					if (obs::tools::scene_contains_source(obs_scene_from_source(source), this->m_source)) {
 						allow = false;
@@ -332,12 +359,21 @@ void Source::Mirror::update(obs_data_t* data)
 				}
 				if (allow) {
 					this->m_sceneitem = obs_scene_add(m_scene, source);
-					try {
-						this->m_audio_capture = std::make_unique<obs::audio_capture>(source);
-						this->m_audio_capture->set_callback(std::bind(&Source::Mirror::audio_capture_cb, this,
-																	  std::placeholders::_1, std::placeholders::_2,
-																	  std::placeholders::_3));
-					} catch (...) {
+					if (this->m_sceneitem) {
+						m_source_target = std::make_shared<obs::source>(source, true, true);
+						m_source_target->events.rename.add(std::bind(&Source::Mirror::on_source_rename, this,
+																	 std::placeholders::_1, std::placeholders::_2,
+																	 std::placeholders::_3));
+						m_source_target->events.destroy.add(
+							std::bind(&Source::Mirror::on_source_destroy, this, std::placeholders::_1));
+						try {
+							this->m_audio_capture = std::make_unique<obs::audio_capture>(source);
+							this->m_audio_capture->set_callback(std::bind(&Source::Mirror::audio_capture_cb, this,
+																		  std::placeholders::_1, std::placeholders::_2,
+																		  std::placeholders::_3));
+						} catch (...) {
+						}
+						this->m_source_name = new_source_name;
 					}
 				}
 				obs_source_release(source);
@@ -435,9 +471,7 @@ void Source::Mirror::video_tick(float time)
 {
 	this->m_tick += time;
 
-	if (this->m_sceneitem) {
-		this->m_source_name = obs_source_get_name(obs_sceneitem_get_source(this->m_sceneitem));
-	} else {
+	if (!this->m_sceneitem) {
 		if (this->m_tick > 0.1f) {
 			obs_data_t* ref = obs_source_get_settings(this->m_source);
 			update(ref);
@@ -483,11 +517,13 @@ void Source::Mirror::video_render(gs_effect_t*)
 
 		if (this->m_keep_original_size) {
 			{
-				vec4 black;
-				vec4_zero(&black);
 				auto op = m_render_target_scale->render(this->m_width, this->m_height);
 				gs_ortho(0, float_t(this->m_width), 0, float_t(this->m_height), 0, 1);
+
+				vec4 black;
+				vec4_zero(&black);
 				gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
+
 				while (gs_effect_loop(this->m_scaling_effect, "Draw")) {
 					gs_eparam_t* image = gs_effect_get_param_by_name(this->m_scaling_effect, "image");
 					gs_effect_set_next_sampler(image, this->m_sampler->get_object());
@@ -567,4 +603,31 @@ void Source::Mirror::enum_active_sources(obs_source_enum_proc_t enum_callback, v
 	if (this->m_sceneitem) {
 		enum_callback(this->m_source, obs_sceneitem_get_source(this->m_sceneitem), param);
 	}
+	if (this->m_scene) {
+		enum_callback(this->m_source, obs_scene_get_source(this->m_scene), param);
+	}
+}
+
+void Source::Mirror::load(obs_data_t* data) {}
+
+void Source::Mirror::save(obs_data_t* data)
+{
+	if (this->m_sceneitem) {
+		obs_data_set_string(data, P_SOURCE, obs_source_get_name(obs_sceneitem_get_source(this->m_sceneitem)));
+	}
+}
+
+void Source::Mirror::on_source_rename(obs::source* source, std::string new_name, std::string old_name) {
+	obs_data_t* ref = obs_source_get_settings(this->m_source);
+	obs_data_set_string(ref, P_SOURCE, obs_source_get_name(source->get()));
+	obs_source_update(this->m_source, ref);
+	obs_data_release(ref);
+}
+
+void Source::Mirror::on_source_destroy(obs::source* source)
+{
+	obs_data_t* ref = obs_source_get_settings(this->m_source);
+	obs_data_set_string(ref, P_SOURCE, "");
+	obs_source_update(this->m_source, ref);
+	obs_data_release(ref);
 }

@@ -59,6 +59,8 @@ namespace Source {
 		static void video_tick(void*, float);
 		static void video_render(void*, gs_effect_t*);
 		static void enum_active_sources(void*, obs_source_enum_proc_t, void*);
+		static void load(void*, obs_data_t*);
+		static void save(void*, obs_data_t*);
 	};
 
 	class Mirror {
@@ -72,8 +74,9 @@ namespace Source {
 		std::unique_ptr<gfx::source_texture> m_source_texture;
 
 		// Input Source
-		obs_sceneitem_t* m_sceneitem = nullptr;
-		std::string      m_source_name;
+		std::shared_ptr<obs::source> m_source_target;
+		obs_sceneitem_t*             m_sceneitem = nullptr;
+		std::string                  m_source_name;
 
 		// Scaling
 		bool                              m_rescale = false;
@@ -110,5 +113,10 @@ namespace Source {
 		void audio_capture_cb(void* data, const audio_data* audio, bool muted);
 		void audio_output_cb();
 		void enum_active_sources(obs_source_enum_proc_t, void*);
+		void load(obs_data_t*);
+		void save(obs_data_t*);
+
+		void on_source_rename(obs::source* source, std::string new_name, std::string old_name);
+		void on_source_destroy(obs::source* source);
 	};
 }; // namespace Source
