@@ -626,6 +626,13 @@ void Source::Mirror::on_source_rename(obs::source* source, std::string new_name,
 
 void Source::Mirror::on_source_destroy(obs::source* source)
 {
+	// This is an odd case. If you hit this, be prepared for all kinds of broken things.
+	this->m_source_target->clear();
+	this->m_source_target.reset();
+	this->m_audio_capture.reset();
+	obs_sceneitem_remove(this->m_sceneitem);
+	this->m_sceneitem = nullptr;
+
 	obs_data_t* ref = obs_source_get_settings(this->m_source);
 	obs_data_set_string(ref, P_SOURCE, "");
 	obs_source_update(this->m_source, ref);
