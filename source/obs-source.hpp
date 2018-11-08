@@ -33,6 +33,8 @@ namespace obs {
 		obs_source_t* self;
 		bool          track_ownership = false;
 
+		static void handle_destroy(void* p, calldata_t* calldata);
+
 		public:
 		virtual ~source();
 
@@ -50,6 +52,8 @@ namespace obs {
 
 		uint32_t width();
 		uint32_t height();
+
+		bool destroyed();
 
 		public: // Unsafe Methods
 		void clear();
