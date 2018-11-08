@@ -264,6 +264,8 @@ SET(PROJECT_PRIVATE
 	"${PROJECT_SOURCE_DIR}/source/strings.h"
 	"${PROJECT_SOURCE_DIR}/source/utility.h"
 	"${PROJECT_SOURCE_DIR}/source/utility.cpp"
+	"${PROJECT_SOURCE_DIR}/source/util-event.hpp"
+	"${PROJECT_SOURCE_DIR}/source/util-event.cpp"
 	"${PROJECT_SOURCE_DIR}/source/util-math.h"
 	"${PROJECT_SOURCE_DIR}/source/util-math.cpp"
 	"${PROJECT_SOURCE_DIR}/source/util-memory.h"
