@@ -114,6 +114,9 @@ std::shared_ptr<gs::texture> gfx::source_texture::render(size_t width, size_t he
 	if ((height == 0) || (height >= 16384)) {
 		throw std::runtime_error("Height too large or too small.");
 	}
+	if (child->destroyed() || parent->destroyed()) {
+		return nullptr;
+	}
 
 	{
 		auto op = render_target->render((uint32_t)width, (uint32_t)height);
