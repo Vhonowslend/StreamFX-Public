@@ -19,20 +19,409 @@
 
 #include "obs-source.hpp"
 
-void obs::source::handle_destroy(void* p, calldata_t* calldata){
+void obs::source::handle_destroy(void* p, calldata_t* calldata)
+{
 	obs::source* self = reinterpret_cast<obs::source*>(p);
+
 	obs_source_t* source;
-	if (calldata_get_ptr(calldata, "source", &source)) {
-		if (self->self == source) {
-			self->self = nullptr;
-		}
+	if (!calldata_get_ptr(calldata, "source", &source)) {
+		return;
+	}
+
+	if (self->self == source) {
+		self->self = nullptr;
+	}
+
+	if (self->events.destroy) {
+		return;
+	}
+	self->events.destroy(self);
+}
+
+void obs::source::handle_remove(void* p, calldata_t*)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.remove) {
+		return;
+	}
+	self->events.remove(self);
+}
+
+void obs::source::handle_save(void* p, calldata_t*)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.save) {
+		return;
+	}
+	self->events.save(self);
+}
+
+void obs::source::handle_load(void* p, calldata_t*)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.load) {
+		return;
+	}
+	self->events.load(self);
+}
+
+void obs::source::handle_activate(void* p, calldata_t*)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.activate) {
+		return;
+	}
+	self->events.activate(self);
+}
+
+void obs::source::handle_deactivate(void* p, calldata_t*)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.deactivate) {
+		return;
+	}
+	self->events.deactivate(self);
+}
+
+void obs::source::handle_show(void* p, calldata_t*)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.show) {
+		return;
+	}
+	self->events.show(self);
+}
+
+void obs::source::handle_hide(void* p, calldata_t*)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.hide) {
+		return;
+	}
+	self->events.hide(self);
+}
+
+void obs::source::handle_enable(void* p, calldata_t* calldata)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.enable) {
+		return;
+	}
+
+	bool enabled = false;
+	if (!calldata_get_bool(calldata, "enabled", &enabled)) {
+		return;
+	}
+
+	self->events.enable(self, enabled);
+}
+
+void obs::source::handle_push_to_mute_changed(void* p, calldata_t* calldata)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.push_to_mute_changed) {
+		return;
+	}
+
+	bool enabled = false;
+	if (!calldata_get_bool(calldata, "enabled", &enabled)) {
+		return;
+	}
+
+	self->events.push_to_mute_changed(self, enabled);
+}
+
+void obs::source::handle_push_to_mute_delay(void* p, calldata_t* calldata)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.push_to_mute_delay) {
+		return;
+	}
+
+	long long delay;
+	if (!calldata_get_int(calldata, "delay", &delay)) {
+		return;
+	}
+
+	self->events.push_to_mute_delay(self, delay);
+}
+
+void obs::source::handle_push_to_talk_changed(void* p, calldata_t* calldata)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.push_to_talk_changed) {
+		return;
+	}
+
+	bool enabled = false;
+	if (!calldata_get_bool(calldata, "enabled", &enabled)) {
+		return;
+	}
+
+	self->events.push_to_talk_changed(self, enabled);
+}
+
+void obs::source::handle_push_to_talk_delay(void* p, calldata_t* calldata)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.push_to_talk_delay) {
+		return;
+	}
+
+	long long delay;
+	if (!calldata_get_int(calldata, "delay", &delay)) {
+		return;
+	}
+
+	self->events.push_to_talk_delay(self, delay);
+}
+
+void obs::source::handle_rename(void* p, calldata_t* calldata)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.enable) {
+		return;
+	}
+
+	const char* new_name;
+	if (!calldata_get_string(calldata, "new_name", &new_name)) {
+		return;
+	}
+
+	const char* prev_name;
+	if (!calldata_get_string(calldata, "prev_name", &prev_name)) {
+		return;
+	}
+
+	self->events.rename(self, std::string(new_name ? new_name : ""), std::string(prev_name ? prev_name : ""));
+}
+
+void obs::source::handle_update_properties(void* p, calldata_t*)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.update_properties) {
+		return;
+	}
+	self->events.update_properties(self);
+}
+
+void obs::source::handle_update_flags(void* p, calldata_t* calldata)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.update_flags) {
+		return;
+	}
+
+	long long flags;
+	if (!calldata_get_int(calldata, "flags", &flags)) {
+		return;
+	}
+
+	self->events.update_flags(self, flags);
+}
+
+void obs::source::handle_mute(void* p, calldata_t* calldata)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.mute) {
+		return;
+	}
+
+	bool muted;
+	if (!calldata_get_bool(calldata, "muted", &muted)) {
+		return;
+	}
+
+	self->events.mute(self, muted);
+}
+
+void obs::source::handle_volume(void* p, calldata_t* calldata)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.volume) {
+		return;
+	}
+
+	double volume;
+	if (!calldata_get_float(calldata, "volume", &volume)) {
+		return;
+	}
+
+	self->events.volume(self, volume);
+
+	calldata_set_float(calldata, "volume", volume);
+}
+
+void obs::source::handle_audio_sync(void* p, calldata_t* calldata)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.audio_sync) {
+		return;
+	}
+
+	long long mixers;
+	if (!calldata_get_int(calldata, "offset", &mixers)) {
+		return;
+	}
+
+	self->events.audio_sync(self, mixers);
+
+	calldata_set_int(calldata, "offset", mixers);
+}
+
+void obs::source::handle_audio_mixers(void* p, calldata_t* calldata)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.audio_mixers) {
+		return;
+	}
+
+	long long mixers;
+	if (!calldata_get_int(calldata, "mixers", &mixers)) {
+		return;
+	}
+
+	self->events.audio_mixers(self, mixers);
+
+	calldata_set_int(calldata, "mixers", mixers);
+}
+
+void obs::source::handle_filter_add(void* p, calldata_t* calldata)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.filter_add) {
+		return;
+	}
+
+	obs_source_t* filter;
+	if (!calldata_get_ptr(calldata, "filter", &filter)) {
+		return;
+	}
+
+	self->events.filter_add(self, filter);
+}
+
+void obs::source::handle_filter_remove(void* p, calldata_t* calldata)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.filter_remove) {
+		return;
+	}
+
+	obs_source_t* filter;
+	if (!calldata_get_ptr(calldata, "filter", &filter)) {
+		return;
+	}
+
+	self->events.filter_remove(self, filter);
+}
+
+void obs::source::handle_reorder_filters(void* p, calldata_t*)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.reorder_filters) {
+		return;
+	}
+	self->events.reorder_filters(self);
+}
+
+void obs::source::handle_transition_start(void* p, calldata_t*)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.transition_start) {
+		return;
+	}
+	self->events.transition_start(self);
+}
+
+void obs::source::handle_transition_video_stop(void* p, calldata_t*)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.transition_video_stop) {
+		return;
+	}
+	self->events.transition_video_stop(self);
+}
+
+void obs::source::handle_transition_stop(void* p, calldata_t*)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.transition_stop) {
+		return;
+	}
+	self->events.transition_stop(self);
+}
+
+void obs::source::connect_signals()
+{
+	auto sh = obs_source_get_signal_handler(this->self);
+	if (sh) {
+#define auto_signal_c(SIGNAL) signal_handler_connect(sh, "" #SIGNAL, obs::source::handle_##SIGNAL, this);
+		auto_signal_c(destroy);
+		auto_signal_c(remove);
+		auto_signal_c(save);
+		auto_signal_c(load);
+		auto_signal_c(activate);
+		auto_signal_c(deactivate);
+		auto_signal_c(show);
+		auto_signal_c(hide);
+		auto_signal_c(mute);
+		auto_signal_c(push_to_mute_changed);
+		auto_signal_c(push_to_mute_delay);
+		auto_signal_c(push_to_talk_changed);
+		auto_signal_c(push_to_talk_delay);
+		auto_signal_c(enable);
+		auto_signal_c(rename);
+		auto_signal_c(volume);
+		auto_signal_c(update_properties);
+		auto_signal_c(update_flags);
+		auto_signal_c(audio_sync);
+		auto_signal_c(audio_mixers);
+		auto_signal_c(filter_add);
+		auto_signal_c(filter_remove);
+		auto_signal_c(reorder_filters);
+		auto_signal_c(transition_start);
+		auto_signal_c(transition_video_stop);
+		auto_signal_c(transition_stop);
+#undef auto_signal_c
 	}
 }
 
 obs::source::~source()
 {
-	auto sh = obs_source_get_signal_handler(this->self);
-	signal_handler_disconnect(sh, "destroy", obs::source::handle_destroy, this);
+	if (this->self) {
+		auto sh = obs_source_get_signal_handler(this->self);
+		if (sh) {
+#define auto_signal_dc(SIGNAL) signal_handler_disconnect(sh, "" #SIGNAL, obs::source::handle_##SIGNAL, this);
+			auto_signal_dc(destroy);
+			auto_signal_dc(remove);
+			auto_signal_dc(save);
+			auto_signal_dc(load);
+			auto_signal_dc(activate);
+			auto_signal_dc(deactivate);
+			auto_signal_dc(show);
+			auto_signal_dc(hide);
+			auto_signal_dc(mute);
+			auto_signal_dc(push_to_mute_changed);
+			auto_signal_dc(push_to_mute_delay);
+			auto_signal_dc(push_to_talk_changed);
+			auto_signal_dc(push_to_talk_delay);
+			auto_signal_dc(enable);
+			auto_signal_dc(rename);
+			auto_signal_dc(volume);
+			auto_signal_dc(update_properties);
+			auto_signal_dc(update_flags);
+			auto_signal_dc(audio_sync);
+			auto_signal_dc(audio_mixers);
+			auto_signal_dc(filter_add);
+			auto_signal_dc(filter_remove);
+			auto_signal_dc(reorder_filters);
+			auto_signal_dc(transition_start);
+			auto_signal_dc(transition_video_stop);
+			auto_signal_dc(transition_stop);
+#undef auto_signal_dc
+		}
+	}
 	if (this->track_ownership && this->self) {
 		obs_source_release(this->self);
 	}
@@ -41,24 +430,30 @@ obs::source::~source()
 
 obs::source::source(std::string name, bool track_ownership, bool add_reference)
 {
-	this->self            = obs_get_source_by_name(name.c_str());
+	this->self = obs_get_source_by_name(name.c_str());
+	if (!this->self) {
+		throw std::runtime_error("source with name not found");
+	}
+
 	this->track_ownership = track_ownership;
 	if (!add_reference) {
 		obs_source_release(this->self);
 	}
-	auto sh = obs_source_get_signal_handler(this->self);
-	signal_handler_connect(sh, "destroy", obs::source::handle_destroy, this);
+	connect_signals();
 }
 
 obs::source::source(obs_source_t* source, bool track_ownership, bool add_reference)
 {
-	this->self            = source;
+	this->self = source;
+	if (!this->self) {
+		throw std::invalid_argument("source must not be null");
+	}
+
 	this->track_ownership = track_ownership;
 	if (add_reference) {
 		obs_source_addref(this->self);
 	}
-	auto sh = obs_source_get_signal_handler(this->self);
-	signal_handler_connect(sh, "destroy", obs::source::handle_destroy, this);
+	connect_signals();
 }
 
 obs::source& obs::source::operator=(const source& ref)
@@ -69,7 +464,7 @@ obs::source& obs::source::operator=(const source& ref)
 				obs_source_release(self);
 			}
 		}
-		self = ref.self;
+		self            = ref.self;
 		track_ownership = ref.track_ownership;
 		if (track_ownership) {
 			obs_source_addref(self);
