@@ -184,7 +184,7 @@ ElseIf(${PropertyPrefix}OBS_DOWNLOAD)
 	)
 	INCLUDE("${libobs_SOURCE_DIR}/cmake/LibObs/LibObsConfig.cmake")
 Else()
-	Message(CRITICAL "Impossible case reached, very system stability.")
+	Message(CRITICAL "Impossible case reached, verify system stability.")
 	Return()
 EndIf()
 
@@ -195,15 +195,13 @@ SET(PROJECT_DATA_LOCALE
 	"${PROJECT_SOURCE_DIR}/data/locale/en-US.ini"
 )
 SET(PROJECT_DATA_EFFECTS
-	"${PROJECT_SOURCE_DIR}/data/effects/bilateral-blur.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/box-blur.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/gaussian-blur.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/displace.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/blur.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/color-conversion.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/displace.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mask.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/mip-mapper.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mipgen.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/sdf-generator.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/sdf-shadow.effect"
 )
 SET(PROJECT_DATA_SHADERS
 #	"${PROJECT_SOURCE_DIR}/data/shaders/name.effect"

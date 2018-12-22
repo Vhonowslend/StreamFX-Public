@@ -39,6 +39,7 @@ extern "C" {
 
 #define P_TYPE "Filter.Blur.Type"
 #define P_TYPE_BOX "Filter.Blur.Type.Box"
+#define P_TYPE_BOXLINEAR "Filter.Blur.Type.BoxLinear"
 #define P_TYPE_GAUSSIAN "Filter.Blur.Type.Gaussian"
 #define P_TYPE_BILATERAL "Filter.Blur.Type.Bilateral"
 #define P_SIZE "Filter.Blur.Size"
@@ -137,8 +138,8 @@ bool filter::blur::blur_instance::apply_gaussian_param()
 	return true;
 }
 
-bool filter::blur::blur_instance::apply_mask_parameters(std::shared_ptr<gs::effect> effect, gs_texture_t* original_texture,
-												   gs_texture_t* blurred_texture)
+bool filter::blur::blur_instance::apply_mask_parameters(std::shared_ptr<gs::effect> effect,
+														gs_texture_t* original_texture, gs_texture_t* blurred_texture)
 {
 	if (effect->has_parameter("image_orig")) {
 		effect->get_parameter("image_orig").set_texture(original_texture);
@@ -203,7 +204,7 @@ bool filter::blur::blur_instance::apply_mask_parameters(std::shared_ptr<gs::effe
 }
 
 bool filter::blur::blur_instance::modified_properties(void* ptr, obs_properties_t* props, obs_property* prop,
-												 obs_data_t* settings)
+													  obs_data_t* settings)
 {
 	bool showBilateral = (obs_data_get_int(settings, P_TYPE) == type::Bilateral);
 
@@ -297,6 +298,7 @@ obs_properties_t* filter::blur::blur_instance::get_properties()
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_TYPE)));
 	obs_property_set_modified_callback2(p, modified_properties, this);
 	obs_property_list_add_int(p, P_TRANSLATE(P_TYPE_BOX), filter::blur::type::Box);
+	obs_property_list_add_int(p, P_TRANSLATE(P_TYPE_BOXLINEAR), filter::blur::type::BoxLinear);
 	obs_property_list_add_int(p, P_TRANSLATE(P_TYPE_GAUSSIAN), filter::blur::type::Gaussian);
 	obs_property_list_add_int(p, P_TRANSLATE(P_TYPE_BILATERAL), filter::blur::type::Bilateral);
 
@@ -356,7 +358,7 @@ obs_properties_t* filter::blur::blur_instance::get_properties()
 		p);
 	blur_factory::get()->enum_scenes([this, p](obs_scene_t* scene) {
 		struct data {
-			blur_instance*       self;
+			blur_instance*  self;
 			obs_property_t* prop;
 			std::string     parent_name;
 		};
@@ -394,9 +396,10 @@ obs_properties_t* filter::blur::blur_instance::get_properties()
 
 void filter::blur::blur_instance::update(obs_data_t* settings)
 {
-	type        = (blur::type)obs_data_get_int(settings, P_TYPE);
-	blur_effect = blur_factory::get()->get_effect(type);
-	size        = (uint64_t)obs_data_get_int(settings, P_SIZE);
+	type           = (blur::type)obs_data_get_int(settings, P_TYPE);
+	blur_effect    = blur_factory::get()->get_effect(type);
+	blur_technique = blur_factory::get()->get_technique(type);
+	size           = (uint64_t)obs_data_get_int(settings, P_SIZE);
 
 	// bilateral blur
 	bilateral_smoothing = obs_data_get_double(settings, P_BILATERAL_SMOOTHING) / 100.0;
@@ -620,8 +623,6 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 		std::make_tuple("Vertical", vertical_rendertarget, 0.0f, 1.0f / baseH),
 	};
 
-	std::string pass = "Draw";
-
 	for (auto v : kvs) {
 		const char*     name = std::get<0>(v);
 		gs_texrender_t* rt   = std::get<1>(v);
@@ -649,7 +650,7 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
 
 		// Render
-		while (gs_effect_loop(blur_effect->get_object(), pass.c_str())) {
+		while (gs_effect_loop(this->blur_effect->get_object(), this->blur_technique.c_str())) {
 			gs_draw_sprite(intermediate, 0, baseW, baseH);
 		}
 
@@ -812,27 +813,9 @@ void filter::blur::blur_factory::on_list_fill()
 	obs_enter_graphics();
 
 	{
-		char* file = obs_module_file("effects/box-blur.effect");
+		char* file = obs_module_file("effects/blur.effect");
 		try {
-			effects.insert_or_assign(type::Box, std::make_shared<gs::effect>(file));
-		} catch (std::runtime_error ex) {
-			P_LOG_ERROR("<filter-blur> Loading effect '%s' failed with error(s): %s", file, ex.what());
-		}
-		bfree(file);
-	}
-	{
-		char* file = obs_module_file("effects/gaussian-blur.effect");
-		try {
-			effects.insert_or_assign(type::Gaussian, std::make_shared<gs::effect>(file));
-		} catch (std::runtime_error ex) {
-			P_LOG_ERROR("<filter-blur> Loading effect '%s' failed with error(s): %s", file, ex.what());
-		}
-		bfree(file);
-	}
-	{
-		char* file = obs_module_file("effects/bilateral-blur.effect");
-		try {
-			effects.insert_or_assign(type::Bilateral, std::make_shared<gs::effect>(file));
+			blur_effect = std::make_shared<gs::effect>(file);
 		} catch (std::runtime_error ex) {
 			P_LOG_ERROR("<filter-blur> Loading effect '%s' failed with error(s): %s", file, ex.what());
 		}
@@ -864,7 +847,7 @@ void filter::blur::blur_factory::on_list_fill()
 void filter::blur::blur_factory::on_list_empty()
 {
 	obs_enter_graphics();
-	effects.clear();
+	blur_effect.reset();
 	kernels.clear();
 	color_converter_effect.reset();
 	mask_effect.reset();
@@ -1013,7 +996,7 @@ void filter::blur::blur_factory::video_render(void* inptr, gs_effect_t* effect)
 void filter::blur::blur_factory::scene_create_handler(void* ptr, calldata_t* data)
 {
 	filter::blur::blur_factory* self   = reinterpret_cast<filter::blur::blur_factory*>(ptr);
-	obs_source_t*          source = nullptr;
+	obs_source_t*               source = nullptr;
 	calldata_get_ptr(data, "source", &source);
 	obs_scene_t* scene = obs_scene_from_source(source);
 	if (scene) {
@@ -1024,7 +1007,7 @@ void filter::blur::blur_factory::scene_create_handler(void* ptr, calldata_t* dat
 void filter::blur::blur_factory::scene_destroy_handler(void* ptr, calldata_t* data)
 {
 	filter::blur::blur_factory* self   = reinterpret_cast<filter::blur::blur_factory*>(ptr);
-	obs_source_t*          source = nullptr;
+	obs_source_t*               source = nullptr;
 	calldata_get_ptr(data, "source", &source);
 	obs_scene_t* scene = obs_scene_from_source(source);
 	if (scene) {
@@ -1034,7 +1017,22 @@ void filter::blur::blur_factory::scene_destroy_handler(void* ptr, calldata_t* da
 
 std::shared_ptr<gs::effect> filter::blur::blur_factory::get_effect(filter::blur::type type)
 {
-	return effects.at(type);
+	return blur_effect;
+}
+
+std::string filter::blur::blur_factory::get_technique(filter::blur::type type)
+{
+	switch (type) {
+	case type::Box:
+		return "Box";
+	case type::BoxLinear:
+		return "BoxLinear";
+	case type::Gaussian:
+		return "Gaussian";
+	case type::Bilateral:
+		return "Bilateral";
+	}
+	return "";
 }
 
 std::shared_ptr<gs::effect> filter::blur::blur_factory::get_color_converter_effect()

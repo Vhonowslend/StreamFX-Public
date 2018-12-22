@@ -42,6 +42,7 @@ namespace filter {
 	namespace blur {
 		enum type : int64_t {
 			Box,
+			BoxLinear,
 			Gaussian,
 			Bilateral,
 		};
@@ -61,6 +62,7 @@ namespace filter {
 
 			// blur
 			std::shared_ptr<gs::effect> blur_effect;
+			std::string                 blur_technique;
 			filter::blur::type          type;
 			uint64_t                    size;
 
@@ -134,11 +136,11 @@ namespace filter {
 
 		class blur_factory {
 			obs_source_info             source_info;
-			std::list<blur_instance*>        sources;
+			std::list<blur_instance*>   sources;
 			std::shared_ptr<gs::effect> color_converter_effect;
 			std::shared_ptr<gs::effect> mask_effect;
 
-			std::map<filter::blur::type, std::shared_ptr<gs::effect>>  effects;
+			std::shared_ptr<gs::effect>                                blur_effect;
 			std::map<filter::blur::type, std::shared_ptr<gs::texture>> kernels;
 
 			std::map<std::string, obs_scene_t*> scenes;
@@ -177,6 +179,8 @@ namespace filter {
 			public:
 			std::shared_ptr<gs::effect> get_effect(filter::blur::type type);
 
+			std::string get_technique(filter::blur::type type);
+
 			std::shared_ptr<gs::effect> get_color_converter_effect();
 
 			std::shared_ptr<gs::effect> get_mask_effect();
@@ -188,8 +192,8 @@ namespace filter {
 			void enum_scenes(std::function<bool(obs_scene_t*)> fnc);
 
 			public: // Singleton
-			static void     initialize();
-			static void     finalize();
+			static void          initialize();
+			static void          finalize();
 			static blur_factory* get();
 		};
 
