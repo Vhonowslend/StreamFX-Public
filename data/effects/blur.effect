@@ -78,7 +78,7 @@ technique Box
 
 /// Blur: Box (Linear Optimized)
 // By abusing Linear sampling we can reduce the necessary samples, halving the total samples.
-float4 PSBoxBlurLinear(VertDataOut vtx) : TARGET {	
+float4 PSBoxBlurLinear(VertDataOut vtx) : TARGET {
 	// Radius 4 (Even):
 	// [-4, -3, -2, -1,  0, +1, +2, +3, +4]
 	//   ^-S-^   ^-S-^   S   ^-S-^   ^-S-^
@@ -152,6 +152,66 @@ technique Gaussian
 	{
 		vertex_shader = VSDefault(vtx);
 		pixel_shader  = PSGaussianBlur(vtx);
+	}
+}
+
+/// Blur: Gaussian Linear
+float4 PSGaussianLinearBlur(VertDataOut vtx) : TARGET {
+	// Origin sample must always be sampled.
+	// Even, Odd must decide differently than Box Blur
+	
+	// Radius 5 (Odd):
+	// [-5, -4, -3, -2, -1,  0, +1, +2, +3, +4, +5]
+	//   S   ^-S-^   ^-S-^   S   ^-S-^   ^-S-^   S
+	//   S   ^-S-^   ^-S-^   S   ^-S-^   ^-S-^   S
+	// Total Samples: 7 (n+2)
+
+	// Radius 4 (Even):
+	// [-4, -3, -2, -1,  0, +1, +2, +3, +4]
+	//   ^-S-^   ^-S-^   S   ^-S-^   ^-S-^
+	// Total Samples: 5 (n+1)
+
+	// Radius 3 (Odd):
+	// [-3, -2, -1,  0, +1, +2, +3]
+	//   S   ^-S-^   S   ^-S-^   S
+	// Total Samples: 5 (n+2)
+
+	// Radius 2 (Even):
+	// [-2, -1,  0, +1, +2]
+	//   ^-S-^   S   ^-S-^
+	// Total Samples: 3 (n+1)
+	
+	float4 origin = u_image.SampleLevel(pointSampler, vtx.uv, 0);
+	float4 final = origin * kernel.SampleLevel(pointSampler, (float2(0, u_radius - 1) * kernelTexel), 0).r;
+	float2 halfTexelDelta = u_texelDelta / 2.0;
+
+	for (int k = 1; k < u_radius; k+=2) {
+		float2 offset = k * u_texelDelta + halfTexelDelta;
+		float l_g0 = kernel.SampleLevel(pointSampler, (float2(k, u_radius - 1) * kernelTexel), 0).r;
+		float l_g1 = kernel.SampleLevel(pointSampler, (float2(k + 1, u_radius - 1) * kernelTexel), 0).r;
+		float4 l_p = u_image.SampleLevel(linearSampler, vtx.uv + offset, 0);
+		float4 l_n = u_image.SampleLevel(linearSampler, vtx.uv - offset, 0);
+		final += (l_p + l_n) * l_g0;
+		final += (l_p + l_n) * l_g1;
+	}
+
+	if (u_radius % 2 == 1) {
+		// Odd numbers require treatment of ends.
+		float4 left = u_image.SampleLevel(pointSampler, vtx.uv + u_texelDelta * u_radius, 0);
+		float4 right = u_image.SampleLevel(pointSampler, vtx.uv - u_texelDelta * u_radius, 0);
+		float krn = kernel.SampleLevel(pointSampler, (float2(u_radius, u_radius - 1) * kernelTexel), 0).r;
+		final += (left + right) * krn;
+	}
+
+	return final;
+}
+
+technique GaussianLinear
+{
+	pass
+	{
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSGaussianLinearBlur(vtx);
 	}
 }
 

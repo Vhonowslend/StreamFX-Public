@@ -41,6 +41,7 @@ extern "C" {
 #define P_TYPE_BOX "Filter.Blur.Type.Box"
 #define P_TYPE_BOXLINEAR "Filter.Blur.Type.BoxLinear"
 #define P_TYPE_GAUSSIAN "Filter.Blur.Type.Gaussian"
+#define P_TYPE_GAUSSIANLINEAR "Filter.Blur.Type.GaussianLinear"
 #define P_TYPE_BILATERAL "Filter.Blur.Type.Bilateral"
 #define P_SIZE "Filter.Blur.Size"
 #define P_BILATERAL_SMOOTHING "Filter.Blur.Bilateral.Smoothing"
@@ -125,8 +126,6 @@ bool filter::blur::blur_instance::apply_gaussian_param()
 
 	if (blur_effect->has_parameter("kernel")) {
 		blur_effect->get_parameter("kernel").set_texture(kernel);
-	} else {
-		return false;
 	}
 
 	if (blur_effect->has_parameter("kernelTexel")) {
@@ -300,6 +299,7 @@ obs_properties_t* filter::blur::blur_instance::get_properties()
 	obs_property_list_add_int(p, P_TRANSLATE(P_TYPE_BOX), filter::blur::type::Box);
 	obs_property_list_add_int(p, P_TRANSLATE(P_TYPE_BOXLINEAR), filter::blur::type::BoxLinear);
 	obs_property_list_add_int(p, P_TRANSLATE(P_TYPE_GAUSSIAN), filter::blur::type::Gaussian);
+	obs_property_list_add_int(p, P_TRANSLATE(P_TYPE_GAUSSIANLINEAR), filter::blur::type::GaussianLinear);
 	obs_property_list_add_int(p, P_TRANSLATE(P_TYPE_BILATERAL), filter::blur::type::Bilateral);
 
 	p = obs_properties_add_int_slider(pr, P_SIZE, P_TRANSLATE(P_SIZE), 1, 25, 1);
@@ -630,14 +630,8 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 
 		if (!apply_shared_param(intermediate, xpel, ypel))
 			break;
-		switch (type) {
-		case Gaussian:
-			apply_gaussian_param();
-			break;
-		case Bilateral:
-			apply_bilateral_param();
-			break;
-		}
+		apply_gaussian_param();
+		apply_bilateral_param();
 
 		gs_texrender_reset(rt);
 		if (!gs_texrender_begin(rt, baseW, baseH)) {
@@ -1025,12 +1019,14 @@ std::string filter::blur::blur_factory::get_technique(filter::blur::type type)
 	switch (type) {
 	case type::Box:
 		return "Box";
-	case type::BoxLinear:
-		return "BoxLinear";
 	case type::Gaussian:
 		return "Gaussian";
 	case type::Bilateral:
 		return "Bilateral";
+	case type::BoxLinear:
+		return "BoxLinear";
+	case type::GaussianLinear:
+		return "GaussianLinear";
 	}
 	return "";
 }

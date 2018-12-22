@@ -42,9 +42,10 @@ namespace filter {
 	namespace blur {
 		enum type : int64_t {
 			Box,
-			BoxLinear,
 			Gaussian,
 			Bilateral,
+			BoxLinear,
+			GaussianLinear,
 		};
 
 		enum mask_type : int64_t {
