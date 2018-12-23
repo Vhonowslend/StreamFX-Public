@@ -19,7 +19,7 @@
 
 #pragma once
 #include <inttypes.h>
-#include <math.h>
+#include <cmath>
 #include <string>
 #include <utility>
 
