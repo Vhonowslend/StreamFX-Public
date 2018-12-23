@@ -32,7 +32,7 @@ extern "C" {
 
 // Plugin
 #define PLUGIN_NAME "Stream Effects"
-#include "version.h"
+#include "version.hpp"
 
 #define P_LOG(level, ...) blog(level, "[" PLUGIN_NAME "] " __VA_ARGS__);
 #define P_LOG_ERROR(...) P_LOG(LOG_ERROR, __VA_ARGS__)

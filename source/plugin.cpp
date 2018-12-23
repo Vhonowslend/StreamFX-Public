@@ -23,10 +23,6 @@
 #include "filter-shape.h"
 #include "filter-transform.h"
 
-OBS_DECLARE_MODULE();
-OBS_MODULE_AUTHOR("Michael Fabian Dirks");
-OBS_MODULE_USE_DEFAULT_LOCALE("obs-stream-effects", "en-US");
-
 filter::Displacement* filterDisplacement;
 filter::Shape*        filterShape;
 filter::Transform*    filterTransform;
@@ -51,16 +47,6 @@ MODULE_EXPORT void obs_module_unload(void)
 	for (auto func : finalizerFunctions) {
 		func();
 	}
-}
-
-MODULE_EXPORT const char* obs_module_name()
-{
-	return PLUGIN_NAME;
-}
-
-MODULE_EXPORT const char* obs_module_description()
-{
-	return PLUGIN_NAME;
 }
 
 #ifdef _WIN32

@@ -1,44 +1,47 @@
-version: 0.4.2-{build}-{branch}
-
-platform: x64
-image: Visual Studio 2017
-
 matrix:
   fast_finish: true
 
+image:
+  - Visual Studio 2017
+
+platform: x64
+
+version: '{build}-{branch}'
+
 environment:
+  CMAKE_SYSTEM_VERSION: 10.0.17134.0
+  PACKAGE_PREFIX: amd-encoder-for-obs-studio
+  INNOSETUP_URL: http://www.jrsoftware.org/download.php/is-unicode.exe
   CURL_VERSION: 7.39.0
-  matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      CMAKE_COMPILER: Visual Studio 15 2017
-      CMAKE_COMPILER_TARGET: host=x64
-      CMAKE_SYSTEM_VERSION: 10.0.16299.91
-      CPACK_SYSTEM_NAME: win32
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      CMAKE_COMPILER: Visual Studio 15 2017 Win64
-      CMAKE_COMPILER_TARGET: host=x64
-      CMAKE_SYSTEM_VERSION: 10.0.16299.91
-      CPACK_SYSTEM_NAME: win64
-
-pull_requests:
-  do_not_increment_build_number: true
-
+  
 install:
-  - git submodule update --init --recursive
-
-before_build:
-  - mkdir build
-  - cd build
-  - cmake -G "%CMAKE_COMPILER%" -T "%CMAKE_COMPILER_TARGET%" -DCMAKE_SYSTEM_VERSION="%CMAKE_SYSTEM_VERSION%" -DCMAKE_INSTALL_PREFIX="%CD%/distrib" -DCPACK_GENERATOR="7Z;ZIP" -DCPACK_SYSTEM_NAME="%CPACK_SYSTEM_NAME%" ..
+- cmd: ci/appveyor-install.bat
 
 build_script:
-  - cmake --build . --config RelWithDebInfo
-  - cmake --build . --target PACKAGE --config RelWithDebInfo
+- cmd: ci/appveyor-build.bat
+
+after_build:
+- cmd: ci/appveyor-package.bat
+
+cache:
+  - inno.exe
 
 artifacts:
-  - path: build/*.zip
-  - path: build/*.7z
-  - path: build/*.sha512
+  - path: build/obs-stream-effects-*.zip
+  - path: build/obs-stream-effects-*.7z
+  - path: build/obs-stream-effects-*.exe
+
+deploy:
+  - provider: GitHub
+    auth_token:
+      secure: QwBI/KNma7xeTcwQUGpTNSFaZU13Qv9UpiqUKHndJgAsh3aoRM8jnGUvCcg8aQIO
+    draft: true
+    prerelease: false
+    force_update: true
+    on:
+      appveyor_repo_tag: true
+
+test: off
 
 notifications:
   - provider: Webhook
