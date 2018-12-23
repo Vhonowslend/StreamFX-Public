@@ -223,10 +223,10 @@ void filter::shadow_sdf::shadow_sdf_instance::video_render(gs_effect_t*)
 				} else {
 					throw std::exception("failed to process source");
 				}
-				m_input->get_texture(this->m_source_texture);
-				if (!this->m_source_texture) {
-					throw std::exception("failed to draw source");
-				}
+			}
+			m_input->get_texture(this->m_source_texture);
+			if (!this->m_source_texture) {
+				throw std::exception("failed to draw source");
 			}
 
 			// Generate SDF Buffers
