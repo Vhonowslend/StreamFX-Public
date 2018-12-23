@@ -18,9 +18,9 @@
  */
 
 #include "filter-blur.h"
+#include <cmath>
 #include <inttypes.h>
 #include <map>
-#include <math.h>
 #include "strings.h"
 #include "util-math.h"
 
@@ -46,7 +46,11 @@ extern "C" {
 #define P_SIZE "Filter.Blur.Size"
 #define P_BILATERAL_SMOOTHING "Filter.Blur.Bilateral.Smoothing"
 #define P_BILATERAL_SHARPNESS "Filter.Blur.Bilateral.Sharpness"
-#define P_COLORFORMAT "Filter.Blur.ColorFormat"
+#define P_DIRECTIONAL "Filter.Blur.Directional"
+#define P_DIRECTIONAL_ANGLE "Filter.Blur.Directional.Angle"
+#define P_STEPSCALE "Filter.Blur.StepScale"
+#define P_STEPSCALE_X "Filter.Blur.StepScale.X"
+#define P_STEPSCALE_Y "Filter.Blur.StepScale.Y"
 #define P_MASK "Filter.Blur.Mask"
 #define P_MASK_TYPE "Filter.Blur.Mask.Type"
 #define P_MASK_TYPE_REGION "Filter.Blur.Mask.Type.Region"
@@ -64,6 +68,7 @@ extern "C" {
 #define P_MASK_COLOR "Filter.Blur.Mask.Color"
 #define P_MASK_ALPHA "Filter.Blur.Mask.Alpha"
 #define P_MASK_MULTIPLIER "Filter.Blur.Mask.Multiplier"
+#define P_COLORFORMAT "Filter.Blur.ColorFormat"
 
 // Initializer & Finalizer
 INITIALIZER(filterBlurFactoryInitializer)
@@ -199,14 +204,13 @@ bool filter::blur::blur_instance::apply_mask_parameters(std::shared_ptr<gs::effe
 bool filter::blur::blur_instance::modified_properties(void* ptr, obs_properties_t* props, obs_property* prop,
 													  obs_data_t* settings)
 {
-	bool showBilateral = (obs_data_get_int(settings, P_TYPE) == type::Bilateral);
-
 	prop;
 	ptr;
 
 	// bilateral blur
-	obs_property_set_visible(obs_properties_get(props, P_BILATERAL_SMOOTHING), showBilateral);
-	obs_property_set_visible(obs_properties_get(props, P_BILATERAL_SHARPNESS), showBilateral);
+	bool show_bilateral = (obs_data_get_int(settings, P_TYPE) == type::Bilateral);
+	obs_property_set_visible(obs_properties_get(props, P_BILATERAL_SMOOTHING), show_bilateral);
+	obs_property_set_visible(obs_properties_get(props, P_BILATERAL_SHARPNESS), show_bilateral);
 
 	// region
 	bool      show_mask   = obs_data_get_bool(settings, P_MASK);
@@ -214,7 +218,6 @@ bool filter::blur::blur_instance::modified_properties(void* ptr, obs_properties_
 	bool      show_region = (mtype == mask_type::Region) && show_mask;
 	bool      show_image  = (mtype == mask_type::Image) && show_mask;
 	bool      show_source = (mtype == mask_type::Source) && show_mask;
-
 	obs_property_set_visible(obs_properties_get(props, P_MASK_TYPE), show_mask);
 	obs_property_set_visible(obs_properties_get(props, P_MASK_REGION_LEFT), show_region);
 	obs_property_set_visible(obs_properties_get(props, P_MASK_REGION_TOP), show_region);
@@ -223,12 +226,20 @@ bool filter::blur::blur_instance::modified_properties(void* ptr, obs_properties_
 	obs_property_set_visible(obs_properties_get(props, P_MASK_REGION_FEATHER), show_region);
 	obs_property_set_visible(obs_properties_get(props, P_MASK_REGION_FEATHER_SHIFT), show_region);
 	obs_property_set_visible(obs_properties_get(props, P_MASK_REGION_INVERT), show_region);
-
 	obs_property_set_visible(obs_properties_get(props, P_MASK_IMAGE), show_image);
 	obs_property_set_visible(obs_properties_get(props, P_MASK_SOURCE), show_source);
 	obs_property_set_visible(obs_properties_get(props, P_MASK_COLOR), show_image || show_source);
 	obs_property_set_visible(obs_properties_get(props, P_MASK_ALPHA), show_image || show_source);
 	obs_property_set_visible(obs_properties_get(props, P_MASK_MULTIPLIER), show_image || show_source);
+
+	// Directional Blur
+	bool show_directional = obs_data_get_bool(settings, P_DIRECTIONAL);
+	obs_property_set_visible(obs_properties_get(props, P_DIRECTIONAL_ANGLE), show_directional);
+
+	// Scaling
+	bool show_scaling = obs_data_get_bool(settings, P_STEPSCALE);
+	obs_property_set_visible(obs_properties_get(props, P_STEPSCALE_X), show_scaling);
+	obs_property_set_visible(obs_properties_get(props, P_STEPSCALE_Y), show_scaling);
 
 	// advanced
 	bool showAdvanced = obs_data_get_bool(settings, S_ADVANCED);
@@ -364,6 +375,20 @@ obs_properties_t* filter::blur::blur_instance::get_properties()
 	p = obs_properties_add_float_slider(pr, P_MASK_MULTIPLIER, P_TRANSLATE(P_MASK_MULTIPLIER), 0.0, 10.0, 0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_MULTIPLIER)));
 
+	// Directional Blur
+	p = obs_properties_add_bool(pr, P_DIRECTIONAL, P_TRANSLATE(P_DIRECTIONAL));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_DIRECTIONAL)));
+	obs_property_set_modified_callback2(p, modified_properties, this);
+	p = obs_properties_add_float_slider(pr, P_DIRECTIONAL_ANGLE, P_TRANSLATE(P_DIRECTIONAL_ANGLE), -180.0, 180.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_DIRECTIONAL_ANGLE)));
+
+	// Scaling
+	p = obs_properties_add_bool(pr, P_STEPSCALE, P_TRANSLATE(P_STEPSCALE));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_STEPSCALE)));
+	obs_property_set_modified_callback2(p, modified_properties, this);
+	p = obs_properties_add_float_slider(pr, P_STEPSCALE_X, P_TRANSLATE(P_STEPSCALE_X), 0.0, 1000.0, 0.01);
+	p = obs_properties_add_float_slider(pr, P_STEPSCALE_Y, P_TRANSLATE(P_STEPSCALE_Y), 0.0, 1000.0, 0.01);
+
 	// advanced
 	p = obs_properties_add_bool(pr, S_ADVANCED, P_TRANSLATE(S_ADVANCED));
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_ADVANCED)));
@@ -419,6 +444,15 @@ void filter::blur::blur_instance::update(obs_data_t* settings)
 			mask.multiplier = float_t(obs_data_get_double(settings, P_MASK_MULTIPLIER));
 		}
 	}
+
+	// Directional Blur
+	this->directional = obs_data_get_bool(settings, P_DIRECTIONAL);
+	this->angle       = obs_data_get_double(settings, P_DIRECTIONAL_ANGLE);
+
+	// Scaling
+	this->scaling      = obs_data_get_bool(settings, P_STEPSCALE);
+	this->scale.first  = obs_data_get_double(settings, P_STEPSCALE_X) / 100.0;
+	this->scale.second = obs_data_get_double(settings, P_STEPSCALE_Y) / 100.0;
 
 	// advanced
 	if (obs_data_get_bool(settings, S_ADVANCED)) {
@@ -624,10 +658,55 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 		std::pair<float, float> kvs[] = {{1.0f / baseW, 0.0f}, {0.0f, 1.0f / baseH}};
 		tex_intermediate              = tex_source; // We need the original to work.
 
+		// Directional Blur
+		if (this->directional) {
+			// Directional Blur changes how
+
+			kvs[0].first  = (1.0f / baseW);
+			kvs[0].second = (1.0f / baseH);
+			kvs[1].first  = kvs[0].first;
+			kvs[1].second = kvs[0].second;
+
+			double_t rad = this->angle * PI / 180.0;
+			double_t c0  = cos(rad);
+			double_t s0  = sin(rad);
+
+			kvs[0].first *= c0;
+			kvs[0].second *= s0;
+
+			if (!this->scaling) {
+				kvs[1].first *= 0.0;
+				kvs[1].second *= 0.0;
+			} else {
+				kvs[1].first *= s0;
+				kvs[1].second *= c0;
+			}
+		}
+
+		// Apply scaling
+		if (this->scaling) {
+			if (!this->directional) {
+				kvs[0].first *= float_t(this->scale.first);
+				kvs[0].second *= float_t(this->scale.second);
+				kvs[1].first *= float_t(this->scale.first);
+				kvs[1].second *= float_t(this->scale.second);
+			} else {
+				// Directional Blur changes how scaling works as it rotates and needs to be relative to the axis of rotation.
+				kvs[0].first *= float_t(this->scale.first);
+				kvs[0].second *= float_t(this->scale.first);
+				kvs[1].first *= float_t(this->scale.second);
+				kvs[1].second *= float_t(this->scale.second);
+			}
+		}
+
 		try {
 			for (auto v : kvs) {
 				float xpel = std::get<0>(v);
 				float ypel = std::get<1>(v);
+				if ((abs(xpel) <= FLT_EPSILON) && (abs(ypel) <= FLT_EPSILON)) {
+					// Ignore passes that have a 0 texel modifier.
+					continue;
+				}
 
 				{
 					auto op = this->rt_primary->render(baseW, baseH);
@@ -944,19 +1023,19 @@ void filter::blur::blur_factory::get_defaults(obs_data_t* data)
 	obs_data_set_default_int(data, P_TYPE, filter::blur::type::Box);
 	obs_data_set_default_int(data, P_SIZE, 5);
 
-	// bilateral Only
+	// Bilateral Only
 	obs_data_set_default_double(data, P_BILATERAL_SMOOTHING, 50.0);
 	obs_data_set_default_double(data, P_BILATERAL_SHARPNESS, 90.0);
 
-	// region
+	// Masking
 	obs_data_set_default_bool(data, P_MASK, false);
 	obs_data_set_default_int(data, P_MASK_TYPE, mask_type::Region);
-	obs_data_set_default_double(data, P_MASK_REGION_LEFT, 0.0f);
-	obs_data_set_default_double(data, P_MASK_REGION_RIGHT, 0.0f);
-	obs_data_set_default_double(data, P_MASK_REGION_TOP, 0.0f);
-	obs_data_set_default_double(data, P_MASK_REGION_BOTTOM, 0.0f);
-	obs_data_set_default_double(data, P_MASK_REGION_FEATHER, 0.0f);
-	obs_data_set_default_double(data, P_MASK_REGION_FEATHER_SHIFT, 0.0f);
+	obs_data_set_default_double(data, P_MASK_REGION_LEFT, 0.0);
+	obs_data_set_default_double(data, P_MASK_REGION_RIGHT, 0.0);
+	obs_data_set_default_double(data, P_MASK_REGION_TOP, 0.0);
+	obs_data_set_default_double(data, P_MASK_REGION_BOTTOM, 0.0);
+	obs_data_set_default_double(data, P_MASK_REGION_FEATHER, 0.0);
+	obs_data_set_default_double(data, P_MASK_REGION_FEATHER_SHIFT, 0.0);
 	obs_data_set_default_bool(data, P_MASK_REGION_INVERT, false);
 	char* default_file = obs_module_file("white.png");
 	obs_data_set_default_string(data, P_MASK_IMAGE, default_file);
@@ -965,7 +1044,16 @@ void filter::blur::blur_factory::get_defaults(obs_data_t* data)
 	obs_data_set_default_int(data, P_MASK_COLOR, 0xFFFFFFFFull);
 	obs_data_set_default_double(data, P_MASK_MULTIPLIER, 1.0);
 
-	// advanced
+	// Directional Blur
+	obs_data_set_default_bool(data, P_DIRECTIONAL, false);
+	obs_data_set_default_double(data, P_DIRECTIONAL_ANGLE, 0.0);
+
+	// Scaling
+	obs_data_set_default_bool(data, P_STEPSCALE, false);
+	obs_data_set_default_double(data, P_STEPSCALE_X, 100.0);
+	obs_data_set_default_double(data, P_STEPSCALE_Y, 100.0);
+
+	// Advanced
 	obs_data_set_default_bool(data, S_ADVANCED, false);
 	obs_data_set_default_int(data, P_COLORFORMAT, ColorFormat::RGB);
 }

@@ -106,6 +106,14 @@ namespace filter {
 				float_t multiplier;
 			} mask;
 
+			// Directional
+			bool directional;
+			double_t angle;
+
+			// Scale
+			bool scaling;
+			std::pair<double_t, double_t> scale;
+
 			// advanced
 			uint64_t color_format;
 
