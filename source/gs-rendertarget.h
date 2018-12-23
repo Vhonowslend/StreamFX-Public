@@ -47,6 +47,8 @@ namespace gs {
 
 		gs_texture_t* get_object();
 
+		std::shared_ptr<gs::texture> get_texture();
+
 		void get_texture(gs::texture& tex);
 
 		void get_texture(std::shared_ptr<gs::texture>& tex);

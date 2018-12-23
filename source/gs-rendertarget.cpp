@@ -57,6 +57,11 @@ gs_texture_t* gs::rendertarget::get_object()
 	return tex;
 }
 
+std::shared_ptr<gs::texture> gs::rendertarget::get_texture()
+{
+	return std::make_shared<gs::texture>(get_object(), false);
+}
+
 void gs::rendertarget::get_texture(gs::texture& tex)
 {
 	tex = gs::texture(get_object(), false);
