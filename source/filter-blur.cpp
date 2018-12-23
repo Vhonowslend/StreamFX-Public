@@ -237,49 +237,39 @@ bool filter::blur::blur_instance::modified_properties(void* ptr, obs_properties_
 	return true;
 }
 
+bool filter::blur::blur_instance::can_log()
+{
+	// Only allow logging errors every 200ms.
+	auto now   = std::chrono::high_resolution_clock::now();
+	auto delta = (now - this->last_log);
+	std::swap(this->last_log, now);
+	return std::chrono::duration_cast<std::chrono::milliseconds>(delta) > std::chrono::milliseconds(200);
+}
+
 filter::blur::blur_instance::blur_instance(obs_data_t* settings, obs_source_t* parent)
 {
 	m_source = parent;
 
-	obs_enter_graphics();
-	blur_effect             = filter::blur::blur_factory::get()->get_effect(filter::blur::type::Box);
-	primary_rendertarget    = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
-	secondary_rendertarget  = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
-	horizontal_rendertarget = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
-	vertical_rendertarget   = gs_texrender_create(GS_RGBA, GS_ZS_NONE);
-	obs_leave_graphics();
-
-	if (!primary_rendertarget) {
-		P_LOG_ERROR("<filter-blur> Instance '%s' failed to create primary rendertarget.",
-					obs_source_get_name(m_source));
+	// Create RenderTargets
+	try {
+		this->rt_source    = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+		this->rt_primary   = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+		this->rt_secondary = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	} catch (std::exception ex) {
+		P_LOG_ERROR("<filter-blur:%s> Failed to create rendertargets, error %s.", obs_source_get_name(m_source),
+					ex.what());
 	}
 
-	if (!secondary_rendertarget) {
-		P_LOG_ERROR("<filter-blur> Instance '%s' failed to create secondary rendertarget.",
-					obs_source_get_name(m_source));
-	}
-
-	if (!horizontal_rendertarget) {
-		P_LOG_ERROR("<filter-blur> Instance '%s' failed to create horizontal rendertarget.",
-					obs_source_get_name(m_source));
-	}
-
-	if (!vertical_rendertarget) {
-		P_LOG_ERROR("<filter-blur> Instance '%s' failed to create vertical rendertarget.",
-					obs_source_get_name(m_source));
-	}
+	// Get initial Blur effect.
+	blur_effect = filter::blur::blur_factory::get()->get_effect(filter::blur::type::Box);
 
 	update(settings);
 }
 
 filter::blur::blur_instance::~blur_instance()
 {
-	obs_enter_graphics();
-	gs_texrender_destroy(primary_rendertarget);
-	gs_texrender_destroy(secondary_rendertarget);
-	gs_texrender_destroy(horizontal_rendertarget);
-	gs_texrender_destroy(vertical_rendertarget);
-	obs_leave_graphics();
+	this->rt_primary.reset();
+	this->rt_secondary.reset();
 }
 
 obs_properties_t* filter::blur::blur_instance::get_properties()
@@ -480,8 +470,8 @@ void filter::blur::blur_instance::video_tick(float)
 
 void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 {
-	obs_source_t* parent = obs_filter_get_parent(m_source);
-	obs_source_t* target = obs_filter_get_target(m_source);
+	obs_source_t* parent = obs_filter_get_parent(this->m_source);
+	obs_source_t* target = obs_filter_get_target(this->m_source);
 	uint32_t      baseW  = obs_source_get_base_width(target);
 	uint32_t      baseH  = obs_source_get_base_height(target);
 	vec4          black  = {0};
@@ -490,185 +480,214 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 
 	std::shared_ptr<gs::effect> colorConversionEffect = blur_factory::get()->get_color_converter_effect();
 
-	// Skip rendering if our target, parent or context is not valid.
-	if (!target || !parent || !m_source) {
-		obs_source_skip_video_filter(m_source);
+	// Verify that we can actually run first.
+	if (!target || !parent || !this->m_source) {
+		if (this->can_log()) {
+			P_LOG_ERROR("<filter-blur:%s> Invalid context, memory corruption may have happened.",
+						obs_source_get_name(this->m_source));
+		}
+		obs_source_skip_video_filter(this->m_source);
 		return;
 	}
 	if ((baseW == 0) || (baseH == 0)) {
-		if (!have_logged_error)
-			P_LOG_ERROR("<filter-blur> Instance '%s' has invalid size source '%s'.", obs_source_get_name(m_source),
-						obs_source_get_name(target));
-		have_logged_error = true;
-		obs_source_skip_video_filter(m_source);
-		return;
-	}
-	if (!primary_rendertarget || !blur_effect) {
-		if (!have_logged_error)
-			P_LOG_ERROR("<filter-blur> Instance '%s' is unable to render.", obs_source_get_name(m_source),
-						obs_source_get_name(target));
-		have_logged_error = true;
-		obs_source_skip_video_filter(m_source);
-		return;
-	}
-	have_logged_error = false;
-
-	gs_effect_t*  defaultEffect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
-	gs_texture_t* sourceTexture = nullptr;
-
-#pragma region Source To Texture
-	gs_texrender_reset(primary_rendertarget);
-	if (!gs_texrender_begin(primary_rendertarget, baseW, baseH)) {
-		P_LOG_ERROR("<filter-blur> Failed to set up base texture.");
-		obs_source_skip_video_filter(m_source);
-		return;
-	} else {
-		gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
-
-		// Clear to Black
-		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
-
-		// Render
-		if (obs_source_process_filter_begin(m_source, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
-			obs_source_process_filter_end(m_source, effect ? effect : defaultEffect, baseW, baseH);
-		} else {
-			P_LOG_ERROR("<filter-blur> Unable to render source.");
-			failed = true;
+		if (this->can_log()) {
+			P_LOG_ERROR("<filter-blur:%s> Invalid base size from '%s': %lux%lu.", obs_source_get_name(this->m_source),
+						obs_source_get_name(target), baseW, baseH);
 		}
-		gs_texrender_end(primary_rendertarget);
+		obs_source_skip_video_filter(this->m_source);
+		return;
 	}
-
-	if (failed) {
-		obs_source_skip_video_filter(m_source);
+	if (!this->rt_primary || !this->rt_secondary || !this->blur_effect) {
+		if (this->can_log()) {
+			P_LOG_ERROR("<filter-blur:%s> Missing RenderTarget or Effect.", obs_source_get_name(this->m_source));
+		}
+		obs_source_skip_video_filter(this->m_source);
 		return;
 	}
 
-	sourceTexture = gs_texrender_get_texture(primary_rendertarget);
-	if (!sourceTexture) {
-		P_LOG_ERROR("<filter-blur> Failed to get source texture.");
-		obs_source_skip_video_filter(m_source);
-		return;
-	}
-#pragma endregion Source To Texture
+	gs_effect_t*                 defaultEffect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
+	std::shared_ptr<gs::texture> tex_source;
+	std::shared_ptr<gs::texture> tex_intermediate;
 
-	// Conversion
-#pragma region RGB->YUV
-	if ((color_format == ColorFormat::YUV) && colorConversionEffect) {
-		gs_texrender_reset(secondary_rendertarget);
-		if (!gs_texrender_begin(secondary_rendertarget, baseW, baseH)) {
-			P_LOG_ERROR("<filter-blur> Failed to set up base texture.");
-			obs_source_skip_video_filter(m_source);
-			return;
-		} else {
-			gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
+	// Source To Texture
+	{
+		gs_blend_state_push();
+		gs_reset_blend_state();
+		gs_enable_color(true, true, true, true);
+		gs_enable_blending(true);
+		gs_enable_depth_test(false);
+		gs_enable_stencil_test(false);
+		gs_enable_stencil_write(false);
+		gs_set_cull_mode(GS_NEITHER);
+		gs_depth_function(GS_ALWAYS);
+		gs_blend_function(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);
+		gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
+		gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
-			// Clear to Black
+		try {
+			auto op = this->rt_source->render(baseW, baseH);
+
+			// Orthographic Camera and clear RenderTarget.
+			gs_ortho(0, (float)baseW, 0, (float)baseH, -1., 1.);
 			gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
 
-			// Set up camera stuff
-			gs_set_cull_mode(GS_NEITHER);
-			gs_reset_blend_state();
-			gs_enable_blending(false);
-			gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
-			gs_enable_depth_test(false);
-			gs_enable_stencil_test(false);
-			gs_enable_stencil_write(false);
-			gs_enable_color(true, true, true, true);
+			// Render
+			if (obs_source_process_filter_begin(this->m_source, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
+				obs_source_process_filter_end(this->m_source, defaultEffect, baseW, baseH);
+			} else {
+				throw std::exception("Failed to render source");
+			}
+		} catch (std::exception ex) {
+			if (this->can_log()) {
+				P_LOG_ERROR("<filter-blur:%s> Rendering parent source to texture failed with error: %s.",
+							obs_source_get_name(this->m_source), ex.what());
+			}
+			gs_blend_state_pop();
+			obs_source_skip_video_filter(this->m_source);
+			return;
+		}
+		gs_blend_state_pop();
+
+		if (!(tex_source = this->rt_source->get_texture())) {
+			if (this->can_log()) {
+				P_LOG_ERROR("<filter-blur> Failed to get source texture.");
+			}
+			obs_source_skip_video_filter(m_source);
+			return;
+		}
+	}
+
+	// Color Conversion RGB-YUV
+	if ((color_format == ColorFormat::YUV) && colorConversionEffect) {
+		gs_blend_state_push();
+		gs_reset_blend_state();
+		gs_enable_color(true, true, true, true);
+		gs_enable_blending(false);
+		gs_enable_depth_test(false);
+		gs_enable_stencil_test(false);
+		gs_enable_stencil_write(false);
+		gs_set_cull_mode(GS_NEITHER);
+		gs_depth_function(GS_ALWAYS);
+		gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
+		gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
+		gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
+
+		try {
+			auto op = this->rt_primary->render(baseW, baseH);
+			gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
 
 			if (colorConversionEffect->has_parameter("image")) {
-				colorConversionEffect->get_parameter("image").set_texture(sourceTexture);
+				colorConversionEffect->get_parameter("image").set_texture(tex_source->get_object());
 			}
 			while (gs_effect_loop(colorConversionEffect->get_object(), "RGBToYUV")) {
-				gs_draw_sprite(sourceTexture, 0, baseW, baseH);
+				gs_draw_sprite(tex_source->get_object(), 0, baseW, baseH);
 			}
-			gs_texrender_end(secondary_rendertarget);
+		} catch (std::exception ex) {
+			if (this->can_log()) {
+				P_LOG_ERROR("<filter-blur:%s> RGB-YUV conversion failed with error: %s.",
+							obs_source_get_name(this->m_source), ex.what());
+			}
+			gs_blend_state_pop();
+			obs_source_skip_video_filter(m_source);
+			return;
 		}
+		gs_blend_state_pop();
 
-		if (failed) {
+		if (!(tex_source = this->rt_primary->get_texture())) {
+			if (this->can_log()) {
+				P_LOG_ERROR("<filter-blur:%s> Failed to get color conversion texture.",
+							obs_source_get_name(this->m_source));
+			}
 			obs_source_skip_video_filter(m_source);
 			return;
 		}
 
-		sourceTexture = gs_texrender_get_texture(secondary_rendertarget);
-		if (!sourceTexture) {
-			P_LOG_ERROR("<filter-blur> Failed to get source texture.");
-			obs_source_skip_video_filter(m_source);
+		// Swap RTs for further rendering.
+		std::swap(this->rt_primary, this->rt_secondary);
+	}
+
+	// Blur
+	{
+		gs_blend_state_push();
+		gs_reset_blend_state();
+		gs_enable_color(true, true, true, true);
+		gs_enable_blending(false);
+		gs_enable_depth_test(false);
+		gs_enable_stencil_test(false);
+		gs_enable_stencil_write(false);
+		gs_set_cull_mode(GS_NEITHER);
+		gs_depth_function(GS_ALWAYS);
+		gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
+		gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
+		gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
+
+		std::pair<float, float> kvs[] = {{1.0f / baseW, 0.0f}, {0.0f, 1.0f / baseH}};
+		tex_intermediate              = tex_source; // We need the original to work.
+
+		try {
+			for (auto v : kvs) {
+				float xpel = std::get<0>(v);
+				float ypel = std::get<1>(v);
+
+				{
+					auto op = this->rt_primary->render(baseW, baseH);
+					gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
+
+					apply_shared_param(tex_intermediate->get_object(), xpel, ypel);
+					apply_gaussian_param(uint8_t(this->size));
+					apply_bilateral_param();
+
+					// Render
+					while (gs_effect_loop(this->blur_effect->get_object(), this->blur_technique.c_str())) {
+						gs_draw_sprite(tex_intermediate->get_object(), 0, baseW, baseH);
+					}
+				}
+
+				if (!(tex_intermediate = this->rt_primary->get_texture())) {
+					throw("Failed to get blur texture.");
+				}
+
+				// Swap RTs for further rendering.
+				std::swap(this->rt_primary, this->rt_secondary);
+			}
+		} catch (std::exception ex) {
+			if (this->can_log()) {
+				P_LOG_ERROR("<filter-blur:%s> Blur failed with error: %s.", obs_source_get_name(this->m_source),
+							ex.what());
+			}
+			gs_blend_state_pop();
+			obs_source_skip_video_filter(this->m_source);
 			return;
 		}
+		gs_blend_state_pop();
 	}
-#pragma endregion RGB->YUV
 
-#pragma region Blur
-	// Set up camera stuff
-	gs_set_cull_mode(GS_NEITHER);
-	gs_reset_blend_state();
-	gs_enable_blending(true);
-	gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
-	gs_enable_depth_test(false);
-	gs_enable_stencil_test(false);
-	gs_enable_stencil_write(false);
-	gs_enable_color(true, true, true, true);
-
-	gs_texture_t* blurred      = nullptr;
-	gs_texture_t* intermediate = sourceTexture;
-
-	std::tuple<const char*, gs_texrender_t*, float, float> kvs[] = {
-		std::make_tuple("Horizontal", horizontal_rendertarget, 1.0f / baseW, 0.0f),
-		std::make_tuple("Vertical", vertical_rendertarget, 0.0f, 1.0f / baseH),
-	};
-
-	for (auto v : kvs) {
-		const char*     name = std::get<0>(v);
-		gs_texrender_t* rt   = std::get<1>(v);
-		float           xpel = std::get<2>(v), ypel = std::get<3>(v);
-
-		if (!apply_shared_param(intermediate, xpel, ypel))
-			break;
-		apply_gaussian_param(this->size);
-		apply_bilateral_param();
-
-		gs_texrender_reset(rt);
-		if (!gs_texrender_begin(rt, baseW, baseH)) {
-			P_LOG_ERROR("<filter-blur:%s> Failed to begin rendering.", name);
-			break;
-		}
-
-		// Camera
-		gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
-		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
-
-		// Render
-		while (gs_effect_loop(this->blur_effect->get_object(), this->blur_technique.c_str())) {
-			gs_draw_sprite(intermediate, 0, baseW, baseH);
-		}
-
-		gs_texrender_end(rt);
-		intermediate = gs_texrender_get_texture(rt);
-		if (!intermediate) {
-			P_LOG_ERROR("<filter-blur:%s> Failed to get intermediate texture.", name);
-			break;
-		}
-		blurred = intermediate;
-	}
-	if (blurred == nullptr) {
-		obs_source_skip_video_filter(m_source);
-		return;
-	}
-#pragma endregion blur
-
-#pragma region Mask
+	// Mask
 	if (mask.enabled) {
+		gs_blend_state_push();
+		gs_reset_blend_state();
+		gs_enable_color(true, true, true, true);
+		gs_enable_blending(false);
+		gs_enable_depth_test(false);
+		gs_enable_stencil_test(false);
+		gs_enable_stencil_write(false);
+		gs_set_cull_mode(GS_NEITHER);
+		gs_depth_function(GS_ALWAYS);
+		gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
+		gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
+		gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
+
 		std::string technique = "";
-		switch (mask.type) {
+		switch (this->mask.type) {
 		case Region:
-			if (mask.region.feather > 0.001) {
-				if (mask.region.invert) {
+			if (this->mask.region.feather > 0.001) {
+				if (this->mask.region.invert) {
 					technique = "RegionFeatherInverted";
 				} else {
 					technique = "RegionFeather";
 				}
 			} else {
-				if (mask.region.invert) {
+				if (this->mask.region.invert) {
 					technique = "RegionInverted";
 				} else {
 					technique = "Region";
@@ -682,8 +701,8 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 		}
 
 		if (mask.source.source_texture) {
-			uint32_t source_width  = obs_source_get_width(mask.source.source_texture->get_object());
-			uint32_t source_height = obs_source_get_height(mask.source.source_texture->get_object());
+			uint32_t source_width  = obs_source_get_width(this->mask.source.source_texture->get_object());
+			uint32_t source_height = obs_source_get_height(this->mask.source.source_texture->get_object());
 
 			if (source_width == 0) {
 				source_width = baseW;
@@ -691,7 +710,7 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 			if (source_height == 0) {
 				source_height = baseH;
 			}
-			if (mask.source.is_scene) {
+			if (this->mask.source.is_scene) {
 				obs_video_info ovi;
 				if (obs_get_video_info(&ovi)) {
 					source_width  = ovi.base_width;
@@ -699,35 +718,57 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 				}
 			}
 
-			mask.source.texture = mask.source.source_texture->render(source_width, source_height);
+			this->mask.source.texture = this->mask.source.source_texture->render(source_width, source_height);
 		}
 
 		std::shared_ptr<gs::effect> mask_effect = blur_factory::get()->get_mask_effect();
-		apply_mask_parameters(mask_effect, sourceTexture, blurred);
+		apply_mask_parameters(mask_effect, tex_source->get_object(), tex_intermediate->get_object());
 
-		gs_texrender_reset(horizontal_rendertarget);
-		if (gs_texrender_begin(horizontal_rendertarget, baseW, baseH)) {
-			// Camera
+		try {
+			auto op = this->rt_primary->render(baseW, baseH);
 			gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
-			gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
 
 			// Render
 			while (gs_effect_loop(mask_effect->get_object(), technique.c_str())) {
-				gs_draw_sprite(blurred, 0, baseW, baseH);
+				gs_draw_sprite(tex_intermediate->get_object(), 0, baseW, baseH);
 			}
 
-			gs_texrender_end(horizontal_rendertarget);
-
-			blurred = gs_texrender_get_texture(horizontal_rendertarget);
+		} catch (std::exception ex) {
+			if (this->can_log()) {
+				P_LOG_ERROR("<filter-blur:%s> Masking failed with error: %s.", obs_source_get_name(this->m_source),
+							ex.what());
+			}
+			gs_blend_state_pop();
+			obs_source_skip_video_filter(this->m_source);
+			return;
 		}
+		gs_blend_state_pop();
+
+		if (!(tex_intermediate = this->rt_primary->get_texture())) {
+			if (this->can_log()) {
+				P_LOG_ERROR("<filter-blur:%s> Failed to get masked texture.", obs_source_get_name(this->m_source));
+			}
+			obs_source_skip_video_filter(this->m_source);
+			return;
+		}
+
+		// Swap RTs for further rendering.
+		std::swap(this->rt_primary, this->rt_secondary);
 	}
 
-#pragma endregion
-
-#pragma region YUV->RGB or straight draw
-	// Draw final effect
+	// Color Conversion RGB-YUV or Straight Draw
 	{
-		gs_effect_t* finalEffect = defaultEffect;
+		// It is important that we do not modify the blend state here, as it is set correctly by OBS
+		gs_enable_color(true, true, true, true);
+		gs_enable_depth_test(false);
+		gs_enable_stencil_test(false);
+		gs_enable_stencil_write(false);
+		gs_set_cull_mode(GS_NEITHER);
+		gs_depth_function(GS_ALWAYS);
+		gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
+		gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
+
+		gs_effect_t* finalEffect = effect ? effect : defaultEffect;
 		const char*  technique   = "Draw";
 
 		if ((color_format == ColorFormat::YUV) && colorConversionEffect) {
@@ -735,28 +776,17 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 			technique   = "YUVToRGB";
 		}
 
-		// Set up camera stuff
-		gs_set_cull_mode(GS_NEITHER);
-		gs_reset_blend_state();
-		gs_enable_blending(true);
-		gs_blend_function(GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA);
-		gs_enable_depth_test(false);
-		gs_enable_stencil_test(false);
-		gs_enable_stencil_write(false);
-		gs_enable_color(true, true, true, true);
-
 		gs_eparam_t* param = gs_effect_get_param_by_name(finalEffect, "image");
 		if (!param) {
-			P_LOG_ERROR("<filter-blur:Final> Failed to set image param.");
+			P_LOG_ERROR("<filter-blur:%s> Failed to set image param.", obs_source_get_name(this->m_source));
 			failed = true;
 		} else {
-			gs_effect_set_texture(param, blurred);
+			gs_effect_set_texture(param, tex_intermediate->get_object());
 		}
 		while (gs_effect_loop(finalEffect, technique)) {
-			gs_draw_sprite(blurred, 0, baseW, baseH);
+			gs_draw_sprite(tex_intermediate->get_object(), 0, baseW, baseH);
 		}
 	}
-#pragma endregion YUV->RGB or straight draw
 
 	if (failed) {
 		obs_source_skip_video_filter(m_source);
@@ -1010,6 +1040,7 @@ void filter::blur::blur_factory::scene_destroy_handler(void* ptr, calldata_t* da
 
 std::shared_ptr<gs::effect> filter::blur::blur_factory::get_effect(filter::blur::type type)
 {
+	type;
 	return blur_effect;
 }
 

@@ -21,6 +21,7 @@
 #define OBS_STREAM_EFFECTS_FILTER_BLUR_HPP
 #pragma once
 
+#include <chrono>
 #include <functional>
 #include <list>
 #include <map>
@@ -29,6 +30,7 @@
 #include "gs-effect.h"
 #include "gs-helper.h"
 #include "gs-texture.h"
+#include "gs-rendertarget.h"
 #include "plugin.h"
 
 extern "C" {
@@ -56,10 +58,9 @@ namespace filter {
 
 		class blur_instance {
 			obs_source_t*   m_source;
-			gs_texrender_t* primary_rendertarget;
-			gs_texrender_t* secondary_rendertarget;
-			gs_texrender_t* horizontal_rendertarget;
-			gs_texrender_t* vertical_rendertarget;
+			std::shared_ptr<gs::rendertarget> rt_source; 
+			std::shared_ptr<gs::rendertarget> rt_primary;
+			std::shared_ptr<gs::rendertarget> rt_secondary;
 
 			// blur
 			std::shared_ptr<gs::effect> blur_effect;
@@ -71,7 +72,7 @@ namespace filter {
 			double_t bilateral_smoothing;
 			double_t bilateral_sharpness;
 
-			// Regional
+			// Masking
 			struct {
 				bool      enabled;
 				mask_type type;
@@ -106,7 +107,6 @@ namespace filter {
 			} mask;
 
 			// advanced
-			bool     have_logged_error = false;
 			uint64_t color_format;
 
 			bool apply_shared_param(gs_texture_t* input, float texelX, float texelY);
@@ -117,6 +117,10 @@ namespace filter {
 
 			static bool modified_properties(void* ptr, obs_properties_t* props, obs_property* prop,
 											obs_data_t* settings);
+
+			// Logging
+			std::chrono::high_resolution_clock::time_point last_log;
+			bool can_log();
 
 			public:
 			blur_instance(obs_data_t* settings, obs_source_t* self);
