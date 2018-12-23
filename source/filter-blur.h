@@ -111,7 +111,7 @@ namespace filter {
 
 			bool apply_shared_param(gs_texture_t* input, float texelX, float texelY);
 			bool apply_bilateral_param();
-			bool apply_gaussian_param();
+			bool apply_gaussian_param(uint8_t width);
 			bool apply_mask_parameters(std::shared_ptr<gs::effect> effect, gs_texture_t* original_texture,
 									   gs_texture_t* blurred_texture);
 
@@ -143,6 +143,7 @@ namespace filter {
 
 			std::shared_ptr<gs::effect>                                blur_effect;
 			std::map<filter::blur::type, std::shared_ptr<gs::texture>> kernels;
+			std::map<uint8_t, std::shared_ptr<std::vector<float_t>>>   gaussian_kernels;
 
 			std::map<std::string, obs_scene_t*> scenes;
 
@@ -187,6 +188,8 @@ namespace filter {
 			std::shared_ptr<gs::effect> get_mask_effect();
 
 			std::shared_ptr<gs::texture> get_kernel(filter::blur::type type);
+
+			std::shared_ptr<std::vector<float_t>> get_gaussian_kernel(uint8_t size);
 
 			obs_scene_t* get_scene(std::string name);
 

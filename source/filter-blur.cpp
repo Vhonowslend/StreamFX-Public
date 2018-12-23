@@ -120,18 +120,12 @@ bool filter::blur::blur_instance::apply_bilateral_param()
 	return true;
 }
 
-bool filter::blur::blur_instance::apply_gaussian_param()
+bool filter::blur::blur_instance::apply_gaussian_param(uint8_t width)
 {
-	std::shared_ptr<gs::texture> kernel = filter::blur::blur_factory::get()->get_kernel(filter::blur::type::Gaussian);
+	auto kernel = filter::blur::blur_factory::get()->get_gaussian_kernel(width);
 
 	if (blur_effect->has_parameter("kernel")) {
-		blur_effect->get_parameter("kernel").set_texture(kernel);
-	}
-
-	if (blur_effect->has_parameter("kernelTexel")) {
-		float_t wb = 1.0f / kernel->get_width();
-		float_t hb = 1.0f / kernel->get_height();
-		blur_effect->get_parameter("kernelTexel").set_float2(wb, hb);
+		blur_effect->get_parameter("kernel").set_float_array(&(kernel->front()), kernel->size());
 	}
 
 	return true;
@@ -604,7 +598,7 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 	}
 #pragma endregion RGB->YUV
 
-#pragma region blur
+#pragma region Blur
 	// Set up camera stuff
 	gs_set_cull_mode(GS_NEITHER);
 	gs_reset_blend_state();
@@ -630,7 +624,7 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 
 		if (!apply_shared_param(intermediate, xpel, ypel))
 			break;
-		apply_gaussian_param();
+		apply_gaussian_param(this->size);
 		apply_bilateral_param();
 
 		gs_texrender_reset(rt);
@@ -853,11 +847,13 @@ void filter::blur::blur_factory::generate_gaussian_kernels()
 	// 2D texture, horizontal is value, vertical is kernel size.
 	size_t size_power_of_two = size_t(pow(2, util::math::get_power_of_two_exponent_ceil(max_kernel_size)));
 
-	std::vector<float_t> texture_Data(size_power_of_two * size_power_of_two);
-	std::vector<float_t> math_data(size_power_of_two);
+	std::vector<float_t>                  texture_data(size_power_of_two * size_power_of_two);
+	std::vector<float_t>                  math_data(size_power_of_two);
+	std::shared_ptr<std::vector<float_t>> kernel_data;
 
 	for (size_t width = 1; width <= max_kernel_size; width++) {
-		size_t v = (width - 1) * size_power_of_two;
+		size_t v    = (width - 1) * size_power_of_two;
+		kernel_data = std::make_shared<std::vector<float_t>>(size_power_of_two);
 
 		// Calculate and normalize
 		float_t sum = 0;
@@ -869,13 +865,16 @@ void filter::blur::blur_factory::generate_gaussian_kernels()
 		// Normalize to Texture Buffer
 		double_t inverse_sum = 1.0 / sum;
 		for (size_t p = 0; p <= width; p++) {
-			texture_Data[v + p] = float_t(math_data[p] * inverse_sum);
+			texture_data[v + p] = float_t(math_data[p] * inverse_sum);
+			kernel_data->at(p)  = texture_data[v + p];
 		}
+
+		gaussian_kernels.insert({uint8_t(width), kernel_data});
 	}
 
 	// Create Texture
 	try {
-		auto texture_buffer = reinterpret_cast<uint8_t*>(texture_Data.data());
+		auto texture_buffer = reinterpret_cast<uint8_t*>(texture_data.data());
 		auto unsafe_buffer  = const_cast<const uint8_t**>(&texture_buffer);
 
 		kernels.insert_or_assign(filter::blur::type::Gaussian,
@@ -1044,6 +1043,11 @@ std::shared_ptr<gs::effect> filter::blur::blur_factory::get_mask_effect()
 std::shared_ptr<gs::texture> filter::blur::blur_factory::get_kernel(filter::blur::type type)
 {
 	return kernels.at(type);
+}
+
+std::shared_ptr<std::vector<float_t>> filter::blur::blur_factory::get_gaussian_kernel(uint8_t size)
+{
+	return gaussian_kernels.at(size);
 }
 
 obs_scene_t* filter::blur::blur_factory::get_scene(std::string name)

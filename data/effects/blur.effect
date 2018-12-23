@@ -10,9 +10,7 @@ uniform int u_diameter;
 uniform float2 u_texelDelta;
 
 // Kernel Settings
-//uniform float registerkernel[25];
-uniform texture2d kernel;
-uniform float2 kernelTexel;
+uniform float4 kernel[8]; // max kernel radius 31+center.
 
 // Bilateral Settings
 uniform float bilateralSmoothing;
@@ -51,6 +49,11 @@ VertDataOut VSDefault(VertDataIn vtx)
 	vert_out.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
 	vert_out.uv  = vtx.uv;
 	return vert_out;
+}
+
+/// Utility
+float GetKernelAt(int i) {
+	return ((float[4])(kernel[floor(i/4)]))[i%4];
 }
 
 /// Blur: Box
@@ -131,14 +134,13 @@ technique BoxLinear
 }
 
 /// Blur: Gaussian
-// ToDo: Switch to array Kernel instead of Texture kernel.
 float4 PSGaussianBlur(VertDataOut vtx) : TARGET {
 	float2 uvOffset = float2(0, 0);
 	float4 final = u_image.SampleLevel(pointSampler, vtx.uv, 0)
-		* kernel.SampleLevel(pointSampler, (float2(0, u_radius - 1) * kernelTexel), 0).r;
+		* GetKernelAt(0);
 	for (int k = 1; k <= u_radius; k++) {
 		uvOffset += u_texelDelta;
-		float l_g = kernel.SampleLevel(pointSampler, (float2(k, u_radius - 1) * kernelTexel), 0).r;
+		float l_g = GetKernelAt(k);
 		float4 l_p = u_image.SampleLevel(pointSampler, vtx.uv + uvOffset, 0);
 		float4 l_n = u_image.SampleLevel(pointSampler, vtx.uv - uvOffset, 0);
 		final += (l_p + l_n) * l_g;
@@ -180,15 +182,15 @@ float4 PSGaussianLinearBlur(VertDataOut vtx) : TARGET {
 	// [-2, -1,  0, +1, +2]
 	//   ^-S-^   S   ^-S-^
 	// Total Samples: 3 (n+1)
-	
+
 	float4 origin = u_image.SampleLevel(pointSampler, vtx.uv, 0);
-	float4 final = origin * kernel.SampleLevel(pointSampler, (float2(0, u_radius - 1) * kernelTexel), 0).r;
+	float4 final = origin * GetKernelAt(0);
 	float2 halfTexelDelta = u_texelDelta / 2.0;
 
 	for (int k = 1; k < u_radius; k+=2) {
 		float2 offset = k * u_texelDelta + halfTexelDelta;
-		float l_g0 = kernel.SampleLevel(pointSampler, (float2(k, u_radius - 1) * kernelTexel), 0).r;
-		float l_g1 = kernel.SampleLevel(pointSampler, (float2(k + 1, u_radius - 1) * kernelTexel), 0).r;
+		float l_g0 = GetKernelAt(k);
+		float l_g1 = GetKernelAt(k +1);
 		float4 l_p = u_image.SampleLevel(linearSampler, vtx.uv + offset, 0);
 		float4 l_n = u_image.SampleLevel(linearSampler, vtx.uv - offset, 0);
 		final += (l_p + l_n) * l_g0;
@@ -199,7 +201,7 @@ float4 PSGaussianLinearBlur(VertDataOut vtx) : TARGET {
 		// Odd numbers require treatment of ends.
 		float4 left = u_image.SampleLevel(pointSampler, vtx.uv + u_texelDelta * u_radius, 0);
 		float4 right = u_image.SampleLevel(pointSampler, vtx.uv - u_texelDelta * u_radius, 0);
-		float krn = kernel.SampleLevel(pointSampler, (float2(u_radius, u_radius - 1) * kernelTexel), 0).r;
+		float krn = GetKernelAt(u_radius);
 		final += (left + right) * krn;
 	}
 
