@@ -22,11 +22,16 @@
 #include <cinttypes>
 #include <list>
 
+// OBS
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4201)
+#endif
 #include "obs-module.h"
 #include "util/platform.h"
+#ifdef _MSC_VER
 #pragma warning(pop)
+#endif
 
 // Plugin
 #define PLUGIN_NAME "Stream Effects"

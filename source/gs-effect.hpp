@@ -25,14 +25,19 @@
 #include "gs-sampler.hpp"
 #include "gs-texture.hpp"
 
+// OBS
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4201)
+#endif
 #include <graphics/graphics.h>
 #include <graphics/matrix4.h>
 #include <graphics/vec2.h>
 #include <graphics/vec3.h>
 #include <graphics/vec4.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
+#endif
 
 namespace gs {
 	class effect_parameter {

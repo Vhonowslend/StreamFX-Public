@@ -22,10 +22,14 @@
 #include "plugin.hpp"
 
 // OBS
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4201)
+#endif
 #include <graphics/graphics.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
+#endif
 
 gs_effect_param* gs_effect_get_param(gs_effect_t* effect, const char* name);
 bool             gs_set_param_int(gs_effect_t* effect, const char* name, int value);

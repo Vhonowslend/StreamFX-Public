@@ -21,10 +21,14 @@
 #include <functional>
 
 // OBS
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4201)
+#endif
 #include <obs.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
+#endif
 
 namespace obs {
 	typedef std::function<void(void* data, struct audio_data const* audio, bool muted)> audio_capture_callback_t;
