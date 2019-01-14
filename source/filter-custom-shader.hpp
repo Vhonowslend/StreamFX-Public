@@ -63,7 +63,7 @@ namespace filter {
 
 			public:
 			Instance(obs_data_t*, obs_source_t*);
-			~Instance();
+			virtual ~Instance();
 
 			uint32_t get_width();
 			uint32_t get_height();
