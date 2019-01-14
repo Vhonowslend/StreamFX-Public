@@ -194,7 +194,7 @@ elseif(${PropertyPrefix}OBS_PACKAGE)
 	include("${OBS_STUDIO_DIR}/cmake/LibObs/LibObsConfig.cmake")
 elseif(${PropertyPrefix}OBS_REFERENCE)
 	set(obsPath "${OBS_STUDIO_DIR}")
-	include("${OBS_STUDIO_DIR}/cmake/external/Findlibobs.cmake")
+	include("${OBS_STUDIO_DIR}/cmake/external/FindLibobs.cmake")
 elseif(${PropertyPrefix}OBS_DOWNLOAD)
 	download_project(
 		PROJ libobs
