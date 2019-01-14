@@ -465,9 +465,9 @@ void Source::Mirror::deactivate()
 
 static inline void mix_audio(float* p_out, float* p_in, size_t pos, size_t count)
 {
-	register float* out = p_out;
-	register float* in  = p_in + pos;
-	register float* end = in + count;
+	float* out = p_out;
+	float* in  = p_in + pos;
+	float* end = in + count;
 
 	while (in < end)
 		*(out++) += *(in++);
