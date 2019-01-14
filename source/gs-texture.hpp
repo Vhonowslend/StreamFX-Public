@@ -117,6 +117,6 @@ namespace gs {
 
 		gs_color_format get_color_format();
 	};
-
-	ENABLE_BITMASK_OPERATORS(gs::texture::flags)
 } // namespace gs
+
+ENABLE_BITMASK_OPERATORS(gs::texture::flags)
