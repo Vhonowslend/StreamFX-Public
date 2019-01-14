@@ -29,9 +29,11 @@
 #include "gs-vertexbuffer.h"
 #include "plugin.h"
 
-extern "C" {
+// OBS
+#pragma warning(push)
+#pragma warning(disable : 4201)
 #include <obs.h>
-}
+#pragma warning(pop)
 
 namespace filter {
 	namespace shadow_sdf {

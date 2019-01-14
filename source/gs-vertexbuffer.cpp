@@ -20,12 +20,12 @@
 #include "gs-vertexbuffer.h"
 #include <stdexcept>
 #include "util-memory.h"
-extern "C" {
+
+// OBS
 #pragma warning(push)
 #pragma warning(disable : 4201)
 #include <obs.h>
 #pragma warning(pop)
-}
 
 gs::vertex_buffer::~vertex_buffer()
 {

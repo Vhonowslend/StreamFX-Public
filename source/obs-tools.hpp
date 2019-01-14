@@ -24,9 +24,11 @@
 #include <cinttypes>
 #include <string>
 
-extern "C" {
-#include "obs.h"
-}
+// OBS
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#include <obs.h>
+#pragma warning(pop)
 
 namespace obs {
 	namespace tools {

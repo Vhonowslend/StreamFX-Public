@@ -19,8 +19,7 @@
 
 #include "util-math.h"
 #include <cctype>
-#include <malloc.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include "util-memory.h"
 
 void* util::vec3a::operator new(size_t count)

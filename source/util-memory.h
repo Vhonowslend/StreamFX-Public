@@ -18,8 +18,7 @@
  */
 
 #pragma once
-#include <malloc.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace util {
 	inline size_t aligned_offset(size_t align, size_t pos)

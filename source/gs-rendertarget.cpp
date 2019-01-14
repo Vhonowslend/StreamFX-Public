@@ -20,13 +20,12 @@
 #include "gs-rendertarget.h"
 #include <stdexcept>
 
-extern "C" {
+// OBS
 #pragma warning(push)
 #pragma warning(disable : 4201)
 #include <graphics/graphics.h>
 #include <obs.h>
 #pragma warning(pop)
-}
 
 gs::rendertarget::~rendertarget()
 {

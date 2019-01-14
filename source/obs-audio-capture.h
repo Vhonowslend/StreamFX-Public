@@ -19,7 +19,12 @@
 
 #pragma once
 #include <functional>
+
+// OBS
+#pragma warning(push)
+#pragma warning(disable : 4201)
 #include <obs.h>
+#pragma warning(pop)
 
 namespace obs {
 	typedef std::function<void(void* data, struct audio_data const* audio, bool muted)> audio_capture_callback_t;

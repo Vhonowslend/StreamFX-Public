@@ -18,7 +18,7 @@
  */
 
 #pragma once
-#include <inttypes.h>
+#include <cinttypes>
 #include <list>
 #include <vector>
 #include "gfx-effect-source.h"

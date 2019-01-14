@@ -18,13 +18,13 @@
  */
 
 #pragma once
-#include <inttypes.h>
-extern "C" {
+#include <cinttypes>
+
+// OBS
 #pragma warning(push)
 #pragma warning(disable : 4201)
 #include <graphics/graphics.h>
 #pragma warning(pop)
-}
 
 namespace gs {
 	class sampler {

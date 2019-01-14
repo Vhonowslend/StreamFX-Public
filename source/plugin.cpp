@@ -53,7 +53,9 @@ MODULE_EXPORT void obs_module_unload(void)
 #define NOMINMAX
 #define NOINOUT
 
+extern "C" {
 #include <windows.h>
+}
 
 BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID)
 {

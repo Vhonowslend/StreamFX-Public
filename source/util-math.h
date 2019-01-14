@@ -18,15 +18,18 @@
 */
 
 #pragma once
-#include <inttypes.h>
+#include <cinttypes>
 #include <cmath>
 #include <string>
 #include <utility>
 
 // OBS
+#pragma warning(push)
+#pragma warning(disable : 4201)
 #include <graphics/vec2.h>
 #include <graphics/vec3.h>
 #include <graphics/vec4.h>
+#pragma warning(pop)
 
 // Constants
 #define PI 3.1415926535897932384626433832795

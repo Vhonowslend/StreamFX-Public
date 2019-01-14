@@ -20,12 +20,12 @@
 #pragma once
 #include <vector>
 #include "plugin.h"
-extern "C" {
+
+// OBS
 #pragma warning(push)
 #pragma warning(disable : 4201)
-#include "graphics/graphics.h"
+#include <graphics/graphics.h>
 #pragma warning(pop)
-}
 
 gs_effect_param* gs_effect_get_param(gs_effect_t* effect, const char* name);
 bool             gs_set_param_int(gs_effect_t* effect, const char* name, int value);

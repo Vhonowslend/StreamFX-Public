@@ -23,13 +23,12 @@
 #include <sys/stat.h>
 #include "util-math.h"
 
-extern "C" {
+// OBS
 #pragma warning(push)
 #pragma warning(disable : 4201)
 #include <obs.h>
 #include <util/platform.h>
 #pragma warning(pop)
-}
 
 gs::texture::texture(uint32_t width, uint32_t height, gs_color_format format, uint32_t mip_levels,
 					 const uint8_t** mip_data, gs::texture::flags texture_flags)

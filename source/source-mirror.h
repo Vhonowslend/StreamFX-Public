@@ -30,9 +30,11 @@
 #include "obs-source.hpp"
 #include "plugin.h"
 
-extern "C" {
+// OBS
+#pragma warning(push)
+#pragma warning(disable : 4201)
 #include <obs-source.h>
-}
+#pragma warning(pop)
 
 namespace Source {
 	class MirrorAddon {

@@ -24,12 +24,11 @@
 #include "util-math.h"
 #include "util-memory.h"
 
-extern "C" {
+// OBS
 #pragma warning(push)
 #pragma warning(disable : 4201)
 #include <graphics/graphics.h>
 #pragma warning(pop)
-}
 
 namespace gs {
 	class vertex_buffer {

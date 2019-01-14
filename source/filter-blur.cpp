@@ -19,20 +19,19 @@
 
 #include "filter-blur.h"
 #include <cmath>
-#include <inttypes.h>
+#include <cinttypes>
 #include <map>
 #include "strings.h"
 #include "util-math.h"
 
-extern "C" {
+// OBS
 #pragma warning(push)
 #pragma warning(disable : 4201)
-#include "callback/signal.h"
-#include "graphics/graphics.h"
-#include "graphics/matrix4.h"
-#include "util/platform.h"
+#include <callback/signal.h>
+#include <graphics/graphics.h>
+#include <graphics/matrix4.h>
+#include <util/platform.h>
 #pragma warning(pop)
-}
 
 // Translation Strings
 #define SOURCE_NAME "Filter.Blur"

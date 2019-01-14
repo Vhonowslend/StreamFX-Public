@@ -26,10 +26,12 @@
 #include "obs-tools.hpp"
 #include "strings.h"
 
-extern "C" {
+// OBS
+#pragma warning(push)
+#pragma warning(disable : 4201)
 #include <media-io/audio-io.h>
 #include <obs-config.h>
-}
+#pragma warning(pop)
 
 #define S_SOURCE_MIRROR "Source.Mirror"
 #define P_SOURCE "Source.Mirror.Source"

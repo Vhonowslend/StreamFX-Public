@@ -20,12 +20,11 @@
 #include "gs-effect.h"
 #include <stdexcept>
 
-extern "C" {
+// OBS
 #pragma warning(push)
 #pragma warning(disable : 4201)
 #include <obs.h>
 #pragma warning(pop)
-}
 
 gs::effect::effect() : m_effect(nullptr) {}
 

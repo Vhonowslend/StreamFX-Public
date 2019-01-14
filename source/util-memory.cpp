@@ -19,6 +19,7 @@
 
 #include "util-memory.h"
 #include <cstdlib>
+
 #define USE_STD_ALLOC_FREE
 
 void* util::malloc_aligned(size_t align, size_t size)

@@ -33,12 +33,11 @@
 #include "gs-rendertarget.h"
 #include "plugin.h"
 
-extern "C" {
+// OBS
 #pragma warning(push)
 #pragma warning(disable : 4201)
-#include "callback/signal.h"
+#include <callback/signal.h>
 #pragma warning(pop)
-}
 
 namespace filter {
 	namespace blur {
