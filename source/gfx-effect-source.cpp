@@ -96,19 +96,14 @@ bool gfx::effect_source::property_texture_type_modified(void* priv, obs_properti
 	return true;
 }
 
-bool gfx::effect_source::property_texture_input_modified(void* priv, obs_properties_t* props, obs_property_t* prop,
-														 obs_data_t* sett)
+bool gfx::effect_source::property_texture_input_modified(void*, obs_properties_t*, obs_property_t*,
+														 obs_data_t*)
 {
-	priv;
-	props;
-	prop;
-	sett;
 	return false;
 }
 
-gfx::effect_source::effect_source(obs_data_t* data, obs_source_t* owner)
+gfx::effect_source::effect_source(obs_data_t*, obs_source_t* owner)
 {
-	data;
 	m_source       = owner;
 	m_timeExisting = 0;
 	m_timeActive   = 0;
@@ -520,6 +515,8 @@ void gfx::effect_source::apply_parameters()
 			case gs::effect_parameter::type::Integer4:
 				param->param->set_int4(param->value[0], param->value[1], param->value[2], param->value[3]);
 				break;
+			default:
+				break;
 			}
 		} else if (prm.first.second >= gs::effect_parameter::type::Float
 				   && prm.first.second <= gs::effect_parameter::type::Float4) {
@@ -536,6 +533,8 @@ void gfx::effect_source::apply_parameters()
 				break;
 			case gs::effect_parameter::type::Float4:
 				param->param->set_float4(param->value[0], param->value[1], param->value[2], param->value[3]);
+				break;
+			default:
 				break;
 			}
 		}

@@ -360,7 +360,7 @@ bool filter::CustomShader::Instance::is_special_parameter(std::string name, gs::
 	return false;
 }
 
-bool filter::CustomShader::Instance::apply_special_parameters(uint32_t viewW, uint32_t viewH)
+bool filter::CustomShader::Instance::apply_special_parameters(uint32_t, uint32_t)
 {
 	std::unique_ptr<gs::texture> imageTexture;
 	m_renderTarget->get_texture(imageTexture);
@@ -385,7 +385,7 @@ bool filter::CustomShader::Instance::apply_special_parameters(uint32_t viewW, ui
 	return true;
 }
 
-bool filter::CustomShader::Instance::video_tick_impl(float_t time)
+bool filter::CustomShader::Instance::video_tick_impl(float_t)
 {
 	return true;
 }

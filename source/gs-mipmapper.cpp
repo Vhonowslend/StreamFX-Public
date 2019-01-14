@@ -151,14 +151,14 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 	}
 
 	// Render
-	graphics_t*      ctx         = gs_get_context();
+	graphics_t* ctx = gs_get_context();
 #if defined(WIN32) || defined(WIN64)
-	gs_d3d11_device* dev         = reinterpret_cast<gs_d3d11_device*>(ctx->device);
+	gs_d3d11_device* dev = reinterpret_cast<gs_d3d11_device*>(ctx->device);
 #endif
-	int              device_type = gs_get_device_type();
-	void*            sobj        = gs_texture_get_obj(source->get_object());
-	void*            tobj        = gs_texture_get_obj(target->get_object());
-	std::string      technique   = "Draw";
+	int         device_type = gs_get_device_type();
+	void*       sobj        = gs_texture_get_obj(source->get_object());
+	void*       tobj        = gs_texture_get_obj(target->get_object());
+	std::string technique   = "Draw";
 
 	switch (generator) {
 	case generator::Point:

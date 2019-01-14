@@ -154,7 +154,7 @@ void filter::shadow_sdf::shadow_sdf_instance::update(obs_data_t* data)
 	}
 	this->m_inner_offset_x = float_t(obs_data_get_double(data, P_INNER_OFFSET_X));
 	this->m_inner_offset_y = float_t(obs_data_get_double(data, P_INNER_OFFSET_Y));
-	this->m_inner_color    = obs_data_get_int(data, P_INNER_COLOR) & 0x00FFFFFF
+	this->m_inner_color    = (obs_data_get_int(data, P_INNER_COLOR) & 0x00FFFFFF)
 						  | (int32_t(obs_data_get_double(data, P_INNER_ALPHA) * 2.55) << 24);
 
 	this->m_outer_shadow    = obs_data_get_bool(data, P_OUTER);
@@ -165,7 +165,7 @@ void filter::shadow_sdf::shadow_sdf_instance::update(obs_data_t* data)
 	}
 	this->m_outer_offset_x = float_t(obs_data_get_double(data, P_OUTER_OFFSET_X));
 	this->m_outer_offset_y = float_t(obs_data_get_double(data, P_OUTER_OFFSET_Y));
-	this->m_outer_color    = obs_data_get_int(data, P_OUTER_COLOR) & 0x00FFFFFF
+	this->m_outer_color    = (obs_data_get_int(data, P_OUTER_COLOR) & 0x00FFFFFF)
 						  | (int32_t(obs_data_get_double(data, P_OUTER_ALPHA) * 2.55) << 24);
 }
 
@@ -194,8 +194,9 @@ void filter::shadow_sdf::shadow_sdf_instance::video_render(gs_effect_t*)
 	obs_source_t* target            = obs_filter_get_target(this->m_self);
 	uint32_t      baseW             = obs_source_get_base_width(target);
 	uint32_t      baseH             = obs_source_get_base_height(target);
-	vec4          color_transparent = {0};
 	gs_effect_t*  default_effect    = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
+	vec4          color_transparent;
+	vec4_zero(&color_transparent);
 
 	if (!parent || !target || (baseW == 0) || (baseH == 0)) {
 		obs_source_skip_video_filter(this->m_self);
@@ -436,9 +437,8 @@ void filter::shadow_sdf::shadow_sdf_factory::update(void* inptr, obs_data_t* set
 	reinterpret_cast<filter::shadow_sdf::shadow_sdf_instance*>(inptr)->update(settings);
 }
 
-const char* filter::shadow_sdf::shadow_sdf_factory::get_name(void* inptr)
+const char* filter::shadow_sdf::shadow_sdf_factory::get_name(void*)
 {
-	inptr;
 	return P_TRANSLATE(SOURCE_NAME);
 }
 

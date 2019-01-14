@@ -18,12 +18,12 @@
  */
 
 #include "filter-blur.hpp"
-#include <cmath>
+#include <cfloat>
 #include <cinttypes>
+#include <cmath>
 #include <map>
 #include "strings.hpp"
 #include "util-math.hpp"
-#include <cfloat>
 
 // OBS
 #ifdef _MSC_VER
@@ -205,12 +205,9 @@ bool filter::blur::blur_instance::apply_mask_parameters(std::shared_ptr<gs::effe
 	return true;
 }
 
-bool filter::blur::blur_instance::modified_properties(void* ptr, obs_properties_t* props, obs_property* prop,
+bool filter::blur::blur_instance::modified_properties(void*, obs_properties_t* props, obs_property*,
 													  obs_data_t* settings)
 {
-	prop;
-	ptr;
-
 	// bilateral blur
 	bool show_bilateral = (obs_data_get_int(settings, P_TYPE) == type::Bilateral);
 	obs_property_set_visible(obs_properties_get(props, P_BILATERAL_SMOOTHING), show_bilateral);
@@ -512,7 +509,8 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 	obs_source_t* target = obs_filter_get_target(this->m_source);
 	uint32_t      baseW  = obs_source_get_base_width(target);
 	uint32_t      baseH  = obs_source_get_base_height(target);
-	vec4          black  = {0};
+	vec4          black;
+	vec4_set(&black, 0, 0, 0, 0);
 
 	bool failed = false;
 
@@ -529,8 +527,8 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 	}
 	if ((baseW == 0) || (baseH == 0)) {
 		if (this->can_log()) {
-			P_LOG_ERROR("<filter-blur:%s> Invalid base size from '%s': %lux%lu.", obs_source_get_name(this->m_source),
-						obs_source_get_name(target), baseW, baseH);
+			P_LOG_ERROR("<filter-blur:%s> Invalid base size from '%s': %" PRIu32 "x%" PRIu32 ".",
+						obs_source_get_name(this->m_source), obs_source_get_name(target), baseW, baseH);
 		}
 		obs_source_skip_video_filter(this->m_source);
 		return;
@@ -1072,9 +1070,8 @@ void filter::blur::blur_factory::update(void* inptr, obs_data_t* settings)
 	reinterpret_cast<filter::blur::blur_instance*>(inptr)->update(settings);
 }
 
-const char* filter::blur::blur_factory::get_name(void* inptr)
+const char* filter::blur::blur_factory::get_name(void*)
 {
-	inptr;
 	return P_TRANSLATE(SOURCE_NAME);
 }
 
@@ -1130,9 +1127,8 @@ void filter::blur::blur_factory::scene_destroy_handler(void* ptr, calldata_t* da
 	}
 }
 
-std::shared_ptr<gs::effect> filter::blur::blur_factory::get_effect(filter::blur::type type)
+std::shared_ptr<gs::effect> filter::blur::blur_factory::get_effect(filter::blur::type)
 {
-	type;
 	return blur_effect;
 }
 
