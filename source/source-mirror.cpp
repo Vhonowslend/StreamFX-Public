@@ -115,7 +115,8 @@ bool Source::MirrorAddon::modified_properties(obs_properties_t* pr, obs_property
 		obs_source_t* target = obs_get_source_by_name(obs_data_get_string(data, P_SOURCE));
 		if (target) {
 			std::vector<char> buf(256);
-			snprintf(buf.data(), buf.size(), "%ldx%ld\0", obs_source_get_width(target), obs_source_get_height(target));
+			snprintf(buf.data(), buf.size(), "%" PRIu32 "x%" PRIu32, obs_source_get_width(target),
+					 obs_source_get_height(target));
 			obs_data_set_string(data, P_SOURCE_SIZE, buf.data());
 		} else {
 			obs_data_set_string(data, P_SOURCE_SIZE, "0x0");
@@ -517,7 +518,8 @@ void Source::Mirror::video_render(gs_effect_t*)
 
 		gs_eparam_t* scale_param = gs_effect_get_param_by_name(this->m_scaling_effect, "base_dimension_i");
 		if (scale_param) {
-			struct vec2 base_res_i = {1.0f / float_t(sw), 1.0f / float_t(sh)};
+			vec2 base_res_i;
+			vec2_set(&base_res_i, 1.0f / float_t(sw), 1.0f / float_t(sh));
 			gs_effect_set_vec2(scale_param, &base_res_i);
 		}
 
@@ -614,7 +616,7 @@ void Source::Mirror::enum_active_sources(obs_source_enum_proc_t enum_callback, v
 	}
 }
 
-void Source::Mirror::load(obs_data_t* data) {}
+void Source::Mirror::load(obs_data_t*) {}
 
 void Source::Mirror::save(obs_data_t* data)
 {
@@ -623,14 +625,15 @@ void Source::Mirror::save(obs_data_t* data)
 	}
 }
 
-void Source::Mirror::on_source_rename(obs::source* source, std::string new_name, std::string old_name) {
+void Source::Mirror::on_source_rename(obs::source* source, std::string, std::string)
+{
 	obs_data_t* ref = obs_source_get_settings(this->m_source);
 	obs_data_set_string(ref, P_SOURCE, obs_source_get_name(source->get()));
 	obs_source_update(this->m_source, ref);
 	obs_data_release(ref);
 }
 
-void Source::Mirror::on_source_destroy(obs::source* source)
+void Source::Mirror::on_source_destroy(obs::source*)
 {
 	// This is an odd case. If you hit this, be prepared for all kinds of broken things.
 	this->m_source_target->clear();
