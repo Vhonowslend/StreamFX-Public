@@ -21,7 +21,7 @@
 #include "util-memory.hpp"
 
 gs::vertex::vertex()
-	: hasStore(true), store(nullptr), position(nullptr), normal(nullptr), tangent(nullptr), color(nullptr)
+	: position(nullptr), normal(nullptr), tangent(nullptr), color(nullptr), hasStore(true), store(nullptr)
 {
 	store = util::malloc_aligned(16, sizeof(vec3) * 3 + sizeof(uint32_t) + sizeof(vec4) * MAXIMUM_UVW_LAYERS);
 

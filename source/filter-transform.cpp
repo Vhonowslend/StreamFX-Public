@@ -71,7 +71,6 @@ INITIALIZER(FilterTransformInit)
 
 static const float farZ       = 2097152.0f; // 2 pow 21
 static const float nearZ      = 1.0f / farZ;
-static const float valueLimit = 65536.0f;
 
 enum class CameraMode : int32_t { Orthographic, Perspective };
 
