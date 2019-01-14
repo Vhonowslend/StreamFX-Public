@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#include "gs-helper.h"
+#include "gs-helper.hpp"
 
 gs_effect_param* gs_effect_get_param(gs_effect_t* effect, const char* name)
 {

@@ -19,17 +19,16 @@
 
 #pragma once
 #include <cinttypes>
-#include "gs-limits.h"
-#include "gs-vertex.h"
-#include "util-math.h"
-#include "util-memory.h"
+#include "gs-limits.hpp"
+#include "gs-vertex.hpp"
+#include "util-math.hpp"
+#include "util-memory.hpp"
 
-extern "C" {
+// OBS
 #pragma warning(push)
 #pragma warning(disable : 4201)
 #include <graphics/graphics.h>
 #pragma warning(pop)
-}
 
 namespace gs {
 	class vertex_buffer {

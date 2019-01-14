@@ -20,11 +20,11 @@
 #pragma once
 #include <memory>
 #include <vector>
-#include "gs-mipmapper.h"
-#include "gs-rendertarget.h"
-#include "gs-texture.h"
-#include "gs-vertexbuffer.h"
-#include "plugin.h"
+#include "gs-mipmapper.hpp"
+#include "gs-rendertarget.hpp"
+#include "gs-texture.hpp"
+#include "gs-vertexbuffer.hpp"
+#include "plugin.hpp"
 
 namespace filter {
 	class Transform {
@@ -78,12 +78,10 @@ namespace filter {
 
 			// 3D Information
 			uint32_t rotation_order;
-			struct {
-				std::unique_ptr<util::vec3a> position;
-				std::unique_ptr<util::vec3a> rotation;
-				std::unique_ptr<util::vec3a> scale;
-				std::unique_ptr<util::vec3a> shear;
-			};
+			std::unique_ptr<util::vec3a> position;
+			std::unique_ptr<util::vec3a> rotation;
+			std::unique_ptr<util::vec3a> scale;
+			std::unique_ptr<util::vec3a> shear;
 
 			public:
 			Instance(obs_data_t*, obs_source_t*);

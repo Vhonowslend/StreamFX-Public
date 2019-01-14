@@ -18,29 +18,19 @@
  */
 
 #pragma once
-#include <inttypes.h>
 #include <vector>
-extern "C" {
+#include "plugin.hpp"
+
+// OBS
 #pragma warning(push)
 #pragma warning(disable : 4201)
 #include <graphics/graphics.h>
 #pragma warning(pop)
-}
 
-namespace gs {
-	class index_buffer : public std::vector<uint32_t> {
-		public:
-		index_buffer(uint32_t maximumVertices);
-		index_buffer();
-		index_buffer(index_buffer& other);
-		index_buffer(std::vector<uint32_t>& other);
-		virtual ~index_buffer();
-
-		gs_indexbuffer_t* get();
-
-		gs_indexbuffer_t* get(bool refreshGPU);
-
-		protected:
-		gs_indexbuffer_t* m_indexBuffer;
-	};
-} // namespace gs
+gs_effect_param* gs_effect_get_param(gs_effect_t* effect, const char* name);
+bool             gs_set_param_int(gs_effect_t* effect, const char* name, int value);
+bool             gs_set_param_float(gs_effect_t* effect, const char* name, float value);
+bool             gs_set_param_float2(gs_effect_t* effect, const char* name, vec2* value);
+bool             gs_set_param_float3(gs_effect_t* effect, const char* name, vec3* value);
+bool             gs_set_param_float4(gs_effect_t* effect, const char* name, vec4* value);
+bool             gs_set_param_texture(gs_effect_t* effect, const char* name, gs_texture_t* value);

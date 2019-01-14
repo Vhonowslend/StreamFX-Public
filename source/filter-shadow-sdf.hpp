@@ -22,16 +22,22 @@
 #pragma once
 
 #include <memory>
-#include "gs-effect.h"
-#include "gs-rendertarget.h"
-#include "gs-sampler.h"
-#include "gs-texture.h"
-#include "gs-vertexbuffer.h"
-#include "plugin.h"
+#include "gs-effect.hpp"
+#include "gs-rendertarget.hpp"
+#include "gs-sampler.hpp"
+#include "gs-texture.hpp"
+#include "gs-vertexbuffer.hpp"
+#include "plugin.hpp"
 
-extern "C" {
+// OBS
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#endif
 #include <obs.h>
-}
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 namespace filter {
 	namespace shadow_sdf {

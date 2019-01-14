@@ -17,50 +17,49 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 
-#include "util-math.h"
+#include "util-math.hpp"
 #include <cctype>
-#include <malloc.h>
-#include <stdlib.h>
-#include "util-memory.h"
+#include <cstdlib>
+#include "util-memory.hpp"
 
 void* util::vec3a::operator new(size_t count)
 {
-	return _aligned_malloc(count, 16);
+	return aligned_alloc(count, 16);
 }
 
 void* util::vec3a::operator new[](size_t count)
 {
-	return _aligned_malloc(count, 16);
+	return aligned_alloc(count, 16);
 }
 
 void util::vec3a::operator delete(void* p)
 {
-	_aligned_free(p);
+	aligned_free(p);
 }
 
 void util::vec3a::operator delete[](void* p)
 {
-	_aligned_free(p);
+	aligned_free(p);
 }
 
 void* util::vec4a::operator new(size_t count)
 {
-	return _aligned_malloc(count, 16);
+	return aligned_alloc(count, 16);
 }
 
 void* util::vec4a::operator new[](size_t count)
 {
-	return _aligned_malloc(count, 16);
+	return aligned_alloc(count, 16);
 }
 
 void util::vec4a::operator delete(void* p)
 {
-	_aligned_free(p);
+	aligned_free(p);
 }
 
 void util::vec4a::operator delete[](void* p)
 {
-	_aligned_free(p);
+	aligned_free(p);
 }
 
 std::pair<int64_t, int64_t> util::SizeFromString(std::string text, bool allowSquare)

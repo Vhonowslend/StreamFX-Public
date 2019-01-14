@@ -62,4 +62,4 @@ namespace util {
 			listeners.clear();
 		}
 	};
-}; // namespace util
+} // namespace util

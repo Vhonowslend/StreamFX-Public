@@ -17,20 +17,26 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#include "gs-mipmapper.h"
-#include "plugin.h"
+#include "gs-mipmapper.hpp"
+#include "plugin.hpp"
 
-extern "C" {
+// OBS
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4201)
+#endif
 #include <graphics/graphics.h>
 #include <obs-module.h>
 #include <obs.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
-#if defined(WIN32) || defined(WIN64)
-#include <windows.h>
 #endif
+
+#if defined(WIN32) || defined(WIN64)
+extern "C" {
+#include <windows.h>
 }
+#endif
 
 // Here be dragons!
 // This is to add support for mipmap generation which is by default not possible with libobs.
@@ -146,7 +152,9 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 
 	// Render
 	graphics_t*      ctx         = gs_get_context();
+#if defined(WIN32) || defined(WIN64)
 	gs_d3d11_device* dev         = reinterpret_cast<gs_d3d11_device*>(ctx->device);
+#endif
 	int              device_type = gs_get_device_type();
 	void*            sobj        = gs_texture_get_obj(source->get_object());
 	void*            tobj        = gs_texture_get_obj(target->get_object());

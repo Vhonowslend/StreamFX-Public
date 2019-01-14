@@ -20,14 +20,13 @@
 #pragma once
 #include <cinttypes>
 #include <string>
-#include "utility.h"
+#include "utility.hpp"
 
-extern "C" {
+// OBS
 #pragma warning(push)
 #pragma warning(disable : 4201)
 #include <graphics/graphics.h>
 #pragma warning(pop)
-}
 
 namespace gs {
 	class texture {

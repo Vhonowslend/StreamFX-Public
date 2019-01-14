@@ -15,10 +15,23 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-#include "gfx-effect-source.h"
+#include "gfx-effect-source.hpp"
 #include <fstream>
+#include <sys/stat.h>
+#include "strings.hpp"
+#include <cfloat>
+#include <climits>
+#include <cstdint>
+
+// OBS
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#endif
 #include <util/platform.h>
-#include "strings.h"
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 bool gfx::effect_source::property_type_modified(void*, obs_properties_t* props, obs_property_t*, obs_data_t* sett)
 {

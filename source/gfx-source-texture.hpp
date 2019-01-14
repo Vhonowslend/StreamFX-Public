@@ -18,13 +18,15 @@
 #pragma once
 #include <memory>
 #include <string>
-#include "gs-rendertarget.h"
-#include "gs-texture.h"
+#include "gs-rendertarget.hpp"
+#include "gs-texture.hpp"
 #include "obs-source.hpp"
 
-extern "C" {
+// OBS
+#pragma warning(push)
+#pragma warning(disable : 4201)
 #include <obs.h>
-}
+#pragma warning(pop)
 
 namespace gfx {
 	class source_texture {

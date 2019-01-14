@@ -18,15 +18,18 @@
 */
 
 #pragma once
-#include <inttypes.h>
+#include <cinttypes>
 #include <cmath>
 #include <string>
 #include <utility>
 
 // OBS
+#pragma warning(push)
+#pragma warning(disable : 4201)
 #include <graphics/vec2.h>
 #include <graphics/vec3.h>
 #include <graphics/vec4.h>
+#pragma warning(pop)
 
 // Constants
 #define PI 3.1415926535897932384626433832795
@@ -60,18 +63,24 @@ inline size_t GetNearestPowerOfTwoBelow(size_t v)
 }
 
 namespace util {
-	__declspec(align(16)) struct vec3a : public vec3 {
-		static void* vec3a::operator new(size_t count);
-		static void* vec3a::operator new[](size_t count);
-		static void vec3a::operator delete(void* p);
-		static void vec3a::operator delete[](void* p);
+	#ifdef _MSC_VER
+	__declspec(align(16))
+	#endif
+	struct vec3a : public vec3 {
+		static void* operator new(size_t count);
+		static void* operator new[](size_t count);
+		static void operator delete(void* p);
+		static void operator delete[](void* p);
 	};
 
-	__declspec(align(16)) struct vec4a : public vec4 {
-		static void* vec4a::operator new(size_t count);
-		static void* vec4a::operator new[](size_t count);
-		static void vec4a::operator delete(void* p);
-		static void vec4a::operator delete[](void* p);
+	#ifdef _MSC_VER
+	__declspec(align(16))
+	#endif
+	struct vec4a : public vec4 {
+		static void* operator new(size_t count);
+		static void* operator new[](size_t count);
+		static void operator delete(void* p);
+		static void operator delete[](void* p);
 	};
 
 	std::pair<int64_t, int64_t> SizeFromString(std::string text, bool allowSquare = true);
@@ -108,15 +117,15 @@ namespace util {
 	inline bool is_power_of_two(x v)    \
 	{                                   \
 		return is_power_of_two_loop(v); \
-	};
-		is_power_of_two_as_loop(int8_t);
-		is_power_of_two_as_loop(uint8_t);
-		is_power_of_two_as_loop(int16_t);
-		is_power_of_two_as_loop(uint16_t);
-		is_power_of_two_as_loop(int32_t);
-		is_power_of_two_as_loop(uint32_t);
-		is_power_of_two_as_loop(int64_t);
-		is_power_of_two_as_loop(uint64_t);
+	}
+		is_power_of_two_as_loop(int8_t)
+		is_power_of_two_as_loop(uint8_t)
+		is_power_of_two_as_loop(int16_t)
+		is_power_of_two_as_loop(uint16_t)
+		is_power_of_two_as_loop(int32_t)
+		is_power_of_two_as_loop(uint32_t)
+		is_power_of_two_as_loop(int64_t)
+		is_power_of_two_as_loop(uint64_t)
 #undef is_power_of_two_as_loop
 #pragma pop_macro("is_power_of_two_as_loop")
 

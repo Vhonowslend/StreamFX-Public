@@ -18,8 +18,8 @@
  */
 
 #pragma once
-#include "gs-vertexbuffer.h"
-#include "plugin.h"
+#include "gs-vertexbuffer.hpp"
+#include "plugin.hpp"
 
 #define P_SHAPE "Shape"
 #define P_SHAPE_LOOP "Shape.Loop"

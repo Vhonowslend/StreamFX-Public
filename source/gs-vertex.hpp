@@ -1,6 +1,6 @@
 /*
  * Modern effects for a modern Streamer
- * Copyright (C) 2018 Michael Fabian Dirks
+ * Copyright (C) 2017 Michael Fabian Dirks
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,24 +18,30 @@
  */
 
 #pragma once
-#include <functional>
-#include <obs.h>
+#include <cinttypes>
+#include <xmmintrin.h>
+#include "gs-limits.hpp"
 
-namespace obs {
-	typedef std::function<void(void* data, struct audio_data const* audio, bool muted)> audio_capture_callback_t;
+// OBS
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#include <graphics/vec3.h>
+#pragma warning(pop)
 
-	class audio_capture {
-		obs_source_t*            source;
-		audio_capture_callback_t cb;
-		void*                    cb_data;
+namespace gs {
+	struct vertex {
+		vec3*     position;
+		vec3*     normal;
+		vec3*     tangent;
+		uint32_t* color;
+		vec4*     uv[MAXIMUM_UVW_LAYERS];
 
-		static void audio_capture_cb(void*, obs_source_t*, struct audio_data const*, bool);
+		vertex();
+		vertex(vec3* p, vec3* n, vec3* t, uint32_t* col, vec4* uv[MAXIMUM_UVW_LAYERS]);
+		~vertex();
 
-		public:
-		audio_capture(obs_source_t* source);
-		virtual ~audio_capture();
-
-		void set_callback(audio_capture_callback_t cb, void* data);
-		void set_callback(audio_capture_callback_t cb);
+		private:
+		bool  hasStore;
+		void* store;
 	};
-} // namespace obs
+} // namespace gs

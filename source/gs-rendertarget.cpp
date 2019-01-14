@@ -17,16 +17,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#include "gs-rendertarget.h"
+#include "gs-rendertarget.hpp"
 #include <stdexcept>
 
-extern "C" {
+// OBS
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4201)
+#endif
 #include <graphics/graphics.h>
 #include <obs.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
-}
+#endif
 
 gs::rendertarget::~rendertarget()
 {

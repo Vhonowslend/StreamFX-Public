@@ -18,13 +18,13 @@
  */
 
 #pragma once
-#include <inttypes.h>
+#include <cinttypes>
 #include <list>
 #include <vector>
-#include "gfx-effect-source.h"
-#include "gs-effect.h"
-#include "gs-rendertarget.h"
-#include "plugin.h"
+#include "gfx-effect-source.hpp"
+#include "gs-effect.hpp"
+#include "gs-rendertarget.hpp"
+#include "plugin.hpp"
 
 namespace filter {
 	class CustomShader {

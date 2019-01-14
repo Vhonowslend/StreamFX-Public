@@ -19,16 +19,14 @@
 
 #pragma once
 #include <functional>
-#include <inttypes.h>
+#include <cinttypes>
 #include <list>
 
-extern "C" {
 #pragma warning(push)
 #pragma warning(disable : 4201)
 #include "obs-module.h"
 #include "util/platform.h"
 #pragma warning(pop)
-}
 
 // Plugin
 #define PLUGIN_NAME "Stream Effects"
@@ -43,16 +41,6 @@ extern "C" {
 // Utility
 #define vstr(s) dstr(s)
 #define dstr(s) #s
-
-#define clamp(val, low, high) (val > high ? high : (val < low ? low : val))
-#ifdef max
-#undef max
-#endif
-#define max(val, high) (val > high ? val : high)
-#ifdef min
-#undef min
-#endif
-#define min(val, low) (val < low ? val : low)
 
 #ifndef __FUNCTION_NAME__
 #if defined(_WIN32) || defined(_WIN64) //WINDOWS

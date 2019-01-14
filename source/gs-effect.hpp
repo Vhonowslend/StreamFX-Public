@@ -18,14 +18,13 @@
  */
 
 #pragma once
-#include <inttypes.h>
+#include <cinttypes>
 #include <list>
 #include <memory>
 #include <string>
-#include "gs-sampler.h"
-#include "gs-texture.h"
+#include "gs-sampler.hpp"
+#include "gs-texture.hpp"
 
-extern "C" {
 #pragma warning(push)
 #pragma warning(disable : 4201)
 #include <graphics/graphics.h>
@@ -34,7 +33,6 @@ extern "C" {
 #include <graphics/vec3.h>
 #include <graphics/vec4.h>
 #pragma warning(pop)
-}
 
 namespace gs {
 	class effect_parameter {

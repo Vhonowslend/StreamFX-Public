@@ -19,29 +19,27 @@
 
 #pragma once
 #include <cinttypes>
-#include <xmmintrin.h>
-#include "gs-limits.h"
-extern "C" {
+#include <vector>
+
 #pragma warning(push)
 #pragma warning(disable : 4201)
-#include <graphics/vec3.h>
+#include <graphics/graphics.h>
 #pragma warning(pop)
-}
 
 namespace gs {
-	struct vertex {
-		vec3*     position;
-		vec3*     normal;
-		vec3*     tangent;
-		uint32_t* color;
-		vec4*     uv[MAXIMUM_UVW_LAYERS];
+	class index_buffer : public std::vector<uint32_t> {
+		public:
+		index_buffer(uint32_t maximumVertices);
+		index_buffer();
+		index_buffer(index_buffer& other);
+		index_buffer(std::vector<uint32_t>& other);
+		virtual ~index_buffer();
 
-		vertex();
-		vertex(vec3* p, vec3* n, vec3* t, uint32_t* col, vec4* uv[MAXIMUM_UVW_LAYERS]);
-		~vertex();
+		gs_indexbuffer_t* get();
 
-		private:
-		bool  hasStore;
-		void* store;
+		gs_indexbuffer_t* get(bool refreshGPU);
+
+		protected:
+		gs_indexbuffer_t* m_indexBuffer;
 	};
 } // namespace gs

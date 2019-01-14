@@ -26,19 +26,22 @@
 #include <list>
 #include <map>
 #include <memory>
-#include "gfx-source-texture.h"
-#include "gs-effect.h"
-#include "gs-helper.h"
-#include "gs-texture.h"
-#include "gs-rendertarget.h"
-#include "plugin.h"
+#include "gfx-source-texture.hpp"
+#include "gs-effect.hpp"
+#include "gs-helper.hpp"
+#include "gs-texture.hpp"
+#include "gs-rendertarget.hpp"
+#include "plugin.hpp"
 
-extern "C" {
+// OBS
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4201)
-#include "callback/signal.h"
+#endif
+#include <callback/signal.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
-}
+#endif
 
 namespace filter {
 	namespace blur {

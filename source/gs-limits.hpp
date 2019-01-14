@@ -18,7 +18,7 @@
 */
 
 #pragma once
-#include <inttypes.h>
+#include <cinttypes>
 
 namespace gs {
 	static const uint32_t MAXIMUM_VERTICES   = 0xFFFFFFu;

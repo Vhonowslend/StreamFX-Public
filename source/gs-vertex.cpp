@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#include "gs-vertex.h"
-#include "util-memory.h"
+#include "gs-vertex.hpp"
+#include "util-memory.hpp"
 
 gs::vertex::vertex()
 	: hasStore(true), store(nullptr), position(nullptr), normal(nullptr), tangent(nullptr), color(nullptr)

@@ -17,22 +17,26 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#include "filter-blur.h"
+#include "filter-blur.hpp"
 #include <cmath>
-#include <inttypes.h>
+#include <cinttypes>
 #include <map>
-#include "strings.h"
-#include "util-math.h"
+#include "strings.hpp"
+#include "util-math.hpp"
+#include <cfloat>
 
-extern "C" {
+// OBS
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4201)
-#include "callback/signal.h"
-#include "graphics/graphics.h"
-#include "graphics/matrix4.h"
-#include "util/platform.h"
+#endif
+#include <callback/signal.h>
+#include <graphics/graphics.h>
+#include <graphics/matrix4.h>
+#include <util/platform.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
-}
+#endif
 
 // Translation Strings
 #define SOURCE_NAME "Filter.Blur"
@@ -569,7 +573,7 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 			if (obs_source_process_filter_begin(this->m_source, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
 				obs_source_process_filter_end(this->m_source, defaultEffect, baseW, baseH);
 			} else {
-				throw std::exception("Failed to render source");
+				throw std::runtime_error("Failed to render source");
 			}
 		} catch (std::exception ex) {
 			if (this->can_log()) {

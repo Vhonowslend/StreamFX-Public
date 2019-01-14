@@ -17,18 +17,15 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 
-#include "util-memory.h"
+#include "util-memory.hpp"
 #include <cstdlib>
+
 #define USE_STD_ALLOC_FREE
 
 void* util::malloc_aligned(size_t align, size_t size)
 {
 #ifdef USE_STD_ALLOC_FREE
-#if defined(_MSC_VER)
-	return _aligned_malloc(size, align);
-#else
-	return aligned_malloc(align, size);
-#endif
+	return aligned_alloc(align, size);
 #else
 	// Ensure that we have space for the pointer and the data.
 	size_t asize = aligned_offset(align, size + (sizeof(void*) * 2));
@@ -50,11 +47,7 @@ void* util::malloc_aligned(size_t align, size_t size)
 void util::free_aligned(void* mem)
 {
 #ifdef USE_STD_ALLOC_FREE
-#if defined(_MSC_VER)
-	_aligned_free(mem);
-#else
-	free(mem);
-#endif
+	aligned_free(mem);
 #else
 	void* ptr = reinterpret_cast<void*>(*reinterpret_cast<intptr_t*>(static_cast<char*>(mem) - sizeof(void*)));
 	free(ptr);

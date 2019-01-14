@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#include "obs-audio-capture.h"
+#include "obs-audio-capture.hpp"
 
 void obs::audio_capture::audio_capture_cb(void* data, obs_source_t*, const struct audio_data* audio, bool muted)
 {

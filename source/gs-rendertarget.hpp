@@ -20,16 +20,17 @@
 #pragma once
 #include <cinttypes>
 #include <memory>
-#include "gs-texture.h"
+#include "gs-texture.hpp"
 
-extern "C" {
+// OBS
 #pragma warning(push)
 #pragma warning(disable : 4201)
 #include <graphics/graphics.h>
 #pragma warning(pop)
-}
 
 namespace gs {
+	class rendertarget_op;
+	
 	class rendertarget {
 		friend class rendertarget_op;
 

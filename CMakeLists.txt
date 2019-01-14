@@ -128,8 +128,20 @@ if(MSVC)
 	endif()
 elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
 	# Update if necessary
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic")
+	# GCC: -fpermissive is required as GCC does not allow the same template to be in different namespaces.
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -Wpedantic -fpermissive")
 endif()
+
+# C++ Standard and Extensions
+IF (CMAKE_VERSION VERSION_LESS "3.8")
+    SET(CMAKE_CXX_STANDARD 14)
+ELSEIF (CMAKE_VERSION VERSION_LESS "3.11")
+    SET(CMAKE_CXX_STANDARD 17)
+ELSE() # CMake 3.11 or higher:
+    SET(CMAKE_CXX_STANDARD 20)
+ENDIF()
+## Disable nonstandard extensions
+SET(CMAKE_CXX_EXTENSIONS OFF)
 
 ################################################################################
 # Options
@@ -239,57 +251,57 @@ SET(PROJECT_PRIVATE
 	${PROJECT_DATA_SHADERS_FILTER}
 	"${PROJECT_BINARY_DIR}/source/module.cpp"
 	"${PROJECT_BINARY_DIR}/source/version.hpp"
-	"${PROJECT_SOURCE_DIR}/source/plugin.h"
+	"${PROJECT_SOURCE_DIR}/source/plugin.hpp"
 	"${PROJECT_SOURCE_DIR}/source/plugin.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-displacement.h"
+	"${PROJECT_SOURCE_DIR}/source/filter-displacement.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filter-displacement.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-blur.h"
+	"${PROJECT_SOURCE_DIR}/source/filter-blur.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filter-blur.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filter-shadow-sdf.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filter-shadow-sdf.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-shape.h"
+	"${PROJECT_SOURCE_DIR}/source/filter-shape.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filter-shape.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-transform.h"
+	"${PROJECT_SOURCE_DIR}/source/filter-transform.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filter-transform.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-custom-shader.h"
+	"${PROJECT_SOURCE_DIR}/source/filter-custom-shader.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filter-custom-shader.cpp"
-	"${PROJECT_SOURCE_DIR}/source/source-mirror.h"
+	"${PROJECT_SOURCE_DIR}/source/source-mirror.hpp"
 	"${PROJECT_SOURCE_DIR}/source/source-mirror.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx-effect-source.h"
+	"${PROJECT_SOURCE_DIR}/source/gfx-effect-source.hpp"
 	"${PROJECT_SOURCE_DIR}/source/gfx-effect-source.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx-source-texture.h"
+	"${PROJECT_SOURCE_DIR}/source/gfx-source-texture.hpp"
 	"${PROJECT_SOURCE_DIR}/source/gfx-source-texture.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-helper.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-helper.hpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-helper.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-effect.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-effect.hpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-effect.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-indexbuffer.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-indexbuffer.hpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-indexbuffer.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-limits.h"
-	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-limits.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.hpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-rendertarget.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-rendertarget.hpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-rendertarget.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-sampler.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-sampler.hpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-sampler.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-texture.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-texture.hpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-texture.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-vertex.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-vertex.hpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-vertex.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-vertexbuffer.h"
+	"${PROJECT_SOURCE_DIR}/source/gs-vertexbuffer.hpp"
 	"${PROJECT_SOURCE_DIR}/source/gs-vertexbuffer.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs-audio-capture.h"
+	"${PROJECT_SOURCE_DIR}/source/obs-audio-capture.hpp"
 	"${PROJECT_SOURCE_DIR}/source/obs-audio-capture.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs-tools.hpp"
 	"${PROJECT_SOURCE_DIR}/source/obs-tools.cpp"
-	"${PROJECT_SOURCE_DIR}/source/strings.h"
-	"${PROJECT_SOURCE_DIR}/source/utility.h"
+	"${PROJECT_SOURCE_DIR}/source/strings.hpp"
+	"${PROJECT_SOURCE_DIR}/source/utility.hpp"
 	"${PROJECT_SOURCE_DIR}/source/utility.cpp"
 	"${PROJECT_SOURCE_DIR}/source/util-event.hpp"
 	"${PROJECT_SOURCE_DIR}/source/util-event.cpp"
-	"${PROJECT_SOURCE_DIR}/source/util-math.h"
+	"${PROJECT_SOURCE_DIR}/source/util-math.hpp"
 	"${PROJECT_SOURCE_DIR}/source/util-math.cpp"
-	"${PROJECT_SOURCE_DIR}/source/util-memory.h"
+	"${PROJECT_SOURCE_DIR}/source/util-memory.hpp"
 	"${PROJECT_SOURCE_DIR}/source/util-memory.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs-source.hpp"
 	"${PROJECT_SOURCE_DIR}/source/obs-source.cpp"

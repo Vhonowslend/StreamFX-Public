@@ -21,16 +21,18 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "gfx-source-texture.h"
-#include "gs-effect.h"
-#include "gs-mipmapper.h"
-#include "gs-rendertarget.h"
-#include "gs-texture.h"
-#include "gs-vertexbuffer.h"
+#include "gfx-source-texture.hpp"
+#include "gs-effect.hpp"
+#include "gs-mipmapper.hpp"
+#include "gs-rendertarget.hpp"
+#include "gs-texture.hpp"
+#include "gs-vertexbuffer.hpp"
 
-extern "C" {
+// OBS
+#pragma warning(push)
+#pragma warning(disable : 4201)
 #include <obs.h>
-}
+#pragma warning(pop)
 
 // Data Defines
 #define D_TYPE "CustomShader.Type"

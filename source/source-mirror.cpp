@@ -17,19 +17,25 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 
-#include "source-mirror.h"
+#include "source-mirror.hpp"
 #include <bitset>
 #include <cstring>
 #include <functional>
 #include <memory>
 #include <vector>
 #include "obs-tools.hpp"
-#include "strings.h"
+#include "strings.hpp"
 
-extern "C" {
+// OBS
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#endif
 #include <media-io/audio-io.h>
 #include <obs-config.h>
-}
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #define S_SOURCE_MIRROR "Source.Mirror"
 #define P_SOURCE "Source.Mirror.Source"
@@ -109,7 +115,7 @@ bool Source::MirrorAddon::modified_properties(obs_properties_t* pr, obs_property
 		obs_source_t* target = obs_get_source_by_name(obs_data_get_string(data, P_SOURCE));
 		if (target) {
 			std::vector<char> buf(256);
-			sprintf_s(buf.data(), buf.size(), "%ldx%ld\0", obs_source_get_width(target), obs_source_get_height(target));
+			snprintf(buf.data(), buf.size(), "%ldx%ld\0", obs_source_get_width(target), obs_source_get_height(target));
 			obs_data_set_string(data, P_SOURCE_SIZE, buf.data());
 		} else {
 			obs_data_set_string(data, P_SOURCE_SIZE, "0x0");

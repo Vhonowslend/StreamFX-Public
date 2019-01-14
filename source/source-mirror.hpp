@@ -23,16 +23,18 @@
 #include <mutex>
 #include <thread>
 #include <vector>
-#include "gfx-source-texture.h"
-#include "gs-rendertarget.h"
-#include "gs-sampler.h"
-#include "obs-audio-capture.h"
+#include "gfx-source-texture.hpp"
+#include "gs-rendertarget.hpp"
+#include "gs-sampler.hpp"
+#include "obs-audio-capture.hpp"
 #include "obs-source.hpp"
-#include "plugin.h"
+#include "plugin.hpp"
 
-extern "C" {
+// OBS
+#pragma warning(push)
+#pragma warning(disable : 4201)
 #include <obs-source.h>
-}
+#pragma warning(pop)
 
 namespace Source {
 	class MirrorAddon {

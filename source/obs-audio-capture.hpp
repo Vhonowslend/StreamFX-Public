@@ -1,6 +1,6 @@
 /*
  * Modern effects for a modern Streamer
- * Copyright (C) 2017 Michael Fabian Dirks
+ * Copyright (C) 2018 Michael Fabian Dirks
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,19 +18,29 @@
  */
 
 #pragma once
-#include <vector>
-#include "plugin.h"
-extern "C" {
+#include <functional>
+
+// OBS
 #pragma warning(push)
 #pragma warning(disable : 4201)
-#include "graphics/graphics.h"
+#include <obs.h>
 #pragma warning(pop)
-}
 
-gs_effect_param* gs_effect_get_param(gs_effect_t* effect, const char* name);
-bool             gs_set_param_int(gs_effect_t* effect, const char* name, int value);
-bool             gs_set_param_float(gs_effect_t* effect, const char* name, float value);
-bool             gs_set_param_float2(gs_effect_t* effect, const char* name, vec2* value);
-bool             gs_set_param_float3(gs_effect_t* effect, const char* name, vec3* value);
-bool             gs_set_param_float4(gs_effect_t* effect, const char* name, vec4* value);
-bool             gs_set_param_texture(gs_effect_t* effect, const char* name, gs_texture_t* value);
+namespace obs {
+	typedef std::function<void(void* data, struct audio_data const* audio, bool muted)> audio_capture_callback_t;
+
+	class audio_capture {
+		obs_source_t*            source;
+		audio_capture_callback_t cb;
+		void*                    cb_data;
+
+		static void audio_capture_cb(void*, obs_source_t*, struct audio_data const*, bool);
+
+		public:
+		audio_capture(obs_source_t* source);
+		virtual ~audio_capture();
+
+		void set_callback(audio_capture_callback_t cb, void* data);
+		void set_callback(audio_capture_callback_t cb);
+	};
+} // namespace obs

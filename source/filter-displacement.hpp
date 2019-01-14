@@ -18,17 +18,19 @@
 */
 
 #pragma once
-#include "plugin.h"
+#include "plugin.hpp"
+#include <string>
 
-extern "C" {
+// OBS
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4201)
+#endif
 #include <obs-source.h>
 #include <util/platform.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
-}
-
-#include <string>
+#endif
 
 #define S_FILTER_DISPLACEMENT "Filter.Displacement"
 #define S_FILTER_DISPLACEMENT_FILE "Filter.Displacement.File"

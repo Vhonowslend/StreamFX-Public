@@ -18,7 +18,7 @@
 */
 
 #pragma once
-#include "plugin.h"
+#include "plugin.hpp"
 
 #define P_TRANSLATE(x) obs_module_text(x)
 #define P_DESC(x) x ".Description"

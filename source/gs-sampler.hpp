@@ -18,39 +18,47 @@
  */
 
 #pragma once
-#include "gs-effect.h"
-#include "gs-rendertarget.h"
-#include "gs-texture.h"
-#include "gs-vertexbuffer.h"
+#include <cinttypes>
 
-extern "C" {
+// OBS
 #pragma warning(push)
 #pragma warning(disable : 4201)
 #include <graphics/graphics.h>
 #pragma warning(pop)
-}
 
 namespace gs {
-	class mipmapper {
-		std::unique_ptr<gs::vertex_buffer> vertex_buffer;
-		std::unique_ptr<gs::rendertarget>  render_target;
-		std::unique_ptr<gs::effect>        effect;
-
+	class sampler {
 		public:
-		enum class generator : uint8_t {
-			Point,
-			Linear,
-			Sharpen,
-			Smoothen,
-			Bicubic,
-			Lanczos,
-		};
+		sampler();
+		~sampler();
 
-		public:
-		~mipmapper();
-		mipmapper();
+		void             set_filter(gs_sample_filter v);
+		gs_sample_filter get_filter();
 
-		void rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr<gs::texture> target,
-					 gs::mipmapper::generator generator, float_t strength);
+		void            set_address_mode_u(gs_address_mode v);
+		gs_address_mode get_address_mode_u();
+
+		void            set_address_mode_v(gs_address_mode v);
+		gs_address_mode get_address_mode_v();
+
+		void            set_address_mode_w(gs_address_mode v);
+		gs_address_mode get_address_mode_w();
+
+		void set_max_anisotropy(int v);
+		int  get_max_anisotropy();
+
+		void     set_border_color(uint32_t v);
+		void     set_border_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+		uint32_t get_border_color();
+		uint8_t  get_border_color(bool r, bool g, bool b, bool a);
+
+		gs_sampler_state* refresh();
+
+		gs_sampler_state* get_object();
+
+		private:
+		bool              m_dirty;
+		gs_sampler_info   m_samplerInfo;
+		gs_sampler_state* m_samplerState;
 	};
 } // namespace gs

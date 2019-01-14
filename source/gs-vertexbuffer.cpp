@@ -17,15 +17,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#include "gs-vertexbuffer.h"
+#include "gs-vertexbuffer.hpp"
 #include <stdexcept>
-#include "util-memory.h"
-extern "C" {
+#include "util-memory.hpp"
+
+// OBS
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4201)
+#endif
 #include <obs.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
-}
+#endif
 
 gs::vertex_buffer::~vertex_buffer()
 {
@@ -56,7 +60,7 @@ gs::vertex_buffer::~vertex_buffer()
 		m_layerdata = nullptr;
 	}
 	if (m_vertexbufferdata) {
-		std::memset(m_vertexbufferdata, 0, sizeof(gs_vb_data));
+		memset(m_vertexbufferdata, 0, sizeof(gs_vb_data));
 		if (!m_vertexbuffer) {
 			gs_vbdata_destroy(m_vertexbufferdata);
 			m_vertexbufferdata = nullptr;
@@ -94,12 +98,12 @@ gs::vertex_buffer::vertex_buffer(uint32_t vertices, uint8_t uvlayers)
 	m_vertexbufferdata->colors = m_colors = (uint32_t*)util::malloc_aligned(16, sizeof(uint32_t) * m_capacity);
 
 	// cppcheck-suppress memsetClassFloat
-	std::memset(m_positions, 0, sizeof(vec3) * m_capacity);
+	memset(m_positions, 0, sizeof(vec3) * m_capacity);
 	// cppcheck-suppress memsetClassFloat
-	std::memset(m_normals, 0, sizeof(vec3) * m_capacity);
+	memset(m_normals, 0, sizeof(vec3) * m_capacity);
 	// cppcheck-suppress memsetClassFloat
-	std::memset(m_tangents, 0, sizeof(vec3) * m_capacity);
-	std::memset(m_colors, 0, sizeof(uint32_t) * m_capacity);
+	memset(m_tangents, 0, sizeof(vec3) * m_capacity);
+	memset(m_colors, 0, sizeof(uint32_t) * m_capacity);
 
 	m_vertexbufferdata->num_tex = m_layers;
 	if (m_layers > 0) {
@@ -108,7 +112,7 @@ gs::vertex_buffer::vertex_buffer(uint32_t vertices, uint8_t uvlayers)
 		for (size_t n = 0; n < m_layers; n++) {
 			m_layerdata[n].array = m_uvs[n] = (vec4*)util::malloc_aligned(16, sizeof(vec4) * m_capacity);
 			m_layerdata[n].width            = 4;
-			std::memset(m_uvs[n], 0, sizeof(vec4) * m_capacity);
+			memset(m_uvs[n], 0, sizeof(vec4) * m_capacity);
 		}
 	} else {
 		m_vertexbufferdata->tvarray = nullptr;
@@ -117,7 +121,7 @@ gs::vertex_buffer::vertex_buffer(uint32_t vertices, uint8_t uvlayers)
 	// Allocate GPU
 	obs_enter_graphics();
 	m_vertexbuffer = gs_vertexbuffer_create(m_vertexbufferdata, GS_DYNAMIC);
-	std::memset(m_vertexbufferdata, 0, sizeof(gs_vb_data));
+	memset(m_vertexbufferdata, 0, sizeof(gs_vb_data));
 	m_vertexbufferdata->num     = m_capacity;
 	m_vertexbufferdata->num_tex = m_layers;
 	obs_leave_graphics();
@@ -138,24 +142,24 @@ gs::vertex_buffer::vertex_buffer(gs_vertbuffer_t* vb)
 	this->set_uv_layers((uint32_t)vbd->num_tex);
 
 	if (vbd->points != nullptr)
-		std::memcpy(m_positions, vbd->points, vbd->num * sizeof(vec3));
+		memcpy(m_positions, vbd->points, vbd->num * sizeof(vec3));
 	if (vbd->normals != nullptr)
-		std::memcpy(m_normals, vbd->normals, vbd->num * sizeof(vec3));
+		memcpy(m_normals, vbd->normals, vbd->num * sizeof(vec3));
 	if (vbd->tangents != nullptr)
-		std::memcpy(m_tangents, vbd->tangents, vbd->num * sizeof(vec3));
+		memcpy(m_tangents, vbd->tangents, vbd->num * sizeof(vec3));
 	if (vbd->colors != nullptr)
-		std::memcpy(m_colors, vbd->colors, vbd->num * sizeof(uint32_t));
+		memcpy(m_colors, vbd->colors, vbd->num * sizeof(uint32_t));
 	if (vbd->tvarray != nullptr) {
 		for (size_t n = 0; n < vbd->num_tex; n++) {
 			if (vbd->tvarray[n].array != nullptr && vbd->tvarray[n].width <= 4 && vbd->tvarray[n].width > 0) {
 				if (vbd->tvarray[n].width == 4) {
-					std::memcpy(m_uvs[n], vbd->tvarray[n].array, vbd->num * sizeof(vec4));
+					memcpy(m_uvs[n], vbd->tvarray[n].array, vbd->num * sizeof(vec4));
 				} else {
 					for (size_t idx = 0; idx < m_capacity; idx++) {
 						float* mem = reinterpret_cast<float*>(vbd->tvarray[n].array) + (idx * vbd->tvarray[n].width);
 						// cppcheck-suppress memsetClassFloat
-						std::memset(&m_uvs[n][idx], 0, sizeof(vec4));
-						std::memcpy(&m_uvs[n][idx], mem, vbd->tvarray[n].width);
+						memset(&m_uvs[n][idx], 0, sizeof(vec4));
+						memcpy(&m_uvs[n][idx], mem, vbd->tvarray[n].width);
 					}
 				}
 			}
@@ -168,12 +172,12 @@ gs::vertex_buffer::vertex_buffer(gs_vertbuffer_t* vb)
 gs::vertex_buffer::vertex_buffer(vertex_buffer const& other) : vertex_buffer(other.m_capacity)
 {
 	// Copy Constructor
-	std::memcpy(m_positions, other.m_positions, m_capacity * sizeof(vec3));
-	std::memcpy(m_normals, other.m_normals, m_capacity * sizeof(vec3));
-	std::memcpy(m_tangents, other.m_tangents, m_capacity * sizeof(vec3));
-	std::memcpy(m_colors, other.m_colors, m_capacity * sizeof(vec3));
+	memcpy(m_positions, other.m_positions, m_capacity * sizeof(vec3));
+	memcpy(m_normals, other.m_normals, m_capacity * sizeof(vec3));
+	memcpy(m_tangents, other.m_tangents, m_capacity * sizeof(vec3));
+	memcpy(m_colors, other.m_colors, m_capacity * sizeof(vec3));
 	for (size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
-		std::memcpy(m_uvs[n], other.m_uvs[n], m_capacity * sizeof(vec3));
+		memcpy(m_uvs[n], other.m_uvs[n], m_capacity * sizeof(vec3));
 	}
 }
 
@@ -225,7 +229,7 @@ void gs::vertex_buffer::operator=(vertex_buffer const&& other)
 		m_layerdata = nullptr;
 	}
 	if (m_vertexbufferdata) {
-		std::memset(m_vertexbufferdata, 0, sizeof(gs_vb_data));
+		memset(m_vertexbufferdata, 0, sizeof(gs_vb_data));
 		if (!m_vertexbuffer) {
 			gs_vbdata_destroy(m_vertexbufferdata);
 			m_vertexbufferdata = nullptr;
@@ -338,7 +342,7 @@ gs_vertbuffer_t* gs::vertex_buffer::update(bool refreshGPU)
 	// Update VertexBuffer data.
 	obs_enter_graphics();
 	m_vertexbufferdata = gs_vertexbuffer_get_data(m_vertexbuffer);
-	std::memset(m_vertexbufferdata, 0, sizeof(gs_vb_data));
+	memset(m_vertexbufferdata, 0, sizeof(gs_vb_data));
 	m_vertexbufferdata->num      = m_capacity;
 	m_vertexbufferdata->points   = m_positions;
 	m_vertexbufferdata->normals  = m_normals;
@@ -356,7 +360,7 @@ gs_vertbuffer_t* gs::vertex_buffer::update(bool refreshGPU)
 	obs_leave_graphics();
 
 	// WORKAROUND: OBS Studio 20.x and below incorrectly deletes data that it doesn't own.
-	std::memset(m_vertexbufferdata, 0, sizeof(gs_vb_data));
+	memset(m_vertexbufferdata, 0, sizeof(gs_vb_data));
 	m_vertexbufferdata->num     = m_capacity;
 	m_vertexbufferdata->num_tex = m_layers;
 	for (uint32_t n = 0; n < m_layers; n++) {

@@ -17,11 +17,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 
-#include "plugin.h"
-#include "filter-blur.h"
-#include "filter-displacement.h"
-#include "filter-shape.h"
-#include "filter-transform.h"
+#include "plugin.hpp"
+#include "filter-blur.hpp"
+#include "filter-displacement.hpp"
+#include "filter-shape.hpp"
+#include "filter-transform.hpp"
 
 filter::Displacement* filterDisplacement;
 filter::Shape*        filterShape;
@@ -50,10 +50,10 @@ MODULE_EXPORT void obs_module_unload(void)
 }
 
 #ifdef _WIN32
-#define NOMINMAX
-#define NOINOUT
-
+// Windows Only
+extern "C" {
 #include <windows.h>
+}
 
 BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID)
 {

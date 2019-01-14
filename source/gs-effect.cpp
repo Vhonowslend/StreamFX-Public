@@ -17,15 +17,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#include "gs-effect.h"
+#include "gs-effect.hpp"
 #include <stdexcept>
 
-extern "C" {
+// OBS
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4201)
+#endif
 #include <obs.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
-}
+#endif
 
 gs::effect::effect() : m_effect(nullptr) {}
 

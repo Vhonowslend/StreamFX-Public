@@ -18,7 +18,7 @@
  */
 
 #include "filter-shadow-sdf.hpp"
-#include "strings.h"
+#include "strings.hpp"
 
 // Translation Strings
 #define SOURCE_NAME "Filter.ShadowSDF"
@@ -221,25 +221,25 @@ void filter::shadow_sdf::shadow_sdf_instance::video_render(gs_effect_t*)
 				if (obs_source_process_filter_begin(this->m_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
 					obs_source_process_filter_end(this->m_self, default_effect, baseW, baseH);
 				} else {
-					throw std::exception("failed to process source");
+					throw std::runtime_error("failed to process source");
 				}
 			}
 			m_input->get_texture(this->m_source_texture);
 			if (!this->m_source_texture) {
-				throw std::exception("failed to draw source");
+				throw std::runtime_error("failed to draw source");
 			}
 
 			// Generate SDF Buffers
 			{
 				this->m_sdf_read->get_texture(this->m_sdf_texture);
 				if (!this->m_sdf_texture) {
-					throw std::exception("SDF Backbuffer empty");
+					throw std::runtime_error("SDF Backbuffer empty");
 				}
 
 				std::shared_ptr<gs::effect> sdf_effect =
 					filter::shadow_sdf::shadow_sdf_factory::get()->get_sdf_generator_effect();
 				if (!sdf_effect) {
-					throw std::exception("SDF Effect no loaded");
+					throw std::runtime_error("SDF Effect no loaded");
 				}
 
 				{
@@ -266,7 +266,7 @@ void filter::shadow_sdf::shadow_sdf_instance::video_render(gs_effect_t*)
 				this->m_sdf_write.swap(this->m_sdf_read);
 				this->m_sdf_read->get_texture(this->m_sdf_texture);
 				if (!this->m_sdf_texture) {
-					throw std::exception("SDF Backbuffer empty");
+					throw std::runtime_error("SDF Backbuffer empty");
 				}
 			}
 		}
@@ -275,7 +275,7 @@ void filter::shadow_sdf::shadow_sdf_instance::video_render(gs_effect_t*)
 			std::shared_ptr<gs::effect> shadow_effect =
 				filter::shadow_sdf::shadow_sdf_factory::get()->get_sdf_shadow_effect();
 			if (!shadow_effect) {
-				throw std::exception("Shadow Effect no loaded");
+				throw std::runtime_error("Shadow Effect no loaded");
 			}
 
 			gs_set_cull_mode(GS_NEITHER);

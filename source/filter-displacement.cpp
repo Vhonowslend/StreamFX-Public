@@ -17,8 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 
-#include "filter-displacement.h"
-#include "strings.h"
+#include "filter-displacement.hpp"
+#include <sys/stat.h>
+#include "strings.hpp"
 
 // Initializer & Finalizer
 static filter::Displacement* filterDisplacementInstance;

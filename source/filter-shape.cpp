@@ -17,21 +17,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#include "filter-shape.h"
+#include "filter-shape.hpp"
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
-#include "strings.h"
+#include "strings.hpp"
 
-extern "C" {
+// OBS
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4201)
-#include "graphics/graphics.h"
-#include "graphics/matrix4.h"
-#include "util/platform.h"
+#endif
+#include <graphics/graphics.h>
+#include <graphics/matrix4.h>
+#include <util/platform.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
-}
+#endif
 
 // Initializer & Finalizer
 static filter::Shape* filterShapeInstance;
