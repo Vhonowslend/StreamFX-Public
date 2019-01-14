@@ -146,7 +146,7 @@ namespace gfx {
 
 		public:
 		effect_source(obs_data_t* data, obs_source_t* owner);
-		~effect_source();
+		virtual ~effect_source();
 
 		void        get_properties(obs_properties_t* properties);
 		static void get_defaults(obs_data_t* data);
