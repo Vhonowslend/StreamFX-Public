@@ -24,12 +24,16 @@
 #include <utility>
 
 // OBS
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4201)
+#endif
 #include <graphics/vec2.h>
 #include <graphics/vec3.h>
 #include <graphics/vec4.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
+#endif
 
 // Constants
 #define PI 3.1415926535897932384626433832795
