@@ -50,9 +50,7 @@ MODULE_EXPORT void obs_module_unload(void)
 }
 
 #ifdef _WIN32
-#define NOMINMAX
-#define NOINOUT
-
+// Windows Only
 extern "C" {
 #include <windows.h>
 }
