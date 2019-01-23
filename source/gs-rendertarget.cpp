@@ -45,6 +45,9 @@ gs::rendertarget::rendertarget(gs_color_format colorFormat, gs_zstencil_format z
 	obs_enter_graphics();
 	render_target = gs_texrender_create(colorFormat, zsFormat);
 	obs_leave_graphics();
+	if (!render_target) {
+		throw std::runtime_error("Failed to create render target.");
+	}
 }
 
 gs::rendertarget_op gs::rendertarget::render(uint32_t width, uint32_t height)
