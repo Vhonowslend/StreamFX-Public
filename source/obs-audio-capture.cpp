@@ -22,28 +22,36 @@
 void obs::audio_capture::audio_capture_cb(void* data, obs_source_t*, const struct audio_data* audio, bool muted)
 {
 	auto self = reinterpret_cast<obs::audio_capture*>(data);
-	self->cb(self->cb_data, audio, muted);
+	if (self->on.data) {
+		self->on.data(self->m_self, audio, muted);
+	}
+}
+
+void obs::audio_capture::on_data_listen()
+{
+	if (this->m_self) {
+		obs_source_add_audio_capture_callback(this->m_self->get(), audio_capture_cb, this);
+	}
+}
+
+void obs::audio_capture::on_data_silence()
+{
+	if (this->m_self) {
+		obs_source_remove_audio_capture_callback(this->m_self->get(), audio_capture_cb, this);
+	}
 }
 
 obs::audio_capture::audio_capture(obs_source_t* source)
 {
-	this->source = source;
-	obs_source_add_audio_capture_callback(this->source, audio_capture_cb, this);
+	this->m_self = std::make_shared<obs::source>(source, true, true);
+	this->on.data.set_listen_callback(std::bind(&obs::audio_capture::on_data_listen, this));
+	this->on.data.set_silence_callback(std::bind(&obs::audio_capture::on_data_silence, this));
 }
+
+obs::audio_capture::audio_capture(std::shared_ptr<obs::source> source) : audio_capture(source->get()) {}
 
 obs::audio_capture::~audio_capture()
 {
-	obs_source_remove_audio_capture_callback(this->source, audio_capture_cb, this);
-}
-
-void obs::audio_capture::set_callback(audio_capture_callback_t cb, void* data)
-{
-	this->cb      = cb;
-	this->cb_data = data;
-}
-
-void obs::audio_capture::set_callback(audio_capture_callback_t cb)
-{
-	this->cb      = cb;
-	this->cb_data = nullptr;
+	on.data.clear();
+	this->m_self.reset();
 }

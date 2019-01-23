@@ -19,6 +19,7 @@
 
 #pragma once
 #include <functional>
+#include "obs-source.hpp"
 
 // OBS
 #ifdef _MSC_VER
@@ -31,20 +32,37 @@
 #endif
 
 namespace obs {
-	typedef std::function<void(void* data, struct audio_data const* audio, bool muted)> audio_capture_callback_t;
-
 	class audio_capture {
-		obs_source_t*            source;
-		audio_capture_callback_t cb;
-		void*                    cb_data;
+		std::shared_ptr<obs::source> m_self;
 
 		static void audio_capture_cb(void*, obs_source_t*, struct audio_data const*, bool);
 
+		void on_data_listen();
+		void on_data_silence();
+
 		public:
 		audio_capture(obs_source_t* source);
-		virtual ~audio_capture();
 
-		void set_callback(audio_capture_callback_t cb, void* data);
-		void set_callback(audio_capture_callback_t cb);
+		audio_capture(std::shared_ptr<obs::source> source);
+
+		~audio_capture();
+
+		public /*copy*/:
+		audio_capture(audio_capture const& other) = delete;
+		audio_capture& operator=(audio_capture const& other) = delete;
+
+		public /*move*/:
+		audio_capture(audio_capture&& other) = delete;
+		audio_capture& operator=(audio_capture&& other) = delete;
+
+		public /*events*/:
+		struct {
+			//! Called if there is new audio data.
+			//
+			// @param std::shared_ptr<obs::source> Source
+			// @param audio_data const* const Audio Data
+			// @param bool Muted
+			util::event<std::shared_ptr<obs::source>, audio_data const* const, bool> data;
+		} on;
 	};
 } // namespace obs
