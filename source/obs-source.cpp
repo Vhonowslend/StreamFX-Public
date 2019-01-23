@@ -456,29 +456,60 @@ obs::source::source(obs_source_t* source, bool track_ownership, bool add_referen
 	connect_signals();
 }
 
-obs::source& obs::source::operator=(const source& ref)
+obs::source::source(source const& other)
 {
-	if (this != &ref) {
-		if (self) {
-			if (track_ownership) {
-				obs_source_release(self);
-			}
-		}
-		self            = ref.self;
-		track_ownership = ref.track_ownership;
-		if (track_ownership) {
-			obs_source_addref(self);
-		}
+	this->self = other.self;
+
+	this->track_ownership = other.track_ownership;
+	if (this->track_ownership) {
+		obs_source_addref(this->self);
 	}
+}
+
+obs::source& obs::source::operator=(source const& other)
+{
+	if (this == &other) {
+		return *this;
+	}
+
+	// Release previous source.
+	if (this->self && this->track_ownership) {
+		obs_source_release(this->self);
+	}
+
+	this->self            = other.self;
+	this->track_ownership = other.track_ownership;
+	if (this->track_ownership) {
+		obs_source_addref(this->self);
+	}
+
 	return *this;
 }
 
-obs::source& obs::source::operator=(source&& ref) noexcept
+obs::source::source(source&& other)
 {
-	if (this != &ref) {
-		self     = ref.self;
-		ref.self = nullptr;
+	this->self            = other.self;
+	this->track_ownership = other.track_ownership;
+	other.self            = nullptr;
+	other.track_ownership = false;
+}
+
+obs::source& obs::source::operator=(source&& other)
+{
+	if (this == &other) {
+		return *this;
 	}
+
+	// Release previous source.
+	if (this->self && this->track_ownership) {
+		obs_source_release(this->self);
+	}
+
+	this->self            = other.self;
+	this->track_ownership = other.track_ownership;
+	other.self            = nullptr;
+	other.track_ownership = false;
+
 	return *this;
 }
 

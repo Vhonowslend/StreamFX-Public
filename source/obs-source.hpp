@@ -77,10 +77,15 @@ namespace obs {
 
 		source(obs_source_t* source, bool track_ownership = true, bool add_reference = false);
 
-		source& operator=(const source& ref);
+		public /*copy*/:
+		source(source const& other);
+		source& operator=(source const& other);
 
-		source& operator=(source&& ref) noexcept;
+		public /*move*/:
+		source(source&& other);
+		source& operator=(source&& other);
 
+		public:
 		obs_source_type type();
 
 		void* type_data();
@@ -108,17 +113,17 @@ namespace obs {
 
 			util::event<obs::source*, bool> enable;
 
-			util::event<obs::source*, bool>    push_to_mute_changed;
+			util::event<obs::source*, bool>      push_to_mute_changed;
 			util::event<obs::source*, long long> push_to_mute_delay;
-			util::event<obs::source*, bool>    push_to_talk_changed;
+			util::event<obs::source*, bool>      push_to_talk_changed;
 			util::event<obs::source*, long long> push_to_talk_delay;
 
 			util::event<obs::source*, std::string, std::string> rename;
 
-			util::event<obs::source*>          update_properties;
+			util::event<obs::source*>            update_properties;
 			util::event<obs::source*, long long> update_flags;
 
-			util::event<obs::source*, bool>     mute;
+			util::event<obs::source*, bool>       mute;
 			util::event<obs::source*, double&>    volume;
 			util::event<obs::source*, long long&> audio_sync;
 			util::event<obs::source*, long long&> audio_mixers;
