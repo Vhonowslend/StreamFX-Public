@@ -26,40 +26,87 @@ namespace util {
 	class event {
 		std::list<std::function<void(_args...)>> listeners;
 
-		public:
-		void add(std::function<void(_args...)> listener)
+		std::function<void()> listen_cb;
+		std::function<void()> silence_cb;
+
+		public /* functions */:
+		// Add new listener.
+		inline void add(std::function<void(_args...)> listener)
 		{
+			if (listeners.size() == 0) {
+				if (listen_cb) {
+					listen_cb();
+				}
+			}
 			listeners.push_back(listener);
 		}
 
-		void remove(std::function<void(_args...)> listener)
+		// Remove existing listener.
+		inline void remove(std::function<void(_args...)> listener)
 		{
 			listeners.remove(listener);
+			if (listeners.size() == 0) {
+				if (silence_cb) {
+					silence_cb();
+				}
+			}
 		}
 
-		// Not valid without the extra template.
+		// Check if empty / no listeners.
+		inline bool empty()
+		{
+			return listeners.empty();
+		}
+
+		// Remove all listeners.
+		inline void clear()
+		{
+			listeners.clear();
+			if (silence_cb) {
+				silence_cb();
+			}
+		}
+
+		public /* operators */:
+		// Call Listeners with arguments.
+		/// Not valid without the extra template.
 		template<typename... _largs>
-		void operator()(_args... args)
+		inline void operator()(_args... args)
 		{
 			for (auto& l : listeners) {
 				l(args...);
 			}
 		}
 
-		operator bool()
+		// Convert to bool (true if not empty, false if empty).
+		inline operator bool()
 		{
-			return !listeners.empty();
+			return !this->empty();
 		}
 
-		public:
-		bool empty()
+		// Add new listener.
+		inline event<_args...>& operator+=(std::function<void(_args...)> listener)
 		{
-			return listeners.empty();
+			this->add(listener);
+			return *this;
 		}
 
-		void clear()
+		// Remove existing listener.
+		inline event<_args...>& operator-=(std::function<void(_args...)> listener)
 		{
-			listeners.clear();
+			this->remove(listener);
+			return *this;
+		}
+
+		public /* events */:
+		void set_listen_callback(std::function<void()> cb)
+		{
+			this->listen_cb = cb;
+		}
+
+		void set_silence_callback(std::function<void()> cb)
+		{
+			this->silence_cb = cb;
 		}
 	};
 } // namespace util
