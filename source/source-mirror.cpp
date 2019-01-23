@@ -33,6 +33,7 @@
 #endif
 #include <media-io/audio-io.h>
 #include <obs-config.h>
+#include <util/threading.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
@@ -276,16 +277,14 @@ void Source::Mirror::release_input()
 {
 	// Clear any references to the previous source.
 	if (this->m_source_item) {
-		{
-			std::unique_lock<std::mutex> audio_lock(this->m_audio_lock);
-			this->m_source_audio.reset();
-		}
-		this->m_source.reset();
-		if (this->m_source_item) {
-			obs_sceneitem_remove(this->m_source_item);
-			this->m_source_item = nullptr;
-		}
+		obs_sceneitem_remove(this->m_source_item);
+		this->m_source_item = nullptr;
 	}
+	{
+		std::unique_lock<std::mutex> audio_lock(this->m_audio_lock);
+		this->m_source_audio.reset();
+	}
+	this->m_source.reset();
 }
 
 void Source::Mirror::acquire_input(std::string source_name)
@@ -351,7 +350,7 @@ Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src)
 	  m_audio_have_output(false), m_source_item(nullptr)
 {
 	// Initialize Video Rendering
-	this->m_scene = std::make_shared<obs::source>(obs_scene_get_source(obs_scene_create_private(nullptr)));
+	this->m_scene = std::make_shared<obs::source>(obs_scene_get_source(obs_scene_create_private("Source Mirror Internal Scene")));
 	this->m_scene_texture =
 		std::make_shared<gfx::source_texture>(this->m_scene, std::make_shared<obs::source>(this->m_self, false, false));
 
@@ -534,11 +533,9 @@ void Source::Mirror::video_render(gs_effect_t*)
 
 	if (this->m_rescale_enabled && this->m_width > 0 && this->m_height > 0 && this->m_rescale_effect) {
 		// Get Size of source.
-		obs_source_t* source = obs_sceneitem_get_source(this->m_source_item);
-
 		uint32_t sw, sh;
-		sw = obs_source_get_width(source);
-		sh = obs_source_get_height(source);
+		sw = this->m_source->width();
+		sh = this->m_source->height();
 
 		vec2 bounds;
 		bounds.x = float_t(sw);
@@ -633,6 +630,7 @@ void Source::Mirror::audio_capture_cb(std::shared_ptr<obs::source> source, audio
 void Source::Mirror::audio_output_cb()
 {
 	std::unique_lock<std::mutex> ulock(this->m_audio_lock);
+	os_set_thread_name("Source Mirror Audio Thread");
 
 	while (!this->m_audio_kill_thread) {
 		if (this->m_audio_have_output) {
