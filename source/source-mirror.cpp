@@ -272,16 +272,95 @@ void Source::MirrorAddon::save(void* p, obs_data_t* d)
 	}
 }
 
-Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src)
+void Source::Mirror::release_input()
 {
-	this->m_source              = src;
-	this->m_rescale             = false;
-	this->m_width               = 1;
-	this->m_height              = this->m_width;
-	this->m_render_target_scale = std::make_unique<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	this->m_sampler             = std::make_shared<gs::sampler>();
-	this->m_scaling_effect      = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
+	// Clear any references to the previous source.
+	if (this->m_source_item) {
+		{
+			std::unique_lock<std::mutex> audio_lock(this->m_audio_lock);
+			this->m_source_audio.reset();
+		}
+		this->m_source.reset();
+		if (this->m_source_item) {
+			obs_sceneitem_remove(this->m_source_item);
+			this->m_source_item = nullptr;
+		}
+	}
+}
 
+void Source::Mirror::acquire_input(std::string source_name)
+{
+	// Acquire new reference to current source.
+	obs_source_t* ref_source = obs_get_source_by_name(source_name.c_str());
+	if (!ref_source) {
+		// Early-Exit: Unable to find a source with this name, likely has been released.
+#ifdef _DEBUG
+		P_LOG_DEBUG("<Source Mirror:%s> Unable to find target source '%s'.", obs_source_get_name(this->m_self),
+					source_name.c_str());
+#endif
+		return;
+	}
+
+	std::shared_ptr<obs::source> new_source = std::make_shared<obs::source>(ref_source, true, false);
+	if (new_source->get() == this->m_self) {
+		// Early-Exit: Attempted self-mirror (recursion).
+#ifdef _DEBUG
+		P_LOG_DEBUG("<Source Mirror:%s> Attempted to mirror self.", obs_source_get_name(this->m_self));
+#endif
+		return;
+	} else if (strcmp(obs_source_get_id(new_source->get()), "scene") == 0) {
+		// Early-Exit: Attempted recursion.
+		if (obs::tools::scene_contains_source(obs_scene_from_source(new_source->get()), this->m_self)) {
+#ifdef _DEBUG
+			P_LOG_DEBUG("<Source Mirror:%s> Attempted recursion with scene '%s'.", obs_source_get_name(this->m_self),
+						source_name.c_str());
+#endif
+			return;
+		}
+	}
+
+	// It looks like everything is in order, so continue now.
+	this->m_source_item = obs_scene_add(obs_scene_from_source(this->m_scene->get()), new_source->get());
+	if (!this->m_source_item) {
+		// Late-Exit: OBS detected something bad, so no further action will be taken.
+#ifdef _DEBUG
+		P_LOG_DEBUG("<Source Mirror:%s> Attempted recursion with scene '%s'.", obs_source_get_name(this->m_self),
+					source_name.c_str());
+#endif
+		return;
+	}
+
+	// If everything worked fine, we now set everything up.
+	this->m_source      = std::move(new_source);
+	this->m_source->events.rename += std::bind(&Source::Mirror::on_source_rename, this, std::placeholders::_1,
+											   std::placeholders::_2, std::placeholders::_3);
+	try {
+		// Audio
+		this->m_source_audio = std::make_shared<obs::audio_capture>(this->m_source);
+		this->m_source_audio->on.data += std::bind(&Source::Mirror::audio_capture_cb, this, std::placeholders::_1,
+													std::placeholders::_2, std::placeholders::_3);
+	} catch (...) {
+		P_LOG_ERROR("<Source Mirror:%s> Unexpected error during registering audio callback for '%s'.",
+					source_name.c_str());
+	}
+}
+
+Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src)
+	: m_self(src), m_active(false), m_tick(0), m_rescale_enabled(false), m_rescale_effect(nullptr),
+	  m_rescale_keep_orig_size(false), m_width(1), m_height(1), m_audio_enabled(false), m_audio_kill_thread(false),
+	  m_audio_have_output(false), m_source_item(nullptr)
+{
+	// Initialize Video Rendering
+	this->m_scene = std::make_shared<obs::source>(obs_scene_get_source(obs_scene_create_private(nullptr)));
+	this->m_scene_texture =
+		std::make_shared<gfx::source_texture>(this->m_scene, std::make_shared<obs::source>(this->m_self, false, false));
+
+	// Initialize Rescaling
+	this->m_rescale_rt     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	this->m_sampler        = std::make_shared<gs::sampler>();
+	this->m_rescale_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
+
+	// Initialize Audio Rendering
 	this->m_audio_data.resize(MAX_AUDIO_CHANNELS);
 	for (size_t idx = 0; idx < this->m_audio_data.size(); idx++) {
 		this->m_audio_data[idx].resize(AUDIO_OUTPUT_FRAMES);
@@ -294,29 +373,31 @@ Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src)
 
 Source::Mirror::~Mirror()
 {
-	if (this->m_audio_capture) {
-		this->m_audio_capture.reset();
-	}
-	this->m_kill_audio_thread = true;
+	release_input();
+
+	// Finalize Audio Rendering
+	this->m_audio_kill_thread = true;
 	this->m_audio_notify.notify_all();
 	if (this->m_audio_thread.joinable()) {
 		this->m_audio_thread.join();
 	}
 
-	if (this->m_source_texture) {
-		this->m_source_texture.reset();
-	}
-	if (this->m_scene) {
-		obs_scene_release(this->m_scene);
-	}
+	// Finalize Rescaling
+	this->m_rescale_effect = nullptr;
+	this->m_sampler.reset();
+	this->m_rescale_rt.reset();
+
+	// Finalize Video Rendering
+	this->m_scene_texture.reset();
+	this->m_scene.reset();
 }
 
 uint32_t Source::Mirror::get_width()
 {
-	if (this->m_rescale && this->m_width > 0 && !this->m_keep_original_size) {
+	if (this->m_rescale_enabled && this->m_width > 0 && !this->m_rescale_keep_orig_size) {
 		return this->m_width;
 	}
-	obs_source_t* source = obs_sceneitem_get_source(this->m_sceneitem);
+	obs_source_t* source = obs_sceneitem_get_source(this->m_source_item);
 	if (source) {
 		return obs_source_get_width(source);
 	}
@@ -325,9 +406,9 @@ uint32_t Source::Mirror::get_width()
 
 uint32_t Source::Mirror::get_height()
 {
-	if (this->m_rescale && this->m_height > 0 && !this->m_keep_original_size)
+	if (this->m_rescale_enabled && this->m_height > 0 && !this->m_rescale_keep_orig_size)
 		return this->m_height;
-	obs_source_t* source = obs_sceneitem_get_source(this->m_sceneitem);
+	obs_source_t* source = obs_sceneitem_get_source(this->m_source_item);
 	if (source) {
 		return obs_source_get_height(source);
 	}
@@ -336,62 +417,20 @@ uint32_t Source::Mirror::get_height()
 
 void Source::Mirror::update(obs_data_t* data)
 {
-	if (!this->m_scene && this->m_active) {
-		this->m_scene          = obs_scene_create_private("localscene");
-		this->m_scene_source   = std::make_shared<obs::source>(obs_scene_get_source(this->m_scene), false, false);
-		this->m_source_texture = std::make_unique<gfx::source_texture>(
-			this->m_scene_source, std::make_shared<obs::source>(this->m_source, false, false));
-	}
-
-	// Update selected source.
-	const char* new_source_name = obs_data_get_string(data, P_SOURCE);
-	if (new_source_name != m_source_name) {
-		if (m_scene) {
-			if (this->m_sceneitem) {
-				this->m_audio_capture.reset();
-				this->m_source_target.reset();
-				obs_sceneitem_remove(this->m_sceneitem);
-				this->m_sceneitem = nullptr;
-			}
-			obs_source_t* source = obs_get_source_by_name(new_source_name);
-			if (source) {
-				bool allow = true;
-				if (source == m_source) {
-					allow = false;
-				}
-				if (strcmp(obs_source_get_id(source), "scene") == 0) {
-					if (obs::tools::scene_contains_source(obs_scene_from_source(source), this->m_source)) {
-						allow = false;
-					}
-				}
-				if (allow) {
-					this->m_sceneitem = obs_scene_add(m_scene, source);
-					if (this->m_sceneitem) {
-						m_source_target = std::make_shared<obs::source>(source, true, true);
-						m_source_target->events.rename.add(std::bind(&Source::Mirror::on_source_rename, this,
-																	 std::placeholders::_1, std::placeholders::_2,
-																	 std::placeholders::_3));
-						m_source_target->events.destroy.add(
-							std::bind(&Source::Mirror::on_source_destroy, this, std::placeholders::_1));
-						try {
-							this->m_audio_capture = std::make_unique<obs::audio_capture>(source);
-							this->m_audio_capture->set_callback(std::bind(&Source::Mirror::audio_capture_cb, this,
-																		  std::placeholders::_1, std::placeholders::_2,
-																		  std::placeholders::_3));
-						} catch (...) {
-						}
-						this->m_source_name = new_source_name;
-					}
-				}
-				obs_source_release(source);
-			}
+	{ // User changed the source we are tracking.
+		release_input();
+		this->m_source_name = obs_data_get_string(data, P_SOURCE);
+		if (this->m_source_name.length() > 0) {
+			acquire_input(this->m_source_name);
 		}
 	}
-	this->m_enable_audio = obs_data_get_bool(data, P_SOURCE_AUDIO);
+
+	// Audio
+	this->m_audio_enabled = obs_data_get_bool(data, P_SOURCE_AUDIO);
 
 	// Rescaling
-	this->m_rescale = obs_data_get_bool(data, P_SCALING);
-	if (this->m_rescale) { // Parse rescaling settings.
+	this->m_rescale_enabled = obs_data_get_bool(data, P_SCALING);
+	if (this->m_rescale_enabled) { // Parse rescaling settings.
 		uint32_t width, height;
 
 		// Read value.
@@ -401,61 +440,61 @@ void Source::Mirror::update(obs_data_t* data)
 			// Width
 			width = strtoul(size, nullptr, 10);
 			if (errno == ERANGE || width == 0) {
-				this->m_rescale = false;
-				this->m_width   = 1;
+				this->m_rescale_enabled = false;
+				this->m_width           = 1;
 			} else {
 				this->m_width = width;
 			}
 
 			height = strtoul(xpos + 1, nullptr, 10);
 			if (errno == ERANGE || height == 0) {
-				this->m_rescale = false;
-				this->m_height  = 1;
+				this->m_rescale_enabled = false;
+				this->m_height          = 1;
 			} else {
 				this->m_height = height;
 			}
 		} else {
-			this->m_rescale = false;
-			this->m_width   = 1;
-			this->m_height  = 1;
+			this->m_rescale_enabled = false;
+			this->m_width           = 1;
+			this->m_height          = 1;
 		}
 
 		ScalingMethod scaler = (ScalingMethod)obs_data_get_int(data, P_SCALING_METHOD);
 		switch (scaler) {
 		case ScalingMethod::Point:
 		default:
-			this->m_scaling_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
+			this->m_rescale_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 			this->m_sampler->set_filter(GS_FILTER_POINT);
 			break;
 		case ScalingMethod::Bilinear:
-			this->m_scaling_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
+			this->m_rescale_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 			this->m_sampler->set_filter(GS_FILTER_LINEAR);
 			break;
 		case ScalingMethod::BilinearLowRes:
-			this->m_scaling_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_BILINEAR_LOWRES);
+			this->m_rescale_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_BILINEAR_LOWRES);
 			this->m_sampler->set_filter(GS_FILTER_LINEAR);
 			break;
 		case ScalingMethod::Bicubic:
-			this->m_scaling_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_BICUBIC);
+			this->m_rescale_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_BICUBIC);
 			this->m_sampler->set_filter(GS_FILTER_LINEAR);
 			break;
 		case ScalingMethod::Lanczos:
-			this->m_scaling_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_LANCZOS);
+			this->m_rescale_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_LANCZOS);
 			this->m_sampler->set_filter(GS_FILTER_LINEAR);
 			break;
 		}
 
-		this->m_keep_original_size = obs_data_get_bool(data, P_SCALING_TRANSFORMKEEPORIGINAL);
+		this->m_rescale_keep_orig_size = obs_data_get_bool(data, P_SCALING_TRANSFORMKEEPORIGINAL);
 	}
 }
 
 void Source::Mirror::activate()
 {
 	this->m_active = true;
-	if (!this->m_sceneitem) {
-		obs_data_t* ref = obs_source_get_settings(this->m_source);
-		update(ref);
-		obs_data_release(ref);
+
+	// No source, delayed acquire.
+	if (!this->m_source_item) {
+		this->acquire_input(this->m_source_name.c_str());
 	}
 }
 
@@ -477,63 +516,61 @@ static inline void mix_audio(float* p_out, float* p_in, size_t pos, size_t count
 void Source::Mirror::video_tick(float time)
 {
 	this->m_tick += time;
+	if (this->m_tick > 0.1f) {
+		this->m_tick -= 0.1f;
 
-	if (!this->m_sceneitem) {
-		if (this->m_tick > 0.1f) {
-			obs_data_t* ref = obs_source_get_settings(this->m_source);
-			update(ref);
-			obs_data_release(ref);
-			this->m_tick -= 0.1f;
+		// No source, delayed acquire.
+		if (!this->m_source_item) {
+			this->acquire_input(this->m_source_name.c_str());
 		}
 	}
 }
 
 void Source::Mirror::video_render(gs_effect_t*)
 {
-	if ((this->m_width == 0) || (this->m_height == 0) || !this->m_source_texture || !this->m_scene
-		|| !this->m_sceneitem) {
+	if ((this->m_width == 0) || (this->m_height == 0) || !this->m_source_item) {
 		return;
 	}
 
-	if (this->m_rescale && this->m_width > 0 && this->m_height > 0 && this->m_scaling_effect) {
+	if (this->m_rescale_enabled && this->m_width > 0 && this->m_height > 0 && this->m_rescale_effect) {
 		// Get Size of source.
-		obs_source_t* source = obs_sceneitem_get_source(this->m_sceneitem);
+		obs_source_t* source = obs_sceneitem_get_source(this->m_source_item);
 
 		uint32_t sw, sh;
 		sw = obs_source_get_width(source);
 		sh = obs_source_get_height(source);
 
 		vec2 bounds;
-		bounds.x = sw;
-		bounds.y = sh;
-		obs_sceneitem_set_bounds(this->m_sceneitem, &bounds);
+		bounds.x = float_t(sw);
+		bounds.y = float_t(sh);
+		obs_sceneitem_set_bounds(this->m_source_item, &bounds);
 
 		// Store original Source Texture
 		std::shared_ptr<gs::texture> tex;
 		try {
-			tex = this->m_source_texture->render(sw, sh);
+			tex = this->m_scene_texture->render(sw, sh);
 		} catch (...) {
 			return;
 		}
 
-		gs_eparam_t* scale_param = gs_effect_get_param_by_name(this->m_scaling_effect, "base_dimension_i");
+		gs_eparam_t* scale_param = gs_effect_get_param_by_name(this->m_rescale_effect, "base_dimension_i");
 		if (scale_param) {
 			vec2 base_res_i;
 			vec2_set(&base_res_i, 1.0f / float_t(sw), 1.0f / float_t(sh));
 			gs_effect_set_vec2(scale_param, &base_res_i);
 		}
 
-		if (this->m_keep_original_size) {
+		if (this->m_rescale_keep_orig_size) {
 			{
-				auto op = m_render_target_scale->render(this->m_width, this->m_height);
+				auto op = m_rescale_rt->render(this->m_width, this->m_height);
 				gs_ortho(0, float_t(this->m_width), 0, float_t(this->m_height), 0, 1);
 
 				vec4 black;
 				vec4_zero(&black);
 				gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
 
-				while (gs_effect_loop(this->m_scaling_effect, "Draw")) {
-					gs_eparam_t* image = gs_effect_get_param_by_name(this->m_scaling_effect, "image");
+				while (gs_effect_loop(this->m_rescale_effect, "Draw")) {
+					gs_eparam_t* image = gs_effect_get_param_by_name(this->m_rescale_effect, "image");
 					gs_effect_set_next_sampler(image, this->m_sampler->get_object());
 					obs_source_draw(tex->get_object(), 0, 0, this->m_width, this->m_height, false);
 				}
@@ -541,24 +578,24 @@ void Source::Mirror::video_render(gs_effect_t*)
 			while (gs_effect_loop(obs_get_base_effect(OBS_EFFECT_DEFAULT), "Draw")) {
 				gs_eparam_t* image = gs_effect_get_param_by_name(obs_get_base_effect(OBS_EFFECT_DEFAULT), "image");
 				gs_effect_set_next_sampler(image, this->m_sampler->get_object());
-				obs_source_draw(this->m_render_target_scale->get_object(), 0, 0, sw, sh, false);
+				obs_source_draw(this->m_rescale_rt->get_object(), 0, 0, sw, sh, false);
 			}
 		} else {
-			while (gs_effect_loop(this->m_scaling_effect, "Draw")) {
-				gs_eparam_t* image = gs_effect_get_param_by_name(this->m_scaling_effect, "image");
+			while (gs_effect_loop(this->m_rescale_effect, "Draw")) {
+				gs_eparam_t* image = gs_effect_get_param_by_name(this->m_rescale_effect, "image");
 				gs_effect_set_next_sampler(image, this->m_sampler->get_object());
 				obs_source_draw(tex->get_object(), 0, 0, this->m_width, this->m_height, false);
 			}
 		}
 	} else {
-		obs_source_video_render(this->m_source_texture->get_object());
+		obs_source_video_render(this->m_scene_texture->get_object());
 	}
 }
 
-void Source::Mirror::audio_capture_cb(void*, const audio_data* audio, bool)
+void Source::Mirror::audio_capture_cb(std::shared_ptr<obs::source> source, audio_data const* const audio, bool)
 {
 	std::unique_lock<std::mutex> ulock(this->m_audio_lock);
-	if (!this->m_enable_audio) {
+	if (!this->m_audio_enabled) {
 		return;
 	}
 
@@ -589,7 +626,7 @@ void Source::Mirror::audio_capture_cb(void*, const audio_data* audio, bool)
 	this->m_audio_output.samples_per_sec = aoi->samples_per_sec;
 	this->m_audio_output.speakers        = aoi->speakers;
 
-	this->m_have_audio_output = true;
+	this->m_audio_have_output = true;
 	this->m_audio_notify.notify_all();
 }
 
@@ -597,22 +634,20 @@ void Source::Mirror::audio_output_cb()
 {
 	std::unique_lock<std::mutex> ulock(this->m_audio_lock);
 
-	while (!this->m_kill_audio_thread) {
-		if (this->m_have_audio_output) {
-			obs_source_output_audio(this->m_source, &this->m_audio_output);
-			this->m_have_audio_output = false;
+	while (!this->m_audio_kill_thread) {
+		if (this->m_audio_have_output) {
+			std::unique_lock<std::mutex> ulock(this->m_audio_lock);
+			obs_source_output_audio(this->m_self, &this->m_audio_output);
+			this->m_audio_have_output = false;
 		}
-		this->m_audio_notify.wait(ulock, [this]() { return this->m_have_audio_output || this->m_kill_audio_thread; });
+		this->m_audio_notify.wait(ulock, [this]() { return this->m_audio_have_output || this->m_audio_kill_thread; });
 	}
 }
 
 void Source::Mirror::enum_active_sources(obs_source_enum_proc_t enum_callback, void* param)
 {
-	if (this->m_sceneitem) {
-		enum_callback(this->m_source, obs_sceneitem_get_source(this->m_sceneitem), param);
-	}
 	if (this->m_scene) {
-		enum_callback(this->m_source, obs_scene_get_source(this->m_scene), param);
+		enum_callback(this->m_self, this->m_scene->get(), param);
 	}
 }
 
@@ -620,30 +655,15 @@ void Source::Mirror::load(obs_data_t*) {}
 
 void Source::Mirror::save(obs_data_t* data)
 {
-	if (this->m_sceneitem) {
-		obs_data_set_string(data, P_SOURCE, obs_source_get_name(obs_sceneitem_get_source(this->m_sceneitem)));
+	if (this->m_source_item) {
+		obs_data_set_string(data, P_SOURCE, obs_source_get_name(m_source->get()));
 	}
 }
 
 void Source::Mirror::on_source_rename(obs::source* source, std::string, std::string)
 {
-	obs_data_t* ref = obs_source_get_settings(this->m_source);
+	obs_data_t* ref = obs_source_get_settings(this->m_self);
 	obs_data_set_string(ref, P_SOURCE, obs_source_get_name(source->get()));
-	obs_source_update(this->m_source, ref);
-	obs_data_release(ref);
-}
-
-void Source::Mirror::on_source_destroy(obs::source*)
-{
-	// This is an odd case. If you hit this, be prepared for all kinds of broken things.
-	this->m_source_target->clear();
-	this->m_source_target.reset();
-	this->m_audio_capture.reset();
-	obs_sceneitem_remove(this->m_sceneitem);
-	this->m_sceneitem = nullptr;
-
-	obs_data_t* ref = obs_source_get_settings(this->m_source);
-	obs_data_set_string(ref, P_SOURCE, "");
-	obs_source_update(this->m_source, ref);
+	obs_source_update(this->m_self, ref);
 	obs_data_release(ref);
 }

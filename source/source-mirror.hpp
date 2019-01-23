@@ -70,39 +70,42 @@ namespace Source {
 	};
 
 	class Mirror {
-		bool          m_active = false;
-		obs_source_t* m_source = nullptr;
-		float_t       m_tick   = 0;
+		bool          m_active;
+		obs_source_t* m_self;
+		float_t       m_tick;
 
-		// Input
-		obs_scene_t*                         m_scene = nullptr;
-		std::shared_ptr<obs::source>         m_scene_source;
-		std::unique_ptr<gfx::source_texture> m_source_texture;
+		// Video Rendering
+		std::shared_ptr<obs::source>         m_scene;
+		std::shared_ptr<gfx::source_texture> m_scene_texture;
 
-		// Input Source
-		std::shared_ptr<obs::source> m_source_target;
-		obs_sceneitem_t*             m_sceneitem = nullptr;
-		std::string                  m_source_name;
-
-		// Scaling
-		bool                              m_rescale = false;
+		// Rescaling
+		std::shared_ptr<gs::rendertarget> m_rescale_rt;
+		bool                              m_rescale_enabled;
+		gs_effect_t*                      m_rescale_effect;
+		bool                              m_rescale_keep_orig_size;
 		uint32_t                          m_width;
 		uint32_t                          m_height;
-		gs_effect_t*                      m_scaling_effect     = nullptr;
-		bool                              m_keep_original_size = false;
-		std::unique_ptr<gs::rendertarget> m_render_target_scale;
 		std::shared_ptr<gs::sampler>      m_sampler;
 
-		// Audio
-		bool                                m_enable_audio = false;
-		std::unique_ptr<obs::audio_capture> m_audio_capture;
+		// Audio Rendering
+		bool                                m_audio_enabled;
 		std::mutex                          m_audio_lock;
 		std::condition_variable             m_audio_notify;
 		obs_source_audio                    m_audio_output;
 		std::vector<std::vector<float_t>>   m_audio_data;
 		std::thread                         m_audio_thread;
-		bool                                m_kill_audio_thread = false;
-		bool                                m_have_audio_output = false;
+		bool                                m_audio_kill_thread;
+		bool                                m_audio_have_output;
+
+		// Input
+		std::shared_ptr<obs::source>         m_source;
+		obs_sceneitem_t*                     m_source_item;
+		std::string                          m_source_name;
+		std::shared_ptr<obs::audio_capture>  m_source_audio;
+
+		private:
+		void release_input();
+		void acquire_input(std::string source_name);
 
 		public:
 		Mirror(obs_data_t*, obs_source_t*);
@@ -116,13 +119,12 @@ namespace Source {
 		void deactivate();
 		void video_tick(float);
 		void video_render(gs_effect_t*);
-		void audio_capture_cb(void* data, const audio_data* audio, bool muted);
+		void audio_capture_cb(std::shared_ptr<obs::source> source, audio_data const* const audio, bool muted);
 		void audio_output_cb();
 		void enum_active_sources(obs_source_enum_proc_t, void*);
 		void load(obs_data_t*);
 		void save(obs_data_t*);
 
 		void on_source_rename(obs::source* source, std::string new_name, std::string old_name);
-		void on_source_destroy(obs::source* source);
 	};
 }; // namespace Source
