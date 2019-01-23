@@ -350,24 +350,6 @@ Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src)
 	  m_rescale_keep_orig_size(false), m_width(1), m_height(1), m_audio_enabled(false), m_audio_kill_thread(false),
 	  m_audio_have_output(false), m_source_item(nullptr)
 {
-	// Initialize Video Rendering
-	this->m_scene = std::make_shared<obs::source>(obs_scene_get_source(obs_scene_create_private("Source Mirror Internal Scene")));
-	this->m_scene_texture =
-		std::make_shared<gfx::source_texture>(this->m_scene, std::make_shared<obs::source>(this->m_self, false, false));
-
-	// Initialize Rescaling
-	this->m_rescale_rt     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	this->m_sampler        = std::make_shared<gs::sampler>();
-	this->m_rescale_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
-
-	// Initialize Audio Rendering
-	this->m_audio_data.resize(MAX_AUDIO_CHANNELS);
-	for (size_t idx = 0; idx < this->m_audio_data.size(); idx++) {
-		this->m_audio_data[idx].resize(AUDIO_OUTPUT_FRAMES);
-	}
-	this->m_audio_thread = std::thread(std::bind(&Source::Mirror::audio_output_cb, this));
-
-	update(data);
 	m_active = true;
 }
 
@@ -417,6 +399,26 @@ uint32_t Source::Mirror::get_height()
 
 void Source::Mirror::update(obs_data_t* data)
 {
+	if (!this->m_scene) {
+		// Initialize Video Rendering
+		this->m_scene = std::make_shared<obs::source>(
+			obs_scene_get_source(obs_scene_create_private("Source Mirror Internal Scene")));
+		this->m_scene_texture = std::make_shared<gfx::source_texture>(
+			this->m_scene, std::make_shared<obs::source>(this->m_self, false, false));
+
+		// Initialize Rescaling
+		this->m_rescale_rt     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+		this->m_sampler        = std::make_shared<gs::sampler>();
+		this->m_rescale_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
+
+		// Initialize Audio Rendering
+		this->m_audio_data.resize(MAX_AUDIO_CHANNELS);
+		for (size_t idx = 0; idx < this->m_audio_data.size(); idx++) {
+			this->m_audio_data[idx].resize(AUDIO_OUTPUT_FRAMES);
+		}
+		this->m_audio_thread = std::thread(std::bind(&Source::Mirror::audio_output_cb, this));
+	}
+
 	{ // User changed the source we are tracking.
 		release_input();
 		this->m_source_name = obs_data_get_string(data, P_SOURCE);
@@ -650,7 +652,9 @@ void Source::Mirror::enum_active_sources(obs_source_enum_proc_t enum_callback, v
 	}
 }
 
-void Source::Mirror::load(obs_data_t*) {}
+void Source::Mirror::load(obs_data_t* data) {
+	this->update(data);
+}
 
 void Source::Mirror::save(obs_data_t* data)
 {
