@@ -122,6 +122,7 @@ bool Source::MirrorAddon::modified_properties(obs_properties_t* pr, obs_property
 		} else {
 			obs_data_set_string(data, P_SOURCE_SIZE, "0x0");
 		}
+		obs_source_release(target);
 	}
 
 	if (obs_properties_get(pr, P_SCALING) == p) {
@@ -299,25 +300,16 @@ void Source::Mirror::acquire_input(std::string source_name)
 					source_name.c_str());
 #endif
 		return;
-	}
-
-	std::shared_ptr<obs::source> new_source = std::make_shared<obs::source>(ref_source, true, false);
-	if (new_source->get() == this->m_self) {
+	} else if (ref_source == this->m_self) {
 		// Early-Exit: Attempted self-mirror (recursion).
 #ifdef _DEBUG
 		P_LOG_DEBUG("<Source Mirror:%s> Attempted to mirror self.", obs_source_get_name(this->m_self));
 #endif
+		obs_source_release(ref_source);
 		return;
-	} else if (strcmp(obs_source_get_id(new_source->get()), "scene") == 0) {
-		// Early-Exit: Attempted recursion.
-		if (obs::tools::scene_contains_source(obs_scene_from_source(new_source->get()), this->m_self)) {
-#ifdef _DEBUG
-			P_LOG_DEBUG("<Source Mirror:%s> Attempted recursion with scene '%s'.", obs_source_get_name(this->m_self),
-						source_name.c_str());
-#endif
-			return;
-		}
 	}
+
+	std::shared_ptr<obs::source> new_source = std::make_shared<obs::source>(ref_source, true, false);
 
 	// It looks like everything is in order, so continue now.
 	this->m_source_item = obs_scene_add(obs_scene_from_source(this->m_scene->get()), new_source->get());
@@ -331,14 +323,14 @@ void Source::Mirror::acquire_input(std::string source_name)
 	}
 
 	// If everything worked fine, we now set everything up.
-	this->m_source      = std::move(new_source);
+	this->m_source = std::move(new_source);
 	this->m_source->events.rename += std::bind(&Source::Mirror::on_source_rename, this, std::placeholders::_1,
 											   std::placeholders::_2, std::placeholders::_3);
 	try {
 		// Audio
 		this->m_source_audio = std::make_shared<obs::audio_capture>(this->m_source);
 		this->m_source_audio->on.data += std::bind(&Source::Mirror::audio_capture_cb, this, std::placeholders::_1,
-													std::placeholders::_2, std::placeholders::_3);
+												   std::placeholders::_2, std::placeholders::_3);
 	} catch (...) {
 		P_LOG_ERROR("<Source Mirror:%s> Unexpected error during registering audio callback for '%s'.",
 					source_name.c_str());
@@ -652,7 +644,8 @@ void Source::Mirror::enum_active_sources(obs_source_enum_proc_t enum_callback, v
 	}
 }
 
-void Source::Mirror::load(obs_data_t* data) {
+void Source::Mirror::load(obs_data_t* data)
+{
 	this->update(data);
 }
 
