@@ -144,6 +144,7 @@ static bool UpdateSourceListCB(void* ptr, obs_source_t* src)
 static void UpdateSourceList(obs_property_t* p)
 {
 	obs_property_list_clear(p);
+	obs_property_list_add_string(p, "", "");
 	obs_enum_sources(UpdateSourceListCB, p);
 #if LIBOBS_API_MAJOR_VER >= 23
 	obs_enum_scenes(UpdateSourceListCB, p);
