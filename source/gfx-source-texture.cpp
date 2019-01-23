@@ -77,7 +77,8 @@ gfx::source_texture::source_texture(std::shared_ptr<obs::source> child, std::sha
 		throw std::runtime_error("parent is contained in child");
 	}
 	this->child  = child;
-	this->parent = parent;
+	this->parent  = parent;
+	this->render_target = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
 gfx::source_texture::source_texture(std::shared_ptr<obs::source> child, obs_source_t* _parent)
