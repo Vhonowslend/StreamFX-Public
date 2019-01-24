@@ -59,6 +59,7 @@ namespace filter {
 		// Input
 		std::shared_ptr<gs::rendertarget> m_source_rendertarget;
 		std::shared_ptr<gs::texture>      m_source_texture;
+		bool                              m_source_rendered;
 
 		// Mipmapping
 		bool                     m_mipmap_enabled;
@@ -67,7 +68,8 @@ namespace filter {
 		gs::mipmapper            m_mipmapper;
 
 		// Rendering
-		std::shared_ptr<gs::rendertarget>  m_shape_rendertarget;
+		std::shared_ptr<gs::rendertarget> m_shape_rendertarget;
+		std::shared_ptr<gs::texture>      m_shape_texture;
 
 		// Mesh
 		bool                               m_update_mesh;

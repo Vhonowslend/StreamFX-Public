@@ -126,8 +126,7 @@ void filter::TransformAddon::get_defaults(obs_data_t* data)
 	obs_data_set_default_double(data, ST_SHEAR_X, 0);
 	obs_data_set_default_double(data, ST_SHEAR_Y, 0);
 	obs_data_set_default_bool(data, S_ADVANCED, false);
-	obs_data_set_default_int(data, ST_ROTATION_ORDER,
-							 RotationOrder::ZXY); //ZXY
+	obs_data_set_default_int(data, ST_ROTATION_ORDER, RotationOrder::ZXY);
 }
 
 obs_properties_t* filter::TransformAddon::get_properties(void*)
@@ -135,17 +134,20 @@ obs_properties_t* filter::TransformAddon::get_properties(void*)
 	obs_properties_t* pr = obs_properties_create();
 	obs_property_t*   p  = NULL;
 
+	// Camera
+	/// Projection Mode
 	p = obs_properties_add_list(pr, ST_CAMERA, P_TRANSLATE(ST_CAMERA), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(ST_CAMERA)));
 	obs_property_list_add_int(p, P_TRANSLATE(ST_CAMERA_ORTHOGRAPHIC), (int64_t)CameraMode::Orthographic);
 	obs_property_list_add_int(p, P_TRANSLATE(ST_CAMERA_PERSPECTIVE), (int64_t)CameraMode::Perspective);
 	obs_property_set_modified_callback(p, modified_properties);
-
+	/// Field Of View
 	p = obs_properties_add_float_slider(pr, ST_CAMERA_FIELDOFVIEW, P_TRANSLATE(ST_CAMERA_FIELDOFVIEW), 1.0, 179.0,
 										0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(ST_CAMERA_FIELDOFVIEW)));
 
-	// Position, Scale, Rotation
+	// Mesh
+	/// Position
 	{
 		std::pair<const char*, const char*> entries[] = {
 			std::make_pair(ST_POSITION_X, P_DESC(ST_POSITION_X)),
@@ -157,6 +159,7 @@ obs_properties_t* filter::TransformAddon::get_properties(void*)
 			obs_property_set_long_description(p, P_TRANSLATE(kv.second));
 		}
 	}
+	/// Rotation
 	{
 		std::pair<const char*, const char*> entries[] = {
 			std::make_pair(ST_ROTATION_X, P_DESC(ST_ROTATION_X)),
@@ -168,6 +171,7 @@ obs_properties_t* filter::TransformAddon::get_properties(void*)
 			obs_property_set_long_description(p, P_TRANSLATE(kv.second));
 		}
 	}
+	/// Scale
 	{
 		std::pair<const char*, const char*> entries[] = {
 			std::make_pair(ST_SCALE_X, P_DESC(ST_SCALE_X)),
@@ -178,6 +182,7 @@ obs_properties_t* filter::TransformAddon::get_properties(void*)
 			obs_property_set_long_description(p, P_TRANSLATE(kv.second));
 		}
 	}
+	/// Shear
 	{
 		std::pair<const char*, const char*> entries[] = {
 			std::make_pair(ST_SHEAR_X, P_DESC(ST_SHEAR_X)),
@@ -206,24 +211,25 @@ obs_properties_t* filter::TransformAddon::get_properties(void*)
 	obs_property_set_modified_callback(p, modified_properties);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(ST_MIPMAPPING)));
 
-	p = obs_properties_add_list(pr, strings::MipGenerator::Name, P_TRANSLATE(strings::MipGenerator::Name),
+	p = obs_properties_add_list(pr, S_MIPGENERATOR, P_TRANSLATE(S_MIPGENERATOR),
 								OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-	obs_property_set_long_description(p, P_TRANSLATE(strings::MipGenerator::Description));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_MIPGENERATOR)));
 
-	obs_property_list_add_int(p, P_TRANSLATE(strings::MipGenerator::Point), (long long)gs::mipmapper::generator::Point);
-	obs_property_list_add_int(p, P_TRANSLATE(strings::MipGenerator::Linear),
+	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_POINT), (long long)gs::mipmapper::generator::Point);
+	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_POINT),
 							  (long long)gs::mipmapper::generator::Linear);
-	obs_property_list_add_int(p, P_TRANSLATE(strings::MipGenerator::Sharpen),
+	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_POINT),
 							  (long long)gs::mipmapper::generator::Sharpen);
-	obs_property_list_add_int(p, P_TRANSLATE(strings::MipGenerator::Smoothen),
+	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_POINT),
 							  (long long)gs::mipmapper::generator::Smoothen);
-	obs_property_list_add_int(p, P_TRANSLATE(strings::MipGenerator::Bicubic),
+	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_POINT),
 							  (long long)gs::mipmapper::generator::Bicubic);
-	obs_property_list_add_int(p, P_TRANSLATE(strings::MipGenerator::Lanczos),
+	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_POINT),
 							  (long long)gs::mipmapper::generator::Lanczos);
 
-	p = obs_properties_add_float(pr, strings::MipGenerator::Strength, P_TRANSLATE(strings::MipGenerator::Strength), 0.0,
-								 100.0, 0.01);
+	p = obs_properties_add_float_slider(pr, S_MIPGENERATOR_STRENGTH, P_TRANSLATE(S_MIPGENERATOR_STRENGTH), 0.0,
+								 1000.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_MIPGENERATOR_STRENGTH)));
 
 	return pr;
 }
@@ -246,8 +252,8 @@ bool filter::TransformAddon::modified_properties(obs_properties_t* pr, obs_prope
 	obs_property_set_visible(obs_properties_get(pr, ST_MIPMAPPING), advancedVisible);
 
 	bool mipmappingVisible = obs_data_get_bool(d, ST_MIPMAPPING) && advancedVisible;
-	obs_property_set_visible(obs_properties_get(pr, strings::MipGenerator::Name), mipmappingVisible);
-	obs_property_set_visible(obs_properties_get(pr, strings::MipGenerator::Strength), mipmappingVisible);
+	obs_property_set_visible(obs_properties_get(pr, S_MIPGENERATOR), mipmappingVisible);
+	obs_property_set_visible(obs_properties_get(pr, S_MIPGENERATOR_STRENGTH), mipmappingVisible);
 
 	return true;
 }
@@ -299,17 +305,26 @@ void filter::TransformAddon::video_render(void* ptr, gs_effect_t* effect)
 
 filter::Transform::~Transform()
 {
-	obs_enter_graphics();
-	m_shape_rendertarget.reset();
-	m_source_rendertarget.reset();
+	m_shear.reset();
+	m_scale.reset();
+	m_rotation.reset();
+	m_position.reset();
 	m_vertex_buffer.reset();
-	obs_leave_graphics();
+	m_shape_texture.reset();
+	m_shape_rendertarget.reset();
+	m_source_texture.reset();
+	m_source_rendertarget.reset();
 }
 
 filter::Transform::Transform(obs_data_t* data, obs_source_t* context)
-	: m_active(true), m_self(context), m_camera_orthographic(true), m_camera_fov(90.0), m_update_mesh(false),
-	  m_rotation_order(RotationOrder::ZXY)
+	: m_active(true), m_self(context), m_source_rendered(false), m_mipmap_enabled(false), m_mipmap_strength(50.0),
+	  m_mipmap_generator(gs::mipmapper::generator::Linear), m_update_mesh(false), m_rotation_order(RotationOrder::ZXY),
+	  m_camera_orthographic(true), m_camera_fov(90.0)
 {
+	m_source_rendertarget = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	m_shape_rendertarget  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	m_vertex_buffer       = std::make_shared<gs::vertex_buffer>(4u, 1u);
+
 	m_position = std::make_unique<util::vec3a>();
 	m_rotation = std::make_unique<util::vec3a>();
 	m_scale    = std::make_unique<util::vec3a>();
@@ -318,16 +333,6 @@ filter::Transform::Transform(obs_data_t* data, obs_source_t* context)
 	vec3_set(m_position.get(), 0, 0, 0);
 	vec3_set(m_rotation.get(), 0, 0, 0);
 	vec3_set(m_scale.get(), 1, 1, 1);
-
-	m_mipmap_enabled   = false;
-	m_mipmap_generator = gs::mipmapper::generator::Linear;
-	m_mipmap_strength  = 50.0;
-
-	obs_enter_graphics();
-	m_source_rendertarget = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	m_shape_rendertarget  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	m_vertex_buffer       = std::make_shared<gs::vertex_buffer>(4u, 1u);
-	obs_leave_graphics();
 
 	update(data);
 }
@@ -346,7 +351,7 @@ void filter::Transform::update(obs_data_t* data)
 {
 	// Camera
 	m_camera_orthographic = obs_data_get_int(data, ST_CAMERA) == 0;
-	m_camera_fov   = (float)obs_data_get_double(data, ST_CAMERA_FIELDOFVIEW);
+	m_camera_fov          = (float)obs_data_get_double(data, ST_CAMERA_FIELDOFVIEW);
 
 	// Source
 	m_position->x    = (float)obs_data_get_double(data, ST_POSITION_X) / 100.0f;
@@ -365,8 +370,8 @@ void filter::Transform::update(obs_data_t* data)
 
 	// Mipmapping
 	m_mipmap_enabled   = obs_data_get_bool(data, ST_MIPMAPPING);
-	m_mipmap_strength  = obs_data_get_double(data, strings::MipGenerator::Strength);
-	m_mipmap_generator = (gs::mipmapper::generator)obs_data_get_int(data, strings::MipGenerator::Name);
+	m_mipmap_strength  = obs_data_get_double(data, S_MIPGENERATOR_STRENGTH);
+	m_mipmap_generator = (gs::mipmapper::generator)obs_data_get_int(data, S_MIPGENERATOR);
 
 	m_update_mesh = true;
 }
@@ -381,39 +386,28 @@ void filter::Transform::deactivate()
 	m_active = false;
 }
 
-void filter::Transform::video_tick(float) {}
-
-void filter::Transform::video_render(gs_effect_t* paramEffect)
+void filter::Transform::video_tick(float)
 {
-	if (!m_active) {
-		obs_source_skip_video_filter(m_self);
-		return;
-	}
-
-	// Grab parent and target.
-	obs_source_t* parent = obs_filter_get_parent(m_self);
-	obs_source_t* target = obs_filter_get_target(m_self);
-	if (!parent || !target) {
-		obs_source_skip_video_filter(m_self);
-		return;
-	}
-
-	// Grab width an height of the target source (child filter or source).
-	uint32_t width  = obs_source_get_base_width(target);
-	uint32_t height = obs_source_get_base_height(target);
-	if ((width == 0) || (height == 0)) {
-		obs_source_skip_video_filter(m_self);
-		return;
-	}
-
-	std::shared_ptr<gs::texture> source_tex;
-	std::shared_ptr<gs::texture> shape_tex;
-	uint32_t                     real_width     = width;
-	uint32_t                     real_height    = height;
-	gs_effect_t*                 default_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
-
 	// Update Mesh
 	if (m_update_mesh) {
+		uint32_t width  = 0;
+		uint32_t height = 0;
+
+		// Grab parent and target.
+		obs_source_t* target = obs_filter_get_target(m_self);
+		if (target) {
+			// Grab width an height of the target source (child filter or source).
+			width  = obs_source_get_base_width(target);
+			height = obs_source_get_base_height(target);
+		}
+		if (width == 0) {
+			width = 1;
+		}
+		if (height == 0) {
+			height = 1;
+		}
+
+		// Calculate Aspect Ratio
 		float_t aspectRatioX = float_t(width) / float_t(height);
 		if (m_camera_orthographic)
 			aspectRatioX = 1.0;
@@ -493,118 +487,156 @@ void filter::Transform::video_render(gs_effect_t* paramEffect)
 		m_update_mesh = false;
 	}
 
-	// Make texture a power of two compatible texture if mipmapping is enabled.
-	if (m_mipmap_enabled) {
-		real_width  = uint32_t(pow(2, util::math::get_power_of_two_exponent_ceil(width)));
-		real_height = uint32_t(pow(2, util::math::get_power_of_two_exponent_ceil(height)));
-		if ((real_width >= 8192) || (real_height >= 8192)) {
-			// Most GPUs cap out here, so let's not go higher.
-			double_t aspect = double_t(width) / double_t(height);
-			if (aspect > 1.0) { // height < width
-				real_width  = 8192;
-				real_height = uint32_t(real_width / aspect);
-			} else if (aspect < 1.0) { // width > height
-				real_height = 8192;
-				real_width  = uint32_t(real_height * aspect);
-			}
-		}
-	}
+	this->m_source_rendered = false;
+}
 
-	// Draw previous filters to texture.
-	try {
-		auto op = m_source_rendertarget->render(real_width, real_height);
-
-		gs_set_cull_mode(GS_NEITHER);
-		gs_reset_blend_state();
-		gs_blend_function_separate(gs_blend_type::GS_BLEND_ONE, gs_blend_type::GS_BLEND_ZERO,
-								   gs_blend_type::GS_BLEND_ONE, gs_blend_type::GS_BLEND_ZERO);
-		gs_enable_depth_test(false);
-		gs_enable_stencil_test(false);
-		gs_enable_stencil_write(false);
-		gs_enable_color(true, true, true, true);
-		gs_ortho(0, (float)width, 0, (float)height, -1, 1);
-
-		vec4 black;
-		vec4_zero(&black);
-		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
-
-		/// Render original source
-		if (obs_source_process_filter_begin(m_self, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
-			obs_source_process_filter_end(m_self, paramEffect ? paramEffect : default_effect, width, height);
-		} else {
-			obs_source_skip_video_filter(m_self);
-		}
-	} catch (...) {
+void filter::Transform::video_render(gs_effect_t* paramEffect)
+{
+	if (!m_active) {
 		obs_source_skip_video_filter(m_self);
 		return;
 	}
-	m_source_rendertarget->get_texture(source_tex);
 
-	if (m_mipmap_enabled) {
-		if ((!m_source_texture) || (m_source_texture->get_width() != real_width)
-			|| (m_source_texture->get_height() != real_height)) {
-			size_t mip_levels = 0;
-			if (util::math::is_power_of_two(real_width) && util::math::is_power_of_two(real_height)) {
-				size_t w_level = util::math::get_power_of_two_exponent_ceil(real_width);
-				size_t h_level = util::math::get_power_of_two_exponent_ceil(real_height);
-				if (h_level > w_level) {
-					mip_levels = h_level;
-				} else {
-					mip_levels = w_level;
+	// Grab parent and target.
+	obs_source_t* parent = obs_filter_get_parent(m_self);
+	obs_source_t* target = obs_filter_get_target(m_self);
+	if (!parent || !target) {
+		obs_source_skip_video_filter(m_self);
+		return;
+	}
+
+	// Grab width an height of the target source (child filter or source).
+	uint32_t width  = obs_source_get_base_width(target);
+	uint32_t height = obs_source_get_base_height(target);
+	if ((width == 0) || (height == 0)) {
+		obs_source_skip_video_filter(m_self);
+		return;
+	}
+
+	gs_effect_t* default_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
+
+	// Only render if we didn't already render.
+	if (!this->m_source_rendered) {
+		std::shared_ptr<gs::texture> source_tex;
+		uint32_t                     real_width  = width;
+		uint32_t                     real_height = height;
+
+		// If MipMapping is enabled, resize Render Target to be a Power of Two.
+		if (m_mipmap_enabled) {
+			real_width  = uint32_t(pow(2, util::math::get_power_of_two_exponent_ceil(width)));
+			real_height = uint32_t(pow(2, util::math::get_power_of_two_exponent_ceil(height)));
+			if ((real_width >= 8192) || (real_height >= 8192)) {
+				// Most GPUs cap out here, so let's not go higher.
+				double_t aspect = double_t(width) / double_t(height);
+				if (aspect > 1.0) { // height < width
+					real_width  = 8192;
+					real_height = uint32_t(real_width / aspect);
+				} else if (aspect < 1.0) { // width > height
+					real_height = 8192;
+					real_width  = uint32_t(real_height * aspect);
 				}
 			}
-
-			m_source_texture = std::make_shared<gs::texture>(
-				real_width, real_height, GS_RGBA, uint32_t(1u + mip_levels), nullptr, gs::texture::flags::BuildMipMaps);
 		}
 
-		m_mipmapper.rebuild(source_tex, m_source_texture, m_mipmap_generator, float_t(m_mipmap_strength));
+		// Draw previous filters to texture.
+		try {
+			auto op = m_source_rendertarget->render(real_width, real_height);
+
+			gs_set_cull_mode(GS_NEITHER);
+			gs_reset_blend_state();
+			gs_blend_function_separate(gs_blend_type::GS_BLEND_ONE, gs_blend_type::GS_BLEND_ZERO,
+									   gs_blend_type::GS_BLEND_ONE, gs_blend_type::GS_BLEND_ZERO);
+			gs_enable_depth_test(false);
+			gs_enable_stencil_test(false);
+			gs_enable_stencil_write(false);
+			gs_enable_color(true, true, true, true);
+			gs_ortho(0, (float)width, 0, (float)height, -1, 1);
+
+			vec4 black;
+			vec4_zero(&black);
+			gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
+
+			/// Render original source
+			if (obs_source_process_filter_begin(m_self, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
+				obs_source_process_filter_end(m_self, paramEffect ? paramEffect : default_effect, width, height);
+			} else {
+				obs_source_skip_video_filter(m_self);
+			}
+		} catch (...) {
+			obs_source_skip_video_filter(m_self);
+			return;
+		}
+		m_source_rendertarget->get_texture(source_tex);
+
+		if (m_mipmap_enabled) {
+			if ((!m_source_texture) || (m_source_texture->get_width() != real_width)
+				|| (m_source_texture->get_height() != real_height)) {
+				size_t mip_levels = 0;
+				if (util::math::is_power_of_two(real_width) && util::math::is_power_of_two(real_height)) {
+					size_t w_level = util::math::get_power_of_two_exponent_ceil(real_width);
+					size_t h_level = util::math::get_power_of_two_exponent_ceil(real_height);
+					if (h_level > w_level) {
+						mip_levels = h_level;
+					} else {
+						mip_levels = w_level;
+					}
+				}
+
+				m_source_texture =
+					std::make_shared<gs::texture>(real_width, real_height, GS_RGBA, uint32_t(1u + mip_levels), nullptr,
+												  gs::texture::flags::BuildMipMaps);
+			}
+
+			m_mipmapper.rebuild(source_tex, m_source_texture, m_mipmap_generator, float_t(m_mipmap_strength));
+		}
+
+		// Draw shape to texture
+		try {
+			auto op = m_shape_rendertarget->render(width, height);
+
+			if (m_camera_orthographic) {
+				gs_ortho(-1.0, 1.0, -1.0, 1.0, -farZ, farZ);
+			} else {
+				gs_perspective(m_camera_fov, float_t(width) / float_t(height), nearZ, farZ);
+				// Fix camera pointing at -Z instead of +Z.
+				gs_matrix_scale3f(1.0, 1.0, -1.0);
+				// Move backwards so we can actually see stuff.
+				gs_matrix_translate3f(0, 0, 1.0);
+			}
+
+			// Rendering
+			vec4 black;
+			vec4_zero(&black);
+			gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, farZ, 0);
+			gs_set_cull_mode(GS_NEITHER);
+			gs_enable_blending(false);
+			gs_enable_depth_test(false);
+			gs_depth_function(gs_depth_test::GS_ALWAYS);
+			gs_enable_stencil_test(false);
+			gs_enable_stencil_write(false);
+			gs_enable_color(true, true, true, true);
+			gs_load_vertexbuffer(m_vertex_buffer->update(false));
+			gs_load_indexbuffer(nullptr);
+			while (gs_effect_loop(default_effect, "Draw")) {
+				gs_effect_set_texture(gs_effect_get_param_by_name(default_effect, "image"),
+									  m_mipmap_enabled ? m_source_texture->get_object() : source_tex->get_object());
+				gs_draw(GS_TRISTRIP, 0, 4);
+			}
+			gs_load_vertexbuffer(nullptr);
+		} catch (...) {
+			obs_source_skip_video_filter(m_self);
+			return;
+		}
+		m_shape_rendertarget->get_texture(m_shape_texture);
+
+		this->m_source_rendered = true;
 	}
-
-	// Draw shape to texture
-	try {
-		auto op = m_shape_rendertarget->render(width, height);
-
-		if (m_camera_orthographic) {
-			gs_ortho(-1.0, 1.0, -1.0, 1.0, -farZ, farZ);
-		} else {
-			gs_perspective(m_camera_fov, float_t(width) / float_t(height), nearZ, farZ);
-			// Fix camera pointing at -Z instead of +Z.
-			gs_matrix_scale3f(1.0, 1.0, -1.0);
-			// Move backwards so we can actually see stuff.
-			gs_matrix_translate3f(0, 0, 1.0);
-		}
-
-		// Rendering
-		vec4 black;
-		vec4_zero(&black);
-		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, farZ, 0);
-		gs_set_cull_mode(GS_NEITHER);
-		gs_enable_blending(false);
-		gs_enable_depth_test(false);
-		gs_depth_function(gs_depth_test::GS_ALWAYS);
-		gs_enable_stencil_test(false);
-		gs_enable_stencil_write(false);
-		gs_enable_color(true, true, true, true);
-		gs_load_vertexbuffer(m_vertex_buffer->update(false));
-		gs_load_indexbuffer(nullptr);
-		while (gs_effect_loop(default_effect, "Draw")) {
-			gs_effect_set_texture(gs_effect_get_param_by_name(default_effect, "image"),
-								  m_mipmap_enabled ? m_source_texture->get_object() : source_tex->get_object());
-			gs_draw(GS_TRISTRIP, 0, 4);
-		}
-		gs_load_vertexbuffer(nullptr);
-	} catch (...) {
-		obs_source_skip_video_filter(m_self);
-		return;
-	}
-	m_shape_rendertarget->get_texture(shape_tex);
 
 	// Draw final shape
 	gs_reset_blend_state();
 	gs_enable_depth_test(false);
 	while (gs_effect_loop(default_effect, "Draw")) {
-		gs_effect_set_texture(gs_effect_get_param_by_name(default_effect, "image"), shape_tex->get_object());
-		gs_draw_sprite(shape_tex->get_object(), 0, 0, 0);
+		gs_effect_set_texture(gs_effect_get_param_by_name(default_effect, "image"), m_shape_texture->get_object());
+		gs_draw_sprite(m_shape_texture->get_object(), 0, 0, 0);
 	}
 }
