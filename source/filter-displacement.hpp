@@ -39,10 +39,12 @@
 #define S_FILTER_DISPLACEMENT_SCALE "Filter.Displacement.Scale"
 
 namespace filter {
-	class Displacement {
+	class DisplacementAddon {
+		obs_source_info sourceInfo;
+
 		public:
-		Displacement();
-		~Displacement();
+		DisplacementAddon();
+		~DisplacementAddon();
 
 		static const char* get_name(void*);
 
@@ -59,44 +61,39 @@ namespace filter {
 		static void              hide(void*);
 		static void              video_tick(void*, float);
 		static void              video_render(void*, gs_effect_t*);
+	};
 
-		private:
-		obs_source_info sourceInfo;
+	class Displacement {
+		void updateDisplacementMap(std::string file);
 
-		private:
-		class Instance {
-			public:
-			Instance(obs_data_t*, obs_source_t*);
-			~Instance();
+		obs_source_t* context;
+		gs_effect_t*  customEffect;
+		float_t       distance;
+		vec2          displacementScale;
+		struct {
+			std::string file;
 
-			void     update(obs_data_t*);
-			uint32_t get_width();
-			uint32_t get_height();
-			void     activate();
-			void     deactivate();
-			void     show();
-			void     hide();
-			void     video_tick(float);
-			void     video_render(gs_effect_t*);
+			gs_texture_t* texture;
+			time_t        createTime, modifiedTime;
+			size_t        size;
+		} dispmap;
 
-			std::string get_file();
+		float_t timer;
 
-			private:
-			void updateDisplacementMap(std::string file);
+		public:
+		Displacement(obs_data_t*, obs_source_t*);
+		~Displacement();
 
-			obs_source_t* context;
-			gs_effect_t*  customEffect;
-			float_t       distance;
-			vec2          displacementScale;
-			struct {
-				std::string file;
+		void     update(obs_data_t*);
+		uint32_t get_width();
+		uint32_t get_height();
+		void     activate();
+		void     deactivate();
+		void     show();
+		void     hide();
+		void     video_tick(float);
+		void     video_render(gs_effect_t*);
 
-				gs_texture_t* texture;
-				time_t        createTime, modifiedTime;
-				size_t        size;
-			} dispmap;
-
-			float_t timer;
-		};
+		std::string get_file();
 	};
 } // namespace filter
