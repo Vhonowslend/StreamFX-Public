@@ -338,10 +338,26 @@ void Source::Mirror::acquire_input(std::string source_name)
 
 Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src)
 	: m_self(src), m_active(false), m_tick(0), m_rescale_enabled(false), m_rescale_effect(nullptr),
-	  m_rescale_keep_orig_size(false), m_width(1), m_height(1), m_audio_enabled(false), m_audio_kill_thread(false),
+	  m_rescale_keep_orig_size(false), m_rescale_width(1), m_rescale_height(1), m_audio_enabled(false), m_audio_kill_thread(false),
 	  m_audio_have_output(false), m_source_item(nullptr)
 {
-	m_active = true;
+	// Initialize Video Rendering
+	this->m_scene =
+		std::make_shared<obs::source>(obs_scene_get_source(obs_scene_create_private("Source Mirror Internal Scene")));
+	this->m_scene_texture_renderer =
+		std::make_shared<gfx::source_texture>(this->m_scene, std::make_shared<obs::source>(this->m_self, false, false));
+
+	// Initialize Rescaling
+	this->m_rescale_rt     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	this->m_sampler        = std::make_shared<gs::sampler>();
+	this->m_rescale_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
+
+	// Initialize Audio Rendering
+	this->m_audio_data.resize(MAX_AUDIO_CHANNELS);
+	for (size_t idx = 0; idx < this->m_audio_data.size(); idx++) {
+		this->m_audio_data[idx].resize(AUDIO_OUTPUT_FRAMES);
+	}
+	this->m_audio_thread = std::thread(std::bind(&Source::Mirror::audio_output_cb, this));
 }
 
 Source::Mirror::~Mirror()
@@ -361,14 +377,14 @@ Source::Mirror::~Mirror()
 	this->m_rescale_rt.reset();
 
 	// Finalize Video Rendering
-	this->m_scene_texture.reset();
+	this->m_scene_texture_renderer.reset();
 	this->m_scene.reset();
 }
 
 uint32_t Source::Mirror::get_width()
 {
-	if (this->m_rescale_enabled && this->m_width > 0 && !this->m_rescale_keep_orig_size) {
-		return this->m_width;
+	if (this->m_rescale_enabled && this->m_rescale_width > 0 && !this->m_rescale_keep_orig_size) {
+		return this->m_rescale_width;
 	}
 	obs_source_t* source = obs_sceneitem_get_source(this->m_source_item);
 	if (source) {
@@ -379,8 +395,8 @@ uint32_t Source::Mirror::get_width()
 
 uint32_t Source::Mirror::get_height()
 {
-	if (this->m_rescale_enabled && this->m_height > 0 && !this->m_rescale_keep_orig_size)
-		return this->m_height;
+	if (this->m_rescale_enabled && this->m_rescale_height > 0 && !this->m_rescale_keep_orig_size)
+		return this->m_rescale_height;
 	obs_source_t* source = obs_sceneitem_get_source(this->m_source_item);
 	if (source) {
 		return obs_source_get_height(source);
@@ -390,26 +406,6 @@ uint32_t Source::Mirror::get_height()
 
 void Source::Mirror::update(obs_data_t* data)
 {
-	if (!this->m_scene) {
-		// Initialize Video Rendering
-		this->m_scene = std::make_shared<obs::source>(
-			obs_scene_get_source(obs_scene_create_private("Source Mirror Internal Scene")));
-		this->m_scene_texture = std::make_shared<gfx::source_texture>(
-			this->m_scene, std::make_shared<obs::source>(this->m_self, false, false));
-
-		// Initialize Rescaling
-		this->m_rescale_rt     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-		this->m_sampler        = std::make_shared<gs::sampler>();
-		this->m_rescale_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
-
-		// Initialize Audio Rendering
-		this->m_audio_data.resize(MAX_AUDIO_CHANNELS);
-		for (size_t idx = 0; idx < this->m_audio_data.size(); idx++) {
-			this->m_audio_data[idx].resize(AUDIO_OUTPUT_FRAMES);
-		}
-		this->m_audio_thread = std::thread(std::bind(&Source::Mirror::audio_output_cb, this));
-	}
-
 	{ // User changed the source we are tracking.
 		release_input();
 		this->m_source_name = obs_data_get_string(data, P_SOURCE);
@@ -434,22 +430,22 @@ void Source::Mirror::update(obs_data_t* data)
 			width = strtoul(size, nullptr, 10);
 			if (errno == ERANGE || width == 0) {
 				this->m_rescale_enabled = false;
-				this->m_width           = 1;
+				this->m_rescale_width   = 1;
 			} else {
-				this->m_width = width;
+				this->m_rescale_width = width;
 			}
 
 			height = strtoul(xpos + 1, nullptr, 10);
 			if (errno == ERANGE || height == 0) {
 				this->m_rescale_enabled = false;
-				this->m_height          = 1;
+				this->m_rescale_height  = 1;
 			} else {
-				this->m_height = height;
+				this->m_rescale_height = height;
 			}
 		} else {
 			this->m_rescale_enabled = false;
-			this->m_width           = 1;
-			this->m_height          = 1;
+			this->m_rescale_width   = 1;
+			this->m_rescale_height  = 1;
 		}
 
 		ScalingMethod scaler = (ScalingMethod)obs_data_get_int(data, P_SCALING_METHOD);
@@ -519,13 +515,14 @@ void Source::Mirror::video_tick(float time)
 	}
 }
 
-void Source::Mirror::video_render(gs_effect_t*)
+void Source::Mirror::video_render(gs_effect_t* effect)
 {
-	if ((this->m_width == 0) || (this->m_height == 0) || !this->m_source_item) {
+	if ((this->m_rescale_width == 0) || (this->m_rescale_height == 0) || !this->m_source_item
+		|| !this->m_scene_texture_renderer) {
 		return;
 	}
 
-	if (this->m_rescale_enabled && this->m_width > 0 && this->m_height > 0 && this->m_rescale_effect) {
+	if (this->m_rescale_enabled && this->m_rescale_effect) {
 		// Get Size of source.
 		uint32_t sw, sh;
 		sw = this->m_source->width();
@@ -539,7 +536,7 @@ void Source::Mirror::video_render(gs_effect_t*)
 		// Store original Source Texture
 		std::shared_ptr<gs::texture> tex;
 		try {
-			tex = this->m_scene_texture->render(sw, sh);
+			tex = this->m_scene_texture_renderer->render(sw, sh);
 		} catch (...) {
 			return;
 		}
@@ -553,8 +550,8 @@ void Source::Mirror::video_render(gs_effect_t*)
 
 		if (this->m_rescale_keep_orig_size) {
 			{
-				auto op = m_rescale_rt->render(this->m_width, this->m_height);
-				gs_ortho(0, float_t(this->m_width), 0, float_t(this->m_height), 0, 1);
+				auto op = m_rescale_rt->render(this->m_rescale_width, this->m_rescale_height);
+				gs_ortho(0, float_t(this->m_rescale_width), 0, float_t(this->m_rescale_height), 0, 1);
 
 				vec4 black;
 				vec4_zero(&black);
@@ -563,7 +560,7 @@ void Source::Mirror::video_render(gs_effect_t*)
 				while (gs_effect_loop(this->m_rescale_effect, "Draw")) {
 					gs_eparam_t* image = gs_effect_get_param_by_name(this->m_rescale_effect, "image");
 					gs_effect_set_next_sampler(image, this->m_sampler->get_object());
-					obs_source_draw(tex->get_object(), 0, 0, this->m_width, this->m_height, false);
+					obs_source_draw(tex->get_object(), 0, 0, this->m_rescale_width, this->m_rescale_height, false);
 				}
 			}
 			while (gs_effect_loop(obs_get_base_effect(OBS_EFFECT_DEFAULT), "Draw")) {
@@ -575,11 +572,11 @@ void Source::Mirror::video_render(gs_effect_t*)
 			while (gs_effect_loop(this->m_rescale_effect, "Draw")) {
 				gs_eparam_t* image = gs_effect_get_param_by_name(this->m_rescale_effect, "image");
 				gs_effect_set_next_sampler(image, this->m_sampler->get_object());
-				obs_source_draw(tex->get_object(), 0, 0, this->m_width, this->m_height, false);
+				obs_source_draw(tex->get_object(), 0, 0, this->m_rescale_width, this->m_rescale_height, false);
 			}
 		}
 	} else {
-		obs_source_video_render(this->m_scene_texture->get_object());
+		obs_source_video_render(this->m_scene_texture_renderer->get_object());
 	}
 }
 

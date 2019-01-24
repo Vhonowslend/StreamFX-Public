@@ -76,15 +76,15 @@ namespace Source {
 
 		// Video Rendering
 		std::shared_ptr<obs::source>         m_scene;
-		std::shared_ptr<gfx::source_texture> m_scene_texture;
+		std::shared_ptr<gfx::source_texture> m_scene_texture_renderer;
 
 		// Rescaling
 		std::shared_ptr<gs::rendertarget> m_rescale_rt;
 		bool                              m_rescale_enabled;
 		gs_effect_t*                      m_rescale_effect;
 		bool                              m_rescale_keep_orig_size;
-		uint32_t                          m_width;
-		uint32_t                          m_height;
+		uint32_t                          m_rescale_width;
+		uint32_t                          m_rescale_height;
 		std::shared_ptr<gs::sampler>      m_sampler;
 
 		// Audio Rendering
