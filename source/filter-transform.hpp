@@ -84,8 +84,8 @@ namespace filter {
 		std::unique_ptr<util::vec3a> shear;
 
 		public:
-		Transform(obs_data_t*, obs_source_t*);
 		~Transform();
+		Transform(obs_data_t*, obs_source_t*);
 
 		void     update(obs_data_t*);
 		uint32_t get_width();

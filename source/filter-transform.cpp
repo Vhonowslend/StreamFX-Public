@@ -297,6 +297,15 @@ void filter::TransformAddon::video_render(void* ptr, gs_effect_t* effect)
 	reinterpret_cast<Transform*>(ptr)->video_render(effect);
 }
 
+filter::Transform::~Transform()
+{
+	obs_enter_graphics();
+	shape_rt.reset();
+	source_rt.reset();
+	vertex_buffer.reset();
+	obs_leave_graphics();
+}
+
 filter::Transform::Transform(obs_data_t* data, obs_source_t* context)
 	: source_context(context), is_orthographic(true), field_of_view(90.0), is_inactive(false), is_hidden(false),
 	  is_mesh_update_required(false), rotation_order(RotationOrder::ZXY)
@@ -321,15 +330,6 @@ filter::Transform::Transform(obs_data_t* data, obs_source_t* context)
 	obs_leave_graphics();
 
 	update(data);
-}
-
-filter::Transform::~Transform()
-{
-	obs_enter_graphics();
-	shape_rt.reset();
-	source_rt.reset();
-	vertex_buffer.reset();
-	obs_leave_graphics();
 }
 
 void filter::Transform::update(obs_data_t* data)
