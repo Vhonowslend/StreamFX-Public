@@ -337,8 +337,8 @@ obs_properties_t* filter::blur::blur_instance::get_properties()
 	p = obs_properties_add_bool(pr, P_MASK_REGION_INVERT, P_TRANSLATE(P_MASK_REGION_INVERT));
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_REGION_INVERT)));
 	/// Image
-	p = obs_properties_add_path(pr, P_MASK_IMAGE, P_TRANSLATE(P_MASK_IMAGE), OBS_PATH_FILE,
-								P_TRANSLATE(S_FILEFILTERS_IMAGES), nullptr);
+	p = obs_properties_add_path(pr, P_MASK_IMAGE, P_TRANSLATE(P_MASK_IMAGE), OBS_PATH_FILE, P_TRANSLATE(""),
+								nullptr);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_IMAGE)));
 	/// Source
 	p = obs_properties_add_list(pr, P_MASK_SOURCE, P_TRANSLATE(P_MASK_SOURCE), OBS_COMBO_TYPE_LIST,

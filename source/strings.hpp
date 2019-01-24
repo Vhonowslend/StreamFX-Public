@@ -23,8 +23,22 @@
 #define P_TRANSLATE(x) obs_module_text(x)
 #define P_DESC(x) x ".Description"
 
+#define T_FILEFILTERS_IMAGE "*.png *.webp *.tga *.tiff *.jpeg *.jpg *.bmp"
+#define T_FILEFILTERS_VIDEO "*.mkv *.webm *.mp4 *.mov *.flv"
+#define T_FILEFILTERS_SOUND "*.ogg *.flac *.mp3 *.wav"
+#define T_FILEFILTERS_EFFECT "*.effect *.txt"
+#define T_FILEFILTERS_ANY "*.*"
+
 #define S_ADVANCED "Advanced"
-#define S_FILEFILTERS_IMAGES "FileFilters.Images"
+
+#define S_FILETYPE_IMAGE "FileType.Image"
+#define S_FILETYPE_IMAGES "FileType.Images"
+#define S_FILETYPE_VIDEO "FileType.Video"
+#define S_FILETYPE_VIDEOS "FileType.Videos"
+#define S_FILETYPE_SOUND "FileType.Sound"
+#define S_FILETYPE_SOUNDS "FileType.Sounds"
+#define S_FILETYPE_EFFECT "FileType.Effect"
+#define S_FILETYPE_EFFECTS "FileType.Effects"
 
 #define S_MIPGENERATOR "MipGenerator"
 #define S_MIPGENERATOR_POINT "MipGenerator.Point"
