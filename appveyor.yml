@@ -1,6 +1,10 @@
 matrix:
   fast_finish: true
 
+branches:
+  except:
+    - /i18n_.*/
+
 image:
   - Visual Studio 2017
 
