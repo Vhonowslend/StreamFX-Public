@@ -57,14 +57,14 @@
 #define P_SCALING_BOUNDS_FILLHEIGHT "Source.Mirror.Scaling.Bounds.FillHeight"
 
 // Initializer & Finalizer
-Source::MirrorAddon* sourceMirrorInstance;
+Source::mirror_factory* sourceMirrorInstance;
 INITIALIZER(SourceMirrorInit)
 {
-	initializerFunctions.push_back([] { sourceMirrorInstance = new Source::MirrorAddon(); });
+	initializerFunctions.push_back([] { sourceMirrorInstance = new Source::mirror_factory(); });
 	finalizerFunctions.push_back([] { delete sourceMirrorInstance; });
 }
 
-Source::MirrorAddon::MirrorAddon()
+Source::mirror_factory::mirror_factory()
 {
 	memset(&osi, 0, sizeof(obs_source_info));
 	osi.id           = "obs-stream-effects-source-mirror";
@@ -90,14 +90,14 @@ Source::MirrorAddon::MirrorAddon()
 	obs_register_source(&osi);
 }
 
-Source::MirrorAddon::~MirrorAddon() {}
+Source::mirror_factory::~mirror_factory() {}
 
-const char* Source::MirrorAddon::get_name(void*)
+const char* Source::mirror_factory::get_name(void*)
 {
 	return P_TRANSLATE(S_SOURCE_MIRROR);
 }
 
-void Source::MirrorAddon::get_defaults(obs_data_t* data)
+void Source::mirror_factory::get_defaults(obs_data_t* data)
 {
 	obs_data_set_default_string(data, P_SOURCE, "");
 	obs_data_set_default_bool(data, P_SOURCE_AUDIO, false);
@@ -108,7 +108,7 @@ void Source::MirrorAddon::get_defaults(obs_data_t* data)
 	obs_data_set_default_int(data, P_SCALING_BOUNDS, (int64_t)obs_bounds_type::OBS_BOUNDS_STRETCH);
 }
 
-bool Source::MirrorAddon::modified_properties(obs_properties_t* pr, obs_property_t* p, obs_data_t* data)
+bool Source::mirror_factory::modified_properties(obs_properties_t* pr, obs_property_t* p, obs_data_t* data)
 {
 	if (obs_properties_get(pr, P_SOURCE) == p) {
 		obs_source_t* target = obs_get_source_by_name(obs_data_get_string(data, P_SOURCE));
@@ -151,7 +151,7 @@ static void UpdateSourceList(obs_property_t* p)
 #endif
 }
 
-obs_properties_t* Source::MirrorAddon::get_properties(void*)
+obs_properties_t* Source::mirror_factory::get_properties(void*)
 {
 	obs_properties_t* pr = obs_properties_create();
 	obs_property_t*   p  = nullptr;
@@ -200,91 +200,91 @@ obs_properties_t* Source::MirrorAddon::get_properties(void*)
 	return pr;
 }
 
-void* Source::MirrorAddon::create(obs_data_t* data, obs_source_t* source)
+void* Source::mirror_factory::create(obs_data_t* data, obs_source_t* source)
 {
-	return new Source::Mirror(data, source);
+	return new Source::mirror(data, source);
 }
 
-void Source::MirrorAddon::destroy(void* p)
+void Source::mirror_factory::destroy(void* p)
 {
 	if (p) {
-		delete static_cast<Source::Mirror*>(p);
+		delete static_cast<Source::mirror*>(p);
 	}
 }
 
-uint32_t Source::MirrorAddon::get_width(void* p)
+uint32_t Source::mirror_factory::get_width(void* p)
 {
 	if (p) {
-		return static_cast<Source::Mirror*>(p)->get_width();
-	}
-	return 0;
-}
-
-uint32_t Source::MirrorAddon::get_height(void* p)
-{
-	if (p) {
-		return static_cast<Source::Mirror*>(p)->get_height();
+		return static_cast<Source::mirror*>(p)->get_width();
 	}
 	return 0;
 }
 
-void Source::MirrorAddon::update(void* p, obs_data_t* data)
+uint32_t Source::mirror_factory::get_height(void* p)
 {
 	if (p) {
-		static_cast<Source::Mirror*>(p)->update(data);
+		return static_cast<Source::mirror*>(p)->get_height();
+	}
+	return 0;
+}
+
+void Source::mirror_factory::update(void* p, obs_data_t* data)
+{
+	if (p) {
+		static_cast<Source::mirror*>(p)->update(data);
 	}
 }
 
-void Source::MirrorAddon::activate(void* p)
+void Source::mirror_factory::activate(void* p)
 {
 	if (p) {
-		static_cast<Source::Mirror*>(p)->activate();
+		static_cast<Source::mirror*>(p)->activate();
 	}
 }
 
-void Source::MirrorAddon::deactivate(void* p)
+void Source::mirror_factory::deactivate(void* p)
 {
 	if (p) {
-		static_cast<Source::Mirror*>(p)->deactivate();
+		static_cast<Source::mirror*>(p)->deactivate();
 	}
 }
 
-void Source::MirrorAddon::video_tick(void* p, float t)
+void Source::mirror_factory::video_tick(void* p, float t)
 {
 	if (p) {
-		static_cast<Source::Mirror*>(p)->video_tick(t);
+		static_cast<Source::mirror*>(p)->video_tick(t);
 	}
 }
 
-void Source::MirrorAddon::video_render(void* p, gs_effect_t* ef)
+void Source::mirror_factory::video_render(void* p, gs_effect_t* ef)
 {
 	if (p) {
-		static_cast<Source::Mirror*>(p)->video_render(ef);
+		static_cast<Source::mirror*>(p)->video_render(ef);
 	}
 }
 
-void Source::MirrorAddon::enum_active_sources(void* p, obs_source_enum_proc_t enum_callback, void* param)
+void Source::mirror_factory::enum_active_sources(void* p, obs_source_enum_proc_t enum_callback, void* param)
 {
 	if (p) {
-		static_cast<Source::Mirror*>(p)->enum_active_sources(enum_callback, param);
+		static_cast<Source::mirror*>(p)->enum_active_sources(enum_callback, param);
 	}
 }
 
-void Source::MirrorAddon::load(void* p, obs_data_t* d)
+void Source::mirror_factory::load(void* p, obs_data_t* d)
 {
 	if (p) {
-		static_cast<Source::Mirror*>(p)->load(d);
+		static_cast<Source::mirror*>(p)->load(d);
 	}
 }
 
-void Source::MirrorAddon::save(void* p, obs_data_t* d)
+void Source::mirror_factory::save(void* p, obs_data_t* d)
 {
 	if (p) {
-		static_cast<Source::Mirror*>(p)->save(d);
+		static_cast<Source::mirror*>(p)->save(d);
 	}
 }
 
-void Source::Mirror::release_input()
+void Source::mirror::release_input()
 {
 	// Clear any references to the previous source.
 	if (this->m_source_item) {
@@ -298,7 +298,7 @@ void Source::Mirror::release_input()
 	this->m_source.reset();
 }
 
-void Source::Mirror::acquire_input(std::string source_name)
+void Source::mirror::acquire_input(std::string source_name)
 {
 	// Acquire new reference to current source.
 	obs_source_t* ref_source = obs_get_source_by_name(source_name.c_str());
@@ -333,12 +333,12 @@ void Source::Mirror::acquire_input(std::string source_name)
 
 	// If everything worked fine, we now set everything up.
 	this->m_source = std::move(new_source);
-	this->m_source->events.rename += std::bind(&Source::Mirror::on_source_rename, this, std::placeholders::_1,
+	this->m_source->events.rename += std::bind(&Source::mirror::on_source_rename, this, std::placeholders::_1,
 											   std::placeholders::_2, std::placeholders::_3);
 	try {
 		// Audio
 		this->m_source_audio = std::make_shared<obs::audio_capture>(this->m_source);
-		this->m_source_audio->on.data += std::bind(&Source::Mirror::audio_capture_cb, this, std::placeholders::_1,
+		this->m_source_audio->on.data += std::bind(&Source::mirror::audio_capture_cb, this, std::placeholders::_1,
 												   std::placeholders::_2, std::placeholders::_3);
 	} catch (...) {
 		P_LOG_ERROR("<Source Mirror:%s> Unexpected error during registering audio callback for '%s'.",
@@ -346,7 +346,7 @@ void Source::Mirror::acquire_input(std::string source_name)
 	}
 }
 
-Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src)
+Source::mirror::mirror(obs_data_t* data, obs_source_t* src)
 	: m_self(src), m_active(true), m_tick(0), m_scene_rendered(false), m_rescale_enabled(false),
 	  m_rescale_keep_orig_size(false), m_rescale_width(1), m_rescale_height(1),
 	  m_rescale_type(obs_scale_type::OBS_SCALE_BICUBIC), m_rescale_bounds(obs_bounds_type::OBS_BOUNDS_STRETCH),
@@ -363,10 +363,10 @@ Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src)
 	for (size_t idx = 0; idx < this->m_audio_data.size(); idx++) {
 		this->m_audio_data[idx].resize(AUDIO_OUTPUT_FRAMES);
 	}
-	this->m_audio_thread = std::thread(std::bind(&Source::Mirror::audio_output_cb, this));
+	this->m_audio_thread = std::thread(std::bind(&Source::mirror::audio_output_cb, this));
 }
 
-Source::Mirror::~Mirror()
+Source::mirror::~mirror()
 {
 	release_input();
 
@@ -382,7 +382,7 @@ Source::Mirror::~Mirror()
 	this->m_scene.reset();
 }
 
-uint32_t Source::Mirror::get_width()
+uint32_t Source::mirror::get_width()
 {
 	if (this->m_rescale_enabled && this->m_rescale_width > 0 && !this->m_rescale_keep_orig_size) {
 		return this->m_rescale_width;
@@ -394,7 +394,7 @@ uint32_t Source::Mirror::get_width()
 	return 1;
 }
 
-uint32_t Source::Mirror::get_height()
+uint32_t Source::mirror::get_height()
 {
 	if (this->m_rescale_enabled && this->m_rescale_height > 0 && !this->m_rescale_keep_orig_size)
 		return this->m_rescale_height;
@@ -405,7 +405,7 @@ uint32_t Source::Mirror::get_height()
 	return 1;
 }
 
-void Source::Mirror::update(obs_data_t* data)
+void Source::mirror::update(obs_data_t* data)
 {
 	{ // User changed the source we are tracking.
 		release_input();
@@ -455,7 +455,7 @@ void Source::Mirror::update(obs_data_t* data)
 	}
 }
 
-void Source::Mirror::activate()
+void Source::mirror::activate()
 {
 	this->m_active = true;
 
@@ -465,7 +465,7 @@ void Source::Mirror::activate()
 	}
 }
 
-void Source::Mirror::deactivate()
+void Source::mirror::deactivate()
 {
 	this->m_active = false;
 }
@@ -480,7 +480,7 @@ static inline void mix_audio(float* p_out, float* p_in, size_t pos, size_t count
 		*(out++) += *(in++);
 }
 
-void Source::Mirror::video_tick(float time)
+void Source::mirror::video_tick(float time)
 {
 	this->m_tick += time;
 	if (this->m_tick > 0.1f) {
@@ -521,7 +521,7 @@ void Source::Mirror::video_tick(float time)
 	m_scene_rendered = false;
 }
 
-void Source::Mirror::video_render(gs_effect_t* effect)
+void Source::mirror::video_render(gs_effect_t* effect)
 {
 	if ((this->m_rescale_width == 0) || (this->m_rescale_height == 0) || !this->m_source_item
 		|| !this->m_scene_texture_renderer) {
@@ -554,7 +554,7 @@ void Source::Mirror::video_render(gs_effect_t* effect)
 	}
 }
 
-void Source::Mirror::audio_capture_cb(std::shared_ptr<obs::source> source, audio_data const* const audio, bool)
+void Source::mirror::audio_capture_cb(std::shared_ptr<obs::source> source, audio_data const* const audio, bool)
 {
 	std::unique_lock<std::mutex> ulock(this->m_audio_lock);
 	if (!this->m_audio_enabled) {
@@ -592,7 +592,7 @@ void Source::Mirror::audio_capture_cb(std::shared_ptr<obs::source> source, audio
 	this->m_audio_notify.notify_all();
 }
 
-void Source::Mirror::audio_output_cb()
+void Source::mirror::audio_output_cb()
 {
 	std::unique_lock<std::mutex> ulock(this->m_audio_lock);
 
@@ -606,26 +606,26 @@ void Source::Mirror::audio_output_cb()
 	}
 }
 
-void Source::Mirror::enum_active_sources(obs_source_enum_proc_t enum_callback, void* param)
+void Source::mirror::enum_active_sources(obs_source_enum_proc_t enum_callback, void* param)
 {
 	if (this->m_scene) {
 		enum_callback(this->m_self, this->m_scene->get(), param);
 	}
 }
 
-void Source::Mirror::load(obs_data_t* data)
+void Source::mirror::load(obs_data_t* data)
 {
 	this->update(data);
 }
 
-void Source::Mirror::save(obs_data_t* data)
+void Source::mirror::save(obs_data_t* data)
 {
 	if (this->m_source_item) {
 		obs_data_set_string(data, P_SOURCE, obs_source_get_name(m_source->get()));
 	}
 }
 
-void Source::Mirror::on_source_rename(obs::source* source, std::string, std::string)
+void Source::mirror::on_source_rename(obs::source* source, std::string, std::string)
 {
 	obs_data_t* ref = obs_source_get_settings(this->m_self);
 	obs_data_set_string(ref, P_SOURCE, obs_source_get_name(source->get()));

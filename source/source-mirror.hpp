@@ -41,12 +41,12 @@
 #endif
 
 namespace Source {
-	class MirrorAddon {
+	class mirror_factory {
 		obs_source_info osi;
 
 		public:
-		MirrorAddon();
-		~MirrorAddon();
+		mirror_factory();
+		~mirror_factory();
 
 		static const char*       get_name(void*);
 		static void              get_defaults(obs_data_t*);
@@ -69,7 +69,7 @@ namespace Source {
 		static void save(void*, obs_data_t*);
 	};
 
-	class Mirror {
+	class mirror {
 		bool          m_active;
 		obs_source_t* m_self;
 		float_t       m_tick;
@@ -109,8 +109,8 @@ namespace Source {
 		void acquire_input(std::string source_name);
 
 		public:
-		Mirror(obs_data_t*, obs_source_t*);
-		~Mirror();
+		mirror(obs_data_t*, obs_source_t*);
+		~mirror();
 
 		uint32_t get_width();
 		uint32_t get_height();
