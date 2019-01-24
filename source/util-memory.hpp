@@ -21,7 +21,7 @@
 #include <cstdlib>
 
 #ifdef _MSC_VER
-#define aligned_alloc _aligned_malloc
+#define aligned_alloc(a, s) _aligned_malloc(s, a)
 #define aligned_free _aligned_free
 #else
 #define aligned_free free
