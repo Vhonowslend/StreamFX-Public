@@ -18,8 +18,10 @@
 */
 
 #pragma once
-#include "plugin.hpp"
+#include <memory>
 #include <string>
+#include "gs-effect.hpp"
+#include "plugin.hpp"
 
 // OBS
 #ifdef _MSC_VER
@@ -68,9 +70,9 @@ namespace filter {
 		bool          m_active;
 
 		// Rendering
-		gs_effect_t* m_effect;
-		float_t      m_distance;
-		vec2         m_displacement_scale;
+		std::shared_ptr<gs::effect> m_effect;
+		float_t                     m_distance;
+		vec2                        m_displacement_scale;
 		struct {
 			std::string file;
 

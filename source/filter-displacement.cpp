@@ -142,31 +142,28 @@ void filter::DisplacementAddon::video_render(void* ptr, gs_effect_t* effect)
 
 filter::Displacement::Displacement(obs_data_t* data, obs_source_t* context)
 	: m_self(context), m_active(true), m_effect(nullptr), m_distance(0), m_timer(0)
-	{
+{
 	this->m_displacement_map.texture      = nullptr;
 	this->m_displacement_map.createTime   = 0;
 	this->m_displacement_map.modifiedTime = 0;
 	this->m_displacement_map.size         = 0;
 
-
-	obs_enter_graphics();
-	char* effectFile   = obs_module_file("effects/displace.effect");
-	char* errorMessage = nullptr;
-	this->m_effect     = gs_effect_create_from_file(effectFile, &errorMessage);
-	bfree(effectFile);
-	if (errorMessage != nullptr) {
-		P_LOG_ERROR("%s", errorMessage);
-		bfree(errorMessage);
+	char* effectFile = obs_module_file("effects/displace.effect");
+	try {
+		m_effect = std::make_shared<gs::effect>(effectFile);
+	} catch (...) {
+		P_LOG_ERROR("<Displacement Filter:%s> Failed to load displacement effect.", obs_source_get_name(m_self));
 	}
-	obs_leave_graphics();
+	bfree(effectFile);
 
 	update(data);
 }
 
 filter::Displacement::~Displacement()
 {
+	m_effect.reset();
+
 	obs_enter_graphics();
-	gs_effect_destroy(m_effect);
 	gs_texture_destroy(m_displacement_map.texture);
 	obs_leave_graphics();
 }
@@ -219,7 +216,7 @@ void filter::Displacement::video_render(gs_effect_t*)
 	uint32_t      baseW = obs_source_get_base_width(target), baseH = obs_source_get_base_height(target);
 
 	// Skip rendering if our target, parent or context is not valid.
-	if (!target || !parent || !m_self || !m_displacement_map.texture || !baseW || !baseH) {
+	if (!parent || !target || !baseW || !baseH || !m_displacement_map.texture) {
 		obs_source_skip_video_filter(m_self);
 		return;
 	}
@@ -231,25 +228,18 @@ void filter::Displacement::video_render(gs_effect_t*)
 
 	vec2 texelScale;
 	vec2_set(&texelScale, interp((1.0f / baseW), 1.0f, m_distance), interp((1.0f / baseH), 1.0f, m_distance));
-	param = gs_effect_get_param_by_name(m_effect, "texelScale");
-	if (param)
-		gs_effect_set_vec2(param, &texelScale);
-	else
-		P_LOG_ERROR("Failed to set texel scale param.");
 
-	param = gs_effect_get_param_by_name(m_effect, "displacementScale");
-	if (param)
-		gs_effect_set_vec2(param, &m_displacement_scale);
-	else
-		P_LOG_ERROR("Failed to set displacement scale param.");
+	if (m_effect->has_parameter("texelScale")) {
+		m_effect->get_parameter("texelScale").set_float2(texelScale);
+	}
+	if (m_effect->has_parameter("displacementScale")) {
+		m_effect->get_parameter("displacmenetScale").set_float2(m_displacement_scale);
+	}
+	if (m_effect->has_parameter("displacementMap")) {
+		m_effect->get_parameter("displacementMap").set_texture(m_displacement_map.texture);
+	}
 
-	param = gs_effect_get_param_by_name(m_effect, "displacementMap");
-	if (param)
-		gs_effect_set_texture(param, m_displacement_map.texture);
-	else
-		P_LOG_ERROR("Failed to set texture param.");
-
-	obs_source_process_filter_end(m_self, m_effect, baseW, baseH);
+	obs_source_process_filter_end(m_self, m_effect->get_object(), baseW, baseH);
 }
 
 std::string filter::Displacement::get_file()
