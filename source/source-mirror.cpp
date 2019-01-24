@@ -33,7 +33,6 @@
 #endif
 #include <media-io/audio-io.h>
 #include <obs-config.h>
-#include <util/threading.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
@@ -625,7 +624,6 @@ void Source::Mirror::audio_capture_cb(std::shared_ptr<obs::source> source, audio
 void Source::Mirror::audio_output_cb()
 {
 	std::unique_lock<std::mutex> ulock(this->m_audio_lock);
-	os_set_thread_name("Source Mirror Audio Thread");
 
 	while (!this->m_audio_kill_thread) {
 		if (this->m_audio_have_output) {
