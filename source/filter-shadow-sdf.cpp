@@ -406,6 +406,7 @@ void filter::shadow_sdf::shadow_sdf_factory::destroy(void* inptr)
 	if (get()->sources.empty()) {
 		get()->on_list_empty();
 	}
+	delete ptr;
 }
 
 void filter::shadow_sdf::shadow_sdf_factory::get_defaults(obs_data_t* data)
