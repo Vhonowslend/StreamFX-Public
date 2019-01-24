@@ -140,14 +140,38 @@ void filter::DisplacementAddon::video_render(void* ptr, gs_effect_t* effect)
 	reinterpret_cast<Displacement*>(ptr)->video_render(effect);
 }
 
-filter::Displacement::Displacement(obs_data_t* data, obs_source_t* context)
-	: m_self(context), m_active(true), m_effect(nullptr), m_distance(0), m_timer(0)
+void filter::Displacement::validate_file_texture(std::string file)
 {
-	this->m_displacement_map.texture      = nullptr;
-	this->m_displacement_map.createTime   = 0;
-	this->m_displacement_map.modifiedTime = 0;
-	this->m_displacement_map.size         = 0;
+	bool do_update = false;
 
+	// File name different
+	if (file != m_file_name) {
+		do_update   = true;
+		m_file_name = file;
+	}
+
+	// Timestamp verification
+	struct stat stats;
+	if (os_stat(m_file_name.c_str(), &stats) != 0) {
+		do_update            = do_update || (stats.st_ctime != m_file_create_time);
+		do_update            = do_update || (stats.st_mtime != m_file_modified_time);
+		do_update            = do_update || (stats.st_size != m_file_size);
+		m_file_create_time   = stats.st_ctime;
+		m_file_modified_time = stats.st_mtime;
+		m_file_size          = stats.st_size;
+	}
+
+	do_update = !m_file_texture || do_update;
+
+	if (do_update) {
+		m_file_texture = std::make_shared<gs::texture>(m_file_name);
+	}
+}
+
+filter::Displacement::Displacement(obs_data_t* data, obs_source_t* context)
+	: m_self(context), m_active(true), m_timer(0), m_effect(nullptr), m_distance(0), m_file_create_time(0),
+	  m_file_modified_time(0), m_file_size(0)
+{
 	char* effectFile = obs_module_file("effects/displace.effect");
 	try {
 		m_effect = std::make_shared<gs::effect>(effectFile);
@@ -162,15 +186,12 @@ filter::Displacement::Displacement(obs_data_t* data, obs_source_t* context)
 filter::Displacement::~Displacement()
 {
 	m_effect.reset();
-
-	obs_enter_graphics();
-	gs_texture_destroy(m_displacement_map.texture);
-	obs_leave_graphics();
+	m_file_texture.reset();
 }
 
 void filter::Displacement::update(obs_data_t* data)
 {
-	updateDisplacementMap(obs_data_get_string(data, S_FILTER_DISPLACEMENT_FILE));
+	validate_file_texture(obs_data_get_string(data, S_FILTER_DISPLACEMENT_FILE));
 
 	m_distance = float_t(obs_data_get_double(data, S_FILTER_DISPLACEMENT_RATIO));
 	vec2_set(&m_displacement_scale, float_t(obs_data_get_double(data, S_FILTER_DISPLACEMENT_SCALE)),
@@ -200,7 +221,7 @@ void filter::Displacement::video_tick(float time)
 	m_timer += time;
 	if (m_timer >= 1.0) {
 		m_timer -= 1.0;
-		updateDisplacementMap(m_displacement_map.file);
+		validate_file_texture(m_file_name);
 	}
 }
 
@@ -216,27 +237,25 @@ void filter::Displacement::video_render(gs_effect_t*)
 	uint32_t      baseW = obs_source_get_base_width(target), baseH = obs_source_get_base_height(target);
 
 	// Skip rendering if our target, parent or context is not valid.
-	if (!parent || !target || !baseW || !baseH || !m_displacement_map.texture) {
+	if (!parent || !target || !baseW || !baseH || !m_file_texture) {
 		obs_source_skip_video_filter(m_self);
 		return;
 	}
 
-	if (!obs_source_process_filter_begin(m_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING))
+	if (!obs_source_process_filter_begin(m_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
+		obs_source_skip_video_filter(m_self);
 		return;
-
-	gs_eparam_t* param;
-
-	vec2 texelScale;
-	vec2_set(&texelScale, interp((1.0f / baseW), 1.0f, m_distance), interp((1.0f / baseH), 1.0f, m_distance));
+	}
 
 	if (m_effect->has_parameter("texelScale")) {
-		m_effect->get_parameter("texelScale").set_float2(texelScale);
+		m_effect->get_parameter("texelScale")
+			.set_float2(interp((1.0f / baseW), 1.0f, m_distance), interp((1.0f / baseH), 1.0f, m_distance));
 	}
 	if (m_effect->has_parameter("displacementScale")) {
-		m_effect->get_parameter("displacmenetScale").set_float2(m_displacement_scale);
+		m_effect->get_parameter("displacementScale").set_float2(m_displacement_scale);
 	}
 	if (m_effect->has_parameter("displacementMap")) {
-		m_effect->get_parameter("displacementMap").set_texture(m_displacement_map.texture);
+		m_effect->get_parameter("displacementMap").set_texture(m_file_texture);
 	}
 
 	obs_source_process_filter_end(m_self, m_effect->get_object(), baseW, baseH);
@@ -244,35 +263,5 @@ void filter::Displacement::video_render(gs_effect_t*)
 
 std::string filter::Displacement::get_file()
 {
-	return m_displacement_map.file;
-}
-
-void filter::Displacement::updateDisplacementMap(std::string file)
-{
-	bool shouldUpdateTexture = false;
-
-	// Different File
-	if (file != m_displacement_map.file) {
-		m_displacement_map.file = file;
-		shouldUpdateTexture     = true;
-	} else { // Different Timestamps
-		struct stat stats;
-		if (os_stat(m_displacement_map.file.c_str(), &stats) != 0) {
-			shouldUpdateTexture = shouldUpdateTexture || (m_displacement_map.createTime != stats.st_ctime)
-								  || (m_displacement_map.modifiedTime != stats.st_mtime);
-			m_displacement_map.createTime   = stats.st_ctime;
-			m_displacement_map.modifiedTime = stats.st_mtime;
-		}
-	}
-
-	if (shouldUpdateTexture) {
-		obs_enter_graphics();
-		if (m_displacement_map.texture) {
-			gs_texture_destroy(m_displacement_map.texture);
-			m_displacement_map.texture = nullptr;
-		}
-		if (os_file_exists(file.c_str()))
-			m_displacement_map.texture = gs_texture_create_from_file(m_displacement_map.file.c_str());
-		obs_leave_graphics();
-	}
+	return m_file_name;
 }

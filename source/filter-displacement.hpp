@@ -68,21 +68,21 @@ namespace filter {
 	class Displacement {
 		obs_source_t* m_self;
 		bool          m_active;
+		float_t       m_timer;
 
 		// Rendering
 		std::shared_ptr<gs::effect> m_effect;
 		float_t                     m_distance;
 		vec2                        m_displacement_scale;
-		struct {
-			std::string file;
 
-			gs_texture_t* texture;
-			time_t        createTime, modifiedTime;
-			size_t        size;
-		} m_displacement_map;
-		float_t m_timer;
+		// Displacement Map
+		std::string                  m_file_name;
+		std::shared_ptr<gs::texture> m_file_texture;
+		time_t                       m_file_create_time;
+		time_t                       m_file_modified_time;
+		size_t                       m_file_size;
 
-		void updateDisplacementMap(std::string file);
+		void validate_file_texture(std::string file);
 
 		public:
 		Displacement(obs_data_t*, obs_source_t*);
