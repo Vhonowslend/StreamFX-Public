@@ -19,6 +19,7 @@
 
 #pragma once
 #include <functional>
+#include <memory>
 #include "obs-source.hpp"
 
 // OBS
