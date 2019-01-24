@@ -72,9 +72,9 @@ bool filter::shadow_sdf::shadow_sdf_instance::cb_modified_outside(void*, obs_pro
 }
 
 filter::shadow_sdf::shadow_sdf_instance::shadow_sdf_instance(obs_data_t* settings, obs_source_t* self)
+	: m_self(self), m_source_rendered(false)
 {
-	this->m_self      = self;
-	this->m_input     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	this->m_source_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	this->m_sdf_write = std::make_shared<gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
 	{
 		auto op = this->m_sdf_write->render(1, 1);
@@ -186,15 +186,16 @@ void filter::shadow_sdf::shadow_sdf_instance::deactivate() {}
 void filter::shadow_sdf::shadow_sdf_instance::video_tick(float time)
 {
 	this->m_tick += time;
+	m_source_rendered = false;
 }
 
 void filter::shadow_sdf::shadow_sdf_instance::video_render(gs_effect_t*)
 {
-	obs_source_t* parent            = obs_filter_get_parent(this->m_self);
-	obs_source_t* target            = obs_filter_get_target(this->m_self);
-	uint32_t      baseW             = obs_source_get_base_width(target);
-	uint32_t      baseH             = obs_source_get_base_height(target);
-	gs_effect_t*  default_effect    = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
+	obs_source_t* parent         = obs_filter_get_parent(this->m_self);
+	obs_source_t* target         = obs_filter_get_target(this->m_self);
+	uint32_t      baseW          = obs_source_get_base_width(target);
+	uint32_t      baseH          = obs_source_get_base_height(target);
+	gs_effect_t*  default_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 	vec4          color_transparent;
 	vec4_zero(&color_transparent);
 
@@ -204,10 +205,10 @@ void filter::shadow_sdf::shadow_sdf_instance::video_render(gs_effect_t*)
 	}
 
 	try {
-		if (this->m_tick != this->m_last_tick) {
+		if (!this->m_source_rendered) {
 			// Store input texture.
 			{
-				auto op = m_input->render(baseW, baseH);
+				auto op = m_source_rt->render(baseW, baseH);
 				gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
 				gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &color_transparent, 0, 0);
 				gs_set_cull_mode(GS_NEITHER);
@@ -225,7 +226,7 @@ void filter::shadow_sdf::shadow_sdf_instance::video_render(gs_effect_t*)
 					throw std::runtime_error("failed to process source");
 				}
 			}
-			m_input->get_texture(this->m_source_texture);
+			m_source_rt->get_texture(this->m_source_texture);
 			if (!this->m_source_texture) {
 				throw std::runtime_error("failed to draw source");
 			}
@@ -333,9 +334,9 @@ void filter::shadow_sdf::shadow_sdf_instance::video_render(gs_effect_t*)
 		obs_source_skip_video_filter(this->m_self);
 		return;
 	}
+
 	gs_reset_blend_state();
 	gs_enable_depth_test(false);
-	this->m_last_tick = this->m_tick;
 }
 
 filter::shadow_sdf::shadow_sdf_factory::shadow_sdf_factory()

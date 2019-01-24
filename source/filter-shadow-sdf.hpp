@@ -43,13 +43,17 @@ namespace filter {
 	namespace shadow_sdf {
 		class shadow_sdf_instance {
 			obs_source_t*                     m_self;
-			std::shared_ptr<gs::rendertarget> m_input;
-			std::shared_ptr<gs::rendertarget> m_sdf_write, m_sdf_read;
+
+			// Input
+			std::shared_ptr<gs::rendertarget> m_source_rt;
 			std::shared_ptr<gs::texture>      m_source_texture;
+			bool                              m_source_rendered;
+
+			// Distance Field
+			std::shared_ptr<gs::rendertarget> m_sdf_write, m_sdf_read;
 			std::shared_ptr<gs::texture>      m_sdf_texture;
 
 			float_t m_tick      = 0.;
-			float_t m_last_tick = 0.;
 
 			bool     m_inner_shadow;
 			float_t  m_inner_range_min;
