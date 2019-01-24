@@ -23,10 +23,6 @@
 #include "filter-shape.hpp"
 #include "filter-transform.hpp"
 
-filter::Displacement* filterDisplacement;
-filter::Shape*        filterShape;
-filter::Transform*    filterTransform;
-
 std::list<std::function<void()>> initializerFunctions;
 std::list<std::function<void()>> finalizerFunctions;
 
