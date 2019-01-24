@@ -27,12 +27,12 @@
 #include "plugin.hpp"
 
 namespace filter {
-	class Transform {
+	class TransformAddon {
 		obs_source_info sourceInfo;
 
 		public:
-		Transform();
-		~Transform();
+		TransformAddon();
+		~TransformAddon();
 
 		static const char*       get_name(void*);
 		static void              get_defaults(obs_data_t*);
@@ -50,50 +50,49 @@ namespace filter {
 		static void     hide(void*);
 		static void     video_tick(void*, float);
 		static void     video_render(void*, gs_effect_t*);
+	};
 
-		private:
-		class Instance {
-			obs_source_t* source_context;
+	class Transform {
+		obs_source_t* source_context;
 
-			// Graphics Data
-			std::shared_ptr<gs::vertex_buffer> vertex_buffer;
-			std::shared_ptr<gs::rendertarget>  source_rt;
-			std::shared_ptr<gs::rendertarget>  shape_rt;
+		// Graphics Data
+		std::shared_ptr<gs::vertex_buffer> vertex_buffer;
+		std::shared_ptr<gs::rendertarget>  source_rt;
+		std::shared_ptr<gs::rendertarget>  shape_rt;
 
-			// Mipmapping
-			bool                         enable_mipmapping;
-			double_t                     generator_strength;
-			gs::mipmapper::generator     generator;
-			std::shared_ptr<gs::texture> source_texture;
-			gs::mipmapper                mipmapper;
+		// Mipmapping
+		bool                         enable_mipmapping;
+		double_t                     generator_strength;
+		gs::mipmapper::generator     generator;
+		std::shared_ptr<gs::texture> source_texture;
+		gs::mipmapper                mipmapper;
 
-			// Camera
-			bool    is_orthographic;
-			float_t field_of_view;
+		// Camera
+		bool    is_orthographic;
+		float_t field_of_view;
 
-			// Source
-			bool is_inactive;
-			bool is_hidden;
-			bool is_mesh_update_required;
+		// Source
+		bool is_inactive;
+		bool is_hidden;
+		bool is_mesh_update_required;
 
-			// 3D Information
-			uint32_t rotation_order;
-			std::unique_ptr<util::vec3a> position;
-			std::unique_ptr<util::vec3a> rotation;
-			std::unique_ptr<util::vec3a> scale;
-			std::unique_ptr<util::vec3a> shear;
+		// 3D Information
+		uint32_t                     rotation_order;
+		std::unique_ptr<util::vec3a> position;
+		std::unique_ptr<util::vec3a> rotation;
+		std::unique_ptr<util::vec3a> scale;
+		std::unique_ptr<util::vec3a> shear;
 
-			public:
-			Instance(obs_data_t*, obs_source_t*);
-			~Instance();
+		public:
+		Transform(obs_data_t*, obs_source_t*);
+		~Transform();
 
-			void     update(obs_data_t*);
-			uint32_t get_width();
-			uint32_t get_height();
-			void     activate();
-			void     deactivate();
-			void     video_tick(float);
-			void     video_render(gs_effect_t*);
-		};
+		void     update(obs_data_t*);
+		uint32_t get_width();
+		uint32_t get_height();
+		void     activate();
+		void     deactivate();
+		void     video_tick(float);
+		void     video_render(gs_effect_t*);
 	};
 } // namespace filter
