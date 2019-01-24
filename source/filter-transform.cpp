@@ -332,6 +332,16 @@ filter::Transform::Transform(obs_data_t* data, obs_source_t* context)
 	update(data);
 }
 
+uint32_t filter::Transform::get_width()
+{
+	return 0;
+}
+
+uint32_t filter::Transform::get_height()
+{
+	return 0;
+}
+
 void filter::Transform::update(obs_data_t* data)
 {
 	// Camera
@@ -359,16 +369,6 @@ void filter::Transform::update(obs_data_t* data)
 	generator          = (gs::mipmapper::generator)obs_data_get_int(data, strings::MipGenerator::Name);
 
 	is_mesh_update_required = true;
-}
-
-uint32_t filter::Transform::get_width()
-{
-	return 0;
-}
-
-uint32_t filter::Transform::get_height()
-{
-	return 0;
 }
 
 void filter::Transform::activate()

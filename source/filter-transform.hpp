@@ -87,9 +87,10 @@ namespace filter {
 		~Transform();
 		Transform(obs_data_t*, obs_source_t*);
 
-		void     update(obs_data_t*);
 		uint32_t get_width();
 		uint32_t get_height();
+
+		void     update(obs_data_t*);
 		void     activate();
 		void     deactivate();
 		void     video_tick(float);
