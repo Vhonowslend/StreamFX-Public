@@ -45,19 +45,16 @@
 #define P_SCALING_METHOD "Source.Mirror.Scaling.Method"
 #define P_SCALING_METHOD_POINT "Source.Mirror.Scaling.Method.Point"
 #define P_SCALING_METHOD_BILINEAR "Source.Mirror.Scaling.Method.Bilinear"
-#define P_SCALING_METHOD_BILINEARLOWRES "Source.Mirror.Scaling.Method.BilinearLowRes"
 #define P_SCALING_METHOD_BICUBIC "Source.Mirror.Scaling.Method.Bicubic"
 #define P_SCALING_METHOD_LANCZOS "Source.Mirror.Scaling.Method.Lanczos"
 #define P_SCALING_SIZE "Source.Mirror.Scaling.Size"
 #define P_SCALING_TRANSFORMKEEPORIGINAL "Source.Mirror.Scaling.TransformKeepOriginal"
-
-enum class ScalingMethod : int64_t {
-	Point,
-	Bilinear,
-	BilinearLowRes,
-	Bicubic,
-	Lanczos,
-};
+#define P_SCALING_BOUNDS "Source.Mirror.Scaling.Bounds"
+#define P_SCALING_BOUNDS_STRETCH "Source.Mirror.Scaling.Bounds.Stretch"
+#define P_SCALING_BOUNDS_FIT "Source.Mirror.Scaling.Bounds.Fit"
+#define P_SCALING_BOUNDS_FILL "Source.Mirror.Scaling.Bounds.Fill"
+#define P_SCALING_BOUNDS_FILLWIDTH "Source.Mirror.Scaling.Bounds.FillWidth"
+#define P_SCALING_BOUNDS_FILLHEIGHT "Source.Mirror.Scaling.Bounds.FillHeight"
 
 // Initializer & Finalizer
 Source::MirrorAddon* sourceMirrorInstance;
@@ -106,7 +103,9 @@ void Source::MirrorAddon::get_defaults(obs_data_t* data)
 	obs_data_set_default_bool(data, P_SOURCE_AUDIO, false);
 	obs_data_set_default_bool(data, P_SCALING, false);
 	obs_data_set_default_string(data, P_SCALING_SIZE, "100x100");
-	obs_data_set_default_int(data, P_SCALING_METHOD, (int64_t)ScalingMethod::Bilinear);
+	obs_data_set_default_int(data, P_SCALING_METHOD, (int64_t)obs_scale_type::OBS_SCALE_BILINEAR);
+	obs_data_set_default_bool(data, P_SCALING_TRANSFORMKEEPORIGINAL, false);
+	obs_data_set_default_int(data, P_SCALING_BOUNDS, (int64_t)obs_bounds_type::OBS_BOUNDS_STRETCH);
 }
 
 bool Source::MirrorAddon::modified_properties(obs_properties_t* pr, obs_property_t* p, obs_data_t* data)
@@ -128,6 +127,7 @@ bool Source::MirrorAddon::modified_properties(obs_properties_t* pr, obs_property
 		bool show = obs_data_get_bool(data, P_SCALING);
 		obs_property_set_visible(obs_properties_get(pr, P_SCALING_METHOD), show);
 		obs_property_set_visible(obs_properties_get(pr, P_SCALING_SIZE), show);
+		obs_property_set_visible(obs_properties_get(pr, P_SCALING_BOUNDS), show);
 		return true;
 	}
 
@@ -175,17 +175,27 @@ obs_properties_t* Source::MirrorAddon::get_properties(void*)
 	p = obs_properties_add_list(pr, P_SCALING_METHOD, P_TRANSLATE(P_SCALING_METHOD), OBS_COMBO_TYPE_LIST,
 								OBS_COMBO_FORMAT_INT);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_METHOD)));
-	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_METHOD_POINT), (int64_t)ScalingMethod::Point);
-	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_METHOD_BILINEAR), (int64_t)ScalingMethod::Bilinear);
-	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_METHOD_BILINEARLOWRES), (int64_t)ScalingMethod::BilinearLowRes);
-	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_METHOD_BICUBIC), (int64_t)ScalingMethod::Bicubic);
-	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_METHOD_LANCZOS), (int64_t)ScalingMethod::Lanczos);
+	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_METHOD_POINT), (int64_t)obs_scale_type::OBS_SCALE_POINT);
+	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_METHOD_BILINEAR), (int64_t)obs_scale_type::OBS_SCALE_BILINEAR);
+	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_METHOD_BICUBIC), (int64_t)obs_scale_type::OBS_SCALE_BICUBIC);
+	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_METHOD_LANCZOS), (int64_t)obs_scale_type::OBS_SCALE_LANCZOS);
 
 	p = obs_properties_add_text(pr, P_SCALING_SIZE, P_TRANSLATE(P_SCALING_SIZE), OBS_TEXT_DEFAULT);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_SIZE)));
 
 	p = obs_properties_add_bool(pr, P_SCALING_TRANSFORMKEEPORIGINAL, P_TRANSLATE(P_SCALING_TRANSFORMKEEPORIGINAL));
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_TRANSFORMKEEPORIGINAL)));
+
+	p = obs_properties_add_list(pr, P_SCALING_BOUNDS, P_TRANSLATE(P_SCALING_BOUNDS), OBS_COMBO_TYPE_LIST,
+								OBS_COMBO_FORMAT_INT);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS)));
+	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_BOUNDS_STRETCH), (int64_t)obs_bounds_type::OBS_BOUNDS_STRETCH);
+	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_BOUNDS_FIT), (int64_t)obs_bounds_type::OBS_BOUNDS_SCALE_INNER);
+	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_BOUNDS_FILL), (int64_t)obs_bounds_type::OBS_BOUNDS_SCALE_OUTER);
+	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_BOUNDS_FILLWIDTH),
+							  (int64_t)obs_bounds_type::OBS_BOUNDS_SCALE_TO_WIDTH);
+	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_BOUNDS_FILLHEIGHT),
+							  (int64_t)obs_bounds_type::OBS_BOUNDS_SCALE_TO_HEIGHT);
 
 	return pr;
 }
@@ -337,20 +347,16 @@ void Source::Mirror::acquire_input(std::string source_name)
 }
 
 Source::Mirror::Mirror(obs_data_t* data, obs_source_t* src)
-	: m_self(src), m_active(false), m_tick(0), m_rescale_enabled(false), m_rescale_effect(nullptr),
-	  m_rescale_keep_orig_size(false), m_rescale_width(1), m_rescale_height(1), m_audio_enabled(false), m_audio_kill_thread(false),
-	  m_audio_have_output(false), m_source_item(nullptr)
+	: m_self(src), m_active(true), m_tick(0), m_scene_rendered(false), m_rescale_enabled(false),
+	  m_rescale_keep_orig_size(false), m_rescale_width(1), m_rescale_height(1),
+	  m_rescale_type(obs_scale_type::OBS_SCALE_BICUBIC), m_rescale_bounds(obs_bounds_type::OBS_BOUNDS_STRETCH),
+	  m_audio_enabled(false), m_audio_kill_thread(false), m_audio_have_output(false), m_source_item(nullptr)
 {
 	// Initialize Video Rendering
 	this->m_scene =
 		std::make_shared<obs::source>(obs_scene_get_source(obs_scene_create_private("Source Mirror Internal Scene")));
 	this->m_scene_texture_renderer =
 		std::make_shared<gfx::source_texture>(this->m_scene, std::make_shared<obs::source>(this->m_self, false, false));
-
-	// Initialize Rescaling
-	this->m_rescale_rt     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	this->m_sampler        = std::make_shared<gs::sampler>();
-	this->m_rescale_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 
 	// Initialize Audio Rendering
 	this->m_audio_data.resize(MAX_AUDIO_CHANNELS);
@@ -370,11 +376,6 @@ Source::Mirror::~Mirror()
 	if (this->m_audio_thread.joinable()) {
 		this->m_audio_thread.join();
 	}
-
-	// Finalize Rescaling
-	this->m_rescale_effect = nullptr;
-	this->m_sampler.reset();
-	this->m_rescale_rt.reset();
 
 	// Finalize Video Rendering
 	this->m_scene_texture_renderer.reset();
@@ -448,32 +449,9 @@ void Source::Mirror::update(obs_data_t* data)
 			this->m_rescale_height  = 1;
 		}
 
-		ScalingMethod scaler = (ScalingMethod)obs_data_get_int(data, P_SCALING_METHOD);
-		switch (scaler) {
-		case ScalingMethod::Point:
-		default:
-			this->m_rescale_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
-			this->m_sampler->set_filter(GS_FILTER_POINT);
-			break;
-		case ScalingMethod::Bilinear:
-			this->m_rescale_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
-			this->m_sampler->set_filter(GS_FILTER_LINEAR);
-			break;
-		case ScalingMethod::BilinearLowRes:
-			this->m_rescale_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_BILINEAR_LOWRES);
-			this->m_sampler->set_filter(GS_FILTER_LINEAR);
-			break;
-		case ScalingMethod::Bicubic:
-			this->m_rescale_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_BICUBIC);
-			this->m_sampler->set_filter(GS_FILTER_LINEAR);
-			break;
-		case ScalingMethod::Lanczos:
-			this->m_rescale_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_LANCZOS);
-			this->m_sampler->set_filter(GS_FILTER_LINEAR);
-			break;
-		}
-
 		this->m_rescale_keep_orig_size = obs_data_get_bool(data, P_SCALING_TRANSFORMKEEPORIGINAL);
+		this->m_rescale_type           = (obs_scale_type)obs_data_get_int(data, P_SCALING_METHOD);
+		this->m_rescale_bounds         = (obs_bounds_type)obs_data_get_int(data, P_SCALING_BOUNDS);
 	}
 }
 
@@ -513,6 +491,34 @@ void Source::Mirror::video_tick(float time)
 			this->acquire_input(this->m_source_name.c_str());
 		}
 	}
+
+	// Update Scene Item Boundaries
+	if (this->m_source_item) {
+		obs_transform_info info;
+		obs_sceneitem_get_info(this->m_source_item, &info);
+
+		info.pos.x       = 0;
+		info.pos.y       = 0;
+		info.rot         = 0;
+		info.scale.x     = 1.f;
+		info.scale.y     = 1.f;
+		info.bounds.x    = float_t(this->m_source->width());
+		info.bounds.y    = float_t(this->m_source->height());
+		info.bounds_type = obs_bounds_type::OBS_BOUNDS_STRETCH;
+
+		if (this->m_rescale_enabled) {
+			info.bounds.x    = float_t(this->m_rescale_width);
+			info.bounds.y    = float_t(this->m_rescale_height);
+			info.bounds_type = this->m_rescale_bounds;
+		}
+		obs_sceneitem_set_info(this->m_source_item, &info);
+		obs_sceneitem_force_update_transform(this->m_source_item);
+
+		obs_sceneitem_set_scale_filter(this->m_source_item, this->m_rescale_enabled ? this->m_rescale_type
+																					: obs_scale_type::OBS_SCALE_POINT);
+	}
+
+	m_scene_rendered = false;
 }
 
 void Source::Mirror::video_render(gs_effect_t* effect)
@@ -522,61 +528,29 @@ void Source::Mirror::video_render(gs_effect_t* effect)
 		return;
 	}
 
-	if (this->m_rescale_enabled && this->m_rescale_effect) {
-		// Get Size of source.
-		uint32_t sw, sh;
-		sw = this->m_source->width();
-		sh = this->m_source->height();
-
-		vec2 bounds;
-		bounds.x = float_t(sw);
-		bounds.y = float_t(sh);
-		obs_sceneitem_set_bounds(this->m_source_item, &bounds);
-
-		// Store original Source Texture
-		std::shared_ptr<gs::texture> tex;
-		try {
-			tex = this->m_scene_texture_renderer->render(sw, sh);
-		} catch (...) {
-			return;
+	// Only re-render the scene if there was a video_tick, saves GPU cycles.
+	if (!m_scene_rendered) {
+		// Override render size if rescaling is enabled.
+		uint32_t render_width  = this->m_source->width();
+		uint32_t render_height = this->m_source->height();
+		if (m_rescale_enabled) {
+			render_width  = m_rescale_width;
+			render_height = m_rescale_height;
 		}
 
-		gs_eparam_t* scale_param = gs_effect_get_param_by_name(this->m_rescale_effect, "base_dimension_i");
-		if (scale_param) {
-			vec2 base_res_i;
-			vec2_set(&base_res_i, 1.0f / float_t(sw), 1.0f / float_t(sh));
-			gs_effect_set_vec2(scale_param, &base_res_i);
-		}
+		m_scene_texture  = this->m_scene_texture_renderer->render(render_width, render_height);
+		m_scene_rendered = true;
+	}
 
-		if (this->m_rescale_keep_orig_size) {
-			{
-				auto op = m_rescale_rt->render(this->m_rescale_width, this->m_rescale_height);
-				gs_ortho(0, float_t(this->m_rescale_width), 0, float_t(this->m_rescale_height), 0, 1);
+	// Use default effect unless we are provided a different effect.
+	if (!effect) {
+		effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
+	}
 
-				vec4 black;
-				vec4_zero(&black);
-				gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
-
-				while (gs_effect_loop(this->m_rescale_effect, "Draw")) {
-					gs_eparam_t* image = gs_effect_get_param_by_name(this->m_rescale_effect, "image");
-					gs_effect_set_next_sampler(image, this->m_sampler->get_object());
-					obs_source_draw(tex->get_object(), 0, 0, this->m_rescale_width, this->m_rescale_height, false);
-				}
-			}
-			while (gs_effect_loop(obs_get_base_effect(OBS_EFFECT_DEFAULT), "Draw")) {
-				gs_eparam_t* image = gs_effect_get_param_by_name(obs_get_base_effect(OBS_EFFECT_DEFAULT), "image");
-				gs_effect_set_next_sampler(image, this->m_sampler->get_object());
-				obs_source_draw(this->m_rescale_rt->get_object(), 0, 0, sw, sh, false);
-			}
-		} else {
-			while (gs_effect_loop(this->m_rescale_effect, "Draw")) {
-				gs_eparam_t* image = gs_effect_get_param_by_name(this->m_rescale_effect, "image");
-				gs_effect_set_next_sampler(image, this->m_sampler->get_object());
-				obs_source_draw(tex->get_object(), 0, 0, this->m_rescale_width, this->m_rescale_height, false);
-			}
-		}
-	} else {
-		obs_source_video_render(this->m_scene_texture_renderer->get_object());
+	// Render the cached scene texture.
+	gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), m_scene_texture->get_object());
+	while (gs_effect_loop(effect, "Draw")) {
+		gs_draw_sprite(m_scene_texture->get_object(), 0, this->get_width(), this->get_height());
 	}
 }
 

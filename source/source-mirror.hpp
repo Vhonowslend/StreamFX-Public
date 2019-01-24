@@ -77,31 +77,32 @@ namespace Source {
 		// Video Rendering
 		std::shared_ptr<obs::source>         m_scene;
 		std::shared_ptr<gfx::source_texture> m_scene_texture_renderer;
+		std::shared_ptr<gs::texture>         m_scene_texture;
+		bool                                 m_scene_rendered;
 
 		// Rescaling
-		std::shared_ptr<gs::rendertarget> m_rescale_rt;
-		bool                              m_rescale_enabled;
-		gs_effect_t*                      m_rescale_effect;
-		bool                              m_rescale_keep_orig_size;
-		uint32_t                          m_rescale_width;
-		uint32_t                          m_rescale_height;
-		std::shared_ptr<gs::sampler>      m_sampler;
+		bool            m_rescale_enabled;
+		uint32_t        m_rescale_width;
+		uint32_t        m_rescale_height;
+		bool            m_rescale_keep_orig_size;
+		obs_scale_type  m_rescale_type;
+		obs_bounds_type m_rescale_bounds;
 
 		// Audio Rendering
-		bool                                m_audio_enabled;
-		std::mutex                          m_audio_lock;
-		std::condition_variable             m_audio_notify;
-		obs_source_audio                    m_audio_output;
-		std::vector<std::vector<float_t>>   m_audio_data;
-		std::thread                         m_audio_thread;
-		bool                                m_audio_kill_thread;
-		bool                                m_audio_have_output;
+		bool                              m_audio_enabled;
+		std::mutex                        m_audio_lock;
+		std::condition_variable           m_audio_notify;
+		obs_source_audio                  m_audio_output;
+		std::vector<std::vector<float_t>> m_audio_data;
+		std::thread                       m_audio_thread;
+		bool                              m_audio_kill_thread;
+		bool                              m_audio_have_output;
 
 		// Input
-		std::shared_ptr<obs::source>         m_source;
-		obs_sceneitem_t*                     m_source_item;
-		std::string                          m_source_name;
-		std::shared_ptr<obs::audio_capture>  m_source_audio;
+		std::shared_ptr<obs::source>        m_source;
+		obs_sceneitem_t*                    m_source_item;
+		std::string                         m_source_name;
+		std::shared_ptr<obs::audio_capture> m_source_audio;
 
 		private:
 		void release_input();
