@@ -67,24 +67,37 @@ inline size_t GetNearestPowerOfTwoBelow(size_t v)
 }
 
 namespace util {
-	#ifdef _MSC_VER
+#ifdef _MSC_VER
 	__declspec(align(16))
-	#endif
-	struct vec3a : public vec3 {
+#endif
+		struct vec2a : public vec2 {
+		// 16-byte Aligned version of vec2
 		static void* operator new(size_t count);
 		static void* operator new[](size_t count);
-		static void operator delete(void* p);
-		static void operator delete[](void* p);
+		static void  operator delete(void* p);
+		static void  operator delete[](void* p);
 	};
 
-	#ifdef _MSC_VER
+#ifdef _MSC_VER
 	__declspec(align(16))
-	#endif
-	struct vec4a : public vec4 {
+#endif
+		struct vec3a : public vec3 {
+		// 16-byte Aligned version of vec3
 		static void* operator new(size_t count);
 		static void* operator new[](size_t count);
-		static void operator delete(void* p);
-		static void operator delete[](void* p);
+		static void  operator delete(void* p);
+		static void  operator delete[](void* p);
+	};
+
+#ifdef _MSC_VER
+	__declspec(align(16))
+#endif
+		struct vec4a : public vec4 {
+		// 16-byte Aligned version of vec4
+		static void* operator new(size_t count);
+		static void* operator new[](size_t count);
+		static void  operator delete(void* p);
+		static void  operator delete[](void* p);
 	};
 
 	std::pair<int64_t, int64_t> SizeFromString(std::string text, bool allowSquare = true);
@@ -122,19 +135,14 @@ namespace util {
 	{                                   \
 		return is_power_of_two_loop(v); \
 	}
-		is_power_of_two_as_loop(int8_t)
-		is_power_of_two_as_loop(uint8_t)
-		is_power_of_two_as_loop(int16_t)
-		is_power_of_two_as_loop(uint16_t)
-		is_power_of_two_as_loop(int32_t)
-		is_power_of_two_as_loop(uint32_t)
-		is_power_of_two_as_loop(int64_t)
-		is_power_of_two_as_loop(uint64_t)
+		is_power_of_two_as_loop(int8_t) is_power_of_two_as_loop(uint8_t) is_power_of_two_as_loop(int16_t)
+			is_power_of_two_as_loop(uint16_t) is_power_of_two_as_loop(int32_t) is_power_of_two_as_loop(uint32_t)
+				is_power_of_two_as_loop(int64_t) is_power_of_two_as_loop(uint64_t)
 #undef is_power_of_two_as_loop
 #pragma pop_macro("is_power_of_two_as_loop")
 
-		template<typename T>
-		inline uint64_t get_power_of_two_exponent_floor(T v)
+					template<typename T>
+					inline uint64_t get_power_of_two_exponent_floor(T v)
 		{
 			return uint64_t(floor(log10(T(v)) / log10(2.0)));
 		}

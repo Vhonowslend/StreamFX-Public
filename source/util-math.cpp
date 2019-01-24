@@ -22,6 +22,26 @@
 #include <cstdlib>
 #include "util-memory.hpp"
 
+void* util::vec2a::operator new(size_t count)
+{
+	return aligned_alloc(count, 16);
+}
+
+void* util::vec2a::operator new[](size_t count)
+{
+	return aligned_alloc(count, 16);
+}
+
+void util::vec2a::operator delete(void* p)
+{
+	aligned_free(p);
+}
+
+void util::vec2a::operator delete[](void* p)
+{
+	aligned_free(p);
+}
+
 void* util::vec3a::operator new(size_t count)
 {
 	return aligned_alloc(count, 16);
