@@ -53,35 +53,34 @@ namespace filter {
 	};
 
 	class Transform {
-		obs_source_t* source_context;
+		bool          m_active;
+		obs_source_t* m_self;
 
-		// Graphics Data
-		std::shared_ptr<gs::vertex_buffer> vertex_buffer;
-		std::shared_ptr<gs::rendertarget>  source_rt;
-		std::shared_ptr<gs::rendertarget>  shape_rt;
+		// Input
+		std::shared_ptr<gs::rendertarget> m_source_rendertarget;
+		std::shared_ptr<gs::texture>      m_source_texture;
 
 		// Mipmapping
-		bool                         enable_mipmapping;
-		double_t                     generator_strength;
-		gs::mipmapper::generator     generator;
-		std::shared_ptr<gs::texture> source_texture;
-		gs::mipmapper                mipmapper;
+		bool                     m_mipmap_enabled;
+		double_t                 m_mipmap_strength;
+		gs::mipmapper::generator m_mipmap_generator;
+		gs::mipmapper            m_mipmapper;
+
+		// Rendering
+		std::shared_ptr<gs::rendertarget>  m_shape_rendertarget;
+
+		// Mesh
+		bool                               m_update_mesh;
+		std::shared_ptr<gs::vertex_buffer> m_vertex_buffer;
+		uint32_t                           m_rotation_order;
+		std::unique_ptr<util::vec3a>       m_position;
+		std::unique_ptr<util::vec3a>       m_rotation;
+		std::unique_ptr<util::vec3a>       m_scale;
+		std::unique_ptr<util::vec3a>       m_shear;
 
 		// Camera
-		bool    is_orthographic;
-		float_t field_of_view;
-
-		// Source
-		bool is_inactive;
-		bool is_hidden;
-		bool is_mesh_update_required;
-
-		// 3D Information
-		uint32_t                     rotation_order;
-		std::unique_ptr<util::vec3a> position;
-		std::unique_ptr<util::vec3a> rotation;
-		std::unique_ptr<util::vec3a> scale;
-		std::unique_ptr<util::vec3a> shear;
+		bool    m_camera_orthographic;
+		float_t m_camera_fov;
 
 		public:
 		~Transform();
@@ -90,10 +89,10 @@ namespace filter {
 		uint32_t get_width();
 		uint32_t get_height();
 
-		void     update(obs_data_t*);
-		void     activate();
-		void     deactivate();
-		void     video_tick(float);
-		void     video_render(gs_effect_t*);
+		void update(obs_data_t*);
+		void activate();
+		void deactivate();
+		void video_tick(float);
+		void video_render(gs_effect_t*);
 	};
 } // namespace filter

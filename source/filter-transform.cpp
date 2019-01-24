@@ -69,8 +69,8 @@ INITIALIZER(FilterTransformInit)
 #define ST_ROTATION_ORDER_ZYX "Filter.Transform.Rotation.Order.ZYX"
 #define ST_MIPMAPPING "Filter.Transform.Mipmapping"
 
-static const float farZ       = 2097152.0f; // 2 pow 21
-static const float nearZ      = 1.0f / farZ;
+static const float farZ  = 2097152.0f; // 2 pow 21
+static const float nearZ = 1.0f / farZ;
 
 enum class CameraMode : int32_t { Orthographic, Perspective };
 
@@ -300,33 +300,33 @@ void filter::TransformAddon::video_render(void* ptr, gs_effect_t* effect)
 filter::Transform::~Transform()
 {
 	obs_enter_graphics();
-	shape_rt.reset();
-	source_rt.reset();
-	vertex_buffer.reset();
+	m_shape_rendertarget.reset();
+	m_source_rendertarget.reset();
+	m_vertex_buffer.reset();
 	obs_leave_graphics();
 }
 
 filter::Transform::Transform(obs_data_t* data, obs_source_t* context)
-	: source_context(context), is_orthographic(true), field_of_view(90.0), is_inactive(false), is_hidden(false),
-	  is_mesh_update_required(false), rotation_order(RotationOrder::ZXY)
+	: m_active(true), m_self(context), m_camera_orthographic(true), m_camera_fov(90.0), m_update_mesh(false),
+	  m_rotation_order(RotationOrder::ZXY)
 {
-	position = std::make_unique<util::vec3a>();
-	rotation = std::make_unique<util::vec3a>();
-	scale    = std::make_unique<util::vec3a>();
-	shear    = std::make_unique<util::vec3a>();
+	m_position = std::make_unique<util::vec3a>();
+	m_rotation = std::make_unique<util::vec3a>();
+	m_scale    = std::make_unique<util::vec3a>();
+	m_shear    = std::make_unique<util::vec3a>();
 
-	vec3_set(position.get(), 0, 0, 0);
-	vec3_set(rotation.get(), 0, 0, 0);
-	vec3_set(scale.get(), 1, 1, 1);
+	vec3_set(m_position.get(), 0, 0, 0);
+	vec3_set(m_rotation.get(), 0, 0, 0);
+	vec3_set(m_scale.get(), 1, 1, 1);
 
-	enable_mipmapping  = false;
-	generator          = gs::mipmapper::generator::Linear;
-	generator_strength = 50.0;
+	m_mipmap_enabled   = false;
+	m_mipmap_generator = gs::mipmapper::generator::Linear;
+	m_mipmap_strength  = 50.0;
 
 	obs_enter_graphics();
-	source_rt     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	shape_rt      = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	vertex_buffer = std::make_shared<gs::vertex_buffer>(4u, 1u);
+	m_source_rendertarget = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	m_shape_rendertarget  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	m_vertex_buffer       = std::make_shared<gs::vertex_buffer>(4u, 1u);
 	obs_leave_graphics();
 
 	update(data);
@@ -345,148 +345,156 @@ uint32_t filter::Transform::get_height()
 void filter::Transform::update(obs_data_t* data)
 {
 	// Camera
-	is_orthographic = obs_data_get_int(data, ST_CAMERA) == 0;
-	field_of_view   = (float)obs_data_get_double(data, ST_CAMERA_FIELDOFVIEW);
+	m_camera_orthographic = obs_data_get_int(data, ST_CAMERA) == 0;
+	m_camera_fov   = (float)obs_data_get_double(data, ST_CAMERA_FIELDOFVIEW);
 
 	// Source
-	position->x    = (float)obs_data_get_double(data, ST_POSITION_X) / 100.0f;
-	position->y    = (float)obs_data_get_double(data, ST_POSITION_Y) / 100.0f;
-	position->z    = (float)obs_data_get_double(data, ST_POSITION_Z) / 100.0f;
-	scale->x       = (float)obs_data_get_double(data, ST_SCALE_X) / 100.0f;
-	scale->y       = (float)obs_data_get_double(data, ST_SCALE_Y) / 100.0f;
-	scale->z       = 1.0f;
-	rotation_order = (int)obs_data_get_int(data, ST_ROTATION_ORDER);
-	rotation->x    = (float)(obs_data_get_double(data, ST_ROTATION_X) / 180.0f * PI);
-	rotation->y    = (float)(obs_data_get_double(data, ST_ROTATION_Y) / 180.0f * PI);
-	rotation->z    = (float)(obs_data_get_double(data, ST_ROTATION_Z) / 180.0f * PI);
-	shear->x       = (float)obs_data_get_double(data, ST_SHEAR_X) / 100.0f;
-	shear->y       = (float)obs_data_get_double(data, ST_SHEAR_Y) / 100.0f;
-	shear->z       = 0.0f;
+	m_position->x    = (float)obs_data_get_double(data, ST_POSITION_X) / 100.0f;
+	m_position->y    = (float)obs_data_get_double(data, ST_POSITION_Y) / 100.0f;
+	m_position->z    = (float)obs_data_get_double(data, ST_POSITION_Z) / 100.0f;
+	m_scale->x       = (float)obs_data_get_double(data, ST_SCALE_X) / 100.0f;
+	m_scale->y       = (float)obs_data_get_double(data, ST_SCALE_Y) / 100.0f;
+	m_scale->z       = 1.0f;
+	m_rotation_order = (int)obs_data_get_int(data, ST_ROTATION_ORDER);
+	m_rotation->x    = (float)(obs_data_get_double(data, ST_ROTATION_X) / 180.0f * PI);
+	m_rotation->y    = (float)(obs_data_get_double(data, ST_ROTATION_Y) / 180.0f * PI);
+	m_rotation->z    = (float)(obs_data_get_double(data, ST_ROTATION_Z) / 180.0f * PI);
+	m_shear->x       = (float)obs_data_get_double(data, ST_SHEAR_X) / 100.0f;
+	m_shear->y       = (float)obs_data_get_double(data, ST_SHEAR_Y) / 100.0f;
+	m_shear->z       = 0.0f;
 
 	// Mipmapping
-	enable_mipmapping  = obs_data_get_bool(data, ST_MIPMAPPING);
-	generator_strength = obs_data_get_double(data, strings::MipGenerator::Strength);
-	generator          = (gs::mipmapper::generator)obs_data_get_int(data, strings::MipGenerator::Name);
+	m_mipmap_enabled   = obs_data_get_bool(data, ST_MIPMAPPING);
+	m_mipmap_strength  = obs_data_get_double(data, strings::MipGenerator::Strength);
+	m_mipmap_generator = (gs::mipmapper::generator)obs_data_get_int(data, strings::MipGenerator::Name);
 
-	is_mesh_update_required = true;
+	m_update_mesh = true;
 }
 
 void filter::Transform::activate()
 {
-	is_inactive = false;
+	m_active = true;
 }
 
 void filter::Transform::deactivate()
 {
-	is_inactive = true;
+	m_active = false;
 }
 
 void filter::Transform::video_tick(float) {}
 
 void filter::Transform::video_render(gs_effect_t* paramEffect)
 {
-	std::shared_ptr<gs::texture> source_tex;
-	std::shared_ptr<gs::texture> shape_tex;
-
-	obs_source_t* parent = obs_filter_get_parent(source_context);
-	obs_source_t* target = obs_filter_get_target(source_context);
-
-	uint32_t width       = obs_source_get_base_width(target);
-	uint32_t height      = obs_source_get_base_height(target);
-	uint32_t real_width  = width;
-	uint32_t real_height = height;
-
-	gs_effect_t* default_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
-
-	// Skip rendering if our target, parent or context is not valid.
-	if (!target || !parent || !source_context || !width || !height || is_inactive || is_hidden) {
-		obs_source_skip_video_filter(source_context);
+	if (!m_active) {
+		obs_source_skip_video_filter(m_self);
 		return;
 	}
 
+	// Grab parent and target.
+	obs_source_t* parent = obs_filter_get_parent(m_self);
+	obs_source_t* target = obs_filter_get_target(m_self);
+	if (!parent || !target) {
+		obs_source_skip_video_filter(m_self);
+		return;
+	}
+
+	// Grab width an height of the target source (child filter or source).
+	uint32_t width  = obs_source_get_base_width(target);
+	uint32_t height = obs_source_get_base_height(target);
+	if ((width == 0) || (height == 0)) {
+		obs_source_skip_video_filter(m_self);
+		return;
+	}
+
+	std::shared_ptr<gs::texture> source_tex;
+	std::shared_ptr<gs::texture> shape_tex;
+	uint32_t                     real_width     = width;
+	uint32_t                     real_height    = height;
+	gs_effect_t*                 default_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
+
 	// Update Mesh
-	if (is_mesh_update_required) {
+	if (m_update_mesh) {
 		float_t aspectRatioX = float_t(width) / float_t(height);
-		if (is_orthographic)
+		if (m_camera_orthographic)
 			aspectRatioX = 1.0;
 
 		// Mesh
 		matrix4 ident;
 		matrix4_identity(&ident);
-		switch (rotation_order) {
+		switch (m_rotation_order) {
 		case RotationOrder::XYZ: // XYZ
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rotation->x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rotation->y);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
 			break;
 		case RotationOrder::XZY: // XZY
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rotation->x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rotation->z);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
 			break;
 		case RotationOrder::YXZ: // YXZ
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rotation->y);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rotation->x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
 			break;
 		case RotationOrder::YZX: // YZX
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rotation->y);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rotation->z);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
 			break;
 		case RotationOrder::ZXY: // ZXY
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rotation->z);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rotation->x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
 			break;
 		case RotationOrder::ZYX: // ZYX
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, rotation->z);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, rotation->y);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
 			break;
 		}
-		matrix4_translate3f(&ident, &ident, position->x, position->y, position->z);
+		matrix4_translate3f(&ident, &ident, m_position->x, m_position->y, m_position->z);
 
 		/// Calculate vertex position once only.
-		float_t p_x = aspectRatioX * scale->x;
-		float_t p_y = 1.0f * scale->y;
+		float_t p_x = aspectRatioX * m_scale->x;
+		float_t p_y = 1.0f * m_scale->y;
 
 		/// Generate mesh
 		{
-			auto vtx   = vertex_buffer->at(0);
+			auto vtx   = m_vertex_buffer->at(0);
 			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 0, 0, 0, 0);
-			vec3_set(vtx.position, -p_x + shear->x, -p_y - shear->y, 0);
+			vec3_set(vtx.position, -p_x + m_shear->x, -p_y - m_shear->y, 0);
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 		{
-			auto vtx   = vertex_buffer->at(1);
+			auto vtx   = m_vertex_buffer->at(1);
 			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 1, 0, 0, 0);
-			vec3_set(vtx.position, p_x + shear->x, -p_y + shear->y, 0);
+			vec3_set(vtx.position, p_x + m_shear->x, -p_y + m_shear->y, 0);
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 		{
-			auto vtx   = vertex_buffer->at(2);
+			auto vtx   = m_vertex_buffer->at(2);
 			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 0, 1, 0, 0);
-			vec3_set(vtx.position, -p_x - shear->x, p_y - shear->y, 0);
+			vec3_set(vtx.position, -p_x - m_shear->x, p_y - m_shear->y, 0);
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 		{
-			auto vtx   = vertex_buffer->at(3);
+			auto vtx   = m_vertex_buffer->at(3);
 			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 1, 1, 0, 0);
-			vec3_set(vtx.position, p_x - shear->x, p_y + shear->y, 0);
+			vec3_set(vtx.position, p_x - m_shear->x, p_y + m_shear->y, 0);
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 
-		vertex_buffer->update(true);
-		is_mesh_update_required = false;
+		m_vertex_buffer->update(true);
+		m_update_mesh = false;
 	}
 
 	// Make texture a power of two compatible texture if mipmapping is enabled.
-	if (enable_mipmapping) {
+	if (m_mipmap_enabled) {
 		real_width  = uint32_t(pow(2, util::math::get_power_of_two_exponent_ceil(width)));
 		real_height = uint32_t(pow(2, util::math::get_power_of_two_exponent_ceil(height)));
 		if ((real_width >= 8192) || (real_height >= 8192)) {
@@ -504,7 +512,7 @@ void filter::Transform::video_render(gs_effect_t* paramEffect)
 
 	// Draw previous filters to texture.
 	try {
-		auto op = source_rt->render(real_width, real_height);
+		auto op = m_source_rendertarget->render(real_width, real_height);
 
 		gs_set_cull_mode(GS_NEITHER);
 		gs_reset_blend_state();
@@ -521,20 +529,20 @@ void filter::Transform::video_render(gs_effect_t* paramEffect)
 		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
 
 		/// Render original source
-		if (obs_source_process_filter_begin(source_context, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
-			obs_source_process_filter_end(source_context, paramEffect ? paramEffect : default_effect, width, height);
+		if (obs_source_process_filter_begin(m_self, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
+			obs_source_process_filter_end(m_self, paramEffect ? paramEffect : default_effect, width, height);
 		} else {
-			obs_source_skip_video_filter(source_context);
+			obs_source_skip_video_filter(m_self);
 		}
 	} catch (...) {
-		obs_source_skip_video_filter(source_context);
+		obs_source_skip_video_filter(m_self);
 		return;
 	}
-	source_rt->get_texture(source_tex);
+	m_source_rendertarget->get_texture(source_tex);
 
-	if (enable_mipmapping) {
-		if ((!source_texture) || (source_texture->get_width() != real_width)
-			|| (source_texture->get_height() != real_height)) {
+	if (m_mipmap_enabled) {
+		if ((!m_source_texture) || (m_source_texture->get_width() != real_width)
+			|| (m_source_texture->get_height() != real_height)) {
 			size_t mip_levels = 0;
 			if (util::math::is_power_of_two(real_width) && util::math::is_power_of_two(real_height)) {
 				size_t w_level = util::math::get_power_of_two_exponent_ceil(real_width);
@@ -546,21 +554,21 @@ void filter::Transform::video_render(gs_effect_t* paramEffect)
 				}
 			}
 
-			source_texture = std::make_shared<gs::texture>(real_width, real_height, GS_RGBA, uint32_t(1u + mip_levels),
-														   nullptr, gs::texture::flags::BuildMipMaps);
+			m_source_texture = std::make_shared<gs::texture>(
+				real_width, real_height, GS_RGBA, uint32_t(1u + mip_levels), nullptr, gs::texture::flags::BuildMipMaps);
 		}
 
-		mipmapper.rebuild(source_tex, source_texture, generator, float_t(generator_strength));
+		m_mipmapper.rebuild(source_tex, m_source_texture, m_mipmap_generator, float_t(m_mipmap_strength));
 	}
 
 	// Draw shape to texture
 	try {
-		auto op = shape_rt->render(width, height);
+		auto op = m_shape_rendertarget->render(width, height);
 
-		if (is_orthographic) {
+		if (m_camera_orthographic) {
 			gs_ortho(-1.0, 1.0, -1.0, 1.0, -farZ, farZ);
 		} else {
-			gs_perspective(field_of_view, float_t(width) / float_t(height), nearZ, farZ);
+			gs_perspective(m_camera_fov, float_t(width) / float_t(height), nearZ, farZ);
 			// Fix camera pointing at -Z instead of +Z.
 			gs_matrix_scale3f(1.0, 1.0, -1.0);
 			// Move backwards so we can actually see stuff.
@@ -578,19 +586,19 @@ void filter::Transform::video_render(gs_effect_t* paramEffect)
 		gs_enable_stencil_test(false);
 		gs_enable_stencil_write(false);
 		gs_enable_color(true, true, true, true);
-		gs_load_vertexbuffer(vertex_buffer->update(false));
+		gs_load_vertexbuffer(m_vertex_buffer->update(false));
 		gs_load_indexbuffer(nullptr);
 		while (gs_effect_loop(default_effect, "Draw")) {
 			gs_effect_set_texture(gs_effect_get_param_by_name(default_effect, "image"),
-								  enable_mipmapping ? source_texture->get_object() : source_tex->get_object());
+								  m_mipmap_enabled ? m_source_texture->get_object() : source_tex->get_object());
 			gs_draw(GS_TRISTRIP, 0, 4);
 		}
 		gs_load_vertexbuffer(nullptr);
 	} catch (...) {
-		obs_source_skip_video_filter(source_context);
+		obs_source_skip_video_filter(m_self);
 		return;
 	}
-	shape_rt->get_texture(shape_tex);
+	m_shape_rendertarget->get_texture(shape_tex);
 
 	// Draw final shape
 	gs_reset_blend_state();
