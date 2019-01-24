@@ -64,21 +64,23 @@ namespace filter {
 	};
 
 	class Displacement {
-		void updateDisplacementMap(std::string file);
+		obs_source_t* m_self;
+		bool          m_active;
 
-		obs_source_t* context;
-		gs_effect_t*  customEffect;
-		float_t       distance;
-		vec2          displacementScale;
+		// Rendering
+		gs_effect_t* m_effect;
+		float_t      m_distance;
+		vec2         m_displacement_scale;
 		struct {
 			std::string file;
 
 			gs_texture_t* texture;
 			time_t        createTime, modifiedTime;
 			size_t        size;
-		} dispmap;
+		} m_displacement_map;
+		float_t m_timer;
 
-		float_t timer;
+		void updateDisplacementMap(std::string file);
 
 		public:
 		Displacement(obs_data_t*, obs_source_t*);

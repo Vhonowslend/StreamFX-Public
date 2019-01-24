@@ -141,18 +141,18 @@ void filter::DisplacementAddon::video_render(void* ptr, gs_effect_t* effect)
 }
 
 filter::Displacement::Displacement(obs_data_t* data, obs_source_t* context)
-{
-	this->dispmap.texture      = nullptr;
-	this->dispmap.createTime   = 0;
-	this->dispmap.modifiedTime = 0;
-	this->dispmap.size         = 0;
-	this->timer                = 0;
-	this->context              = context;
+	: m_self(context), m_active(true), m_effect(nullptr), m_distance(0), m_timer(0)
+	{
+	this->m_displacement_map.texture      = nullptr;
+	this->m_displacement_map.createTime   = 0;
+	this->m_displacement_map.modifiedTime = 0;
+	this->m_displacement_map.size         = 0;
+
 
 	obs_enter_graphics();
 	char* effectFile   = obs_module_file("effects/displace.effect");
 	char* errorMessage = nullptr;
-	this->customEffect = gs_effect_create_from_file(effectFile, &errorMessage);
+	this->m_effect     = gs_effect_create_from_file(effectFile, &errorMessage);
 	bfree(effectFile);
 	if (errorMessage != nullptr) {
 		P_LOG_ERROR("%s", errorMessage);
@@ -166,8 +166,8 @@ filter::Displacement::Displacement(obs_data_t* data, obs_source_t* context)
 filter::Displacement::~Displacement()
 {
 	obs_enter_graphics();
-	gs_effect_destroy(customEffect);
-	gs_texture_destroy(dispmap.texture);
+	gs_effect_destroy(m_effect);
+	gs_texture_destroy(m_displacement_map.texture);
 	obs_leave_graphics();
 }
 
@@ -175,8 +175,8 @@ void filter::Displacement::update(obs_data_t* data)
 {
 	updateDisplacementMap(obs_data_get_string(data, S_FILTER_DISPLACEMENT_FILE));
 
-	distance = float_t(obs_data_get_double(data, S_FILTER_DISPLACEMENT_RATIO));
-	vec2_set(&displacementScale, float_t(obs_data_get_double(data, S_FILTER_DISPLACEMENT_SCALE)),
+	m_distance = float_t(obs_data_get_double(data, S_FILTER_DISPLACEMENT_RATIO));
+	vec2_set(&m_displacement_scale, float_t(obs_data_get_double(data, S_FILTER_DISPLACEMENT_SCALE)),
 			 float_t(obs_data_get_double(data, S_FILTER_DISPLACEMENT_SCALE)));
 }
 
@@ -200,10 +200,10 @@ void filter::Displacement::hide() {}
 
 void filter::Displacement::video_tick(float time)
 {
-	timer += time;
-	if (timer >= 1.0) {
-		timer -= 1.0;
-		updateDisplacementMap(dispmap.file);
+	m_timer += time;
+	if (m_timer >= 1.0) {
+		m_timer -= 1.0;
+		updateDisplacementMap(m_displacement_map.file);
 	}
 }
 
@@ -214,47 +214,47 @@ float interp(float a, float b, float v)
 
 void filter::Displacement::video_render(gs_effect_t*)
 {
-	obs_source_t* parent = obs_filter_get_parent(context);
-	obs_source_t* target = obs_filter_get_target(context);
+	obs_source_t* parent = obs_filter_get_parent(m_self);
+	obs_source_t* target = obs_filter_get_target(m_self);
 	uint32_t      baseW = obs_source_get_base_width(target), baseH = obs_source_get_base_height(target);
 
 	// Skip rendering if our target, parent or context is not valid.
-	if (!target || !parent || !context || !dispmap.texture || !baseW || !baseH) {
-		obs_source_skip_video_filter(context);
+	if (!target || !parent || !m_self || !m_displacement_map.texture || !baseW || !baseH) {
+		obs_source_skip_video_filter(m_self);
 		return;
 	}
 
-	if (!obs_source_process_filter_begin(context, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING))
+	if (!obs_source_process_filter_begin(m_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING))
 		return;
 
 	gs_eparam_t* param;
 
 	vec2 texelScale;
-	vec2_set(&texelScale, interp((1.0f / baseW), 1.0f, distance), interp((1.0f / baseH), 1.0f, distance));
-	param = gs_effect_get_param_by_name(customEffect, "texelScale");
+	vec2_set(&texelScale, interp((1.0f / baseW), 1.0f, m_distance), interp((1.0f / baseH), 1.0f, m_distance));
+	param = gs_effect_get_param_by_name(m_effect, "texelScale");
 	if (param)
 		gs_effect_set_vec2(param, &texelScale);
 	else
 		P_LOG_ERROR("Failed to set texel scale param.");
 
-	param = gs_effect_get_param_by_name(customEffect, "displacementScale");
+	param = gs_effect_get_param_by_name(m_effect, "displacementScale");
 	if (param)
-		gs_effect_set_vec2(param, &displacementScale);
+		gs_effect_set_vec2(param, &m_displacement_scale);
 	else
 		P_LOG_ERROR("Failed to set displacement scale param.");
 
-	param = gs_effect_get_param_by_name(customEffect, "displacementMap");
+	param = gs_effect_get_param_by_name(m_effect, "displacementMap");
 	if (param)
-		gs_effect_set_texture(param, dispmap.texture);
+		gs_effect_set_texture(param, m_displacement_map.texture);
 	else
 		P_LOG_ERROR("Failed to set texture param.");
 
-	obs_source_process_filter_end(context, customEffect, baseW, baseH);
+	obs_source_process_filter_end(m_self, m_effect, baseW, baseH);
 }
 
 std::string filter::Displacement::get_file()
 {
-	return dispmap.file;
+	return m_displacement_map.file;
 }
 
 void filter::Displacement::updateDisplacementMap(std::string file)
@@ -262,27 +262,27 @@ void filter::Displacement::updateDisplacementMap(std::string file)
 	bool shouldUpdateTexture = false;
 
 	// Different File
-	if (file != dispmap.file) {
-		dispmap.file        = file;
-		shouldUpdateTexture = true;
+	if (file != m_displacement_map.file) {
+		m_displacement_map.file = file;
+		shouldUpdateTexture     = true;
 	} else { // Different Timestamps
 		struct stat stats;
-		if (os_stat(dispmap.file.c_str(), &stats) != 0) {
-			shouldUpdateTexture = shouldUpdateTexture || (dispmap.createTime != stats.st_ctime)
-								  || (dispmap.modifiedTime != stats.st_mtime);
-			dispmap.createTime   = stats.st_ctime;
-			dispmap.modifiedTime = stats.st_mtime;
+		if (os_stat(m_displacement_map.file.c_str(), &stats) != 0) {
+			shouldUpdateTexture = shouldUpdateTexture || (m_displacement_map.createTime != stats.st_ctime)
+								  || (m_displacement_map.modifiedTime != stats.st_mtime);
+			m_displacement_map.createTime   = stats.st_ctime;
+			m_displacement_map.modifiedTime = stats.st_mtime;
 		}
 	}
 
 	if (shouldUpdateTexture) {
 		obs_enter_graphics();
-		if (dispmap.texture) {
-			gs_texture_destroy(dispmap.texture);
-			dispmap.texture = nullptr;
+		if (m_displacement_map.texture) {
+			gs_texture_destroy(m_displacement_map.texture);
+			m_displacement_map.texture = nullptr;
 		}
 		if (os_file_exists(file.c_str()))
-			dispmap.texture = gs_texture_create_from_file(dispmap.file.c_str());
+			m_displacement_map.texture = gs_texture_create_from_file(m_displacement_map.file.c_str());
 		obs_leave_graphics();
 	}
 }
