@@ -41,12 +41,12 @@
 #define S_FILTER_DISPLACEMENT_SCALE "Filter.Displacement.Scale"
 
 namespace filter {
-	class DisplacementAddon {
+	class displacement_factory {
 		obs_source_info sourceInfo;
 
 		public:
-		DisplacementAddon();
-		~DisplacementAddon();
+		displacement_factory();
+		~displacement_factory();
 
 		static const char* get_name(void*);
 
@@ -65,7 +65,7 @@ namespace filter {
 		static void              video_render(void*, gs_effect_t*);
 	};
 
-	class Displacement {
+	class displacement {
 		obs_source_t* m_self;
 		bool          m_active;
 		float_t       m_timer;
@@ -85,8 +85,8 @@ namespace filter {
 		void validate_file_texture(std::string file);
 
 		public:
-		Displacement(obs_data_t*, obs_source_t*);
-		~Displacement();
+		displacement(obs_data_t*, obs_source_t*);
+		~displacement();
 
 		void     update(obs_data_t*);
 		uint32_t get_width();

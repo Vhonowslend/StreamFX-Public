@@ -22,14 +22,14 @@
 #include "strings.hpp"
 
 // Initializer & Finalizer
-static filter::DisplacementAddon* filterDisplacementInstance;
+static filter::displacement_factory* filterDisplacementInstance;
 INITIALIZER(FilterDisplacementInit)
 {
-	initializerFunctions.push_back([] { filterDisplacementInstance = new filter::DisplacementAddon(); });
+	initializerFunctions.push_back([] { filterDisplacementInstance = new filter::displacement_factory(); });
 	finalizerFunctions.push_back([] { delete filterDisplacementInstance; });
 }
 
-filter::DisplacementAddon::DisplacementAddon()
+filter::displacement_factory::displacement_factory()
 {
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
 	sourceInfo.id             = "obs-stream-effects-filter-displacement";
@@ -52,34 +52,34 @@ filter::DisplacementAddon::DisplacementAddon()
 	obs_register_source(&sourceInfo);
 }
 
-filter::DisplacementAddon::~DisplacementAddon() {}
+filter::displacement_factory::~displacement_factory() {}
 
-const char* filter::DisplacementAddon::get_name(void*)
+const char* filter::displacement_factory::get_name(void*)
 {
 	return P_TRANSLATE(S_FILTER_DISPLACEMENT);
 }
 
-void* filter::DisplacementAddon::create(obs_data_t* data, obs_source_t* source)
+void* filter::displacement_factory::create(obs_data_t* data, obs_source_t* source)
 {
-	return new Displacement(data, source);
+	return new displacement(data, source);
 }
 
-void filter::DisplacementAddon::destroy(void* ptr)
+void filter::displacement_factory::destroy(void* ptr)
 {
-	delete reinterpret_cast<Displacement*>(ptr);
+	delete reinterpret_cast<displacement*>(ptr);
 }
 
-uint32_t filter::DisplacementAddon::get_width(void* ptr)
+uint32_t filter::displacement_factory::get_width(void* ptr)
 {
-	return reinterpret_cast<Displacement*>(ptr)->get_width();
+	return reinterpret_cast<displacement*>(ptr)->get_width();
 }
 
-uint32_t filter::DisplacementAddon::get_height(void* ptr)
+uint32_t filter::displacement_factory::get_height(void* ptr)
 {
-	return reinterpret_cast<Displacement*>(ptr)->get_height();
+	return reinterpret_cast<displacement*>(ptr)->get_height();
 }
 
-void filter::DisplacementAddon::get_defaults(obs_data_t* data)
+void filter::displacement_factory::get_defaults(obs_data_t* data)
 {
 	char* disp = obs_module_file("filter-displacement/neutral.png");
 	obs_data_set_default_string(data, S_FILTER_DISPLACEMENT_FILE, disp);
@@ -88,13 +88,13 @@ void filter::DisplacementAddon::get_defaults(obs_data_t* data)
 	bfree(disp);
 }
 
-obs_properties_t* filter::DisplacementAddon::get_properties(void* ptr)
+obs_properties_t* filter::displacement_factory::get_properties(void* ptr)
 {
 	obs_properties_t* pr = obs_properties_create();
 
 	std::string path = "";
 	if (ptr)
-		path = reinterpret_cast<Displacement*>(ptr)->get_file();
+		path = reinterpret_cast<displacement*>(ptr)->get_file();
 
 	obs_properties_add_path(pr, S_FILTER_DISPLACEMENT_FILE, P_TRANSLATE(S_FILTER_DISPLACEMENT_FILE),
 							obs_path_type::OBS_PATH_FILE, P_TRANSLATE(S_FILTER_DISPLACEMENT_FILE_TYPES), path.c_str());
@@ -105,42 +105,42 @@ obs_properties_t* filter::DisplacementAddon::get_properties(void* ptr)
 	return pr;
 }
 
-void filter::DisplacementAddon::update(void* ptr, obs_data_t* data)
+void filter::displacement_factory::update(void* ptr, obs_data_t* data)
 {
-	reinterpret_cast<Displacement*>(ptr)->update(data);
+	reinterpret_cast<displacement*>(ptr)->update(data);
 }
 
-void filter::DisplacementAddon::activate(void* ptr)
+void filter::displacement_factory::activate(void* ptr)
 {
-	reinterpret_cast<Displacement*>(ptr)->activate();
+	reinterpret_cast<displacement*>(ptr)->activate();
 }
 
-void filter::DisplacementAddon::deactivate(void* ptr)
+void filter::displacement_factory::deactivate(void* ptr)
 {
-	reinterpret_cast<Displacement*>(ptr)->deactivate();
+	reinterpret_cast<displacement*>(ptr)->deactivate();
 }
 
-void filter::DisplacementAddon::show(void* ptr)
+void filter::displacement_factory::show(void* ptr)
 {
-	reinterpret_cast<Displacement*>(ptr)->show();
+	reinterpret_cast<displacement*>(ptr)->show();
 }
 
-void filter::DisplacementAddon::hide(void* ptr)
+void filter::displacement_factory::hide(void* ptr)
 {
-	reinterpret_cast<Displacement*>(ptr)->hide();
+	reinterpret_cast<displacement*>(ptr)->hide();
 }
 
-void filter::DisplacementAddon::video_tick(void* ptr, float time)
+void filter::displacement_factory::video_tick(void* ptr, float time)
 {
-	reinterpret_cast<Displacement*>(ptr)->video_tick(time);
+	reinterpret_cast<displacement*>(ptr)->video_tick(time);
 }
 
-void filter::DisplacementAddon::video_render(void* ptr, gs_effect_t* effect)
+void filter::displacement_factory::video_render(void* ptr, gs_effect_t* effect)
 {
-	reinterpret_cast<Displacement*>(ptr)->video_render(effect);
+	reinterpret_cast<displacement*>(ptr)->video_render(effect);
 }
 
-void filter::Displacement::validate_file_texture(std::string file)
+void filter::displacement::validate_file_texture(std::string file)
 {
 	bool do_update = false;
 
@@ -168,7 +168,7 @@ void filter::Displacement::validate_file_texture(std::string file)
 	}
 }
 
-filter::Displacement::Displacement(obs_data_t* data, obs_source_t* context)
+filter::displacement::displacement(obs_data_t* data, obs_source_t* context)
 	: m_self(context), m_active(true), m_timer(0), m_effect(nullptr), m_distance(0), m_file_create_time(0),
 	  m_file_modified_time(0), m_file_size(0)
 {
@@ -183,13 +183,13 @@ filter::Displacement::Displacement(obs_data_t* data, obs_source_t* context)
 	update(data);
 }
 
-filter::Displacement::~Displacement()
+filter::displacement::~displacement()
 {
 	m_effect.reset();
 	m_file_texture.reset();
 }
 
-void filter::Displacement::update(obs_data_t* data)
+void filter::displacement::update(obs_data_t* data)
 {
 	validate_file_texture(obs_data_get_string(data, S_FILTER_DISPLACEMENT_FILE));
 
@@ -198,25 +198,25 @@ void filter::Displacement::update(obs_data_t* data)
 			 float_t(obs_data_get_double(data, S_FILTER_DISPLACEMENT_SCALE)));
 }
 
-uint32_t filter::Displacement::get_width()
+uint32_t filter::displacement::get_width()
 {
 	return 0;
 }
 
-uint32_t filter::Displacement::get_height()
+uint32_t filter::displacement::get_height()
 {
 	return 0;
 }
 
-void filter::Displacement::activate() {}
+void filter::displacement::activate() {}
 
-void filter::Displacement::deactivate() {}
+void filter::displacement::deactivate() {}
 
-void filter::Displacement::show() {}
+void filter::displacement::show() {}
 
-void filter::Displacement::hide() {}
+void filter::displacement::hide() {}
 
-void filter::Displacement::video_tick(float time)
+void filter::displacement::video_tick(float time)
 {
 	m_timer += time;
 	if (m_timer >= 1.0) {
@@ -230,7 +230,7 @@ float interp(float a, float b, float v)
 	return (a * (1.0f - v)) + (b * v);
 }
 
-void filter::Displacement::video_render(gs_effect_t*)
+void filter::displacement::video_render(gs_effect_t*)
 {
 	obs_source_t* parent = obs_filter_get_parent(m_self);
 	obs_source_t* target = obs_filter_get_target(m_self);
@@ -261,7 +261,7 @@ void filter::Displacement::video_render(gs_effect_t*)
 	obs_source_process_filter_end(m_self, m_effect->get_object(), baseW, baseH);
 }
 
-std::string filter::Displacement::get_file()
+std::string filter::displacement::get_file()
 {
 	return m_file_name;
 }
