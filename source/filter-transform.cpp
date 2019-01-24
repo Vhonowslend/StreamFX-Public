@@ -34,10 +34,10 @@
 #endif
 
 // Initializer & Finalizer
-static filter::TransformAddon* filterTransformInstance;
+static filter::transform_factory* filterTransformInstance;
 INITIALIZER(FilterTransformInit)
 {
-	initializerFunctions.push_back([] { filterTransformInstance = new filter::TransformAddon(); });
+	initializerFunctions.push_back([] { filterTransformInstance = new filter::transform_factory(); });
 	finalizerFunctions.push_back([] { delete filterTransformInstance; });
 }
 
@@ -83,7 +83,7 @@ enum RotationOrder : int64_t {
 	ZYX,
 };
 
-filter::TransformAddon::TransformAddon()
+filter::transform_factory::transform_factory()
 {
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
 	sourceInfo.id             = "obs-stream-effects-filter-transform";
@@ -104,14 +104,14 @@ filter::TransformAddon::TransformAddon()
 	obs_register_source(&sourceInfo);
 }
 
-filter::TransformAddon::~TransformAddon() {}
+filter::transform_factory::~transform_factory() {}
 
-const char* filter::TransformAddon::get_name(void*)
+const char* filter::transform_factory::get_name(void*)
 {
 	return P_TRANSLATE(ST);
 }
 
-void filter::TransformAddon::get_defaults(obs_data_t* data)
+void filter::transform_factory::get_defaults(obs_data_t* data)
 {
 	obs_data_set_default_int(data, ST_CAMERA, (int64_t)CameraMode::Orthographic);
 	obs_data_set_default_double(data, ST_CAMERA_FIELDOFVIEW, 90.0);
@@ -129,7 +129,7 @@ void filter::TransformAddon::get_defaults(obs_data_t* data)
 	obs_data_set_default_int(data, ST_ROTATION_ORDER, RotationOrder::ZXY);
 }
 
-obs_properties_t* filter::TransformAddon::get_properties(void*)
+obs_properties_t* filter::transform_factory::get_properties(void*)
 {
 	obs_properties_t* pr = obs_properties_create();
 	obs_property_t*   p  = NULL;
@@ -234,7 +234,7 @@ obs_properties_t* filter::TransformAddon::get_properties(void*)
 	return pr;
 }
 
-bool filter::TransformAddon::modified_properties(obs_properties_t* pr, obs_property_t*, obs_data_t* d)
+bool filter::transform_factory::modified_properties(obs_properties_t* pr, obs_property_t*, obs_data_t* d)
 {
 	switch ((CameraMode)obs_data_get_int(d, ST_CAMERA)) {
 	case CameraMode::Orthographic:
@@ -258,52 +258,52 @@ bool filter::TransformAddon::modified_properties(obs_properties_t* pr, obs_prope
 	return true;
 }
 
-void* filter::TransformAddon::create(obs_data_t* data, obs_source_t* source)
+void* filter::transform_factory::create(obs_data_t* data, obs_source_t* source)
 {
-	return new Transform(data, source);
+	return new transform(data, source);
 }
 
-void filter::TransformAddon::destroy(void* ptr)
+void filter::transform_factory::destroy(void* ptr)
 {
-	delete reinterpret_cast<Transform*>(ptr);
+	delete reinterpret_cast<transform*>(ptr);
 }
 
-uint32_t filter::TransformAddon::get_width(void* ptr)
+uint32_t filter::transform_factory::get_width(void* ptr)
 {
-	return reinterpret_cast<Transform*>(ptr)->get_width();
+	return reinterpret_cast<transform*>(ptr)->get_width();
 }
 
-uint32_t filter::TransformAddon::get_height(void* ptr)
+uint32_t filter::transform_factory::get_height(void* ptr)
 {
-	return reinterpret_cast<Transform*>(ptr)->get_height();
+	return reinterpret_cast<transform*>(ptr)->get_height();
 }
 
-void filter::TransformAddon::update(void* ptr, obs_data_t* data)
+void filter::transform_factory::update(void* ptr, obs_data_t* data)
 {
-	reinterpret_cast<Transform*>(ptr)->update(data);
+	reinterpret_cast<transform*>(ptr)->update(data);
 }
 
-void filter::TransformAddon::activate(void* ptr)
+void filter::transform_factory::activate(void* ptr)
 {
-	reinterpret_cast<Transform*>(ptr)->activate();
+	reinterpret_cast<transform*>(ptr)->activate();
 }
 
-void filter::TransformAddon::deactivate(void* ptr)
+void filter::transform_factory::deactivate(void* ptr)
 {
-	reinterpret_cast<Transform*>(ptr)->deactivate();
+	reinterpret_cast<transform*>(ptr)->deactivate();
 }
 
-void filter::TransformAddon::video_tick(void* ptr, float time)
+void filter::transform_factory::video_tick(void* ptr, float time)
 {
-	reinterpret_cast<Transform*>(ptr)->video_tick(time);
+	reinterpret_cast<transform*>(ptr)->video_tick(time);
 }
 
-void filter::TransformAddon::video_render(void* ptr, gs_effect_t* effect)
+void filter::transform_factory::video_render(void* ptr, gs_effect_t* effect)
 {
-	reinterpret_cast<Transform*>(ptr)->video_render(effect);
+	reinterpret_cast<transform*>(ptr)->video_render(effect);
 }
 
-filter::Transform::~Transform()
+filter::transform::~transform()
 {
 	m_shear.reset();
 	m_scale.reset();
@@ -316,7 +316,7 @@ filter::Transform::~Transform()
 	m_source_rendertarget.reset();
 }
 
-filter::Transform::Transform(obs_data_t* data, obs_source_t* context)
+filter::transform::transform(obs_data_t* data, obs_source_t* context)
 	: m_active(true), m_self(context), m_source_rendered(false), m_mipmap_enabled(false), m_mipmap_strength(50.0),
 	  m_mipmap_generator(gs::mipmapper::generator::Linear), m_update_mesh(false), m_rotation_order(RotationOrder::ZXY),
 	  m_camera_orthographic(true), m_camera_fov(90.0)
@@ -337,17 +337,17 @@ filter::Transform::Transform(obs_data_t* data, obs_source_t* context)
 	update(data);
 }
 
-uint32_t filter::Transform::get_width()
+uint32_t filter::transform::get_width()
 {
 	return 0;
 }
 
-uint32_t filter::Transform::get_height()
+uint32_t filter::transform::get_height()
 {
 	return 0;
 }
 
-void filter::Transform::update(obs_data_t* data)
+void filter::transform::update(obs_data_t* data)
 {
 	// Camera
 	m_camera_orthographic = obs_data_get_int(data, ST_CAMERA) == 0;
@@ -376,17 +376,17 @@ void filter::Transform::update(obs_data_t* data)
 	m_update_mesh = true;
 }
 
-void filter::Transform::activate()
+void filter::transform::activate()
 {
 	m_active = true;
 }
 
-void filter::Transform::deactivate()
+void filter::transform::deactivate()
 {
 	m_active = false;
 }
 
-void filter::Transform::video_tick(float)
+void filter::transform::video_tick(float)
 {
 	// Update Mesh
 	if (m_update_mesh) {
@@ -490,7 +490,7 @@ void filter::Transform::video_tick(float)
 	this->m_source_rendered = false;
 }
 
-void filter::Transform::video_render(gs_effect_t* paramEffect)
+void filter::transform::video_render(gs_effect_t* paramEffect)
 {
 	if (!m_active) {
 		obs_source_skip_video_filter(m_self);

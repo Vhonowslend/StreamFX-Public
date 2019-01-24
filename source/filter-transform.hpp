@@ -27,12 +27,12 @@
 #include "plugin.hpp"
 
 namespace filter {
-	class TransformAddon {
+	class transform_factory {
 		obs_source_info sourceInfo;
 
 		public:
-		TransformAddon();
-		~TransformAddon();
+		transform_factory();
+		~transform_factory();
 
 		static const char*       get_name(void*);
 		static void              get_defaults(obs_data_t*);
@@ -52,7 +52,7 @@ namespace filter {
 		static void     video_render(void*, gs_effect_t*);
 	};
 
-	class Transform {
+	class transform {
 		bool          m_active;
 		obs_source_t* m_self;
 
@@ -85,8 +85,8 @@ namespace filter {
 		float_t m_camera_fov;
 
 		public:
-		~Transform();
-		Transform(obs_data_t*, obs_source_t*);
+		~transform();
+		transform(obs_data_t*, obs_source_t*);
 
 		uint32_t get_width();
 		uint32_t get_height();
