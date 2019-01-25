@@ -1018,6 +1018,7 @@ void filter::blur::blur_factory::destroy(void* inptr)
 	if (get()->sources.empty()) {
 		get()->on_list_empty();
 	}
+	delete ptr;
 }
 
 void filter::blur::blur_factory::get_defaults(obs_data_t* data)
