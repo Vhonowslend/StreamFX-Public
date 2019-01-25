@@ -40,92 +40,101 @@
 #pragma warning(pop)
 #endif
 
-namespace Source {
-	class mirror_factory {
-		obs_source_info osi;
+namespace source {
+	namespace mirror {
+		class factory {
+			friend class std::_Ptr_base<source::mirror::factory>;
 
-		public:
-		mirror_factory();
-		~mirror_factory();
+			obs_source_info osi;
 
-		static const char*       get_name(void*);
-		static void              get_defaults(obs_data_t*);
-		static bool              modified_properties(obs_properties_t*, obs_property_t*, obs_data_t*);
-		static obs_properties_t* get_properties(void*);
+			public: // Singleton
+			static void                     initialize();
+			static void                     finalize();
+			static std::shared_ptr<factory> get();
 
-		static void* create(obs_data_t*, obs_source_t*);
-		static void  destroy(void*);
+			public:
+			factory();
+			~factory();
 
-		static uint32_t get_width(void*);
-		static uint32_t get_height(void*);
+			static const char*       get_name(void*);
+			static void              get_defaults(obs_data_t*);
+			static bool              modified_properties(obs_properties_t*, obs_property_t*, obs_data_t*);
+			static obs_properties_t* get_properties(void*);
 
-		static void update(void*, obs_data_t*);
-		static void activate(void*);
-		static void deactivate(void*);
-		static void video_tick(void*, float);
-		static void video_render(void*, gs_effect_t*);
-		static void enum_active_sources(void*, obs_source_enum_proc_t, void*);
-		static void load(void*, obs_data_t*);
-		static void save(void*, obs_data_t*);
-	};
+			static void* create(obs_data_t*, obs_source_t*);
+			static void  destroy(void*);
 
-	class mirror {
-		bool          m_active;
-		obs_source_t* m_self;
-		float_t       m_tick;
+			static uint32_t get_width(void*);
+			static uint32_t get_height(void*);
 
-		// Video Rendering
-		std::shared_ptr<obs::source>         m_scene;
-		std::shared_ptr<gfx::source_texture> m_scene_texture_renderer;
-		std::shared_ptr<gs::texture>         m_scene_texture;
-		bool                                 m_scene_rendered;
+			static void update(void*, obs_data_t*);
+			static void activate(void*);
+			static void deactivate(void*);
+			static void video_tick(void*, float);
+			static void video_render(void*, gs_effect_t*);
+			static void enum_active_sources(void*, obs_source_enum_proc_t, void*);
+			static void load(void*, obs_data_t*);
+			static void save(void*, obs_data_t*);
+		};
 
-		// Rescaling
-		bool            m_rescale_enabled;
-		uint32_t        m_rescale_width;
-		uint32_t        m_rescale_height;
-		bool            m_rescale_keep_orig_size;
-		obs_scale_type  m_rescale_type;
-		obs_bounds_type m_rescale_bounds;
+		class instance {
+			bool          m_active;
+			obs_source_t* m_self;
+			float_t       m_tick;
 
-		// Audio Rendering
-		bool                              m_audio_enabled;
-		std::mutex                        m_audio_lock;
-		std::condition_variable           m_audio_notify;
-		obs_source_audio                  m_audio_output;
-		std::vector<std::vector<float_t>> m_audio_data;
-		std::thread                       m_audio_thread;
-		bool                              m_audio_kill_thread;
-		bool                              m_audio_have_output;
+			// Video Rendering
+			std::shared_ptr<obs::source>         m_scene;
+			std::shared_ptr<gfx::source_texture> m_scene_texture_renderer;
+			std::shared_ptr<gs::texture>         m_scene_texture;
+			bool                                 m_scene_rendered;
 
-		// Input
-		std::shared_ptr<obs::source>        m_source;
-		obs_sceneitem_t*                    m_source_item;
-		std::string                         m_source_name;
-		std::shared_ptr<obs::audio_capture> m_source_audio;
+			// Rescaling
+			bool            m_rescale_enabled;
+			uint32_t        m_rescale_width;
+			uint32_t        m_rescale_height;
+			bool            m_rescale_keep_orig_size;
+			obs_scale_type  m_rescale_type;
+			obs_bounds_type m_rescale_bounds;
 
-		private:
-		void release_input();
-		void acquire_input(std::string source_name);
+			// Audio Rendering
+			bool                              m_audio_enabled;
+			std::mutex                        m_audio_lock;
+			std::condition_variable           m_audio_notify;
+			obs_source_audio                  m_audio_output;
+			std::vector<std::vector<float_t>> m_audio_data;
+			std::thread                       m_audio_thread;
+			bool                              m_audio_kill_thread;
+			bool                              m_audio_have_output;
 
-		public:
-		mirror(obs_data_t*, obs_source_t*);
-		~mirror();
+			// Input
+			std::shared_ptr<obs::source>        m_source;
+			obs_sceneitem_t*                    m_source_item;
+			std::string                         m_source_name;
+			std::shared_ptr<obs::audio_capture> m_source_audio;
 
-		uint32_t get_width();
-		uint32_t get_height();
+			private:
+			void release_input();
+			void acquire_input(std::string source_name);
 
-		void update(obs_data_t*);
-		void activate();
-		void deactivate();
-		void video_tick(float);
-		void video_render(gs_effect_t*);
-		void audio_capture_cb(std::shared_ptr<obs::source> source, audio_data const* const audio, bool muted);
-		void audio_output_cb();
-		void enum_active_sources(obs_source_enum_proc_t, void*);
-		void load(obs_data_t*);
-		void save(obs_data_t*);
+			public:
+			instance(obs_data_t*, obs_source_t*);
+			~instance();
 
-		void on_source_rename(obs::source* source, std::string new_name, std::string old_name);
-	};
-}; // namespace Source
+			uint32_t get_width();
+			uint32_t get_height();
+
+			void update(obs_data_t*);
+			void activate();
+			void deactivate();
+			void video_tick(float);
+			void video_render(gs_effect_t*);
+			void audio_capture_cb(std::shared_ptr<obs::source> source, audio_data const* const audio, bool muted);
+			void audio_output_cb();
+			void enum_active_sources(obs_source_enum_proc_t, void*);
+			void load(obs_data_t*);
+			void save(obs_data_t*);
+
+			void on_source_rename(obs::source* source, std::string new_name, std::string old_name);
+		};
+	} // namespace mirror
+};    // namespace source

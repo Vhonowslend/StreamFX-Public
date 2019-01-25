@@ -33,14 +33,6 @@
 #pragma warning(pop)
 #endif
 
-// Initializer & Finalizer
-static filter::transform_factory* filterTransformInstance;
-INITIALIZER(FilterTransformInit)
-{
-	initializerFunctions.push_back([] { filterTransformInstance = new filter::transform_factory(); });
-	finalizerFunctions.push_back([] { delete filterTransformInstance; });
-}
-
 #define ST "Filter.Transform"
 #define ST_CAMERA "Filter.Transform.Camera"
 #define ST_CAMERA_ORTHOGRAPHIC "Filter.Transform.Camera.Orthographic"
@@ -83,7 +75,31 @@ enum RotationOrder : int64_t {
 	ZYX,
 };
 
-filter::transform_factory::transform_factory()
+// Initializer & Finalizer
+INITIALIZER(FilterTransformInit)
+{
+	initializerFunctions.push_back([] { filter::transform::factory::initialize(); });
+	finalizerFunctions.push_back([] { filter::transform::factory::finalize(); });
+}
+
+static std::shared_ptr<filter::transform::factory> factory_instance = nullptr;
+
+void filter::transform::factory::initialize()
+{
+	factory_instance = std::make_shared<filter::transform::factory>();
+}
+
+void filter::transform::factory::finalize()
+{
+	factory_instance.reset();
+}
+
+std::shared_ptr<filter::transform::factory> filter::transform::factory::get()
+{
+	return factory_instance;
+}
+
+filter::transform::factory::factory()
 {
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
 	sourceInfo.id             = "obs-stream-effects-filter-transform";
@@ -104,14 +120,14 @@ filter::transform_factory::transform_factory()
 	obs_register_source(&sourceInfo);
 }
 
-filter::transform_factory::~transform_factory() {}
+filter::transform::factory::~factory() {}
 
-const char* filter::transform_factory::get_name(void*)
+const char* filter::transform::factory::get_name(void*)
 {
 	return P_TRANSLATE(ST);
 }
 
-void filter::transform_factory::get_defaults(obs_data_t* data)
+void filter::transform::factory::get_defaults(obs_data_t* data)
 {
 	obs_data_set_default_int(data, ST_CAMERA, (int64_t)CameraMode::Orthographic);
 	obs_data_set_default_double(data, ST_CAMERA_FIELDOFVIEW, 90.0);
@@ -129,7 +145,7 @@ void filter::transform_factory::get_defaults(obs_data_t* data)
 	obs_data_set_default_int(data, ST_ROTATION_ORDER, RotationOrder::ZXY);
 }
 
-obs_properties_t* filter::transform_factory::get_properties(void*)
+obs_properties_t* filter::transform::factory::get_properties(void*)
 {
 	obs_properties_t* pr = obs_properties_create();
 	obs_property_t*   p  = NULL;
@@ -211,30 +227,25 @@ obs_properties_t* filter::transform_factory::get_properties(void*)
 	obs_property_set_modified_callback(p, modified_properties);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(ST_MIPMAPPING)));
 
-	p = obs_properties_add_list(pr, S_MIPGENERATOR, P_TRANSLATE(S_MIPGENERATOR),
-								OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	p = obs_properties_add_list(pr, S_MIPGENERATOR, P_TRANSLATE(S_MIPGENERATOR), OBS_COMBO_TYPE_LIST,
+								OBS_COMBO_FORMAT_INT);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_MIPGENERATOR)));
 
 	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_POINT), (long long)gs::mipmapper::generator::Point);
-	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_POINT),
-							  (long long)gs::mipmapper::generator::Linear);
-	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_POINT),
-							  (long long)gs::mipmapper::generator::Sharpen);
-	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_POINT),
-							  (long long)gs::mipmapper::generator::Smoothen);
-	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_POINT),
-							  (long long)gs::mipmapper::generator::Bicubic);
-	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_POINT),
-							  (long long)gs::mipmapper::generator::Lanczos);
+	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_POINT), (long long)gs::mipmapper::generator::Linear);
+	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_POINT), (long long)gs::mipmapper::generator::Sharpen);
+	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_POINT), (long long)gs::mipmapper::generator::Smoothen);
+	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_POINT), (long long)gs::mipmapper::generator::Bicubic);
+	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_POINT), (long long)gs::mipmapper::generator::Lanczos);
 
-	p = obs_properties_add_float_slider(pr, S_MIPGENERATOR_STRENGTH, P_TRANSLATE(S_MIPGENERATOR_STRENGTH), 0.0,
-								 1000.0, 0.01);
+	p = obs_properties_add_float_slider(pr, S_MIPGENERATOR_STRENGTH, P_TRANSLATE(S_MIPGENERATOR_STRENGTH), 0.0, 1000.0,
+										0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_MIPGENERATOR_STRENGTH)));
 
 	return pr;
 }
 
-bool filter::transform_factory::modified_properties(obs_properties_t* pr, obs_property_t*, obs_data_t* d)
+bool filter::transform::factory::modified_properties(obs_properties_t* pr, obs_property_t*, obs_data_t* d)
 {
 	switch ((CameraMode)obs_data_get_int(d, ST_CAMERA)) {
 	case CameraMode::Orthographic:
@@ -258,52 +269,52 @@ bool filter::transform_factory::modified_properties(obs_properties_t* pr, obs_pr
 	return true;
 }
 
-void* filter::transform_factory::create(obs_data_t* data, obs_source_t* source)
+void* filter::transform::factory::create(obs_data_t* data, obs_source_t* source)
 {
-	return new transform(data, source);
+	return new instance(data, source);
 }
 
-void filter::transform_factory::destroy(void* ptr)
+void filter::transform::factory::destroy(void* ptr)
 {
-	delete reinterpret_cast<transform*>(ptr);
+	delete reinterpret_cast<instance*>(ptr);
 }
 
-uint32_t filter::transform_factory::get_width(void* ptr)
+uint32_t filter::transform::factory::get_width(void* ptr)
 {
-	return reinterpret_cast<transform*>(ptr)->get_width();
+	return reinterpret_cast<instance*>(ptr)->get_width();
 }
 
-uint32_t filter::transform_factory::get_height(void* ptr)
+uint32_t filter::transform::factory::get_height(void* ptr)
 {
-	return reinterpret_cast<transform*>(ptr)->get_height();
+	return reinterpret_cast<instance*>(ptr)->get_height();
 }
 
-void filter::transform_factory::update(void* ptr, obs_data_t* data)
+void filter::transform::factory::update(void* ptr, obs_data_t* data)
 {
-	reinterpret_cast<transform*>(ptr)->update(data);
+	reinterpret_cast<instance*>(ptr)->update(data);
 }
 
-void filter::transform_factory::activate(void* ptr)
+void filter::transform::factory::activate(void* ptr)
 {
-	reinterpret_cast<transform*>(ptr)->activate();
+	reinterpret_cast<instance*>(ptr)->activate();
 }
 
-void filter::transform_factory::deactivate(void* ptr)
+void filter::transform::factory::deactivate(void* ptr)
 {
-	reinterpret_cast<transform*>(ptr)->deactivate();
+	reinterpret_cast<instance*>(ptr)->deactivate();
 }
 
-void filter::transform_factory::video_tick(void* ptr, float time)
+void filter::transform::factory::video_tick(void* ptr, float time)
 {
-	reinterpret_cast<transform*>(ptr)->video_tick(time);
+	reinterpret_cast<instance*>(ptr)->video_tick(time);
 }
 
-void filter::transform_factory::video_render(void* ptr, gs_effect_t* effect)
+void filter::transform::factory::video_render(void* ptr, gs_effect_t* effect)
 {
-	reinterpret_cast<transform*>(ptr)->video_render(effect);
+	reinterpret_cast<instance*>(ptr)->video_render(effect);
 }
 
-filter::transform::~transform()
+filter::transform::instance::~instance()
 {
 	m_shear.reset();
 	m_scale.reset();
@@ -316,7 +327,7 @@ filter::transform::~transform()
 	m_source_rendertarget.reset();
 }
 
-filter::transform::transform(obs_data_t* data, obs_source_t* context)
+filter::transform::instance::instance(obs_data_t* data, obs_source_t* context)
 	: m_active(true), m_self(context), m_source_rendered(false), m_mipmap_enabled(false), m_mipmap_strength(50.0),
 	  m_mipmap_generator(gs::mipmapper::generator::Linear), m_update_mesh(false), m_rotation_order(RotationOrder::ZXY),
 	  m_camera_orthographic(true), m_camera_fov(90.0)
@@ -337,17 +348,17 @@ filter::transform::transform(obs_data_t* data, obs_source_t* context)
 	update(data);
 }
 
-uint32_t filter::transform::get_width()
+uint32_t filter::transform::instance::get_width()
 {
 	return 0;
 }
 
-uint32_t filter::transform::get_height()
+uint32_t filter::transform::instance::get_height()
 {
 	return 0;
 }
 
-void filter::transform::update(obs_data_t* data)
+void filter::transform::instance::update(obs_data_t* data)
 {
 	// Camera
 	m_camera_orthographic = obs_data_get_int(data, ST_CAMERA) == 0;
@@ -376,17 +387,17 @@ void filter::transform::update(obs_data_t* data)
 	m_update_mesh = true;
 }
 
-void filter::transform::activate()
+void filter::transform::instance::activate()
 {
 	m_active = true;
 }
 
-void filter::transform::deactivate()
+void filter::transform::instance::deactivate()
 {
 	m_active = false;
 }
 
-void filter::transform::video_tick(float)
+void filter::transform::instance::video_tick(float)
 {
 	// Update Mesh
 	if (m_update_mesh) {
@@ -490,7 +501,7 @@ void filter::transform::video_tick(float)
 	this->m_source_rendered = false;
 }
 
-void filter::transform::video_render(gs_effect_t* paramEffect)
+void filter::transform::instance::video_render(gs_effect_t* paramEffect)
 {
 	if (!m_active) {
 		obs_source_skip_video_filter(m_self);

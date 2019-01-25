@@ -17,10 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#ifndef OBS_STREAM_EFFECTS_FILTER_BLUR_HPP
-#define OBS_STREAM_EFFECTS_FILTER_BLUR_HPP
 #pragma once
-
 #include <chrono>
 #include <functional>
 #include <list>
@@ -29,8 +26,8 @@
 #include "gfx-source-texture.hpp"
 #include "gs-effect.hpp"
 #include "gs-helper.hpp"
-#include "gs-texture.hpp"
 #include "gs-rendertarget.hpp"
+#include "gs-texture.hpp"
 #include "plugin.hpp"
 
 // OBS
@@ -45,6 +42,8 @@
 
 namespace filter {
 	namespace blur {
+		class instance;
+
 		enum type : int64_t {
 			Box,
 			Gaussian,
@@ -59,9 +58,76 @@ namespace filter {
 			Source,
 		};
 
-		class blur_instance {
-			obs_source_t*   m_source;
-			std::shared_ptr<gs::rendertarget> rt_source; 
+		class factory {
+			friend class std::_Ptr_base<filter::blur::factory>;
+
+			obs_source_info             source_info;
+			std::list<instance*>        sources;
+			std::shared_ptr<gs::effect> color_converter_effect;
+			std::shared_ptr<gs::effect> mask_effect;
+
+			std::shared_ptr<gs::effect>                                blur_effect;
+			std::map<filter::blur::type, std::shared_ptr<gs::texture>> kernels;
+			std::map<uint8_t, std::shared_ptr<std::vector<float_t>>>   gaussian_kernels;
+
+			std::map<std::string, obs_scene_t*> scenes;
+
+			public: // Singleton
+			static void                     initialize();
+			static void                     finalize();
+			static std::shared_ptr<factory> get();
+
+			public:
+			factory();
+			~factory();
+
+			void on_list_fill();
+			void on_list_empty();
+
+			void generate_gaussian_kernels();
+			void generate_kernel_textures();
+
+			static void* create(obs_data_t* settings, obs_source_t* self);
+			static void  destroy(void* source);
+
+			static void              get_defaults(obs_data_t* settings);
+			static obs_properties_t* get_properties(void* source);
+			static void              update(void* source, obs_data_t* settings);
+
+			static const char* get_name(void* source);
+			static uint32_t    get_width(void* source);
+			static uint32_t    get_height(void* source);
+
+			static void activate(void* source);
+			static void deactivate(void* source);
+
+			static void video_tick(void* source, float delta);
+			static void video_render(void* source, gs_effect_t* effect);
+
+			static void scene_create_handler(void* ptr, calldata_t* data);
+			static void scene_destroy_handler(void* ptr, calldata_t* data);
+
+			public:
+			std::shared_ptr<gs::effect> get_effect(filter::blur::type type);
+
+			std::string get_technique(filter::blur::type type);
+
+			std::shared_ptr<gs::effect> get_color_converter_effect();
+
+			std::shared_ptr<gs::effect> get_mask_effect();
+
+			std::shared_ptr<gs::texture> get_kernel(filter::blur::type type);
+
+			std::shared_ptr<std::vector<float_t>> get_gaussian_kernel(uint8_t size);
+
+			obs_scene_t* get_scene(std::string name);
+
+			void enum_scenes(std::function<bool(obs_scene_t*)> fnc);
+		};
+
+		class instance {
+			obs_source_t*                     m_source;
+			std::shared_ptr<gs::rendertarget> rt_source;
 			std::shared_ptr<gs::rendertarget> rt_primary;
 			std::shared_ptr<gs::rendertarget> rt_secondary;
 
@@ -110,11 +176,11 @@ namespace filter {
 			} mask;
 
 			// Directional
-			bool directional;
+			bool     directional;
 			double_t angle;
 
 			// Scale
-			bool scaling;
+			bool                          scaling;
 			std::pair<double_t, double_t> scale;
 
 			// advanced
@@ -131,11 +197,11 @@ namespace filter {
 
 			// Logging
 			std::chrono::high_resolution_clock::time_point last_log;
-			bool can_log();
+			bool                                           can_log();
 
 			public:
-			blur_instance(obs_data_t* settings, obs_source_t* self);
-			~blur_instance();
+			instance(obs_data_t* settings, obs_source_t* self);
+			~instance();
 
 			obs_properties_t* get_properties();
 			void              update(obs_data_t*);
@@ -149,75 +215,5 @@ namespace filter {
 			void video_tick(float);
 			void video_render(gs_effect_t*);
 		};
-
-		class blur_factory {
-			obs_source_info             source_info;
-			std::list<blur_instance*>   sources;
-			std::shared_ptr<gs::effect> color_converter_effect;
-			std::shared_ptr<gs::effect> mask_effect;
-
-			std::shared_ptr<gs::effect>                                blur_effect;
-			std::map<filter::blur::type, std::shared_ptr<gs::texture>> kernels;
-			std::map<uint8_t, std::shared_ptr<std::vector<float_t>>>   gaussian_kernels;
-
-			std::map<std::string, obs_scene_t*> scenes;
-
-			private:
-			blur_factory();
-			~blur_factory();
-
-			void on_list_fill();
-			void on_list_empty();
-
-			void generate_gaussian_kernels();
-			void generate_kernel_textures();
-
-			protected:
-			static void* create(obs_data_t* settings, obs_source_t* self);
-			static void  destroy(void* source);
-
-			static void              get_defaults(obs_data_t* settings);
-			static obs_properties_t* get_properties(void* source);
-			static void              update(void* source, obs_data_t* settings);
-
-			static const char* get_name(void* source);
-			static uint32_t    get_width(void* source);
-			static uint32_t    get_height(void* source);
-
-			static void activate(void* source);
-			static void deactivate(void* source);
-
-			static void video_tick(void* source, float delta);
-			static void video_render(void* source, gs_effect_t* effect);
-
-			static void scene_create_handler(void* ptr, calldata_t* data);
-			static void scene_destroy_handler(void* ptr, calldata_t* data);
-
-			public:
-			std::shared_ptr<gs::effect> get_effect(filter::blur::type type);
-
-			std::string get_technique(filter::blur::type type);
-
-			std::shared_ptr<gs::effect> get_color_converter_effect();
-
-			std::shared_ptr<gs::effect> get_mask_effect();
-
-			std::shared_ptr<gs::texture> get_kernel(filter::blur::type type);
-
-			std::shared_ptr<std::vector<float_t>> get_gaussian_kernel(uint8_t size);
-
-			obs_scene_t* get_scene(std::string name);
-
-			void enum_scenes(std::function<bool(obs_scene_t*)> fnc);
-
-			public: // Singleton
-			static void          initialize();
-			static void          finalize();
-			static blur_factory* get();
-		};
-
 	} // namespace blur
-
 } // namespace filter
-
-#endif

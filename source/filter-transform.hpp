@@ -27,74 +27,83 @@
 #include "plugin.hpp"
 
 namespace filter {
-	class transform_factory {
-		obs_source_info sourceInfo;
+	namespace transform {
+		class factory {
+			friend class std::_Ptr_base<filter::transform::factory>;
 
-		public:
-		transform_factory();
-		~transform_factory();
+			obs_source_info sourceInfo;
 
-		static const char*       get_name(void*);
-		static void              get_defaults(obs_data_t*);
-		static obs_properties_t* get_properties(void*);
-		static bool              modified_properties(obs_properties_t*, obs_property_t*, obs_data_t*);
+			public: // Singleton
+			static void                     initialize();
+			static void                     finalize();
+			static std::shared_ptr<factory> get();
 
-		static void*    create(obs_data_t*, obs_source_t*);
-		static void     destroy(void*);
-		static uint32_t get_width(void*);
-		static uint32_t get_height(void*);
-		static void     update(void*, obs_data_t*);
-		static void     activate(void*);
-		static void     deactivate(void*);
-		static void     show(void*);
-		static void     hide(void*);
-		static void     video_tick(void*, float);
-		static void     video_render(void*, gs_effect_t*);
-	};
+			public:
+			factory();
+			~factory();
 
-	class transform {
-		bool          m_active;
-		obs_source_t* m_self;
+			static const char*       get_name(void*);
+			static void              get_defaults(obs_data_t*);
+			static obs_properties_t* get_properties(void*);
+			static bool              modified_properties(obs_properties_t*, obs_property_t*, obs_data_t*);
 
-		// Input
-		std::shared_ptr<gs::rendertarget> m_source_rendertarget;
-		std::shared_ptr<gs::texture>      m_source_texture;
-		bool                              m_source_rendered;
+			static void*    create(obs_data_t*, obs_source_t*);
+			static void     destroy(void*);
+			static uint32_t get_width(void*);
+			static uint32_t get_height(void*);
+			static void     update(void*, obs_data_t*);
+			static void     activate(void*);
+			static void     deactivate(void*);
+			static void     show(void*);
+			static void     hide(void*);
+			static void     video_tick(void*, float);
+			static void     video_render(void*, gs_effect_t*);
+		};
 
-		// Mipmapping
-		bool                     m_mipmap_enabled;
-		double_t                 m_mipmap_strength;
-		gs::mipmapper::generator m_mipmap_generator;
-		gs::mipmapper            m_mipmapper;
+		class instance {
+			bool          m_active;
+			obs_source_t* m_self;
 
-		// Rendering
-		std::shared_ptr<gs::rendertarget> m_shape_rendertarget;
-		std::shared_ptr<gs::texture>      m_shape_texture;
+			// Input
+			std::shared_ptr<gs::rendertarget> m_source_rendertarget;
+			std::shared_ptr<gs::texture>      m_source_texture;
+			bool                              m_source_rendered;
 
-		// Mesh
-		bool                               m_update_mesh;
-		std::shared_ptr<gs::vertex_buffer> m_vertex_buffer;
-		uint32_t                           m_rotation_order;
-		std::unique_ptr<util::vec3a>       m_position;
-		std::unique_ptr<util::vec3a>       m_rotation;
-		std::unique_ptr<util::vec3a>       m_scale;
-		std::unique_ptr<util::vec3a>       m_shear;
+			// Mipmapping
+			bool                     m_mipmap_enabled;
+			double_t                 m_mipmap_strength;
+			gs::mipmapper::generator m_mipmap_generator;
+			gs::mipmapper            m_mipmapper;
 
-		// Camera
-		bool    m_camera_orthographic;
-		float_t m_camera_fov;
+			// Rendering
+			std::shared_ptr<gs::rendertarget> m_shape_rendertarget;
+			std::shared_ptr<gs::texture>      m_shape_texture;
 
-		public:
-		~transform();
-		transform(obs_data_t*, obs_source_t*);
+			// Mesh
+			bool                               m_update_mesh;
+			std::shared_ptr<gs::vertex_buffer> m_vertex_buffer;
+			uint32_t                           m_rotation_order;
+			std::unique_ptr<util::vec3a>       m_position;
+			std::unique_ptr<util::vec3a>       m_rotation;
+			std::unique_ptr<util::vec3a>       m_scale;
+			std::unique_ptr<util::vec3a>       m_shear;
 
-		uint32_t get_width();
-		uint32_t get_height();
+			// Camera
+			bool    m_camera_orthographic;
+			float_t m_camera_fov;
 
-		void update(obs_data_t*);
-		void activate();
-		void deactivate();
-		void video_tick(float);
-		void video_render(gs_effect_t*);
-	};
+			public:
+			~instance();
+			instance(obs_data_t*, obs_source_t*);
+
+			uint32_t get_width();
+			uint32_t get_height();
+
+			void update(obs_data_t*);
+			void activate();
+			void deactivate();
+			void video_tick(float);
+			void video_render(gs_effect_t*);
+		};
+	} // namespace transform
 } // namespace filter
