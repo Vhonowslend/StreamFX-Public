@@ -32,23 +32,11 @@
          offset="1"
          id="stop2810" />
     </linearGradient>
-    <linearGradient
-       id="linearGradient2397"
-       osb:paint="gradient">
-      <stop
-         style="stop-color:#000000;stop-opacity:1;"
-         offset="0"
-         id="stop2393" />
-      <stop
-         style="stop-color:#000000;stop-opacity:0;"
-         offset="1"
-         id="stop2395" />
-    </linearGradient>
     <filter
        style="color-interpolation-filters:sRGB"
        id="filter819"
        inkscape:label="filter0"
-       x="-0.050000001"
+       x="-0.05"
        y="-0.25"
        width="1.1"
        height="1.5">
