@@ -62,7 +62,7 @@ namespace filter {
 			friend class std::_Ptr_base<filter::blur::blur_factory>;
 
 			obs_source_info             source_info;
-			std::list<blur_instance*>        sources;
+			std::list<blur_instance*>   sources;
 			std::shared_ptr<gs::effect> color_converter_effect;
 			std::shared_ptr<gs::effect> mask_effect;
 
@@ -71,8 +71,8 @@ namespace filter {
 			std::map<uint8_t, std::shared_ptr<std::vector<float_t>>>   gaussian_kernels;
 
 			public: // Singleton
-			static void                     initialize();
-			static void                     finalize();
+			static void                          initialize();
+			static void                          finalize();
 			static std::shared_ptr<blur_factory> get();
 
 			public:
@@ -118,20 +118,29 @@ namespace filter {
 		};
 
 		class blur_instance {
-			obs_source_t*                     m_source;
+			obs_source_t* m_self;
+
+			// Rendering
 			std::shared_ptr<gs::rendertarget> rt_source;
 			std::shared_ptr<gs::rendertarget> rt_primary;
 			std::shared_ptr<gs::rendertarget> rt_secondary;
+			std::shared_ptr<gs::texture>      m_source_texture;
+			bool                              m_source_rendered;
 
-			// blur
+			// Blur
 			std::shared_ptr<gs::effect> blur_effect;
 			std::string                 blur_technique;
 			filter::blur::type          type;
 			uint64_t                    size;
-
-			// bilateral
+			/// Bilateral Blur
 			double_t bilateral_smoothing;
 			double_t bilateral_sharpness;
+			/// Directional Blur
+			bool     directional;
+			double_t angle;
+			/// Step Scaling
+			bool                          scaling;
+			std::pair<double_t, double_t> scale;
 
 			// Masking
 			struct {
@@ -166,14 +175,6 @@ namespace filter {
 				} color;
 				float_t multiplier;
 			} mask;
-
-			// Directional
-			bool     directional;
-			double_t angle;
-
-			// Scale
-			bool                          scaling;
-			std::pair<double_t, double_t> scale;
 
 			// advanced
 			uint64_t color_format;
