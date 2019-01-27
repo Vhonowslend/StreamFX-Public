@@ -35,7 +35,7 @@
 #pragma warning(push)
 #pragma warning(disable : 4201)
 #endif
-#include <callback/signal.h>
+#include <obs.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
@@ -70,8 +70,6 @@ namespace filter {
 			std::map<filter::blur::type, std::shared_ptr<gs::texture>> kernels;
 			std::map<uint8_t, std::shared_ptr<std::vector<float_t>>>   gaussian_kernels;
 
-			std::map<std::string, obs_scene_t*> scenes;
-
 			public: // Singleton
 			static void                     initialize();
 			static void                     finalize();
@@ -104,9 +102,6 @@ namespace filter {
 			static void video_tick(void* source, float delta);
 			static void video_render(void* source, gs_effect_t* effect);
 
-			static void scene_create_handler(void* ptr, calldata_t* data);
-			static void scene_destroy_handler(void* ptr, calldata_t* data);
-
 			public:
 			std::shared_ptr<gs::effect> get_effect(filter::blur::type type);
 
@@ -119,10 +114,6 @@ namespace filter {
 			std::shared_ptr<gs::texture> get_kernel(filter::blur::type type);
 
 			std::shared_ptr<std::vector<float_t>> get_gaussian_kernel(uint8_t size);
-
-			obs_scene_t* get_scene(std::string name);
-
-			void enum_scenes(std::function<bool(obs_scene_t*)> fnc);
 		};
 
 		class instance {

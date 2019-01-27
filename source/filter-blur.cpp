@@ -22,6 +22,7 @@
 #include <cinttypes>
 #include <cmath>
 #include <map>
+#include "obs-source-tracker.hpp"
 #include "strings.hpp"
 #include "util-math.hpp"
 
@@ -124,18 +125,9 @@ filter::blur::factory::factory()
 	source_info.video_render = video_render;
 
 	obs_register_source(&source_info);
-
-	auto osi = obs_get_signal_handler();
-	signal_handler_connect(osi, "source_create", scene_create_handler, this);
-	signal_handler_connect(osi, "source_destroy", scene_destroy_handler, this);
 }
 
-filter::blur::factory::~factory()
-{
-	auto osi = obs_get_signal_handler();
-	signal_handler_disconnect(osi, "source_create", scene_create_handler, this);
-	signal_handler_disconnect(osi, "source_destroy", scene_destroy_handler, this);
-}
+filter::blur::factory::~factory() {}
 
 void filter::blur::factory::on_list_fill()
 {
@@ -336,28 +328,6 @@ void filter::blur::factory::video_render(void* inptr, gs_effect_t* effect)
 	reinterpret_cast<filter::blur::instance*>(inptr)->video_render(effect);
 }
 
-void filter::blur::factory::scene_create_handler(void* ptr, calldata_t* data)
-{
-	filter::blur::factory* self   = reinterpret_cast<filter::blur::factory*>(ptr);
-	obs_source_t*               source = nullptr;
-	calldata_get_ptr(data, "source", &source);
-	obs_scene_t* scene = obs_scene_from_source(source);
-	if (scene) {
-		self->scenes.insert_or_assign(std::string(obs_source_get_name(source)), scene);
-	}
-}
-
-void filter::blur::factory::scene_destroy_handler(void* ptr, calldata_t* data)
-{
-	filter::blur::factory* self   = reinterpret_cast<filter::blur::factory*>(ptr);
-	obs_source_t*               source = nullptr;
-	calldata_get_ptr(data, "source", &source);
-	obs_scene_t* scene = obs_scene_from_source(source);
-	if (scene) {
-		self->scenes.erase(std::string(obs_source_get_name(source)));
-	}
-}
-
 std::shared_ptr<gs::effect> filter::blur::factory::get_effect(filter::blur::type)
 {
 	return blur_effect;
@@ -398,24 +368,6 @@ std::shared_ptr<gs::texture> filter::blur::factory::get_kernel(filter::blur::typ
 std::shared_ptr<std::vector<float_t>> filter::blur::factory::get_gaussian_kernel(uint8_t size)
 {
 	return gaussian_kernels.at(size);
-}
-
-obs_scene_t* filter::blur::factory::get_scene(std::string name)
-{
-	auto kv = scenes.find(name);
-	if (kv != scenes.end()) {
-		return kv->second;
-	}
-	return nullptr;
-}
-
-void filter::blur::factory::enum_scenes(std::function<bool(obs_scene_t*)> fnc)
-{
-	for (auto kv : scenes) {
-		if (!fnc(kv.second)) {
-			break;
-		}
-	}
 }
 
 bool filter::blur::instance::apply_shared_param(gs_texture_t* input, float texelX, float texelY)
@@ -470,8 +422,8 @@ bool filter::blur::instance::apply_gaussian_param(uint8_t width)
 	return true;
 }
 
-bool filter::blur::instance::apply_mask_parameters(std::shared_ptr<gs::effect> effect,
-														gs_texture_t* original_texture, gs_texture_t* blurred_texture)
+bool filter::blur::instance::apply_mask_parameters(std::shared_ptr<gs::effect> effect, gs_texture_t* original_texture,
+												   gs_texture_t* blurred_texture)
 {
 	if (effect->has_parameter("image_orig")) {
 		effect->get_parameter("image_orig").set_texture(original_texture);
@@ -535,8 +487,7 @@ bool filter::blur::instance::apply_mask_parameters(std::shared_ptr<gs::effect> e
 	return true;
 }
 
-bool filter::blur::instance::modified_properties(void*, obs_properties_t* props, obs_property*,
-													  obs_data_t* settings)
+bool filter::blur::instance::modified_properties(void*, obs_properties_t* props, obs_property*, obs_data_t* settings)
 {
 	// bilateral blur
 	bool show_bilateral = (obs_data_get_int(settings, P_TYPE) == type::Bilateral);
@@ -667,36 +618,24 @@ obs_properties_t* filter::blur::instance::get_properties()
 	p = obs_properties_add_bool(pr, P_MASK_REGION_INVERT, P_TRANSLATE(P_MASK_REGION_INVERT));
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_REGION_INVERT)));
 	/// Image
-	p = obs_properties_add_path(pr, P_MASK_IMAGE, P_TRANSLATE(P_MASK_IMAGE), OBS_PATH_FILE, P_TRANSLATE(""),
-								nullptr);
+	p = obs_properties_add_path(pr, P_MASK_IMAGE, P_TRANSLATE(P_MASK_IMAGE), OBS_PATH_FILE, P_TRANSLATE(""), nullptr);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_IMAGE)));
 	/// Source
 	p = obs_properties_add_list(pr, P_MASK_SOURCE, P_TRANSLATE(P_MASK_SOURCE), OBS_COMBO_TYPE_LIST,
 								OBS_COMBO_FORMAT_STRING);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_SOURCE)));
-	obs_enum_sources(
-		[](void* ptr, obs_source_t* source) {
-			obs_property_t* p = reinterpret_cast<obs_property_t*>(ptr);
-			obs_property_list_add_string(p, std::string(std::string(obs_source_get_name(source)) + " (Source)").c_str(),
-										 obs_source_get_name(source));
-			return true;
+	obs::source_tracker::get()->enumerate(
+		[this, &p](std::string name, obs_source_t* source) {
+			obs_property_list_add_string(p, std::string(name + " (Source)").c_str(), name.c_str());
+			return false;
 		},
-		p);
-	factory::get()->enum_scenes([this, p](obs_scene_t* scene) {
-		struct data {
-			instance*  self;
-			obs_property_t* prop;
-			std::string     parent_name;
-		};
-
-		obs_source_t* scene_source = obs_scene_get_source(scene);
-		P_LOG_DEBUG("<filter-blur> Instance '%s' adding scene '%s'.", obs_source_get_name(m_source),
-					obs_source_get_name(scene_source));
-		obs_property_list_add_string(p,
-									 std::string(std::string(obs_source_get_name(scene_source)) + " (Scene)").c_str(),
-									 obs_source_get_name(scene_source));
-		return true;
-	});
+		obs::source_tracker::filter_video_sources);
+	obs::source_tracker::get()->enumerate(
+		[this, &p](std::string name, obs_source_t* source) {
+			obs_property_list_add_string(p, std::string(name + " (Scene)").c_str(), name.c_str());
+			return false;
+		},
+		obs::source_tracker::filter_scenes);
 
 	/// Shared
 	p = obs_properties_add_color(pr, P_MASK_COLOR, P_TRANSLATE(P_MASK_COLOR));
@@ -791,24 +730,8 @@ void filter::blur::instance::update(obs_data_t* settings)
 	} else {
 		color_format = obs_data_get_default_int(settings, P_COLORFORMAT);
 	}
-}
 
-uint32_t filter::blur::instance::get_width()
-{
-	return uint32_t(0);
-}
-
-uint32_t filter::blur::instance::get_height()
-{
-	return uint32_t(0);
-}
-
-void filter::blur::instance::activate() {}
-
-void filter::blur::instance::deactivate() {}
-
-void filter::blur::instance::video_tick(float)
-{
+	// Load Mask
 	if (mask.type == mask_type::Image) {
 		if (mask.image.path_old != mask.image.path) {
 			try {
@@ -831,6 +754,24 @@ void filter::blur::instance::video_tick(float)
 			}
 		}
 	}
+}
+
+uint32_t filter::blur::instance::get_width()
+{
+	return uint32_t(0);
+}
+
+uint32_t filter::blur::instance::get_height()
+{
+	return uint32_t(0);
+}
+
+void filter::blur::instance::activate() {}
+
+void filter::blur::instance::deactivate() {}
+
+void filter::blur::instance::video_tick(float)
+{
 }
 
 void filter::blur::instance::video_render(gs_effect_t* effect)
