@@ -123,6 +123,7 @@ filter::blur::factory::factory()
 	source_info.deactivate   = deactivate;
 	source_info.video_tick   = video_tick;
 	source_info.video_render = video_render;
+	source_info.load         = load;
 
 	obs_register_source(&source_info);
 }
@@ -293,6 +294,11 @@ void filter::blur::factory::update(void* inptr, obs_data_t* settings)
 	reinterpret_cast<filter::blur::instance*>(inptr)->update(settings);
 }
 
+void filter::blur::factory::load(void* inptr, obs_data_t* settings)
+{
+	reinterpret_cast<filter::blur::instance*>(inptr)->update(settings);
+}
+
 const char* filter::blur::factory::get_name(void*)
 {
 	return P_TRANSLATE(SOURCE_NAME);
@@ -422,8 +428,8 @@ bool filter::blur::instance::apply_gaussian_param(uint8_t width)
 	return true;
 }
 
-bool filter::blur::instance::apply_mask_parameters(std::shared_ptr<gs::effect> effect, gs_texture_t* original_texture,
-												   gs_texture_t* blurred_texture)
+bool filter::blur::instance::apply_mask_parameters(std::shared_ptr<gs::effect> effect,
+														gs_texture_t* original_texture, gs_texture_t* blurred_texture)
 {
 	if (effect->has_parameter("image_orig")) {
 		effect->get_parameter("image_orig").set_texture(original_texture);
@@ -487,7 +493,8 @@ bool filter::blur::instance::apply_mask_parameters(std::shared_ptr<gs::effect> e
 	return true;
 }
 
-bool filter::blur::instance::modified_properties(void*, obs_properties_t* props, obs_property*, obs_data_t* settings)
+bool filter::blur::instance::modified_properties(void*, obs_properties_t* props, obs_property*,
+													  obs_data_t* settings)
 {
 	// bilateral blur
 	bool show_bilateral = (obs_data_get_int(settings, P_TYPE) == type::Bilateral);
@@ -561,6 +568,7 @@ filter::blur::instance::instance(obs_data_t* settings, obs_source_t* parent)
 
 filter::blur::instance::~instance()
 {
+	this->mask.source.source_texture.reset();
 	this->rt_primary.reset();
 	this->rt_secondary.reset();
 }
@@ -756,6 +764,11 @@ void filter::blur::instance::update(obs_data_t* settings)
 	}
 }
 
+void filter::blur::instance::load(obs_data_t* settings)
+{
+	update(settings);
+}
+
 uint32_t filter::blur::instance::get_width()
 {
 	return uint32_t(0);
@@ -770,9 +783,7 @@ void filter::blur::instance::activate() {}
 
 void filter::blur::instance::deactivate() {}
 
-void filter::blur::instance::video_tick(float)
-{
-}
+void filter::blur::instance::video_tick(float) {}
 
 void filter::blur::instance::video_render(gs_effect_t* effect)
 {

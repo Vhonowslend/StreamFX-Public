@@ -91,6 +91,7 @@ namespace filter {
 			static void              get_defaults(obs_data_t* settings);
 			static obs_properties_t* get_properties(void* source);
 			static void              update(void* source, obs_data_t* settings);
+			static void              load(void* source, obs_data_t* settings);
 
 			static const char* get_name(void* source);
 			static uint32_t    get_width(void* source);
@@ -196,6 +197,7 @@ namespace filter {
 
 			obs_properties_t* get_properties();
 			void              update(obs_data_t*);
+			void              load(obs_data_t*);
 
 			uint32_t get_width();
 			uint32_t get_height();
