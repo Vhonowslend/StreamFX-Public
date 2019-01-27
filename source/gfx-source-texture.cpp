@@ -32,7 +32,7 @@ gfx::source_texture::source_texture(obs_source_t* _parent)
 	if (!_parent) {
 		throw std::invalid_argument("parent must not be null");
 	}
-	parent        = std::make_unique<obs::source>(_parent, false, false);
+	parent        = std::make_shared<obs::source>(_parent, false, false);
 	render_target = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
@@ -44,7 +44,7 @@ gfx::source_texture::source_texture(obs_source_t* _source, obs_source_t* _parent
 	if (!obs_source_add_active_child(_parent, _source)) {
 		throw std::runtime_error("parent is contained in child");
 	}
-	child = std::make_unique<obs::source>(_source, true, true);
+	child = std::make_shared<obs::source>(_source, true, true);
 }
 
 gfx::source_texture::source_texture(const char* _name, obs_source_t* _parent) : source_texture(_parent)
@@ -52,15 +52,10 @@ gfx::source_texture::source_texture(const char* _name, obs_source_t* _parent) : 
 	if (!_name) {
 		throw std::invalid_argument("name must not be null");
 	}
-	obs_source_t* source = obs_get_source_by_name(_name);
-	if (!source) {
-		throw std::invalid_argument("source does not exist");
-	}
-	if (!obs_source_add_active_child(_parent, source)) {
-		obs_source_release(source);
+	child = std::make_shared<obs::source>(_name, true, true);
+	if (!obs_source_add_active_child(_parent, child->get())) {
 		throw std::runtime_error("parent is contained in child");
 	}
-	child = std::make_unique<obs::source>(source, true, true);
 }
 
 gfx::source_texture::source_texture(std::string _name, obs_source_t* _parent) : source_texture(_name.c_str(), _parent)
