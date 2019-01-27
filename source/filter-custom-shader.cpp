@@ -67,6 +67,7 @@ INITIALIZER(HandlerInit)
 
 filter::CustomShader::CustomShader()
 {
+	return; // TEMP
 	memset(&sourceInfo, 0, sizeof(obs_source_info));
 	sourceInfo.id             = "obs-stream-effects-filter-custom-shader";
 	sourceInfo.type           = OBS_SOURCE_TYPE_FILTER;
