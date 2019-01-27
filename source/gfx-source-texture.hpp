@@ -50,6 +50,15 @@ namespace gfx {
 		source_texture(std::shared_ptr<obs::source> child, std::shared_ptr<obs::source> parent);
 		source_texture(std::shared_ptr<obs::source> child, obs_source_t* parent);
 
+		public /*copy*/:
+		source_texture(source_texture const& other) = delete;
+		source_texture& operator=(source_texture const& other) = delete;
+
+		public /*move*/:
+		source_texture(source_texture&& other) = delete;
+		source_texture& operator=(source_texture&& other) = delete;
+
+		public:
 		std::shared_ptr<gs::texture> render(size_t width, size_t height);
 
 		public: // Unsafe Methods
