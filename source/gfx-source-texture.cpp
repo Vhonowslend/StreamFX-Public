@@ -57,6 +57,7 @@ gfx::source_texture::source_texture(const char* _name, obs_source_t* _parent) : 
 		throw std::invalid_argument("source does not exist");
 	}
 	if (!obs_source_add_active_child(_parent, source)) {
+		obs_source_release(source);
 		throw std::runtime_error("parent is contained in child");
 	}
 	child = std::make_unique<obs::source>(source, true, true);
@@ -76,8 +77,8 @@ gfx::source_texture::source_texture(std::shared_ptr<obs::source> child, std::sha
 	if (!obs_source_add_active_child(parent->get(), child->get())) {
 		throw std::runtime_error("parent is contained in child");
 	}
-	this->child  = child;
-	this->parent  = parent;
+	this->child         = child;
+	this->parent        = parent;
 	this->render_target = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
