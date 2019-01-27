@@ -42,7 +42,7 @@
 
 namespace filter {
 	namespace blur {
-		class instance;
+		class blur_instance;
 
 		enum type : int64_t {
 			Box,
@@ -58,11 +58,11 @@ namespace filter {
 			Source,
 		};
 
-		class factory {
-			friend class std::_Ptr_base<filter::blur::factory>;
+		class blur_factory {
+			friend class std::_Ptr_base<filter::blur::blur_factory>;
 
 			obs_source_info             source_info;
-			std::list<instance*>        sources;
+			std::list<blur_instance*>        sources;
 			std::shared_ptr<gs::effect> color_converter_effect;
 			std::shared_ptr<gs::effect> mask_effect;
 
@@ -73,11 +73,11 @@ namespace filter {
 			public: // Singleton
 			static void                     initialize();
 			static void                     finalize();
-			static std::shared_ptr<factory> get();
+			static std::shared_ptr<blur_factory> get();
 
 			public:
-			factory();
-			~factory();
+			blur_factory();
+			~blur_factory();
 
 			void on_list_fill();
 			void on_list_empty();
@@ -117,7 +117,7 @@ namespace filter {
 			std::shared_ptr<std::vector<float_t>> get_gaussian_kernel(uint8_t size);
 		};
 
-		class instance {
+		class blur_instance {
 			obs_source_t*                     m_source;
 			std::shared_ptr<gs::rendertarget> rt_source;
 			std::shared_ptr<gs::rendertarget> rt_primary;
@@ -192,8 +192,8 @@ namespace filter {
 			bool                                           can_log();
 
 			public:
-			instance(obs_data_t* settings, obs_source_t* self);
-			~instance();
+			blur_instance(obs_data_t* settings, obs_source_t* self);
+			~blur_instance();
 
 			obs_properties_t* get_properties();
 			void              update(obs_data_t*);

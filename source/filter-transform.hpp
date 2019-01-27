@@ -28,19 +28,19 @@
 
 namespace filter {
 	namespace transform {
-		class factory {
-			friend class std::_Ptr_base<filter::transform::factory>;
+		class transform_factory {
+			friend class std::_Ptr_base<filter::transform::transform_factory>;
 
 			obs_source_info sourceInfo;
 
 			public: // Singleton
 			static void                     initialize();
 			static void                     finalize();
-			static std::shared_ptr<factory> get();
+			static std::shared_ptr<transform_factory> get();
 
 			public:
-			factory();
-			~factory();
+			transform_factory();
+			~transform_factory();
 
 			static const char*       get_name(void*);
 			static void              get_defaults(obs_data_t*);
@@ -60,7 +60,7 @@ namespace filter {
 			static void     video_render(void*, gs_effect_t*);
 		};
 
-		class instance {
+		class transform_instance {
 			bool          m_active;
 			obs_source_t* m_self;
 
@@ -93,8 +93,8 @@ namespace filter {
 			float_t m_camera_fov;
 
 			public:
-			~instance();
-			instance(obs_data_t*, obs_source_t*);
+			~transform_instance();
+			transform_instance(obs_data_t*, obs_source_t*);
 
 			uint32_t get_width();
 			uint32_t get_height();

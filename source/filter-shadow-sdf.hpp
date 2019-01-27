@@ -41,13 +41,13 @@
 
 namespace filter {
 	namespace shadow_sdf {
-		class instance;
+		class shadow_sdf_instance;
 
-		class factory {
-			friend class std::_Ptr_base<filter::shadow_sdf::factory>;
+		class shadow_sdf_factory {
+			friend class std::_Ptr_base<filter::shadow_sdf::shadow_sdf_factory>;
 
 			obs_source_info        source_info;
-			std::list<instance*> sources;
+			std::list<shadow_sdf_instance*> sources;
 
 			std::shared_ptr<gs::effect> sdf_generator_effect;
 			std::shared_ptr<gs::effect> sdf_shadow_effect;
@@ -55,11 +55,11 @@ namespace filter {
 			public: // Singleton
 			static void     initialize();
 			static void     finalize();
-			static std::shared_ptr<factory> get();
+			static std::shared_ptr<shadow_sdf_factory> get();
 
 			public:
-			factory();
-			~factory();
+			shadow_sdf_factory();
+			~shadow_sdf_factory();
 
 			void on_list_fill();
 			void on_list_empty();
@@ -86,7 +86,7 @@ namespace filter {
 			std::shared_ptr<gs::effect> get_sdf_shadow_effect();
 		};
 
-		class instance {
+		class shadow_sdf_instance {
 			obs_source_t* m_self;
 
 			// Input
@@ -120,8 +120,8 @@ namespace filter {
 											obs_data_t* settings);
 
 			public:
-			instance(obs_data_t* settings, obs_source_t* self);
-			~instance();
+			shadow_sdf_instance(obs_data_t* settings, obs_source_t* self);
+			~shadow_sdf_instance();
 
 			obs_properties_t* get_properties();
 			void              update(obs_data_t*);

@@ -41,28 +41,28 @@
 // Initializer & Finalizer
 INITIALIZER(filterShadowFactoryInitializer)
 {
-	initializerFunctions.push_back([] { filter::shadow_sdf::factory::initialize(); });
-	finalizerFunctions.push_back([] { filter::shadow_sdf::factory::finalize(); });
+	initializerFunctions.push_back([] { filter::shadow_sdf::shadow_sdf_factory::initialize(); });
+	finalizerFunctions.push_back([] { filter::shadow_sdf::shadow_sdf_factory::finalize(); });
 }
 
-static std::shared_ptr<filter::shadow_sdf::factory> factory_instance = nullptr;
+static std::shared_ptr<filter::shadow_sdf::shadow_sdf_factory> factory_instance = nullptr;
 
-void filter::shadow_sdf::factory::initialize()
+void filter::shadow_sdf::shadow_sdf_factory::initialize()
 {
-	factory_instance = std::make_shared<filter::shadow_sdf::factory>();
+	factory_instance = std::make_shared<filter::shadow_sdf::shadow_sdf_factory>();
 }
 
-void filter::shadow_sdf::factory::finalize()
+void filter::shadow_sdf::shadow_sdf_factory::finalize()
 {
 	factory_instance.reset();
 }
 
-std::shared_ptr<filter::shadow_sdf::factory> filter::shadow_sdf::factory::get()
+std::shared_ptr<filter::shadow_sdf::shadow_sdf_factory> filter::shadow_sdf::shadow_sdf_factory::get()
 {
 	return factory_instance;
 }
 
-bool filter::shadow_sdf::instance::cb_modified_inside(void*, obs_properties_t* props, obs_property*,
+bool filter::shadow_sdf::shadow_sdf_instance::cb_modified_inside(void*, obs_properties_t* props, obs_property*,
 																 obs_data_t* settings)
 {
 	bool v = obs_data_get_bool(settings, P_INNER);
@@ -75,7 +75,7 @@ bool filter::shadow_sdf::instance::cb_modified_inside(void*, obs_properties_t* p
 	return true;
 }
 
-bool filter::shadow_sdf::instance::cb_modified_outside(void*, obs_properties_t* props, obs_property*,
+bool filter::shadow_sdf::shadow_sdf_instance::cb_modified_outside(void*, obs_properties_t* props, obs_property*,
 																  obs_data_t* settings)
 {
 	bool v = obs_data_get_bool(settings, P_OUTER);
@@ -88,7 +88,7 @@ bool filter::shadow_sdf::instance::cb_modified_outside(void*, obs_properties_t* 
 	return true;
 }
 
-filter::shadow_sdf::instance::instance(obs_data_t* settings, obs_source_t* self)
+filter::shadow_sdf::shadow_sdf_instance::shadow_sdf_instance(obs_data_t* settings, obs_source_t* self)
 	: m_self(self), m_source_rendered(false)
 {
 	this->m_source_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
@@ -103,9 +103,9 @@ filter::shadow_sdf::instance::instance(obs_data_t* settings, obs_source_t* self)
 	this->update(settings);
 }
 
-filter::shadow_sdf::instance::~instance() {}
+filter::shadow_sdf::shadow_sdf_instance::~shadow_sdf_instance() {}
 
-obs_properties_t* filter::shadow_sdf::instance::get_properties()
+obs_properties_t* filter::shadow_sdf::shadow_sdf_instance::get_properties()
 {
 	obs_properties_t* props = obs_properties_create();
 	obs_property_t*   p     = nullptr;
@@ -161,7 +161,7 @@ obs_properties_t* filter::shadow_sdf::instance::get_properties()
 	return props;
 }
 
-void filter::shadow_sdf::instance::update(obs_data_t* data)
+void filter::shadow_sdf::shadow_sdf_instance::update(obs_data_t* data)
 {
 	this->m_inner_shadow    = obs_data_get_bool(data, P_INNER);
 	this->m_inner_range_min = float_t(obs_data_get_double(data, P_INNER_RANGE_MINIMUM));
@@ -186,27 +186,27 @@ void filter::shadow_sdf::instance::update(obs_data_t* data)
 						  | (int32_t(obs_data_get_double(data, P_OUTER_ALPHA) * 2.55) << 24);
 }
 
-uint32_t filter::shadow_sdf::instance::get_width()
+uint32_t filter::shadow_sdf::shadow_sdf_instance::get_width()
 {
 	return uint32_t(0);
 }
 
-uint32_t filter::shadow_sdf::instance::get_height()
+uint32_t filter::shadow_sdf::shadow_sdf_instance::get_height()
 {
 	return uint32_t(0);
 }
 
-void filter::shadow_sdf::instance::activate() {}
+void filter::shadow_sdf::shadow_sdf_instance::activate() {}
 
-void filter::shadow_sdf::instance::deactivate() {}
+void filter::shadow_sdf::shadow_sdf_instance::deactivate() {}
 
-void filter::shadow_sdf::instance::video_tick(float time)
+void filter::shadow_sdf::shadow_sdf_instance::video_tick(float time)
 {
 	this->m_tick += time;
 	m_source_rendered = false;
 }
 
-void filter::shadow_sdf::instance::video_render(gs_effect_t*)
+void filter::shadow_sdf::shadow_sdf_instance::video_render(gs_effect_t*)
 {
 	obs_source_t* parent         = obs_filter_get_parent(this->m_self);
 	obs_source_t* target         = obs_filter_get_target(this->m_self);
@@ -256,7 +256,7 @@ void filter::shadow_sdf::instance::video_render(gs_effect_t*)
 				}
 
 				std::shared_ptr<gs::effect> sdf_effect =
-					filter::shadow_sdf::factory::get()->get_sdf_generator_effect();
+					filter::shadow_sdf::shadow_sdf_factory::get()->get_sdf_generator_effect();
 				if (!sdf_effect) {
 					throw std::runtime_error("SDF Effect no loaded");
 				}
@@ -292,7 +292,7 @@ void filter::shadow_sdf::instance::video_render(gs_effect_t*)
 
 		{
 			std::shared_ptr<gs::effect> shadow_effect =
-				filter::shadow_sdf::factory::get()->get_sdf_shadow_effect();
+				filter::shadow_sdf::shadow_sdf_factory::get()->get_sdf_shadow_effect();
 			if (!shadow_effect) {
 				throw std::runtime_error("Shadow Effect no loaded");
 			}
@@ -356,7 +356,7 @@ void filter::shadow_sdf::instance::video_render(gs_effect_t*)
 	gs_enable_depth_test(false);
 }
 
-filter::shadow_sdf::factory::factory()
+filter::shadow_sdf::shadow_sdf_factory::shadow_sdf_factory()
 {
 	memset(&source_info, 0, sizeof(obs_source_info));
 	source_info.id             = "obs-stream-effects-filter-shadow-sdf";
@@ -377,9 +377,9 @@ filter::shadow_sdf::factory::factory()
 	obs_register_source(&source_info);
 }
 
-filter::shadow_sdf::factory::~factory() {}
+filter::shadow_sdf::shadow_sdf_factory::~shadow_sdf_factory() {}
 
-void filter::shadow_sdf::factory::on_list_fill()
+void filter::shadow_sdf::shadow_sdf_factory::on_list_fill()
 {
 	{
 		char* file = obs_module_file("effects/sdf-generator.effect");
@@ -401,25 +401,25 @@ void filter::shadow_sdf::factory::on_list_fill()
 	}
 }
 
-void filter::shadow_sdf::factory::on_list_empty()
+void filter::shadow_sdf::shadow_sdf_factory::on_list_empty()
 {
 	sdf_generator_effect.reset();
 	sdf_shadow_effect.reset();
 }
 
-void* filter::shadow_sdf::factory::create(obs_data_t* data, obs_source_t* parent)
+void* filter::shadow_sdf::shadow_sdf_factory::create(obs_data_t* data, obs_source_t* parent)
 {
 	if (get()->sources.empty()) {
 		get()->on_list_fill();
 	}
-	filter::shadow_sdf::instance* ptr = new filter::shadow_sdf::instance(data, parent);
+	filter::shadow_sdf::shadow_sdf_instance* ptr = new filter::shadow_sdf::shadow_sdf_instance(data, parent);
 	get()->sources.push_back(ptr);
 	return ptr;
 }
 
-void filter::shadow_sdf::factory::destroy(void* inptr)
+void filter::shadow_sdf::shadow_sdf_factory::destroy(void* inptr)
 {
-	filter::shadow_sdf::instance* ptr = reinterpret_cast<filter::shadow_sdf::instance*>(inptr);
+	filter::shadow_sdf::shadow_sdf_instance* ptr = reinterpret_cast<filter::shadow_sdf::shadow_sdf_instance*>(inptr);
 	get()->sources.remove(ptr);
 	if (get()->sources.empty()) {
 		get()->on_list_empty();
@@ -427,7 +427,7 @@ void filter::shadow_sdf::factory::destroy(void* inptr)
 	delete ptr;
 }
 
-void filter::shadow_sdf::factory::get_defaults(obs_data_t* data)
+void filter::shadow_sdf::shadow_sdf_factory::get_defaults(obs_data_t* data)
 {
 	obs_data_set_bool(data, P_INNER, false);
 	obs_data_set_double(data, P_INNER_RANGE_MINIMUM, 0.0);
@@ -446,57 +446,57 @@ void filter::shadow_sdf::factory::get_defaults(obs_data_t* data)
 	obs_data_set_double(data, P_OUTER_ALPHA, 100.0);
 }
 
-obs_properties_t* filter::shadow_sdf::factory::get_properties(void* inptr)
+obs_properties_t* filter::shadow_sdf::shadow_sdf_factory::get_properties(void* inptr)
 {
-	return reinterpret_cast<filter::shadow_sdf::instance*>(inptr)->get_properties();
+	return reinterpret_cast<filter::shadow_sdf::shadow_sdf_instance*>(inptr)->get_properties();
 }
 
-void filter::shadow_sdf::factory::update(void* inptr, obs_data_t* settings)
+void filter::shadow_sdf::shadow_sdf_factory::update(void* inptr, obs_data_t* settings)
 {
-	reinterpret_cast<filter::shadow_sdf::instance*>(inptr)->update(settings);
+	reinterpret_cast<filter::shadow_sdf::shadow_sdf_instance*>(inptr)->update(settings);
 }
 
-const char* filter::shadow_sdf::factory::get_name(void*)
+const char* filter::shadow_sdf::shadow_sdf_factory::get_name(void*)
 {
 	return P_TRANSLATE(SOURCE_NAME);
 }
 
-uint32_t filter::shadow_sdf::factory::get_width(void* inptr)
+uint32_t filter::shadow_sdf::shadow_sdf_factory::get_width(void* inptr)
 {
-	return reinterpret_cast<filter::shadow_sdf::instance*>(inptr)->get_width();
+	return reinterpret_cast<filter::shadow_sdf::shadow_sdf_instance*>(inptr)->get_width();
 }
 
-uint32_t filter::shadow_sdf::factory::get_height(void* inptr)
+uint32_t filter::shadow_sdf::shadow_sdf_factory::get_height(void* inptr)
 {
-	return reinterpret_cast<filter::shadow_sdf::instance*>(inptr)->get_height();
+	return reinterpret_cast<filter::shadow_sdf::shadow_sdf_instance*>(inptr)->get_height();
 }
 
-void filter::shadow_sdf::factory::activate(void* inptr)
+void filter::shadow_sdf::shadow_sdf_factory::activate(void* inptr)
 {
-	reinterpret_cast<filter::shadow_sdf::instance*>(inptr)->activate();
+	reinterpret_cast<filter::shadow_sdf::shadow_sdf_instance*>(inptr)->activate();
 }
 
-void filter::shadow_sdf::factory::deactivate(void* inptr)
+void filter::shadow_sdf::shadow_sdf_factory::deactivate(void* inptr)
 {
-	reinterpret_cast<filter::shadow_sdf::instance*>(inptr)->deactivate();
+	reinterpret_cast<filter::shadow_sdf::shadow_sdf_instance*>(inptr)->deactivate();
 }
 
-void filter::shadow_sdf::factory::video_tick(void* inptr, float delta)
+void filter::shadow_sdf::shadow_sdf_factory::video_tick(void* inptr, float delta)
 {
-	reinterpret_cast<filter::shadow_sdf::instance*>(inptr)->video_tick(delta);
+	reinterpret_cast<filter::shadow_sdf::shadow_sdf_instance*>(inptr)->video_tick(delta);
 }
 
-void filter::shadow_sdf::factory::video_render(void* inptr, gs_effect_t* effect)
+void filter::shadow_sdf::shadow_sdf_factory::video_render(void* inptr, gs_effect_t* effect)
 {
-	reinterpret_cast<filter::shadow_sdf::instance*>(inptr)->video_render(effect);
+	reinterpret_cast<filter::shadow_sdf::shadow_sdf_instance*>(inptr)->video_render(effect);
 }
 
-std::shared_ptr<gs::effect> filter::shadow_sdf::factory::get_sdf_generator_effect()
+std::shared_ptr<gs::effect> filter::shadow_sdf::shadow_sdf_factory::get_sdf_generator_effect()
 {
 	return sdf_generator_effect;
 }
 
-std::shared_ptr<gs::effect> filter::shadow_sdf::factory::get_sdf_shadow_effect()
+std::shared_ptr<gs::effect> filter::shadow_sdf::shadow_sdf_factory::get_sdf_shadow_effect()
 {
 	return sdf_shadow_effect;
 }

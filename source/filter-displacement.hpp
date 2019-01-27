@@ -42,19 +42,19 @@
 
 namespace filter {
 	namespace displacement {
-		class factory {
-			friend class std::_Ptr_base<filter::displacement::factory>;
+		class displacement_factory {
+			friend class std::_Ptr_base<filter::displacement::displacement_factory>;
 
 			obs_source_info sourceInfo;
 
 			public: // Singleton
 			static void                     initialize();
 			static void                     finalize();
-			static std::shared_ptr<factory> get();
+			static std::shared_ptr<displacement_factory> get();
 
 			public:
-			factory();
-			~factory();
+			displacement_factory();
+			~displacement_factory();
 
 			static const char* get_name(void*);
 
@@ -73,7 +73,7 @@ namespace filter {
 			static void              video_render(void*, gs_effect_t*);
 		};
 
-		class instance {
+		class displacement_instance {
 			obs_source_t* m_self;
 			bool          m_active;
 			float_t       m_timer;
@@ -93,8 +93,8 @@ namespace filter {
 			void validate_file_texture(std::string file);
 
 			public:
-			instance(obs_data_t*, obs_source_t*);
-			~instance();
+			displacement_instance(obs_data_t*, obs_source_t*);
+			~displacement_instance();
 
 			void     update(obs_data_t*);
 			uint32_t get_width();

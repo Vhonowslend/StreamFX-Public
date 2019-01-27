@@ -42,19 +42,19 @@
 
 namespace source {
 	namespace mirror {
-		class factory {
-			friend class std::_Ptr_base<source::mirror::factory>;
+		class mirror_factory {
+			friend class std::_Ptr_base<source::mirror::mirror_factory>;
 
 			obs_source_info osi;
 
 			public: // Singleton
 			static void                     initialize();
 			static void                     finalize();
-			static std::shared_ptr<factory> get();
+			static std::shared_ptr<mirror_factory> get();
 
 			public:
-			factory();
-			~factory();
+			mirror_factory();
+			~mirror_factory();
 
 			static const char*       get_name(void*);
 			static void              get_defaults(obs_data_t*);
@@ -77,7 +77,7 @@ namespace source {
 			static void save(void*, obs_data_t*);
 		};
 
-		class instance {
+		class mirror_instance {
 			bool          m_active;
 			obs_source_t* m_self;
 			float_t       m_tick;
@@ -117,8 +117,8 @@ namespace source {
 			void acquire_input(std::string source_name);
 
 			public:
-			instance(obs_data_t*, obs_source_t*);
-			~instance();
+			mirror_instance(obs_data_t*, obs_source_t*);
+			~mirror_instance();
 
 			uint32_t get_width();
 			uint32_t get_height();
