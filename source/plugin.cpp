@@ -22,6 +22,7 @@
 #include "filter-displacement.hpp"
 #include "filter-shape.hpp"
 #include "filter-transform.hpp"
+#include "obs-source-tracker.hpp"
 
 std::list<std::function<void()>> initializerFunctions;
 std::list<std::function<void()>> finalizerFunctions;
@@ -30,6 +31,7 @@ MODULE_EXPORT bool obs_module_load(void)
 {
 	P_LOG_INFO("Loading Version %u.%u.%u (Build %u)", PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR,
 			   PROJECT_VERSION_PATCH, PROJECT_VERSION_TWEAK);
+	obs::source_tracker::initialize();
 	for (auto func : initializerFunctions) {
 		func();
 	}
@@ -43,6 +45,7 @@ MODULE_EXPORT void obs_module_unload(void)
 	for (auto func : finalizerFunctions) {
 		func();
 	}
+	obs::source_tracker::finalize();
 }
 
 #ifdef _WIN32

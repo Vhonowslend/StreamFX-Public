@@ -305,6 +305,8 @@ SET(PROJECT_PRIVATE
 	"${PROJECT_SOURCE_DIR}/source/util-memory.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs-source.hpp"
 	"${PROJECT_SOURCE_DIR}/source/obs-source.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs-source-tracker.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs-source-tracker.cpp"
 )
 
 source_group("Data Files\\Locale" FILES ${PROJECT_DATA_LOCALE})
