@@ -120,27 +120,31 @@ namespace filter {
 		class blur_instance {
 			obs_source_t* m_self;
 
-			// Rendering
-			std::shared_ptr<gs::rendertarget> rt_source;
-			std::shared_ptr<gs::rendertarget> rt_primary;
-			std::shared_ptr<gs::rendertarget> rt_secondary;
+			// Input
+			std::shared_ptr<gs::rendertarget> m_source_rt;
 			std::shared_ptr<gs::texture>      m_source_texture;
 			bool                              m_source_rendered;
 
+			// Rendering
+			std::shared_ptr<gs::rendertarget> m_output_rt1;
+			std::shared_ptr<gs::rendertarget> m_output_rt2;
+			std::shared_ptr<gs::texture>      m_output_texture;
+			bool                              m_output_rendered;
+
 			// Blur
-			std::shared_ptr<gs::effect> blur_effect;
-			std::string                 blur_technique;
-			filter::blur::type          type;
-			uint64_t                    size;
+			std::shared_ptr<gs::effect> m_blur_effect;
+			std::string                 m_blur_technique;
+			filter::blur::type          m_blur_type;
+			uint64_t                    m_blur_size;
 			/// Bilateral Blur
-			double_t bilateral_smoothing;
-			double_t bilateral_sharpness;
+			double_t m_blur_bilateral_smoothing;
+			double_t m_blur_bilateral_sharpness;
 			/// Directional Blur
-			bool     directional;
-			double_t angle;
+			bool     m_blur_directional;
+			double_t m_blur_angle;
 			/// Step Scaling
-			bool                          scaling;
-			std::pair<double_t, double_t> scale;
+			bool                          m_blur_step_scaling;
+			std::pair<double_t, double_t> m_blur_step_scale;
 
 			// Masking
 			struct {
@@ -174,11 +178,16 @@ namespace filter {
 					float_t a;
 				} color;
 				float_t multiplier;
-			} mask;
+			} m_mask;
 
 			// advanced
-			uint64_t color_format;
+			uint64_t m_color_format;
 
+			public:
+			blur_instance(obs_data_t* settings, obs_source_t* self);
+			~blur_instance();
+
+			private:
 			bool apply_shared_param(gs_texture_t* input, float texelX, float texelY);
 			bool apply_bilateral_param();
 			bool apply_gaussian_param(uint8_t width);
@@ -188,14 +197,7 @@ namespace filter {
 			static bool modified_properties(void* ptr, obs_properties_t* props, obs_property* prop,
 											obs_data_t* settings);
 
-			// Logging
-			std::chrono::high_resolution_clock::time_point last_log;
-			bool                                           can_log();
-
 			public:
-			blur_instance(obs_data_t* settings, obs_source_t* self);
-			~blur_instance();
-
 			obs_properties_t* get_properties();
 			void              update(obs_data_t*);
 			void              load(obs_data_t*);
