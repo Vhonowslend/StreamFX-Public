@@ -17,78 +17,79 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#include "filter-shadow-sdf.hpp"
+#include "filter-sdf-effects.hpp"
 #include "strings.hpp"
 
 // Translation Strings
-#define SOURCE_NAME "Filter.ShadowSDF"
+#define SOURCE_NAME "Filter.SDFEffects"
 
-#define P_INNER "Filter.ShadowSDF.Inner"
-#define P_INNER_RANGE_MINIMUM "Filter.ShadowSDF.Inner.Range.Minimum"
-#define P_INNER_RANGE_MAXIMUM "Filter.ShadowSDF.Inner.Range.Maximum"
-#define P_INNER_OFFSET_X "Filter.ShadowSDF.Inner.Offset.X"
-#define P_INNER_OFFSET_Y "Filter.ShadowSDF.Inner.Offset.Y"
-#define P_INNER_COLOR "Filter.ShadowSDF.Inner.Color"
-#define P_INNER_ALPHA "Filter.ShadowSDF.Inner.Alpha"
-#define P_OUTER "Filter.ShadowSDF.Outer"
-#define P_OUTER_RANGE_MINIMUM "Filter.ShadowSDF.Outer.Range.Minimum"
-#define P_OUTER_RANGE_MAXIMUM "Filter.ShadowSDF.Outer.Range.Maximum"
-#define P_OUTER_OFFSET_X "Filter.ShadowSDF.Outer.Offset.X"
-#define P_OUTER_OFFSET_Y "Filter.ShadowSDF.Outer.Offset.Y"
-#define P_OUTER_COLOR "Filter.ShadowSDF.Outer.Color"
-#define P_OUTER_ALPHA "Filter.ShadowSDF.Outer.Alpha"
+#define P_SHADOW_INNER "Filter.SDFEffects.Shadow.Inner"
+#define P_SHADOW_INNER_RANGE_MINIMUM "Filter.SDFEffects.Shadow.Inner.Range.Minimum"
+#define P_SHADOW_INNER_RANGE_MAXIMUM "Filter.SDFEffects.Shadow.Inner.Range.Maximum"
+#define P_SHADOW_INNER_OFFSET_X "Filter.SDFEffects.Shadow.Inner.Offset.X"
+#define P_SHADOW_INNER_OFFSET_Y "Filter.SDFEffects.Shadow.Inner.Offset.Y"
+#define P_SHADOW_INNER_COLOR "Filter.SDFEffects.Shadow.Inner.Color"
+#define P_SHADOW_INNER_ALPHA "Filter.SDFEffects.Shadow.Inner.Alpha"
+
+#define P_SHADOW_OUTER "Filter.SDFEffects.Shadow.Outer"
+#define P_SHADOW_OUTER_RANGE_MINIMUM "Filter.SDFEffects.Shadow.Outer.Range.Minimum"
+#define P_SHADOW_OUTER_RANGE_MAXIMUM "Filter.SDFEffects.Shadow.Outer.Range.Maximum"
+#define P_SHADOW_OUTER_OFFSET_X "Filter.SDFEffects.Shadow.Outer.Offset.X"
+#define P_SHADOW_OUTER_OFFSET_Y "Filter.SDFEffects.Shadow.Outer.Offset.Y"
+#define P_SHADOW_OUTER_COLOR "Filter.SDFEffects.Shadow.Outer.Color"
+#define P_SHADOW_OUTER_ALPHA "Filter.SDFEffects.Shadow.Outer.Alpha"
 
 // Initializer & Finalizer
 INITIALIZER(filterShadowFactoryInitializer)
 {
-	initializerFunctions.push_back([] { filter::shadow_sdf::shadow_sdf_factory::initialize(); });
-	finalizerFunctions.push_back([] { filter::shadow_sdf::shadow_sdf_factory::finalize(); });
+	initializerFunctions.push_back([] { filter::sdf_effects::sdf_effects_factory::initialize(); });
+	finalizerFunctions.push_back([] { filter::sdf_effects::sdf_effects_factory::finalize(); });
 }
 
-static std::shared_ptr<filter::shadow_sdf::shadow_sdf_factory> factory_instance = nullptr;
+static std::shared_ptr<filter::sdf_effects::sdf_effects_factory> factory_instance = nullptr;
 
-void filter::shadow_sdf::shadow_sdf_factory::initialize()
+void filter::sdf_effects::sdf_effects_factory::initialize()
 {
-	factory_instance = std::make_shared<filter::shadow_sdf::shadow_sdf_factory>();
+	factory_instance = std::make_shared<filter::sdf_effects::sdf_effects_factory>();
 }
 
-void filter::shadow_sdf::shadow_sdf_factory::finalize()
+void filter::sdf_effects::sdf_effects_factory::finalize()
 {
 	factory_instance.reset();
 }
 
-std::shared_ptr<filter::shadow_sdf::shadow_sdf_factory> filter::shadow_sdf::shadow_sdf_factory::get()
+std::shared_ptr<filter::sdf_effects::sdf_effects_factory> filter::sdf_effects::sdf_effects_factory::get()
 {
 	return factory_instance;
 }
 
-bool filter::shadow_sdf::shadow_sdf_instance::cb_modified_inside(void*, obs_properties_t* props, obs_property*,
-																 obs_data_t* settings)
+bool filter::sdf_effects::sdf_effects_instance::cb_modified_inside(void*, obs_properties_t* props, obs_property*,
+																   obs_data_t* settings)
 {
-	bool v = obs_data_get_bool(settings, P_INNER);
-	obs_property_set_visible(obs_properties_get(props, P_INNER_RANGE_MINIMUM), v);
-	obs_property_set_visible(obs_properties_get(props, P_INNER_RANGE_MAXIMUM), v);
-	obs_property_set_visible(obs_properties_get(props, P_INNER_OFFSET_X), v);
-	obs_property_set_visible(obs_properties_get(props, P_INNER_OFFSET_Y), v);
-	obs_property_set_visible(obs_properties_get(props, P_INNER_COLOR), v);
-	obs_property_set_visible(obs_properties_get(props, P_INNER_ALPHA), v);
+	bool v = obs_data_get_bool(settings, P_SHADOW_INNER);
+	obs_property_set_visible(obs_properties_get(props, P_SHADOW_INNER_RANGE_MINIMUM), v);
+	obs_property_set_visible(obs_properties_get(props, P_SHADOW_INNER_RANGE_MAXIMUM), v);
+	obs_property_set_visible(obs_properties_get(props, P_SHADOW_INNER_OFFSET_X), v);
+	obs_property_set_visible(obs_properties_get(props, P_SHADOW_INNER_OFFSET_Y), v);
+	obs_property_set_visible(obs_properties_get(props, P_SHADOW_INNER_COLOR), v);
+	obs_property_set_visible(obs_properties_get(props, P_SHADOW_INNER_ALPHA), v);
 	return true;
 }
 
-bool filter::shadow_sdf::shadow_sdf_instance::cb_modified_outside(void*, obs_properties_t* props, obs_property*,
-																  obs_data_t* settings)
+bool filter::sdf_effects::sdf_effects_instance::cb_modified_outside(void*, obs_properties_t* props, obs_property*,
+																	obs_data_t* settings)
 {
-	bool v = obs_data_get_bool(settings, P_OUTER);
-	obs_property_set_visible(obs_properties_get(props, P_OUTER_RANGE_MINIMUM), v);
-	obs_property_set_visible(obs_properties_get(props, P_OUTER_RANGE_MAXIMUM), v);
-	obs_property_set_visible(obs_properties_get(props, P_OUTER_OFFSET_X), v);
-	obs_property_set_visible(obs_properties_get(props, P_OUTER_OFFSET_Y), v);
-	obs_property_set_visible(obs_properties_get(props, P_OUTER_COLOR), v);
-	obs_property_set_visible(obs_properties_get(props, P_OUTER_ALPHA), v);
+	bool v = obs_data_get_bool(settings, P_SHADOW_OUTER);
+	obs_property_set_visible(obs_properties_get(props, P_SHADOW_OUTER_RANGE_MINIMUM), v);
+	obs_property_set_visible(obs_properties_get(props, P_SHADOW_OUTER_RANGE_MAXIMUM), v);
+	obs_property_set_visible(obs_properties_get(props, P_SHADOW_OUTER_OFFSET_X), v);
+	obs_property_set_visible(obs_properties_get(props, P_SHADOW_OUTER_OFFSET_Y), v);
+	obs_property_set_visible(obs_properties_get(props, P_SHADOW_OUTER_COLOR), v);
+	obs_property_set_visible(obs_properties_get(props, P_SHADOW_OUTER_ALPHA), v);
 	return true;
 }
 
-filter::shadow_sdf::shadow_sdf_instance::shadow_sdf_instance(obs_data_t* settings, obs_source_t* self)
+filter::sdf_effects::sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* self)
 	: m_self(self), m_source_rendered(false)
 {
 	this->m_source_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
@@ -103,110 +104,110 @@ filter::shadow_sdf::shadow_sdf_instance::shadow_sdf_instance(obs_data_t* setting
 	this->update(settings);
 }
 
-filter::shadow_sdf::shadow_sdf_instance::~shadow_sdf_instance() {}
+filter::sdf_effects::sdf_effects_instance::~sdf_effects_instance() {}
 
-obs_properties_t* filter::shadow_sdf::shadow_sdf_instance::get_properties()
+obs_properties_t* filter::sdf_effects::sdf_effects_instance::get_properties()
 {
 	obs_properties_t* props = obs_properties_create();
 	obs_property_t*   p     = nullptr;
 
-	p = obs_properties_add_bool(props, P_INNER, P_TRANSLATE(P_INNER));
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_INNER)));
+	p = obs_properties_add_bool(props, P_SHADOW_INNER, P_TRANSLATE(P_SHADOW_INNER));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_INNER)));
 	obs_property_set_modified_callback2(p, cb_modified_inside, this);
 
-	p = obs_properties_add_float_slider(props, P_INNER_RANGE_MINIMUM, P_TRANSLATE(P_INNER_RANGE_MINIMUM), 0.0, 16.0,
+	p = obs_properties_add_float_slider(props, P_SHADOW_INNER_RANGE_MINIMUM, P_TRANSLATE(P_SHADOW_INNER_RANGE_MINIMUM), 0.0, 16.0,
 										0.01);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_INNER_RANGE_MINIMUM)));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_INNER_RANGE_MINIMUM)));
 
-	p = obs_properties_add_float_slider(props, P_INNER_RANGE_MAXIMUM, P_TRANSLATE(P_INNER_RANGE_MAXIMUM), 0.0, 16.0,
+	p = obs_properties_add_float_slider(props, P_SHADOW_INNER_RANGE_MAXIMUM, P_TRANSLATE(P_SHADOW_INNER_RANGE_MAXIMUM), 0.0, 16.0,
 										0.01);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_INNER_RANGE_MAXIMUM)));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_INNER_RANGE_MAXIMUM)));
 
-	p = obs_properties_add_float_slider(props, P_INNER_OFFSET_X, P_TRANSLATE(P_INNER_OFFSET_X), -100.0, 100.0, 0.01);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_INNER_OFFSET_X)));
+	p = obs_properties_add_float_slider(props, P_SHADOW_INNER_OFFSET_X, P_TRANSLATE(P_SHADOW_INNER_OFFSET_X), -100.0, 100.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_INNER_OFFSET_X)));
 
-	p = obs_properties_add_float_slider(props, P_INNER_OFFSET_Y, P_TRANSLATE(P_INNER_OFFSET_Y), -100.0, 100.0, 0.01);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_INNER_OFFSET_Y)));
+	p = obs_properties_add_float_slider(props, P_SHADOW_INNER_OFFSET_Y, P_TRANSLATE(P_SHADOW_INNER_OFFSET_Y), -100.0, 100.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_INNER_OFFSET_Y)));
 
-	p = obs_properties_add_color(props, P_INNER_COLOR, P_TRANSLATE(P_INNER_COLOR));
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_INNER_COLOR)));
+	p = obs_properties_add_color(props, P_SHADOW_INNER_COLOR, P_TRANSLATE(P_SHADOW_INNER_COLOR));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_INNER_COLOR)));
 
-	p = obs_properties_add_float_slider(props, P_INNER_ALPHA, P_TRANSLATE(P_INNER_ALPHA), 0.0, 100.0, 0.1);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_INNER_ALPHA)));
+	p = obs_properties_add_float_slider(props, P_SHADOW_INNER_ALPHA, P_TRANSLATE(P_SHADOW_INNER_ALPHA), 0.0, 100.0, 0.1);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_INNER_ALPHA)));
 
-	p = obs_properties_add_bool(props, P_OUTER, P_TRANSLATE(P_OUTER));
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_OUTER)));
+	p = obs_properties_add_bool(props, P_SHADOW_OUTER, P_TRANSLATE(P_SHADOW_OUTER));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_OUTER)));
 	obs_property_set_modified_callback2(p, cb_modified_outside, this);
 
-	p = obs_properties_add_float_slider(props, P_OUTER_RANGE_MINIMUM, P_TRANSLATE(P_OUTER_RANGE_MINIMUM), 0.0, 16.0,
+	p = obs_properties_add_float_slider(props, P_SHADOW_OUTER_RANGE_MINIMUM, P_TRANSLATE(P_SHADOW_OUTER_RANGE_MINIMUM), 0.0, 16.0,
 										0.01);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_OUTER_RANGE_MINIMUM)));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_OUTER_RANGE_MINIMUM)));
 
-	p = obs_properties_add_float_slider(props, P_OUTER_RANGE_MAXIMUM, P_TRANSLATE(P_OUTER_RANGE_MAXIMUM), 0.0, 16.0,
+	p = obs_properties_add_float_slider(props, P_SHADOW_OUTER_RANGE_MAXIMUM, P_TRANSLATE(P_SHADOW_OUTER_RANGE_MAXIMUM), 0.0, 16.0,
 										0.01);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_OUTER_RANGE_MAXIMUM)));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_OUTER_RANGE_MAXIMUM)));
 
-	p = obs_properties_add_float_slider(props, P_OUTER_OFFSET_X, P_TRANSLATE(P_OUTER_OFFSET_X), -100.0, 100.0, 0.01);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_OUTER_OFFSET_X)));
+	p = obs_properties_add_float_slider(props, P_SHADOW_OUTER_OFFSET_X, P_TRANSLATE(P_SHADOW_OUTER_OFFSET_X), -100.0, 100.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_OUTER_OFFSET_X)));
 
-	p = obs_properties_add_float_slider(props, P_OUTER_OFFSET_Y, P_TRANSLATE(P_OUTER_OFFSET_Y), -100.0, 100.0, 0.01);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_OUTER_OFFSET_Y)));
+	p = obs_properties_add_float_slider(props, P_SHADOW_OUTER_OFFSET_Y, P_TRANSLATE(P_SHADOW_OUTER_OFFSET_Y), -100.0, 100.0, 0.01);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_OUTER_OFFSET_Y)));
 
-	p = obs_properties_add_color(props, P_OUTER_COLOR, P_TRANSLATE(P_OUTER_COLOR));
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_OUTER_COLOR)));
+	p = obs_properties_add_color(props, P_SHADOW_OUTER_COLOR, P_TRANSLATE(P_SHADOW_OUTER_COLOR));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_OUTER_COLOR)));
 
-	p = obs_properties_add_float_slider(props, P_OUTER_ALPHA, P_TRANSLATE(P_OUTER_ALPHA), 0.0, 100.0, 0.1);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_OUTER_ALPHA)));
+	p = obs_properties_add_float_slider(props, P_SHADOW_OUTER_ALPHA, P_TRANSLATE(P_SHADOW_OUTER_ALPHA), 0.0, 100.0, 0.1);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_OUTER_ALPHA)));
 
 	return props;
 }
 
-void filter::shadow_sdf::shadow_sdf_instance::update(obs_data_t* data)
+void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 {
-	this->m_inner_shadow    = obs_data_get_bool(data, P_INNER);
-	this->m_inner_range_min = float_t(obs_data_get_double(data, P_INNER_RANGE_MINIMUM));
-	this->m_inner_range_max = float_t(obs_data_get_double(data, P_INNER_RANGE_MAXIMUM));
+	this->m_inner_shadow    = obs_data_get_bool(data, P_SHADOW_INNER);
+	this->m_inner_range_min = float_t(obs_data_get_double(data, P_SHADOW_INNER_RANGE_MINIMUM));
+	this->m_inner_range_max = float_t(obs_data_get_double(data, P_SHADOW_INNER_RANGE_MAXIMUM));
 	if (this->m_inner_range_max < this->m_inner_range_min) {
 		std::swap(this->m_inner_range_max, this->m_inner_range_min);
 	}
-	this->m_inner_offset_x = float_t(obs_data_get_double(data, P_INNER_OFFSET_X));
-	this->m_inner_offset_y = float_t(obs_data_get_double(data, P_INNER_OFFSET_Y));
-	this->m_inner_color    = (obs_data_get_int(data, P_INNER_COLOR) & 0x00FFFFFF)
-						  | (int32_t(obs_data_get_double(data, P_INNER_ALPHA) * 2.55) << 24);
+	this->m_inner_offset_x = float_t(obs_data_get_double(data, P_SHADOW_INNER_OFFSET_X));
+	this->m_inner_offset_y = float_t(obs_data_get_double(data, P_SHADOW_INNER_OFFSET_Y));
+	this->m_inner_color    = (obs_data_get_int(data, P_SHADOW_INNER_COLOR) & 0x00FFFFFF)
+						  | (int32_t(obs_data_get_double(data, P_SHADOW_INNER_ALPHA) * 2.55) << 24);
 
-	this->m_outer_shadow    = obs_data_get_bool(data, P_OUTER);
-	this->m_outer_range_min = float_t(obs_data_get_double(data, P_OUTER_RANGE_MINIMUM));
-	this->m_outer_range_max = float_t(obs_data_get_double(data, P_OUTER_RANGE_MAXIMUM));
+	this->m_outer_shadow    = obs_data_get_bool(data, P_SHADOW_OUTER);
+	this->m_outer_range_min = float_t(obs_data_get_double(data, P_SHADOW_OUTER_RANGE_MINIMUM));
+	this->m_outer_range_max = float_t(obs_data_get_double(data, P_SHADOW_OUTER_RANGE_MAXIMUM));
 	if (this->m_outer_range_max < this->m_outer_range_min) {
 		std::swap(this->m_outer_range_max, this->m_outer_range_min);
 	}
-	this->m_outer_offset_x = float_t(obs_data_get_double(data, P_OUTER_OFFSET_X));
-	this->m_outer_offset_y = float_t(obs_data_get_double(data, P_OUTER_OFFSET_Y));
-	this->m_outer_color    = (obs_data_get_int(data, P_OUTER_COLOR) & 0x00FFFFFF)
-						  | (int32_t(obs_data_get_double(data, P_OUTER_ALPHA) * 2.55) << 24);
+	this->m_outer_offset_x = float_t(obs_data_get_double(data, P_SHADOW_OUTER_OFFSET_X));
+	this->m_outer_offset_y = float_t(obs_data_get_double(data, P_SHADOW_OUTER_OFFSET_Y));
+	this->m_outer_color    = (obs_data_get_int(data, P_SHADOW_OUTER_COLOR) & 0x00FFFFFF)
+						  | (int32_t(obs_data_get_double(data, P_SHADOW_OUTER_ALPHA) * 2.55) << 24);
 }
 
-uint32_t filter::shadow_sdf::shadow_sdf_instance::get_width()
+uint32_t filter::sdf_effects::sdf_effects_instance::get_width()
 {
 	return uint32_t(0);
 }
 
-uint32_t filter::shadow_sdf::shadow_sdf_instance::get_height()
+uint32_t filter::sdf_effects::sdf_effects_instance::get_height()
 {
 	return uint32_t(0);
 }
 
-void filter::shadow_sdf::shadow_sdf_instance::activate() {}
+void filter::sdf_effects::sdf_effects_instance::activate() {}
 
-void filter::shadow_sdf::shadow_sdf_instance::deactivate() {}
+void filter::sdf_effects::sdf_effects_instance::deactivate() {}
 
-void filter::shadow_sdf::shadow_sdf_instance::video_tick(float time)
+void filter::sdf_effects::sdf_effects_instance::video_tick(float time)
 {
 	this->m_tick += time;
 	m_source_rendered = false;
 }
 
-void filter::shadow_sdf::shadow_sdf_instance::video_render(gs_effect_t*)
+void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t*)
 {
 	obs_source_t* parent         = obs_filter_get_parent(this->m_self);
 	obs_source_t* target         = obs_filter_get_target(this->m_self);
@@ -256,7 +257,7 @@ void filter::shadow_sdf::shadow_sdf_instance::video_render(gs_effect_t*)
 				}
 
 				std::shared_ptr<gs::effect> sdf_effect =
-					filter::shadow_sdf::shadow_sdf_factory::get()->get_sdf_generator_effect();
+					filter::sdf_effects::sdf_effects_factory::get()->get_sdf_generator_effect();
 				if (!sdf_effect) {
 					throw std::runtime_error("SDF Effect no loaded");
 				}
@@ -292,7 +293,7 @@ void filter::shadow_sdf::shadow_sdf_instance::video_render(gs_effect_t*)
 
 		{
 			std::shared_ptr<gs::effect> shadow_effect =
-				filter::shadow_sdf::shadow_sdf_factory::get()->get_sdf_shadow_effect();
+				filter::sdf_effects::sdf_effects_factory::get()->get_sdf_shadow_effect();
 			if (!shadow_effect) {
 				throw std::runtime_error("Shadow Effect no loaded");
 			}
@@ -356,10 +357,10 @@ void filter::shadow_sdf::shadow_sdf_instance::video_render(gs_effect_t*)
 	gs_enable_depth_test(false);
 }
 
-filter::shadow_sdf::shadow_sdf_factory::shadow_sdf_factory()
+filter::sdf_effects::sdf_effects_factory::sdf_effects_factory()
 {
 	memset(&source_info, 0, sizeof(obs_source_info));
-	source_info.id             = "obs-stream-effects-filter-shadow-sdf";
+	source_info.id             = "obs-stream-effects-filter-sdf-effects";
 	source_info.type           = OBS_SOURCE_TYPE_FILTER;
 	source_info.output_flags   = OBS_SOURCE_VIDEO;
 	source_info.get_name       = get_name;
@@ -377,9 +378,9 @@ filter::shadow_sdf::shadow_sdf_factory::shadow_sdf_factory()
 	obs_register_source(&source_info);
 }
 
-filter::shadow_sdf::shadow_sdf_factory::~shadow_sdf_factory() {}
+filter::sdf_effects::sdf_effects_factory::~sdf_effects_factory() {}
 
-void filter::shadow_sdf::shadow_sdf_factory::on_list_fill()
+void filter::sdf_effects::sdf_effects_factory::on_list_fill()
 {
 	{
 		char* file = obs_module_file("effects/sdf-generator.effect");
@@ -401,25 +402,26 @@ void filter::shadow_sdf::shadow_sdf_factory::on_list_fill()
 	}
 }
 
-void filter::shadow_sdf::shadow_sdf_factory::on_list_empty()
+void filter::sdf_effects::sdf_effects_factory::on_list_empty()
 {
 	sdf_generator_effect.reset();
 	sdf_shadow_effect.reset();
 }
 
-void* filter::shadow_sdf::shadow_sdf_factory::create(obs_data_t* data, obs_source_t* parent)
+void* filter::sdf_effects::sdf_effects_factory::create(obs_data_t* data, obs_source_t* parent)
 {
 	if (get()->sources.empty()) {
 		get()->on_list_fill();
 	}
-	filter::shadow_sdf::shadow_sdf_instance* ptr = new filter::shadow_sdf::shadow_sdf_instance(data, parent);
+	filter::sdf_effects::sdf_effects_instance* ptr = new filter::sdf_effects::sdf_effects_instance(data, parent);
 	get()->sources.push_back(ptr);
 	return ptr;
 }
 
-void filter::shadow_sdf::shadow_sdf_factory::destroy(void* inptr)
+void filter::sdf_effects::sdf_effects_factory::destroy(void* inptr)
 {
-	filter::shadow_sdf::shadow_sdf_instance* ptr = reinterpret_cast<filter::shadow_sdf::shadow_sdf_instance*>(inptr);
+	filter::sdf_effects::sdf_effects_instance* ptr =
+		reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr);
 	get()->sources.remove(ptr);
 	if (get()->sources.empty()) {
 		get()->on_list_empty();
@@ -427,76 +429,76 @@ void filter::shadow_sdf::shadow_sdf_factory::destroy(void* inptr)
 	delete ptr;
 }
 
-void filter::shadow_sdf::shadow_sdf_factory::get_defaults(obs_data_t* data)
+void filter::sdf_effects::sdf_effects_factory::get_defaults(obs_data_t* data)
 {
-	obs_data_set_bool(data, P_INNER, false);
-	obs_data_set_double(data, P_INNER_RANGE_MINIMUM, 0.0);
-	obs_data_set_double(data, P_INNER_RANGE_MAXIMUM, 4.0);
-	obs_data_set_double(data, P_INNER_OFFSET_X, 0.0);
-	obs_data_set_double(data, P_INNER_OFFSET_Y, 0.0);
-	obs_data_set_int(data, P_INNER_COLOR, 0x00000000);
-	obs_data_set_double(data, P_INNER_ALPHA, 100.0);
+	obs_data_set_bool(data, P_SHADOW_INNER, false);
+	obs_data_set_double(data, P_SHADOW_INNER_RANGE_MINIMUM, 0.0);
+	obs_data_set_double(data, P_SHADOW_INNER_RANGE_MAXIMUM, 4.0);
+	obs_data_set_double(data, P_SHADOW_INNER_OFFSET_X, 0.0);
+	obs_data_set_double(data, P_SHADOW_INNER_OFFSET_Y, 0.0);
+	obs_data_set_int(data, P_SHADOW_INNER_COLOR, 0x00000000);
+	obs_data_set_double(data, P_SHADOW_INNER_ALPHA, 100.0);
 
-	obs_data_set_bool(data, P_OUTER, false);
-	obs_data_set_double(data, P_OUTER_RANGE_MINIMUM, 0.0);
-	obs_data_set_double(data, P_OUTER_RANGE_MAXIMUM, 4.0);
-	obs_data_set_double(data, P_OUTER_OFFSET_X, 0.0);
-	obs_data_set_double(data, P_OUTER_OFFSET_Y, 0.0);
-	obs_data_set_int(data, P_OUTER_COLOR, 0x00000000);
-	obs_data_set_double(data, P_OUTER_ALPHA, 100.0);
+	obs_data_set_bool(data, P_SHADOW_OUTER, false);
+	obs_data_set_double(data, P_SHADOW_OUTER_RANGE_MINIMUM, 0.0);
+	obs_data_set_double(data, P_SHADOW_OUTER_RANGE_MAXIMUM, 4.0);
+	obs_data_set_double(data, P_SHADOW_OUTER_OFFSET_X, 0.0);
+	obs_data_set_double(data, P_SHADOW_OUTER_OFFSET_Y, 0.0);
+	obs_data_set_int(data, P_SHADOW_OUTER_COLOR, 0x00000000);
+	obs_data_set_double(data, P_SHADOW_OUTER_ALPHA, 100.0);
 }
 
-obs_properties_t* filter::shadow_sdf::shadow_sdf_factory::get_properties(void* inptr)
+obs_properties_t* filter::sdf_effects::sdf_effects_factory::get_properties(void* inptr)
 {
-	return reinterpret_cast<filter::shadow_sdf::shadow_sdf_instance*>(inptr)->get_properties();
+	return reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->get_properties();
 }
 
-void filter::shadow_sdf::shadow_sdf_factory::update(void* inptr, obs_data_t* settings)
+void filter::sdf_effects::sdf_effects_factory::update(void* inptr, obs_data_t* settings)
 {
-	reinterpret_cast<filter::shadow_sdf::shadow_sdf_instance*>(inptr)->update(settings);
+	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->update(settings);
 }
 
-const char* filter::shadow_sdf::shadow_sdf_factory::get_name(void*)
+const char* filter::sdf_effects::sdf_effects_factory::get_name(void*)
 {
 	return P_TRANSLATE(SOURCE_NAME);
 }
 
-uint32_t filter::shadow_sdf::shadow_sdf_factory::get_width(void* inptr)
+uint32_t filter::sdf_effects::sdf_effects_factory::get_width(void* inptr)
 {
-	return reinterpret_cast<filter::shadow_sdf::shadow_sdf_instance*>(inptr)->get_width();
+	return reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->get_width();
 }
 
-uint32_t filter::shadow_sdf::shadow_sdf_factory::get_height(void* inptr)
+uint32_t filter::sdf_effects::sdf_effects_factory::get_height(void* inptr)
 {
-	return reinterpret_cast<filter::shadow_sdf::shadow_sdf_instance*>(inptr)->get_height();
+	return reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->get_height();
 }
 
-void filter::shadow_sdf::shadow_sdf_factory::activate(void* inptr)
+void filter::sdf_effects::sdf_effects_factory::activate(void* inptr)
 {
-	reinterpret_cast<filter::shadow_sdf::shadow_sdf_instance*>(inptr)->activate();
+	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->activate();
 }
 
-void filter::shadow_sdf::shadow_sdf_factory::deactivate(void* inptr)
+void filter::sdf_effects::sdf_effects_factory::deactivate(void* inptr)
 {
-	reinterpret_cast<filter::shadow_sdf::shadow_sdf_instance*>(inptr)->deactivate();
+	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->deactivate();
 }
 
-void filter::shadow_sdf::shadow_sdf_factory::video_tick(void* inptr, float delta)
+void filter::sdf_effects::sdf_effects_factory::video_tick(void* inptr, float delta)
 {
-	reinterpret_cast<filter::shadow_sdf::shadow_sdf_instance*>(inptr)->video_tick(delta);
+	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->video_tick(delta);
 }
 
-void filter::shadow_sdf::shadow_sdf_factory::video_render(void* inptr, gs_effect_t* effect)
+void filter::sdf_effects::sdf_effects_factory::video_render(void* inptr, gs_effect_t* effect)
 {
-	reinterpret_cast<filter::shadow_sdf::shadow_sdf_instance*>(inptr)->video_render(effect);
+	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->video_render(effect);
 }
 
-std::shared_ptr<gs::effect> filter::shadow_sdf::shadow_sdf_factory::get_sdf_generator_effect()
+std::shared_ptr<gs::effect> filter::sdf_effects::sdf_effects_factory::get_sdf_generator_effect()
 {
 	return sdf_generator_effect;
 }
 
-std::shared_ptr<gs::effect> filter::shadow_sdf::shadow_sdf_factory::get_sdf_shadow_effect()
+std::shared_ptr<gs::effect> filter::sdf_effects::sdf_effects_factory::get_sdf_shadow_effect()
 {
 	return sdf_shadow_effect;
 }

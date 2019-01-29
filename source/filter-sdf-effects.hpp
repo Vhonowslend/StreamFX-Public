@@ -17,10 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#ifndef OBS_STREAM_EFFECTS_FILTER_SHADOW_SDF_HPP
-#define OBS_STREAM_EFFECTS_FILTER_SHADOW_SDF_HPP
 #pragma once
-
 #include <memory>
 #include "gs-effect.hpp"
 #include "gs-rendertarget.hpp"
@@ -40,14 +37,15 @@
 #endif
 
 namespace filter {
-	namespace shadow_sdf {
-		class shadow_sdf_instance;
+	namespace sdf_effects {
+		class sdf_effects_instance;
 
-		class shadow_sdf_factory {
-			friend class std::_Ptr_base<filter::shadow_sdf::shadow_sdf_factory>;
+		class sdf_effects_factory {
+			friend class std::_Ptr_base<filter::sdf_effects::sdf_effects_factory>;
 
 			obs_source_info        source_info;
-			std::list<shadow_sdf_instance*> sources;
+
+			std::list<sdf_effects_instance*> sources;
 
 			std::shared_ptr<gs::effect> sdf_generator_effect;
 			std::shared_ptr<gs::effect> sdf_shadow_effect;
@@ -55,11 +53,11 @@ namespace filter {
 			public: // Singleton
 			static void     initialize();
 			static void     finalize();
-			static std::shared_ptr<shadow_sdf_factory> get();
+			static std::shared_ptr<sdf_effects_factory> get();
 
 			public:
-			shadow_sdf_factory();
-			~shadow_sdf_factory();
+			sdf_effects_factory();
+			~sdf_effects_factory();
 
 			void on_list_fill();
 			void on_list_empty();
@@ -86,7 +84,7 @@ namespace filter {
 			std::shared_ptr<gs::effect> get_sdf_shadow_effect();
 		};
 
-		class shadow_sdf_instance {
+		class sdf_effects_instance {
 			obs_source_t* m_self;
 
 			// Input
@@ -120,8 +118,8 @@ namespace filter {
 											obs_data_t* settings);
 
 			public:
-			shadow_sdf_instance(obs_data_t* settings, obs_source_t* self);
-			~shadow_sdf_instance();
+			sdf_effects_instance(obs_data_t* settings, obs_source_t* self);
+			~sdf_effects_instance();
 
 			obs_properties_t* get_properties();
 			void              update(obs_data_t*);
@@ -137,5 +135,3 @@ namespace filter {
 		};
 	} // namespace shadow_sdf
 } // namespace filter
-
-#endif
