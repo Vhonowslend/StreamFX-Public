@@ -1,3 +1,11 @@
+// -------------------------------------------------------------------------------- //
+// Defines
+#define MAX_DISTANCE 65536.0
+#define NEAR_INFINITE 18446744073709551616.0
+#define FLT_SMALL 0.001
+
+// -------------------------------------------------------------------------------- //
+
 // OBS Default
 uniform float4x4 ViewProj;
 
@@ -14,15 +22,21 @@ uniform float2 _outer_offset;
 uniform float4 _outer_color;
 uniform float _threshold;
 
-#define NEAR_INFINITE 18446744073709551616.0
-
 sampler_state sdfSampler {
-	Filter    = Trilinear;
+	Filter    = Linear;
 	AddressU  = Clamp;
 	AddressV  = Clamp;
 };
+
+sampler_state sdfSampler1_1 {
+	Filter    = Linear;
+	AddressU  = Border;
+	AddressV  = Border;
+	BorderColor = FFFF0000;
+};
+
 sampler_state imageSampler {
-	Filter    = Trilinear;
+	Filter    = Linear;
 	AddressU  = Clamp;
 	AddressV  = Clamp;
 };
@@ -48,7 +62,7 @@ VertDataOut VSDefault(VertDataIn v_in)
 float4 PS_SDFShadow_v1(VertDataOut v_in) : TARGET
 {
 	float4 final = _image.Sample(imageSampler, v_in.uv);
-
+	
 	if (_inner_max > 0 && final.a >= _threshold) {
 		float inner_dist = _sdf.Sample(sdfSampler, v_in.uv + _inner_offset).g;
 		float range = (_inner_max - _inner_min);
@@ -65,11 +79,77 @@ float4 PS_SDFShadow_v1(VertDataOut v_in) : TARGET
 	return final;
 }
 
+float4 PS_SDFShadow_v1_1(VertDataOut v_in) : TARGET
+{
+	// V1.1:
+	// - No longer clipping off image using _threshold.
+	// - Inverse Gradient supported (max < min)
+	// - Negative Gradient support (min/max < 0)
+
+	// Support for inverse Gradient (Outer Shadow): Maximum < Minimum
+	//
+	// Min=4.00, Max=0.00:
+	//  Expected: Max is fully visible, Min and higher is fully shadowed.
+	//   d=0.5
+	//   d = d - 4.00 (= -3.5)
+	//   d = d / 4.00 (= -0.875, 87.5%)
+	//   d is 87.5% visible
+	// Normal:
+	// Min=0.00, Max=4.00:
+	//   d=0.5
+	//   d = d - 0.00 (= 0.5)
+	//   d = d / 4.00 (= 0.125, 12.5%)
+	//   d is 12.5% visible
+
+	float4 final = float4(0., 0., 0., 0.);
+	float4 base = _image.Sample(imageSampler, v_in.uv);
+
+	//! Outer Shadow
+	// Are we allowed to draw an outer shadow?
+	float2 outer_sdf = _sdf.Sample(sdfSampler, v_in.uv + _outer_offset).rg * float2(MAX_DISTANCE, MAX_DISTANCE);
+	if ((_outer_color.a > 0.) && (outer_sdf.r < MAX_DISTANCE)) {
+		// Calculate the true distance value:
+		// - If we are outside, this will be positive.
+		// - If we are inside, this will be negative.
+		float sdf_distance = outer_sdf.r - outer_sdf.g;
+
+		// Calculate the delta.
+		float delta = _outer_max - _outer_min;
+		float t1 = sdf_distance - _outer_min;
+		float t2 = clamp(t1 / delta, 0., 1.);
+
+		final = lerp(final, _outer_color, 1. - t2);
+	}
+
+	// Base Image
+	final += base;
+	
+	//! Inner Shadow
+	// Are we allowed to draw an inner shadow?
+	float2 inner_sdf = _sdf.Sample(sdfSampler, v_in.uv + _inner_offset).rg * float2(MAX_DISTANCE, MAX_DISTANCE);
+	if ((_inner_color.a > 0.) && (inner_sdf.g < MAX_DISTANCE) && (inner_sdf.r <= FLT_SMALL)) {
+		// Calculate the true distance value:
+		// - If we are outside, this will be positive.
+		// - If we are inside, this will be negative.
+		float sdf_distance = inner_sdf.g;
+
+		// Calculate the delta.
+		float delta = _inner_max - _inner_min;
+		float t1 = sdf_distance - _inner_min;
+		float t2 = clamp(t1 / delta, 0., 1.);
+
+		// Inner shadow does not affect alpha of image.
+		final.rgb = lerp(final.rgb, _inner_color.rgb, (1. - t2) * _inner_color.a);
+	}
+
+	return final;
+}
+
 technique Draw
 {
 	pass
 	{
 		vertex_shader = VSDefault(v_in);
-		pixel_shader  = PS_SDFShadow_v1(v_in);
+		pixel_shader  = PS_SDFShadow_v1_1(v_in);
 	}
 }

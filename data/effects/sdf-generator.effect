@@ -1,3 +1,31 @@
+// 2D Signed Distance Field Generator
+//
+// This will produce an approximated Signed Distance Field on the fly.
+
+// Version 1.0:
+// - Inputs:
+//   - _image: Source Image
+//   - _size: Size of SDF Frame
+//   - _sdf: Last SDF Frame
+//   - _threshold: Alpha Threshold
+// - Output:
+//   - float4
+//     - R: If outside, distance to nearest wall, otherwise 0.
+//     - G: If inside, distance to nearest wall, otherwise 0.
+//     - BA: UV coordinates of nearest wall.
+// 
+// Version 1.1:
+// - See Version 1.0
+// - Adjusted R, G to be 0..1 range, multiply by 65536.0 to get proper results.
+
+// -------------------------------------------------------------------------------- //
+// Defines
+#define MAX_DISTANCE 65536.0
+#define NEAR_INFINITE 18446744073709551616.0
+#define RANGE 4
+
+// -------------------------------------------------------------------------------- //
+
 // OBS Default
 uniform float4x4 ViewProj;
 
@@ -7,14 +35,19 @@ uniform float2 _size;
 uniform texture2d _sdf; // in, out - swap rendering
 uniform float _threshold;
 
-#define NEAR_INFINITE 18446744073709551616.0
-#define RANGE 4
-
 sampler_state sdfSampler {
 	Filter    = Point;
 	AddressU  = Clamp;
 	AddressV  = Clamp;
 };
+
+sampler_state sdfSampler1_1 {
+	Filter    = Linear;
+	AddressU  = Border;
+	AddressV  = Border;
+	BorderColor = FFFFFFFF;
+};
+
 sampler_state imageSampler {
 	Filter    = Point;
 	AddressU  = Clamp;
@@ -108,12 +141,87 @@ float4 PS_SDFGenerator_v1(VertDataOut v_in) : TARGET
 	return outval;
 }
 
+float4 PS_SDFGenerator_v1_1(VertDataOut v_in) : TARGET
+{
+	const float step = 1.0 / MAX_DISTANCE;
+
+	float4 outval = float4(0.0, 0.0, v_in.uv.x, v_in.uv.y);
+	
+	// utility values
+	float2 uv_step = 1.0 / _size;
+	float lowest = NEAR_INFINITE;
+	float2 lowest_source = float2(NEAR_INFINITE, NEAR_INFINITE);
+	float2 lowest_origin = float2(NEAR_INFINITE, NEAR_INFINITE);
+	
+	// inputs	
+	float imageA = _image.Sample(imageSampler, v_in.uv).a;
+	float4 self = _sdf.Sample(sdfSampler1_1, v_in.uv);
+		
+	if (imageA > _threshold) {
+		// Inside
+		// TODO: Optimize to be O(n*n) instead of (2n*2n)
+		for (int x = -RANGE; x < RANGE; x++) {
+			for (int y = -RANGE; y < RANGE; y++) {
+				if ((x == 0) && (y == 0)) {
+					continue;
+				}
+				
+				float2 dtr = float2(x, y);
+				float2 dt = uv_step * dtr;
+				float4 here = _sdf.Sample(sdfSampler1_1, v_in.uv + dt);
+				float dst = abs(distance(float2(0., 0.), dtr)) * step;
+				
+				if (lowest > (here.g + dst)) {
+					lowest = here.g + dst;
+					lowest_source = v_in.uv + dt;
+					lowest_origin = here.ba;
+				}
+			}
+		}
+        if (lowest < NEAR_INFINITE) {
+            outval.g = lowest;
+            outval.ba = lowest_origin;
+        } else {
+			outval.g = self.g + step;
+		}
+	} else {
+		// Outside
+		// TODO: Optimize to be O(n*n) instead of (2n*2n)
+		for (int x = -RANGE; x < RANGE; x++) {
+			for (int y = -RANGE; y < RANGE; y++) {
+				if ((x == 0) && (y == 0)) {
+					continue;
+				}
+				
+				float2 dtr = float2(x, y);
+				float2 dt = uv_step * dtr;
+				float4 here = _sdf.Sample(sdfSampler1_1, v_in.uv + dt);
+				float dst = abs(distance(float2(0., 0.), dtr)) * step;
+				
+				if (lowest > (here.r + dst)) {
+					lowest = here.r + dst;
+					lowest_source = v_in.uv + dt;
+					lowest_origin = here.ba;
+				}
+			}
+		}
+        if (lowest < NEAR_INFINITE) {
+            outval.r = lowest;
+            outval.ba = lowest_origin;
+        } else {
+			outval.r = self.r + step;
+		}
+	}
+	
+	return outval;
+}
+
 technique Draw
 {
 	pass
 	{
 		vertex_shader = VSDefault(v_in);
-		pixel_shader  = PS_SDFGenerator_v1(v_in);
+		pixel_shader  = PS_SDFGenerator_v1_1(v_in);
 	}
 }
 

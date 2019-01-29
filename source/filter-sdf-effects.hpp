@@ -95,9 +95,7 @@ namespace filter {
 			// Distance Field
 			std::shared_ptr<gs::rendertarget> m_sdf_write, m_sdf_read;
 			std::shared_ptr<gs::texture>      m_sdf_texture;
-
-			float_t m_tick = 0.;
-
+			
 			bool     m_inner_shadow;
 			float_t  m_inner_range_min;
 			float_t  m_inner_range_max;

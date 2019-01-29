@@ -115,48 +115,54 @@ obs_properties_t* filter::sdf_effects::sdf_effects_instance::get_properties()
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_INNER)));
 	obs_property_set_modified_callback2(p, cb_modified_inside, this);
 
-	p = obs_properties_add_float_slider(props, P_SHADOW_INNER_RANGE_MINIMUM, P_TRANSLATE(P_SHADOW_INNER_RANGE_MINIMUM), 0.0, 16.0,
-										0.01);
+	p = obs_properties_add_float_slider(props, P_SHADOW_INNER_RANGE_MINIMUM, P_TRANSLATE(P_SHADOW_INNER_RANGE_MINIMUM),
+										0.0, 16.0, 0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_INNER_RANGE_MINIMUM)));
 
-	p = obs_properties_add_float_slider(props, P_SHADOW_INNER_RANGE_MAXIMUM, P_TRANSLATE(P_SHADOW_INNER_RANGE_MAXIMUM), 0.0, 16.0,
-										0.01);
+	p = obs_properties_add_float_slider(props, P_SHADOW_INNER_RANGE_MAXIMUM, P_TRANSLATE(P_SHADOW_INNER_RANGE_MAXIMUM),
+										0.0, 16.0, 0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_INNER_RANGE_MAXIMUM)));
 
-	p = obs_properties_add_float_slider(props, P_SHADOW_INNER_OFFSET_X, P_TRANSLATE(P_SHADOW_INNER_OFFSET_X), -100.0, 100.0, 0.01);
+	p = obs_properties_add_float_slider(props, P_SHADOW_INNER_OFFSET_X, P_TRANSLATE(P_SHADOW_INNER_OFFSET_X), -100.0,
+										100.0, 0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_INNER_OFFSET_X)));
 
-	p = obs_properties_add_float_slider(props, P_SHADOW_INNER_OFFSET_Y, P_TRANSLATE(P_SHADOW_INNER_OFFSET_Y), -100.0, 100.0, 0.01);
+	p = obs_properties_add_float_slider(props, P_SHADOW_INNER_OFFSET_Y, P_TRANSLATE(P_SHADOW_INNER_OFFSET_Y), -100.0,
+										100.0, 0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_INNER_OFFSET_Y)));
 
 	p = obs_properties_add_color(props, P_SHADOW_INNER_COLOR, P_TRANSLATE(P_SHADOW_INNER_COLOR));
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_INNER_COLOR)));
 
-	p = obs_properties_add_float_slider(props, P_SHADOW_INNER_ALPHA, P_TRANSLATE(P_SHADOW_INNER_ALPHA), 0.0, 100.0, 0.1);
+	p = obs_properties_add_float_slider(props, P_SHADOW_INNER_ALPHA, P_TRANSLATE(P_SHADOW_INNER_ALPHA), 0.0, 100.0,
+										0.1);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_INNER_ALPHA)));
 
 	p = obs_properties_add_bool(props, P_SHADOW_OUTER, P_TRANSLATE(P_SHADOW_OUTER));
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_OUTER)));
 	obs_property_set_modified_callback2(p, cb_modified_outside, this);
 
-	p = obs_properties_add_float_slider(props, P_SHADOW_OUTER_RANGE_MINIMUM, P_TRANSLATE(P_SHADOW_OUTER_RANGE_MINIMUM), 0.0, 16.0,
-										0.01);
+	p = obs_properties_add_float_slider(props, P_SHADOW_OUTER_RANGE_MINIMUM, P_TRANSLATE(P_SHADOW_OUTER_RANGE_MINIMUM),
+										0.0, 16.0, 0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_OUTER_RANGE_MINIMUM)));
 
-	p = obs_properties_add_float_slider(props, P_SHADOW_OUTER_RANGE_MAXIMUM, P_TRANSLATE(P_SHADOW_OUTER_RANGE_MAXIMUM), 0.0, 16.0,
-										0.01);
+	p = obs_properties_add_float_slider(props, P_SHADOW_OUTER_RANGE_MAXIMUM, P_TRANSLATE(P_SHADOW_OUTER_RANGE_MAXIMUM),
+										0.0, 16.0, 0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_OUTER_RANGE_MAXIMUM)));
 
-	p = obs_properties_add_float_slider(props, P_SHADOW_OUTER_OFFSET_X, P_TRANSLATE(P_SHADOW_OUTER_OFFSET_X), -100.0, 100.0, 0.01);
+	p = obs_properties_add_float_slider(props, P_SHADOW_OUTER_OFFSET_X, P_TRANSLATE(P_SHADOW_OUTER_OFFSET_X), -100.0,
+										100.0, 0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_OUTER_OFFSET_X)));
 
-	p = obs_properties_add_float_slider(props, P_SHADOW_OUTER_OFFSET_Y, P_TRANSLATE(P_SHADOW_OUTER_OFFSET_Y), -100.0, 100.0, 0.01);
+	p = obs_properties_add_float_slider(props, P_SHADOW_OUTER_OFFSET_Y, P_TRANSLATE(P_SHADOW_OUTER_OFFSET_Y), -100.0,
+										100.0, 0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_OUTER_OFFSET_Y)));
 
 	p = obs_properties_add_color(props, P_SHADOW_OUTER_COLOR, P_TRANSLATE(P_SHADOW_OUTER_COLOR));
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_OUTER_COLOR)));
 
-	p = obs_properties_add_float_slider(props, P_SHADOW_OUTER_ALPHA, P_TRANSLATE(P_SHADOW_OUTER_ALPHA), 0.0, 100.0, 0.1);
+	p = obs_properties_add_float_slider(props, P_SHADOW_OUTER_ALPHA, P_TRANSLATE(P_SHADOW_OUTER_ALPHA), 0.0, 100.0,
+										0.1);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_OUTER_ALPHA)));
 
 	return props;
@@ -167,23 +173,17 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 	this->m_inner_shadow    = obs_data_get_bool(data, P_SHADOW_INNER);
 	this->m_inner_range_min = float_t(obs_data_get_double(data, P_SHADOW_INNER_RANGE_MINIMUM));
 	this->m_inner_range_max = float_t(obs_data_get_double(data, P_SHADOW_INNER_RANGE_MAXIMUM));
-	if (this->m_inner_range_max < this->m_inner_range_min) {
-		std::swap(this->m_inner_range_max, this->m_inner_range_min);
-	}
-	this->m_inner_offset_x = float_t(obs_data_get_double(data, P_SHADOW_INNER_OFFSET_X));
-	this->m_inner_offset_y = float_t(obs_data_get_double(data, P_SHADOW_INNER_OFFSET_Y));
-	this->m_inner_color    = (obs_data_get_int(data, P_SHADOW_INNER_COLOR) & 0x00FFFFFF)
+	this->m_inner_offset_x  = float_t(obs_data_get_double(data, P_SHADOW_INNER_OFFSET_X));
+	this->m_inner_offset_y  = float_t(obs_data_get_double(data, P_SHADOW_INNER_OFFSET_Y));
+	this->m_inner_color     = (obs_data_get_int(data, P_SHADOW_INNER_COLOR) & 0x00FFFFFF)
 						  | (int32_t(obs_data_get_double(data, P_SHADOW_INNER_ALPHA) * 2.55) << 24);
 
 	this->m_outer_shadow    = obs_data_get_bool(data, P_SHADOW_OUTER);
 	this->m_outer_range_min = float_t(obs_data_get_double(data, P_SHADOW_OUTER_RANGE_MINIMUM));
 	this->m_outer_range_max = float_t(obs_data_get_double(data, P_SHADOW_OUTER_RANGE_MAXIMUM));
-	if (this->m_outer_range_max < this->m_outer_range_min) {
-		std::swap(this->m_outer_range_max, this->m_outer_range_min);
-	}
-	this->m_outer_offset_x = float_t(obs_data_get_double(data, P_SHADOW_OUTER_OFFSET_X));
-	this->m_outer_offset_y = float_t(obs_data_get_double(data, P_SHADOW_OUTER_OFFSET_Y));
-	this->m_outer_color    = (obs_data_get_int(data, P_SHADOW_OUTER_COLOR) & 0x00FFFFFF)
+	this->m_outer_offset_x  = float_t(obs_data_get_double(data, P_SHADOW_OUTER_OFFSET_X));
+	this->m_outer_offset_y  = float_t(obs_data_get_double(data, P_SHADOW_OUTER_OFFSET_Y));
+	this->m_outer_color     = (obs_data_get_int(data, P_SHADOW_OUTER_COLOR) & 0x00FFFFFF)
 						  | (int32_t(obs_data_get_double(data, P_SHADOW_OUTER_ALPHA) * 2.55) << 24);
 }
 
@@ -203,7 +203,6 @@ void filter::sdf_effects::sdf_effects_instance::deactivate() {}
 
 void filter::sdf_effects::sdf_effects_instance::video_tick(float time)
 {
-	this->m_tick += time;
 	m_source_rendered = false;
 }
 
@@ -223,20 +222,26 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t*)
 	}
 
 	try {
+		gs_blend_state_push();
+		gs_reset_blend_state();
+		gs_enable_blending(false);
+		gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
+
+		gs_set_cull_mode(GS_NEITHER);
+		gs_enable_color(true, true, true, true);
+		gs_enable_depth_test(false);
+		gs_depth_function(GS_ALWAYS);
+		gs_enable_stencil_test(false);
+		gs_enable_stencil_write(false);
+		gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
+		gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
+
 		if (!this->m_source_rendered) {
 			// Store input texture.
 			{
 				auto op = m_source_rt->render(baseW, baseH);
 				gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
 				gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &color_transparent, 0, 0);
-				gs_set_cull_mode(GS_NEITHER);
-				gs_reset_blend_state();
-				gs_enable_blending(false);
-				gs_blend_function(GS_BLEND_SRCALPHA, GS_BLEND_ZERO);
-				gs_enable_depth_test(false);
-				gs_enable_stencil_test(false);
-				gs_enable_stencil_write(false);
-				gs_enable_color(true, true, true, true);
 
 				if (obs_source_process_filter_begin(this->m_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
 					obs_source_process_filter_end(this->m_self, default_effect, baseW, baseH);
@@ -266,13 +271,6 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t*)
 					auto op = m_sdf_write->render(baseW, baseH);
 					gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
 					gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &color_transparent, 0, 0);
-					gs_set_cull_mode(GS_NEITHER);
-					gs_reset_blend_state();
-					gs_enable_blending(false);
-					gs_enable_depth_test(false);
-					gs_enable_stencil_test(false);
-					gs_enable_stencil_write(false);
-					gs_enable_color(true, true, true, true);
 
 					sdf_effect->get_parameter("_image").set_texture(this->m_source_texture);
 					sdf_effect->get_parameter("_size").set_float2(float_t(baseW), float_t(baseH));
@@ -291,70 +289,62 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t*)
 			}
 		}
 
-		{
-			std::shared_ptr<gs::effect> shadow_effect =
-				filter::sdf_effects::sdf_effects_factory::get()->get_sdf_shadow_effect();
-			if (!shadow_effect) {
-				throw std::runtime_error("Shadow Effect no loaded");
-			}
-
-			gs_set_cull_mode(GS_NEITHER);
-			gs_reset_blend_state();
-			gs_enable_blending(true);
-			gs_blend_function(GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA);
-			gs_enable_depth_test(false);
-			gs_enable_stencil_test(false);
-			gs_enable_stencil_write(false);
-			gs_enable_color(true, true, true, true);
-
-			shadow_effect->get_parameter("_sdf").set_texture(this->m_sdf_texture);
-			shadow_effect->get_parameter("_image").set_texture(this->m_source_texture);
-			shadow_effect->get_parameter("_threshold").set_float(0.5f);
-
-			if (this->m_inner_shadow) {
-				shadow_effect->get_parameter("_inner_min").set_float(this->m_inner_range_min);
-				shadow_effect->get_parameter("_inner_max").set_float(this->m_inner_range_max);
-				shadow_effect->get_parameter("_inner_offset")
-					.set_float2(this->m_inner_offset_x / float_t(baseW), this->m_inner_offset_y / float_t(baseH));
-				shadow_effect->get_parameter("_inner_color")
-					.set_float4((this->m_inner_color & 0xFF) / 255.0f, ((this->m_inner_color >> 8) & 0xFF) / 255.0f,
-								((this->m_inner_color >> 16) & 0xFF) / 255.0f,
-								((this->m_inner_color >> 24) & 0xFF) / 255.0f);
-			} else {
-				shadow_effect->get_parameter("_inner_min").set_float(0.);
-				shadow_effect->get_parameter("_inner_max").set_float(0.);
-				shadow_effect->get_parameter("_inner_offset").set_float2(0., 0.);
-				shadow_effect->get_parameter("_inner_color").set_float4(0., 0., 0., 0.);
-			}
-			if (this->m_outer_shadow) {
-				shadow_effect->get_parameter("_outer_min").set_float(this->m_outer_range_min);
-				shadow_effect->get_parameter("_outer_max").set_float(this->m_outer_range_max);
-				shadow_effect->get_parameter("_outer_offset")
-					.set_float2(this->m_outer_offset_x / float_t(baseW), this->m_outer_offset_y / float_t(baseH));
-				shadow_effect->get_parameter("_outer_color")
-					.set_float4((this->m_outer_color & 0xFF) / 255.0f, ((this->m_outer_color >> 8) & 0xFF) / 255.0f,
-								((this->m_outer_color >> 16) & 0xFF) / 255.0f,
-								((this->m_outer_color >> 24) & 0xFF) / 255.0f);
-			} else {
-				shadow_effect->get_parameter("_outer_min").set_float(0.);
-				shadow_effect->get_parameter("_outer_max").set_float(0.);
-				shadow_effect->get_parameter("_outer_offset").set_float2(0., 0.);
-				shadow_effect->get_parameter("_outer_color").set_float4(0., 0., 0., 0.);
-			}
-
-			while (gs_effect_loop(shadow_effect->get_object(), "Draw")) {
-				gs_draw_sprite(this->m_source_texture->get_object(), 0, baseW, baseH);
-			}
-		}
+		gs_blend_state_pop();
 	} catch (...) {
-		gs_reset_blend_state();
-		gs_enable_depth_test(false);
+		gs_blend_state_pop();
 		obs_source_skip_video_filter(this->m_self);
 		return;
 	}
 
-	gs_reset_blend_state();
-	gs_enable_depth_test(false);
+	try {
+		std::shared_ptr<gs::effect> shadow_effect =
+			filter::sdf_effects::sdf_effects_factory::get()->get_sdf_shadow_effect();
+		if (!shadow_effect) {
+			throw std::runtime_error("Shadow Effect no loaded");
+		}
+
+		shadow_effect->get_parameter("_sdf").set_texture(this->m_sdf_texture);
+		shadow_effect->get_parameter("_image").set_texture(this->m_source_texture);
+		shadow_effect->get_parameter("_threshold").set_float(0.5f);
+
+		if (this->m_inner_shadow) {
+			shadow_effect->get_parameter("_inner_min").set_float(this->m_inner_range_min);
+			shadow_effect->get_parameter("_inner_max").set_float(this->m_inner_range_max);
+			shadow_effect->get_parameter("_inner_offset")
+				.set_float2(this->m_inner_offset_x / float_t(baseW), this->m_inner_offset_y / float_t(baseH));
+			shadow_effect->get_parameter("_inner_color")
+				.set_float4((this->m_inner_color & 0xFF) / 255.0f, ((this->m_inner_color >> 8) & 0xFF) / 255.0f,
+							((this->m_inner_color >> 16) & 0xFF) / 255.0f,
+							((this->m_inner_color >> 24) & 0xFF) / 255.0f);
+		} else {
+			shadow_effect->get_parameter("_inner_min").set_float(0.);
+			shadow_effect->get_parameter("_inner_max").set_float(0.);
+			shadow_effect->get_parameter("_inner_offset").set_float2(0., 0.);
+			shadow_effect->get_parameter("_inner_color").set_float4(0., 0., 0., 0.);
+		}
+		if (this->m_outer_shadow) {
+			shadow_effect->get_parameter("_outer_min").set_float(this->m_outer_range_min);
+			shadow_effect->get_parameter("_outer_max").set_float(this->m_outer_range_max);
+			shadow_effect->get_parameter("_outer_offset")
+				.set_float2(this->m_outer_offset_x / float_t(baseW), this->m_outer_offset_y / float_t(baseH));
+			shadow_effect->get_parameter("_outer_color")
+				.set_float4((this->m_outer_color & 0xFF) / 255.0f, ((this->m_outer_color >> 8) & 0xFF) / 255.0f,
+							((this->m_outer_color >> 16) & 0xFF) / 255.0f,
+							((this->m_outer_color >> 24) & 0xFF) / 255.0f);
+		} else {
+			shadow_effect->get_parameter("_outer_min").set_float(0.);
+			shadow_effect->get_parameter("_outer_max").set_float(0.);
+			shadow_effect->get_parameter("_outer_offset").set_float2(0., 0.);
+			shadow_effect->get_parameter("_outer_color").set_float4(0., 0., 0., 0.);
+		}
+
+		while (gs_effect_loop(shadow_effect->get_object(), "Draw")) {
+			gs_draw_sprite(this->m_source_texture->get_object(), 0, baseW, baseH);
+		}
+	} catch (...) {
+		obs_source_skip_video_filter(this->m_self);
+		return;
+	}
 }
 
 filter::sdf_effects::sdf_effects_factory::sdf_effects_factory()
