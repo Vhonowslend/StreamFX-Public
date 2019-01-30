@@ -39,6 +39,8 @@
 #define P_SHADOW_OUTER_COLOR "Filter.SDFEffects.Shadow.Outer.Color"
 #define P_SHADOW_OUTER_ALPHA "Filter.SDFEffects.Shadow.Outer.Alpha"
 
+#define P_SDF_SCALE "Filter.SDFEffects.SDF.Scale"
+
 // Initializer & Finalizer
 INITIALIZER(filterShadowFactoryInitializer)
 {
@@ -137,21 +139,24 @@ void filter::sdf_effects::sdf_effects_factory::destroy(void* inptr)
 
 void filter::sdf_effects::sdf_effects_factory::get_defaults(obs_data_t* data)
 {
-	obs_data_set_bool(data, P_SHADOW_INNER, false);
-	obs_data_set_double(data, P_SHADOW_INNER_RANGE_MINIMUM, 0.0);
-	obs_data_set_double(data, P_SHADOW_INNER_RANGE_MAXIMUM, 4.0);
-	obs_data_set_double(data, P_SHADOW_INNER_OFFSET_X, 0.0);
-	obs_data_set_double(data, P_SHADOW_INNER_OFFSET_Y, 0.0);
-	obs_data_set_int(data, P_SHADOW_INNER_COLOR, 0x00000000);
-	obs_data_set_double(data, P_SHADOW_INNER_ALPHA, 100.0);
+	obs_data_set_default_bool(data, P_SHADOW_INNER, false);
+	obs_data_set_default_double(data, P_SHADOW_INNER_RANGE_MINIMUM, 0.0);
+	obs_data_set_default_double(data, P_SHADOW_INNER_RANGE_MAXIMUM, 4.0);
+	obs_data_set_default_double(data, P_SHADOW_INNER_OFFSET_X, 0.0);
+	obs_data_set_default_double(data, P_SHADOW_INNER_OFFSET_Y, 0.0);
+	obs_data_set_default_int(data, P_SHADOW_INNER_COLOR, 0x00000000);
+	obs_data_set_default_double(data, P_SHADOW_INNER_ALPHA, 100.0);
 
-	obs_data_set_bool(data, P_SHADOW_OUTER, false);
-	obs_data_set_double(data, P_SHADOW_OUTER_RANGE_MINIMUM, 0.0);
-	obs_data_set_double(data, P_SHADOW_OUTER_RANGE_MAXIMUM, 4.0);
-	obs_data_set_double(data, P_SHADOW_OUTER_OFFSET_X, 0.0);
-	obs_data_set_double(data, P_SHADOW_OUTER_OFFSET_Y, 0.0);
-	obs_data_set_int(data, P_SHADOW_OUTER_COLOR, 0x00000000);
-	obs_data_set_double(data, P_SHADOW_OUTER_ALPHA, 100.0);
+	obs_data_set_default_bool(data, P_SHADOW_OUTER, false);
+	obs_data_set_default_double(data, P_SHADOW_OUTER_RANGE_MINIMUM, 0.0);
+	obs_data_set_default_double(data, P_SHADOW_OUTER_RANGE_MAXIMUM, 4.0);
+	obs_data_set_default_double(data, P_SHADOW_OUTER_OFFSET_X, 0.0);
+	obs_data_set_default_double(data, P_SHADOW_OUTER_OFFSET_Y, 0.0);
+	obs_data_set_default_int(data, P_SHADOW_OUTER_COLOR, 0x00000000);
+	obs_data_set_default_double(data, P_SHADOW_OUTER_ALPHA, 100.0);
+
+	obs_data_set_default_bool(data, S_ADVANCED, false);
+	obs_data_set_default_double(data, P_SDF_SCALE, 100.0);
 }
 
 obs_properties_t* filter::sdf_effects::sdf_effects_factory::get_properties(void* inptr)
@@ -235,8 +240,16 @@ bool filter::sdf_effects::sdf_effects_instance::cb_modified_outside(void*, obs_p
 	return true;
 }
 
+bool filter::sdf_effects::sdf_effects_instance::cb_modified_advanced(void* ptr, obs_properties_t* props,
+																	 obs_property* prop, obs_data_t* settings)
+{
+	bool show_advanced = obs_data_get_bool(settings, S_ADVANCED);
+	obs_property_set_visible(obs_properties_get(props, P_SDF_SCALE), show_advanced);
+	return true;
+}
+
 filter::sdf_effects::sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* self)
-	: m_self(self), m_source_rendered(false)
+	: m_self(self), m_source_rendered(false), m_sdf_scale(1.0)
 {
 	this->m_source_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	this->m_sdf_write = std::make_shared<gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
@@ -311,6 +324,13 @@ obs_properties_t* filter::sdf_effects::sdf_effects_instance::get_properties()
 										0.1);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_OUTER_ALPHA)));
 
+	p = obs_properties_add_bool(props, S_ADVANCED, P_TRANSLATE(S_ADVANCED));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_ADVANCED)));
+	obs_property_set_modified_callback2(p, cb_modified_advanced, this);
+
+	p = obs_properties_add_float_slider(props, P_SDF_SCALE, P_TRANSLATE(P_SDF_SCALE), 0.1, 500.0, 0.1);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SDF_SCALE)));
+
 	return props;
 }
 
@@ -331,6 +351,8 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 	this->m_outer_offset_y  = float_t(obs_data_get_double(data, P_SHADOW_OUTER_OFFSET_Y));
 	this->m_outer_color     = (obs_data_get_int(data, P_SHADOW_OUTER_COLOR) & 0x00FFFFFF)
 						  | (int32_t(obs_data_get_double(data, P_SHADOW_OUTER_ALPHA) * 2.55) << 24);
+
+	this->m_sdf_scale = double_t(obs_data_get_double(data, P_SDF_SCALE) / 100.0);
 }
 
 uint32_t filter::sdf_effects::sdf_effects_instance::get_width()
@@ -413,18 +435,29 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t*)
 					throw std::runtime_error("SDF Effect no loaded");
 				}
 
+				// Scale SDF Size
+				double_t sdfW, sdfH;
+				sdfW = baseW * m_sdf_scale;
+				sdfH = baseH * m_sdf_scale;
+				if (sdfW <= 1) {
+					sdfW = 1.0;
+				}
+				if (sdfH <= 1) {
+					sdfH = 1.0;
+				}
+
 				{
-					auto op = m_sdf_write->render(baseW, baseH);
-					gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
+					auto op = m_sdf_write->render(sdfW, sdfH);
+					gs_ortho(0, (float)sdfW, 0, (float)sdfH, -1, 1);
 					gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &color_transparent, 0, 0);
 
 					sdf_effect->get_parameter("_image").set_texture(this->m_source_texture);
-					sdf_effect->get_parameter("_size").set_float2(float_t(baseW), float_t(baseH));
+					sdf_effect->get_parameter("_size").set_float2(float_t(sdfW), float_t(sdfH));
 					sdf_effect->get_parameter("_sdf").set_texture(this->m_sdf_texture);
 					sdf_effect->get_parameter("_threshold").set_float(0.5);
 
 					while (gs_effect_loop(sdf_effect->get_object(), "Draw")) {
-						gs_draw_sprite(this->m_sdf_texture->get_object(), 0, baseW, baseH);
+						gs_draw_sprite(this->m_sdf_texture->get_object(), 0, sdfW, sdfH);
 					}
 				}
 				this->m_sdf_write.swap(this->m_sdf_read);

@@ -95,6 +95,7 @@ namespace filter {
 			// Distance Field
 			std::shared_ptr<gs::rendertarget> m_sdf_write, m_sdf_read;
 			std::shared_ptr<gs::texture>      m_sdf_texture;
+			double_t                          m_sdf_scale;
 			
 			bool     m_inner_shadow;
 			float_t  m_inner_range_min;
@@ -113,6 +114,9 @@ namespace filter {
 										   obs_data_t* settings);
 
 			static bool cb_modified_outside(void* ptr, obs_properties_t* props, obs_property* prop,
+											obs_data_t* settings);
+
+			static bool cb_modified_advanced(void* ptr, obs_properties_t* props, obs_property* prop,
 											obs_data_t* settings);
 
 			public:
