@@ -63,6 +63,152 @@ std::shared_ptr<filter::sdf_effects::sdf_effects_factory> filter::sdf_effects::s
 	return factory_instance;
 }
 
+filter::sdf_effects::sdf_effects_factory::sdf_effects_factory()
+{
+	memset(&source_info, 0, sizeof(obs_source_info));
+	source_info.id             = "obs-stream-effects-filter-sdf-effects";
+	source_info.type           = OBS_SOURCE_TYPE_FILTER;
+	source_info.output_flags   = OBS_SOURCE_VIDEO;
+	source_info.get_name       = get_name;
+	source_info.get_defaults   = get_defaults;
+	source_info.get_properties = get_properties;
+
+	source_info.create       = create;
+	source_info.destroy      = destroy;
+	source_info.update       = update;
+	source_info.activate     = activate;
+	source_info.deactivate   = deactivate;
+	source_info.video_tick   = video_tick;
+	source_info.video_render = video_render;
+
+	obs_register_source(&source_info);
+}
+
+filter::sdf_effects::sdf_effects_factory::~sdf_effects_factory() {}
+
+void filter::sdf_effects::sdf_effects_factory::on_list_fill()
+{
+	{
+		char* file = obs_module_file("effects/sdf-generator.effect");
+		try {
+			sdf_generator_effect = std::make_shared<gs::effect>(file);
+		} catch (std::runtime_error ex) {
+			P_LOG_ERROR("<filter-shadow> Loading effect '%s' failed with error(s): %s", file, ex.what());
+		}
+		bfree(file);
+	}
+	{
+		char* file = obs_module_file("effects/sdf-shadow.effect");
+		try {
+			sdf_shadow_effect = std::make_shared<gs::effect>(file);
+		} catch (std::runtime_error ex) {
+			P_LOG_ERROR("<filter-shadow> Loading effect '%s' failed with error(s): %s", file, ex.what());
+		}
+		bfree(file);
+	}
+}
+
+void filter::sdf_effects::sdf_effects_factory::on_list_empty()
+{
+	sdf_generator_effect.reset();
+	sdf_shadow_effect.reset();
+}
+
+void* filter::sdf_effects::sdf_effects_factory::create(obs_data_t* data, obs_source_t* parent)
+{
+	if (get()->sources.empty()) {
+		get()->on_list_fill();
+	}
+	filter::sdf_effects::sdf_effects_instance* ptr = new filter::sdf_effects::sdf_effects_instance(data, parent);
+	get()->sources.push_back(ptr);
+	return ptr;
+}
+
+void filter::sdf_effects::sdf_effects_factory::destroy(void* inptr)
+{
+	filter::sdf_effects::sdf_effects_instance* ptr =
+		reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr);
+	get()->sources.remove(ptr);
+	if (get()->sources.empty()) {
+		get()->on_list_empty();
+	}
+	delete ptr;
+}
+
+void filter::sdf_effects::sdf_effects_factory::get_defaults(obs_data_t* data)
+{
+	obs_data_set_bool(data, P_SHADOW_INNER, false);
+	obs_data_set_double(data, P_SHADOW_INNER_RANGE_MINIMUM, 0.0);
+	obs_data_set_double(data, P_SHADOW_INNER_RANGE_MAXIMUM, 4.0);
+	obs_data_set_double(data, P_SHADOW_INNER_OFFSET_X, 0.0);
+	obs_data_set_double(data, P_SHADOW_INNER_OFFSET_Y, 0.0);
+	obs_data_set_int(data, P_SHADOW_INNER_COLOR, 0x00000000);
+	obs_data_set_double(data, P_SHADOW_INNER_ALPHA, 100.0);
+
+	obs_data_set_bool(data, P_SHADOW_OUTER, false);
+	obs_data_set_double(data, P_SHADOW_OUTER_RANGE_MINIMUM, 0.0);
+	obs_data_set_double(data, P_SHADOW_OUTER_RANGE_MAXIMUM, 4.0);
+	obs_data_set_double(data, P_SHADOW_OUTER_OFFSET_X, 0.0);
+	obs_data_set_double(data, P_SHADOW_OUTER_OFFSET_Y, 0.0);
+	obs_data_set_int(data, P_SHADOW_OUTER_COLOR, 0x00000000);
+	obs_data_set_double(data, P_SHADOW_OUTER_ALPHA, 100.0);
+}
+
+obs_properties_t* filter::sdf_effects::sdf_effects_factory::get_properties(void* inptr)
+{
+	return reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->get_properties();
+}
+
+void filter::sdf_effects::sdf_effects_factory::update(void* inptr, obs_data_t* settings)
+{
+	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->update(settings);
+}
+
+const char* filter::sdf_effects::sdf_effects_factory::get_name(void*)
+{
+	return P_TRANSLATE(SOURCE_NAME);
+}
+
+uint32_t filter::sdf_effects::sdf_effects_factory::get_width(void* inptr)
+{
+	return reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->get_width();
+}
+
+uint32_t filter::sdf_effects::sdf_effects_factory::get_height(void* inptr)
+{
+	return reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->get_height();
+}
+
+void filter::sdf_effects::sdf_effects_factory::activate(void* inptr)
+{
+	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->activate();
+}
+
+void filter::sdf_effects::sdf_effects_factory::deactivate(void* inptr)
+{
+	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->deactivate();
+}
+
+void filter::sdf_effects::sdf_effects_factory::video_tick(void* inptr, float delta)
+{
+	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->video_tick(delta);
+}
+
+void filter::sdf_effects::sdf_effects_factory::video_render(void* inptr, gs_effect_t* effect)
+{
+	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->video_render(effect);
+}
+
+std::shared_ptr<gs::effect> filter::sdf_effects::sdf_effects_factory::get_sdf_generator_effect()
+{
+	return sdf_generator_effect;
+}
+
+std::shared_ptr<gs::effect> filter::sdf_effects::sdf_effects_factory::get_sdf_shadow_effect()
+{
+	return sdf_shadow_effect;
+}
+
 bool filter::sdf_effects::sdf_effects_instance::cb_modified_inside(void*, obs_properties_t* props, obs_property*,
 																   obs_data_t* settings)
 {
@@ -345,150 +491,4 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t*)
 		obs_source_skip_video_filter(this->m_self);
 		return;
 	}
-}
-
-filter::sdf_effects::sdf_effects_factory::sdf_effects_factory()
-{
-	memset(&source_info, 0, sizeof(obs_source_info));
-	source_info.id             = "obs-stream-effects-filter-sdf-effects";
-	source_info.type           = OBS_SOURCE_TYPE_FILTER;
-	source_info.output_flags   = OBS_SOURCE_VIDEO;
-	source_info.get_name       = get_name;
-	source_info.get_defaults   = get_defaults;
-	source_info.get_properties = get_properties;
-
-	source_info.create       = create;
-	source_info.destroy      = destroy;
-	source_info.update       = update;
-	source_info.activate     = activate;
-	source_info.deactivate   = deactivate;
-	source_info.video_tick   = video_tick;
-	source_info.video_render = video_render;
-
-	obs_register_source(&source_info);
-}
-
-filter::sdf_effects::sdf_effects_factory::~sdf_effects_factory() {}
-
-void filter::sdf_effects::sdf_effects_factory::on_list_fill()
-{
-	{
-		char* file = obs_module_file("effects/sdf-generator.effect");
-		try {
-			sdf_generator_effect = std::make_shared<gs::effect>(file);
-		} catch (std::runtime_error ex) {
-			P_LOG_ERROR("<filter-shadow> Loading effect '%s' failed with error(s): %s", file, ex.what());
-		}
-		bfree(file);
-	}
-	{
-		char* file = obs_module_file("effects/sdf-shadow.effect");
-		try {
-			sdf_shadow_effect = std::make_shared<gs::effect>(file);
-		} catch (std::runtime_error ex) {
-			P_LOG_ERROR("<filter-shadow> Loading effect '%s' failed with error(s): %s", file, ex.what());
-		}
-		bfree(file);
-	}
-}
-
-void filter::sdf_effects::sdf_effects_factory::on_list_empty()
-{
-	sdf_generator_effect.reset();
-	sdf_shadow_effect.reset();
-}
-
-void* filter::sdf_effects::sdf_effects_factory::create(obs_data_t* data, obs_source_t* parent)
-{
-	if (get()->sources.empty()) {
-		get()->on_list_fill();
-	}
-	filter::sdf_effects::sdf_effects_instance* ptr = new filter::sdf_effects::sdf_effects_instance(data, parent);
-	get()->sources.push_back(ptr);
-	return ptr;
-}
-
-void filter::sdf_effects::sdf_effects_factory::destroy(void* inptr)
-{
-	filter::sdf_effects::sdf_effects_instance* ptr =
-		reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr);
-	get()->sources.remove(ptr);
-	if (get()->sources.empty()) {
-		get()->on_list_empty();
-	}
-	delete ptr;
-}
-
-void filter::sdf_effects::sdf_effects_factory::get_defaults(obs_data_t* data)
-{
-	obs_data_set_bool(data, P_SHADOW_INNER, false);
-	obs_data_set_double(data, P_SHADOW_INNER_RANGE_MINIMUM, 0.0);
-	obs_data_set_double(data, P_SHADOW_INNER_RANGE_MAXIMUM, 4.0);
-	obs_data_set_double(data, P_SHADOW_INNER_OFFSET_X, 0.0);
-	obs_data_set_double(data, P_SHADOW_INNER_OFFSET_Y, 0.0);
-	obs_data_set_int(data, P_SHADOW_INNER_COLOR, 0x00000000);
-	obs_data_set_double(data, P_SHADOW_INNER_ALPHA, 100.0);
-
-	obs_data_set_bool(data, P_SHADOW_OUTER, false);
-	obs_data_set_double(data, P_SHADOW_OUTER_RANGE_MINIMUM, 0.0);
-	obs_data_set_double(data, P_SHADOW_OUTER_RANGE_MAXIMUM, 4.0);
-	obs_data_set_double(data, P_SHADOW_OUTER_OFFSET_X, 0.0);
-	obs_data_set_double(data, P_SHADOW_OUTER_OFFSET_Y, 0.0);
-	obs_data_set_int(data, P_SHADOW_OUTER_COLOR, 0x00000000);
-	obs_data_set_double(data, P_SHADOW_OUTER_ALPHA, 100.0);
-}
-
-obs_properties_t* filter::sdf_effects::sdf_effects_factory::get_properties(void* inptr)
-{
-	return reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->get_properties();
-}
-
-void filter::sdf_effects::sdf_effects_factory::update(void* inptr, obs_data_t* settings)
-{
-	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->update(settings);
-}
-
-const char* filter::sdf_effects::sdf_effects_factory::get_name(void*)
-{
-	return P_TRANSLATE(SOURCE_NAME);
-}
-
-uint32_t filter::sdf_effects::sdf_effects_factory::get_width(void* inptr)
-{
-	return reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->get_width();
-}
-
-uint32_t filter::sdf_effects::sdf_effects_factory::get_height(void* inptr)
-{
-	return reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->get_height();
-}
-
-void filter::sdf_effects::sdf_effects_factory::activate(void* inptr)
-{
-	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->activate();
-}
-
-void filter::sdf_effects::sdf_effects_factory::deactivate(void* inptr)
-{
-	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->deactivate();
-}
-
-void filter::sdf_effects::sdf_effects_factory::video_tick(void* inptr, float delta)
-{
-	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->video_tick(delta);
-}
-
-void filter::sdf_effects::sdf_effects_factory::video_render(void* inptr, gs_effect_t* effect)
-{
-	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->video_render(effect);
-}
-
-std::shared_ptr<gs::effect> filter::sdf_effects::sdf_effects_factory::get_sdf_generator_effect()
-{
-	return sdf_generator_effect;
-}
-
-std::shared_ptr<gs::effect> filter::sdf_effects::sdf_effects_factory::get_sdf_shadow_effect()
-{
-	return sdf_shadow_effect;
 }
