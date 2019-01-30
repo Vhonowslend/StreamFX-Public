@@ -118,11 +118,14 @@ float4 PS_SDFShadow_v1_1(VertDataOut v_in) : TARGET
 		float t1 = sdf_distance - _outer_min;
 		float t2 = clamp(t1 / delta, 0., 1.);
 
-		final = lerp(final, _outer_color, 1. - t2);
+		final = lerp(final, _outer_color, (1. - t2) * _outer_color.a);
 	}
 
 	// Base Image
-	final += base;
+	if (base.a > 0.) {
+		float3 rgb = base.rgb / base.a;
+		final = lerp(final, base, base.a);
+	}
 	
 	//! Inner Shadow
 	// Are we allowed to draw an inner shadow?
