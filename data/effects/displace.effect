@@ -5,12 +5,12 @@ uniform float2 texelScale;
 uniform float2 displacementScale;
 
 sampler_state textureSampler {
-	Filter    = Trilinear;
+	Filter    = Linear;
 	AddressU  = Wrap;
 	AddressV  = Wrap;
 };
 sampler_state dispTextureSampler {
-	Filter    = Trilinear;
+	Filter    = Linear;
 	AddressU  = Clamp;
 	AddressV  = Clamp;
 };
@@ -35,17 +35,14 @@ VertDataOut VSDefault(VertDataIn v_in)
 
 float4 PSDisplace(VertDataOut v_in) : TARGET
 {
-	float2 disp = displacementMap.Sample(dispTextureSampler, v_in.uv).rg - float2(0.5, 0.5);
+	float2 disp = displacementMap.Sample(dispTextureSampler, v_in.uv).rg - float2(.5, .5);
 
-	// Handle 0..255 correctly (127, 128 are center)
-	float2 signdisp = disp * float2(281474976710656.0, 281474976710656.0);
-	float2 signs = float2(clamp(disp.r, -1.0, 1.0), clamp(disp.g, -1.0, 1.0));
-	disp = (floor(abs(disp * 127.0)) / 127.0) * signs;
+	// Method 1: Only Math
+	disp = (floor(abs(disp * 255.0)) / 255.0) * sign(disp);
 
 	float2 uv = v_in.uv + (disp * texelScale * displacementScale);
-	float4 rgba = image.Sample(textureSampler, uv);
 
-	return rgba;
+	return image.Sample(textureSampler, uv);
 }
 
 technique Draw
