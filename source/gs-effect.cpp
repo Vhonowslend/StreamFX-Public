@@ -19,6 +19,9 @@
 
 #include "gs-effect.hpp"
 #include <stdexcept>
+#include <fstream>
+#include <iostream>
+#include <vector>
 
 // OBS
 #ifdef _MSC_VER
@@ -30,10 +33,13 @@
 #pragma warning(pop)
 #endif
 
+//#define OBS_LOAD_EFFECT_FILE
+
 gs::effect::effect() : m_effect(nullptr) {}
 
 gs::effect::effect(std::string file)
 {
+#ifdef OBS_LOAD_EFFECT_FILE
 	obs_enter_graphics();
 	char* errorMessage = nullptr;
 	m_effect           = gs_effect_create_from_file(file.c_str(), &errorMessage);
@@ -47,6 +53,39 @@ gs::effect::effect(std::string file)
 		throw std::runtime_error(error);
 	}
 	obs_leave_graphics();
+#else
+	std::ifstream filestream = std::ifstream(file, std::ios::binary);
+	if (!filestream.is_open()) {
+		throw std::runtime_error("Failed to open file.");
+	}
+
+	filestream.ignore(std::numeric_limits<std::streamsize>::max());
+	std::streamsize length = filestream.gcount();
+	filestream.clear(); //  Since ignore will have set eof.
+	filestream.seekg(0, std::ios_base::beg);
+
+	if (length > 256 * 1024 * 1024) {
+		throw std::runtime_error("Shader too large (>256mb)");
+	}
+
+	std::vector<char> shader_buf(length+1);
+	filestream.read(shader_buf.data(), length);
+	const char* buf = shader_buf.data();
+
+	obs_enter_graphics();
+	char* errorMessage = nullptr;
+	m_effect           = gs_effect_create(shader_buf.data(), file.c_str(), &errorMessage);
+	if (!m_effect || errorMessage) {
+		std::string error = "Generic Error";
+		if (errorMessage) {
+			error = std::string(errorMessage);
+			bfree((void*)errorMessage);
+		}
+		obs_leave_graphics();
+		throw std::runtime_error(error);
+	}
+	obs_leave_graphics();
+#endif
 }
 
 gs::effect::effect(std::string code, std::string name)
