@@ -32,7 +32,7 @@ sampler_state sdfSampler1_1 {
 	Filter    = Linear;
 	AddressU  = Border;
 	AddressV  = Border;
-	BorderColor = FFFF0000;
+	BorderColor = 000000FF;
 };
 
 sampler_state imageSampler {
@@ -106,7 +106,7 @@ float4 PS_SDFShadow_v1_1(VertDataOut v_in) : TARGET
 
 	//! Outer Shadow
 	// Are we allowed to draw an outer shadow?
-	float2 outer_sdf = _sdf.Sample(sdfSampler, v_in.uv + _outer_offset).rg * float2(MAX_DISTANCE, MAX_DISTANCE);
+	float2 outer_sdf = _sdf.Sample(sdfSampler1_1, v_in.uv + _outer_offset).rg * float2(MAX_DISTANCE, MAX_DISTANCE);
 	if ((_outer_color.a > 0.) && (outer_sdf.r < MAX_DISTANCE)) {
 		// Calculate the true distance value:
 		// - If we are outside, this will be positive.
@@ -129,7 +129,7 @@ float4 PS_SDFShadow_v1_1(VertDataOut v_in) : TARGET
 	
 	//! Inner Shadow
 	// Are we allowed to draw an inner shadow?
-	float2 inner_sdf = _sdf.Sample(sdfSampler, v_in.uv + _inner_offset).rg * float2(MAX_DISTANCE, MAX_DISTANCE);
+	float2 inner_sdf = _sdf.Sample(sdfSampler1_1, v_in.uv + _inner_offset).rg * float2(MAX_DISTANCE, MAX_DISTANCE);
 	if ((_inner_color.a > 0.) && (inner_sdf.g < MAX_DISTANCE) && (inner_sdf.r <= FLT_SMALL)) {
 		// Calculate the true distance value:
 		// - If we are outside, this will be positive.
