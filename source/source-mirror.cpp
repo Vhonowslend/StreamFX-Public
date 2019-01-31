@@ -349,13 +349,13 @@ void source::mirror::mirror_instance::acquire_input(std::string source_name)
 
 	// If everything worked fine, we now set everything up.
 	this->m_source = std::move(new_source);
-	this->m_source->events.rename += std::bind(&source::mirror::mirror_instance::on_source_rename, this, std::placeholders::_1,
-											   std::placeholders::_2, std::placeholders::_3);
+	this->m_source->events.rename += std::bind(&source::mirror::mirror_instance::on_source_rename, this,
+											   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 	try {
 		// Audio
 		this->m_source_audio = std::make_shared<obs::audio_capture>(this->m_source);
-		this->m_source_audio->on.data += std::bind(&source::mirror::mirror_instance::audio_capture_cb, this, std::placeholders::_1,
-												   std::placeholders::_2, std::placeholders::_3);
+		this->m_source_audio->on.data += std::bind(&source::mirror::mirror_instance::audio_capture_cb, this,
+												   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 	} catch (...) {
 		P_LOG_ERROR("<Source Mirror:%s> Unexpected error during registering audio callback for '%s'.",
 					source_name.c_str());
@@ -544,6 +544,11 @@ void source::mirror::mirror_instance::video_render(gs_effect_t* effect)
 		return;
 	}
 
+	// Don't bother rendering sources that aren't video.
+	if (obs_source_get_flags(this->m_source->get()) & OBS_SOURCE_VIDEO) {
+		return;
+	}
+
 	// Only re-render the scene if there was a video_tick, saves GPU cycles.
 	if (!m_scene_rendered) {
 		// Override render size if rescaling is enabled.
@@ -554,8 +559,13 @@ void source::mirror::mirror_instance::video_render(gs_effect_t* effect)
 			render_height = m_rescale_height;
 		}
 
-		m_scene_texture  = this->m_scene_texture_renderer->render(render_width, render_height);
-		m_scene_rendered = true;
+		try {
+			m_scene_texture  = this->m_scene_texture_renderer->render(render_width, render_height);
+			m_scene_rendered = true;
+		} catch (...) {
+			// If we fail to render the source, just render nothing.
+			return;
+		}
 	}
 
 	// Use default effect unless we are provided a different effect.
@@ -570,7 +580,8 @@ void source::mirror::mirror_instance::video_render(gs_effect_t* effect)
 	}
 }
 
-void source::mirror::mirror_instance::audio_capture_cb(std::shared_ptr<obs::source> source, audio_data const* const audio, bool)
+void source::mirror::mirror_instance::audio_capture_cb(std::shared_ptr<obs::source> source,
+													   audio_data const* const      audio, bool)
 {
 	std::unique_lock<std::mutex> ulock(this->m_audio_lock);
 	if (!this->m_audio_enabled) {
