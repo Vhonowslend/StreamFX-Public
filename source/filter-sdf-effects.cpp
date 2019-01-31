@@ -275,11 +275,11 @@ obs_properties_t* filter::sdf_effects::sdf_effects_instance::get_properties()
 	obs_property_set_modified_callback2(p, cb_modified_inside, this);
 
 	p = obs_properties_add_float_slider(props, P_SHADOW_INNER_RANGE_MINIMUM, P_TRANSLATE(P_SHADOW_INNER_RANGE_MINIMUM),
-										0.0, 16.0, 0.01);
+										-16.0, 16.0, 0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_INNER_RANGE_MINIMUM)));
 
 	p = obs_properties_add_float_slider(props, P_SHADOW_INNER_RANGE_MAXIMUM, P_TRANSLATE(P_SHADOW_INNER_RANGE_MAXIMUM),
-										0.0, 16.0, 0.01);
+										-16.0, 16.0, 0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_INNER_RANGE_MAXIMUM)));
 
 	p = obs_properties_add_float_slider(props, P_SHADOW_INNER_OFFSET_X, P_TRANSLATE(P_SHADOW_INNER_OFFSET_X), -100.0,
@@ -302,11 +302,11 @@ obs_properties_t* filter::sdf_effects::sdf_effects_instance::get_properties()
 	obs_property_set_modified_callback2(p, cb_modified_outside, this);
 
 	p = obs_properties_add_float_slider(props, P_SHADOW_OUTER_RANGE_MINIMUM, P_TRANSLATE(P_SHADOW_OUTER_RANGE_MINIMUM),
-										0.0, 16.0, 0.01);
+										-16.0, 16.0, 0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_OUTER_RANGE_MINIMUM)));
 
 	p = obs_properties_add_float_slider(props, P_SHADOW_OUTER_RANGE_MAXIMUM, P_TRANSLATE(P_SHADOW_OUTER_RANGE_MAXIMUM),
-										0.0, 16.0, 0.01);
+										-16.0, 16.0, 0.01);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SHADOW_OUTER_RANGE_MAXIMUM)));
 
 	p = obs_properties_add_float_slider(props, P_SHADOW_OUTER_OFFSET_X, P_TRANSLATE(P_SHADOW_OUTER_OFFSET_X), -100.0,
