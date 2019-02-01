@@ -135,14 +135,19 @@ namespace util {
 	{                                   \
 		return is_power_of_two_loop(v); \
 	}
-		is_power_of_two_as_loop(int8_t) is_power_of_two_as_loop(uint8_t) is_power_of_two_as_loop(int16_t)
-			is_power_of_two_as_loop(uint16_t) is_power_of_two_as_loop(int32_t) is_power_of_two_as_loop(uint32_t)
-				is_power_of_two_as_loop(int64_t) is_power_of_two_as_loop(uint64_t)
+		is_power_of_two_as_loop(int8_t);
+		is_power_of_two_as_loop(uint8_t);
+		is_power_of_two_as_loop(int16_t);
+		is_power_of_two_as_loop(uint16_t);
+		is_power_of_two_as_loop(int32_t);
+		is_power_of_two_as_loop(uint32_t);
+		is_power_of_two_as_loop(int64_t);
+		is_power_of_two_as_loop(uint64_t);
 #undef is_power_of_two_as_loop
 #pragma pop_macro("is_power_of_two_as_loop")
 
-					template<typename T>
-					inline uint64_t get_power_of_two_exponent_floor(T v)
+		template<typename T>
+		inline uint64_t get_power_of_two_exponent_floor(T v)
 		{
 			return uint64_t(floor(log10(T(v)) / log10(2.0)));
 		}
@@ -151,6 +156,27 @@ namespace util {
 		inline uint64_t get_power_of_two_exponent_ceil(T v)
 		{
 			return uint64_t(ceil(log10(T(v)) / log10(2.0)));
+		}
+
+		template<typename T>
+		inline T gaussian(T x, T o /*, T u = 0*/)
+		{
+			// u/µ can be simulated by subtracting that value from x.
+			static const double_t pi            = 3.1415926535897932384626433832795;
+			static const double_t two_pi        = pi * 2.;
+			static const double_t two_pi_sqroot = 2.506628274631000502415765284811; //sqrt(two_pi);
+
+			if (o == 0) {
+				return T(std::numeric_limits<double_t>::infinity());
+			}
+
+			// g(x) = (1 / o√(2Π)) * e(-(1/2) * ((x-u)/o)²)
+			double_t left_e      = 1. / (o * two_pi_sqroot);
+			double_t mid_right_e = ((x /* - u*/) / o);
+			double_t right_e     = -0.5 * mid_right_e * mid_right_e;
+			double_t final       = left_e * exp(right_e);
+
+			return T(final);
 		}
 	} // namespace math
 } // namespace util
