@@ -81,6 +81,9 @@ enum ColorFormat : uint64_t { // ToDo: Refactor into full class.
 };
 
 static uint8_t const max_kernel_size = 25;
+// Search density for proper gaussian curve size. Lower means more accurate, but takes more time to calculate.
+static double_t const search_density = 1. / 5000.;
+static double_t const search_threshold = 1. / 256.;
 
 // Initializer & Finalizer
 INITIALIZER(filterBlurFactoryInitializer)
@@ -126,6 +129,17 @@ filter::blur::blur_factory::blur_factory()
 	source_info.load         = load;
 
 	obs_register_source(&source_info);
+
+	P_LOG_INFO("<filter-blur> Precalculating Gaussian Blur Kernel...");
+	this->gaussian_widths.resize(max_kernel_size + 1);
+	for (size_t w = 1.; w <= max_kernel_size; w++) {
+		for (double_t h = FLT_EPSILON; h <= w; h += search_density) {
+			if (util::math::gaussian<double_t>(w, h) > search_threshold) {
+				this->gaussian_widths[w] = h;
+				break;
+			}
+		}
+	}
 }
 
 filter::blur::blur_factory::~blur_factory() {}
@@ -170,7 +184,6 @@ void filter::blur::blur_factory::on_list_empty()
 {
 	obs_enter_graphics();
 	blur_effect.reset();
-	kernels.clear();
 	color_converter_effect.reset();
 	mask_effect.reset();
 	obs_leave_graphics();
@@ -180,8 +193,6 @@ void filter::blur::blur_factory::generate_gaussian_kernels()
 {
 	// 2D texture, horizontal is value, vertical is kernel size.
 	size_t size_power_of_two = size_t(pow(2, util::math::get_power_of_two_exponent_ceil(max_kernel_size)));
-
-	std::vector<float_t>                  texture_data(size_power_of_two * size_power_of_two);
 	std::vector<float_t>                  math_data(size_power_of_two);
 	std::shared_ptr<std::vector<float_t>> kernel_data;
 
@@ -192,30 +203,17 @@ void filter::blur::blur_factory::generate_gaussian_kernels()
 		// Calculate and normalize
 		float_t sum = 0;
 		for (size_t p = 0; p <= width; p++) {
-			math_data[p] = float_t(Gaussian1D(double_t(p), double_t(width)));
+			math_data[p] = float_t(Gaussian1D(double_t(p), double_t(gaussian_widths[width])));
 			sum += math_data[p] * (p > 0 ? 2 : 1);
 		}
 
 		// Normalize to Texture Buffer
 		double_t inverse_sum = 1.0 / sum;
 		for (size_t p = 0; p <= width; p++) {
-			texture_data[v + p] = float_t(math_data[p] * inverse_sum);
-			kernel_data->at(p)  = texture_data[v + p];
+			kernel_data->at(p)  = math_data[p] * inverse_sum;
 		}
 
 		gaussian_kernels.insert({uint8_t(width), kernel_data});
-	}
-
-	// Create Texture
-	try {
-		auto texture_buffer = reinterpret_cast<uint8_t*>(texture_data.data());
-		auto unsafe_buffer  = const_cast<const uint8_t**>(&texture_buffer);
-
-		kernels.insert_or_assign(filter::blur::type::Gaussian,
-								 std::make_shared<gs::texture>(uint32_t(size_power_of_two), uint32_t(size_power_of_two),
-															   GS_R32F, 1, unsafe_buffer, gs::texture::flags::None));
-	} catch (std::runtime_error ex) {
-		P_LOG_ERROR("<filter-blur> Failed to create gaussian kernel texture.");
 	}
 }
 
@@ -366,11 +364,6 @@ std::shared_ptr<gs::effect> filter::blur::blur_factory::get_mask_effect()
 	return mask_effect;
 }
 
-std::shared_ptr<gs::texture> filter::blur::blur_factory::get_kernel(filter::blur::type type)
-{
-	return kernels.at(type);
-}
-
 std::shared_ptr<std::vector<float_t>> filter::blur::blur_factory::get_gaussian_kernel(uint8_t size)
 {
 	return gaussian_kernels.at(size);
@@ -438,7 +431,8 @@ bool filter::blur::blur_instance::apply_bilateral_param()
 		return false;
 
 	if (m_blur_effect->has_parameter("bilateralSmoothing")) {
-		m_blur_effect->get_parameter("bilateralSmoothing").set_float((float)(m_blur_bilateral_smoothing * (1 + m_blur_size * 2)));
+		m_blur_effect->get_parameter("bilateralSmoothing")
+			.set_float((float)(m_blur_bilateral_smoothing * (1 + m_blur_size * 2)));
 	}
 
 	if (m_blur_effect->has_parameter("bilateralSharpness")) {
@@ -678,10 +672,10 @@ obs_properties_t* filter::blur::blur_instance::get_properties()
 
 void filter::blur::blur_instance::update(obs_data_t* settings)
 {
-	m_blur_type           = (blur::type)obs_data_get_int(settings, P_TYPE);
+	m_blur_type      = (blur::type)obs_data_get_int(settings, P_TYPE);
 	m_blur_effect    = blur_factory::get()->get_effect(m_blur_type);
 	m_blur_technique = blur_factory::get()->get_technique(m_blur_type);
-	m_blur_size           = (uint64_t)obs_data_get_int(settings, P_SIZE);
+	m_blur_size      = (uint64_t)obs_data_get_int(settings, P_SIZE);
 
 	// bilateral blur
 	m_blur_bilateral_smoothing = obs_data_get_double(settings, P_BILATERAL_SMOOTHING) / 100.0;
@@ -709,7 +703,7 @@ void filter::blur::blur_instance::update(obs_data_t* settings)
 			break;
 		}
 		if ((m_mask.type == mask_type::Image) || (m_mask.type == mask_type::Source)) {
-			uint32_t color  = static_cast<uint32_t>(obs_data_get_int(settings, P_MASK_COLOR));
+			uint32_t color    = static_cast<uint32_t>(obs_data_get_int(settings, P_MASK_COLOR));
 			m_mask.color.r    = ((color >> 0) & 0xFF) / 255.0f;
 			m_mask.color.g    = ((color >> 8) & 0xFF) / 255.0f;
 			m_mask.color.b    = ((color >> 16) & 0xFF) / 255.0f;
@@ -916,7 +910,7 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 			gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
 			gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
-			std::pair<float, float>      kvs[]            = {{1.0f / baseW, 0.0f}, {0.0f, 1.0f / baseH}};
+			std::pair<float, float> kvs[] = {{1.0f / baseW, 0.0f}, {0.0f, 1.0f / baseH}};
 
 			// Directional Blur
 			if (this->m_blur_directional) {

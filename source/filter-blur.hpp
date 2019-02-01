@@ -65,10 +65,10 @@ namespace filter {
 			std::list<blur_instance*>   sources;
 			std::shared_ptr<gs::effect> color_converter_effect;
 			std::shared_ptr<gs::effect> mask_effect;
+			std::shared_ptr<gs::effect> blur_effect;
 
-			std::shared_ptr<gs::effect>                                blur_effect;
-			std::map<filter::blur::type, std::shared_ptr<gs::texture>> kernels;
-			std::map<uint8_t, std::shared_ptr<std::vector<float_t>>>   gaussian_kernels;
+			std::vector<double_t>                                    gaussian_widths;
+			std::map<uint8_t, std::shared_ptr<std::vector<float_t>>> gaussian_kernels;
 
 			public: // Singleton
 			static void                          initialize();
@@ -111,8 +111,6 @@ namespace filter {
 			std::shared_ptr<gs::effect> get_color_converter_effect();
 
 			std::shared_ptr<gs::effect> get_mask_effect();
-
-			std::shared_ptr<gs::texture> get_kernel(filter::blur::type type);
 
 			std::shared_ptr<std::vector<float_t>> get_gaussian_kernel(uint8_t size);
 		};
