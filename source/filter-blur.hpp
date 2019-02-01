@@ -67,6 +67,8 @@ namespace filter {
 			std::shared_ptr<gs::effect> mask_effect;
 			std::shared_ptr<gs::effect> blur_effect;
 
+			std::map<std::string, std::string> translation_map;
+
 			std::vector<double_t>                                    gaussian_widths;
 			std::map<uint8_t, std::shared_ptr<std::vector<float_t>>> gaussian_kernels;
 
@@ -84,6 +86,8 @@ namespace filter {
 
 			void generate_gaussian_kernels();
 			void generate_kernel_textures();
+
+			std::string& const get_translation(std::string const key);
 
 			static void* create(obs_data_t* settings, obs_source_t* self);
 			static void  destroy(void* source);

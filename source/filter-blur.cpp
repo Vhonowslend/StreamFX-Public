@@ -82,7 +82,7 @@ enum ColorFormat : uint64_t { // ToDo: Refactor into full class.
 
 static uint8_t const max_kernel_size = 25;
 // Search density for proper gaussian curve size. Lower means more accurate, but takes more time to calculate.
-static double_t const search_density = 1. / 5000.;
+static double_t const search_density   = 1. / 5000.;
 static double_t const search_threshold = 1. / 256.;
 
 // Initializer & Finalizer
@@ -140,6 +140,12 @@ filter::blur::blur_factory::blur_factory()
 			}
 		}
 	}
+
+	// Translation Cache
+	/// File Filter for Images
+	translation_map.insert({std::string("image-filter"), std::string(P_TRANSLATE(S_FILETYPE_IMAGES))
+															+ std::string(" (" T_FILEFILTERS_IMAGE ");;")
+															+ std::string("* (*.*)")});
 }
 
 filter::blur::blur_factory::~blur_factory() {}
@@ -210,7 +216,7 @@ void filter::blur::blur_factory::generate_gaussian_kernels()
 		// Normalize to Texture Buffer
 		double_t inverse_sum = 1.0 / sum;
 		for (size_t p = 0; p <= width; p++) {
-			kernel_data->at(p)  = math_data[p] * inverse_sum;
+			kernel_data->at(p) = math_data[p] * inverse_sum;
 		}
 
 		gaussian_kernels.insert({uint8_t(width), kernel_data});
@@ -220,6 +226,16 @@ void filter::blur::blur_factory::generate_gaussian_kernels()
 void filter::blur::blur_factory::generate_kernel_textures()
 {
 	generate_gaussian_kernels();
+}
+
+std::string& const filter::blur::blur_factory::get_translation(std::string const key)
+{
+	static std::string none("");
+	auto               found = translation_map.find(key);
+	if (found != translation_map.end()) {
+		return found->second;
+	}
+	return none;
 }
 
 void* filter::blur::blur_factory::create(obs_data_t* data, obs_source_t* parent)
@@ -615,7 +631,8 @@ obs_properties_t* filter::blur::blur_instance::get_properties()
 	p = obs_properties_add_bool(pr, P_MASK_REGION_INVERT, P_TRANSLATE(P_MASK_REGION_INVERT));
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_REGION_INVERT)));
 	/// Image
-	p = obs_properties_add_path(pr, P_MASK_IMAGE, P_TRANSLATE(P_MASK_IMAGE), OBS_PATH_FILE, P_TRANSLATE(""), nullptr);
+	p = obs_properties_add_path(pr, P_MASK_IMAGE, P_TRANSLATE(P_MASK_IMAGE), OBS_PATH_FILE,
+								filter::blur::blur_factory::get()->get_translation("image-filter").c_str(), nullptr);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_IMAGE)));
 	/// Source
 	p = obs_properties_add_list(pr, P_MASK_SOURCE, P_TRANSLATE(P_MASK_SOURCE), OBS_COMBO_TYPE_LIST,
