@@ -97,14 +97,14 @@ configure_file(
 )
 
 # Windows
-## Installer (InnoSetup)
-Configure_File(
-	"${PROJECT_SOURCE_DIR}/cmake/installer.iss.in"
-	"${PROJECT_BINARY_DIR}/installer.iss"
-)
-
-# Windows Specific Resource Definition
 if(WIN32)
+	## Installer (InnoSetup)
+	Configure_File(
+		"${PROJECT_SOURCE_DIR}/cmake/installer.iss.in"
+		"${PROJECT_BINARY_DIR}/installer.iss"
+	)
+
+	# Windows Specific Resource Definition
 	set(PROJECT_PRODUCT_NAME "${PROJECT_FULL_NAME}")
 	set(PROJECT_COMPANY_NAME "${PROJECT_AUTHORS}")
 	set(PROJECT_COPYRIGHT "${PROJECT_AUTHORS} © ${PROJECT_COPYRIGHT_YEARS}")
