@@ -47,4 +47,4 @@
 #define S_MIPGENERATOR_SMOOTHEN "MipGenerator.Smoothen"
 #define S_MIPGENERATOR_BICUBIC "MipGenerator.Bicubic"
 #define S_MIPGENERATOR_LANCZOS "MipGenerator.Lanczos"
-#define S_MIPGENERATOR_STRENGTH "MipGenerator.Strength"
+#define S_MIPGENERATOR_INTENSITY "MipGenerator.Intensity"
