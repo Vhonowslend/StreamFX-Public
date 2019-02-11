@@ -247,6 +247,17 @@ SET(PROJECT_DATA
 SET(PROJECT_LIBRARIES
 )
 
+SET(PROJECT_TEMPLATES
+	"${PROJECT_SOURCE_DIR}/cmake/version.hpp.in"
+	"${PROJECT_SOURCE_DIR}/cmake/module.cpp.in"
+)
+if(WIN32)
+	list(APPEND PROJECT_TEMPLATES
+		"${PROJECT_SOURCE_DIR}/cmake/installer.iss.in"
+		"${PROJECT_SOURCE_DIR}/cmake/version.rc.in"
+	)
+endif()
+
 SET(PROJECT_PUBLIC
 )
 SET(PROJECT_PRIVATE_GENERATED
@@ -331,6 +342,7 @@ set(PROJECT_PRIVATE
 
 source_group(TREE "${PROJECT_SOURCE_DIR}/data" PREFIX "Data Files" FILES ${PROJECT_DATA})
 source_group(TREE "${PROJECT_BINARY_DIR}/source" PREFIX "Generated Files" FILES ${PROJECT_PRIVATE_GENERATED})
+source_group(TREE "${PROJECT_SOURCE_DIR}/cmake" PREFIX "Template Files" FILES ${PROJECT_TEMPLATES})
 
 # Filter Sources
 set(_TMP_SOURCE ${PROJECT_PRIVATE_SOURCE})
