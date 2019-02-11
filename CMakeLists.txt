@@ -56,7 +56,7 @@ PROJECT(
 	VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}
 )
 set(PROJECT_FULL_NAME "Stream Effects for OBS Studio")
-set(PROJECT_DESCRIPTION "New Sources, Filters and Transitions for OB Studio")
+set(PROJECT_DESCRIPTION "New Sources, Filters and Transitions for OBS Studio")
 set(PROJECT_AUTHORS "Michael Fabian 'Xaymar' Dirks <info@xaymar.com>")
 set(PROJECT_COPYRIGHT_YEARS "2018")
 
