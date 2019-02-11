@@ -18,11 +18,7 @@
 */
 
 #include "plugin.hpp"
-#include "filter-blur.hpp"
-#include "filter-displacement.hpp"
-#include "filter-shape.hpp"
-#include "filter-transform.hpp"
-#include "obs-source-tracker.hpp"
+#include "obs/obs-source-tracker.hpp"
 
 std::list<std::function<void()>> initializerFunctions;
 std::list<std::function<void()>> finalizerFunctions;

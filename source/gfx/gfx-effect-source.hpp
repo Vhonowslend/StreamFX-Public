@@ -22,11 +22,11 @@
 #include <utility>
 #include <vector>
 #include "gfx-source-texture.hpp"
-#include "gs-effect.hpp"
-#include "gs-mipmapper.hpp"
-#include "gs-rendertarget.hpp"
-#include "gs-texture.hpp"
-#include "gs-vertexbuffer.hpp"
+#include "obs/gs/gs-effect.hpp"
+#include "obs/gs/gs-mipmapper.hpp"
+#include "obs/gs/gs-rendertarget.hpp"
+#include "obs/gs/gs-texture.hpp"
+#include "obs/gs/gs-vertexbuffer.hpp"
 
 // OBS
 #ifdef _MSC_VER

@@ -22,7 +22,7 @@
 #include <cinttypes>
 #include <cmath>
 #include <map>
-#include "obs-source-tracker.hpp"
+#include "obs/obs-source-tracker.hpp"
 #include "strings.hpp"
 #include "util-math.hpp"
 

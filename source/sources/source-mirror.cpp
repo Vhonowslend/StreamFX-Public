@@ -23,7 +23,7 @@
 #include <functional>
 #include <memory>
 #include <vector>
-#include "obs-tools.hpp"
+#include "obs/obs-tools.hpp"
 #include "strings.hpp"
 
 // OBS

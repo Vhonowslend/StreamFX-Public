@@ -23,11 +23,11 @@
 #include <mutex>
 #include <thread>
 #include <vector>
-#include "gfx-source-texture.hpp"
-#include "gs-rendertarget.hpp"
-#include "gs-sampler.hpp"
-#include "obs-audio-capture.hpp"
-#include "obs-source.hpp"
+#include "gfx/gfx-source-texture.hpp"
+#include "obs/gs/gs-rendertarget.hpp"
+#include "obs/gs/gs-sampler.hpp"
+#include "obs/obs-audio-capture.hpp"
+#include "obs/obs-source.hpp"
 #include "plugin.hpp"
 
 // OBS

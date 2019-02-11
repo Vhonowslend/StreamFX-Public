@@ -19,11 +19,11 @@
 
 #pragma once
 #include <memory>
-#include "gs-effect.hpp"
-#include "gs-rendertarget.hpp"
-#include "gs-sampler.hpp"
-#include "gs-texture.hpp"
-#include "gs-vertexbuffer.hpp"
+#include "obs/gs/gs-effect.hpp"
+#include "obs/gs/gs-rendertarget.hpp"
+#include "obs/gs/gs-sampler.hpp"
+#include "obs/gs/gs-texture.hpp"
+#include "obs/gs/gs-vertexbuffer.hpp"
 #include "plugin.hpp"
 
 // OBS

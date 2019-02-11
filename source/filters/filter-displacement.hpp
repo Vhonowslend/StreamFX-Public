@@ -20,7 +20,7 @@
 #pragma once
 #include <memory>
 #include <string>
-#include "gs-effect.hpp"
+#include "obs/gs/gs-effect.hpp"
 #include "plugin.hpp"
 
 // OBS

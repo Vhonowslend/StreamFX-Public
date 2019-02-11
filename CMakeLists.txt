@@ -236,64 +236,28 @@ SET(PROJECT_DATA_EFFECTS
 )
 SET(PROJECT_DATA_SHADERS
 #	"${PROJECT_SOURCE_DIR}/data/shaders/name.effect"
-)
-SET(PROJECT_DATA_SHADERS_FILTER
 	"${PROJECT_SOURCE_DIR}/data/shaders/filter/example.effect"
 )
-SET(PROJECT_LIBRARIES
-)
-SET(PROJECT_PUBLIC
-)
-SET(PROJECT_PRIVATE
+SET(PROJECT_DATA
 	${PROJECT_DATA_LOCALE}
 	${PROJECT_DATA_EFFECTS}
 	${PROJECT_DATA_SHADERS}
-	${PROJECT_DATA_SHADERS_FILTER}
+)
+
+SET(PROJECT_LIBRARIES
+)
+
+SET(PROJECT_PUBLIC
+)
+SET(PROJECT_PRIVATE_GENERATED
 	"${PROJECT_BINARY_DIR}/source/module.cpp"
 	"${PROJECT_BINARY_DIR}/source/version.hpp"
+)
+SET(PROJECT_PRIVATE_SOURCE
+
+	# Plugin
 	"${PROJECT_SOURCE_DIR}/source/plugin.hpp"
 	"${PROJECT_SOURCE_DIR}/source/plugin.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-displacement.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-displacement.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-blur.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-blur.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-sdf-effects.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-sdf-effects.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-shape.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-shape.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-transform.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-transform.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-custom-shader.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filter-custom-shader.cpp"
-	"${PROJECT_SOURCE_DIR}/source/source-mirror.hpp"
-	"${PROJECT_SOURCE_DIR}/source/source-mirror.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx-effect-source.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx-effect-source.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx-source-texture.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx-source-texture.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-helper.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-helper.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-effect.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-effect.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-indexbuffer.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-indexbuffer.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-limits.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-mipmapper.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-rendertarget.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-rendertarget.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-sampler.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-sampler.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-texture.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-texture.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-vertex.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-vertex.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-vertexbuffer.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gs-vertexbuffer.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs-audio-capture.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs-audio-capture.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs-tools.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs-tools.cpp"
 	"${PROJECT_SOURCE_DIR}/source/strings.hpp"
 	"${PROJECT_SOURCE_DIR}/source/utility.hpp"
 	"${PROJECT_SOURCE_DIR}/source/utility.cpp"
@@ -303,16 +267,80 @@ SET(PROJECT_PRIVATE
 	"${PROJECT_SOURCE_DIR}/source/util-math.cpp"
 	"${PROJECT_SOURCE_DIR}/source/util-memory.hpp"
 	"${PROJECT_SOURCE_DIR}/source/util-memory.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs-source.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs-source.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs-source-tracker.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs-source-tracker.cpp"
+	
+	# Graphics
+	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-effect-source.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-effect-source.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-source-texture.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-source-texture.cpp"
+
+	# OBS
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-helper.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-helper.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-effect.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-effect.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-indexbuffer.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-indexbuffer.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-limits.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-mipmapper.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-mipmapper.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-rendertarget.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-rendertarget.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-sampler.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-sampler.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-texture.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-texture.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertex.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertex.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertexbuffer.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertexbuffer.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-audio-capture.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-audio-capture.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-tools.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-tools.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-source.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-source.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-source-tracker.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-source-tracker.cpp"
+	
+	# Sources
+	"${PROJECT_SOURCE_DIR}/source/sources/source-mirror.hpp"
+	"${PROJECT_SOURCE_DIR}/source/sources/source-mirror.cpp"
+
+	# Filters
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-displacement.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-displacement.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-blur.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-blur.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-sdf-effects.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-sdf-effects.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-shape.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-shape.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-transform.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-transform.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-custom-shader.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-custom-shader.cpp"
+
+	# Transitions
+)
+set(PROJECT_PRIVATE
+	${PROJECT_DATA}
+	${PROJECT_PRIVATE_GENERATED}
+	${PROJECT_PRIVATE_SOURCE}
 )
 
-source_group("Data Files\\Locale" FILES ${PROJECT_DATA_LOCALE})
-source_group("Data Files\\Effects" FILES ${PROJECT_DATA_EFFECTS})
-source_group("Data Files\\Shaders" FILES ${PROJECT_DATA_SHADERS})
-source_group("Data Files\\Shaders\\Filter" FILES ${PROJECT_DATA_SHADERS_FILTER})
+source_group(TREE "${PROJECT_SOURCE_DIR}/data" PREFIX "Data Files" FILES ${PROJECT_DATA})
+source_group(TREE "${PROJECT_BINARY_DIR}/source" PREFIX "Generated Files" FILES ${PROJECT_PRIVATE_GENERATED})
+
+# Filter Sources
+set(_TMP_SOURCE ${PROJECT_PRIVATE_SOURCE})
+list(FILTER _TMP_SOURCE INCLUDE REGEX "\.(c|cpp)$")
+source_group(TREE "${PROJECT_SOURCE_DIR}/source" PREFIX "Source Files" FILES ${_TMP_SOURCE})
+
+# Filter Headers
+set(_TMP_HEADER ${PROJECT_PRIVATE_SOURCE})
+list(FILTER _TMP_HEADER INCLUDE REGEX "\.(h|hpp)$")
+source_group(TREE "${PROJECT_SOURCE_DIR}/source" PREFIX "Header Files" FILES ${_TMP_HEADER})
 
 ################################################################################
 # Target

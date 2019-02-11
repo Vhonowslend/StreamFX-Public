@@ -18,9 +18,9 @@
 #pragma once
 #include <memory>
 #include <string>
-#include "gs-rendertarget.hpp"
-#include "gs-texture.hpp"
-#include "obs-source.hpp"
+#include "obs/gs/gs-rendertarget.hpp"
+#include "obs/gs/gs-texture.hpp"
+#include "obs/obs-source.hpp"
 
 // OBS
 #ifdef _MSC_VER

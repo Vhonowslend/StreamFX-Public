@@ -18,23 +18,31 @@
  */
 
 #pragma once
-#include <cinttypes>
-#include <list>
-#include <vector>
-#include "gfx-effect-source.hpp"
-#include "gs-effect.hpp"
-#include "gs-rendertarget.hpp"
+#include "obs/gs/gs-vertexbuffer.hpp"
 #include "plugin.hpp"
 
+#define P_SHAPE "Shape"
+#define P_SHAPE_LOOP "Shape.Loop"
+#define P_SHAPE_MODE "Shape.Mode"
+#define P_SHAPE_MODE_TRIS "Shape.Mode.Tris"
+#define P_SHAPE_MODE_TRISTRIP "Shape.Mode.TriStrip"
+#define P_SHAPE_MODE "Shape.Mode"
+#define P_SHAPE_POINTS "Shape.Points"
+#define P_SHAPE_POINT_X "Shape.Point.X"
+#define P_SHAPE_POINT_Y "Shape.Point.Y"
+#define P_SHAPE_POINT_U "Shape.Point.U"
+#define P_SHAPE_POINT_V "Shape.Point.V"
+
 namespace filter {
-	class CustomShader {
+	class Shape {
 		public:
-		CustomShader();
-		~CustomShader();
+		Shape();
+		~Shape();
 
 		static const char*       get_name(void*);
 		static void              get_defaults(obs_data_t*);
 		static obs_properties_t* get_properties(void*);
+		static bool              modified_properties(obs_properties_t*, obs_property_t*, obs_data_t*);
 
 		static void*    create(obs_data_t*, obs_source_t*);
 		static void     destroy(void*);
@@ -43,6 +51,8 @@ namespace filter {
 		static void     update(void*, obs_data_t*);
 		static void     activate(void*);
 		static void     deactivate(void*);
+		static void     show(void*);
+		static void     hide(void*);
 		static void     video_tick(void*, float);
 		static void     video_render(void*, gs_effect_t*);
 
@@ -50,23 +60,27 @@ namespace filter {
 		obs_source_info sourceInfo;
 
 		private:
-		class Instance : public gfx::effect_source {
-			friend class CustomShader;
-
-			std::shared_ptr<gs::rendertarget> m_renderTarget;
-
-			protected:
-			bool         apply_special_parameters(uint32_t viewW, uint32_t viewH);
-			virtual bool is_special_parameter(std::string name, gs::effect_parameter::type type) override;
-			virtual bool video_tick_impl(float_t time) override;
-			virtual bool video_render_impl(gs_effect_t* parent_effect, uint32_t viewW, uint32_t viewH) override;
-
+		class Instance {
 			public:
 			Instance(obs_data_t*, obs_source_t*);
-			virtual ~Instance();
+			~Instance();
 
+			void     update(obs_data_t*);
 			uint32_t get_width();
 			uint32_t get_height();
+			void     activate();
+			void     deactivate();
+			void     show();
+			void     hide();
+			void     video_tick(float);
+			void     video_render(gs_effect_t*);
+
+			private:
+			obs_source_t*      context;
+			gs::vertex_buffer* m_vertexHelper;
+			gs_vertbuffer_t*   m_vertexBuffer;
+			gs_draw_mode       drawmode;
+			gs_texrender_t*    m_texRender;
 		};
 	};
 } // namespace filter

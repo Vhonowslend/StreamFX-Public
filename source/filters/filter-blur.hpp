@@ -23,11 +23,11 @@
 #include <list>
 #include <map>
 #include <memory>
-#include "gfx-source-texture.hpp"
-#include "gs-effect.hpp"
-#include "gs-helper.hpp"
-#include "gs-rendertarget.hpp"
-#include "gs-texture.hpp"
+#include "gfx/gfx-source-texture.hpp"
+#include "obs/gs/gs-effect.hpp"
+#include "obs/gs/gs-helper.hpp"
+#include "obs/gs/gs-rendertarget.hpp"
+#include "obs/gs/gs-texture.hpp"
 #include "plugin.hpp"
 
 // OBS

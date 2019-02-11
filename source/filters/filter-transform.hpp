@@ -20,10 +20,10 @@
 #pragma once
 #include <memory>
 #include <vector>
-#include "gs-mipmapper.hpp"
-#include "gs-rendertarget.hpp"
-#include "gs-texture.hpp"
-#include "gs-vertexbuffer.hpp"
+#include "obs/gs/gs-mipmapper.hpp"
+#include "obs/gs/gs-rendertarget.hpp"
+#include "obs/gs/gs-texture.hpp"
+#include "obs/gs/gs-vertexbuffer.hpp"
 #include "plugin.hpp"
 
 namespace filter {
