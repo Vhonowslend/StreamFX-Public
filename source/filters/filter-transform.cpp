@@ -399,18 +399,29 @@ void filter::transform::transform_instance::deactivate()
 
 void filter::transform::transform_instance::video_tick(float)
 {
+	uint32_t width  = 0;
+	uint32_t height = 0;
+
+	// Grab parent and target.
+	obs_source_t* target = obs_filter_get_target(m_self);
+	if (target) {
+		// Grab width an height of the target source (child filter or source).
+		width  = obs_source_get_base_width(target);
+		height = obs_source_get_base_height(target);
+	}
+
+	// If size mismatch, force an update.
+	if (width != m_source_size.first) {
+		m_update_mesh = true;
+	} else if (height != m_source_size.second) {
+		m_update_mesh = true;
+	}
+
 	// Update Mesh
 	if (m_update_mesh) {
-		uint32_t width  = 0;
-		uint32_t height = 0;
+		m_source_size.first  = width;
+		m_source_size.second = height;
 
-		// Grab parent and target.
-		obs_source_t* target = obs_filter_get_target(m_self);
-		if (target) {
-			// Grab width an height of the target source (child filter or source).
-			width  = obs_source_get_base_width(target);
-			height = obs_source_get_base_height(target);
-		}
 		if (width == 0) {
 			width = 1;
 		}

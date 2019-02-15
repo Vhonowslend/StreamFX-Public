@@ -68,6 +68,7 @@ namespace filter {
 			std::shared_ptr<gs::rendertarget> m_source_rendertarget;
 			std::shared_ptr<gs::texture>      m_source_texture;
 			bool                              m_source_rendered;
+			std::pair<uint32_t, uint32_t>     m_source_size;
 
 			// Mipmapping
 			bool                     m_mipmap_enabled;
