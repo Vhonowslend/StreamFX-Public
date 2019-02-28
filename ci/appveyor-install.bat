@@ -1,3 +1,4 @@
+@ECHO OFF
 git submodule update --init --force --recursive
 
 IF EXIST inno.exe (

@@ -1,40 +1,57 @@
+# Generic Settings
+version: '{build}-{branch}'
+
 matrix:
   fast_finish: true
 
-branches:
-  except:
-    - /i18n_.*/
+# Build Image & Environment
+platform: x64
 
 image:
   - Visual Studio 2017
-
-platform: x64
-
-version: '{build}-{branch}'
 
 environment:
   CMAKE_SYSTEM_VERSION: 10.0.17134.0
   PACKAGE_PREFIX: amd-encoder-for-obs-studio
   INNOSETUP_URL: http://www.jrsoftware.org/download.php/is-unicode.exe
   CURL_VERSION: 7.39.0
-  
+
+# Resource Cache
+cache:
+  - inno.exe
+  - build/32/libobs-download
+  - build/32/libobs-src
+  - build/64/libobs-download
+  - build/64/libobs-src
+
+# Repository Settings
+clone_depth: 1
+shallow_clone: true
+
+branches:
+  except:
+    - /i18n_.*/
+
+# Building  
 install:
 - cmd: ci/appveyor-install.bat
 
 build_script:
-- cmd: ci/appveyor-build.bat
+- cmd: node ci/appveyor-build.js
 
 after_build:
 - cmd: ci/appveyor-package.bat
 
-cache:
-  - inno.exe
+# Testing
+test: off
 
+# Artifacts
 artifacts:
   - path: build/obs-stream-effects-*.zip
   - path: build/obs-stream-effects-*.7z
   - path: build/obs-stream-effects-*.exe
 
+# Deploying
 deploy:
   - provider: GitHub
     auth_token:
@@ -45,16 +62,15 @@ deploy:
     on:
       appveyor_repo_tag: true
 
-test: off
-
+# Notifications
 notifications:
   - provider: Webhook
     url: 
       secure: PTtt5ALhmK0q42jYyx4/Qa1Uf18+gLMXKGdzJjDISJt8IE/K0Zyp58UYmDDbbyLp4pBRf/Ylj8rn/zYL/mqBoDVRIH5zasPqIvBD0ZhtvNjTOxQ3QoRkAmxgpWeMowm3A3I1rLizA2H4EctPpoAJGrvQ1G2HEYn9tVsGYeetFTo=
-    on_build_success: true
-    on_build_failure: true
+    on_build_success: false
+    on_build_failure: false
     on_build_status_changed: true
     body: >-
       {
-        "content": "**Build {{status}}**: {{buildUrl}}\n[{{commitId}}] {{commitMessage}}\nBy {{commitAuthor}} on {{commitDate}}"
+        "content": "**Build {{status}}**: [{{commitId}}] {{commitMessage}}\nBy {{commitAuthor}} on {{commitDate}}\n{{buildUrl}}"
       }
