@@ -847,7 +847,7 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 				gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
 
 				// Render
-				if (obs_source_process_filter_begin(this->m_self, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
+				if (obs_source_process_filter_begin(this->m_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
 					obs_source_process_filter_end(this->m_self, defaultEffect, baseW, baseH);
 				} else {
 					throw std::runtime_error("Failed to render source");
