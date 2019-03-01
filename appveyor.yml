@@ -25,9 +25,6 @@ cache:
   - build/64/libobs-src
 
 # Repository Settings
-clone_depth: 1
-shallow_clone: true
-
 branches:
   except:
     - /i18n_.*/
