@@ -134,7 +134,7 @@ filter::blur::blur_factory::blur_factory()
 	this->gaussian_widths.resize(max_kernel_size + 1);
 	for (size_t w = 1; w <= max_kernel_size; w++) {
 		for (double_t h = FLT_EPSILON; h <= w; h += search_density) {
-			if (util::math::gaussian<double_t>(w, h) > search_threshold) {
+			if (util::math::gaussian<double_t>(double_t(w), h) > search_threshold) {
 				this->gaussian_widths[w] = h;
 				break;
 			}

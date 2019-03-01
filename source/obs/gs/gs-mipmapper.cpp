@@ -50,7 +50,14 @@ struct graphics_subsystem {
 #if defined(WIN32) || defined(WIN64)
 #include <d3d11.h>
 #include <dxgi.h>
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#endif
 #include <util/windows/ComPtr.hpp>
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 // Slaughtered copy of d3d11-subsystem.hpp gs_device. We only need up to device and context, the rest is "unknown" to us.
 struct gs_d3d11_device {
@@ -71,7 +78,7 @@ gs::mipmapper::~mipmapper()
 
 gs::mipmapper::mipmapper()
 {
-	vertex_buffer  = std::make_unique<gs::vertex_buffer>(6, 1);
+	vertex_buffer  = std::make_unique<gs::vertex_buffer>(uint32_t(6u), uint8_t(1u));
 	auto v0        = vertex_buffer->at(0);
 	v0.position->x = 0;
 	v0.position->y = 0;

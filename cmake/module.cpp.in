@@ -1,5 +1,12 @@
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#endif
 #include <obs.h>
 #include <obs-module.h>
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 OBS_DECLARE_MODULE();
 OBS_MODULE_AUTHOR("@PROJECT_AUTHORS@");

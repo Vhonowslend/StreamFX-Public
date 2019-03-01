@@ -334,7 +334,7 @@ filter::transform::transform_instance::transform_instance(obs_data_t* data, obs_
 {
 	m_source_rendertarget = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	m_shape_rendertarget  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	m_vertex_buffer       = std::make_shared<gs::vertex_buffer>(4u, 1u);
+	m_vertex_buffer       = std::make_shared<gs::vertex_buffer>(uint32_t(4u), uint8_t(1u));
 
 	m_position = std::make_unique<util::vec3a>();
 	m_rotation = std::make_unique<util::vec3a>();

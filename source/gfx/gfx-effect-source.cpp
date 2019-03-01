@@ -16,12 +16,12 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "gfx-effect-source.hpp"
-#include <fstream>
-#include <sys/stat.h>
-#include "strings.hpp"
 #include <cfloat>
 #include <climits>
 #include <cstdint>
+#include <fstream>
+#include <sys/stat.h>
+#include "strings.hpp"
 
 // OBS
 #ifdef _MSC_VER
@@ -96,8 +96,7 @@ bool gfx::effect_source::property_texture_type_modified(void* priv, obs_properti
 	return true;
 }
 
-bool gfx::effect_source::property_texture_input_modified(void*, obs_properties_t*, obs_property_t*,
-														 obs_data_t*)
+bool gfx::effect_source::property_texture_input_modified(void*, obs_properties_t*, obs_property_t*, obs_data_t*)
 {
 	return false;
 }
