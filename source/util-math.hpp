@@ -67,10 +67,7 @@ inline size_t GetNearestPowerOfTwoBelow(size_t v)
 }
 
 namespace util {
-#ifdef _MSC_VER
-	__declspec(align(16))
-#endif
-		struct vec2a : public vec2 {
+	struct vec2a : public vec2 {
 		// 16-byte Aligned version of vec2
 		static void* operator new(size_t count);
 		static void* operator new[](size_t count);
@@ -81,7 +78,7 @@ namespace util {
 #ifdef _MSC_VER
 	__declspec(align(16))
 #endif
-		struct vec3a : public vec3 {
+	struct vec3a : public vec3 {
 		// 16-byte Aligned version of vec3
 		static void* operator new(size_t count);
 		static void* operator new[](size_t count);
@@ -92,7 +89,7 @@ namespace util {
 #ifdef _MSC_VER
 	__declspec(align(16))
 #endif
-		struct vec4a : public vec4 {
+	struct vec4a : public vec4 {
 		// 16-byte Aligned version of vec4
 		static void* operator new(size_t count);
 		static void* operator new[](size_t count);
