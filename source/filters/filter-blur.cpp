@@ -309,7 +309,7 @@ void filter::blur::blur_factory::update(void* inptr, obs_data_t* settings)
 
 void filter::blur::blur_factory::load(void* inptr, obs_data_t* settings)
 {
-	reinterpret_cast<filter::blur::blur_instance*>(inptr)->update(settings);
+	reinterpret_cast<filter::blur::blur_instance*>(inptr)->load(settings);
 }
 
 const char* filter::blur::blur_factory::get_name(void*)
