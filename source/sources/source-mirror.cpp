@@ -625,7 +625,6 @@ void source::mirror::mirror_instance::audio_output_cb()
 
 	while (!this->m_audio_kill_thread) {
 		if (this->m_audio_have_output) {
-			std::unique_lock<std::mutex> ulock(this->m_audio_lock);
 			obs_source_output_audio(this->m_self, &this->m_audio_output);
 			this->m_audio_have_output = false;
 		}
