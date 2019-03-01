@@ -187,8 +187,8 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 	if (source->get_type() == gs::texture::type::Normal) {
 		size_t  texture_width  = source->get_width();
 		size_t  texture_height = source->get_height();
-		float_t texel_width    = 1.0 / texture_width;
-		float_t texel_height   = 1.0 / texture_height;
+		float_t texel_width    = 1.0f / texture_width;
+		float_t texel_height   = 1.0f / texture_height;
 		size_t  mip_levels     = 1;
 
 #if defined(WIN32) || defined(WIN64)
@@ -224,12 +224,12 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 				texture_height = 1;
 			}
 
-			texel_width  = 1.0 / texture_width;
-			texel_height = 1.0 / texture_height;
+			texel_width  = 1.0f / texture_width;
+			texel_height = 1.0f / texture_height;
 
 			// Draw mipmap layer
 			try {
-				auto op = render_target->render(texture_width, texture_height);
+				auto op = render_target->render(uint32_t(texture_width), uint32_t(texture_height));
 
 				gs_set_cull_mode(GS_NEITHER);
 				gs_reset_blend_state();
@@ -246,7 +246,7 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 				gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
 
 				effect->get_parameter("image").set_texture(target);
-				effect->get_parameter("level").set_int(mip - 1);
+				effect->get_parameter("level").set_int(uint32_t(mip - 1));
 				effect->get_parameter("imageTexel").set_float2(texel_width, texel_height);
 				effect->get_parameter("strength").set_float(strength);
 
@@ -262,7 +262,7 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 				// Copy
 				ID3D11Texture2D* rt =
 					reinterpret_cast<ID3D11Texture2D*>(gs_texture_get_obj(render_target->get_object()));
-				uint32_t level = D3D11CalcSubresource(mip, 0, mip_levels);
+				uint32_t level = uint32_t(D3D11CalcSubresource(UINT(mip), 0, UINT(mip_levels)));
 				dev->context->CopySubresourceRegion(target_t2, level, 0, 0, 0, rt, 0, NULL);
 			}
 #endif

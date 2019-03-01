@@ -362,7 +362,7 @@ void source::mirror::mirror_instance::acquire_input(std::string source_name)
 	}
 }
 
-source::mirror::mirror_instance::mirror_instance(obs_data_t* data, obs_source_t* src)
+source::mirror::mirror_instance::mirror_instance(obs_data_t*, obs_source_t* src)
 	: m_self(src), m_active(true), m_tick(0), m_scene_rendered(false), m_rescale_enabled(false),
 	  m_rescale_keep_orig_size(false), m_rescale_width(1), m_rescale_height(1),
 	  m_rescale_type(obs_scale_type::OBS_SCALE_BICUBIC), m_rescale_bounds(obs_bounds_type::OBS_BOUNDS_STRETCH),

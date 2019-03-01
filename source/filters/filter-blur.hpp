@@ -87,7 +87,7 @@ namespace filter {
 			void generate_gaussian_kernels();
 			void generate_kernel_textures();
 
-			std::string& const get_translation(std::string const key);
+			std::string const& get_translation(std::string const key);
 
 			static void* create(obs_data_t* settings, obs_source_t* self);
 			static void  destroy(void* source);

@@ -240,8 +240,8 @@ bool filter::sdf_effects::sdf_effects_instance::cb_modified_outside(void*, obs_p
 	return true;
 }
 
-bool filter::sdf_effects::sdf_effects_instance::cb_modified_advanced(void* ptr, obs_properties_t* props,
-																	 obs_property* prop, obs_data_t* settings)
+bool filter::sdf_effects::sdf_effects_instance::cb_modified_advanced(void* , obs_properties_t* props,
+																	 obs_property* , obs_data_t* settings)
 {
 	bool show_advanced = obs_data_get_bool(settings, S_ADVANCED);
 	obs_property_set_visible(obs_properties_get(props, P_SDF_SCALE), show_advanced);
@@ -369,7 +369,7 @@ void filter::sdf_effects::sdf_effects_instance::activate() {}
 
 void filter::sdf_effects::sdf_effects_instance::deactivate() {}
 
-void filter::sdf_effects::sdf_effects_instance::video_tick(float time)
+void filter::sdf_effects::sdf_effects_instance::video_tick(float )
 {
 	m_source_rendered = false;
 }
@@ -447,7 +447,7 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t*)
 				}
 
 				{
-					auto op = m_sdf_write->render(sdfW, sdfH);
+					auto op = m_sdf_write->render(uint32_t(sdfW), uint32_t(sdfH));
 					gs_ortho(0, (float)sdfW, 0, (float)sdfH, -1, 1);
 					gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &color_transparent, 0, 0);
 
@@ -457,7 +457,7 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t*)
 					sdf_effect->get_parameter("_threshold").set_float(0.5);
 
 					while (gs_effect_loop(sdf_effect->get_object(), "Draw")) {
-						gs_draw_sprite(this->m_sdf_texture->get_object(), 0, sdfW, sdfH);
+						gs_draw_sprite(this->m_sdf_texture->get_object(), 0, uint32_t(sdfW), uint32_t(sdfH));
 					}
 				}
 				this->m_sdf_write.swap(this->m_sdf_read);

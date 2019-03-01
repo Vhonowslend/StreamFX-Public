@@ -70,7 +70,6 @@ gs::effect::effect(std::string file)
 
 	std::vector<char> shader_buf(length+1);
 	filestream.read(shader_buf.data(), length);
-	const char* buf = shader_buf.data();
 
 	obs_enter_graphics();
 	char* errorMessage = nullptr;

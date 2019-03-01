@@ -132,7 +132,7 @@ filter::blur::blur_factory::blur_factory()
 
 	P_LOG_INFO("<filter-blur> Precalculating Gaussian Blur Kernel...");
 	this->gaussian_widths.resize(max_kernel_size + 1);
-	for (size_t w = 1.; w <= max_kernel_size; w++) {
+	for (size_t w = 1; w <= max_kernel_size; w++) {
 		for (double_t h = FLT_EPSILON; h <= w; h += search_density) {
 			if (util::math::gaussian<double_t>(w, h) > search_threshold) {
 				this->gaussian_widths[w] = h;
@@ -203,11 +203,10 @@ void filter::blur::blur_factory::generate_gaussian_kernels()
 	std::shared_ptr<std::vector<float_t>> kernel_data;
 
 	for (size_t width = 1; width <= max_kernel_size; width++) {
-		size_t v    = (width - 1) * size_power_of_two;
 		kernel_data = std::make_shared<std::vector<float_t>>(size_power_of_two);
 
 		// Calculate and normalize
-		float_t sum = 0;
+		double_t sum = 0;
 		for (size_t p = 0; p <= width; p++) {
 			math_data[p] = float_t(Gaussian1D(double_t(p), double_t(gaussian_widths[width])));
 			sum += math_data[p] * (p > 0 ? 2 : 1);
@@ -216,7 +215,7 @@ void filter::blur::blur_factory::generate_gaussian_kernels()
 		// Normalize to Texture Buffer
 		double_t inverse_sum = 1.0 / sum;
 		for (size_t p = 0; p <= width; p++) {
-			kernel_data->at(p) = math_data[p] * inverse_sum;
+			kernel_data->at(p) = float_t(math_data[p] * inverse_sum);
 		}
 
 		gaussian_kernels.insert({uint8_t(width), kernel_data});
@@ -228,7 +227,7 @@ void filter::blur::blur_factory::generate_kernel_textures()
 	generate_gaussian_kernels();
 }
 
-std::string& const filter::blur::blur_factory::get_translation(std::string const key)
+std::string const& filter::blur::blur_factory::get_translation(std::string const key)
 {
 	static std::string none("");
 	auto               found = translation_map.find(key);
@@ -639,13 +638,13 @@ obs_properties_t* filter::blur::blur_instance::get_properties()
 								OBS_COMBO_FORMAT_STRING);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_SOURCE)));
 	obs::source_tracker::get()->enumerate(
-		[this, &p](std::string name, obs_source_t* source) {
+		[this, &p](std::string name, obs_source_t*) {
 			obs_property_list_add_string(p, std::string(name + " (Source)").c_str(), name.c_str());
 			return false;
 		},
 		obs::source_tracker::filter_video_sources);
 	obs::source_tracker::get()->enumerate(
-		[this, &p](std::string name, obs_source_t* source) {
+		[this, &p](std::string name, obs_source_t*) {
 			obs_property_list_add_string(p, std::string(name + " (Scene)").c_str(), name.c_str());
 			return false;
 		},
@@ -942,15 +941,15 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 				double_t c0  = cos(rad);
 				double_t s0  = sin(rad);
 
-				kvs[0].first *= c0;
-				kvs[0].second *= s0;
+				kvs[0].first *= float_t(c0);
+				kvs[0].second *= float_t(s0);
 
 				if (!this->m_blur_step_scaling) {
-					kvs[1].first *= 0.0;
-					kvs[1].second *= 0.0;
+					kvs[1].first *= 0.0f;
+					kvs[1].second *= 0.0f;
 				} else {
-					kvs[1].first *= s0;
-					kvs[1].second *= c0;
+					kvs[1].first *= float_t(s0);
+					kvs[1].second *= float_t(c0);
 				}
 			}
 
