@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include "strings.hpp"
+#include "utility.hpp"
 
 // OBS
 #ifdef _MSC_VER
