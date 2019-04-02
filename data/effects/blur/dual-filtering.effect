@@ -1,0 +1,79 @@
+// Parameters:
+/// OBS Default
+uniform float4x4 ViewProj;
+/// Texture
+uniform texture2d pImage;
+uniform float2 pImageSize;
+uniform float2 pImageTexel;
+uniform float2 pImageHalfTexel;
+
+// Sampler
+sampler_state linearSampler {
+	Filter    = Linear;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+	MinLOD    = 0;
+	MaxLOD    = 0;
+};
+
+// Default Vertex Shader and Data
+struct VertDataIn {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+struct VertDataOut {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertDataOut VSDefault(VertDataIn vtx) {
+	VertDataOut vert_out;
+	vert_out.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = vtx.uv;
+	return vert_out;
+}
+
+// Downsample
+float4 PSDown(VertDataOut vtx) : TARGET {
+	//vtx.uv = ((floor(vtx.uv * pImageSize) + float2(0.5, 0.5)) * pImageTexel);
+	
+	float4 pxCC = pImage.Sample(linearSampler, vtx.uv) * 4.0;
+	float4 pxTL = pImage.Sample(linearSampler, vtx.uv - pImageHalfTexel);
+	float4 pxTR = pImage.Sample(linearSampler, vtx.uv + pImageHalfTexel);
+	float4 pxBL = pImage.Sample(linearSampler, vtx.uv + float2(pImageHalfTexel.x, -pImageHalfTexel.y));
+	float4 pxBR = pImage.Sample(linearSampler, vtx.uv - float2(pImageHalfTexel.x, -pImageHalfTexel.y));
+	
+	return (pxCC + pxTL + pxTR + pxBL + pxBR) * 0.125;
+}
+
+technique Down {
+	pass {
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSDown(vtx);
+	}
+}
+
+// Upsample
+float4 PSUp(VertDataOut vtx) : TARGET {
+	//vtx.uv = ((floor(vtx.uv * pImageSize) + float2(0.5, 0.5)) * pImageTexel);
+
+	float4 pxL = pImage.Sample(linearSampler, vtx.uv - float2(pImageHalfTexel.x * 2.0, 0.));
+	float4 pxBL = pImage.Sample(linearSampler, vtx.uv - float2(pImageHalfTexel.x, -pImageHalfTexel.y));
+	float4 pxB = pImage.Sample(linearSampler, vtx.uv + float2(0., pImageHalfTexel.y * 2.0));
+	float4 pxBR = pImage.Sample(linearSampler, vtx.uv + pImageHalfTexel);
+	float4 pxR = pImage.Sample(linearSampler, vtx.uv + float2(pImageHalfTexel.x * 2.0, 0.));
+	float4 pxTR = pImage.Sample(linearSampler, vtx.uv + float2(pImageHalfTexel.x, -pImageHalfTexel.y));
+	float4 pxT = pImage.Sample(linearSampler, vtx.uv - float2(0., pImageHalfTexel.y * 2.0));
+	float4 pxTL = pImage.Sample(linearSampler, vtx.uv - pImageHalfTexel);
+
+	return (((pxTL + pxTR + pxBL + pxBR) * 2.0) + pxL + pxR + pxT + pxB) * 0.083333333333;
+	// return (((pxTL + pxTR + pxBL + pxBR) * 2.0) + pxL + pxR + pxT + pxB) / 12;
+}
+
+technique Up {
+	pass {
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSUp(vtx);
+	}
+}
