@@ -23,6 +23,7 @@
 #include <functional>
 #include <memory>
 #include <vector>
+#include "obs/obs-source-tracker.hpp"
 #include "obs/obs-tools.hpp"
 #include "strings.hpp"
 
@@ -157,16 +158,6 @@ static bool UpdateSourceListCB(void* ptr, obs_source_t* src)
 	return true;
 }
 
-static void UpdateSourceList(obs_property_t* p)
-{
-	obs_property_list_clear(p);
-	obs_property_list_add_string(p, "", "");
-	obs_enum_sources(UpdateSourceListCB, p);
-#if LIBOBS_API_MAJOR_VER >= 23
-	obs_enum_scenes(UpdateSourceListCB, p);
-#endif
-}
-
 obs_properties_t* source::mirror::mirror_factory::get_properties(void*)
 {
 	obs_properties_t* pr = obs_properties_create();
@@ -175,7 +166,19 @@ obs_properties_t* source::mirror::mirror_factory::get_properties(void*)
 	p = obs_properties_add_list(pr, P_SOURCE, P_TRANSLATE(P_SOURCE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SOURCE)));
 	obs_property_set_modified_callback(p, modified_properties);
-	UpdateSourceList(p);
+	obs_property_list_add_string(p, "", "");
+	obs::source_tracker::get()->enumerate(
+		[&p](std::string name, obs_source_t*) {
+			obs_property_list_add_string(p, std::string(name + " (Source)").c_str(), name.c_str());
+			return false;
+		},
+		obs::source_tracker::filter_sources);
+	obs::source_tracker::get()->enumerate(
+		[&p](std::string name, obs_source_t*) {
+			obs_property_list_add_string(p, std::string(name + " (Scene)").c_str(), name.c_str());
+			return false;
+		},
+		obs::source_tracker::filter_scenes);
 
 	p = obs_properties_add_text(pr, P_SOURCE_SIZE, P_TRANSLATE(P_SOURCE_SIZE), OBS_TEXT_DEFAULT);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SOURCE_SIZE)));
