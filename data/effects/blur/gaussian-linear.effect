@@ -1,0 +1,136 @@
+// Parameters:
+/// OBS Default
+uniform float4x4 ViewProj;
+/// Texture
+uniform texture2d pImage;
+uniform float2 pImageTexel;
+/// Blur
+uniform float pSize;
+uniform float pAngle; 
+uniform float2 pCenter;
+uniform float2 pStepScale;
+/// Gaussian
+uniform float4 pKernel[32];
+
+#define MAX_BLUR_SIZE 128
+
+// # Linear Optimization
+// While the normal way is to sample every texel in the pSize, linear optimization
+//  takes advantage of the fact that most people, especially after compression,
+//  will not be able to tell the difference between a linear approximation and
+//  the actual thing.
+//
+// Instead of sampling every texel like this:
+// 
+//       |Tx|Tx|Tx|Tx|Tx|
+//     Tx|-2|-1| 0|+1|+2|
+// 
+// Linear optimization will sample like this:
+// 
+//       |Tx|Tx|Tx|Tx|Tx|
+//     Tx| -1  | 0|  +1 |
+//
+// This effectively removes half the necessary samples and looks identical when
+//  when used with box blur. However there is an edge case when the blur width
+//  is not a multiple of two, where two additional samples have to be spent on
+//  reading the outer edge:
+// 
+//       |Tx|Tx|Tx|Tx|Tx|Tx|Tx|
+//     Tx|-2| -1  | 0|  +1 |+2|
+//
+// or this alternative pattern that uses two less samples:
+// 
+//       |Tx|Tx|Tx|Tx|Tx|Tx|Tx|
+//     Tx|  0  |  +1 |  +2 |+3|
+//
+// or this alternative pattern that also uses two less samples:
+// 
+//       |Tx|Tx|Tx|Tx|Tx|Tx|Tx|
+//     Tx|  -2 | -1~~+1 |  +2 |
+//
+// With careful planning this can even be used for other types of Blur, such as
+//  Gaussian Blur, which suffers a larger hit - however there are better and
+//  faster alternatives than linear sampling with Gaussian Blur, such as
+//  Dual Filtering ("Dual Kawase").
+
+// Sampler
+sampler_state linearSampler {
+	Filter    = Linear;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+	MinLOD    = 0;
+	MaxLOD    = 0;
+};
+
+// Default Vertex Shader and Data
+struct VertDataIn {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+struct VertDataOut {
+	float4 pos  : POSITION;
+	float2 uv   : TEXCOORD0;
+	bool is_odd : TEXCOORD1;
+};
+
+VertDataOut VSDefault(VertDataIn vtx) {
+	VertDataOut vert_out;
+	vert_out.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = vtx.uv;
+	vert_out.is_odd = ((int(round(pSize)) % 2) == 1);
+	return vert_out;
+}
+
+// Functions
+float GetKernelAt(int i) {
+	return ((float[4])(pKernel[floor(i/4)]))[i%4];
+}
+
+// Blur 1 Dimensional
+float4 PSBlur1D(VertDataOut vtx) : TARGET {
+	float4 final = pImage.Sample(linearSampler, vtx.uv)
+		* GetKernelAt(0);
+		
+	// y = yes, s = skip, b = break
+	// Size-> | 1| 2| 3| 4| 5| 6| 7|
+	// -------+--+--+--+--+--+--+--+
+	// n=1    | b| y| y| y| y| y| y|
+	// n=2    |  |bs| s| s| s| s| s|
+	// n=3    |  | b| b| y| y| y| y|
+	// n=4    |  |  |  |bs| s| s| s|
+	// n=5    |  |  |  | b| b| y| y|
+	// n=6    |  |  |  |  |  |bs| s|
+	// n=7    |  |  |  |  |  | b| b|
+	// n=8    |  |  |  |  |  |  |  |
+
+	// Loop unrolling is only possible with a fixed known maximum.
+	// Some compilers may unroll up to x iterations, but most will not.
+	for (int n = 1; n <= MAX_BLUR_SIZE; n+=2) {
+		// Different from normal box, early exit instead of late exit.
+		if (n >= pSize) {
+			break;
+		}
+
+		// TODO: Determine better position than 0.5 for gaussian approximation.
+		float2 nstep = (pImageTexel * pStepScale) * (n + 0.5);
+		float kernel = GetKernelAt(n) + GetKernelAt(n + 1);
+		final += pImage.Sample(linearSampler, vtx.uv + nstep) * kernel;
+		final += pImage.Sample(linearSampler, vtx.uv - nstep) * kernel;
+	}
+	if (vtx.is_odd) {
+		float kernel = GetKernelAt(pSize);
+		float2 nstep = (pImageTexel * pStepScale) * pSize;
+		final += pImage.Sample(linearSampler, vtx.uv + nstep) * kernel;
+		final += pImage.Sample(linearSampler, vtx.uv - nstep) * kernel;
+	}
+
+	return final;
+}
+
+technique Draw {
+	pass {
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSBlur1D(vtx);
+	}
+}
