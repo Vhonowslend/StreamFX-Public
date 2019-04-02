@@ -20,6 +20,7 @@
 #include "gs-vertexbuffer.hpp"
 #include <stdexcept>
 #include "util-memory.hpp"
+#include "obs/gs/gs-helper.hpp"
 
 // OBS
 #ifdef _MSC_VER
@@ -67,9 +68,8 @@ gs::vertex_buffer::~vertex_buffer()
 		}
 	}
 	if (m_vertexbuffer) {
-		obs_enter_graphics();
+		auto gctx = gs::context();
 		gs_vertexbuffer_destroy(m_vertexbuffer);
-		obs_leave_graphics();
 		m_vertexbuffer = nullptr;
 	}
 }
@@ -119,12 +119,11 @@ gs::vertex_buffer::vertex_buffer(uint32_t vertices, uint8_t uvlayers)
 	}
 
 	// Allocate GPU
-	obs_enter_graphics();
+	auto gctx      = gs::context();
 	m_vertexbuffer = gs_vertexbuffer_create(m_vertexbufferdata, GS_DYNAMIC);
 	memset(m_vertexbufferdata, 0, sizeof(gs_vb_data));
 	m_vertexbufferdata->num     = m_capacity;
 	m_vertexbufferdata->num_tex = m_layers;
-	obs_leave_graphics();
 	if (!m_vertexbuffer) {
 		throw std::runtime_error("Failed to create vertex buffer.");
 	}
@@ -133,7 +132,7 @@ gs::vertex_buffer::vertex_buffer(uint32_t vertices, uint8_t uvlayers)
 // cppcheck-suppress uninitMemberVar
 gs::vertex_buffer::vertex_buffer(gs_vertbuffer_t* vb)
 {
-	obs_enter_graphics();
+	auto        gctx = gs::context();
 	gs_vb_data* vbd = gs_vertexbuffer_get_data(vb);
 	if (!vbd)
 		throw std::runtime_error("vertex buffer with no data");
@@ -165,7 +164,6 @@ gs::vertex_buffer::vertex_buffer(gs_vertbuffer_t* vb)
 			}
 		}
 	}
-	obs_leave_graphics();
 }
 
 // cppcheck-suppress uninitMemberVar
@@ -236,9 +234,8 @@ void gs::vertex_buffer::operator=(vertex_buffer const&& other)
 		}
 	}
 	if (m_vertexbuffer) {
-		obs_enter_graphics();
+		auto gctx = gs::context();
 		gs_vertexbuffer_destroy(m_vertexbuffer);
-		obs_leave_graphics();
 		m_vertexbuffer = nullptr;
 	}
 
@@ -340,7 +337,7 @@ gs_vertbuffer_t* gs::vertex_buffer::update(bool refreshGPU)
 		throw std::out_of_range("size is larger than capacity");
 
 	// Update VertexBuffer data.
-	obs_enter_graphics();
+	auto gctx          = gs::context();
 	m_vertexbufferdata = gs_vertexbuffer_get_data(m_vertexbuffer);
 	memset(m_vertexbufferdata, 0, sizeof(gs_vb_data));
 	m_vertexbufferdata->num      = m_capacity;
@@ -357,7 +354,6 @@ gs_vertbuffer_t* gs::vertex_buffer::update(bool refreshGPU)
 
 	// Update GPU
 	gs_vertexbuffer_flush(m_vertexbuffer);
-	obs_leave_graphics();
 
 	// WORKAROUND: OBS Studio 20.x and below incorrectly deletes data that it doesn't own.
 	memset(m_vertexbufferdata, 0, sizeof(gs_vb_data));

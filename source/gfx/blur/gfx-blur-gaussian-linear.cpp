@@ -16,6 +16,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "gfx-blur-gaussian-linear.hpp"
+#include "obs/gs/gs-helper.hpp"
 #include "util-math.hpp"
 
 #ifdef _MSC_VER
@@ -41,6 +42,8 @@
 
 gfx::blur::gaussian_linear_data::gaussian_linear_data()
 {
+	auto gctx = gs::context();
+
 	{
 		char* file = obs_module_file("effects/blur/gaussian-linear.effect");
 		m_effect   = std::make_shared<gs::effect>(file);
@@ -120,7 +123,8 @@ std::shared_ptr<::gfx::blur::ibase> gfx::blur::gaussian_linear_factory::create(:
 	case ::gfx::blur::type::Area:
 		return std::make_shared<::gfx::blur::gaussian_linear>();
 	case ::gfx::blur::type::Directional:
-		return std::static_pointer_cast<::gfx::blur::gaussian_linear>(std::make_shared<::gfx::blur::gaussian_linear_directional>());
+		return std::static_pointer_cast<::gfx::blur::gaussian_linear>(
+			std::make_shared<::gfx::blur::gaussian_linear_directional>());
 	default:
 		throw std::runtime_error("Invalid type.");
 	}
@@ -212,7 +216,7 @@ double_t gfx::blur::gaussian_linear_factory::get_max_step_scale_y(::gfx::blur::t
 
 std::shared_ptr<::gfx::blur::gaussian_linear_data> gfx::blur::gaussian_linear_factory::data()
 {
-	std::unique_lock<std::mutex>                ulock(m_data_lock);
+	std::unique_lock<std::mutex>                       ulock(m_data_lock);
 	std::shared_ptr<::gfx::blur::gaussian_linear_data> data = m_data.lock();
 	if (!data) {
 		data   = std::make_shared<::gfx::blur::gaussian_linear_data>();
@@ -230,6 +234,8 @@ std::shared_ptr<::gfx::blur::gaussian_linear_data> gfx::blur::gaussian_linear_fa
 gfx::blur::gaussian_linear::gaussian_linear()
 	: m_size(1.), m_step_scale({1., 1.}), m_data(::gfx::blur::gaussian_linear_factory::get().data())
 {
+	auto gctx = gs::context();
+
 	m_rendertarget  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	m_rendertarget2 = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
@@ -284,6 +290,8 @@ double_t gfx::blur::gaussian_linear::get_step_scale_y()
 
 std::shared_ptr<::gs::texture> gfx::blur::gaussian_linear::render()
 {
+	auto gctx = gs::context();
+
 	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
 	auto                          kernel = m_data->get_kernel(size_t(m_size));
 
@@ -295,7 +303,6 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_linear::render()
 	float_t height = float_t(m_input_texture->get_height());
 
 	// Setup
-	obs_enter_graphics();
 	gs_set_cull_mode(GS_NEITHER);
 	gs_enable_color(true, true, true, true);
 	gs_enable_depth_test(false);
@@ -346,7 +353,6 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_linear::render()
 	}
 
 	gs_blend_state_pop();
-	obs_leave_graphics();
 
 	return this->get();
 }
@@ -377,6 +383,8 @@ void gfx::blur::gaussian_linear_directional::set_angle(double_t angle)
 
 std::shared_ptr<::gs::texture> gfx::blur::gaussian_linear_directional::render()
 {
+	auto gctx = gs::context();
+
 	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
 	auto                          kernel = m_data->get_kernel(size_t(m_size));
 
@@ -388,7 +396,6 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_linear_directional::render()
 	float_t height = float_t(m_input_texture->get_height());
 
 	// Setup
-	obs_enter_graphics();
 	gs_set_cull_mode(GS_NEITHER);
 	gs_enable_color(true, true, true, true);
 	gs_enable_depth_test(false);
@@ -419,7 +426,6 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_linear_directional::render()
 	}
 
 	gs_blend_state_pop();
-	obs_leave_graphics();
 
 	return this->get();
 }

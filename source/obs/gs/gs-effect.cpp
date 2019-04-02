@@ -18,10 +18,11 @@
  */
 
 #include "gs-effect.hpp"
-#include <stdexcept>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 #include <vector>
+#include "obs/gs/gs-helper.hpp"
 
 // OBS
 #ifdef _MSC_VER
@@ -40,8 +41,8 @@ gs::effect::effect() : m_effect(nullptr) {}
 gs::effect::effect(std::string file)
 {
 #ifdef OBS_LOAD_EFFECT_FILE
-	obs_enter_graphics();
 	char* errorMessage = nullptr;
+	auto  gctx         = gs::context();
 	m_effect           = gs_effect_create_from_file(file.c_str(), &errorMessage);
 	if (!m_effect || errorMessage) {
 		std::string error = "Generic Error";
@@ -49,10 +50,8 @@ gs::effect::effect(std::string file)
 			error = std::string(errorMessage);
 			bfree((void*)errorMessage);
 		}
-		obs_leave_graphics();
 		throw std::runtime_error(error);
 	}
-	obs_leave_graphics();
 #else
 	std::ifstream filestream = std::ifstream(file, std::ios::binary);
 	if (!filestream.is_open()) {
@@ -68,11 +67,11 @@ gs::effect::effect(std::string file)
 		throw std::runtime_error("Shader too large (>256mb)");
 	}
 
-	std::vector<char> shader_buf(length+1);
+	std::vector<char> shader_buf(length + 1);
 	filestream.read(shader_buf.data(), length);
 
-	obs_enter_graphics();
 	char* errorMessage = nullptr;
+	auto  gctx         = gs::context();
 	m_effect           = gs_effect_create(shader_buf.data(), file.c_str(), &errorMessage);
 	if (!m_effect || errorMessage) {
 		std::string error = "Generic Error";
@@ -80,17 +79,15 @@ gs::effect::effect(std::string file)
 			error = std::string(errorMessage);
 			bfree((void*)errorMessage);
 		}
-		obs_leave_graphics();
 		throw std::runtime_error(error);
 	}
-	obs_leave_graphics();
 #endif
 }
 
 gs::effect::effect(std::string code, std::string name)
 {
-	obs_enter_graphics();
 	char* errorMessage = nullptr;
+	auto  gctx         = gs::context();
 	m_effect           = gs_effect_create(code.c_str(), name.c_str(), &errorMessage);
 	if (!m_effect || errorMessage) {
 		std::string error = "Generic Error";
@@ -98,17 +95,14 @@ gs::effect::effect(std::string code, std::string name)
 			error = std::string(errorMessage);
 			bfree((void*)errorMessage);
 		}
-		obs_leave_graphics();
 		throw std::runtime_error(error);
 	}
-	obs_leave_graphics();
 }
 
 gs::effect::~effect()
 {
-	obs_enter_graphics();
+	auto gctx = gs::context();
 	gs_effect_destroy(m_effect);
-	obs_leave_graphics();
 }
 
 gs_effect_t* gs::effect::get_object()

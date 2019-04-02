@@ -18,6 +18,7 @@
  */
 
 #include "gs-mipmapper.hpp"
+#include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
 
 // OBS
@@ -147,7 +148,7 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 		throw std::invalid_argument("source and target must have same format");
 	}
 
-	obs_enter_graphics();
+	auto gctx = gs::context();
 
 	// Copy original texture
 	//gs_copy_texture(target->get_object(), source->get_object());
@@ -217,7 +218,6 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 
 		// If we do not have any miplevels, just stop now.
 		if (mip_levels == 1) {
-			obs_leave_graphics();
 			return;
 		}
 
@@ -278,6 +278,4 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 
 	gs_load_indexbuffer(nullptr);
 	gs_load_vertexbuffer(nullptr);
-
-	obs_leave_graphics();
 }

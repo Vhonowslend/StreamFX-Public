@@ -18,6 +18,7 @@
 #include "gfx-blur-dual-filtering.hpp"
 #include "plugin.hpp"
 #include "util-math.hpp"
+#include "obs/gs/gs-helper.hpp"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -51,6 +52,7 @@
 
 gfx::blur::dual_filtering_data::dual_filtering_data()
 {
+	auto gctx = gs::context();
 	try {
 		char* file = obs_module_file("effects/blur/dual-filtering.effect");
 		m_effect   = std::make_shared<::gs::effect>(file);
@@ -62,6 +64,7 @@ gfx::blur::dual_filtering_data::dual_filtering_data()
 
 gfx::blur::dual_filtering_data::~dual_filtering_data()
 {
+	auto gctx = gs::context();
 	m_effect.reset();
 }
 
@@ -179,12 +182,11 @@ std::shared_ptr<::gfx::blur::dual_filtering_data> gfx::blur::dual_filtering_fact
 gfx::blur::dual_filtering::dual_filtering()
 	: m_size(0), m_size_iterations(0), m_data(::gfx::blur::dual_filtering_factory::get().data())
 {
-	obs_enter_graphics();
+	auto gctx = gs::context();
 	m_rendertargets.resize(MAX_LEVELS + 1);
 	for (size_t n = 0; n <= MAX_LEVELS; n++) {
 		m_rendertargets[n] = std::make_shared<gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
 	}
-	obs_leave_graphics();
 }
 
 gfx::blur::dual_filtering::~dual_filtering() {}
@@ -219,6 +221,7 @@ void gfx::blur::dual_filtering::get_step_scale(double_t&, double_t&) {}
 
 std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 {
+	auto gctx   = gs::context();
 	auto effect = m_data->get_effect();
 	if (!effect) {
 		return m_input_texture;
@@ -226,7 +229,6 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 
 	size_t actual_iterations = m_size_iterations;
 
-	obs_enter_graphics();
 	gs_blend_state_push();
 	gs_reset_blend_state();
 	gs_enable_color(true, true, true, true);
@@ -281,7 +283,7 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 		std::shared_ptr<gs::texture> tex_cur = m_rendertargets[n]->get_texture();
 
 		// Get Size
-		uint32_t width = tex_cur->get_width();
+		uint32_t width  = tex_cur->get_width();
 		uint32_t height = tex_cur->get_height();
 
 		// Apply
@@ -304,7 +306,6 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 	}
 
 	gs_blend_state_pop();
-	obs_leave_graphics();
 
 	return m_rendertargets[0]->get_texture();
 }

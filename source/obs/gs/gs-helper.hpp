@@ -31,10 +31,10 @@
 #pragma warning(pop)
 #endif
 
-gs_effect_param* gs_effect_get_param(gs_effect_t* effect, const char* name);
-bool             gs_set_param_int(gs_effect_t* effect, const char* name, int value);
-bool             gs_set_param_float(gs_effect_t* effect, const char* name, float value);
-bool             gs_set_param_float2(gs_effect_t* effect, const char* name, vec2* value);
-bool             gs_set_param_float3(gs_effect_t* effect, const char* name, vec3* value);
-bool             gs_set_param_float4(gs_effect_t* effect, const char* name, vec4* value);
-bool             gs_set_param_texture(gs_effect_t* effect, const char* name, gs_texture_t* value);
+namespace gs {
+	class context {
+		public:
+		context();
+		~context();
+	};
+} // namespace gs

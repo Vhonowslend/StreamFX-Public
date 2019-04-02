@@ -27,6 +27,7 @@
 #include "gfx/blur/gfx-blur-dual-filtering.hpp"
 #include "gfx/blur/gfx-blur-gaussian-linear.hpp"
 #include "gfx/blur/gfx-blur-gaussian.hpp"
+#include "obs/gs/gs-helper.hpp"
 #include "obs/obs-source-tracker.hpp"
 #include "strings.hpp"
 #include "util-math.hpp"
@@ -154,7 +155,7 @@ filter::blur::blur_factory::~blur_factory() {}
 
 void filter::blur::blur_factory::on_list_fill()
 {
-	obs_enter_graphics();
+	auto gctx = gs::context();
 
 	{
 		char* file = obs_module_file("effects/color-conversion.effect");
@@ -174,16 +175,13 @@ void filter::blur::blur_factory::on_list_fill()
 		}
 		bfree(file);
 	}
-
-	obs_leave_graphics();
 }
 
 void filter::blur::blur_factory::on_list_empty()
 {
-	obs_enter_graphics();
+	auto gctx = gs::context();
 	color_converter_effect.reset();
 	mask_effect.reset();
-	obs_leave_graphics();
 }
 
 std::string const& filter::blur::blur_factory::get_translation(std::string const key)

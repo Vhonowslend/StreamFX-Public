@@ -19,6 +19,7 @@
 
 #include "gs-rendertarget.hpp"
 #include <stdexcept>
+#include "obs/gs/gs-helper.hpp"
 
 // OBS
 #ifdef _MSC_VER
@@ -33,18 +34,16 @@
 
 gs::rendertarget::~rendertarget()
 {
-	obs_enter_graphics();
+	auto gctx = gs::context();
 	gs_texrender_destroy(render_target);
-	obs_leave_graphics();
 }
 
 gs::rendertarget::rendertarget(gs_color_format colorFormat, gs_zstencil_format zsFormat)
 	: color_format(colorFormat), zstencil_format(zsFormat)
 {
 	is_being_rendered = false;
-	obs_enter_graphics();
-	render_target = gs_texrender_create(colorFormat, zsFormat);
-	obs_leave_graphics();
+	auto gctx         = gs::context();
+	render_target     = gs_texrender_create(colorFormat, zsFormat);
 	if (!render_target) {
 		throw std::runtime_error("Failed to create render target.");
 	}
@@ -57,9 +56,8 @@ gs::rendertarget_op gs::rendertarget::render(uint32_t width, uint32_t height)
 
 gs_texture_t* gs::rendertarget::get_object()
 {
-	obs_enter_graphics();
-	gs_texture_t* tex = gs_texrender_get_texture(render_target);
-	obs_leave_graphics();
+	auto          gctx = gs::context();
+	gs_texture_t* tex  = gs_texrender_get_texture(render_target);
 	return tex;
 }
 
@@ -99,13 +97,12 @@ gs::rendertarget_op::rendertarget_op(gs::rendertarget* rt, uint32_t width, uint3
 		throw std::invalid_argument("rt");
 	if (parent->is_being_rendered)
 		throw std::logic_error("Can't start rendering to the same render target twice.");
-	obs_enter_graphics();
+
+	auto gctx = gs::context();
 	gs_texrender_reset(parent->render_target);
 	if (!gs_texrender_begin(parent->render_target, width, height)) {
-		obs_leave_graphics();
 		throw std::runtime_error("Failed to begin rendering to render target.");
 	}
-	obs_leave_graphics();
 	parent->is_being_rendered = true;
 }
 
@@ -119,8 +116,8 @@ gs::rendertarget_op::~rendertarget_op()
 {
 	if (parent == nullptr)
 		return;
-	obs_enter_graphics();
+
+	auto gctx = gs::context();
 	gs_texrender_end(parent->render_target);
-	obs_leave_graphics();
 	parent->is_being_rendered = false;
 }

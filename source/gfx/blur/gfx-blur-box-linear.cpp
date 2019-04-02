@@ -18,6 +18,7 @@
 #include "gfx-blur-box-linear.hpp"
 #include <cmath>
 #include <memory>
+#include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
 #include "util-math.hpp"
 
@@ -35,6 +36,7 @@
 
 gfx::blur::box_linear_data::box_linear_data()
 {
+	auto gctx = gs::context();
 	try {
 		char* file = obs_module_file("effects/blur/box-linear.effect");
 		m_effect   = std::make_shared<::gs::effect>(file);
@@ -46,6 +48,7 @@ gfx::blur::box_linear_data::box_linear_data()
 
 gfx::blur::box_linear_data::~box_linear_data()
 {
+	auto gctx = gs::context();
 	m_effect.reset();
 }
 
@@ -168,7 +171,7 @@ double_t gfx::blur::box_linear_factory::get_max_step_scale_y(::gfx::blur::type)
 
 std::shared_ptr<::gfx::blur::box_linear_data> gfx::blur::box_linear_factory::data()
 {
-	std::unique_lock<std::mutex>           ulock(m_data_lock);
+	std::unique_lock<std::mutex>                  ulock(m_data_lock);
 	std::shared_ptr<::gfx::blur::box_linear_data> data = m_data.lock();
 	if (!data) {
 		data   = std::make_shared<::gfx::blur::box_linear_data>();
@@ -183,7 +186,8 @@ std::shared_ptr<::gfx::blur::box_linear_data> gfx::blur::box_linear_factory::dat
 	return instance;
 }
 
-gfx::blur::box_linear::box_linear() : m_size(1.), m_step_scale({1., 1.}), m_data(::gfx::blur::box_linear_factory::get().data())
+gfx::blur::box_linear::box_linear()
+	: m_size(1.), m_step_scale({1., 1.}), m_data(::gfx::blur::box_linear_factory::get().data())
 {
 	m_rendertarget  = std::make_shared<::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	m_rendertarget2 = std::make_shared<::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
@@ -240,11 +244,10 @@ double_t gfx::blur::box_linear::get_step_scale_y()
 
 std::shared_ptr<::gs::texture> gfx::blur::box_linear::render()
 {
-	float_t width, height;
-	width  = float_t(m_input_texture->get_width());
-	height = float_t(m_input_texture->get_height());
+	auto    gctx   = gs::context();
+	float_t width  = float_t(m_input_texture->get_width());
+	float_t height = float_t(m_input_texture->get_height());
 
-	obs_enter_graphics();
 	gs_set_cull_mode(GS_NEITHER);
 	gs_enable_color(true, true, true, true);
 	gs_enable_depth_test(false);
@@ -290,7 +293,6 @@ std::shared_ptr<::gs::texture> gfx::blur::box_linear::render()
 	}
 
 	gs_blend_state_pop();
-	obs_leave_graphics();
 
 	return m_rendertarget->get_texture();
 }
@@ -319,11 +321,10 @@ void gfx::blur::box_linear_directional::set_angle(double_t angle)
 
 std::shared_ptr<::gs::texture> gfx::blur::box_linear_directional::render()
 {
-	float_t width, height;
-	width  = float_t(m_input_texture->get_width());
-	height = float_t(m_input_texture->get_height());
+	auto    gctx   = gs::context();
+	float_t width  = float_t(m_input_texture->get_width());
+	float_t height = float_t(m_input_texture->get_height());
 
-	obs_enter_graphics();
 	gs_blend_state_push();
 	gs_reset_blend_state();
 	gs_enable_color(true, true, true, true);
@@ -357,7 +358,6 @@ std::shared_ptr<::gs::texture> gfx::blur::box_linear_directional::render()
 	}
 
 	gs_blend_state_pop();
-	obs_leave_graphics();
 
 	return m_rendertarget->get_texture();
 }

@@ -16,6 +16,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "gfx-blur-gaussian.hpp"
+#include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
 #include "util-math.hpp"
 
@@ -42,6 +43,7 @@
 
 gfx::blur::gaussian_data::gaussian_data()
 {
+	auto gctx = gs::context();
 	{
 		char* file = obs_module_file("effects/blur/gaussian.effect");
 		m_effect   = std::make_shared<gs::effect>(file);
@@ -81,6 +83,7 @@ gfx::blur::gaussian_data::gaussian_data()
 
 gfx::blur::gaussian_data::~gaussian_data()
 {
+	auto gctx = gs::context();
 	m_effect.reset();
 }
 
@@ -239,6 +242,7 @@ std::shared_ptr<::gfx::blur::gaussian_data> gfx::blur::gaussian_factory::data()
 gfx::blur::gaussian::gaussian()
 	: m_size(1.), m_step_scale({1., 1.}), m_data(::gfx::blur::gaussian_factory::get().data())
 {
+	auto gctx       = gs::context();
 	m_rendertarget  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	m_rendertarget2 = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
@@ -293,6 +297,8 @@ double_t gfx::blur::gaussian::get_step_scale_y()
 
 std::shared_ptr<::gs::texture> gfx::blur::gaussian::render()
 {
+	auto gctx = gs::context();
+
 	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
 	auto                          kernel = m_data->get_kernel(size_t(m_size));
 
@@ -304,7 +310,6 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian::render()
 	float_t height = float_t(m_input_texture->get_height());
 
 	// Setup
-	obs_enter_graphics();
 	gs_set_cull_mode(GS_NEITHER);
 	gs_enable_color(true, true, true, true);
 	gs_enable_depth_test(false);
@@ -355,7 +360,6 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian::render()
 	}
 
 	gs_blend_state_pop();
-	obs_leave_graphics();
 
 	return this->get();
 }
@@ -386,6 +390,8 @@ void gfx::blur::gaussian_directional::set_angle(double_t angle)
 
 std::shared_ptr<::gs::texture> gfx::blur::gaussian_directional::render()
 {
+	auto gctx = gs::context();
+	
 	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
 	auto                          kernel = m_data->get_kernel(size_t(m_size));
 
@@ -428,7 +434,6 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_directional::render()
 	}
 
 	gs_blend_state_pop();
-	obs_leave_graphics();
 
 	return this->get();
 }
@@ -440,6 +445,8 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_directional::render()
 
 std::shared_ptr<::gs::texture> gfx::blur::gaussian_rotational::render()
 {
+	auto gctx = gs::context();
+
 	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
 	auto                          kernel = m_data->get_kernel(size_t(m_size));
 
@@ -451,7 +458,6 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_rotational::render()
 	float_t height = float_t(m_input_texture->get_height());
 
 	// Setup
-	obs_enter_graphics();
 	gs_set_cull_mode(GS_NEITHER);
 	gs_enable_color(true, true, true, true);
 	gs_enable_depth_test(false);
@@ -483,7 +489,6 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_rotational::render()
 	}
 
 	gs_blend_state_pop();
-	obs_leave_graphics();
 
 	return this->get();
 }
@@ -517,6 +522,8 @@ void gfx::blur::gaussian_rotational::set_angle(double_t angle)
 
 std::shared_ptr<::gs::texture> gfx::blur::gaussian_zoom::render()
 {
+	auto gctx = gs::context();
+
 	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
 	auto                          kernel = m_data->get_kernel(size_t(m_size));
 
@@ -528,7 +535,6 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_zoom::render()
 	float_t height = float_t(m_input_texture->get_height());
 
 	// Setup
-	obs_enter_graphics();
 	gs_set_cull_mode(GS_NEITHER);
 	gs_enable_color(true, true, true, true);
 	gs_enable_depth_test(false);
@@ -559,7 +565,6 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_zoom::render()
 	}
 
 	gs_blend_state_pop();
-	obs_leave_graphics();
 
 	return this->get();
 }
