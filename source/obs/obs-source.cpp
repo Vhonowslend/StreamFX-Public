@@ -484,17 +484,48 @@ obs::source& obs::source::operator=(source const& other)
 	return *this;
 }
 
-obs::source::source(source&& other)
+obs::source::source(source&& other) : self(std::move(other.self)), track_ownership(std::move(other.track_ownership))
 {
-	this->self            = other.self;
-	this->track_ownership = other.track_ownership;
+	// Clean out other source
 	other.self            = nullptr;
 	other.track_ownership = false;
+
+#ifdef auto_signal_c
+#undef auto_signal_c
+#endif
+#define auto_signal_c(SIGNAL) this->events.##SIGNAL = std::move(other.events.##SIGNAL);
+	auto_signal_c(destroy);
+	auto_signal_c(remove);
+	auto_signal_c(save);
+	auto_signal_c(load);
+	auto_signal_c(activate);
+	auto_signal_c(deactivate);
+	auto_signal_c(show);
+	auto_signal_c(hide);
+	auto_signal_c(mute);
+	auto_signal_c(push_to_mute_changed);
+	auto_signal_c(push_to_mute_delay);
+	auto_signal_c(push_to_talk_changed);
+	auto_signal_c(push_to_talk_delay);
+	auto_signal_c(enable);
+	auto_signal_c(rename);
+	auto_signal_c(volume);
+	auto_signal_c(update_properties);
+	auto_signal_c(update_flags);
+	auto_signal_c(audio_sync);
+	auto_signal_c(audio_mixers);
+	auto_signal_c(filter_add);
+	auto_signal_c(filter_remove);
+	auto_signal_c(reorder_filters);
+	auto_signal_c(transition_start);
+	auto_signal_c(transition_video_stop);
+	auto_signal_c(transition_stop);
+#undef auto_signal_c
 }
 
 obs::source& obs::source::operator=(source&& other)
 {
-	if (this == &other) {
+	if (this != &other) {
 		return *this;
 	}
 
@@ -503,10 +534,42 @@ obs::source& obs::source::operator=(source&& other)
 		obs_source_release(this->self);
 	}
 
-	this->self            = other.self;
-	this->track_ownership = other.track_ownership;
+	this->self            = std::move(other.self);
+	this->track_ownership = std::move(other.track_ownership);
 	other.self            = nullptr;
 	other.track_ownership = false;
+
+#ifdef auto_signal_c
+#undef auto_signal_c
+#endif
+#define auto_signal_c(SIGNAL) this->events.##SIGNAL = std::move(other.events.##SIGNAL);
+	auto_signal_c(destroy);
+	auto_signal_c(remove);
+	auto_signal_c(save);
+	auto_signal_c(load);
+	auto_signal_c(activate);
+	auto_signal_c(deactivate);
+	auto_signal_c(show);
+	auto_signal_c(hide);
+	auto_signal_c(mute);
+	auto_signal_c(push_to_mute_changed);
+	auto_signal_c(push_to_mute_delay);
+	auto_signal_c(push_to_talk_changed);
+	auto_signal_c(push_to_talk_delay);
+	auto_signal_c(enable);
+	auto_signal_c(rename);
+	auto_signal_c(volume);
+	auto_signal_c(update_properties);
+	auto_signal_c(update_flags);
+	auto_signal_c(audio_sync);
+	auto_signal_c(audio_mixers);
+	auto_signal_c(filter_add);
+	auto_signal_c(filter_remove);
+	auto_signal_c(reorder_filters);
+	auto_signal_c(transition_start);
+	auto_signal_c(transition_video_stop);
+	auto_signal_c(transition_stop);
+#undef auto_signal_c
 
 	return *this;
 }
