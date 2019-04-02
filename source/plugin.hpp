@@ -18,8 +18,8 @@
  */
 
 #pragma once
-#include <functional>
 #include <cinttypes>
+#include <functional>
 #include <list>
 
 // OBS

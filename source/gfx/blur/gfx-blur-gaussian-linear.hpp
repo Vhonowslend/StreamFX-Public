@@ -39,7 +39,7 @@ namespace gfx {
 		};
 
 		class gaussian_linear_factory : public ::gfx::blur::ifactory {
-			std::mutex                                m_data_lock;
+			std::mutex                                       m_data_lock;
 			std::weak_ptr<::gfx::blur::gaussian_linear_data> m_data;
 
 			public:
@@ -130,7 +130,7 @@ namespace gfx {
 
 			virtual double_t get_angle() override;
 
-			virtual void     set_angle(double_t angle) override;
+			virtual void set_angle(double_t angle) override;
 
 			virtual std::shared_ptr<::gs::texture> render() override;
 		};

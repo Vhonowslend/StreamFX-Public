@@ -34,7 +34,7 @@
 
 namespace gs {
 	class rendertarget_op;
-	
+
 	class rendertarget {
 		friend class rendertarget_op;
 

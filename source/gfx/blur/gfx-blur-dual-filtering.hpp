@@ -38,7 +38,7 @@ namespace gfx {
 		};
 
 		class dual_filtering_factory : public ::gfx::blur::ifactory {
-			std::mutex                                   m_data_lock;
+			std::mutex                                      m_data_lock;
 			std::weak_ptr<::gfx::blur::dual_filtering_data> m_data;
 
 			public:
@@ -94,18 +94,18 @@ namespace gfx {
 			public:
 			dual_filtering();
 			virtual ~dual_filtering();
-		
+
 			virtual void set_input(std::shared_ptr<::gs::texture> texture) override;
 
 			virtual ::gfx::blur::type get_type() override;
 
-			virtual double_t          get_size() override;
+			virtual double_t get_size() override;
 
-			virtual void              set_size(double_t width) override;
+			virtual void set_size(double_t width) override;
 
-			virtual void              set_step_scale(double_t x, double_t y) override;
+			virtual void set_step_scale(double_t x, double_t y) override;
 
-			virtual void              get_step_scale(double_t& x, double_t& y) override;
+			virtual void get_step_scale(double_t& x, double_t& y) override;
 
 			virtual std::shared_ptr<::gs::texture> render() override;
 

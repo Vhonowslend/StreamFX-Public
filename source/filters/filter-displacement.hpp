@@ -48,8 +48,8 @@ namespace filter {
 			obs_source_info sourceInfo;
 
 			public: // Singleton
-			static void                     initialize();
-			static void                     finalize();
+			static void                                  initialize();
+			static void                                  finalize();
 			static std::shared_ptr<displacement_factory> get();
 
 			public:

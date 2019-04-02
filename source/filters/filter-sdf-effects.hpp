@@ -43,7 +43,7 @@ namespace filter {
 		class sdf_effects_factory {
 			friend class std::_Ptr_base<filter::sdf_effects::sdf_effects_factory>;
 
-			obs_source_info        source_info;
+			obs_source_info source_info;
 
 			std::list<sdf_effects_instance*> sources;
 
@@ -51,8 +51,8 @@ namespace filter {
 			std::shared_ptr<gs::effect> sdf_shadow_effect;
 
 			public: // Singleton
-			static void     initialize();
-			static void     finalize();
+			static void                                 initialize();
+			static void                                 finalize();
 			static std::shared_ptr<sdf_effects_factory> get();
 
 			public:
@@ -96,7 +96,7 @@ namespace filter {
 			std::shared_ptr<gs::rendertarget> m_sdf_write, m_sdf_read;
 			std::shared_ptr<gs::texture>      m_sdf_texture;
 			double_t                          m_sdf_scale;
-			
+
 			bool     m_inner_shadow;
 			float_t  m_inner_range_min;
 			float_t  m_inner_range_max;
@@ -117,7 +117,7 @@ namespace filter {
 											obs_data_t* settings);
 
 			static bool cb_modified_advanced(void* ptr, obs_properties_t* props, obs_property* prop,
-											obs_data_t* settings);
+											 obs_data_t* settings);
 
 			public:
 			sdf_effects_instance(obs_data_t* settings, obs_source_t* self);
@@ -135,5 +135,5 @@ namespace filter {
 			void video_tick(float);
 			void video_render(gs_effect_t*);
 		};
-	} // namespace shadow_sdf
+	} // namespace sdf_effects
 } // namespace filter

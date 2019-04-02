@@ -37,7 +37,7 @@ namespace gfx {
 		};
 
 		class box_linear_factory : public ::gfx::blur::ifactory {
-			std::mutex                           m_data_lock;
+			std::mutex                                  m_data_lock;
 			std::weak_ptr<::gfx::blur::box_linear_data> m_data;
 
 			public:

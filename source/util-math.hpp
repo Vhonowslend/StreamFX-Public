@@ -40,7 +40,7 @@
 #define PI2 6.283185307179586476925286766559        // 2PI = 2 * pi
 #define PI2_SQROOT 2.506628274631000502415765284811 // sqrt(2 * pi)
 
-#define V_RAD 57.295779513082320876798154814105      // 180/pi
+#define V_RAD 57.295779513082320876798154814105  // 180/pi
 #define V_DEG 0.01745329251994329576923690768489 // pi/180
 #define DEG_TO_RAD(x) (x * V_DEG)
 #define RAD_TO_DEG(x) (x * V_RAD)
@@ -67,7 +67,7 @@ namespace util {
 #ifdef _MSC_VER
 	__declspec(align(16))
 #endif
-	struct vec3a : public vec3 {
+		struct vec3a : public vec3 {
 		// 16-byte Aligned version of vec3
 		static void* operator new(size_t count);
 		static void* operator new[](size_t count);
@@ -78,7 +78,7 @@ namespace util {
 #ifdef _MSC_VER
 	__declspec(align(16))
 #endif
-	struct vec4a : public vec4 {
+		struct vec4a : public vec4 {
 		// 16-byte Aligned version of vec4
 		static void* operator new(size_t count);
 		static void* operator new[](size_t count);

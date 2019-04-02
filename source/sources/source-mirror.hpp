@@ -47,8 +47,8 @@ namespace source {
 			obs_source_info osi;
 
 			public: // Singleton
-			static void                     initialize();
-			static void                     finalize();
+			static void                            initialize();
+			static void                            finalize();
 			static std::shared_ptr<mirror_factory> get();
 
 			public:
@@ -106,9 +106,9 @@ namespace source {
 			bool                              m_audio_have_output;
 
 			// Input
-			std::shared_ptr<obs::source>        m_source;
-			obs_sceneitem_t*                    m_source_item;
-			std::string                         m_source_name;
+			std::shared_ptr<obs::source> m_source;
+			obs_sceneitem_t*             m_source_item;
+			std::string                  m_source_name;
 
 			private:
 			void release_input();
