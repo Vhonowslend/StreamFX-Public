@@ -324,8 +324,6 @@ SET(PROJECT_PRIVATE_SOURCE
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertex.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertexbuffer.hpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertexbuffer.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/obs-audio-capture.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/obs-audio-capture.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/obs-tools.hpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/obs-tools.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/obs-source.hpp"
