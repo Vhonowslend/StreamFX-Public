@@ -26,7 +26,6 @@
 #include "gfx/gfx-source-texture.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-sampler.hpp"
-#include "obs/obs-audio-capture.hpp"
 #include "obs/obs-source.hpp"
 #include "plugin.hpp"
 
@@ -110,7 +109,6 @@ namespace source {
 			std::shared_ptr<obs::source>        m_source;
 			obs_sceneitem_t*                    m_source_item;
 			std::string                         m_source_name;
-			std::shared_ptr<obs::audio_capture> m_source_audio;
 
 			private:
 			void release_input();
@@ -128,13 +126,13 @@ namespace source {
 			void deactivate();
 			void video_tick(float);
 			void video_render(gs_effect_t*);
-			void audio_capture_cb(std::shared_ptr<obs::source> source, audio_data const* const audio, bool muted);
 			void audio_output_cb();
 			void enum_active_sources(obs_source_enum_proc_t, void*);
 			void load(obs_data_t*);
 			void save(obs_data_t*);
 
 			void on_source_rename(obs::source* source, std::string new_name, std::string old_name);
+			void on_audio_data(obs::source* source, const audio_data* audio, bool muted);
 		};
 	} // namespace mirror
 };    // namespace source

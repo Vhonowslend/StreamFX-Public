@@ -307,10 +307,6 @@ void source::mirror::mirror_instance::release_input()
 		obs_sceneitem_remove(this->m_source_item);
 		this->m_source_item = nullptr;
 	}
-	{
-		std::unique_lock<std::mutex> audio_lock(this->m_audio_lock);
-		this->m_source_audio.reset();
-	}
 	this->m_source.reset();
 }
 
@@ -351,14 +347,10 @@ void source::mirror::mirror_instance::acquire_input(std::string source_name)
 	this->m_source = std::move(new_source);
 	this->m_source->events.rename += std::bind(&source::mirror::mirror_instance::on_source_rename, this,
 											   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-	try {
-		// Audio
-		this->m_source_audio = std::make_shared<obs::audio_capture>(this->m_source);
-		this->m_source_audio->on.data += std::bind(&source::mirror::mirror_instance::audio_capture_cb, this,
-												   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-	} catch (...) {
-		P_LOG_ERROR("<Source Mirror:%s> Unexpected error during registering audio callback for '%s'.",
-					source_name.c_str());
+	if (m_audio_enabled) {
+		this->m_source->events.audio_data +=
+			std::bind(&source::mirror::mirror_instance::on_audio_data, this, std::placeholders::_1,
+					  std::placeholders::_2, std::placeholders::_3);
 	}
 }
 
@@ -580,45 +572,6 @@ void source::mirror::mirror_instance::video_render(gs_effect_t* effect)
 	}
 }
 
-void source::mirror::mirror_instance::audio_capture_cb(std::shared_ptr<obs::source> source,
-													   audio_data const* const      audio, bool)
-{
-	std::unique_lock<std::mutex> ulock(this->m_audio_lock);
-	if (!this->m_audio_enabled) {
-		return;
-	}
-
-	audio_t* aud = obs_get_audio();
-	if (!aud) {
-		return;
-	}
-	audio_output_info const* aoi = audio_output_get_info(aud);
-	if (!aoi) {
-		return;
-	}
-
-	std::bitset<8> layout;
-	for (size_t plane = 0; plane < MAX_AV_PLANES; plane++) {
-		float* samples = (float*)audio->data[plane];
-		if (!samples) {
-			this->m_audio_output.data[plane] = nullptr;
-			continue;
-		}
-		layout.set(plane);
-
-		memcpy(this->m_audio_data[plane].data(), audio->data[plane], audio->frames * sizeof(float_t));
-		this->m_audio_output.data[plane] = reinterpret_cast<uint8_t*>(this->m_audio_data[plane].data());
-	}
-	this->m_audio_output.format          = aoi->format;
-	this->m_audio_output.frames          = audio->frames;
-	this->m_audio_output.timestamp       = audio->timestamp;
-	this->m_audio_output.samples_per_sec = aoi->samples_per_sec;
-	this->m_audio_output.speakers        = aoi->speakers;
-
-	this->m_audio_have_output = true;
-	this->m_audio_notify.notify_all();
-}
-
 void source::mirror::mirror_instance::audio_output_cb()
 {
 	std::unique_lock<std::mutex> ulock(this->m_audio_lock);
@@ -657,4 +610,42 @@ void source::mirror::mirror_instance::on_source_rename(obs::source* source, std:
 	obs_data_set_string(ref, P_SOURCE, obs_source_get_name(source->get()));
 	obs_source_update(this->m_self, ref);
 	obs_data_release(ref);
+}
+
+void source::mirror::mirror_instance::on_audio_data(obs::source* source, const audio_data* audio, bool muted)
+{
+	std::unique_lock<std::mutex> ulock(this->m_audio_lock);
+	if (!this->m_audio_enabled) {
+		return;
+	}
+
+	audio_t* aud = obs_get_audio();
+	if (!aud) {
+		return;
+	}
+	audio_output_info const* aoi = audio_output_get_info(aud);
+	if (!aoi) {
+		return;
+	}
+
+	std::bitset<8> layout;
+	for (size_t plane = 0; plane < MAX_AV_PLANES; plane++) {
+		float* samples = (float*)audio->data[plane];
+		if (!samples) {
+			this->m_audio_output.data[plane] = nullptr;
+			continue;
+		}
+		layout.set(plane);
+
+		memcpy(this->m_audio_data[plane].data(), audio->data[plane], audio->frames * sizeof(float_t));
+		this->m_audio_output.data[plane] = reinterpret_cast<uint8_t*>(this->m_audio_data[plane].data());
+	}
+	this->m_audio_output.format          = aoi->format;
+	this->m_audio_output.frames          = audio->frames;
+	this->m_audio_output.timestamp       = audio->timestamp;
+	this->m_audio_output.samples_per_sec = aoi->samples_per_sec;
+	this->m_audio_output.speakers        = aoi->speakers;
+
+	this->m_audio_have_output = true;
+	this->m_audio_notify.notify_all();
 }
