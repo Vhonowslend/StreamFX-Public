@@ -286,7 +286,7 @@ void obs::source::handle_audio_mixers(void* p, calldata_t* calldata)
 	calldata_set_int(calldata, "mixers", mixers);
 }
 
-void obs::source::handle_audio_data(void* p, obs_source_t* source, const audio_data* audio, bool muted)
+void obs::source::handle_audio_data(void* p, obs_source_t*, const audio_data* audio, bool muted)
 {
 	obs::source* self = reinterpret_cast<obs::source*>(p);
 	if (!self->events.audio_data) {
