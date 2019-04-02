@@ -413,8 +413,8 @@ bool filter::blur::blur_instance::modified_properties(void*, obs_properties_t* p
 	}
 
 	// Find new Subtype
-	auto found = list_of_subtypes.find(vsubtype);
-	if (found == list_of_subtypes.end()) {
+	auto subtype_found = list_of_subtypes.find(vsubtype);
+	if (subtype_found == list_of_subtypes.end()) {
 		return false;
 	}
 
@@ -428,9 +428,9 @@ bool filter::blur::blur_instance::modified_properties(void*, obs_properties_t* p
 			const char* subtype  = obs_property_list_item_string(prop_subtype, idx);
 			bool        disabled = false;
 
-			auto found = list_of_subtypes.find(subtype);
-			if (found != list_of_subtypes.end()) {
-				disabled = !type_found->second.fn().is_type_supported(found->second.type);
+			auto subtype_found_idx = list_of_subtypes.find(subtype);
+			if (subtype_found_idx != list_of_subtypes.end()) {
+				disabled = !type_found->second.fn().is_type_supported(subtype_found_idx->second.type);
 			} else {
 				disabled = true;
 			}
@@ -454,25 +454,25 @@ bool filter::blur::blur_instance::modified_properties(void*, obs_properties_t* p
 
 	// Blur Sub-Type
 	{
-		bool has_angle_support = (found->second.type == ::gfx::blur::type::Directional)
-								 || (found->second.type == ::gfx::blur::type::Rotational);
+		bool has_angle_support = (subtype_found->second.type == ::gfx::blur::type::Directional)
+								 || (subtype_found->second.type == ::gfx::blur::type::Rotational);
 		bool has_center_support =
-			(found->second.type == ::gfx::blur::type::Rotational) || (found->second.type == ::gfx::blur::type::Zoom);
-		bool has_stepscale_support = type_found->second.fn().is_step_scale_supported(found->second.type);
+			(subtype_found->second.type == ::gfx::blur::type::Rotational) || (subtype_found->second.type == ::gfx::blur::type::Zoom);
+		bool has_stepscale_support = type_found->second.fn().is_step_scale_supported(subtype_found->second.type);
 		bool show_scaling          = obs_data_get_bool(settings, P_STEPSCALE) && has_stepscale_support;
 
 		/// Size
 		p = obs_properties_get(props, P_SIZE);
-		obs_property_float_set_limits(p, type_found->second.fn().get_min_size(found->second.type),
-									  type_found->second.fn().get_max_size(found->second.type),
-									  type_found->second.fn().get_step_size(found->second.type));
+		obs_property_float_set_limits(p, type_found->second.fn().get_min_size(subtype_found->second.type),
+									  type_found->second.fn().get_max_size(subtype_found->second.type),
+									  type_found->second.fn().get_step_size(subtype_found->second.type));
 
 		/// Angle
 		p = obs_properties_get(props, P_ANGLE);
 		obs_property_set_visible(p, has_angle_support);
-		obs_property_float_set_limits(p, type_found->second.fn().get_min_angle(found->second.type),
-									  type_found->second.fn().get_max_angle(found->second.type),
-									  type_found->second.fn().get_step_angle(found->second.type));
+		obs_property_float_set_limits(p, type_found->second.fn().get_min_angle(subtype_found->second.type),
+									  type_found->second.fn().get_max_angle(subtype_found->second.type),
+									  type_found->second.fn().get_step_angle(subtype_found->second.type));
 
 		/// Center, Radius
 		obs_property_set_visible(obs_properties_get(props, P_CENTER_X), has_center_support);
@@ -482,14 +482,14 @@ bool filter::blur::blur_instance::modified_properties(void*, obs_properties_t* p
 		obs_property_set_visible(obs_properties_get(props, P_STEPSCALE), has_stepscale_support);
 		p = obs_properties_get(props, P_STEPSCALE_X);
 		obs_property_set_visible(p, show_scaling);
-		obs_property_float_set_limits(p, type_found->second.fn().get_min_step_scale_x(found->second.type),
-									  type_found->second.fn().get_max_step_scale_x(found->second.type),
-									  type_found->second.fn().get_step_step_scale_x(found->second.type));
+		obs_property_float_set_limits(p, type_found->second.fn().get_min_step_scale_x(subtype_found->second.type),
+									  type_found->second.fn().get_max_step_scale_x(subtype_found->second.type),
+									  type_found->second.fn().get_step_step_scale_x(subtype_found->second.type));
 		p = obs_properties_get(props, P_STEPSCALE_Y);
 		obs_property_set_visible(p, show_scaling);
-		obs_property_float_set_limits(p, type_found->second.fn().get_min_step_scale_x(found->second.type),
-									  type_found->second.fn().get_max_step_scale_x(found->second.type),
-									  type_found->second.fn().get_step_step_scale_x(found->second.type));
+		obs_property_float_set_limits(p, type_found->second.fn().get_min_step_scale_x(subtype_found->second.type),
+									  type_found->second.fn().get_max_step_scale_x(subtype_found->second.type),
+									  type_found->second.fn().get_step_step_scale_x(subtype_found->second.type));
 	}
 
 	{ // Masking
