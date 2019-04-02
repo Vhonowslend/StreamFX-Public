@@ -350,7 +350,7 @@ void source::mirror::mirror_instance::acquire_input(std::string source_name)
 	this->m_source = std::move(new_source);
 	this->m_source->events.rename += std::bind(&source::mirror::mirror_instance::on_source_rename, this,
 											   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-	if (m_audio_enabled) {
+	if ((obs_source_get_output_flags(this->m_source->get()) & OBS_SOURCE_AUDIO) != 0) {
 		this->m_source->events.audio_data +=
 			std::bind(&source::mirror::mirror_instance::on_audio_data, this, std::placeholders::_1,
 					  std::placeholders::_2, std::placeholders::_3);
@@ -540,7 +540,7 @@ void source::mirror::mirror_instance::video_render(gs_effect_t* effect)
 	}
 
 	// Don't bother rendering sources that aren't video.
-	if (obs_source_get_flags(this->m_source->get()) & OBS_SOURCE_VIDEO) {
+	if ((obs_source_get_output_flags(this->m_source->get()) & OBS_SOURCE_VIDEO) == 0) {
 		return;
 	}
 
