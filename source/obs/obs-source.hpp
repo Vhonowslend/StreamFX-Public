@@ -60,6 +60,7 @@ namespace obs {
 		static void handle_volume(void* p, calldata_t* calldata);
 		static void handle_audio_sync(void* p, calldata_t* calldata);
 		static void handle_audio_mixers(void* p, calldata_t* calldata);
+		static void handle_audio_data(void* p, obs_source_t* source, const audio_data* audio, bool muted);
 		static void handle_filter_add(void* p, calldata_t* calldata);
 		static void handle_filter_remove(void* p, calldata_t* calldata);
 		static void handle_reorder_filters(void* p, calldata_t* calldata);
@@ -67,11 +68,10 @@ namespace obs {
 		static void handle_transition_video_stop(void* p, calldata_t* calldata);
 		static void handle_transition_stop(void* p, calldata_t* calldata);
 
-		private:
-		void connect_signals();
-
 		public:
 		virtual ~source();
+
+		source();
 
 		source(std::string name, bool track_ownership = true, bool add_reference = true);
 
@@ -102,36 +102,47 @@ namespace obs {
 
 		public: // Events
 		struct {
+			// Destroy and Remove
 			util::event<obs::source*> destroy;
 			util::event<obs::source*> remove;
+
+			// Saving, Loading and Update
 			util::event<obs::source*> save;
 			util::event<obs::source*> load;
+			util::event<obs::source*> update_properties;
+
+			// Activate, Deactivate
 			util::event<obs::source*> activate;
 			util::event<obs::source*> deactivate;
+
+			// Show Hide
 			util::event<obs::source*> show;
 			util::event<obs::source*> hide;
 
-			util::event<obs::source*, bool> enable;
+			// Other
+			util::event<obs::source*, bool>                     enable;
+			util::event<obs::source*, std::string, std::string> rename;
+			util::event<obs::source*, long long>                update_flags;
 
+			// Hotkeys (PtM, PtT)
 			util::event<obs::source*, bool>      push_to_mute_changed;
 			util::event<obs::source*, long long> push_to_mute_delay;
 			util::event<obs::source*, bool>      push_to_talk_changed;
 			util::event<obs::source*, long long> push_to_talk_delay;
 
-			util::event<obs::source*, std::string, std::string> rename;
+			// Audio
+			util::event<obs::source*, bool>                    mute;
+			util::event<obs::source*, double&>                 volume;
+			util::event<obs::source*, long long&>              audio_sync;
+			util::event<obs::source*, long long&>              audio_mixers;
+			util::event<obs::source*, const audio_data*, bool> audio_data;
 
-			util::event<obs::source*>            update_properties;
-			util::event<obs::source*, long long> update_flags;
-
-			util::event<obs::source*, bool>       mute;
-			util::event<obs::source*, double&>    volume;
-			util::event<obs::source*, long long&> audio_sync;
-			util::event<obs::source*, long long&> audio_mixers;
-
+			// Filters
 			util::event<obs::source*, obs_source_t*> filter_add;
 			util::event<obs::source*, obs_source_t*> filter_remove;
 			util::event<obs::source*>                reorder_filters;
 
+			// Transition
 			util::event<obs::source*> transition_start;
 			util::event<obs::source*> transition_video_stop;
 			util::event<obs::source*> transition_stop;

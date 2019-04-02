@@ -286,6 +286,16 @@ void obs::source::handle_audio_mixers(void* p, calldata_t* calldata)
 	calldata_set_int(calldata, "mixers", mixers);
 }
 
+void obs::source::handle_audio_data(void* p, obs_source_t* source, const audio_data* audio, bool muted)
+{
+	obs::source* self = reinterpret_cast<obs::source*>(p);
+	if (!self->events.audio_data) {
+		return;
+	}
+
+	self->events.audio_data(self, audio, muted);
+}
+
 void obs::source::handle_filter_add(void* p, calldata_t* calldata)
 {
 	obs::source* self = reinterpret_cast<obs::source*>(p);
@@ -352,83 +362,73 @@ void obs::source::handle_transition_stop(void* p, calldata_t*)
 	self->events.transition_stop(self);
 }
 
-void obs::source::connect_signals()
-{
-	auto sh = obs_source_get_signal_handler(this->self);
-	if (sh) {
-#define auto_signal_c(SIGNAL) signal_handler_connect(sh, "" #SIGNAL, obs::source::handle_##SIGNAL, this);
-		auto_signal_c(destroy);
-		auto_signal_c(remove);
-		auto_signal_c(save);
-		auto_signal_c(load);
-		auto_signal_c(activate);
-		auto_signal_c(deactivate);
-		auto_signal_c(show);
-		auto_signal_c(hide);
-		auto_signal_c(mute);
-		auto_signal_c(push_to_mute_changed);
-		auto_signal_c(push_to_mute_delay);
-		auto_signal_c(push_to_talk_changed);
-		auto_signal_c(push_to_talk_delay);
-		auto_signal_c(enable);
-		auto_signal_c(rename);
-		auto_signal_c(volume);
-		auto_signal_c(update_properties);
-		auto_signal_c(update_flags);
-		auto_signal_c(audio_sync);
-		auto_signal_c(audio_mixers);
-		auto_signal_c(filter_add);
-		auto_signal_c(filter_remove);
-		auto_signal_c(reorder_filters);
-		auto_signal_c(transition_start);
-		auto_signal_c(transition_video_stop);
-		auto_signal_c(transition_stop);
-#undef auto_signal_c
-	}
-}
-
 obs::source::~source()
 {
-	if (this->self) {
-		auto sh = obs_source_get_signal_handler(this->self);
-		if (sh) {
-#define auto_signal_dc(SIGNAL) signal_handler_disconnect(sh, "" #SIGNAL, obs::source::handle_##SIGNAL, this);
-			auto_signal_dc(destroy);
-			auto_signal_dc(remove);
-			auto_signal_dc(save);
-			auto_signal_dc(load);
-			auto_signal_dc(activate);
-			auto_signal_dc(deactivate);
-			auto_signal_dc(show);
-			auto_signal_dc(hide);
-			auto_signal_dc(mute);
-			auto_signal_dc(push_to_mute_changed);
-			auto_signal_dc(push_to_mute_delay);
-			auto_signal_dc(push_to_talk_changed);
-			auto_signal_dc(push_to_talk_delay);
-			auto_signal_dc(enable);
-			auto_signal_dc(rename);
-			auto_signal_dc(volume);
-			auto_signal_dc(update_properties);
-			auto_signal_dc(update_flags);
-			auto_signal_dc(audio_sync);
-			auto_signal_dc(audio_mixers);
-			auto_signal_dc(filter_add);
-			auto_signal_dc(filter_remove);
-			auto_signal_dc(reorder_filters);
-			auto_signal_dc(transition_start);
-			auto_signal_dc(transition_video_stop);
-			auto_signal_dc(transition_stop);
-#undef auto_signal_dc
-		}
-	}
 	if (this->track_ownership && this->self) {
 		obs_source_release(this->self);
 	}
 	this->self = nullptr;
 }
 
-obs::source::source(std::string name, bool track_ownership, bool add_reference)
+obs::source::source()
+{
+#ifdef auto_signal_c
+#undef auto_signal_c
+#endif
+#define auto_signal_c(SIGNAL)                                                                  \
+	{                                                                                          \
+		this->events.##SIGNAL.set_listen_callback([this] {                                     \
+			auto sh = obs_source_get_signal_handler(this->self);                               \
+			if (sh) {                                                                          \
+				signal_handler_connect(sh, "" #SIGNAL, obs::source::handle_##SIGNAL, this);    \
+			}                                                                                  \
+		});                                                                                    \
+		this->events.##SIGNAL.set_silence_callback([this] {                                    \
+			auto sh = obs_source_get_signal_handler(this->self);                               \
+			if (sh) {                                                                          \
+				signal_handler_disconnect(sh, "" #SIGNAL, obs::source::handle_##SIGNAL, this); \
+			}                                                                                  \
+		});                                                                                    \
+	}
+	auto_signal_c(destroy);
+	auto_signal_c(remove);
+	auto_signal_c(save);
+	auto_signal_c(load);
+	auto_signal_c(activate);
+	auto_signal_c(deactivate);
+	auto_signal_c(show);
+	auto_signal_c(hide);
+	auto_signal_c(mute);
+	auto_signal_c(push_to_mute_changed);
+	auto_signal_c(push_to_mute_delay);
+	auto_signal_c(push_to_talk_changed);
+	auto_signal_c(push_to_talk_delay);
+	auto_signal_c(enable);
+	auto_signal_c(rename);
+	auto_signal_c(volume);
+	auto_signal_c(update_properties);
+	auto_signal_c(update_flags);
+	auto_signal_c(audio_sync);
+	auto_signal_c(audio_mixers);
+	auto_signal_c(filter_add);
+	auto_signal_c(filter_remove);
+	auto_signal_c(reorder_filters);
+	auto_signal_c(transition_start);
+	auto_signal_c(transition_video_stop);
+	auto_signal_c(transition_stop);
+#undef auto_signal_c
+
+	// libOBS unfortunately does not use the event system for audio data callbacks, which is kind of odd as most other
+	//  things do. So instead we'll have to manually deal with it for now.
+	{
+		this->events.audio_data.set_listen_callback(
+			[this] { obs_source_add_audio_capture_callback(this->self, obs::source::handle_audio_data, this); });
+		this->events.audio_data.set_silence_callback(
+			[this] { obs_source_remove_audio_capture_callback(this->self, obs::source::handle_audio_data, this); });
+	}
+}
+
+obs::source::source(std::string name, bool track_ownership, bool add_reference) : source()
 {
 	this->self = obs_get_source_by_name(name.c_str());
 	if (!this->self) {
@@ -439,10 +439,9 @@ obs::source::source(std::string name, bool track_ownership, bool add_reference)
 	if (!add_reference) {
 		obs_source_release(this->self);
 	}
-	connect_signals();
 }
 
-obs::source::source(obs_source_t* source, bool track_ownership, bool add_reference)
+obs::source::source(obs_source_t* source, bool track_ownership, bool add_reference) : source()
 {
 	this->self = source;
 	if (!this->self) {
@@ -453,7 +452,6 @@ obs::source::source(obs_source_t* source, bool track_ownership, bool add_referen
 	if (add_reference) {
 		obs_source_addref(this->self);
 	}
-	connect_signals();
 }
 
 obs::source::source(source const& other)
