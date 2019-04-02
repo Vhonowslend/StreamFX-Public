@@ -30,6 +30,13 @@ namespace util {
 		std::function<void()> silence_cb;
 
 		public /* functions */:
+
+		// Destructor
+		inline ~event()
+		{
+			this->clear();
+		}
+
 		// Add new listener.
 		inline void add(std::function<void(_args...)> listener)
 		{
