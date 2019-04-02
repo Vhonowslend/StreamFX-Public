@@ -347,7 +347,7 @@ void source::mirror::mirror_instance::acquire_input(std::string source_name)
 	}
 
 	// If everything worked fine, we now set everything up.
-	this->m_source = std::move(new_source);
+	this->m_source = new_source;
 	this->m_source->events.rename += std::bind(&source::mirror::mirror_instance::on_source_rename, this,
 											   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 	if ((obs_source_get_output_flags(this->m_source->get()) & OBS_SOURCE_AUDIO) != 0) {
@@ -395,25 +395,26 @@ source::mirror::mirror_instance::~mirror_instance()
 
 uint32_t source::mirror::mirror_instance::get_width()
 {
-	if (this->m_rescale_enabled && this->m_rescale_width > 0 && !this->m_rescale_keep_orig_size) {
-		return this->m_rescale_width;
+	if (m_source) {
+		if (this->m_rescale_enabled && this->m_rescale_width > 0 && !this->m_rescale_keep_orig_size) {
+			return this->m_rescale_width;
+		} else {
+			return m_source->width();
+		}
 	}
-	obs_source_t* source = obs_sceneitem_get_source(this->m_source_item);
-	if (source) {
-		return obs_source_get_width(source);
-	}
-	return 1;
+	return 0;
 }
 
 uint32_t source::mirror::mirror_instance::get_height()
 {
-	if (this->m_rescale_enabled && this->m_rescale_height > 0 && !this->m_rescale_keep_orig_size)
-		return this->m_rescale_height;
-	obs_source_t* source = obs_sceneitem_get_source(this->m_source_item);
-	if (source) {
-		return obs_source_get_height(source);
+	if (m_source) {
+		if (this->m_rescale_enabled && this->m_rescale_height > 0 && !this->m_rescale_keep_orig_size) {
+			return this->m_rescale_height;
+		} else {
+			return m_source->height();
+		}
 	}
-	return 1;
+	return 0;
 }
 
 void source::mirror::mirror_instance::update(obs_data_t* data)
@@ -471,7 +472,7 @@ void source::mirror::mirror_instance::activate()
 	this->m_active = true;
 
 	// No source, delayed acquire.
-	if (!this->m_source_item) {
+	if (!this->m_source_item && this->m_source_name.length() > 0) {
 		this->acquire_input(this->m_source_name.c_str());
 	}
 }
@@ -498,33 +499,30 @@ void source::mirror::mirror_instance::video_tick(float time)
 		this->m_tick -= 0.1f;
 
 		// No source, delayed acquire.
-		if (!this->m_source_item) {
+		if (!this->m_source_item && this->m_source_name.length() > 0) {
 			this->acquire_input(this->m_source_name.c_str());
 		}
 	}
 
 	// Update Scene Item Boundaries
-	if (this->m_source_item) {
+	if ((this->m_source_item && this->m_source)
+		&& ((obs_source_get_output_flags(this->m_source->get()) & OBS_SOURCE_VIDEO) != 0)) {
 		obs_transform_info info;
-		obs_sceneitem_get_info(this->m_source_item, &info);
-
-		info.pos.x       = 0;
-		info.pos.y       = 0;
-		info.rot         = 0;
-		info.scale.x     = 1.f;
-		info.scale.y     = 1.f;
-		info.bounds.x    = float_t(this->m_source->width());
-		info.bounds.y    = float_t(this->m_source->height());
-		info.bounds_type = obs_bounds_type::OBS_BOUNDS_STRETCH;
-
+		info.pos.x            = 0;
+		info.pos.y            = 0;
+		info.rot              = 0;
+		info.scale.x          = 1.f;
+		info.scale.y          = 1.f;
+		info.alignment        = 4;
+		info.bounds.x         = this->get_width();
+		info.bounds.y         = this->get_height();
+		info.bounds_alignment = 4;
+		info.bounds_type      = obs_bounds_type::OBS_BOUNDS_STRETCH;
 		if (this->m_rescale_enabled) {
-			info.bounds.x    = float_t(this->m_rescale_width);
-			info.bounds.y    = float_t(this->m_rescale_height);
 			info.bounds_type = this->m_rescale_bounds;
 		}
 		obs_sceneitem_set_info(this->m_source_item, &info);
 		obs_sceneitem_force_update_transform(this->m_source_item);
-
 		obs_sceneitem_set_scale_filter(this->m_source_item, this->m_rescale_enabled ? this->m_rescale_type
 																					: obs_scale_type::OBS_SCALE_POINT);
 	}
@@ -535,7 +533,7 @@ void source::mirror::mirror_instance::video_tick(float time)
 void source::mirror::mirror_instance::video_render(gs_effect_t* effect)
 {
 	if ((this->m_rescale_width == 0) || (this->m_rescale_height == 0) || !this->m_source_item
-		|| !this->m_scene_texture_renderer) {
+		|| !this->m_scene_texture_renderer || !this->m_source) {
 		return;
 	}
 
@@ -563,15 +561,17 @@ void source::mirror::mirror_instance::video_render(gs_effect_t* effect)
 		}
 	}
 
-	// Use default effect unless we are provided a different effect.
-	if (!effect) {
-		effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
-	}
+	if (m_scene_texture) {
+		// Use default effect unless we are provided a different effect.
+		if (!effect) {
+			effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
+		}
 
-	// Render the cached scene texture.
-	gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), m_scene_texture->get_object());
-	while (gs_effect_loop(effect, "Draw")) {
-		gs_draw_sprite(m_scene_texture->get_object(), 0, this->get_width(), this->get_height());
+		// Render the cached scene texture.
+		gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), m_scene_texture->get_object());
+		while (gs_effect_loop(effect, "Draw")) {
+			gs_draw_sprite(m_scene_texture->get_object(), 0, this->get_width(), this->get_height());
+		}
 	}
 }
 
@@ -602,9 +602,10 @@ void source::mirror::mirror_instance::load(obs_data_t* data)
 
 void source::mirror::mirror_instance::save(obs_data_t* data)
 {
-	if (this->m_source_item) {
-		obs_data_set_string(data, P_SOURCE, obs_source_get_name(m_source->get()));
+	if (!this->m_source_item || !this->m_source) {
+		return;
 	}
+	obs_data_set_string(data, P_SOURCE, obs_source_get_name(m_source->get()));
 }
 
 void source::mirror::mirror_instance::on_source_rename(obs::source* source, std::string, std::string)
