@@ -23,6 +23,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include "gfx/blur/gfx-blur-base.hpp"
 #include "gfx/gfx-source-texture.hpp"
 #include "obs/gs/gs-effect.hpp"
 #include "obs/gs/gs-helper.hpp"
@@ -44,14 +45,6 @@ namespace filter {
 	namespace blur {
 		class blur_instance;
 
-		enum type : int64_t {
-			Box,
-			Gaussian,
-			Bilateral,
-			BoxLinear,
-			GaussianLinear,
-		};
-
 		enum mask_type : int64_t {
 			Region,
 			Image,
@@ -65,12 +58,8 @@ namespace filter {
 			std::list<blur_instance*>   sources;
 			std::shared_ptr<gs::effect> color_converter_effect;
 			std::shared_ptr<gs::effect> mask_effect;
-			std::shared_ptr<gs::effect> blur_effect;
 
 			std::map<std::string, std::string> translation_map;
-
-			std::vector<double_t>                                    gaussian_widths;
-			std::map<uint8_t, std::shared_ptr<std::vector<float_t>>> gaussian_kernels;
 
 			public: // Singleton
 			static void                          initialize();
@@ -83,9 +72,6 @@ namespace filter {
 
 			void on_list_fill();
 			void on_list_empty();
-
-			void generate_gaussian_kernels();
-			void generate_kernel_textures();
 
 			std::string const& get_translation(std::string const key);
 
@@ -108,15 +94,9 @@ namespace filter {
 			static void video_render(void* source, gs_effect_t* effect);
 
 			public:
-			std::shared_ptr<gs::effect> get_effect(filter::blur::type type);
-
-			std::string get_technique(filter::blur::type type);
-
 			std::shared_ptr<gs::effect> get_color_converter_effect();
 
 			std::shared_ptr<gs::effect> get_mask_effect();
-
-			std::shared_ptr<std::vector<float_t>> get_gaussian_kernel(uint8_t size);
 		};
 
 		class blur_instance {
@@ -128,25 +108,17 @@ namespace filter {
 			bool                              m_source_rendered;
 
 			// Rendering
-			std::shared_ptr<gs::rendertarget> m_output_rt1;
-			std::shared_ptr<gs::rendertarget> m_output_rt2;
 			std::shared_ptr<gs::texture>      m_output_texture;
+			std::shared_ptr<gs::rendertarget> m_output_rt;
 			bool                              m_output_rendered;
 
 			// Blur
-			std::shared_ptr<gs::effect> m_blur_effect;
-			std::string                 m_blur_technique;
-			filter::blur::type          m_blur_type;
-			uint64_t                    m_blur_size;
-			/// Bilateral Blur
-			double_t m_blur_bilateral_smoothing;
-			double_t m_blur_bilateral_sharpness;
-			/// Directional Blur
-			bool     m_blur_directional;
-			double_t m_blur_angle;
-			/// Step Scaling
-			bool                          m_blur_step_scaling;
-			std::pair<double_t, double_t> m_blur_step_scale;
+			std::shared_ptr<::gfx::blur::ibase> m_blur;
+			double_t                            m_blur_size;
+			double_t                            m_blur_angle;
+			std::pair<double_t, double_t>       m_blur_center;
+			bool                                m_blur_step_scaling;
+			std::pair<double_t, double_t>       m_blur_step_scale;
 
 			// Masking
 			struct {
@@ -182,22 +154,18 @@ namespace filter {
 				float_t multiplier;
 			} m_mask;
 
-			// advanced
-			uint64_t m_color_format;
-
 			public:
 			blur_instance(obs_data_t* settings, obs_source_t* self);
 			~blur_instance();
 
 			private:
-			bool apply_shared_param(gs_texture_t* input, float texelX, float texelY);
-			bool apply_bilateral_param();
-			bool apply_gaussian_param(uint8_t width);
 			bool apply_mask_parameters(std::shared_ptr<gs::effect> effect, gs_texture_t* original_texture,
 									   gs_texture_t* blurred_texture);
 
 			static bool modified_properties(void* ptr, obs_properties_t* props, obs_property* prop,
 											obs_data_t* settings);
+
+			void translate_old_settings(obs_data_t*);
 
 			public:
 			obs_properties_t* get_properties();

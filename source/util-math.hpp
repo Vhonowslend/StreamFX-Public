@@ -36,25 +36,14 @@
 #endif
 
 // Constants
-#define PI 3.1415926535897932384626433832795
-#define PI2 6.283185307179586476925286766559
-#define PI2_SQROOT 2.506628274631000502415765284811
+#define PI 3.1415926535897932384626433832795        // PI = pi
+#define PI2 6.283185307179586476925286766559        // 2PI = 2 * pi
+#define PI2_SQROOT 2.506628274631000502415765284811 // sqrt(2 * pi)
 
-inline double_t Gaussian1D(double_t x, double_t o)
-{
-	double_t c = (x / o);
-	double_t b = exp(-0.5 * c * c);
-	double_t a = (1.0 / (o * PI2_SQROOT));
-	return a * b;
-}
-
-inline double_t Bilateral1D(double_t x, double_t o)
-{
-	double_t c = (x / 0);
-	double_t d = c * c;
-	double_t b = exp(-0.5 * d) / o;
-	return 0.39894 * b; // Seems to be (1.0 / (1 * PI2_SQROOT)) * b, otherwise no difference from Gaussian Blur
-}
+#define V_RAD 57.295779513082320876798154814105      // 180/pi
+#define V_DEG 0.01745329251994329576923690768489 // pi/180
+#define DEG_TO_RAD(x) (x * V_DEG)
+#define RAD_TO_DEG(x) (x * V_RAD)
 
 inline size_t GetNearestPowerOfTwoAbove(size_t v)
 {
