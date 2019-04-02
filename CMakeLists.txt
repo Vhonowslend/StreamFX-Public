@@ -234,7 +234,6 @@ SET(PROJECT_DATA_EFFECTS
 	"${PROJECT_SOURCE_DIR}/data/effects/sdf-shadow.effect"
 
 	# Blur
-	"${PROJECT_SOURCE_DIR}/data/effects/blur.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/blur/box.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/blur/box-linear.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/blur/dual-filtering.effect"
@@ -304,6 +303,7 @@ SET(PROJECT_PRIVATE_SOURCE
 	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-gaussian.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-gaussian-linear.hpp"
 	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-gaussian-linear.cpp"
+
 	# OBS
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-helper.hpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-helper.cpp"
@@ -338,18 +338,16 @@ SET(PROJECT_PRIVATE_SOURCE
 	"${PROJECT_SOURCE_DIR}/source/sources/source-mirror.cpp"
 
 	# Filters
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-displacement.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-displacement.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-blur.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-blur.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-sdf-effects.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-sdf-effects.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-shape.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-shape.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-transform.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-transform.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-custom-shader.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-custom-shader.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-displacement.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-displacement.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-sdf-effects.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-sdf-effects.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-transform.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-transform.cpp"
 
 	# Transitions
 )
