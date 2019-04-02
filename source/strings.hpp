@@ -29,6 +29,8 @@
 #define T_FILEFILTERS_EFFECT "*.effect *.txt"
 #define T_FILEFILTERS_ANY "*.*"
 
+#define S_VERSION "Version"
+
 #define S_ADVANCED "Advanced"
 
 #define S_FILETYPE_IMAGE "FileType.Image"
@@ -39,6 +41,17 @@
 #define S_FILETYPE_SOUNDS "FileType.Sounds"
 #define S_FILETYPE_EFFECT "FileType.Effect"
 #define S_FILETYPE_EFFECTS "FileType.Effects"
+
+#define S_BLUR_TYPE_BOX "Blur.Type.Box"
+#define S_BLUR_TYPE_BOX_LINEAR "Blur.Type.BoxLinear"
+#define S_BLUR_TYPE_GAUSSIAN "Blur.Type.Gaussian"
+#define S_BLUR_TYPE_GAUSSIAN_LINEAR "Blur.Type.GaussianLinear"
+#define S_BLUR_TYPE_DUALFILTERING "Blur.Type.DualFiltering"
+
+#define S_BLUR_SUBTYPE_AREA "Blur.Subtype.Area"
+#define S_BLUR_SUBTYPE_DIRECTIONAL "Blur.Subtype.Directional"
+#define S_BLUR_SUBTYPE_ROTATIONAL "Blur.Subtype.Rotational"
+#define S_BLUR_SUBTYPE_ZOOM "Blur.Subtype.Zoom"
 
 #define S_MIPGENERATOR "MipGenerator"
 #define S_MIPGENERATOR_POINT "MipGenerator.Point"
