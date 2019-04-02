@@ -654,6 +654,7 @@ obs_properties_t* filter::blur::blur_instance::get_properties()
 		p = obs_properties_add_list(pr, P_MASK_SOURCE, P_TRANSLATE(P_MASK_SOURCE), OBS_COMBO_TYPE_LIST,
 									OBS_COMBO_FORMAT_STRING);
 		obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_SOURCE)));
+		obs_property_list_add_string(p, "", "");
 		obs::source_tracker::get()->enumerate(
 			[this, &p](std::string name, obs_source_t*) {
 				obs_property_list_add_string(p, std::string(name + " (Source)").c_str(), name.c_str());
