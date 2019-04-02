@@ -226,13 +226,20 @@ SET(PROJECT_DATA_LOCALE
 	"${PROJECT_SOURCE_DIR}/data/locale/en-US.ini"
 )
 SET(PROJECT_DATA_EFFECTS
-	"${PROJECT_SOURCE_DIR}/data/effects/blur.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/color-conversion.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/displace.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mask.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mipgen.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/sdf-generator.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/sdf-shadow.effect"
+
+	# Blur
+	"${PROJECT_SOURCE_DIR}/data/effects/blur.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/blur/box.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/blur/box-linear.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/blur/dual-filtering.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/blur/gaussian.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/blur/gaussian-linear.effect"
 )
 SET(PROJECT_DATA_SHADERS
 #	"${PROJECT_SOURCE_DIR}/data/shaders/name.effect"
@@ -284,7 +291,19 @@ SET(PROJECT_PRIVATE_SOURCE
 	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-effect-source.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-source-texture.hpp"
 	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-source-texture.cpp"
-
+	# Graphics/Blur
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-base.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-base.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-box.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-box.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-box-linear.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-box-linear.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-dual-filtering.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-dual-filtering.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-gaussian.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-gaussian.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-gaussian-linear.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-gaussian-linear.cpp"
 	# OBS
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-helper.hpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-helper.cpp"
