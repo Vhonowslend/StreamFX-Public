@@ -151,13 +151,6 @@ bool source::mirror::mirror_factory::modified_properties(obs_properties_t* pr, o
 	return false;
 }
 
-static bool UpdateSourceListCB(void* ptr, obs_source_t* src)
-{
-	obs_property_t* p = (obs_property_t*)ptr;
-	obs_property_list_add_string(p, obs_source_get_name(src), obs_source_get_name(src));
-	return true;
-}
-
 obs_properties_t* source::mirror::mirror_factory::get_properties(void*)
 {
 	obs_properties_t* pr = obs_properties_create();
@@ -514,8 +507,8 @@ void source::mirror::mirror_instance::video_tick(float time)
 		info.scale.x          = 1.f;
 		info.scale.y          = 1.f;
 		info.alignment        = 4;
-		info.bounds.x         = this->get_width();
-		info.bounds.y         = this->get_height();
+		info.bounds.x         = float_t(this->get_width());
+		info.bounds.y         = float_t(this->get_height());
 		info.bounds_alignment = 4;
 		info.bounds_type      = obs_bounds_type::OBS_BOUNDS_STRETCH;
 		if (this->m_rescale_enabled) {
@@ -616,7 +609,7 @@ void source::mirror::mirror_instance::on_source_rename(obs::source* source, std:
 	obs_data_release(ref);
 }
 
-void source::mirror::mirror_instance::on_audio_data(obs::source* source, const audio_data* audio, bool muted)
+void source::mirror::mirror_instance::on_audio_data(obs::source*, const audio_data* audio, bool)
 {
 	std::unique_lock<std::mutex> ulock(this->m_audio_lock);
 	if (!this->m_audio_enabled) {
