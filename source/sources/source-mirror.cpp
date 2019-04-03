@@ -508,10 +508,10 @@ void source::mirror::mirror_instance::video_tick(float time)
 		info.rot              = 0;
 		info.scale.x          = 1.f;
 		info.scale.y          = 1.f;
-		info.alignment        = 4;
+		info.alignment        = 5;
 		info.bounds.x         = float_t(this->get_width());
 		info.bounds.y         = float_t(this->get_height());
-		info.bounds_alignment = 4;
+		info.bounds_alignment = 5;
 		info.bounds_type      = obs_bounds_type::OBS_BOUNDS_STRETCH;
 		if (this->m_rescale_enabled) {
 			info.bounds_type = this->m_rescale_bounds;
