@@ -363,10 +363,6 @@ source::mirror::mirror_instance::mirror_instance(obs_data_t*, obs_source_t* src)
 		std::make_shared<gfx::source_texture>(this->m_scene, std::make_shared<obs::source>(this->m_self, false, false));
 
 	// Initialize Audio Rendering
-	this->m_audio_data.resize(MAX_AUDIO_CHANNELS);
-	for (size_t idx = 0; idx < this->m_audio_data.size(); idx++) {
-		this->m_audio_data[idx].resize(AUDIO_OUTPUT_FRAMES);
-	}
 	this->m_audio_thread = std::thread(std::bind(&source::mirror::mirror_instance::audio_output_cb, this));
 }
 
@@ -389,6 +385,9 @@ source::mirror::mirror_instance::~mirror_instance()
 uint32_t source::mirror::mirror_instance::get_width()
 {
 	if (m_source) {
+		if ((obs_source_get_output_flags(this->m_source->get()) & OBS_SOURCE_VIDEO) == 0) {
+			return 0;
+		}
 		if (this->m_rescale_enabled && this->m_rescale_width > 0 && !this->m_rescale_keep_orig_size) {
 			return this->m_rescale_width;
 		} else {
@@ -401,6 +400,9 @@ uint32_t source::mirror::mirror_instance::get_width()
 uint32_t source::mirror::mirror_instance::get_height()
 {
 	if (m_source) {
+		if ((obs_source_get_output_flags(this->m_source->get()) & OBS_SOURCE_VIDEO) == 0) {
+			return 0;
+		}
 		if (this->m_rescale_enabled && this->m_rescale_height > 0 && !this->m_rescale_keep_orig_size) {
 			return this->m_rescale_height;
 		} else {
@@ -570,14 +572,35 @@ void source::mirror::mirror_instance::video_render(gs_effect_t* effect)
 
 void source::mirror::mirror_instance::audio_output_cb()
 {
-	std::unique_lock<std::mutex> ulock(this->m_audio_lock);
+	std::unique_lock<std::mutex> ulock(this->m_audio_lock_outputter);
 
 	while (!this->m_audio_kill_thread) {
-		if (this->m_audio_have_output) {
-			obs_source_output_audio(this->m_self, &this->m_audio_output);
-			this->m_audio_have_output = false;
-		}
 		this->m_audio_notify.wait(ulock, [this]() { return this->m_audio_have_output || this->m_audio_kill_thread; });
+
+		if (this->m_audio_have_output) { // Get used audio element
+			std::shared_ptr<mirror_audio_data> mad;
+			{
+				std::lock_guard<std::mutex> capture_lock(this->m_audio_lock_capturer);
+				if (m_audio_data_queue.size() > 0) {
+					mad = m_audio_data_queue.front();
+					m_audio_data_queue.pop();
+				}
+				if (m_audio_data_queue.size() == 0) {
+					this->m_audio_have_output = false;
+				}
+			}
+
+			if (mad) {
+				ulock.unlock();
+				obs_source_output_audio(this->m_self, &mad->audio);
+				ulock.lock();
+
+				{
+					std::lock_guard<std::mutex> capture_lock(this->m_audio_lock_capturer);
+					m_audio_data_free_queue.push(mad);
+				}
+			}
+		}
 	}
 }
 
@@ -611,7 +634,6 @@ void source::mirror::mirror_instance::on_source_rename(obs::source* source, std:
 
 void source::mirror::mirror_instance::on_audio_data(obs::source*, const audio_data* audio, bool)
 {
-	std::unique_lock<std::mutex> ulock(this->m_audio_lock);
 	if (!this->m_audio_enabled) {
 		return;
 	}
@@ -625,24 +647,49 @@ void source::mirror::mirror_instance::on_audio_data(obs::source*, const audio_da
 		return;
 	}
 
-	std::bitset<8> layout;
-	for (size_t plane = 0; plane < MAX_AV_PLANES; plane++) {
-		float* samples = (float*)audio->data[plane];
-		if (!samples) {
-			this->m_audio_output.data[plane] = nullptr;
-			continue;
+	std::shared_ptr<mirror_audio_data> mad;
+	{ // Get free audio data element.
+		std::lock_guard<std::mutex> capture_lock(this->m_audio_lock_capturer);
+		if (m_audio_data_free_queue.size() > 0) {
+			mad = m_audio_data_free_queue.front();
+			m_audio_data_free_queue.pop();
+		} else {
+			mad = std::make_shared<mirror_audio_data>();
+			mad->data.resize(MAX_AUDIO_CHANNELS);
+			for (size_t idx = 0; idx < mad->data.size(); idx++) {
+				mad->data[idx].resize(AUDIO_OUTPUT_FRAMES);
+			}
 		}
-		layout.set(plane);
-
-		memcpy(this->m_audio_data[plane].data(), audio->data[plane], audio->frames * sizeof(float_t));
-		this->m_audio_output.data[plane] = reinterpret_cast<uint8_t*>(this->m_audio_data[plane].data());
 	}
-	this->m_audio_output.format          = aoi->format;
-	this->m_audio_output.frames          = audio->frames;
-	this->m_audio_output.timestamp       = audio->timestamp;
-	this->m_audio_output.samples_per_sec = aoi->samples_per_sec;
-	this->m_audio_output.speakers        = aoi->speakers;
 
-	this->m_audio_have_output = true;
+	{ // Copy data
+		std::bitset<8> layout;
+		for (size_t plane = 0; plane < MAX_AV_PLANES; plane++) {
+			float* samples = (float*)audio->data[plane];
+			if (!samples) {
+				mad->audio.data[plane] = nullptr;
+				continue;
+			}
+			layout.set(plane);
+
+			memcpy(mad->data[plane].data(), audio->data[plane], audio->frames * sizeof(float_t));
+			mad->audio.data[plane] = reinterpret_cast<uint8_t*>(mad->data[plane].data());
+		}
+		mad->audio.format          = aoi->format;
+		mad->audio.frames          = audio->frames;
+		mad->audio.timestamp       = audio->timestamp;
+		mad->audio.samples_per_sec = aoi->samples_per_sec;
+		mad->audio.speakers        = aoi->speakers;
+	}
+
+	{ // Push used audio data element.
+		std::lock_guard<std::mutex> capture_lock(this->m_audio_lock_capturer);
+		m_audio_data_queue.push(mad);
+	}
+
+	{ // Signal other side.
+		std::lock_guard<std::mutex> output_lock(this->m_audio_lock_outputter);
+		this->m_audio_have_output = true;
+	}
 	this->m_audio_notify.notify_all();
 }

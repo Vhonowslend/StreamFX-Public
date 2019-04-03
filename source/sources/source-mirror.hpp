@@ -21,6 +21,7 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <queue>
 #include <thread>
 #include <vector>
 #include "gfx/gfx-source-texture.hpp"
@@ -76,6 +77,11 @@ namespace source {
 			static void save(void*, obs_data_t*);
 		};
 
+		struct mirror_audio_data {
+			obs_source_audio                  audio;
+			std::vector<std::vector<float_t>> data;
+		};
+
 		class mirror_instance {
 			bool          m_active;
 			obs_source_t* m_self;
@@ -96,14 +102,15 @@ namespace source {
 			obs_bounds_type m_rescale_bounds;
 
 			// Audio Rendering
-			bool                              m_audio_enabled;
-			std::mutex                        m_audio_lock;
-			std::condition_variable           m_audio_notify;
-			obs_source_audio                  m_audio_output;
-			std::vector<std::vector<float_t>> m_audio_data;
-			std::thread                       m_audio_thread;
-			bool                              m_audio_kill_thread;
-			bool                              m_audio_have_output;
+			bool                                           m_audio_enabled;
+			std::condition_variable                        m_audio_notify;
+			std::thread                                    m_audio_thread;
+			bool                                           m_audio_kill_thread;
+			bool                                           m_audio_have_output;
+			std::mutex                                     m_audio_lock_outputter;
+			std::mutex                                     m_audio_lock_capturer;
+			std::queue<std::shared_ptr<mirror_audio_data>> m_audio_data_queue;
+			std::queue<std::shared_ptr<mirror_audio_data>> m_audio_data_free_queue;
 
 			// Input
 			std::shared_ptr<obs::source> m_source;
