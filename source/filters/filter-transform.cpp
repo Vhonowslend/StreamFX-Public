@@ -166,9 +166,9 @@ obs_properties_t* filter::transform::transform_factory::get_properties(void*)
 	/// Position
 	{
 		std::pair<const char*, const char*> entries[] = {
-			std::make_pair(ST_POSITION_X, P_DESC(ST_POSITION_X)),
-			std::make_pair(ST_POSITION_Y, P_DESC(ST_POSITION_Y)),
-			std::make_pair(ST_POSITION_Z, P_DESC(ST_POSITION_Z)),
+			std::make_pair(ST_POSITION_X, P_DESC(ST_POSITION)),
+			std::make_pair(ST_POSITION_Y, P_DESC(ST_POSITION)),
+			std::make_pair(ST_POSITION_Z, P_DESC(ST_POSITION)),
 		};
 		for (auto kv : entries) {
 			p = obs_properties_add_float(pr, kv.first, P_TRANSLATE(kv.first), -10000, 10000, 0.01);
@@ -178,9 +178,9 @@ obs_properties_t* filter::transform::transform_factory::get_properties(void*)
 	/// Rotation
 	{
 		std::pair<const char*, const char*> entries[] = {
-			std::make_pair(ST_ROTATION_X, P_DESC(ST_ROTATION_X)),
-			std::make_pair(ST_ROTATION_Y, P_DESC(ST_ROTATION_Y)),
-			std::make_pair(ST_ROTATION_Z, P_DESC(ST_ROTATION_Z)),
+			std::make_pair(ST_ROTATION_X, P_DESC(ST_ROTATION)),
+			std::make_pair(ST_ROTATION_Y, P_DESC(ST_ROTATION)),
+			std::make_pair(ST_ROTATION_Z, P_DESC(ST_ROTATION)),
 		};
 		for (auto kv : entries) {
 			p = obs_properties_add_float_slider(pr, kv.first, P_TRANSLATE(kv.first), -180, 180, 0.01);
@@ -190,8 +190,8 @@ obs_properties_t* filter::transform::transform_factory::get_properties(void*)
 	/// Scale
 	{
 		std::pair<const char*, const char*> entries[] = {
-			std::make_pair(ST_SCALE_X, P_DESC(ST_SCALE_X)),
-			std::make_pair(ST_SCALE_Y, P_DESC(ST_SCALE_Y)),
+			std::make_pair(ST_SCALE_X, P_DESC(ST_SCALE)),
+			std::make_pair(ST_SCALE_Y, P_DESC(ST_SCALE)),
 		};
 		for (auto kv : entries) {
 			p = obs_properties_add_float_slider(pr, kv.first, P_TRANSLATE(kv.first), -1000, 1000, 0.01);
@@ -201,8 +201,8 @@ obs_properties_t* filter::transform::transform_factory::get_properties(void*)
 	/// Shear
 	{
 		std::pair<const char*, const char*> entries[] = {
-			std::make_pair(ST_SHEAR_X, P_DESC(ST_SHEAR_X)),
-			std::make_pair(ST_SHEAR_Y, P_DESC(ST_SHEAR_Y)),
+			std::make_pair(ST_SHEAR_X, P_DESC(ST_SHEAR)),
+			std::make_pair(ST_SHEAR_Y, P_DESC(ST_SHEAR)),
 		};
 		for (auto kv : entries) {
 			p = obs_properties_add_float_slider(pr, kv.first, P_TRANSLATE(kv.first), -100.0, 100.0, 0.01);
