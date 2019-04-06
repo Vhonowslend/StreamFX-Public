@@ -1,0 +1,294 @@
+// -------------------------------------------------------------------------------- //
+// Defines
+#define MAX_DISTANCE	65536.0
+#define NEAR_INFINITE	18446744073709551616.0
+#define FLT_SMALL		0.001
+#define PI				3.1415926535897932384626433832795
+#define HALFPI			1.5707963267948966192313216916398
+// -------------------------------------------------------------------------------- //
+
+// -------------------------------------------------------------------------------- //
+// Samplers
+sampler_state imageSampler {
+	Filter		= Linear;
+	AddressU	= Clamp;
+	AddressV	= Clamp;
+};
+
+sampler_state sdfSampler {
+	Filter		= Linear;
+	AddressU	= Clamp;
+	AddressV	= Clamp;
+	BorderColor	= FFFFFFFF;
+};
+// -------------------------------------------------------------------------------- //
+
+// -------------------------------------------------------------------------------- //
+// Global Parameters
+uniform float4x4 ViewProj;
+uniform texture2d pSDFTexture;
+uniform float pSDFThreshold;
+uniform texture2d pImageTexture;
+// -------------------------------------------------------------------------------- //
+
+// -------------------------------------------------------------------------------- //
+// Shared Functions
+float4 PremultiplyTarget(float4 c, float4 t) {
+	return lerp(float4(t.r, t.g, t.b, c.a), c, c.a);
+}
+
+float LinearCurveFromValue(float v, float offset, float width,
+						   float sharpness, float sharpnessInverse) {
+}
+
+float GradientFromValue(float v, float offset, float width) {
+	return ((v - offset) / width);
+}
+
+// We can use any of the following gradient functions: https://www.desmos.com/calculator/bmbrncaiem
+float CurveEaseInOut(float v) {
+	return cos((v-1)*PI)*0.5+0.5;
+}
+
+float CurveEaseOut(float v) {
+	return sin(v * HALFPI);
+}
+
+float CurveEaseIn(float v) {
+	return 1 - cos(v * HALFPI);
+}
+// -------------------------------------------------------------------------------- //
+
+// -------------------------------------------------------------------------------- //
+// Default Vertex Shader
+struct VertDataIn {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+struct VertDataOut {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertDataOut VSDefault(VertDataIn v_in)
+{
+	VertDataOut vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+	return vert_out;
+}
+// -------------------------------------------------------------------------------- //
+
+// -------------------------------------------------------------------------------- //
+// Shadow Effects (Inner, Outer)
+uniform float4 pShadowColor;
+uniform float pShadowMin;
+uniform float pShadowMax;
+uniform float2 pShadowOffset;
+
+float4 PSShadowOuter(VertDataOut v_in) : TARGET
+{
+	float2 dist_ex = pSDFTexture.Sample(sdfSampler, v_in.uv + pShadowOffset).rg * MAX_DISTANCE;
+	float dist = dist_ex.r - dist_ex.g;
+	bool mask = (pImageTexture.Sample(imageSampler, v_in.uv).a <= pSDFThreshold);
+
+	if (!mask) {
+		return float4(0.0, 0.0, 0.0, 0.0);
+	}
+
+	float v = clamp((dist - pShadowMin) / (pShadowMax - pShadowMin), 0., 1.);
+	return float4(pShadowColor.r, pShadowColor.g, pShadowColor.b, (1.0 - v) * pShadowColor.a);	
+}
+
+technique ShadowOuter
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSShadowOuter(v_in);
+	}
+}
+
+float4 PSShadowInner(VertDataOut v_in) : TARGET
+{
+	float2 dist_ex = pSDFTexture.Sample(sdfSampler, v_in.uv + pShadowOffset).rg * MAX_DISTANCE;
+	float dist = dist_ex.g - dist_ex.r;
+	bool mask = (pImageTexture.Sample(imageSampler, v_in.uv).a > pSDFThreshold);
+
+	if (!mask) {
+		return float4(0.0, 0.0, 0.0, 0.0);
+	}
+
+	float v = clamp((dist - pShadowMin) / (pShadowMax - pShadowMin), 0., 1.);
+	return float4(pShadowColor.r, pShadowColor.g, pShadowColor.b, (1.0 - v) * pShadowColor.a);	
+}
+
+technique ShadowInner
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSShadowInner(v_in);
+	}
+}
+// -------------------------------------------------------------------------------- //
+
+// -------------------------------------------------------------------------------- //
+// Glow
+uniform float4 pGlowColor <
+	string name = "Glow Color";
+	string group = "Glow";
+>;
+uniform float pGlowWidth <
+	string name = "Glow Width";
+	string group = "Glow";
+	float minimum = 0.01;
+	float maximum = 16.0;
+	float delta = 0.01;
+	float default = 1.0;
+>;
+uniform float pGlowSharpness <
+	string name = "Glow Sharpness";
+	string group = "Glow";
+	float minimum = 0.01;
+	float maximum = 100.0;
+	float delta = 0.01;
+	float default = 1.0;
+	string set_expr = "x / 100.0";
+>;
+uniform float pGlowSharpnessInverse <
+	string name = "Glow Sharpness Inverse";
+	string group = "Glow";
+	string value_expr = "1.0 / (1.0 - pGlowSharpness)";
+	bool visible = false;
+	bool enabled = false;
+>;
+
+float4 GlowShared(float dist) {
+	
+	// Calculate correct gradient value and also take into account glow alpha to not delete information.
+	float v = clamp((GradientFromValue(dist, 0, pGlowWidth) - pGlowSharpness) * pGlowSharpnessInverse, 0.0, 1.0);
+	return float4(pGlowColor.r, pGlowColor.g, pGlowColor.b, pGlowColor.a * (1.0 - v));
+}
+
+float4 PSGlowOuter(VertDataOut v_in) : TARGET
+{
+	float dist = pSDFTexture.Sample(sdfSampler, v_in.uv).r * MAX_DISTANCE;
+	bool mask  = (pImageTexture.Sample(imageSampler, v_in.uv).a <= pSDFThreshold);
+
+	if (!mask) {
+		return float4(0.0, 0.0, 0.0, 0.0);
+	}
+
+	return GlowShared(dist);
+}
+
+technique GlowOuter
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSGlowOuter(v_in);
+	}
+}
+
+float4 PSGlowInner(VertDataOut v_in) : TARGET
+{
+	float dist = pSDFTexture.Sample(sdfSampler, v_in.uv).g * MAX_DISTANCE;
+	bool mask  = (pImageTexture.Sample(imageSampler, v_in.uv).a > pSDFThreshold);
+
+	if (!mask) {
+		return float4(0.0, 0.0, 0.0, 0.0);
+	}
+
+	return GlowShared(dist);
+}
+
+technique GlowInner
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSGlowInner(v_in);
+	}
+}
+// -------------------------------------------------------------------------------- //
+
+// -------------------------------------------------------------------------------- //
+// Outline
+uniform float4 pOutlineColor <
+	string name = "Outline Color";
+	string group = "Outline";
+>;
+uniform float pOutlineWidth <
+	string name = "Outline Width";
+	string group = "Outline";
+	float minimum = 0.01;
+	float maximum = 16.0;
+	float delta = 0.01;
+	float default = 1.0;
+>;
+uniform float pOutlineOffset <
+	string name = "Outline Offset";
+	string group = "Outline";
+	float minimum = -16.0;
+	float maximum = 16.0;
+	float delta = 0.01;
+	float default = 0.0;
+>;
+uniform float pOutlineSharpness <
+	string name = "Outline Sharpness";
+	string group = "Outline";
+	float minimum = 0.01;
+	float maximum = 100.0;
+	float delta = 0.01;
+	float default = 1.0;
+	string set_expr = "x / 100.0";
+>;
+uniform float pOutlineSharpnessInverse <
+	string name = "Outline Sharpness Inverse";
+	string group = "Outline";
+	string value_expr = "1.0 / (1.0 - pOutlineSharpness)";
+	bool visible = false;
+	bool enabled = false;
+>;
+
+float4 PSOutline(VertDataOut v_in) : TARGET
+{
+	// Sample Input and SDF
+	float4 tex_input = pImageTexture.Sample(imageSampler, v_in.uv);
+	float4 tex_sdf = pSDFTexture.Sample(sdfSampler, v_in.uv);
+
+	// Expand SDF range to full.
+	float2 sdf = tex_sdf.rg * float2(MAX_DISTANCE, MAX_DISTANCE);
+
+	// Calculate distance.
+	float dist = sdf.r - sdf.g;
+
+	// Calculate where we are in the outline.
+	// We can use any of the following gradient functions: https://www.desmos.com/calculator/bmbrncaiem
+	/// Base Curve
+	float n = clamp(abs(dist - pOutlineOffset) / pOutlineWidth, 0.0, 1.0);
+	/// Sharpness Curve
+	float y1 = clamp((n - pOutlineSharpness) * pOutlineSharpnessInverse, 0.0, 1.0);
+	float y2 = cos((y1 - 1) * PI) * 0.5 + 0.5;
+	float y3 = sin(y1 * (PI / 2));
+	float y4 = sin((y1 - 1) * (PI / 2)) + 1.0;
+
+	// Blend by Color.a so that our outline doesn't delete information.
+	float l = 1.0 - ((1.0 - y1) * pOutlineColor.a);
+
+	return lerp(pOutlineColor, tex_input, l);
+}
+
+technique Outline
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSOutline(v_in);
+	}
+}
+// -------------------------------------------------------------------------------- //
+

@@ -47,8 +47,8 @@ namespace filter {
 
 			std::list<sdf_effects_instance*> sources;
 
-			std::shared_ptr<gs::effect> sdf_generator_effect;
-			std::shared_ptr<gs::effect> sdf_shadow_effect;
+			std::shared_ptr<gs::effect> sdf_producer_effect;
+			std::shared_ptr<gs::effect> sdf_consumer_effect;
 
 			public: // Singleton
 			static void                                 initialize();
@@ -80,8 +80,8 @@ namespace filter {
 			static void video_render(void* source, gs_effect_t* effect);
 
 			public:
-			std::shared_ptr<gs::effect> get_sdf_generator_effect();
-			std::shared_ptr<gs::effect> get_sdf_shadow_effect();
+			std::shared_ptr<gs::effect> get_sdf_producer_effect();
+			std::shared_ptr<gs::effect> get_sdf_consumer_effect();
 		};
 
 		class sdf_effects_instance {
@@ -96,24 +96,59 @@ namespace filter {
 			std::shared_ptr<gs::rendertarget> m_sdf_write, m_sdf_read;
 			std::shared_ptr<gs::texture>      m_sdf_texture;
 			double_t                          m_sdf_scale;
+			float_t                           m_sdf_threshold;
 
-			bool     m_inner_shadow;
-			float_t  m_inner_range_min;
-			float_t  m_inner_range_max;
-			float_t  m_inner_offset_x;
-			float_t  m_inner_offset_y;
-			uint32_t m_inner_color;
-			bool     m_outer_shadow;
-			float_t  m_outer_range_min;
-			float_t  m_outer_range_max;
-			float_t  m_outer_offset_x;
-			float_t  m_outer_offset_y;
-			uint32_t m_outer_color;
+			// Effects
+			bool                              m_output_rendered;
+			std::shared_ptr<gs::texture>      m_output_texture;
+			std::shared_ptr<gs::rendertarget> m_output_rt;
+			/// Inner Shadow
+			bool    m_inner_shadow;
+			vec4    m_inner_shadow_color;
+			float_t m_inner_shadow_range_min;
+			float_t m_inner_shadow_range_max;
+			float_t m_inner_shadow_offset_x;
+			float_t m_inner_shadow_offset_y;
+			/// Outer Shadow
+			bool    m_outer_shadow;
+			vec4    m_outer_shadow_color;
+			float_t m_outer_shadow_range_min;
+			float_t m_outer_shadow_range_max;
+			float_t m_outer_shadow_offset_x;
+			float_t m_outer_shadow_offset_y;
+			/// Inner Glow
+			bool    m_inner_glow;
+			vec4    m_inner_glow_color;
+			float_t m_inner_glow_width;
+			float_t m_inner_glow_sharpness;
+			float_t m_inner_glow_sharpness_inv;
+			/// Outer Glow
+			bool    m_outer_glow;
+			vec4    m_outer_glow_color;
+			float_t m_outer_glow_width;
+			float_t m_outer_glow_sharpness;
+			float_t m_outer_glow_sharpness_inv;
+			/// Outline
+			bool    m_outline;
+			vec4    m_outline_color;
+			float_t m_outline_width;
+			float_t m_outline_offset;
+			float_t m_outline_sharpness;
+			float_t m_outline_sharpness_inv;
 
-			static bool cb_modified_inside(void* ptr, obs_properties_t* props, obs_property* prop,
-										   obs_data_t* settings);
+			static bool cb_modified_shadow_inside(void* ptr, obs_properties_t* props, obs_property* prop,
+												  obs_data_t* settings);
 
-			static bool cb_modified_outside(void* ptr, obs_properties_t* props, obs_property* prop,
+			static bool cb_modified_shadow_outside(void* ptr, obs_properties_t* props, obs_property* prop,
+												   obs_data_t* settings);
+
+			static bool cb_modified_glow_inside(void* ptr, obs_properties_t* props, obs_property* prop,
+												obs_data_t* settings);
+
+			static bool cb_modified_glow_outside(void* ptr, obs_properties_t* props, obs_property* prop,
+												 obs_data_t* settings);
+
+			static bool cb_modified_outline(void* ptr, obs_properties_t* props, obs_property* prop,
 											obs_data_t* settings);
 
 			static bool cb_modified_advanced(void* ptr, obs_properties_t* props, obs_property* prop,

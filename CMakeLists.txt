@@ -230,8 +230,6 @@ SET(PROJECT_DATA_EFFECTS
 	"${PROJECT_SOURCE_DIR}/data/effects/displace.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mask.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mipgen.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/sdf-generator.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/sdf-shadow.effect"
 
 	# Blur
 	"${PROJECT_SOURCE_DIR}/data/effects/blur/box.effect"
@@ -239,6 +237,10 @@ SET(PROJECT_DATA_EFFECTS
 	"${PROJECT_SOURCE_DIR}/data/effects/blur/dual-filtering.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/blur/gaussian.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/blur/gaussian-linear.effect"
+
+	# Signed Distance Field
+	"${PROJECT_SOURCE_DIR}/data/effects/sdf/sdf-producer.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/sdf/sdf-consumer.effect"
 )
 SET(PROJECT_DATA_SHADERS
 #	"${PROJECT_SOURCE_DIR}/data/shaders/name.effect"
