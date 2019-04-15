@@ -446,18 +446,62 @@ bool filter::blur::blur_instance::modified_properties(void*, obs_properties_t* p
 			for (size_t idx = 0, edx = obs_property_list_item_count(prop_subtype); idx < edx; idx++) {
 				if (!obs_property_list_item_disabled(prop_subtype, idx)) {
 					obs_data_set_string(settings, P_SUBTYPE, obs_property_list_item_string(prop_subtype, idx));
+
+					// Find new Subtype
+					auto subtype_found2 = list_of_subtypes.find(vsubtype);
+					if (subtype_found2 == list_of_subtypes.end()) {
+						subtype_found = list_of_subtypes.end();
+					} else {
+						subtype_found = subtype_found2;
+					}
+
 					break;
 				}
 			}
 		}
 	}
 
+	// Update hover text with new descriptions.
+	if (type_found != list_of_types.end()) {
+		if (type_found->first == "box") {
+			obs_property_set_long_description(obs_properties_get(props, P_TYPE), P_TRANSLATE(P_DESC(S_BLUR_TYPE_BOX)));
+		} else if (type_found->first == "box_linear") {
+			obs_property_set_long_description(obs_properties_get(props, P_TYPE),
+											  P_TRANSLATE(P_DESC(S_BLUR_TYPE_BOX_LINEAR)));
+		} else if (type_found->first == "gaussian") {
+			obs_property_set_long_description(obs_properties_get(props, P_TYPE),
+											  P_TRANSLATE(P_DESC(S_BLUR_TYPE_GAUSSIAN)));
+		} else if (type_found->first == "gaussian_linear") {
+			obs_property_set_long_description(obs_properties_get(props, P_TYPE),
+											  P_TRANSLATE(P_DESC(S_BLUR_TYPE_GAUSSIAN_LINEAR)));
+		}
+	} else {
+		obs_property_set_long_description(obs_properties_get(props, P_TYPE), P_TRANSLATE(P_DESC(P_TYPE)));
+	}
+	if (subtype_found != list_of_subtypes.end()) {
+		if (subtype_found->first == "area") {
+			obs_property_set_long_description(obs_properties_get(props, P_SUBTYPE),
+											  P_TRANSLATE(P_DESC(S_BLUR_SUBTYPE_AREA)));
+		} else if (subtype_found->first == "directional") {
+			obs_property_set_long_description(obs_properties_get(props, P_SUBTYPE),
+											  P_TRANSLATE(P_DESC(S_BLUR_SUBTYPE_DIRECTIONAL)));
+		} else if (subtype_found->first == "rotational") {
+			obs_property_set_long_description(obs_properties_get(props, P_SUBTYPE),
+											  P_TRANSLATE(P_DESC(S_BLUR_SUBTYPE_ROTATIONAL)));
+		} else if (subtype_found->first == "zoom") {
+			obs_property_set_long_description(obs_properties_get(props, P_SUBTYPE),
+											  P_TRANSLATE(P_DESC(S_BLUR_SUBTYPE_ZOOM)));
+		}
+	} else {
+		obs_property_set_long_description(obs_properties_get(props, P_SUBTYPE), P_TRANSLATE(P_DESC(P_SUBTYPE)));
+	}
+
 	// Blur Sub-Type
 	{
 		bool has_angle_support = (subtype_found->second.type == ::gfx::blur::type::Directional)
 								 || (subtype_found->second.type == ::gfx::blur::type::Rotational);
-		bool has_center_support =
-			(subtype_found->second.type == ::gfx::blur::type::Rotational) || (subtype_found->second.type == ::gfx::blur::type::Zoom);
+		bool has_center_support = (subtype_found->second.type == ::gfx::blur::type::Rotational)
+								  || (subtype_found->second.type == ::gfx::blur::type::Zoom);
 		bool has_stepscale_support = type_found->second.fn().is_step_scale_supported(subtype_found->second.type);
 		bool show_scaling          = obs_data_get_bool(settings, P_STEPSCALE) && has_stepscale_support;
 
