@@ -185,9 +185,6 @@ endif()
 if(${PropertyPrefix}OBS_DOWNLOAD)
 	include("cmake/DownloadProject.cmake")
 endif()
-if(NOT ${PropertyPrefix}OBS_NATIVE)
-	include("cmake/cppcheck.cmake")
-endif()
 
 # Load OBS Studio
 if(${PropertyPrefix}OBS_NATIVE)
@@ -489,24 +486,6 @@ else()
 		VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${PROJECT_VERSION_TWEAK}
 		SOVERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${PROJECT_VERSION_TWEAK}
 	)
-endif()
-
-# CPPCheck
-if(NOT ${PropertyPrefix}OBS_NATIVE)
-	set(excludes )
-	list(APPEND excludes "${OBS_DEPENDENCIES_DIR}")
-	if(${PropertyPrefix}OBS_REFERENCE)
-		list(APPEND excludes "${OBS_STUDIO_DIR}/libobs")
-	elseif(${PropertyPrefix}OBS_PACKAGE)
-		list(APPEND excludes "${OBS_STUDIO_DIR}/libobs")
-	elseif(${PropertyPrefix}OBS_DOWNLOAD)
-		list(APPEND excludes "${libobs_SOURCE_DIR}")
-	endif()
-
-	cppcheck(
-		EXCLUDE ${excludes}
-	)
-	cppcheck_add_project(${PROJECT_NAME})
 endif()
 
 ################################################################################
