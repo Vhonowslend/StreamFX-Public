@@ -32,6 +32,8 @@ namespace gfx {
 
 		class ibase {
 			public:
+			virtual ~ibase(){}
+
 			virtual void set_input(std::shared_ptr<::gs::texture> texture) = 0;
 
 			virtual ::gfx::blur::type get_type() = 0;
@@ -59,6 +61,8 @@ namespace gfx {
 
 		class ibase_angle {
 			public:
+			virtual ~ibase_angle(){}
+
 			virtual double_t get_angle() = 0;
 
 			virtual void set_angle(double_t angle) = 0;
@@ -66,6 +70,8 @@ namespace gfx {
 
 		class ibase_center {
 			public:
+			virtual ~ibase_center(){}
+
 			virtual void set_center(double_t x, double_t y) = 0;
 
 			virtual void set_center_x(double_t v);
@@ -81,6 +87,8 @@ namespace gfx {
 
 		class ifactory {
 			public:
+			virtual ~ifactory(){}
+
 			virtual bool is_type_supported(::gfx::blur::type type) = 0;
 
 			virtual std::shared_ptr<::gfx::blur::ibase> create(::gfx::blur::type type) = 0;

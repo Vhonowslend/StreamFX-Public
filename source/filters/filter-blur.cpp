@@ -85,14 +85,14 @@ struct local_blur_subtype_t {
 	const char*       name;
 };
 
-std::map<std::string, local_blur_type_t> list_of_types = {
+static std::map<std::string, local_blur_type_t> list_of_types = {
 	{"box", {&::gfx::blur::box_factory::get, S_BLUR_TYPE_BOX}},
 	{"box_linear", {&::gfx::blur::box_linear_factory::get, S_BLUR_TYPE_BOX_LINEAR}},
 	{"gaussian", {&::gfx::blur::gaussian_factory::get, S_BLUR_TYPE_GAUSSIAN}},
 	{"gaussian_linear", {&::gfx::blur::gaussian_linear_factory::get, S_BLUR_TYPE_GAUSSIAN_LINEAR}},
 	{"dual_filtering", {&::gfx::blur::dual_filtering_factory::get, S_BLUR_TYPE_DUALFILTERING}},
 };
-std::map<std::string, local_blur_subtype_t> list_of_subtypes = {
+static std::map<std::string, local_blur_subtype_t> list_of_subtypes = {
 	{"area", {::gfx::blur::type::Area, S_BLUR_SUBTYPE_AREA}},
 	{"directional", {::gfx::blur::type::Directional, S_BLUR_SUBTYPE_DIRECTIONAL}},
 	{"rotational", {::gfx::blur::type::Rotational, S_BLUR_SUBTYPE_ROTATIONAL}},
@@ -698,13 +698,13 @@ obs_properties_t* filter::blur::blur_instance::get_properties()
 		obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_MASK_SOURCE)));
 		obs_property_list_add_string(p, "", "");
 		obs::source_tracker::get()->enumerate(
-			[this, &p](std::string name, obs_source_t*) {
+			[&p](std::string name, obs_source_t*) {
 				obs_property_list_add_string(p, std::string(name + " (Source)").c_str(), name.c_str());
 				return false;
 			},
 			obs::source_tracker::filter_video_sources);
 		obs::source_tracker::get()->enumerate(
-			[this, &p](std::string name, obs_source_t*) {
+			[&p](std::string name, obs_source_t*) {
 				obs_property_list_add_string(p, std::string(name + " (Scene)").c_str(), name.c_str());
 				return false;
 			},
@@ -947,7 +947,7 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 			std::string technique = "";
 			switch (this->m_mask.type) {
 			case Region:
-				if (this->m_mask.region.feather > 0.001) {
+				if (this->m_mask.region.feather > FLT_EPSILON) {
 					if (this->m_mask.region.invert) {
 						technique = "RegionFeatherInverted";
 					} else {

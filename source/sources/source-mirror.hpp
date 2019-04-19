@@ -83,8 +83,8 @@ namespace source {
 		};
 
 		class mirror_instance {
-			bool          m_active;
 			obs_source_t* m_self;
+			bool          m_active;
 			float_t       m_tick;
 
 			// Video Rendering

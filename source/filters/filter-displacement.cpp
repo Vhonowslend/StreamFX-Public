@@ -171,10 +171,10 @@ void filter::displacement::displacement_instance::validate_file_texture(std::str
 	if (os_stat(m_file_name.c_str(), &stats) != 0) {
 		do_update            = do_update || (stats.st_ctime != m_file_create_time);
 		do_update            = do_update || (stats.st_mtime != m_file_modified_time);
-		do_update            = do_update || (stats.st_size != m_file_size);
+		do_update            = do_update || (static_cast<size_t>(stats.st_size) != m_file_size);
 		m_file_create_time   = stats.st_ctime;
 		m_file_modified_time = stats.st_mtime;
-		m_file_size          = stats.st_size;
+		m_file_size          = static_cast<size_t>(stats.st_size);
 	}
 
 	do_update = !m_file_texture || do_update;
@@ -185,8 +185,8 @@ void filter::displacement::displacement_instance::validate_file_texture(std::str
 }
 
 filter::displacement::displacement_instance::displacement_instance(obs_data_t* data, obs_source_t* context)
-	: m_self(context), m_active(true), m_timer(0), m_effect(nullptr), m_distance(0), m_file_create_time(0),
-	  m_file_modified_time(0), m_file_size(0)
+	: m_self(context), m_timer(0), m_effect(nullptr), m_distance(0), m_file_create_time(0), m_file_modified_time(0),
+	  m_file_size(0)
 {
 	char* effectFile = obs_module_file("effects/displace.effect");
 	try {
@@ -235,13 +235,13 @@ void filter::displacement::displacement_instance::hide() {}
 void filter::displacement::displacement_instance::video_tick(float time)
 {
 	m_timer += time;
-	if (m_timer >= 1.0) {
-		m_timer -= 1.0;
+	if (m_timer >= 1.0f) {
+		m_timer -= 1.0f;
 		validate_file_texture(m_file_name);
 	}
 }
 
-float interp(float a, float b, float v)
+static float interp(float a, float b, float v)
 {
 	return (a * (1.0f - v)) + (b * v);
 }

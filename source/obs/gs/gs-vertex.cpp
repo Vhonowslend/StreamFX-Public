@@ -53,7 +53,7 @@ gs::vertex::~vertex()
 }
 
 gs::vertex::vertex(vec3* p, vec3* n, vec3* t, uint32_t* col, vec4* uvs[MAXIMUM_UVW_LAYERS])
-	: hasStore(false), position(p), normal(n), tangent(t), color(col)
+	: position(p), normal(n), tangent(t), color(col), hasStore(false)
 {
 	if (uvs != nullptr) {
 		for (size_t idx = 0; idx < MAXIMUM_UVW_LAYERS; idx++) {

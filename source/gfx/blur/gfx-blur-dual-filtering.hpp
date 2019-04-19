@@ -32,7 +32,7 @@ namespace gfx {
 
 			public:
 			dual_filtering_data();
-			~dual_filtering_data();
+			virtual ~dual_filtering_data();
 
 			std::shared_ptr<::gs::effect> get_effect();
 		};
@@ -43,7 +43,7 @@ namespace gfx {
 
 			public:
 			dual_filtering_factory();
-			virtual ~dual_filtering_factory();
+			virtual ~dual_filtering_factory() override;
 
 			virtual bool is_type_supported(::gfx::blur::type type) override;
 
@@ -93,7 +93,7 @@ namespace gfx {
 
 			public:
 			dual_filtering();
-			virtual ~dual_filtering();
+			virtual ~dual_filtering() override;
 
 			virtual void set_input(std::shared_ptr<::gs::texture> texture) override;
 

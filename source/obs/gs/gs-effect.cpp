@@ -67,7 +67,7 @@ gs::effect::effect(std::string file)
 		throw std::runtime_error("Shader too large (>256mb)");
 	}
 
-	std::vector<char> shader_buf(length + 1);
+	std::vector<char> shader_buf(size_t(length + 1), 0);
 	filestream.read(shader_buf.data(), length);
 
 	char* errorMessage = nullptr;
@@ -235,7 +235,7 @@ void gs::effect_parameter::set_float2(float_t x, float_t y)
 {
 	if (get_type() != type::Float2)
 		throw std::bad_cast();
-	vec2 v = {x, y};
+	vec2 v = {{x, y}};
 	gs_effect_set_vec2(m_param, &v);
 }
 
@@ -250,7 +250,7 @@ void gs::effect_parameter::set_float3(float_t x, float_t y, float_t z)
 {
 	if (get_type() != type::Float3)
 		throw std::bad_cast();
-	vec3 v = {x, y, z};
+	vec3 v = {{x, y, z, 0}};
 	gs_effect_set_vec3(m_param, &v);
 }
 
@@ -265,7 +265,7 @@ void gs::effect_parameter::set_float4(float_t x, float_t y, float_t z, float_t w
 {
 	if (get_type() != type::Float4)
 		throw std::bad_cast();
-	vec4 v = {x, y, z, w};
+	vec4 v = {{x, y, z, w}};
 	gs_effect_set_vec4(m_param, &v);
 }
 

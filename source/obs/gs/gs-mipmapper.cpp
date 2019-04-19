@@ -35,7 +35,7 @@
 
 #if defined(WIN32) || defined(WIN64)
 extern "C" {
-#include <windows.h>
+#include <Windows.h>
 }
 #endif
 
@@ -253,7 +253,7 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 				gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
 
 				effect->get_parameter("image").set_texture(target);
-				effect->get_parameter("level").set_int(uint32_t(mip - 1));
+				effect->get_parameter("level").set_int(int32_t(mip - 1));
 				effect->get_parameter("imageTexel").set_float2(texel_width, texel_height);
 				effect->get_parameter("strength").set_float(strength);
 

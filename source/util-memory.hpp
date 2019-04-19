@@ -38,9 +38,9 @@ namespace util {
 	template<typename T, size_t N = 16>
 	class AlignmentAllocator {
 		public:
-		typedef T              value_type;
-		typedef size_t         size_type;
-		typedef std::ptrdiff_t difference_type;
+		typedef T         value_type;
+		typedef size_t    size_type;
+		typedef ptrdiff_t difference_type;
 
 		typedef T*       pointer;
 		typedef const T* const_pointer;
@@ -49,13 +49,13 @@ namespace util {
 		typedef const T& const_reference;
 
 		public:
-		inline AlignmentAllocator() throw() {}
+		inline AlignmentAllocator() {}
 
 		template<typename T2>
-		inline AlignmentAllocator(const AlignmentAllocator<T2, N>&) throw()
+		inline AlignmentAllocator(const AlignmentAllocator<T2, N>&)
 		{}
 
-		inline ~AlignmentAllocator() throw() {}
+		inline ~AlignmentAllocator() {}
 
 		inline pointer adress(reference r)
 		{
@@ -88,7 +88,7 @@ namespace util {
 			p;
 		}
 
-		inline size_type max_size() const throw()
+		inline size_type max_size() const
 		{
 			return size_type(-1) / sizeof(value_type);
 		}

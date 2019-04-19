@@ -16,9 +16,9 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "gfx-blur-dual-filtering.hpp"
+#include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
 #include "util-math.hpp"
-#include "obs/gs/gs-helper.hpp"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -180,7 +180,7 @@ std::shared_ptr<::gfx::blur::dual_filtering_data> gfx::blur::dual_filtering_fact
 }
 
 gfx::blur::dual_filtering::dual_filtering()
-	: m_size(0), m_size_iterations(0), m_data(::gfx::blur::dual_filtering_factory::get().data())
+	: m_data(::gfx::blur::dual_filtering_factory::get().data()), m_size(0), m_size_iterations(0)
 {
 	auto gctx = gs::context();
 	m_rendertargets.resize(MAX_LEVELS + 1);

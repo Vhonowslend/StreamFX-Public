@@ -22,7 +22,8 @@ void gfx::blur::ibase::set_step_scale_x(double_t v)
 	this->set_step_scale(v, this->get_step_scale_y());
 }
 
-void gfx::blur::ibase::set_step_scale_y(double_t v) {
+void gfx::blur::ibase::set_step_scale_y(double_t v)
+{
 	this->set_step_scale(this->get_step_scale_x(), v);
 }
 

@@ -31,7 +31,7 @@ namespace gfx {
 
 			public:
 			gaussian_data();
-			~gaussian_data();
+			virtual ~gaussian_data();
 
 			std::shared_ptr<::gs::effect> get_effect();
 
@@ -44,7 +44,7 @@ namespace gfx {
 
 			public:
 			gaussian_factory();
-			virtual ~gaussian_factory();
+			virtual ~gaussian_factory() override;
 
 			virtual bool is_type_supported(::gfx::blur::type type) override;
 
@@ -96,7 +96,7 @@ namespace gfx {
 
 			public:
 			gaussian();
-			virtual ~gaussian();
+			virtual ~gaussian() override;
 
 			virtual void set_input(std::shared_ptr<::gs::texture> texture) override;
 
@@ -124,7 +124,7 @@ namespace gfx {
 
 			public:
 			gaussian_directional();
-			virtual ~gaussian_directional();
+			virtual ~gaussian_directional() override;
 
 			virtual ::gfx::blur::type get_type() override;
 

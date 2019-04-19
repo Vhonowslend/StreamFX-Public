@@ -37,7 +37,7 @@
 #define PLUGIN_NAME "Stream Effects"
 #include "version.hpp"
 
-#define P_LOG(level, ...) blog(level, "[" PLUGIN_NAME "] " __VA_ARGS__);
+#define P_LOG(level, ...) blog(level, "[" PLUGIN_NAME "] " __VA_ARGS__)
 #define P_LOG_ERROR(...) P_LOG(LOG_ERROR, __VA_ARGS__)
 #define P_LOG_WARNING(...) P_LOG(LOG_WARNING, __VA_ARGS__)
 #define P_LOG_INFO(...) P_LOG(LOG_INFO, __VA_ARGS__)

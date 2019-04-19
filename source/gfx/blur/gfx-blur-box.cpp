@@ -194,7 +194,7 @@ std::shared_ptr<::gfx::blur::box_data> gfx::blur::box_factory::data()
 	return instance;
 }
 
-gfx::blur::box::box() : m_size(1.), m_step_scale({1., 1.}), m_data(::gfx::blur::box_factory::get().data())
+gfx::blur::box::box() : m_data(::gfx::blur::box_factory::get().data()), m_size(1.), m_step_scale({1., 1.})
 {
 	auto gctx       = gs::context();
 	m_rendertarget  = std::make_shared<::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
@@ -274,28 +274,28 @@ std::shared_ptr<::gs::texture> gfx::blur::box::render()
 	if (effect) {
 		// Pass 1
 		effect->get_parameter("pImage").set_texture(m_input_texture);
-		effect->get_parameter("pImageTexel").set_float2(float_t(1. / width), 0.);
+		effect->get_parameter("pImageTexel").set_float2(float_t(1.f / width), 0.f);
 		effect->get_parameter("pStepScale").set_float2(float_t(m_step_scale.first), float_t(m_step_scale.second));
 		effect->get_parameter("pSize").set_float(float_t(m_size));
-		effect->get_parameter("pSizeInverseMul").set_float(float_t(1.0 / (float_t(m_size) * 2.0 + 1.0)));
+		effect->get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(m_size) * 2.0f + 1.0f)));
 
 		{
 			auto op = m_rendertarget2->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect->get_object(), "Draw")) {
-				gs_draw_sprite(0, 0, 1, 1);
+				gs_draw_sprite(nullptr, 0, 1, 1);
 			}
 		}
 
 		// Pass 2
 		effect->get_parameter("pImage").set_texture(m_rendertarget2->get_texture());
-		effect->get_parameter("pImageTexel").set_float2(0., float_t(1. / height));
+		effect->get_parameter("pImageTexel").set_float2(0.f, float_t(1.f / height));
 
 		{
 			auto op = m_rendertarget->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect->get_object(), "Draw")) {
-				gs_draw_sprite(0, 0, 1, 1);
+				gs_draw_sprite(nullptr, 0, 1, 1);
 			}
 		}
 	}
@@ -351,16 +351,16 @@ std::shared_ptr<::gs::texture> gfx::blur::box_directional::render()
 	if (effect) {
 		effect->get_parameter("pImage").set_texture(m_input_texture);
 		effect->get_parameter("pImageTexel")
-			.set_float2(float_t(1. / width * cos(m_angle)), float_t(1. / height * sin(m_angle)));
+			.set_float2(float_t(1. / width * cos(m_angle)), float_t(1.f / height * sin(m_angle)));
 		effect->get_parameter("pStepScale").set_float2(float_t(m_step_scale.first), float_t(m_step_scale.second));
 		effect->get_parameter("pSize").set_float(float_t(m_size));
-		effect->get_parameter("pSizeInverseMul").set_float(float_t(1.0 / (float_t(m_size) * 2.0 + 1.0)));
+		effect->get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(m_size) * 2.0f + 1.0f)));
 
 		{
 			auto op = m_rendertarget->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect->get_object(), "Draw")) {
-				gs_draw_sprite(0, 0, 1, 1);
+				gs_draw_sprite(nullptr, 0, 1, 1);
 			}
 		}
 	}
@@ -420,10 +420,10 @@ std::shared_ptr<::gs::texture> gfx::blur::box_rotational::render()
 	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
 	if (effect) {
 		effect->get_parameter("pImage").set_texture(m_input_texture);
-		effect->get_parameter("pImageTexel").set_float2(float_t(1. / width), float_t(1. / height));
+		effect->get_parameter("pImageTexel").set_float2(float_t(1.f / width), float_t(1.f / height));
 		effect->get_parameter("pStepScale").set_float2(float_t(m_step_scale.first), float_t(m_step_scale.second));
 		effect->get_parameter("pSize").set_float(float_t(m_size));
-		effect->get_parameter("pSizeInverseMul").set_float(float_t(1.0 / (float_t(m_size) * 2.0 + 1.0)));
+		effect->get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(m_size) * 2.0f + 1.0f)));
 		effect->get_parameter("pAngle").set_float(float_t(m_angle / m_size));
 		effect->get_parameter("pCenter").set_float2(float_t(m_center.first), float_t(m_center.second));
 
@@ -431,7 +431,7 @@ std::shared_ptr<::gs::texture> gfx::blur::box_rotational::render()
 			auto op = m_rendertarget->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect->get_object(), "Rotate")) {
-				gs_draw_sprite(0, 0, 1, 1);
+				gs_draw_sprite(nullptr, 0, 1, 1);
 			}
 		}
 	}
@@ -481,17 +481,17 @@ std::shared_ptr<::gs::texture> gfx::blur::box_zoom::render()
 	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
 	if (effect) {
 		effect->get_parameter("pImage").set_texture(m_input_texture);
-		effect->get_parameter("pImageTexel").set_float2(float_t(1. / width), float_t(1. / height));
+		effect->get_parameter("pImageTexel").set_float2(float_t(1.f / width), float_t(1.f / height));
 		effect->get_parameter("pStepScale").set_float2(float_t(m_step_scale.first), float_t(m_step_scale.second));
 		effect->get_parameter("pSize").set_float(float_t(m_size));
-		effect->get_parameter("pSizeInverseMul").set_float(float_t(1.0 / (float_t(m_size) * 2.0 + 1.0)));
+		effect->get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(m_size) * 2.0f + 1.0f)));
 		effect->get_parameter("pCenter").set_float2(float_t(m_center.first), float_t(m_center.second));
 
 		{
 			auto op = m_rendertarget->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect->get_object(), "Zoom")) {
-				gs_draw_sprite(0, 0, 1, 1);
+				gs_draw_sprite(nullptr, 0, 1, 1);
 			}
 		}
 	}

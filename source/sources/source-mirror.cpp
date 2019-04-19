@@ -150,25 +150,25 @@ bool source::mirror::mirror_factory::modified_properties(obs_properties_t* pr, o
 
 	if (obs_properties_get(pr, P_SCALING_BOUNDS) == p) {
 		obs_bounds_type scaling_type = static_cast<obs_bounds_type>(obs_data_get_int(data, P_SCALING_BOUNDS));
-		obs_property_t* p            = obs_properties_get(pr, P_SCALING_BOUNDS);
+		obs_property_t* p2            = obs_properties_get(pr, P_SCALING_BOUNDS);
 		switch (scaling_type) {
 		case obs_bounds_type::OBS_BOUNDS_STRETCH:
-			obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS_STRETCH)));
+			obs_property_set_long_description(p2, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS_STRETCH)));
 			break;
 		case obs_bounds_type::OBS_BOUNDS_SCALE_INNER:
-			obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS_FIT)));
+			obs_property_set_long_description(p2, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS_FIT)));
 			break;
 		case obs_bounds_type::OBS_BOUNDS_SCALE_OUTER:
-			obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS_FILL)));
+			obs_property_set_long_description(p2, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS_FILL)));
 			break;
 		case obs_bounds_type::OBS_BOUNDS_SCALE_TO_WIDTH:
-			obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS_FILLWIDTH)));
+			obs_property_set_long_description(p2, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS_FILLWIDTH)));
 			break;
 		case obs_bounds_type::OBS_BOUNDS_SCALE_TO_HEIGHT:
-			obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS_FILLHEIGHT)));
+			obs_property_set_long_description(p2, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS_FILLHEIGHT)));
 			break;
 		default:
-			obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS)));
+			obs_property_set_long_description(p2, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS)));
 			break;
 		}
 		return true;
@@ -379,10 +379,10 @@ void source::mirror::mirror_instance::acquire_input(std::string source_name)
 }
 
 source::mirror::mirror_instance::mirror_instance(obs_data_t*, obs_source_t* src)
-	: m_self(src), m_active(true), m_tick(0), m_scene_rendered(false), m_rescale_enabled(false),
-	  m_rescale_keep_orig_size(false), m_rescale_width(1), m_rescale_height(1),
-	  m_rescale_type(obs_scale_type::OBS_SCALE_BICUBIC), m_rescale_bounds(obs_bounds_type::OBS_BOUNDS_STRETCH),
-	  m_audio_enabled(false), m_audio_kill_thread(false), m_audio_have_output(false), m_source_item(nullptr)
+	: m_self(src), m_active(true), m_tick(0), m_scene_rendered(false), m_rescale_enabled(false), m_rescale_width(1),
+	  m_rescale_height(1), m_rescale_keep_orig_size(false), m_rescale_type(obs_scale_type::OBS_SCALE_BICUBIC),
+	  m_rescale_bounds(obs_bounds_type::OBS_BOUNDS_STRETCH), m_audio_enabled(false), m_audio_kill_thread(false),
+	  m_audio_have_output(false), m_source_item(nullptr)
 {
 	// Initialize Video Rendering
 	this->m_scene =
@@ -503,16 +503,6 @@ void source::mirror::mirror_instance::activate()
 void source::mirror::mirror_instance::deactivate()
 {
 	this->m_active = false;
-}
-
-static inline void mix_audio(float* p_out, float* p_in, size_t pos, size_t count)
-{
-	float* out = p_out;
-	float* in  = p_in + pos;
-	float* end = in + count;
-
-	while (in < end)
-		*(out++) += *(in++);
 }
 
 void source::mirror::mirror_instance::video_tick(float time)
@@ -693,7 +683,7 @@ void source::mirror::mirror_instance::on_audio_data(obs::source*, const audio_da
 	{ // Copy data
 		std::bitset<8> layout;
 		for (size_t plane = 0; plane < MAX_AV_PLANES; plane++) {
-			float* samples = (float*)audio->data[plane];
+			float* samples = reinterpret_cast<float_t*>(audio->data[plane]);
 			if (!samples) {
 				mad->audio.data[plane] = nullptr;
 				continue;

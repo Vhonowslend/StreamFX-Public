@@ -61,24 +61,24 @@ gfx::source_texture::source_texture(const char* _name, obs_source_t* _parent) : 
 gfx::source_texture::source_texture(std::string _name, obs_source_t* _parent) : source_texture(_name.c_str(), _parent)
 {}
 
-gfx::source_texture::source_texture(std::shared_ptr<obs::source> child, std::shared_ptr<obs::source> parent)
+gfx::source_texture::source_texture(std::shared_ptr<obs::source> pchild, std::shared_ptr<obs::source> pparent)
 {
-	if (!child) {
+	if (!pchild) {
 		throw std::invalid_argument("child must not be null");
 	}
-	if (!parent) {
+	if (!pparent) {
 		throw std::invalid_argument("parent must not be null");
 	}
-	if (!obs_source_add_active_child(parent->get(), child->get())) {
+	if (!obs_source_add_active_child(pparent->get(), pchild->get())) {
 		throw std::runtime_error("parent is contained in child");
 	}
-	this->child         = child;
-	this->parent        = parent;
+	this->child         = pchild;
+	this->parent        = pparent;
 	this->render_target = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
-gfx::source_texture::source_texture(std::shared_ptr<obs::source> child, obs_source_t* _parent)
-	: source_texture(child, std::make_shared<obs::source>(_parent, false, false))
+gfx::source_texture::source_texture(std::shared_ptr<obs::source> _child, obs_source_t* _parent)
+	: source_texture(_child, std::make_shared<obs::source>(_parent, false, false))
 {}
 
 obs_source_t* gfx::source_texture::get_object()

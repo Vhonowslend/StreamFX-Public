@@ -19,8 +19,8 @@
 
 #include "gs-vertexbuffer.hpp"
 #include <stdexcept>
-#include "util-memory.hpp"
 #include "obs/gs/gs-helper.hpp"
+#include "util-memory.hpp"
 
 // OBS
 #ifdef _MSC_VER
@@ -133,7 +133,7 @@ gs::vertex_buffer::vertex_buffer(uint32_t vertices, uint8_t uvlayers)
 gs::vertex_buffer::vertex_buffer(gs_vertbuffer_t* vb)
 {
 	auto        gctx = gs::context();
-	gs_vb_data* vbd = gs_vertexbuffer_get_data(vb);
+	gs_vb_data* vbd  = gs_vertexbuffer_get_data(vb);
 	if (!vbd)
 		throw std::runtime_error("vertex buffer with no data");
 

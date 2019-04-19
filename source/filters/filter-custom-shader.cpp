@@ -376,7 +376,7 @@ bool filter::CustomShader::Instance::apply_special_parameters(uint32_t, uint32_t
 			.set_float2(float_t(imageTexture->get_width()), float_t(imageTexture->get_height()));
 	}
 	if (m_shader.effect->has_parameter("Image_SizeI" /*, gs::effect_parameter::type::Integer2*/)) {
-		m_shader.effect->get_parameter("Image_SizeI").set_int2(imageTexture->get_width(), imageTexture->get_height());
+		m_shader.effect->get_parameter("Image_SizeI").set_int2(static_cast<int32_t>(imageTexture->get_width()), static_cast<int32_t>(imageTexture->get_height()));
 	}
 	if (m_shader.effect->has_parameter("Image_Texel", gs::effect_parameter::type::Float2)) {
 		m_shader.effect->get_parameter("Image_Texel")

@@ -104,7 +104,7 @@ namespace util {
 		{
 			bool have_bit = false;
 			for (size_t index = 0; index < (sizeof(T) * 8); index++) {
-				bool cur = (v & (1ull << index)) != 0;
+				bool cur = (v & (static_cast<T>(1ull) << index)) != 0;
 				if (cur) {
 					if (have_bit)
 						return false;
@@ -144,6 +144,13 @@ namespace util {
 			return uint64_t(ceil(log10(T(v)) / log10(2.0)));
 		}
 
+		template<typename T, typename C>
+		inline bool is_equal(T target, C value)
+		{
+			return (target > (value - std::numeric_limits<T>::epsilon()))
+				   && (target < (value + std::numeric_limits<T>::epsilon()));
+		}
+
 		template<typename T>
 		inline T gaussian(T x, T o /*, T u = 0*/)
 		{
@@ -152,7 +159,7 @@ namespace util {
 			static const double_t two_pi        = pi * 2.;
 			static const double_t two_pi_sqroot = 2.506628274631000502415765284811; //sqrt(two_pi);
 
-			if (o == 0) {
+			if (is_equal<double_t>(0, o)) {
 				return T(std::numeric_limits<double_t>::infinity());
 			}
 

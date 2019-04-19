@@ -75,7 +75,6 @@ namespace filter {
 
 		class displacement_instance {
 			obs_source_t* m_self;
-			bool          m_active;
 			float_t       m_timer;
 
 			// Rendering

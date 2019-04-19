@@ -35,7 +35,7 @@
 
 bool gfx::effect_source::property_type_modified(void*, obs_properties_t* props, obs_property_t*, obs_data_t* sett)
 {
-	switch ((InputTypes)obs_data_get_int(sett, D_TYPE)) {
+	switch (static_cast<InputTypes>(obs_data_get_int(sett, D_TYPE))) {
 	default:
 	case InputTypes::Text:
 		obs_property_set_visible(obs_properties_get(props, D_INPUT_TEXT), true);
@@ -71,9 +71,9 @@ void gfx::effect_source::fill_source_list(obs_property_t* prop)
 {
 	obs_enum_sources(
 		[](void* ptr, obs_source_t* src) {
-			obs_property_t* prop  = (obs_property_t*)ptr;
+			obs_property_t* pro  = (obs_property_t*)ptr;
 			const char*     sname = obs_source_get_name(src);
-			obs_property_list_add_string(prop, sname, sname);
+			obs_property_list_add_string(pro, sname, sname);
 			return true;
 		},
 		prop);
@@ -159,7 +159,7 @@ void gfx::effect_source::get_properties(obs_properties_t* properties)
 			obs_properties_add_bool(properties, prm.second->ui.names[0], prm.second->ui.descs[0]);
 		} else if (prm.first.second >= gs::effect_parameter::type::Integer
 				   && prm.first.second <= gs::effect_parameter::type::Integer4) {
-			size_t cnt = (size_t)prm.first.second - (size_t)gs::effect_parameter::type::Integer;
+			size_t cnt = static_cast<size_t>(prm.first.second) - static_cast<size_t>(gs::effect_parameter::type::Integer);
 
 			for (size_t idx = 0; idx <= cnt; idx++) {
 				obs_properties_add_int(properties, prm.second->ui.names[idx], prm.second->ui.descs[idx], INT_MIN,
@@ -167,11 +167,11 @@ void gfx::effect_source::get_properties(obs_properties_t* properties)
 			}
 		} else if (prm.first.second >= gs::effect_parameter::type::Float
 				   && prm.first.second <= gs::effect_parameter::type::Float4) {
-			size_t cnt = (size_t)prm.first.second - (size_t)gs::effect_parameter::type::Float;
+			size_t cnt = static_cast<size_t>(prm.first.second) - static_cast<size_t>(gs::effect_parameter::type::Float);
 
 			for (size_t idx = 0; idx <= cnt; idx++) {
-				obs_properties_add_float(properties, prm.second->ui.names[idx], prm.second->ui.descs[idx], -FLT_MAX,
-										 FLT_MAX, 0.01);
+				obs_properties_add_float(properties, prm.second->ui.names[idx], prm.second->ui.descs[idx], -DBL_MAX,
+										 DBL_MAX, 0.01);
 			}
 		} else if (prm.first.second == gs::effect_parameter::type::Texture) {
 			// Switch between File and Source Input
@@ -201,7 +201,7 @@ void gfx::effect_source::get_properties(obs_properties_t* properties)
 
 void gfx::effect_source::get_defaults(obs_data_t* data)
 {
-	obs_data_set_default_int(data, D_TYPE, (long long)InputTypes::Text);
+	obs_data_set_default_int(data, D_TYPE, static_cast<long long>(InputTypes::Text));
 	obs_data_set_default_string(data, D_INPUT_TEXT, "");
 	obs_data_set_default_string(data, D_INPUT_FILE, "");
 }
@@ -211,7 +211,7 @@ void gfx::effect_source::update(obs_data_t* data)
 	obs_data_addref(data);
 
 	// Update Shader
-	InputTypes input_type = (InputTypes)obs_data_get_int(data, D_TYPE);
+	InputTypes input_type = static_cast<InputTypes>(obs_data_get_int(data, D_TYPE));
 	if (input_type == InputTypes::Text) {
 		const char* text = obs_data_get_string(data, D_INPUT_TEXT);
 		test_for_updates(text, nullptr);
@@ -257,7 +257,7 @@ bool gfx::effect_source::test_for_updates(const char* text, const char* path)
 			if (os_stat(m_shader.path.c_str(), &stats) == 0) {
 				m_shader.file_info.modified = (m_shader.file_info.time_create != stats.st_ctime)
 											  | (m_shader.file_info.time_modified != stats.st_mtime)
-											  | (m_shader.file_info.file_size != stats.st_size);
+											  | (m_shader.file_info.file_size != static_cast<size_t>(stats.st_size));
 
 				// Mark shader as different if the file was changed.
 				is_shader_different = is_shader_different | m_shader.file_info.modified;
@@ -265,7 +265,7 @@ bool gfx::effect_source::test_for_updates(const char* text, const char* path)
 				// Update own information
 				m_shader.file_info.time_create   = stats.st_ctime;
 				m_shader.file_info.time_modified = stats.st_mtime;
-				m_shader.file_info.file_size     = stats.st_size;
+				m_shader.file_info.file_size     = static_cast<size_t>(stats.st_size);
 			}
 
 			// Increment timer so that the next check is a reasonable timespan away.
@@ -278,12 +278,12 @@ bool gfx::effect_source::test_for_updates(const char* text, const char* path)
 			std::ifstream     fs(m_shader.path.c_str(), std::ios::binary);
 
 			if (fs.good()) {
-				size_t beg = fs.tellg();
+				size_t beg = static_cast<size_t>(fs.tellg());
 				fs.seekg(0, std::ios::end);
 				size_t sz = size_t(fs.tellg()) - beg;
 				content.resize(sz + 1);
 				fs.seekg(0, std::ios::beg);
-				fs.read(content.data(), sz);
+				fs.read(content.data(), static_cast<std::streamsize>(sz));
 				fs.close();
 				content[sz] = '\0';
 

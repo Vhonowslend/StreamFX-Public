@@ -31,7 +31,7 @@ namespace gfx {
 
 			public:
 			box_data();
-			~box_data();
+			virtual ~box_data();
 
 			std::shared_ptr<::gs::effect> get_effect();
 		};
@@ -42,7 +42,7 @@ namespace gfx {
 
 			public:
 			box_factory();
-			virtual ~box_factory();
+			virtual ~box_factory() override;
 
 			virtual bool is_type_supported(::gfx::blur::type type) override;
 
@@ -94,7 +94,7 @@ namespace gfx {
 
 			public:
 			box();
-			~box();
+			virtual ~box() override;
 
 			virtual void set_input(std::shared_ptr<::gs::texture> texture) override;
 

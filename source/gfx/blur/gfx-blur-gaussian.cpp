@@ -240,7 +240,7 @@ std::shared_ptr<::gfx::blur::gaussian_data> gfx::blur::gaussian_factory::data()
 }
 
 gfx::blur::gaussian::gaussian()
-	: m_size(1.), m_step_scale({1., 1.}), m_data(::gfx::blur::gaussian_factory::get().data())
+	: m_data(::gfx::blur::gaussian_factory::get().data()), m_size(1.), m_step_scale({1., 1.})
 {
 	auto gctx       = gs::context();
 	m_rendertarget  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
@@ -302,7 +302,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian::render()
 	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
 	auto                          kernel = m_data->get_kernel(size_t(m_size));
 
-	if (!effect || ((m_step_scale.first + m_step_scale.second) < FLT_EPSILON)) {
+	if (!effect || ((m_step_scale.first + m_step_scale.second) < DBL_EPSILON)) {
 		return m_input_texture;
 	}
 
@@ -329,14 +329,14 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian::render()
 	effect->get_parameter("pKernel").set_float_array(kernel.data(), MAX_KERNEL_SIZE);
 
 	// First Pass
-	if (m_step_scale.first > FLT_EPSILON) {
-		effect->get_parameter("pImageTexel").set_float2(float_t(1. / width), 0.);
+	if (m_step_scale.first > DBL_EPSILON) {
+		effect->get_parameter("pImageTexel").set_float2(float_t(1.f / width), 0.f);
 
 		{
 			auto op = m_rendertarget2->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect->get_object(), "Draw")) {
-				gs_draw_sprite(0, 0, 1, 1);
+				gs_draw_sprite(nullptr, 0, 1, 1);
 			}
 		}
 
@@ -345,14 +345,14 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian::render()
 	}
 
 	// Second Pass
-	if (m_step_scale.second > FLT_EPSILON) {
-		effect->get_parameter("pImageTexel").set_float2(0., float_t(1. / height));
+	if (m_step_scale.second > DBL_EPSILON) {
+		effect->get_parameter("pImageTexel").set_float2(0.f, float_t(1.f / height));
 
 		{
 			auto op = m_rendertarget2->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect->get_object(), "Draw")) {
-				gs_draw_sprite(0, 0, 1, 1);
+				gs_draw_sprite(nullptr, 0, 1, 1);
 			}
 		}
 
@@ -391,11 +391,11 @@ void gfx::blur::gaussian_directional::set_angle(double_t angle)
 std::shared_ptr<::gs::texture> gfx::blur::gaussian_directional::render()
 {
 	auto gctx = gs::context();
-	
+
 	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
 	auto                          kernel = m_data->get_kernel(size_t(m_size));
 
-	if (!effect || ((m_step_scale.first + m_step_scale.second) < FLT_EPSILON)) {
+	if (!effect || ((m_step_scale.first + m_step_scale.second) < DBL_EPSILON)) {
 		return m_input_texture;
 	}
 
@@ -419,7 +419,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_directional::render()
 
 	effect->get_parameter("pImage").set_texture(m_input_texture);
 	effect->get_parameter("pImageTexel")
-		.set_float2(float_t(1. / width * cos(m_angle)), float_t(1. / height * sin(m_angle)));
+		.set_float2(float_t(1.f / width * cos(m_angle)), float_t(1.f / height * sin(m_angle)));
 	effect->get_parameter("pStepScale").set_float2(float_t(m_step_scale.first), float_t(m_step_scale.second));
 	effect->get_parameter("pSize").set_float(float_t(m_size));
 	effect->get_parameter("pKernel").set_float_array(kernel.data(), MAX_KERNEL_SIZE);
@@ -429,7 +429,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_directional::render()
 		auto op = m_rendertarget->render(uint32_t(width), uint32_t(height));
 		gs_ortho(0, 1., 0, 1., 0, 1.);
 		while (gs_effect_loop(effect->get_object(), "Draw")) {
-			gs_draw_sprite(0, 0, 1, 1);
+			gs_draw_sprite(nullptr, 0, 1, 1);
 		}
 	}
 
@@ -450,7 +450,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_rotational::render()
 	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
 	auto                          kernel = m_data->get_kernel(size_t(m_size));
 
-	if (!effect || ((m_step_scale.first + m_step_scale.second) < FLT_EPSILON)) {
+	if (!effect || ((m_step_scale.first + m_step_scale.second) < DBL_EPSILON)) {
 		return m_input_texture;
 	}
 
@@ -472,7 +472,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_rotational::render()
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
 	effect->get_parameter("pImage").set_texture(m_input_texture);
-	effect->get_parameter("pImageTexel").set_float2(float_t(1. / width), float_t(1. / height));
+	effect->get_parameter("pImageTexel").set_float2(float_t(1.f / width), float_t(1.f / height));
 	effect->get_parameter("pStepScale").set_float2(float_t(m_step_scale.first), float_t(m_step_scale.second));
 	effect->get_parameter("pSize").set_float(float_t(m_size));
 	effect->get_parameter("pAngle").set_float(float_t(m_angle / m_size));
@@ -484,7 +484,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_rotational::render()
 		auto op = m_rendertarget->render(uint32_t(width), uint32_t(height));
 		gs_ortho(0, 1., 0, 1., 0, 1.);
 		while (gs_effect_loop(effect->get_object(), "Rotate")) {
-			gs_draw_sprite(0, 0, 1, 1);
+			gs_draw_sprite(nullptr, 0, 1, 1);
 		}
 	}
 
@@ -527,7 +527,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_zoom::render()
 	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
 	auto                          kernel = m_data->get_kernel(size_t(m_size));
 
-	if (!effect || ((m_step_scale.first + m_step_scale.second) < FLT_EPSILON)) {
+	if (!effect || ((m_step_scale.first + m_step_scale.second) < DBL_EPSILON)) {
 		return m_input_texture;
 	}
 
@@ -549,7 +549,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_zoom::render()
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
 	effect->get_parameter("pImage").set_texture(m_input_texture);
-	effect->get_parameter("pImageTexel").set_float2(float_t(1. / width), float_t(1. / height));
+	effect->get_parameter("pImageTexel").set_float2(float_t(1.f / width), float_t(1.f / height));
 	effect->get_parameter("pStepScale").set_float2(float_t(m_step_scale.first), float_t(m_step_scale.second));
 	effect->get_parameter("pSize").set_float(float_t(m_size));
 	effect->get_parameter("pCenter").set_float2(float_t(m_center.first), float_t(m_center.second));
@@ -560,7 +560,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_zoom::render()
 		auto op = m_rendertarget->render(uint32_t(width), uint32_t(height));
 		gs_ortho(0, 1., 0, 1., 0, 1.);
 		while (gs_effect_loop(effect->get_object(), "Zoom")) {
-			gs_draw_sprite(0, 0, 1, 1);
+			gs_draw_sprite(nullptr, 0, 1, 1);
 		}
 	}
 

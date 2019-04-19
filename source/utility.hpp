@@ -48,14 +48,6 @@ typename std::enable_if<enable_bitmask_operators<Enum>::enable, Enum>::type oper
 #define vstr(s) dstr(s)
 #define dstr(s) #s
 
-#ifndef __FUNCTION_NAME__
-#if defined(_WIN32) || defined(_WIN64) //WINDOWS
-#define __FUNCTION_NAME__ __FUNCTION__
-#else //*NIX
-#define __FUNCTION_NAME__ __func__
-#endif
-#endif
-
 #ifdef __cplusplus
 #define INITIALIZER(f)   \
 	static void f(void); \

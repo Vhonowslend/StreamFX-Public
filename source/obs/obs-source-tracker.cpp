@@ -43,7 +43,6 @@ void obs::source_tracker::source_create_handler(void* ptr, calldata_t* data)
 		return;
 	}
 
-
 	self->source_map.insert({std::string(name), weak});
 }
 
@@ -109,7 +108,8 @@ obs::source_tracker::~source_tracker()
 	this->source_map.clear();
 }
 
-void obs::source_tracker::enumerate(enumerate_cb_t ecb, filter_cb_t fcb) {
+void obs::source_tracker::enumerate(enumerate_cb_t ecb, filter_cb_t fcb)
+{
 	// Need func-local copy, otherwise we risk corruption if a new source is created or destroyed.
 	auto source_map_copy = this->source_map;
 	for (auto kv : this->source_map) {
@@ -136,29 +136,29 @@ void obs::source_tracker::enumerate(enumerate_cb_t ecb, filter_cb_t fcb) {
 	}
 }
 
-bool obs::source_tracker::filter_sources(std::string name, obs_source_t* source)
+bool obs::source_tracker::filter_sources(std::string, obs_source_t* source)
 {
 	return (obs_source_get_type(source) != OBS_SOURCE_TYPE_INPUT);
 }
 
-bool obs::source_tracker::filter_audio_sources(std::string name, obs_source_t* source)
+bool obs::source_tracker::filter_audio_sources(std::string, obs_source_t* source)
 {
 	uint32_t flags = obs_source_get_output_flags(source);
 	return !(flags & OBS_SOURCE_AUDIO) || (obs_source_get_type(source) != OBS_SOURCE_TYPE_INPUT);
 }
 
-bool obs::source_tracker::filter_video_sources(std::string name, obs_source_t* source)
+bool obs::source_tracker::filter_video_sources(std::string, obs_source_t* source)
 {
 	uint32_t flags = obs_source_get_output_flags(source);
 	return !(flags & OBS_SOURCE_VIDEO) || (obs_source_get_type(source) != OBS_SOURCE_TYPE_INPUT);
 }
 
-bool obs::source_tracker::filter_transitions(std::string name, obs_source_t* source)
+bool obs::source_tracker::filter_transitions(std::string, obs_source_t* source)
 {
 	return (obs_source_get_type(source) != OBS_SOURCE_TYPE_TRANSITION);
 }
 
-bool obs::source_tracker::filter_scenes(std::string name, obs_source_t* source)
+bool obs::source_tracker::filter_scenes(std::string, obs_source_t* source)
 {
 	return (obs_source_get_type(source) != OBS_SOURCE_TYPE_SCENE);
 }

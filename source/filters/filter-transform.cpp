@@ -365,24 +365,24 @@ void filter::transform::transform_instance::update(obs_data_t* data)
 	m_camera_fov          = (float)obs_data_get_double(data, ST_CAMERA_FIELDOFVIEW);
 
 	// Source
-	m_position->x    = (float)obs_data_get_double(data, ST_POSITION_X) / 100.0f;
-	m_position->y    = (float)obs_data_get_double(data, ST_POSITION_Y) / 100.0f;
-	m_position->z    = (float)obs_data_get_double(data, ST_POSITION_Z) / 100.0f;
-	m_scale->x       = (float)obs_data_get_double(data, ST_SCALE_X) / 100.0f;
-	m_scale->y       = (float)obs_data_get_double(data, ST_SCALE_Y) / 100.0f;
+	m_position->x    = static_cast<float_t>(obs_data_get_double(data, ST_POSITION_X) / 100.0);
+	m_position->y    = static_cast<float_t>(obs_data_get_double(data, ST_POSITION_Y) / 100.0);
+	m_position->z    = static_cast<float_t>(obs_data_get_double(data, ST_POSITION_Z) / 100.0);
+	m_scale->x       = static_cast<float_t>(obs_data_get_double(data, ST_SCALE_X) / 100.0);
+	m_scale->y       = static_cast<float_t>(obs_data_get_double(data, ST_SCALE_Y) / 100.0);
 	m_scale->z       = 1.0f;
-	m_rotation_order = (int)obs_data_get_int(data, ST_ROTATION_ORDER);
-	m_rotation->x    = (float)(obs_data_get_double(data, ST_ROTATION_X) / 180.0f * PI);
-	m_rotation->y    = (float)(obs_data_get_double(data, ST_ROTATION_Y) / 180.0f * PI);
-	m_rotation->z    = (float)(obs_data_get_double(data, ST_ROTATION_Z) / 180.0f * PI);
-	m_shear->x       = (float)obs_data_get_double(data, ST_SHEAR_X) / 100.0f;
-	m_shear->y       = (float)obs_data_get_double(data, ST_SHEAR_Y) / 100.0f;
+	m_rotation_order = static_cast<uint32_t>(obs_data_get_int(data, ST_ROTATION_ORDER));
+	m_rotation->x    = static_cast<float_t>(obs_data_get_double(data, ST_ROTATION_X) / 180.0 * PI);
+	m_rotation->y    = static_cast<float_t>(obs_data_get_double(data, ST_ROTATION_Y) / 180.0 * PI);
+	m_rotation->z    = static_cast<float_t>(obs_data_get_double(data, ST_ROTATION_Z) / 180.0 * PI);
+	m_shear->x       = static_cast<float_t>(obs_data_get_double(data, ST_SHEAR_X) / 100.0);
+	m_shear->y       = static_cast<float_t>(obs_data_get_double(data, ST_SHEAR_Y) / 100.0);
 	m_shear->z       = 0.0f;
 
 	// Mipmapping
 	m_mipmap_enabled   = obs_data_get_bool(data, ST_MIPMAPPING);
 	m_mipmap_strength  = obs_data_get_double(data, S_MIPGENERATOR_INTENSITY);
-	m_mipmap_generator = (gs::mipmapper::generator)obs_data_get_int(data, S_MIPGENERATOR);
+	m_mipmap_generator = static_cast<gs::mipmapper::generator>(obs_data_get_int(data, S_MIPGENERATOR));
 
 	m_update_mesh = true;
 }
@@ -572,7 +572,7 @@ void filter::transform::transform_instance::video_render(gs_effect_t* paramEffec
 			gs_enable_stencil_test(false);
 			gs_enable_stencil_write(false);
 			gs_enable_color(true, true, true, true);
-			gs_ortho(0, (float)width, 0, (float)height, -1, 1);
+			gs_ortho(0, static_cast<float_t>(width), 0, static_cast<float_t>(height), -1, 1);
 
 			vec4 black;
 			vec4_zero(&black);

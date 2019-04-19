@@ -367,7 +367,7 @@ obs::source::~source()
 #ifdef auto_signal_d
 #undef auto_signal_d
 #endif
-#define auto_signal_d(SIGNAL) this->events.##SIGNAL.clear();
+#define auto_signal_d(SIGNAL) this->events.SIGNAL.clear()
 	auto_signal_d(destroy);
 	auto_signal_d(remove);
 	auto_signal_d(save);
@@ -410,7 +410,7 @@ obs::source::source()
 #endif
 #define auto_signal_c(SIGNAL)                                                                  \
 	{                                                                                          \
-		this->events.##SIGNAL.set_listen_callback([this] {                                     \
+		this->events.SIGNAL.set_listen_callback([this] {                                       \
 			if (!this->self)                                                                   \
 				return;                                                                        \
 			auto sh = obs_source_get_signal_handler(this->self);                               \
@@ -418,7 +418,7 @@ obs::source::source()
 				signal_handler_connect(sh, "" #SIGNAL, obs::source::handle_##SIGNAL, this);    \
 			}                                                                                  \
 		});                                                                                    \
-		this->events.##SIGNAL.set_silence_callback([this] {                                    \
+		this->events.SIGNAL.set_silence_callback([this] {                                      \
 			if (!this->self)                                                                   \
 				return;                                                                        \
 			auto sh = obs_source_get_signal_handler(this->self);                               \
@@ -427,32 +427,32 @@ obs::source::source()
 			}                                                                                  \
 		});                                                                                    \
 	}
-	auto_signal_c(destroy);
-	auto_signal_c(remove);
-	auto_signal_c(save);
-	auto_signal_c(load);
-	auto_signal_c(activate);
-	auto_signal_c(deactivate);
-	auto_signal_c(show);
-	auto_signal_c(hide);
-	auto_signal_c(mute);
-	auto_signal_c(push_to_mute_changed);
-	auto_signal_c(push_to_mute_delay);
-	auto_signal_c(push_to_talk_changed);
-	auto_signal_c(push_to_talk_delay);
-	auto_signal_c(enable);
-	auto_signal_c(rename);
-	auto_signal_c(volume);
-	auto_signal_c(update_properties);
-	auto_signal_c(update_flags);
-	auto_signal_c(audio_sync);
-	auto_signal_c(audio_mixers);
-	auto_signal_c(filter_add);
-	auto_signal_c(filter_remove);
-	auto_signal_c(reorder_filters);
-	auto_signal_c(transition_start);
-	auto_signal_c(transition_video_stop);
-	auto_signal_c(transition_stop);
+	auto_signal_c(destroy)
+	auto_signal_c(remove)
+	auto_signal_c(save)
+	auto_signal_c(load)
+	auto_signal_c(activate)
+	auto_signal_c(deactivate)
+	auto_signal_c(show)
+	auto_signal_c(hide)
+	auto_signal_c(mute)
+	auto_signal_c(push_to_mute_changed)
+	auto_signal_c(push_to_mute_delay)
+	auto_signal_c(push_to_talk_changed)
+	auto_signal_c(push_to_talk_delay)
+	auto_signal_c(enable)
+	auto_signal_c(rename)
+	auto_signal_c(volume)
+	auto_signal_c(update_properties)
+	auto_signal_c(update_flags)
+	auto_signal_c(audio_sync)
+	auto_signal_c(audio_mixers)
+	auto_signal_c(filter_add)
+	auto_signal_c(filter_remove)
+	auto_signal_c(reorder_filters)
+	auto_signal_c(transition_start)
+	auto_signal_c(transition_video_stop)
+	auto_signal_c(transition_stop)
 #undef auto_signal_c
 
 	// libOBS unfortunately does not use the event system for audio data callbacks, which is kind of odd as most other
@@ -465,27 +465,27 @@ obs::source::source()
 	}
 }
 
-obs::source::source(std::string name, bool track_ownership, bool add_reference) : source()
+obs::source::source(std::string name, bool ptrack_ownership, bool add_reference) : ::obs::source::source()
 {
 	this->self = obs_get_source_by_name(name.c_str());
 	if (!this->self) {
 		throw std::runtime_error("source with name not found");
 	}
 
-	this->track_ownership = track_ownership;
+	this->track_ownership = ptrack_ownership;
 	if (!add_reference) {
 		obs_source_release(this->self);
 	}
 }
 
-obs::source::source(obs_source_t* source, bool track_ownership, bool add_reference) : source()
+obs::source::source(obs_source_t* source, bool ptrack_ownership, bool add_reference) : ::obs::source::source()
 {
 	this->self = source;
 	if (!this->self) {
 		throw std::invalid_argument("source must not be null");
 	}
 
-	this->track_ownership = track_ownership;
+	this->track_ownership = ptrack_ownership;
 	if (add_reference) {
 		obs_source_addref(this->self);
 	}
@@ -503,7 +503,7 @@ obs::source::source(source const& other)
 #ifdef auto_signal_c
 #undef auto_signal_c
 #endif
-#define auto_signal_c(SIGNAL) this->events.##SIGNAL = other.events.##SIGNAL;
+#define auto_signal_c(SIGNAL) this->events.SIGNAL = other.events.SIGNAL
 	auto_signal_c(destroy);
 	auto_signal_c(remove);
 	auto_signal_c(save);
@@ -555,7 +555,7 @@ obs::source& obs::source::operator=(source const& other)
 #ifdef auto_signal_c
 #undef auto_signal_c
 #endif
-#define auto_signal_c(SIGNAL) this->events.##SIGNAL = other.events.##SIGNAL;
+#define auto_signal_c(SIGNAL) this->events.SIGNAL = other.events.SIGNAL
 	auto_signal_c(destroy);
 	auto_signal_c(remove);
 	auto_signal_c(save);
@@ -597,7 +597,7 @@ obs::source::source(source&& other) : self(std::move(other.self)), track_ownersh
 #ifdef auto_signal_c
 #undef auto_signal_c
 #endif
-#define auto_signal_c(SIGNAL) this->events.##SIGNAL = std::move(other.events.##SIGNAL);
+#define auto_signal_c(SIGNAL) this->events.SIGNAL = std::move(other.events.SIGNAL)
 	auto_signal_c(destroy);
 	auto_signal_c(remove);
 	auto_signal_c(save);
@@ -647,7 +647,7 @@ obs::source& obs::source::operator=(source&& other)
 #ifdef auto_signal_c
 #undef auto_signal_c
 #endif
-#define auto_signal_c(SIGNAL) this->events.##SIGNAL = std::move(other.events.##SIGNAL);
+#define auto_signal_c(SIGNAL) this->events.SIGNAL = std::move(other.events.SIGNAL)
 	auto_signal_c(destroy);
 	auto_signal_c(remove);
 	auto_signal_c(save);
