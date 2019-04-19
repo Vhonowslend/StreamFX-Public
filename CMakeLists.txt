@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 # CMake Setup
-CMake_Minimum_Required(VERSION 3.1.0)
+CMake_Minimum_Required(VERSION 3.8.0)
 Include("cmake/util.cmake")
 
 # Automatic Versioning
@@ -133,15 +133,9 @@ elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 # C++ Standard and Extensions
-IF (CMAKE_VERSION VERSION_LESS "3.8")
-    SET(CMAKE_CXX_STANDARD 14)
-ELSEIF (CMAKE_VERSION VERSION_LESS "3.11")
-    SET(CMAKE_CXX_STANDARD 17)
-ELSE() # CMake 3.11 or higher:
-    SET(CMAKE_CXX_STANDARD 20)
-ENDIF()
-## Disable nonstandard extensions
-SET(CMAKE_CXX_EXTENSIONS OFF)
+## Use C++17 and no non-standard extensions.
+SET(_CXX_STANDARD 17)
+SET(_CXX_EXTENSIONS OFF)
 
 ################################################################################
 # Options
@@ -471,6 +465,14 @@ if (WIN32)
 			NOINOUT
 	)
 endif()
+
+# C++ Standard and Extensions
+set_target_properties(
+	${PROJECT_NAME}
+	PROPERTIES
+		CXX_STANDARD ${_CXX_STANDARD}
+		CXX_EXTENSIONS ${_CXX_EXTENSIONS}
+)
 
 # File Version
 if(WIN32)
