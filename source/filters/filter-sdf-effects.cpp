@@ -482,7 +482,8 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 {
 	{
 		this->m_outer_shadow =
-			obs_data_get_bool(data, P_SHADOW_OUTER) && (obs_data_get_double(data, P_SHADOW_OUTER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
+			obs_data_get_bool(data, P_SHADOW_OUTER)
+			&& (obs_data_get_double(data, P_SHADOW_OUTER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			union {
 				uint32_t color;
@@ -505,7 +506,8 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 
 	{
 		this->m_inner_shadow =
-			obs_data_get_bool(data, P_SHADOW_INNER) && (obs_data_get_double(data, P_SHADOW_INNER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
+			obs_data_get_bool(data, P_SHADOW_INNER)
+			&& (obs_data_get_double(data, P_SHADOW_INNER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			union {
 				uint32_t color;
@@ -528,7 +530,8 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 
 	{
 		this->m_outer_glow =
-			obs_data_get_bool(data, P_GLOW_OUTER) && (obs_data_get_double(data, P_GLOW_OUTER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
+			obs_data_get_bool(data, P_GLOW_OUTER)
+			&& (obs_data_get_double(data, P_GLOW_OUTER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			union {
 				uint32_t color;
@@ -553,7 +556,8 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 
 	{
 		this->m_inner_glow =
-			obs_data_get_bool(data, P_GLOW_INNER) && (obs_data_get_double(data, P_GLOW_INNER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
+			obs_data_get_bool(data, P_GLOW_INNER)
+			&& (obs_data_get_double(data, P_GLOW_INNER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			union {
 				uint32_t color;
@@ -577,8 +581,8 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 	}
 
 	{
-		this->m_outline =
-			obs_data_get_bool(data, P_OUTLINE) && (obs_data_get_double(data, P_OUTLINE_ALPHA) >= std::numeric_limits<double_t>::epsilon());
+		this->m_outline = obs_data_get_bool(data, P_OUTLINE)
+						  && (obs_data_get_double(data, P_OUTLINE_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			union {
 				uint32_t color;

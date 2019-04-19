@@ -71,7 +71,7 @@ void gfx::effect_source::fill_source_list(obs_property_t* prop)
 {
 	obs_enum_sources(
 		[](void* ptr, obs_source_t* src) {
-			obs_property_t* pro  = (obs_property_t*)ptr;
+			obs_property_t* pro   = (obs_property_t*)ptr;
 			const char*     sname = obs_source_get_name(src);
 			obs_property_list_add_string(pro, sname, sname);
 			return true;
@@ -159,7 +159,8 @@ void gfx::effect_source::get_properties(obs_properties_t* properties)
 			obs_properties_add_bool(properties, prm.second->ui.names[0], prm.second->ui.descs[0]);
 		} else if (prm.first.second >= gs::effect_parameter::type::Integer
 				   && prm.first.second <= gs::effect_parameter::type::Integer4) {
-			size_t cnt = static_cast<size_t>(prm.first.second) - static_cast<size_t>(gs::effect_parameter::type::Integer);
+			size_t cnt =
+				static_cast<size_t>(prm.first.second) - static_cast<size_t>(gs::effect_parameter::type::Integer);
 
 			for (size_t idx = 0; idx <= cnt; idx++) {
 				obs_properties_add_int(properties, prm.second->ui.names[idx], prm.second->ui.descs[idx], INT_MIN,

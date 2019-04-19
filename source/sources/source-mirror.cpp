@@ -150,7 +150,7 @@ bool source::mirror::mirror_factory::modified_properties(obs_properties_t* pr, o
 
 	if (obs_properties_get(pr, P_SCALING_BOUNDS) == p) {
 		obs_bounds_type scaling_type = static_cast<obs_bounds_type>(obs_data_get_int(data, P_SCALING_BOUNDS));
-		obs_property_t* p2            = obs_properties_get(pr, P_SCALING_BOUNDS);
+		obs_property_t* p2           = obs_properties_get(pr, P_SCALING_BOUNDS);
 		switch (scaling_type) {
 		case obs_bounds_type::OBS_BOUNDS_STRETCH:
 			obs_property_set_long_description(p2, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS_STRETCH)));
