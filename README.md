@@ -1,7 +1,12 @@
 ![Logo](https://cdn.xaymar.com/obs-stream-effects/logo.svg)
 Bring your stream to life with more modern effects! Stream Effects adds several much needed features to OBS Studio, such as real time Blur and 3D Transform. Now you can blur out sources you think may be questionable, add sick 3D effects or recreate the Heroes of the Storm displacement overlay with the Displacement filter. The choice is yours, the possibilities are endless.
 
-#### Status: [Windows: ![AppVeyor](https://ci.appveyor.com/api/projects/status/github/Xaymar/obs-stream-effects?branch=master&svg=true)](https://ci.appveyor.com/project/Xaymar/obs-stream-effects) |  [Linux, Mac: ![Travis](https://api.travis-ci.org/Xaymar/obs-stream-effects.svg?branch=master)](https://travis-ci.org/Xaymar/obs-stream-effects) | [Translations: ![CrowdIn](https://d322cqt584bo4o.cloudfront.net/obs-stream-effects/localized.svg)](https://crowdin.com/project/obs-stream-effects)
+#### Status: [Windows: ![AppVeyor](https://ci.appveyor.com/api/projects/status/github/Xaymar/obs-stream-effects?branch=master&svg=true)](https://ci.appveyor.com/project/Xaymar/obs-stream-effects) |  [Linux, Mac: ![Travis](https://api.travis-ci.org/Xaymar/obs-stream-effects.svg?branch=master)](https://travis-ci.org/Xaymar/obs-stream-effects) | [Translations: ![Crowdin](https://d322cqt584bo4o.cloudfront.net/obs-stream-effects/localized.svg)](https://crowdin.com/project/obs-stream-effects)
+
+# Support The Project
+The project is funded through [all Supporters on Patreon](https://www.patreon.com/Xaymar), who get 30 day early access to releases, tutorials and more, and have a special Discord channel for priority support. They also (sometimes) have a say in what makes it into the plugin.
+
+You can also help by [submitting translations through Crowdin](https://crowdin.com/project/obs-stream-effects)! Crowdin is a platform allowing anyone to submit translations for their favorite software (as long as that favorite software uses Crowdin), allowing more people to use the software without knowing another language.
 
 # Features
 ## Source Mirror (Source)
@@ -20,6 +25,3 @@ Add a shadow to any Source you wish to have a shadow for, optionally even a shad
 
 ## Displacement Mapping (Filter)
 Displace the pixels of the Source, in any way you want - create a whirl, zoom in, whatever your input normal map can do will happen with this Filter.
-
-# Support The Project
-The project is supported through [Patreon](https://www.patreon.com/Xaymar). Get early access and influence future decisions by supporting this (and other) Projects on Patreon!
