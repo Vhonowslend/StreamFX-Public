@@ -52,8 +52,6 @@ namespace filter {
 		};
 
 		class blur_factory {
-			friend class std::_Ptr_base<filter::blur::blur_factory>;
-
 			obs_source_info             source_info;
 			std::list<blur_instance*>   sources;
 			std::shared_ptr<gs::effect> color_converter_effect;

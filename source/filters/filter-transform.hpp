@@ -29,8 +29,6 @@
 namespace filter {
 	namespace transform {
 		class transform_factory {
-			friend class std::_Ptr_base<filter::transform::transform_factory>;
-
 			obs_source_info sourceInfo;
 
 			public: // Singleton

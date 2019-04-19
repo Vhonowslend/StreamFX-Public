@@ -482,7 +482,7 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 {
 	{
 		this->m_outer_shadow =
-			obs_data_get_bool(data, P_SHADOW_OUTER) && (obs_data_get_double(data, P_SHADOW_OUTER_ALPHA) >= DBL_EPSILON);
+			obs_data_get_bool(data, P_SHADOW_OUTER) && (obs_data_get_double(data, P_SHADOW_OUTER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			union {
 				uint32_t color;
@@ -505,7 +505,7 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 
 	{
 		this->m_inner_shadow =
-			obs_data_get_bool(data, P_SHADOW_INNER) && (obs_data_get_double(data, P_SHADOW_INNER_ALPHA) >= DBL_EPSILON);
+			obs_data_get_bool(data, P_SHADOW_INNER) && (obs_data_get_double(data, P_SHADOW_INNER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			union {
 				uint32_t color;
@@ -528,7 +528,7 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 
 	{
 		this->m_outer_glow =
-			obs_data_get_bool(data, P_GLOW_OUTER) && (obs_data_get_double(data, P_GLOW_OUTER_ALPHA) >= DBL_EPSILON);
+			obs_data_get_bool(data, P_GLOW_OUTER) && (obs_data_get_double(data, P_GLOW_OUTER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			union {
 				uint32_t color;
@@ -546,14 +546,14 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 		this->m_outer_glow_width         = float_t(obs_data_get_double(data, P_GLOW_OUTER_WIDTH));
 		this->m_outer_glow_sharpness     = float_t(obs_data_get_double(data, P_GLOW_OUTER_SHARPNESS) / 100.0);
 		this->m_outer_glow_sharpness_inv = float_t(1.0f / (1.0f - this->m_outer_glow_sharpness));
-		if (this->m_outer_glow_sharpness >= (1.0f - FLT_EPSILON)) {
-			this->m_outer_glow_sharpness = 1.0f - FLT_EPSILON;
+		if (this->m_outer_glow_sharpness >= (1.0f - std::numeric_limits<float_t>::epsilon())) {
+			this->m_outer_glow_sharpness = 1.0f - std::numeric_limits<float_t>::epsilon();
 		}
 	}
 
 	{
 		this->m_inner_glow =
-			obs_data_get_bool(data, P_GLOW_INNER) && (obs_data_get_double(data, P_GLOW_INNER_ALPHA) >= DBL_EPSILON);
+			obs_data_get_bool(data, P_GLOW_INNER) && (obs_data_get_double(data, P_GLOW_INNER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			union {
 				uint32_t color;
@@ -571,14 +571,14 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 		this->m_inner_glow_width         = float_t(obs_data_get_double(data, P_GLOW_INNER_WIDTH));
 		this->m_inner_glow_sharpness     = float_t(obs_data_get_double(data, P_GLOW_INNER_SHARPNESS) / 100.0);
 		this->m_inner_glow_sharpness_inv = float_t(1.0f / (1.0f - this->m_inner_glow_sharpness));
-		if (this->m_inner_glow_sharpness >= (1.0f - FLT_EPSILON)) {
-			this->m_inner_glow_sharpness = 1.0f - FLT_EPSILON;
+		if (this->m_inner_glow_sharpness >= (1.0f - std::numeric_limits<float_t>::epsilon())) {
+			this->m_inner_glow_sharpness = 1.0f - std::numeric_limits<float_t>::epsilon();
 		}
 	}
 
 	{
 		this->m_outline =
-			obs_data_get_bool(data, P_OUTLINE) && (obs_data_get_double(data, P_OUTLINE_ALPHA) >= DBL_EPSILON);
+			obs_data_get_bool(data, P_OUTLINE) && (obs_data_get_double(data, P_OUTLINE_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			union {
 				uint32_t color;
@@ -597,8 +597,8 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 		this->m_outline_offset        = float_t(obs_data_get_double(data, P_OUTLINE_OFFSET));
 		this->m_outline_sharpness     = float_t(obs_data_get_double(data, P_OUTLINE_SHARPNESS) / 100.0);
 		this->m_outline_sharpness_inv = float_t(1.0f / (1.0f - this->m_outline_sharpness));
-		if (this->m_outline_sharpness >= (1.0f - FLT_EPSILON)) {
-			this->m_outline_sharpness = 1.0f - FLT_EPSILON;
+		if (this->m_outline_sharpness >= (1.0f - std::numeric_limits<float_t>::epsilon())) {
+			this->m_outline_sharpness = 1.0f - std::numeric_limits<float_t>::epsilon();
 		}
 	}
 

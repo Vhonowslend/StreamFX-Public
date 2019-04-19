@@ -38,9 +38,13 @@ namespace util {
 	template<typename T, size_t N = 16>
 	class AlignmentAllocator {
 		public:
-		typedef T         value_type;
-		typedef size_t    size_type;
+		typedef T      value_type;
+		typedef size_t size_type;
+#ifdef __clang__
 		typedef ptrdiff_t difference_type;
+#else
+		typedef std::ptrdiff_t difference_type;
+#endif
 
 		typedef T*       pointer;
 		typedef const T* const_pointer;

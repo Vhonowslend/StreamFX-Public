@@ -41,8 +41,6 @@ namespace filter {
 		class sdf_effects_instance;
 
 		class sdf_effects_factory {
-			friend class std::_Ptr_base<filter::sdf_effects::sdf_effects_factory>;
-
 			obs_source_info source_info;
 
 			std::list<sdf_effects_instance*> sources;

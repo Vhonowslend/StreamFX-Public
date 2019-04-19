@@ -302,7 +302,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian::render()
 	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
 	auto                          kernel = m_data->get_kernel(size_t(m_size));
 
-	if (!effect || ((m_step_scale.first + m_step_scale.second) < DBL_EPSILON)) {
+	if (!effect || ((m_step_scale.first + m_step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
 		return m_input_texture;
 	}
 
@@ -329,7 +329,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian::render()
 	effect->get_parameter("pKernel").set_float_array(kernel.data(), MAX_KERNEL_SIZE);
 
 	// First Pass
-	if (m_step_scale.first > DBL_EPSILON) {
+	if (m_step_scale.first > std::numeric_limits<double_t>::epsilon()) {
 		effect->get_parameter("pImageTexel").set_float2(float_t(1.f / width), 0.f);
 
 		{
@@ -345,7 +345,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian::render()
 	}
 
 	// Second Pass
-	if (m_step_scale.second > DBL_EPSILON) {
+	if (m_step_scale.second > std::numeric_limits<double_t>::epsilon()) {
 		effect->get_parameter("pImageTexel").set_float2(0.f, float_t(1.f / height));
 
 		{
@@ -395,7 +395,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_directional::render()
 	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
 	auto                          kernel = m_data->get_kernel(size_t(m_size));
 
-	if (!effect || ((m_step_scale.first + m_step_scale.second) < DBL_EPSILON)) {
+	if (!effect || ((m_step_scale.first + m_step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
 		return m_input_texture;
 	}
 
@@ -450,7 +450,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_rotational::render()
 	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
 	auto                          kernel = m_data->get_kernel(size_t(m_size));
 
-	if (!effect || ((m_step_scale.first + m_step_scale.second) < DBL_EPSILON)) {
+	if (!effect || ((m_step_scale.first + m_step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
 		return m_input_texture;
 	}
 
@@ -527,7 +527,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_zoom::render()
 	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
 	auto                          kernel = m_data->get_kernel(size_t(m_size));
 
-	if (!effect || ((m_step_scale.first + m_step_scale.second) < DBL_EPSILON)) {
+	if (!effect || ((m_step_scale.first + m_step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
 		return m_input_texture;
 	}
 

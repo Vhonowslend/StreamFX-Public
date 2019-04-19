@@ -947,7 +947,7 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 			std::string technique = "";
 			switch (this->m_mask.type) {
 			case Region:
-				if (this->m_mask.region.feather > FLT_EPSILON) {
+				if (this->m_mask.region.feather > std::numeric_limits<float_t>::epsilon()) {
 					if (this->m_mask.region.invert) {
 						technique = "RegionFeatherInverted";
 					} else {

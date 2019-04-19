@@ -17,6 +17,7 @@
 
 #pragma once
 #include <cinttypes>
+#include <cmath>
 #include <memory>
 #include "obs/gs/gs-texture.hpp"
 
@@ -32,7 +33,7 @@ namespace gfx {
 
 		class ibase {
 			public:
-			virtual ~ibase(){}
+			virtual ~ibase() {}
 
 			virtual void set_input(std::shared_ptr<::gs::texture> texture) = 0;
 
@@ -61,7 +62,7 @@ namespace gfx {
 
 		class ibase_angle {
 			public:
-			virtual ~ibase_angle(){}
+			virtual ~ibase_angle() {}
 
 			virtual double_t get_angle() = 0;
 
@@ -70,7 +71,7 @@ namespace gfx {
 
 		class ibase_center {
 			public:
-			virtual ~ibase_center(){}
+			virtual ~ibase_center() {}
 
 			virtual void set_center(double_t x, double_t y) = 0;
 
@@ -87,7 +88,7 @@ namespace gfx {
 
 		class ifactory {
 			public:
-			virtual ~ifactory(){}
+			virtual ~ifactory() {}
 
 			virtual bool is_type_supported(::gfx::blur::type type) = 0;
 

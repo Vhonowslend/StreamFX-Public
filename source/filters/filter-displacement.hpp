@@ -43,8 +43,6 @@
 namespace filter {
 	namespace displacement {
 		class displacement_factory {
-			friend class std::_Ptr_base<filter::displacement::displacement_factory>;
-
 			obs_source_info sourceInfo;
 
 			public: // Singleton

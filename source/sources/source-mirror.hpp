@@ -43,8 +43,6 @@
 namespace source {
 	namespace mirror {
 		class mirror_factory {
-			friend class std::_Ptr_base<source::mirror::mirror_factory>;
-
 			obs_source_info osi;
 
 			public: // Singleton
