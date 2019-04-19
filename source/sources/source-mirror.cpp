@@ -148,6 +148,32 @@ bool source::mirror::mirror_factory::modified_properties(obs_properties_t* pr, o
 		return true;
 	}
 
+	if (obs_properties_get(pr, P_SCALING_BOUNDS) == p) {
+		obs_bounds_type scaling_type = static_cast<obs_bounds_type>(obs_data_get_int(data, P_SCALING_BOUNDS));
+		obs_property_t* p            = obs_properties_get(pr, P_SCALING_BOUNDS);
+		switch (scaling_type) {
+		case obs_bounds_type::OBS_BOUNDS_STRETCH:
+			obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS_STRETCH)));
+			break;
+		case obs_bounds_type::OBS_BOUNDS_SCALE_INNER:
+			obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS_FIT)));
+			break;
+		case obs_bounds_type::OBS_BOUNDS_SCALE_OUTER:
+			obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS_FILL)));
+			break;
+		case obs_bounds_type::OBS_BOUNDS_SCALE_TO_WIDTH:
+			obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS_FILLWIDTH)));
+			break;
+		case obs_bounds_type::OBS_BOUNDS_SCALE_TO_HEIGHT:
+			obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS_FILLHEIGHT)));
+			break;
+		default:
+			obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS)));
+			break;
+		}
+		return true;
+	}
+
 	return false;
 }
 
@@ -187,6 +213,7 @@ obs_properties_t* source::mirror::mirror_factory::get_properties(void*)
 	p = obs_properties_add_list(pr, P_SCALING_METHOD, P_TRANSLATE(P_SCALING_METHOD), OBS_COMBO_TYPE_LIST,
 								OBS_COMBO_FORMAT_INT);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_METHOD)));
+	obs_property_set_modified_callback(p, modified_properties);
 	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_METHOD_POINT), (int64_t)obs_scale_type::OBS_SCALE_POINT);
 	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_METHOD_BILINEAR), (int64_t)obs_scale_type::OBS_SCALE_BILINEAR);
 	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_METHOD_BICUBIC), (int64_t)obs_scale_type::OBS_SCALE_BICUBIC);
@@ -201,6 +228,7 @@ obs_properties_t* source::mirror::mirror_factory::get_properties(void*)
 	p = obs_properties_add_list(pr, P_SCALING_BOUNDS, P_TRANSLATE(P_SCALING_BOUNDS), OBS_COMBO_TYPE_LIST,
 								OBS_COMBO_FORMAT_INT);
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_BOUNDS)));
+	obs_property_set_modified_callback(p, modified_properties);
 	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_BOUNDS_STRETCH), (int64_t)obs_bounds_type::OBS_BOUNDS_STRETCH);
 	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_BOUNDS_FIT), (int64_t)obs_bounds_type::OBS_BOUNDS_SCALE_INNER);
 	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_BOUNDS_FILL), (int64_t)obs_bounds_type::OBS_BOUNDS_SCALE_OUTER);
