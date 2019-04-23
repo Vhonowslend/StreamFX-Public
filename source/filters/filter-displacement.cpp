@@ -185,7 +185,10 @@ void filter::displacement::displacement_instance::validate_file_texture(std::str
 	do_update = !m_file_texture || do_update;
 
 	if (do_update) {
-		m_file_texture = std::make_shared<gs::texture>(m_file_name);
+		try {		
+			m_file_texture = std::make_shared<gs::texture>(m_file_name);
+		} catch (...) {
+		}
 	}
 }
 
