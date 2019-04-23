@@ -58,7 +58,7 @@ PROJECT(
 set(PROJECT_FULL_NAME "Stream Effects for OBS Studio")
 set(PROJECT_DESCRIPTION "New Sources, Filters and Transitions for OBS Studio")
 set(PROJECT_AUTHORS "Michael Fabian 'Xaymar' Dirks <info@xaymar.com>")
-set(PROJECT_COPYRIGHT_YEARS "2018")
+set(PROJECT_COPYRIGHT_YEARS "2018 - 2019")
 
 ################################################################################
 # Setup / Bootstrap
