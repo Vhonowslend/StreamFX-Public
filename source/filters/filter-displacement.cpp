@@ -160,6 +160,11 @@ void filter::displacement::displacement_instance::validate_file_texture(std::str
 {
 	bool do_update = false;
 
+	// Don't allow empty file names.
+	if (file.length() == 0) {
+		return;
+	}
+
 	// File name different
 	if (file != m_file_name) {
 		do_update   = true;
