@@ -28,6 +28,11 @@ cache:
 branches:
   except:
     - /i18n_.*/
+    - /i18n_master/
+    - i18n_master
+    - /l10n_.*/
+    - /l10n_master/
+    - l10n_master
 
 # Building  
 install:
