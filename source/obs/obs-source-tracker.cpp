@@ -72,6 +72,38 @@ void obs::source_tracker::source_destroy_handler(void* ptr, calldata_t* data)
 	self->source_map.erase(found);
 }
 
+void obs::source_tracker::source_rename_handler(void* ptr, calldata_t* data)
+{
+	obs::source_tracker* self = reinterpret_cast<obs::source_tracker*>(ptr);
+
+	obs_source_t* target    = nullptr;
+	const char*   prev_name = nullptr;
+	const char*   new_name  = nullptr;
+	calldata_get_ptr(data, "source", &target);
+	calldata_get_string(data, "prev_name", &prev_name);
+	calldata_get_string(data, "new_name", &new_name);
+
+	if (strcmp(prev_name, new_name) == 0) {
+		// They weren't renamed at all, invalid event.
+		return;
+	}
+
+	auto found = self->source_map.find(std::string(prev_name));
+	if (found == self->source_map.end()) {
+		// Untracked source, insert.
+		obs_weak_source_t* weak = obs_source_get_weak_source(target);
+		if (!weak) {
+			return;
+		}
+		self->source_map.insert({new_name, weak});
+		return;
+	}
+
+	// Insert at new key, remove old pair.
+	self->source_map.insert({new_name, found->second});
+	self->source_map.erase(found);
+}
+
 void obs::source_tracker::initialize()
 {
 	source_tracker_instance = std::make_shared<obs::source_tracker>();
@@ -92,6 +124,7 @@ obs::source_tracker::source_tracker()
 	auto osi = obs_get_signal_handler();
 	signal_handler_connect(osi, "source_create", &source_create_handler, this);
 	signal_handler_connect(osi, "source_destroy", &source_destroy_handler, this);
+	signal_handler_connect(osi, "source_rename", &source_rename_handler, this);
 }
 
 obs::source_tracker::~source_tracker()
@@ -100,6 +133,7 @@ obs::source_tracker::~source_tracker()
 	if (osi) {
 		signal_handler_disconnect(osi, "source_create", &source_create_handler, this);
 		signal_handler_disconnect(osi, "source_destroy", &source_destroy_handler, this);
+		signal_handler_disconnect(osi, "source_rename", &source_rename_handler, this);
 	}
 
 	for (auto kv : this->source_map) {
