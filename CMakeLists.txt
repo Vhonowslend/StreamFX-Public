@@ -221,6 +221,7 @@ SET(PROJECT_DATA_LOCALE
 	"${PROJECT_SOURCE_DIR}/data/locale/en-US.ini"
 )
 SET(PROJECT_DATA_EFFECTS
+	"${PROJECT_SOURCE_DIR}/data/effects/channel-mask.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/color-conversion.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/displace.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mask.effect"
@@ -339,6 +340,8 @@ SET(PROJECT_PRIVATE_SOURCE
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-custom-shader.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-displacement.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-displacement.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-dynamic-mask.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-dynamic-mask.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-sdf-effects.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-sdf-effects.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-transform.hpp"

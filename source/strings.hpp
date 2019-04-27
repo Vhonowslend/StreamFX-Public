@@ -42,6 +42,9 @@
 #define S_FILETYPE_EFFECT "FileType.Effect"
 #define S_FILETYPE_EFFECTS "FileType.Effects"
 
+#define S_SOURCETYPE_SOURCE "SourceType.Source"
+#define S_SOURCETYPE_SCENE "SourceType.Scene"
+
 #define S_BLUR_TYPE_BOX "Blur.Type.Box"
 #define S_BLUR_TYPE_BOX_LINEAR "Blur.Type.BoxLinear"
 #define S_BLUR_TYPE_GAUSSIAN "Blur.Type.Gaussian"
@@ -61,3 +64,10 @@
 #define S_MIPGENERATOR_BICUBIC "MipGenerator.Bicubic"
 #define S_MIPGENERATOR_LANCZOS "MipGenerator.Lanczos"
 #define S_MIPGENERATOR_INTENSITY "MipGenerator.Intensity"
+
+#define S_CHANNEL_RED "Channel.Red"
+#define S_CHANNEL_GREEN "Channel.Green"
+#define S_CHANNEL_BLUE "Channel.Blue"
+#define S_CHANNEL_ALPHA "Channel.Alpha"
+
+

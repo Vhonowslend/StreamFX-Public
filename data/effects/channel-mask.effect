@@ -1,0 +1,113 @@
+// -------------------------------------------------------------------------------- //
+// Parameters
+/// Provided by OBS Studio.
+uniform float4x4 ViewProj <
+	bool visible = false;
+	bool disabled = true;
+>;
+
+uniform texture2d pMaskInputA <
+	string name = "Mask Input A";
+	string description = "Input to mask.";
+>;
+uniform texture2d pMaskInputB <
+	string name = "Mask Input B";
+	string description = "Input to use as the mask.";
+>;
+
+uniform float4 pMaskBase <
+	string name = "Channel Base";
+//	float4 minimum = float4(-100.0, -100.0, -100.0, -100.0);
+//	float4 maximum = float4(100.0, 100.0, 100.0, 100.0);
+//	float4 default = float4(1, 1, 1, 1);
+>;
+uniform float4x4 pMaskMatrix <
+	string name = "Channel Matrix";
+//	float4 minimum = float4x4(
+//		-100, -100, -100, -100,
+//		-100, -100, -100, -100,
+//		-100, -100, -100, -100,
+//		-100, -100, -100, -100);
+//	float4 maximum = float4x4(
+//		100, 100, 100, 100,
+//		100, 100, 100, 100,
+//		100, 100, 100, 100,
+//		100, 100, 100, 100);
+//	float4 default = float4x4(
+//		1, 0, 0, 0,
+//		0, 1, 0, 0,
+//		0, 0, 1, 0,
+//		0, 0, 0, 1);
+>;
+uniform float4 pMaskMultiplier <
+	string name = "Channel Multiplier";
+//	float4 minimum = float4(-100, -100, -100, -100);
+//	float4 maximum = float4(100, 100, 100, 100);
+//	float4 default = float4(1, 1, 1, 1);
+>;
+// -------------------------------------------------------------------------------- //
+
+// -------------------------------------------------------------------------------- //
+// Samplers
+sampler_state maskSamplerA {
+	Filter		= Linear;
+	AddressU	= Clamp;
+	AddressV	= Clamp;
+};
+
+sampler_state maskSamplerB {
+	Filter		= Linear;
+	AddressU	= Clamp;
+	AddressV	= Clamp;
+};
+// -------------------------------------------------------------------------------- //
+
+// -------------------------------------------------------------------------------- //
+// Default Vertex Shader
+struct VertDataIn {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+struct VertDataOut {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertDataOut VSDefault(VertDataIn v_in)
+{
+	VertDataOut vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+	return vert_out;
+}
+// -------------------------------------------------------------------------------- //
+
+// -------------------------------------------------------------------------------- //
+// Channel Masking
+
+float4 PSChannelMask(VertDataOut v_in) : TARGET
+{
+	float4 imageA = pMaskInputA.Sample(maskSamplerA, v_in.uv);
+
+	// Create Mask
+	float4 mask = pMaskBase;
+	float4 imageB = pMaskInputB.Sample(maskSamplerB, v_in.uv);
+	mask += pMaskMatrix[0] * imageB.r;
+	mask += pMaskMatrix[1] * imageB.g;
+	mask += pMaskMatrix[2] * imageB.b;
+	mask += pMaskMatrix[3] * imageB.a;
+	mask *= pMaskMultiplier;
+
+	return imageA * mask;
+}
+
+technique Mask
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSChannelMask(v_in);
+	}
+}
+// -------------------------------------------------------------------------------- //
