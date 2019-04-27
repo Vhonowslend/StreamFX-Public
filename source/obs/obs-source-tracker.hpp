@@ -40,6 +40,7 @@ namespace obs {
 
 		static void source_create_handler(void* ptr, calldata_t* data);
 		static void source_destroy_handler(void* ptr, calldata_t* data);
+		static void source_rename_handler(void* ptr, calldata_t* data);
 
 		public: // Singleton
 		static void                                 initialize();
