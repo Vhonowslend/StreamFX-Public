@@ -13,7 +13,7 @@ image:
 environment:
   CMAKE_SYSTEM_VERSION: 10.0.17134.0
   PACKAGE_PREFIX: amd-encoder-for-obs-studio
-  INNOSETUP_URL: http://www.jrsoftware.org/download.php/is-unicode.exe
+  INNOSETUP_URL: http://www.jrsoftware.org/download.php/is.exe
   CURL_VERSION: 7.39.0
 
 # Resource Cache
