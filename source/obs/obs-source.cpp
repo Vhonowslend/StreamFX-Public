@@ -458,10 +458,16 @@ obs::source::source()
 	// libOBS unfortunately does not use the event system for audio data callbacks, which is kind of odd as most other
 	//  things do. So instead we'll have to manually deal with it for now.
 	{
-		this->events.audio_data.set_listen_callback(
-			[this] { obs_source_add_audio_capture_callback(this->self, obs::source::handle_audio_data, this); });
-		this->events.audio_data.set_silence_callback(
-			[this] { obs_source_remove_audio_capture_callback(this->self, obs::source::handle_audio_data, this); });
+		this->events.audio_data.set_listen_callback([this] {
+			if (!this->self)
+				return;
+			obs_source_add_audio_capture_callback(this->self, obs::source::handle_audio_data, this);
+		});
+		this->events.audio_data.set_silence_callback([this] {
+			if (!this->self)
+				return;
+			obs_source_remove_audio_capture_callback(this->self, obs::source::handle_audio_data, this);
+		});
 	}
 }
 
