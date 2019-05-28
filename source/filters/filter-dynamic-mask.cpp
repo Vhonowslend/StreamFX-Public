@@ -477,6 +477,10 @@ void filter::dynamic_mask::dynamic_mask_instance::video_render(gs_effect_t* in_e
 		obs_source_skip_video_filter(this->self);
 		return;
 	}
+	if (!this->filter_texture->get_object() || !this->input_texture->get_object() || !this->final_texture->get_object()) {
+		obs_source_skip_video_filter(this->self);
+		return;
+	}
 
 	// Draw source
 	{
