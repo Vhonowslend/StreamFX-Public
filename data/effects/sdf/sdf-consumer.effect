@@ -256,16 +256,9 @@ uniform float pOutlineSharpnessInverse <
 
 float4 PSOutline(VertDataOut v_in) : TARGET
 {
-	// Sample Input and SDF
-	float4 tex_input = pImageTexture.Sample(imageSampler, v_in.uv);
-	float4 tex_sdf = pSDFTexture.Sample(sdfSampler, v_in.uv);
-
-	// Expand SDF range to full.
-	float2 sdf = tex_sdf.rg * float2(MAX_DISTANCE, MAX_DISTANCE);
-
-	// Calculate distance.
-	float dist = sdf.r - sdf.g;
-
+	float2 iodist = pSDFTexture.Sample(sdfSampler, v_in.uv).rg * MAX_DISTANCE;
+	float dist = iodist.r - iodist.g;
+	
 	// Calculate where we are in the outline.
 	// We can use any of the following gradient functions: https://www.desmos.com/calculator/bmbrncaiem
 	/// Base Curve
@@ -279,7 +272,7 @@ float4 PSOutline(VertDataOut v_in) : TARGET
 	// Blend by Color.a so that our outline doesn't delete information.
 	float l = 1.0 - ((1.0 - y1) * pOutlineColor.a);
 
-	return lerp(pOutlineColor, tex_input, l);
+	return float4(pOutlineColor.r, pOutlineColor.g, pOutlineColor.b, pOutlineColor.a * (1.0 - y1));
 }
 
 technique Outline

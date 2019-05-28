@@ -775,32 +775,24 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect
 		//   Inner Glow
 		//   Outline
 
-		{ // Normal Source
+		// Optimized Render path.
+		try {
+			auto op = this->m_output_rt->render(baseW, baseH);
+			gs_ortho(0, 1, 0, 1, 0, 1);
+
 			gs_enable_blending(false);
 			gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
-
 			auto param = gs_effect_get_param_by_name(default_effect, "image");
 			if (param) {
 				gs_effect_set_texture(param, this->m_output_texture->get_object());
 			}
-
-			{
-				auto op = this->m_output_rt->render(baseW, baseH);
-				gs_ortho(0, 1, 0, 1, 0, 1);
-				while (gs_effect_loop(default_effect, "Draw")) {
-					gs_draw_sprite(0, 0, 1, 1);
-				}
+			while (gs_effect_loop(default_effect, "Draw")) {
+				gs_draw_sprite(0, 0, 1, 1);
 			}
 
-			// Flip Buffers
-			m_output_rt->get_texture(this->m_output_texture);
-		}
-
-		if (m_outer_shadow) {
-			try {
-				gs_enable_blending(true);
-				gs_blend_function_separate(GS_BLEND_SRCALPHA, GS_BLEND_DSTALPHA, GS_BLEND_ONE, GS_BLEND_ONE);
-
+			gs_enable_blending(true);
+			gs_blend_function_separate(GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA, GS_BLEND_ONE, GS_BLEND_ONE);
+			if (this->m_outer_shadow) {
 				consumer_effect->get_parameter("pSDFTexture").set_texture(this->m_sdf_texture);
 				consumer_effect->get_parameter("pSDFThreshold").set_float(this->m_sdf_threshold);
 				consumer_effect->get_parameter("pImageTexture").set_texture(this->m_source_texture->get_object());
@@ -810,26 +802,11 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect
 				consumer_effect->get_parameter("pShadowOffset")
 					.set_float2(this->m_outer_shadow_offset_x / float_t(baseW),
 								this->m_outer_shadow_offset_y / float_t(baseH));
-
-				{
-					auto op = this->m_output_rt->render(baseW, baseH);
-					gs_ortho(0, 1, 0, 1, 0, 1);
-					while (gs_effect_loop(consumer_effect->get_object(), "ShadowOuter")) {
-						gs_draw_sprite(0, 0, 1, 1);
-					}
+				while (gs_effect_loop(consumer_effect->get_object(), "ShadowOuter")) {
+					gs_draw_sprite(0, 0, 1, 1);
 				}
-
-				// Flip Buffers
-				m_output_rt->get_texture(this->m_output_texture);
-			} catch (...) {
 			}
-		}
-
-		if (m_inner_shadow) {
-			try {
-				gs_enable_blending(true);
-				gs_blend_function_separate(GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA, GS_BLEND_ONE, GS_BLEND_ONE);
-
+			if (this->m_inner_shadow) {
 				consumer_effect->get_parameter("pSDFTexture").set_texture(this->m_sdf_texture);
 				consumer_effect->get_parameter("pSDFThreshold").set_float(this->m_sdf_threshold);
 				consumer_effect->get_parameter("pImageTexture").set_texture(this->m_source_texture->get_object());
@@ -839,26 +816,11 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect
 				consumer_effect->get_parameter("pShadowOffset")
 					.set_float2(this->m_inner_shadow_offset_x / float_t(baseW),
 								this->m_inner_shadow_offset_y / float_t(baseH));
-
-				{
-					auto op = this->m_output_rt->render(baseW, baseH);
-					gs_ortho(0, 1, 0, 1, 0, 1);
-					while (gs_effect_loop(consumer_effect->get_object(), "ShadowInner")) {
-						gs_draw_sprite(0, 0, 1, 1);
-					}
+				while (gs_effect_loop(consumer_effect->get_object(), "ShadowInner")) {
+					gs_draw_sprite(0, 0, 1, 1);
 				}
-
-				// Flip Buffers
-				m_output_rt->get_texture(this->m_output_texture);
-			} catch (...) {
 			}
-		}
-
-		if (m_outer_glow) {
-			try {
-				gs_enable_blending(true);
-				gs_blend_function_separate(GS_BLEND_SRCALPHA, GS_BLEND_DSTALPHA, GS_BLEND_ONE, GS_BLEND_ONE);
-
+			if (this->m_outer_glow) {
 				consumer_effect->get_parameter("pSDFTexture").set_texture(this->m_sdf_texture);
 				consumer_effect->get_parameter("pSDFThreshold").set_float(this->m_sdf_threshold);
 				consumer_effect->get_parameter("pImageTexture").set_texture(this->m_source_texture->get_object());
@@ -866,26 +828,11 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect
 				consumer_effect->get_parameter("pGlowWidth").set_float(this->m_outer_glow_width);
 				consumer_effect->get_parameter("pGlowSharpness").set_float(this->m_outer_glow_sharpness);
 				consumer_effect->get_parameter("pGlowSharpnessInverse").set_float(this->m_outer_glow_sharpness_inv);
-
-				{
-					auto op = this->m_output_rt->render(baseW, baseH);
-					gs_ortho(0, 1, 0, 1, 0, 1);
-					while (gs_effect_loop(consumer_effect->get_object(), "GlowOuter")) {
-						gs_draw_sprite(0, 0, 1, 1);
-					}
+				while (gs_effect_loop(consumer_effect->get_object(), "GlowOuter")) {
+					gs_draw_sprite(0, 0, 1, 1);
 				}
-
-				// Flip Buffers
-				m_output_rt->get_texture(this->m_output_texture);
-			} catch (...) {
 			}
-		}
-
-		if (m_inner_glow) {
-			try {
-				gs_enable_blending(true);
-				gs_blend_function_separate(GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA, GS_BLEND_ONE, GS_BLEND_ONE);
-
+			if (this->m_inner_glow) {
 				consumer_effect->get_parameter("pSDFTexture").set_texture(this->m_sdf_texture);
 				consumer_effect->get_parameter("pSDFThreshold").set_float(this->m_sdf_threshold);
 				consumer_effect->get_parameter("pImageTexture").set_texture(this->m_source_texture->get_object());
@@ -893,26 +840,11 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect
 				consumer_effect->get_parameter("pGlowWidth").set_float(this->m_inner_glow_width);
 				consumer_effect->get_parameter("pGlowSharpness").set_float(this->m_inner_glow_sharpness);
 				consumer_effect->get_parameter("pGlowSharpnessInverse").set_float(this->m_inner_glow_sharpness_inv);
-
-				{
-					auto op = this->m_output_rt->render(baseW, baseH);
-					gs_ortho(0, 1, 0, 1, 0, 1);
-					while (gs_effect_loop(consumer_effect->get_object(), "GlowInner")) {
-						gs_draw_sprite(0, 0, 1, 1);
-					}
+				while (gs_effect_loop(consumer_effect->get_object(), "GlowInner")) {
+					gs_draw_sprite(0, 0, 1, 1);
 				}
-
-				// Flip Buffers
-				m_output_rt->get_texture(this->m_output_texture);
-			} catch (...) {
 			}
-		}
-
-		if (m_outline) {
-			try {
-				gs_enable_blending(true);
-				gs_blend_function_separate(GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA, GS_BLEND_ONE, GS_BLEND_ONE);
-
+			if (this->m_outline) {
 				consumer_effect->get_parameter("pSDFTexture").set_texture(this->m_sdf_texture);
 				consumer_effect->get_parameter("pSDFThreshold").set_float(this->m_sdf_threshold);
 				consumer_effect->get_parameter("pImageTexture").set_texture(this->m_source_texture->get_object());
@@ -921,20 +853,14 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect
 				consumer_effect->get_parameter("pOutlineOffset").set_float(this->m_outline_offset);
 				consumer_effect->get_parameter("pOutlineSharpness").set_float(this->m_outline_sharpness);
 				consumer_effect->get_parameter("pOutlineSharpnessInverse").set_float(this->m_outline_sharpness_inv);
-
-				{
-					auto op = this->m_output_rt->render(baseW, baseH);
-					gs_ortho(0, 1, 0, 1, 0, 1);
-					while (gs_effect_loop(consumer_effect->get_object(), "Outline")) {
-						gs_draw_sprite(0, 0, 1, 1);
-					}
+				while (gs_effect_loop(consumer_effect->get_object(), "Outline")) {
+					gs_draw_sprite(0, 0, 1, 1);
 				}
-
-				// Flip Buffers
-				m_output_rt->get_texture(this->m_output_texture);
-			} catch (...) {
 			}
+		} catch (...) {
 		}
+
+		this->m_output_rt->get_texture(this->m_output_texture);
 
 		gs_blend_state_pop();
 		this->m_output_rendered = true;
