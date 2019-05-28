@@ -19,6 +19,10 @@
 
 #pragma once
 #include <type_traits>
+#include <cinttypes>
+#include <limits>
+
+const char* obs_module_recursive_text(const char* to_translate, size_t depth = std::numeric_limits<size_t>::max());
 
 template<typename Enum>
 struct enable_bitmask_operators {
