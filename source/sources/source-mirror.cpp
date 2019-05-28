@@ -56,6 +56,7 @@
 #define P_SCALING_BOUNDS_FILL "Source.Mirror.Scaling.Bounds.Fill"
 #define P_SCALING_BOUNDS_FILLWIDTH "Source.Mirror.Scaling.Bounds.FillWidth"
 #define P_SCALING_BOUNDS_FILLHEIGHT "Source.Mirror.Scaling.Bounds.FillHeight"
+#define P_SCALING_ALIGNMENT "Source.Mirror.Scaling.Alignment"
 
 // Initializer & Finalizer
 INITIALIZER(SourceMirrorInit)
@@ -123,6 +124,7 @@ void source::mirror::mirror_factory::get_defaults(obs_data_t* data)
 	obs_data_set_default_int(data, P_SCALING_METHOD, (int64_t)obs_scale_type::OBS_SCALE_BILINEAR);
 	obs_data_set_default_bool(data, P_SCALING_TRANSFORMKEEPORIGINAL, false);
 	obs_data_set_default_int(data, P_SCALING_BOUNDS, (int64_t)obs_bounds_type::OBS_BOUNDS_STRETCH);
+	obs_data_set_default_int(data, P_SCALING_ALIGNMENT, OBS_ALIGN_CENTER);
 }
 
 bool source::mirror::mirror_factory::modified_properties(obs_properties_t* pr, obs_property_t* p, obs_data_t* data)
@@ -145,6 +147,7 @@ bool source::mirror::mirror_factory::modified_properties(obs_properties_t* pr, o
 		obs_property_set_visible(obs_properties_get(pr, P_SCALING_METHOD), show);
 		obs_property_set_visible(obs_properties_get(pr, P_SCALING_SIZE), show);
 		obs_property_set_visible(obs_properties_get(pr, P_SCALING_BOUNDS), show);
+		obs_property_set_visible(obs_properties_get(pr, P_SCALING_ALIGNMENT), show);
 		return true;
 	}
 
@@ -236,6 +239,23 @@ obs_properties_t* source::mirror::mirror_factory::get_properties(void*)
 							  (int64_t)obs_bounds_type::OBS_BOUNDS_SCALE_TO_WIDTH);
 	obs_property_list_add_int(p, P_TRANSLATE(P_SCALING_BOUNDS_FILLHEIGHT),
 							  (int64_t)obs_bounds_type::OBS_BOUNDS_SCALE_TO_HEIGHT);
+
+	p = obs_properties_add_list(pr, P_SCALING_ALIGNMENT, P_TRANSLATE(P_SCALING_ALIGNMENT), OBS_COMBO_TYPE_LIST,
+								OBS_COMBO_FORMAT_INT);
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING_ALIGNMENT)));
+	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_LEFT "\\@ \\@" S_ALIGNMENT_TOP "\\@"),
+							  OBS_ALIGN_LEFT | OBS_ALIGN_TOP);
+	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_TOP "\\@"), OBS_ALIGN_TOP);
+	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_RIGHT "\\@ \\@" S_ALIGNMENT_TOP "\\@"),
+							  OBS_ALIGN_RIGHT | OBS_ALIGN_TOP);
+	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_LEFT "\\@"), OBS_ALIGN_LEFT);
+	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_CENTER "\\@"), OBS_ALIGN_CENTER);
+	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_RIGHT "\\@"), OBS_ALIGN_RIGHT);
+	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_LEFT "\\@ \\@" S_ALIGNMENT_BOTTOM "\\@"),
+							  OBS_ALIGN_LEFT | OBS_ALIGN_BOTTOM);
+	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_BOTTOM "\\@"), OBS_ALIGN_BOTTOM);
+	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_RIGHT "\\@ \\@" S_ALIGNMENT_BOTTOM "\\@"),
+							  OBS_ALIGN_RIGHT | OBS_ALIGN_BOTTOM);
 
 	return pr;
 }
@@ -487,7 +507,9 @@ void source::mirror::mirror_instance::update(obs_data_t* data)
 		this->m_rescale_keep_orig_size = obs_data_get_bool(data, P_SCALING_TRANSFORMKEEPORIGINAL);
 		this->m_rescale_type           = (obs_scale_type)obs_data_get_int(data, P_SCALING_METHOD);
 		this->m_rescale_bounds         = (obs_bounds_type)obs_data_get_int(data, P_SCALING_BOUNDS);
+		this->m_rescale_alignment        = obs_data_get_int(data, P_SCALING_ALIGNMENT);
 	}
+
 }
 
 void source::mirror::mirror_instance::activate()
@@ -526,10 +548,10 @@ void source::mirror::mirror_instance::video_tick(float time)
 		info.rot              = 0;
 		info.scale.x          = 1.f;
 		info.scale.y          = 1.f;
-		info.alignment        = 5;
+		info.alignment        = OBS_ALIGN_LEFT | OBS_ALIGN_TOP;
 		info.bounds.x         = float_t(this->get_width());
 		info.bounds.y         = float_t(this->get_height());
-		info.bounds_alignment = 5;
+		info.bounds_alignment = m_rescale_alignment;
 		info.bounds_type      = obs_bounds_type::OBS_BOUNDS_STRETCH;
 		if (this->m_rescale_enabled) {
 			info.bounds_type = this->m_rescale_bounds;

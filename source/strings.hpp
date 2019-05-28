@@ -45,6 +45,12 @@
 #define S_SOURCETYPE_SOURCE "SourceType.Source"
 #define S_SOURCETYPE_SCENE "SourceType.Scene"
 
+#define S_ALIGNMENT_CENTER "Alignment.Center"
+#define S_ALIGNMENT_LEFT "Alignment.Left"
+#define S_ALIGNMENT_RIGHT "Alignment.Right"
+#define S_ALIGNMENT_TOP "Alignment.Top"
+#define S_ALIGNMENT_BOTTOM "Alignment.Bottom"
+
 #define S_BLUR_TYPE_BOX "Blur.Type.Box"
 #define S_BLUR_TYPE_BOX_LINEAR "Blur.Type.BoxLinear"
 #define S_BLUR_TYPE_GAUSSIAN "Blur.Type.Gaussian"

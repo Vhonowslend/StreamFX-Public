@@ -90,6 +90,7 @@ namespace source {
 			std::shared_ptr<gfx::source_texture> m_scene_texture_renderer;
 			std::shared_ptr<gs::texture>         m_scene_texture;
 			bool                                 m_scene_rendered;
+			int                                  m_rescale_alignment;
 
 			// Rescaling
 			bool            m_rescale_enabled;
