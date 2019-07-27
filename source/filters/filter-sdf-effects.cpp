@@ -127,7 +127,7 @@ void filter::sdf_effects::sdf_effects_factory::on_list_fill()
 		}
 		try {
 			kv.second = std::make_shared<gs::effect>(path);
-		} catch (std::exception ex) {
+		} catch (std::exception& ex) {
 			P_LOG_ERROR(LOG_PREFIX "Failed to load effect '%s' (located at '%s') with error(s): %s", kv.first, path,
 						ex.what());
 		}
@@ -864,6 +864,11 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect
 
 		gs_blend_state_pop();
 		this->m_output_rendered = true;
+	}
+
+	if (!this->m_output_texture) {
+		obs_source_skip_video_filter(this->m_self);
+		return;
 	}
 
 	gs_eparam_t* ep = gs_effect_get_param_by_name(final_effect, "image");
