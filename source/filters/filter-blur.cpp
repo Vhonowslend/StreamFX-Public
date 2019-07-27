@@ -161,7 +161,7 @@ void filter::blur::blur_factory::on_list_fill()
 		char* file = obs_module_file("effects/color-conversion.effect");
 		try {
 			color_converter_effect = std::make_shared<gs::effect>(file);
-		} catch (std::runtime_error ex) {
+		} catch (std::runtime_error& ex) {
 			P_LOG_ERROR("<filter-blur> Loading effect '%s' failed with error(s): %s", file, ex.what());
 		}
 		bfree(file);
@@ -170,7 +170,7 @@ void filter::blur::blur_factory::on_list_fill()
 		char* file = obs_module_file("effects/mask.effect");
 		try {
 			mask_effect = std::make_shared<gs::effect>(file);
-		} catch (std::runtime_error ex) {
+		} catch (std::runtime_error& ex) {
 			P_LOG_ERROR("<filter-blur> Loading effect '%s' failed with error(s): %s", file, ex.what());
 		}
 		bfree(file);
@@ -318,7 +318,7 @@ filter::blur::blur_instance::blur_instance(obs_data_t* settings, obs_source_t* p
 	try {
 		this->m_source_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 		this->m_output_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	} catch (std::exception ex) {
+	} catch (std::exception& ex) {
 		P_LOG_ERROR("<filter-blur:%s> Failed to create rendertargets, error %s.", obs_source_get_name(m_self),
 					ex.what());
 	}

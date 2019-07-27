@@ -133,7 +133,7 @@ filter::dynamic_mask::dynamic_mask_instance::dynamic_mask_instance(obs_data_t* d
 		char* file = obs_module_file("effects/channel-mask.effect");
 		try {
 			this->effect = std::make_shared<gs::effect>(file);
-		} catch (std::exception ex) {
+		} catch (std::exception& ex) {
 			P_LOG_ERROR("Loading channel mask effect failed with error(s):\n%s", ex.what());
 		}
 		assert(this->effect != nullptr);
