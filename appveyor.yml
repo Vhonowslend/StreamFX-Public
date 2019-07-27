@@ -12,7 +12,7 @@ image:
 
 environment:
   CMAKE_SYSTEM_VERSION: 10.0.17134.0
-  PACKAGE_PREFIX: amd-encoder-for-obs-studio
+  PACKAGE_PREFIX: obs-stream-effects
   INNOSETUP_URL: http://www.jrsoftware.org/download.php/is.exe
   CURL_VERSION: 7.39.0
 
@@ -39,7 +39,7 @@ install:
 - cmd: ci/appveyor-install.bat
 
 build_script:
-- cmd: node ci/appveyor-build.js
+- cmd: node ci/builder.js
 
 after_build:
 - cmd: ci/appveyor-package.bat
