@@ -22,6 +22,11 @@
 #include <cinttypes>
 #include <limits>
 
+extern "C" {
+#include <obs-config.h>
+#include <obs.h>
+}
+
 const char* obs_module_recursive_text(const char* to_translate, size_t depth = std::numeric_limits<size_t>::max());
 
 template<typename Enum>
@@ -49,8 +54,8 @@ typename std::enable_if<enable_bitmask_operators<Enum>::enable, Enum>::type oper
 		static const bool enable = true; \
 	};
 
-#define vstr(s) dstr(s)
-#define dstr(s) #s
+#define D_STR(s) #s
+#define D_VSTR(s) D_STR(s)
 
 #ifdef __cplusplus
 #define INITIALIZER(f)   \
@@ -79,3 +84,10 @@ typename std::enable_if<enable_bitmask_operators<Enum>::enable, Enum>::type oper
 	static void f(void) __attribute__((constructor)); \
 	static void f(void)
 #endif
+
+namespace util {
+	bool inline are_property_groups_broken()
+	{
+		return obs_get_version() < MAKE_SEMANTIC_VERSION(24, 0, 0);
+	}
+}
