@@ -38,7 +38,7 @@
 
 gs::effect::effect() : m_effect(nullptr) {}
 
-gs::effect::effect(std::string file)
+gs::effect::effect(std::string file) : effect()
 {
 #ifdef OBS_LOAD_EFFECT_FILE
 	char* errorMessage = nullptr;
@@ -84,7 +84,7 @@ gs::effect::effect(std::string file)
 #endif
 }
 
-gs::effect::effect(std::string code, std::string name)
+gs::effect::effect(std::string code, std::string name) : effect()
 {
 	char* errorMessage = nullptr;
 	auto  gctx         = gs::context();
@@ -156,12 +156,11 @@ gs::effect_parameter gs::effect::get_parameter(std::string name)
 	return effect_parameter(param);
 }
 
-gs::effect_parameter::effect_parameter(gs_eparam_t* param)
+gs::effect_parameter::effect_parameter(gs_eparam_t* param) : m_param(param)
 {
 	if (!param)
 		throw std::invalid_argument("param is null");
 
-	m_param = param;
 	gs_effect_get_param_info(m_param, &m_paramInfo);
 }
 
