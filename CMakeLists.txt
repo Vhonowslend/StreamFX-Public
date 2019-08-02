@@ -152,7 +152,7 @@ mark_as_advanced(FORCE OBS_NATIVE OBS_PACKAGE OBS_REFERENCE OBS_DOWNLOAD)
 
 if(NOT TARGET libobs)
 	set(${PropertyPrefix}OBS_STUDIO_DIR "" CACHE PATH "OBS Studio Source/Package Directory")
-	set(${PropertyPrefix}OBS_DOWNLOAD_VERSION "22.0.2" CACHE STRING "OBS Studio Version to download")
+	set(${PropertyPrefix}OBS_DOWNLOAD_VERSION "23.2.1-ci" CACHE STRING "OBS Studio Version to download")
 endif()
 
 if(NOT ${PropertyPrefix}OBS_NATIVE)
