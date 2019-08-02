@@ -1,0 +1,120 @@
+// Parameters
+uniform float4x4 ViewProj;
+uniform texture2d image;
+uniform float4 pLift;
+uniform float4 pGamma;
+uniform float4 pGain;
+uniform float4 pOffset;
+uniform float3 pTintLow;
+uniform float3 pTintMid;
+uniform float3 pTintHig;
+uniform float4 pCorrection;
+
+// Data
+sampler_state def_sampler {
+	Filter    = Point;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+	MinLOD    = 0;
+	MaxLOD    = 0;
+};
+
+struct VertDataIn {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+struct VertDataOut {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertDataOut VSDefault(VertDataIn v)
+{
+	VertDataOut ov;
+	ov.pos = mul(float4(v.pos.xyz, 1.0), ViewProj);
+	ov.uv = v.uv;
+	return ov;
+}
+
+float4 Lift(float4 v)
+{
+	v.rgb = pLift.aaa + v.rgb;
+	v.rgb = pLift.rgb + v.rgb;
+	return v;
+}
+
+float4 Gamma(float4 v)
+{
+	v.rgb = pow(pow(v.rgb, pGamma.rgb), pGamma.aaa);
+	return v;
+}
+
+float4 Gain(float4 v)
+{
+	v.rgb *= pGain.rgb;
+	v.rgb *= pGain.a;
+	return v;
+}
+
+float4 Offset(float4 v)
+{
+	v.rgb = pOffset.aaa + v.rgb;
+	v.rgb = pOffset.rgb + v.rgb;
+	return v;
+}
+
+float4 RGBtoHSV(float4 RGBA) {
+	const float4 K = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+	const float e = 1.0e-10;	
+	float4 p = lerp(float4(RGBA.bg, K.wz), float4(RGBA.gb, K.xy), step(RGBA.b, RGBA.g));
+	float4 q = lerp(float4(p.xyw, RGBA.r), float4(RGBA.r, p.yzx), step(p.x, RGBA.r));	
+	float d = q.x - min(q.w, q.y);
+	return float4(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x, RGBA.a);
+}
+
+float4 HSVtoRGB(float4 HSVA) {
+	const float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+	float4 v = float4(0,0,0,0);
+	v.rgb = HSVA.z * lerp(K.xxx, clamp(abs(frac(HSVA.xxx + K.xyz) * 6.0 - K.www) - K.xxx, 0.0, 1.0), HSVA.y);
+	v.a = HSVA.a;
+	return v;
+}
+
+float4 Tint(float4 v)
+{
+	float4 v1 = RGBtoHSV(v);
+	float3 tint = float3(0,0,0);
+	if (v1.b > 0.5) {
+		tint = lerp(pTintMid, pTintHig, v1.b * 2.0 - 1.0);
+	} else {
+		tint = lerp(pTintLow, pTintMid, v1.b * 2.0);
+	}
+	v.rgb *= tint;
+	return v;
+}
+
+float4 Correction(float4 v)
+{
+	float4 v1 = RGBtoHSV(v);
+	v1.r += pCorrection.r;
+	v1.g *= pCorrection.g;
+	v1.b *= pCorrection.b;
+	float4 v2 = HSVtoRGB(v1);
+	v2.rgb = ((v2.rgb - 0.5) * max(pCorrection.a, 0)) + 0.5;
+	return v2;
+}
+
+float4 PSColorGrade(VertDataOut v) : TARGET
+{
+	return Correction(Tint(Offset(Gain(Gamma(Lift(image.Sample(def_sampler, v.uv)))))));
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v);
+		pixel_shader = PSColorGrade(v);		
+	}
+}

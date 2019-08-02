@@ -223,6 +223,7 @@ SET(PROJECT_DATA_LOCALE
 SET(PROJECT_DATA_EFFECTS
 	"${PROJECT_SOURCE_DIR}/data/effects/channel-mask.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/color-conversion.effect"
+	"${PROJECT_SOURCE_DIR}/data/effects/color-grade.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/displace.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mask.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/mipgen.effect"
@@ -336,6 +337,8 @@ SET(PROJECT_PRIVATE_SOURCE
 	# Filters
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-blur.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-blur.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-color-grade.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-color-grade.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-custom-shader.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-custom-shader.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-displacement.hpp"
