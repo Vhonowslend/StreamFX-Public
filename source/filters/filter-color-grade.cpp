@@ -34,6 +34,7 @@
 #endif
 
 #define ST "Filter.ColorGrade"
+#define ST_TOOL ST ".Tool"
 #define ST_LIFT ST ".Lift"
 #define ST_LIFT_(x) ST_LIFT "." D_VSTR(x)
 #define ST_GAMMA ST ".Gamma"
@@ -73,6 +74,7 @@ const char* get_name(void*)
 
 void get_defaults(obs_data_t* data)
 {
+	obs_data_set_default_string(data, ST_TOOL, ST_CORRECTION);
 	obs_data_set_default_double(data, ST_LIFT_(RED), 0);
 	obs_data_set_default_double(data, ST_LIFT_(GREEN), 0);
 	obs_data_set_default_double(data, ST_LIFT_(BLUE), 0);
@@ -104,9 +106,59 @@ void get_defaults(obs_data_t* data)
 	obs_data_set_default_double(data, ST_CORRECTION_(CONTRAST), 100.0);
 }
 
+bool tool_modified(obs_properties_t* props, obs_property_t* property, obs_data_t* settings)
+{
+	const std::string mode{obs_data_get_string(settings, ST_TOOL)};
+
+	std::vector<std::pair<std::string, std::vector<std::string>>> tool_to_property{
+		{ST_LIFT, {ST_LIFT_(RED), ST_LIFT_(GREEN), ST_LIFT_(BLUE), ST_LIFT_(ALL)}},
+		{ST_GAMMA, {ST_GAMMA_(RED), ST_GAMMA_(GREEN), ST_GAMMA_(BLUE), ST_GAMMA_(ALL)}},
+		{ST_GAIN, {ST_GAIN_(RED), ST_GAIN_(GREEN), ST_GAIN_(BLUE), ST_GAIN_(ALL)}},
+		{ST_OFFSET, {ST_OFFSET_(RED), ST_OFFSET_(GREEN), ST_OFFSET_(BLUE), ST_OFFSET_(ALL)}},
+		{ST_TINT,
+		 {
+			 ST_TINT_(TONE_LOW, RED),
+			 ST_TINT_(TONE_LOW, GREEN),
+			 ST_TINT_(TONE_LOW, BLUE),
+			 ST_TINT_(TONE_MID, RED),
+			 ST_TINT_(TONE_MID, GREEN),
+			 ST_TINT_(TONE_MID, BLUE),
+			 ST_TINT_(TONE_HIG, RED),
+			 ST_TINT_(TONE_HIG, GREEN),
+			 ST_TINT_(TONE_HIG, BLUE),
+		 }},
+		{ST_CORRECTION,
+		 {ST_CORRECTION_(HUE), ST_CORRECTION_(SATURATION), ST_CORRECTION_(LIGHTNESS), ST_CORRECTION_(CONTRAST)}},
+	};
+
+	for (auto kv : tool_to_property) {
+		if (mode == kv.first) {
+			for (auto kv2 : kv.second) {
+				obs_property_set_visible(obs_properties_get(props, kv2.c_str()), true);
+			}
+		} else {
+			for (auto kv2 : kv.second) {
+				obs_property_set_visible(obs_properties_get(props, kv2.c_str()), false);
+			}
+		}
+	}
+}
+
 obs_properties_t* get_properties(void*)
 {
 	obs_properties_t* pr = obs_properties_create();
+
+	if (util::are_property_groups_broken()) {
+		auto p =
+			obs_properties_add_list(pr, ST_TOOL, P_TRANSLATE(ST_TOOL), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+		obs_property_list_add_string(p, P_TRANSLATE(ST_LIFT), ST_LIFT);
+		obs_property_list_add_string(p, P_TRANSLATE(ST_GAMMA), ST_GAMMA);
+		obs_property_list_add_string(p, P_TRANSLATE(ST_GAIN), ST_GAIN);
+		obs_property_list_add_string(p, P_TRANSLATE(ST_OFFSET), ST_OFFSET);
+		obs_property_list_add_string(p, P_TRANSLATE(ST_TINT), ST_TINT);
+		obs_property_list_add_string(p, P_TRANSLATE(ST_CORRECTION), ST_CORRECTION);
+		obs_property_set_modified_callback(p, &tool_modified);
+	}
 
 	{
 		obs_properties_t* grp = pr;
@@ -193,7 +245,7 @@ obs_properties_t* get_properties(void*)
 		obs_properties_t* grp = pr;
 		if (!util::are_property_groups_broken()) {
 			grp = obs_properties_create();
-			obs_properties_add_group(pr, ST_OFFSET, P_TRANSLATE(ST_OFFSET), OBS_GROUP_NORMAL, grp);
+			obs_properties_add_group(pr, ST_CORRECTION, P_TRANSLATE(ST_CORRECTION), OBS_GROUP_NORMAL, grp);
 		}
 
 		obs_properties_add_float_slider(grp, ST_CORRECTION_(HUE), P_TRANSLATE(ST_CORRECTION_(HUE)), -180, 180.0, 0.01);
