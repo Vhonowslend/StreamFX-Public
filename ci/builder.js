@@ -69,8 +69,8 @@ let package_runners = [];
 		'--config', 'RelWithDebInfo',
 		'--target', 'INSTALL'
 	].concat(cmake_build_extra)));
-	package_runners.push(new runner('64-bit', 'cmake', [
-		'--build', 'build/64',
+	package_runners.push(new runner('32-bit', 'cmake', [
+		'--build', 'build/32',
 		'--target', 'PACKAGE_7Z',
 		'--config', 'RelWithDebInfo'
 	].concat(cmake_build_extra)));
