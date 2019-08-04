@@ -68,25 +68,75 @@ namespace gs {
 		type        get_type();
 
 		void set_bool(bool v);
+		void get_bool(bool& v);
+		void get_default_bool(bool& v);
+
 		void set_bool_array(bool v[], size_t sz);
+
 		void set_float(float_t x);
-		void set_float2(vec2& v);
+		void get_float(float_t& x);
+		void get_default_float(float_t& x);
+
+		void set_float2(vec2 const& v);
+		void get_float2(vec2& v);
+		void get_default_float2(vec2& v);
 		void set_float2(float_t x, float_t y);
-		void set_float3(vec3& v);
+		void get_float2(float_t& x, float_t& y);
+		void get_default_float2(float_t& x, float_t& y);
+
+		void set_float3(vec3 const& v);
+		void get_float3(vec3& v);
+		void get_default_float3(vec3& v);
 		void set_float3(float_t x, float_t y, float_t z);
-		void set_float4(vec4& v);
+		void get_float3(float_t& x, float_t& y, float_t& z);
+		void get_default_float3(float_t& x, float_t& y, float_t& z);
+
+		void set_float4(vec4 const& v);
+		void get_float4(vec4& v);
+		void get_default_float4(vec4& v);
 		void set_float4(float_t x, float_t y, float_t z, float_t w);
+		void get_float4(float_t& x, float_t& y, float_t& z, float_t& w);
+		void get_default_float4(float_t& x, float_t& y, float_t& z, float_t& w);
+
 		void set_float_array(float_t v[], size_t sz);
+
 		void set_int(int32_t x);
+		void get_int(int32_t& x);
+		void get_default_int(int32_t& x);
+
 		void set_int2(int32_t x, int32_t y);
+		void get_int2(int32_t& x, int32_t& y);
+		void get_default_int2(int32_t& x, int32_t& y);
+
 		void set_int3(int32_t x, int32_t y, int32_t z);
+		void get_int3(int32_t& x, int32_t& y, int32_t& z);
+		void get_default_int3(int32_t& x, int32_t& y, int32_t& z);
+
 		void set_int4(int32_t x, int32_t y, int32_t z, int32_t w);
+		void get_int4(int32_t& x, int32_t& y, int32_t& z, int32_t& w);
+		void get_default_int4(int32_t& x, int32_t& y, int32_t& z, int32_t& w);
+
 		void set_int_array(int32_t v[], size_t sz);
-		void set_matrix(matrix4& v);
+
+		void set_matrix(matrix4 const& v);
+		void get_matrix(matrix4& v);
+		void get_default_matrix(matrix4& v);
+
 		void set_texture(std::shared_ptr<gs::texture> v);
 		void set_texture(gs_texture_t* v);
+
 		void set_sampler(std::shared_ptr<gs::sampler> v);
 		void set_sampler(gs_sampler_state* v);
+
+		void set_string(std::string const& v);
+		void get_string(std::string& v);
+		void get_default_string(std::string& v);
+
+		size_t           count_annotations();
+		effect_parameter get_annotation(size_t idx);
+		effect_parameter get_annotation(std::string name);
+		bool             has_annotation(std::string name);
+		bool             has_annotation(std::string name, effect_parameter::type type);
 	};
 
 	class effect {
@@ -107,6 +157,5 @@ namespace gs {
 		effect_parameter            get_parameter(std::string name);
 		bool                        has_parameter(std::string name);
 		bool                        has_parameter(std::string name, effect_parameter::type type);
-
 	};
 } // namespace gs
