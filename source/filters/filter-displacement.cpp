@@ -118,12 +118,10 @@ obs_properties_t* filter::displacement::displacement_factory::get_properties(voi
 	if (ptr)
 		path = reinterpret_cast<displacement_instance*>(ptr)->get_file();
 
-	obs_properties_add_path(pr, ST_FILE, D_TRANSLATE(ST_FILE),
-							obs_path_type::OBS_PATH_FILE, D_TRANSLATE(ST_FILE_TYPES), path.c_str());
-	obs_properties_add_float_slider(pr, ST_RATIO, D_TRANSLATE(ST_RATIO), 0, 1,
-									0.01);
-	obs_properties_add_float_slider(pr, ST_SCALE, D_TRANSLATE(ST_SCALE), -1000,
-									1000, 0.01);
+	obs_properties_add_path(pr, ST_FILE, D_TRANSLATE(ST_FILE), obs_path_type::OBS_PATH_FILE, D_TRANSLATE(ST_FILE_TYPES),
+							path.c_str());
+	obs_properties_add_float_slider(pr, ST_RATIO, D_TRANSLATE(ST_RATIO), 0, 1, 0.01);
+	obs_properties_add_float_slider(pr, ST_SCALE, D_TRANSLATE(ST_SCALE), -1000, 1000, 0.01);
 	return pr;
 }
 
@@ -173,16 +171,16 @@ void filter::displacement::displacement_instance::validate_file_texture(std::str
 
 	// File name different
 	if (file != _file_name) {
-		do_update   = true;
+		do_update  = true;
 		_file_name = file;
 	}
 
 	// Timestamp verification
 	struct stat stats;
 	if (os_stat(_file_name.c_str(), &stats) != 0) {
-		do_update            = do_update || (stats.st_ctime != _file_create_time);
-		do_update            = do_update || (stats.st_mtime != _file_modified_time);
-		do_update            = do_update || (static_cast<size_t>(stats.st_size) != _file_size);
+		do_update           = do_update || (stats.st_ctime != _file_create_time);
+		do_update           = do_update || (stats.st_mtime != _file_modified_time);
+		do_update           = do_update || (static_cast<size_t>(stats.st_size) != _file_size);
 		_file_create_time   = stats.st_ctime;
 		_file_modified_time = stats.st_mtime;
 		_file_size          = static_cast<size_t>(stats.st_size);
@@ -191,7 +189,7 @@ void filter::displacement::displacement_instance::validate_file_texture(std::str
 	do_update = !_file_texture || do_update;
 
 	if (do_update) {
-		try {		
+		try {
 			_file_texture = std::make_shared<gs::texture>(_file_name);
 		} catch (...) {
 		}
@@ -202,13 +200,15 @@ filter::displacement::displacement_instance::displacement_instance(obs_data_t* d
 	: _self(context), _timer(0), _effect(nullptr), _distance(0), _file_create_time(0), _file_modified_time(0),
 	  _file_size(0)
 {
-	char* effectFile = obs_module_file("effects/displace._effect");
-	try {
-		_effect = std::make_shared<gs::effect>(effectFile);
-	} catch (...) {
-		P_LOG_ERROR("<Displacement Filter:%s> Failed to load displacement _effect.", obs_source_get_name(_self));
+	char* effectFile = obs_module_file("effects/displace.effect");
+	if (effectFile) {
+		try {
+			_effect = std::make_shared<gs::effect>(effectFile);
+		} catch (...) {
+			P_LOG_ERROR("<Displacement Filter:%s> Failed to load displacement effect.", obs_source_get_name(_self));
+		}
+		bfree(effectFile);
 	}
-	bfree(effectFile);
 
 	update(data);
 }
