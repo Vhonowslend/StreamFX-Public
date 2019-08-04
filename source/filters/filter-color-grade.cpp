@@ -142,6 +142,8 @@ bool tool_modified(obs_properties_t* props, obs_property_t* property, obs_data_t
 			}
 		}
 	}
+
+	return true;
 }
 
 obs_properties_t* get_properties(void*)
