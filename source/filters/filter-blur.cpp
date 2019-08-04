@@ -158,18 +158,18 @@ void filter::blur::blur_factory::on_list_fill()
 	auto gctx = gs::context();
 
 	{
-		char* file = obs_module_file("effects/color-conversion._effect");
+		char* file = obs_module_file("effects/color-conversion.effect");
 		try {
-			_color_converter_effect = std::make_shared<gs::effect>(file);
+			_color_converter_effect = gs::effect::create(file);
 		} catch (std::runtime_error& ex) {
 			P_LOG_ERROR("<filter-blur> Loading _effect '%s' failed with error(s): %s", file, ex.what());
 		}
 		bfree(file);
 	}
 	{
-		char* file = obs_module_file("effects/mask._effect");
+		char* file = obs_module_file("effects/mask.effect");
 		try {
-			_mask_effect = std::make_shared<gs::effect>(file);
+			_mask_effect = gs::effect::create(file);
 		} catch (std::runtime_error& ex) {
 			P_LOG_ERROR("<filter-blur> Loading _effect '%s' failed with error(s): %s", file, ex.what());
 		}

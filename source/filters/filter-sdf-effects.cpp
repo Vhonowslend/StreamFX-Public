@@ -116,8 +116,8 @@ void filter::sdf_effects::sdf_effects_factory::on_list_fill()
 	auto gctx = gs::context();
 
 	std::pair<const char*, std::shared_ptr<gs::effect>&> load_arr[] = {
-		{"effects/sdf/sdf-producer._effect", this->_sdf_producer_effect},
-		{"effects/sdf/sdf-consumer._effect", this->_sdf_consumer_effect},
+		{"effects/sdf/sdf-producer.effect", this->_sdf_producer_effect},
+		{"effects/sdf/sdf-consumer.effect", this->_sdf_consumer_effect},
 	};
 	for (auto& kv : load_arr) {
 		char* path = obs_module_file(kv.first);
@@ -126,7 +126,7 @@ void filter::sdf_effects::sdf_effects_factory::on_list_fill()
 			continue;
 		}
 		try {
-			kv.second = std::make_shared<gs::effect>(path);
+			kv.second = gs::effect::create(path);
 		} catch (std::exception& ex) {
 			P_LOG_ERROR(LOG_PREFIX "Failed to load _effect '%s' (located at '%s') with error(s): %s", kv.first, path,
 						ex.what());

@@ -38,7 +38,7 @@ gfx::blur::box_data::box_data()
 {
 	auto gctx = gs::context();
 	try {
-		char* file = obs_module_file("effects/blur/box._effect");
+		char* file = obs_module_file("effects/blur/box.effect");
 		_effect   = std::make_shared<::gs::effect>(file);
 		bfree(file);
 	} catch (...) {

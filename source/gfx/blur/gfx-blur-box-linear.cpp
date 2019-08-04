@@ -38,7 +38,7 @@ gfx::blur::box_linear_data::box_linear_data()
 {
 	auto gctx = gs::context();
 	try {
-		char* file = obs_module_file("effects/blur/box-linear._effect");
+		char* file = obs_module_file("effects/blur/box-linear.effect");
 		_effect   = std::make_shared<::gs::effect>(file);
 		bfree(file);
 	} catch (...) {

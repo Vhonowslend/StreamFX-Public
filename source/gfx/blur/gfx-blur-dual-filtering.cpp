@@ -54,7 +54,7 @@ gfx::blur::dual_filtering_data::dual_filtering_data()
 {
 	auto gctx = gs::context();
 	try {
-		char* file = obs_module_file("effects/blur/dual-filtering._effect");
+		char* file = obs_module_file("effects/blur/dual-filtering.effect");
 		_effect   = std::make_shared<::gs::effect>(file);
 		bfree(file);
 	} catch (...) {

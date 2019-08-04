@@ -36,9 +36,7 @@
 
 //#define OBS_LOAD_EFFECT_FILE
 
-gs::effect::effect() : _effect(nullptr) {}
-
-gs::effect::effect(std::string file) : effect()
+gs::effect::effect(std::string file)
 {
 #ifdef OBS_LOAD_EFFECT_FILE
 	char* errorMessage = nullptr;
@@ -84,7 +82,7 @@ gs::effect::effect(std::string file) : effect()
 #endif
 }
 
-gs::effect::effect(std::string code, std::string name) : effect()
+gs::effect::effect(std::string code, std::string name)
 {
 	char* errorMessage = nullptr;
 	auto  gctx         = gs::context();
@@ -155,6 +153,16 @@ bool gs::effect::has_parameter(std::string name, effect_parameter::type type)
 	if (eprm)
 		return eprm->get_type() == type;
 	return false;
+}
+
+std::shared_ptr<gs::effect> gs::effect::create(std::string file)
+{
+	return std::shared_ptr<gs::effect>(new gs::effect(file));
+}
+
+std::shared_ptr<gs::effect> gs::effect::create(std::string code, std::string name)
+{
+	return std::shared_ptr<gs::effect>(new gs::effect(code, name));
 }
 
 gs::effect_parameter::effect_parameter(std::shared_ptr<gs::effect> effect, gs_eparam_t* param)

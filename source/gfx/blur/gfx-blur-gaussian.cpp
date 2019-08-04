@@ -45,8 +45,8 @@ gfx::blur::gaussian_data::gaussian_data()
 {
 	auto gctx = gs::context();
 	{
-		char* file = obs_module_file("effects/blur/gaussian._effect");
-		_effect   = std::make_shared<gs::effect>(file);
+		char* file = obs_module_file("effects/blur/gaussian.effect");
+		_effect   = gs::effect::create(file);
 		bfree(file);
 	}
 

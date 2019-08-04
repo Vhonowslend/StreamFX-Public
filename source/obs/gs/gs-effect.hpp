@@ -44,8 +44,8 @@ namespace gs {
 
 	class effect_parameter {
 		std::shared_ptr<::gs::effect> _effect;
-		gs_eparam_t*         _param;
-		gs_effect_param_info _param_info;
+		gs_eparam_t*                  _param;
+		gs_effect_param_info          _param_info;
 
 		public:
 		enum class type : uint8_t {
@@ -147,7 +147,6 @@ namespace gs {
 		gs_effect_t* _effect;
 
 		public:
-		effect();
 		effect(std::string file);
 		effect(std::string code, std::string name);
 		virtual ~effect();
@@ -160,5 +159,9 @@ namespace gs {
 		std::shared_ptr<effect_parameter>            get_parameter(std::string name);
 		bool                                         has_parameter(std::string name);
 		bool                                         has_parameter(std::string name, effect_parameter::type type);
+
+		public:
+		static std::shared_ptr<gs::effect> create(std::string file);
+		static std::shared_ptr<gs::effect> create(std::string code, std::string name);
 	};
 } // namespace gs

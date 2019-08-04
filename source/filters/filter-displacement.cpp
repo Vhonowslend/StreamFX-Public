@@ -203,7 +203,7 @@ filter::displacement::displacement_instance::displacement_instance(obs_data_t* d
 	char* effectFile = obs_module_file("effects/displace.effect");
 	if (effectFile) {
 		try {
-			_effect = std::make_shared<gs::effect>(effectFile);
+			_effect = gs::effect::create(effectFile);
 		} catch (...) {
 			P_LOG_ERROR("<Displacement Filter:%s> Failed to load displacement effect.", obs_source_get_name(_self));
 		}

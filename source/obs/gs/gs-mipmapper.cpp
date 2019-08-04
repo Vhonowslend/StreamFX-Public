@@ -108,7 +108,7 @@ gs::mipmapper::mipmapper()
 
 	_vb->update();
 
-	char* effect_file = obs_module_file("effects/mipgen._effect");
+	char* effect_file = obs_module_file("effects/mipgen.effect");
 	_effect            = std::make_unique<gs::effect>(effect_file);
 	bfree(effect_file);
 }

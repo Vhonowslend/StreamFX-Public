@@ -130,9 +130,9 @@ filter::dynamic_mask::dynamic_mask_instance::dynamic_mask_instance(obs_data_t* d
 	this->_final_rt  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 
 	{
-		char* file = obs_module_file("effects/channel-mask._effect");
+		char* file = obs_module_file("effects/channel-mask.effect");
 		try {
-			this->_effect = std::make_shared<gs::effect>(file);
+			this->_effect = gs::effect::create(file);
 		} catch (std::exception& ex) {
 			P_LOG_ERROR("Loading channel mask _effect failed with error(s):\n%s", ex.what());
 		}
