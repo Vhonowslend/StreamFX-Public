@@ -263,10 +263,10 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 		}
 
 		// Apply
-		effect->get_parameter("pImage").set_texture(tex_cur);
-		effect->get_parameter("pImageSize").set_float2(float_t(width), float_t(height));
-		effect->get_parameter("pImageTexel").set_float2(1.0f / width, 1.0f / height);
-		effect->get_parameter("pImageHalfTexel").set_float2(0.5f / width, 0.5f / height);
+		effect->get_parameter("pImage")->set_texture(tex_cur);
+		effect->get_parameter("pImageSize")->set_float2(float_t(width), float_t(height));
+		effect->get_parameter("pImageTexel")->set_float2(1.0f / width, 1.0f / height);
+		effect->get_parameter("pImageHalfTexel")->set_float2(0.5f / width, 0.5f / height);
 
 		{
 			auto op = _rendertargets[n]->render(width, height);
@@ -287,10 +287,10 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 		uint32_t height = tex_cur->get_height();
 
 		// Apply
-		effect->get_parameter("pImage").set_texture(tex_cur);
-		effect->get_parameter("pImageSize").set_float2(float_t(width), float_t(height));
-		effect->get_parameter("pImageTexel").set_float2(1.0f / width, 1.0f / height);
-		effect->get_parameter("pImageHalfTexel").set_float2(0.5f / width, 0.5f / height);
+		effect->get_parameter("pImage")->set_texture(tex_cur);
+		effect->get_parameter("pImageSize")->set_float2(float_t(width), float_t(height));
+		effect->get_parameter("pImageTexel")->set_float2(1.0f / width, 1.0f / height);
+		effect->get_parameter("pImageHalfTexel")->set_float2(0.5f / width, 0.5f / height);
 
 		// Increase Size
 		width *= 2;

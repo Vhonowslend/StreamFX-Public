@@ -279,13 +279,13 @@ void filter::displacement::displacement_instance::video_render(gs_effect_t*)
 
 	if (_effect->has_parameter("texelScale")) {
 		_effect->get_parameter("texelScale")
-			.set_float2(interp((1.0f / baseW), 1.0f, _distance), interp((1.0f / baseH), 1.0f, _distance));
+			->set_float2(interp((1.0f / baseW), 1.0f, _distance), interp((1.0f / baseH), 1.0f, _distance));
 	}
 	if (_effect->has_parameter("displacementScale")) {
-		_effect->get_parameter("displacementScale").set_float2(_displacement_scale);
+		_effect->get_parameter("displacementScale")->set_float2(_displacement_scale);
 	}
 	if (_effect->has_parameter("displacementMap")) {
-		_effect->get_parameter("displacementMap").set_texture(_file_texture);
+		_effect->get_parameter("displacementMap")->set_texture(_file_texture);
 	}
 
 	obs_source_process_filter_end(_self, _effect->get_object(), baseW, baseH);

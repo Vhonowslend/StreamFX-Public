@@ -725,10 +725,10 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect
 					gs_ortho(0, (float)sdfW, 0, (float)sdfH, -1, 1);
 					gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &color_transparent, 0, 0);
 
-					sdf_effect->get_parameter("_image").set_texture(this->_source_texture);
-					sdf_effect->get_parameter("_size").set_float2(float_t(sdfW), float_t(sdfH));
-					sdf_effect->get_parameter("_sdf").set_texture(this->_sdf_texture);
-					sdf_effect->get_parameter("_threshold").set_float(this->_sdf_threshold);
+					sdf_effect->get_parameter("_image")->set_texture(this->_source_texture);
+					sdf_effect->get_parameter("_size")->set_float2(float_t(sdfW), float_t(sdfH));
+					sdf_effect->get_parameter("_sdf")->set_texture(this->_sdf_texture);
+					sdf_effect->get_parameter("_threshold")->set_float(this->_sdf_threshold);
 
 					while (gs_effect_loop(sdf_effect->get_object(), "Draw")) {
 						gs_draw_sprite(this->_sdf_texture->get_object(), 0, uint32_t(sdfW), uint32_t(sdfH));
@@ -793,66 +793,66 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect
 			gs_enable_blending(true);
 			gs_blend_function_separate(GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA, GS_BLEND_ONE, GS_BLEND_ONE);
 			if (this->_outer_shadow) {
-				consumer_effect->get_parameter("pSDFTexture").set_texture(this->_sdf_texture);
-				consumer_effect->get_parameter("pSDFThreshold").set_float(this->_sdf_threshold);
-				consumer_effect->get_parameter("pImageTexture").set_texture(this->_source_texture->get_object());
-				consumer_effect->get_parameter("pShadowColor").set_float4(this->_outer_shadow_color);
-				consumer_effect->get_parameter("pShadowMin").set_float(this->_outer_shadow_range_min);
-				consumer_effect->get_parameter("pShadowMax").set_float(this->_outer_shadow_range_max);
+				consumer_effect->get_parameter("pSDFTexture")->set_texture(this->_sdf_texture);
+				consumer_effect->get_parameter("pSDFThreshold")->set_float(this->_sdf_threshold);
+				consumer_effect->get_parameter("pImageTexture")->set_texture(this->_source_texture->get_object());
+				consumer_effect->get_parameter("pShadowColor")->set_float4(this->_outer_shadow_color);
+				consumer_effect->get_parameter("pShadowMin")->set_float(this->_outer_shadow_range_min);
+				consumer_effect->get_parameter("pShadowMax")->set_float(this->_outer_shadow_range_max);
 				consumer_effect->get_parameter("pShadowOffset")
-					.set_float2(this->_outer_shadow_offset_x / float_t(baseW),
+					->set_float2(this->_outer_shadow_offset_x / float_t(baseW),
 								this->_outer_shadow_offset_y / float_t(baseH));
 				while (gs_effect_loop(consumer_effect->get_object(), "ShadowOuter")) {
 					gs_draw_sprite(0, 0, 1, 1);
 				}
 			}
 			if (this->_inner_shadow) {
-				consumer_effect->get_parameter("pSDFTexture").set_texture(this->_sdf_texture);
-				consumer_effect->get_parameter("pSDFThreshold").set_float(this->_sdf_threshold);
-				consumer_effect->get_parameter("pImageTexture").set_texture(this->_source_texture->get_object());
-				consumer_effect->get_parameter("pShadowColor").set_float4(this->_inner_shadow_color);
-				consumer_effect->get_parameter("pShadowMin").set_float(this->_inner_shadow_range_min);
-				consumer_effect->get_parameter("pShadowMax").set_float(this->_inner_shadow_range_max);
+				consumer_effect->get_parameter("pSDFTexture")->set_texture(this->_sdf_texture);
+				consumer_effect->get_parameter("pSDFThreshold")->set_float(this->_sdf_threshold);
+				consumer_effect->get_parameter("pImageTexture")->set_texture(this->_source_texture->get_object());
+				consumer_effect->get_parameter("pShadowColor")->set_float4(this->_inner_shadow_color);
+				consumer_effect->get_parameter("pShadowMin")->set_float(this->_inner_shadow_range_min);
+				consumer_effect->get_parameter("pShadowMax")->set_float(this->_inner_shadow_range_max);
 				consumer_effect->get_parameter("pShadowOffset")
-					.set_float2(this->_inner_shadow_offset_x / float_t(baseW),
+					->set_float2(this->_inner_shadow_offset_x / float_t(baseW),
 								this->_inner_shadow_offset_y / float_t(baseH));
 				while (gs_effect_loop(consumer_effect->get_object(), "ShadowInner")) {
 					gs_draw_sprite(0, 0, 1, 1);
 				}
 			}
 			if (this->_outer_glow) {
-				consumer_effect->get_parameter("pSDFTexture").set_texture(this->_sdf_texture);
-				consumer_effect->get_parameter("pSDFThreshold").set_float(this->_sdf_threshold);
-				consumer_effect->get_parameter("pImageTexture").set_texture(this->_source_texture->get_object());
-				consumer_effect->get_parameter("pGlowColor").set_float4(this->_outer_glow_color);
-				consumer_effect->get_parameter("pGlowWidth").set_float(this->_outer_glow_width);
-				consumer_effect->get_parameter("pGlowSharpness").set_float(this->_outer_glow_sharpness);
-				consumer_effect->get_parameter("pGlowSharpnessInverse").set_float(this->_outer_glow_sharpness_inv);
+				consumer_effect->get_parameter("pSDFTexture")->set_texture(this->_sdf_texture);
+				consumer_effect->get_parameter("pSDFThreshold")->set_float(this->_sdf_threshold);
+				consumer_effect->get_parameter("pImageTexture")->set_texture(this->_source_texture->get_object());
+				consumer_effect->get_parameter("pGlowColor")->set_float4(this->_outer_glow_color);
+				consumer_effect->get_parameter("pGlowWidth")->set_float(this->_outer_glow_width);
+				consumer_effect->get_parameter("pGlowSharpness")->set_float(this->_outer_glow_sharpness);
+				consumer_effect->get_parameter("pGlowSharpnessInverse")->set_float(this->_outer_glow_sharpness_inv);
 				while (gs_effect_loop(consumer_effect->get_object(), "GlowOuter")) {
 					gs_draw_sprite(0, 0, 1, 1);
 				}
 			}
 			if (this->_inner_glow) {
-				consumer_effect->get_parameter("pSDFTexture").set_texture(this->_sdf_texture);
-				consumer_effect->get_parameter("pSDFThreshold").set_float(this->_sdf_threshold);
-				consumer_effect->get_parameter("pImageTexture").set_texture(this->_source_texture->get_object());
-				consumer_effect->get_parameter("pGlowColor").set_float4(this->_inner_glow_color);
-				consumer_effect->get_parameter("pGlowWidth").set_float(this->_inner_glow_width);
-				consumer_effect->get_parameter("pGlowSharpness").set_float(this->_inner_glow_sharpness);
-				consumer_effect->get_parameter("pGlowSharpnessInverse").set_float(this->_inner_glow_sharpness_inv);
+				consumer_effect->get_parameter("pSDFTexture")->set_texture(this->_sdf_texture);
+				consumer_effect->get_parameter("pSDFThreshold")->set_float(this->_sdf_threshold);
+				consumer_effect->get_parameter("pImageTexture")->set_texture(this->_source_texture->get_object());
+				consumer_effect->get_parameter("pGlowColor")->set_float4(this->_inner_glow_color);
+				consumer_effect->get_parameter("pGlowWidth")->set_float(this->_inner_glow_width);
+				consumer_effect->get_parameter("pGlowSharpness")->set_float(this->_inner_glow_sharpness);
+				consumer_effect->get_parameter("pGlowSharpnessInverse")->set_float(this->_inner_glow_sharpness_inv);
 				while (gs_effect_loop(consumer_effect->get_object(), "GlowInner")) {
 					gs_draw_sprite(0, 0, 1, 1);
 				}
 			}
 			if (this->_outline) {
-				consumer_effect->get_parameter("pSDFTexture").set_texture(this->_sdf_texture);
-				consumer_effect->get_parameter("pSDFThreshold").set_float(this->_sdf_threshold);
-				consumer_effect->get_parameter("pImageTexture").set_texture(this->_source_texture->get_object());
-				consumer_effect->get_parameter("pOutlineColor").set_float4(this->_outline_color);
-				consumer_effect->get_parameter("pOutlineWidth").set_float(this->_outline_width);
-				consumer_effect->get_parameter("pOutlineOffset").set_float(this->_outline_offset);
-				consumer_effect->get_parameter("pOutlineSharpness").set_float(this->_outline_sharpness);
-				consumer_effect->get_parameter("pOutlineSharpnessInverse").set_float(this->_outline_sharpness_inv);
+				consumer_effect->get_parameter("pSDFTexture")->set_texture(this->_sdf_texture);
+				consumer_effect->get_parameter("pSDFThreshold")->set_float(this->_sdf_threshold);
+				consumer_effect->get_parameter("pImageTexture")->set_texture(this->_source_texture->get_object());
+				consumer_effect->get_parameter("pOutlineColor")->set_float4(this->_outline_color);
+				consumer_effect->get_parameter("pOutlineWidth")->set_float(this->_outline_width);
+				consumer_effect->get_parameter("pOutlineOffset")->set_float(this->_outline_offset);
+				consumer_effect->get_parameter("pOutlineSharpness")->set_float(this->_outline_sharpness);
+				consumer_effect->get_parameter("pOutlineSharpnessInverse")->set_float(this->_outline_sharpness_inv);
 				while (gs_effect_loop(consumer_effect->get_object(), "Outline")) {
 					gs_draw_sprite(0, 0, 1, 1);
 				}

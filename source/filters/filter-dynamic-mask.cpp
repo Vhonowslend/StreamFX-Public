@@ -451,12 +451,12 @@ void filter::dynamic_mask::dynamic_mask_instance::video_render(gs_effect_t* in_e
 				gs_stencil_op(GS_STENCIL_BOTH, GS_KEEP, GS_KEEP, GS_KEEP);
 				gs_ortho(0, (float)width, 0, (float)height, -1., 1.);
 
-				this->_effect->get_parameter("pMaskInputA").set_texture(this->_filter_texture);
-				this->_effect->get_parameter("pMaskInputB").set_texture(this->_input_texture);
+				this->_effect->get_parameter("pMaskInputA")->set_texture(this->_filter_texture);
+				this->_effect->get_parameter("pMaskInputB")->set_texture(this->_input_texture);
 
-				this->_effect->get_parameter("pMaskBase").set_float4(this->_precalc.base);
-				this->_effect->get_parameter("pMaskMatrix").set_matrix(this->_precalc.matrix);
-				this->_effect->get_parameter("pMaskMultiplier").set_float4(this->_precalc.scale);
+				this->_effect->get_parameter("pMaskBase")->set_float4(this->_precalc.base);
+				this->_effect->get_parameter("pMaskMatrix")->set_matrix(this->_precalc.matrix);
+				this->_effect->get_parameter("pMaskMultiplier")->set_float4(this->_precalc.scale);
 
 				while (gs_effect_loop(this->_effect->get_object(), "Mask")) {
 					gs_draw_sprite(0, 0, width, height);

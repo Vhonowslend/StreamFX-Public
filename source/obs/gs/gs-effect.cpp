@@ -115,51 +115,55 @@ size_t gs::effect::count_parameters()
 	return (size_t)gs_effect_get_num_params(_effect);
 }
 
-std::list<gs::effect_parameter> gs::effect::get_parameters()
+std::list<std::shared_ptr<gs::effect_parameter>> gs::effect::get_parameters()
 {
-	size_t                          num = gs_effect_get_num_params(_effect);
-	std::list<gs::effect_parameter> ps;
+	size_t                                           num = gs_effect_get_num_params(_effect);
+	std::list<std::shared_ptr<gs::effect_parameter>> ps;
 	for (size_t idx = 0; idx < num; idx++) {
 		ps.emplace_back(get_parameter(idx));
 	}
 	return ps;
 }
 
-gs::effect_parameter gs::effect::get_parameter(size_t idx)
+std::shared_ptr<gs::effect_parameter> gs::effect::get_parameter(size_t idx)
 {
 	gs_eparam_t* param = gs_effect_get_param_by_idx(_effect, idx);
 	if (!param)
-		throw std::invalid_argument("parameter with index not found");
-	return effect_parameter(param);
+		return nullptr;
+	return std::make_shared<effect_parameter>(this->shared_from_this(), param);
+}
+
+std::shared_ptr<gs::effect_parameter> gs::effect::get_parameter(std::string name)
+{
+	gs_eparam_t* param = gs_effect_get_param_by_name(_effect, name.c_str());
+	if (!param)
+		return nullptr;
+	return std::make_shared<effect_parameter>(this->shared_from_this(), param);
 }
 
 bool gs::effect::has_parameter(std::string name)
 {
-	gs_eparam_t* param = gs_effect_get_param_by_name(_effect, name.c_str());
-	return (param != nullptr);
+	auto eprm = get_parameter(name);
+	if (eprm)
+		return true;
+	return false;
 }
 
 bool gs::effect::has_parameter(std::string name, effect_parameter::type type)
 {
-	gs_eparam_t* param = gs_effect_get_param_by_name(_effect, name.c_str());
-	if (param == nullptr)
-		return false;
-	gs::effect_parameter eprm(param);
-	return eprm.get_type() == type;
+	auto eprm = get_parameter(name);
+	if (eprm)
+		return eprm->get_type() == type;
+	return false;
 }
 
-gs::effect_parameter gs::effect::get_parameter(std::string name)
+gs::effect_parameter::effect_parameter(std::shared_ptr<gs::effect> effect, gs_eparam_t* param)
+	: _effect(effect), _param(param)
 {
-	gs_eparam_t* param = gs_effect_get_param_by_name(_effect, name.c_str());
+	if (effect)
+		throw std::invalid_argument("effect");
 	if (!param)
-		throw std::invalid_argument("parameter with name not found");
-	return effect_parameter(param);
-}
-
-gs::effect_parameter::effect_parameter(gs_eparam_t* param) : _param(param)
-{
-	if (!param)
-		throw std::invalid_argument("param is null");
+		throw std::invalid_argument("param");
 
 	gs_effect_get_param_info(_param, &_param_info);
 }
@@ -712,7 +716,7 @@ void gs::effect_parameter::get_string(std::string& v)
 	if (get_type() != type::Matrix)
 		throw std::bad_cast();
 	size_t   ptr_len = gs_effect_get_val_size(_param);
-	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_val(_param));
+	uint8_t* ptr     = static_cast<uint8_t*>(gs_effect_get_val(_param));
 	if (ptr) {
 		v = std::string(ptr, ptr + ptr_len);
 		bfree(ptr);
@@ -740,36 +744,34 @@ size_t gs::effect_parameter::count_annotations()
 	return gs_param_get_num_annotations(_param);
 }
 
-gs::effect_parameter gs::effect_parameter::get_annotation(size_t idx)
+std::shared_ptr<gs::effect_parameter> gs::effect_parameter::get_annotation(size_t idx)
 {
 	gs_eparam_t* param = gs_param_get_annotation_by_idx(_param, idx);
 	if (!param)
-		throw std::invalid_argument("annotation with index not found");
-	return effect_parameter(param);
+		return nullptr;
+	return std::make_shared<effect_parameter>(_effect, param);
 }
 
-gs::effect_parameter gs::effect_parameter::get_annotation(std::string name)
+std::shared_ptr<gs::effect_parameter> gs::effect_parameter::get_annotation(std::string name)
 {
 	gs_eparam_t* param = gs_param_get_annotation_by_name(_param, name.c_str());
 	if (!param)
-		throw std::invalid_argument("annotation with name not found");
-	return effect_parameter(param);
+		return nullptr;
+	return std::make_shared<effect_parameter>(_effect, param);
 }
 
 bool gs::effect_parameter::has_annotation(std::string name)
 {
-	gs_eparam_t* param = gs_param_get_annotation_by_name(_param, name.c_str());
-	if (!param)
-		return false;
-	return true;
+	auto eprm = get_annotation(name);
+	if (eprm)
+		return true;
+	return false;
 }
 
 bool gs::effect_parameter::has_annotation(std::string name, effect_parameter::type type)
 {
-	try {
-		auto eprm = get_annotation(name);
-		return eprm.get_type() == type;
-	} catch (...) {
-		return false;
-	}
+	auto eprm = get_annotation(name);
+	if (eprm)
+		return eprm->get_type() == type;
+	return false;
 }

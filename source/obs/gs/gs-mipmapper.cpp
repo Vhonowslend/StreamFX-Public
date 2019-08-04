@@ -252,10 +252,10 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 				vec4_zero(&black);
 				gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
 
-				_effect->get_parameter("image").set_texture(target);
-				_effect->get_parameter("level").set_int(int32_t(mip - 1));
-				_effect->get_parameter("imageTexel").set_float2(texel_width, texel_height);
-				_effect->get_parameter("strength").set_float(strength);
+				_effect->get_parameter("image")->set_texture(target);
+				_effect->get_parameter("level")->set_int(int32_t(mip - 1));
+				_effect->get_parameter("imageTexel")->set_float2(texel_width, texel_height);
+				_effect->get_parameter("strength")->set_float(strength);
 
 				while (gs_effect_loop(_effect->get_object(), technique.c_str())) {
 					gs_draw(gs_draw_mode::GS_TRIS, 0, _vb->size());

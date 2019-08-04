@@ -40,7 +40,10 @@
 #endif
 
 namespace gs {
+	class effect;
+
 	class effect_parameter {
+		std::shared_ptr<::gs::effect> _effect;
 		gs_eparam_t*         _param;
 		gs_effect_param_info _param_info;
 
@@ -62,7 +65,7 @@ namespace gs {
 		};
 
 		public:
-		effect_parameter(gs_eparam_t* param);
+		effect_parameter(std::shared_ptr<gs::effect> effect, gs_eparam_t* param);
 
 		std::string get_name();
 		type        get_type();
@@ -132,14 +135,14 @@ namespace gs {
 		void get_string(std::string& v);
 		void get_default_string(std::string& v);
 
-		size_t           count_annotations();
-		effect_parameter get_annotation(size_t idx);
-		effect_parameter get_annotation(std::string name);
-		bool             has_annotation(std::string name);
-		bool             has_annotation(std::string name, effect_parameter::type type);
+		size_t                            count_annotations();
+		std::shared_ptr<effect_parameter> get_annotation(size_t idx);
+		std::shared_ptr<effect_parameter> get_annotation(std::string name);
+		bool                              has_annotation(std::string name);
+		bool                              has_annotation(std::string name, effect_parameter::type type);
 	};
 
-	class effect {
+	class effect : std::enable_shared_from_this<::gs::effect> {
 		protected:
 		gs_effect_t* _effect;
 
@@ -151,11 +154,11 @@ namespace gs {
 
 		gs_effect_t* get_object();
 
-		size_t                      count_parameters();
-		std::list<effect_parameter> get_parameters();
-		effect_parameter            get_parameter(size_t idx);
-		effect_parameter            get_parameter(std::string name);
-		bool                        has_parameter(std::string name);
-		bool                        has_parameter(std::string name, effect_parameter::type type);
+		size_t                                       count_parameters();
+		std::list<std::shared_ptr<effect_parameter>> get_parameters();
+		std::shared_ptr<effect_parameter>            get_parameter(size_t idx);
+		std::shared_ptr<effect_parameter>            get_parameter(std::string name);
+		bool                                         has_parameter(std::string name);
+		bool                                         has_parameter(std::string name, effect_parameter::type type);
 	};
 } // namespace gs

@@ -265,11 +265,11 @@ std::shared_ptr<::gs::texture> gfx::blur::box_linear::render()
 	std::shared_ptr<::gs::effect> effect = _data->get_effect();
 	if (effect) {
 		// Pass 1
-		effect->get_parameter("pImage").set_texture(_input_texture);
-		effect->get_parameter("pImageTexel").set_float2(float_t(1.f / width), 0.f);
-		effect->get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
-		effect->get_parameter("pSize").set_float(float_t(_size));
-		effect->get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(_size) * 2.0f + 1.0f)));
+		effect->get_parameter("pImage")->set_texture(_input_texture);
+		effect->get_parameter("pImageTexel")->set_float2(float_t(1.f / width), 0.f);
+		effect->get_parameter("pStepScale")->set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
+		effect->get_parameter("pSize")->set_float(float_t(_size));
+		effect->get_parameter("pSizeInverseMul")->set_float(float_t(1.0f / (float_t(_size) * 2.0f + 1.0f)));
 
 		{
 			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
@@ -280,8 +280,8 @@ std::shared_ptr<::gs::texture> gfx::blur::box_linear::render()
 		}
 
 		// Pass 2
-		effect->get_parameter("pImage").set_texture(_rendertarget2->get_texture());
-		effect->get_parameter("pImageTexel").set_float2(0., float_t(1.f / height));
+		effect->get_parameter("pImage")->set_texture(_rendertarget2->get_texture());
+		effect->get_parameter("pImageTexel")->set_float2(0., float_t(1.f / height));
 
 		{
 			auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
@@ -341,12 +341,12 @@ std::shared_ptr<::gs::texture> gfx::blur::box_linear_directional::render()
 	// One Pass Blur
 	std::shared_ptr<::gs::effect> effect = _data->get_effect();
 	if (effect) {
-		effect->get_parameter("pImage").set_texture(_input_texture);
+		effect->get_parameter("pImage")->set_texture(_input_texture);
 		effect->get_parameter("pImageTexel")
-			.set_float2(float_t(1. / width * cos(_angle)), float_t(1.f / height * sin(_angle)));
-		effect->get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
-		effect->get_parameter("pSize").set_float(float_t(_size));
-		effect->get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(_size) * 2.0f + 1.0f)));
+			->set_float2(float_t(1. / width * cos(_angle)), float_t(1.f / height * sin(_angle)));
+		effect->get_parameter("pStepScale")->set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
+		effect->get_parameter("pSize")->set_float(float_t(_size));
+		effect->get_parameter("pSizeInverseMul")->set_float(float_t(1.0f / (float_t(_size) * 2.0f + 1.0f)));
 
 		{
 			auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
