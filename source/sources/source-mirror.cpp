@@ -42,6 +42,8 @@
 #define P_SOURCE "Source.Mirror.Source"
 #define P_SOURCE_SIZE "Source.Mirror.Source.Size"
 #define P_SOURCE_AUDIO "Source.Mirror.Source.Audio"
+#define ST_AUDIO_LAYOUT S_SOURCE_MIRROR ".Audio.Layout"
+#define ST_AUDIO_LAYOUT_(x) ST_AUDIO_LAYOUT "." D_VSTR(x)
 #define P_SCALING "Source.Mirror.Scaling"
 #define P_SCALING_METHOD "Source.Mirror.Scaling.Method"
 #define P_SCALING_METHOD_POINT "Source.Mirror.Scaling.Method.Point"
@@ -119,6 +121,7 @@ void source::mirror::mirror_factory::get_defaults(obs_data_t* data)
 {
 	obs_data_set_default_string(data, P_SOURCE, "");
 	obs_data_set_default_bool(data, P_SOURCE_AUDIO, false);
+	obs_data_set_default_int(data, ST_AUDIO_LAYOUT, static_cast<int64_t>(SPEAKERS_UNKNOWN));
 	obs_data_set_default_bool(data, P_SCALING, false);
 	obs_data_set_default_string(data, P_SCALING_SIZE, "100x100");
 	obs_data_set_default_int(data, P_SCALING_METHOD, (int64_t)obs_scale_type::OBS_SCALE_BILINEAR);
@@ -140,6 +143,12 @@ bool source::mirror::mirror_factory::modified_properties(obs_properties_t* pr, o
 			obs_data_set_string(data, P_SOURCE_SIZE, "0x0");
 		}
 		obs_source_release(target);
+	}
+
+	if (obs_properties_get(pr, P_SOURCE_AUDIO) == p) {
+		bool show = obs_data_get_bool(data, P_SOURCE_AUDIO);
+		obs_property_set_visible(obs_properties_get(pr, ST_AUDIO_LAYOUT), show);
+		return true;
 	}
 
 	if (obs_properties_get(pr, P_SCALING) == p) {
@@ -208,6 +217,19 @@ obs_properties_t* source::mirror::mirror_factory::get_properties(void*)
 
 	p = obs_properties_add_bool(pr, P_SOURCE_AUDIO, P_TRANSLATE(P_SOURCE_AUDIO));
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SOURCE_AUDIO)));
+	obs_property_set_modified_callback(p, modified_properties);
+	p = obs_properties_add_list(pr, ST_AUDIO_LAYOUT, P_TRANSLATE(ST_AUDIO_LAYOUT), OBS_COMBO_TYPE_LIST,
+								OBS_COMBO_FORMAT_INT);
+	obs_property_list_add_int(p, P_TRANSLATE(ST_AUDIO_LAYOUT_(Unknown)), static_cast<int64_t>(SPEAKERS_UNKNOWN));
+	obs_property_list_add_int(p, P_TRANSLATE(ST_AUDIO_LAYOUT_(Mono)), static_cast<int64_t>(SPEAKERS_MONO));
+	obs_property_list_add_int(p, P_TRANSLATE(ST_AUDIO_LAYOUT_(Stereo)), static_cast<int64_t>(SPEAKERS_STEREO));
+	obs_property_list_add_int(p, P_TRANSLATE(ST_AUDIO_LAYOUT_(StereoLFE)), static_cast<int64_t>(SPEAKERS_2POINT1));
+	obs_property_list_add_int(p, P_TRANSLATE(ST_AUDIO_LAYOUT_(Quadraphonic)), static_cast<int64_t>(SPEAKERS_4POINT0));
+	obs_property_list_add_int(p, P_TRANSLATE(ST_AUDIO_LAYOUT_(QuadraphonicLFE)),
+							  static_cast<int64_t>(SPEAKERS_4POINT1));
+	obs_property_list_add_int(p, P_TRANSLATE(ST_AUDIO_LAYOUT_(Surround)), static_cast<int64_t>(SPEAKERS_5POINT1));
+	obs_property_list_add_int(p, P_TRANSLATE(ST_AUDIO_LAYOUT_(FullSurround)), static_cast<int64_t>(SPEAKERS_7POINT1));
+	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(ST_AUDIO_LAYOUT)));
 
 	p = obs_properties_add_bool(pr, P_SCALING, P_TRANSLATE(P_SCALING));
 	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(P_SCALING)));
@@ -472,6 +494,7 @@ void source::mirror::mirror_instance::update(obs_data_t* data)
 
 	// Audio
 	this->m_audio_enabled = obs_data_get_bool(data, P_SOURCE_AUDIO);
+	this->m_audio_layout  = static_cast<speaker_layout>(obs_data_get_int(data, ST_AUDIO_LAYOUT));
 
 	// Rescaling
 	this->m_rescale_enabled = obs_data_get_bool(data, P_SCALING);
@@ -505,11 +528,10 @@ void source::mirror::mirror_instance::update(obs_data_t* data)
 		}
 
 		this->m_rescale_keep_orig_size = obs_data_get_bool(data, P_SCALING_TRANSFORMKEEPORIGINAL);
-		this->m_rescale_type           = (obs_scale_type)obs_data_get_int(data, P_SCALING_METHOD);
-		this->m_rescale_bounds         = (obs_bounds_type)obs_data_get_int(data, P_SCALING_BOUNDS);
-		this->m_rescale_alignment        = obs_data_get_int(data, P_SCALING_ALIGNMENT);
+		this->m_rescale_type           = static_cast<obs_scale_type>(obs_data_get_int(data, P_SCALING_METHOD));
+		this->m_rescale_bounds         = static_cast<obs_bounds_type>(obs_data_get_int(data, P_SCALING_BOUNDS));
+		this->m_rescale_alignment      = static_cast<int32_t>(obs_data_get_int(data, P_SCALING_ALIGNMENT));
 	}
-
 }
 
 void source::mirror::mirror_instance::activate()
@@ -585,6 +607,11 @@ void source::mirror::mirror_instance::video_render(gs_effect_t* effect)
 		if (m_rescale_enabled) {
 			render_width  = m_rescale_width;
 			render_height = m_rescale_height;
+		}
+
+		if (!render_width || !render_height) {
+			// Don't render if width or height are 0.
+			return;
 		}
 
 		try {
@@ -715,11 +742,15 @@ void source::mirror::mirror_instance::on_audio_data(obs::source*, const audio_da
 			memcpy(mad->data[plane].data(), audio->data[plane], audio->frames * sizeof(float_t));
 			mad->audio.data[plane] = reinterpret_cast<uint8_t*>(mad->data[plane].data());
 		}
-		mad->audio.format          = aoi->format;
+		mad->audio.format = aoi->format;
 		mad->audio.frames          = audio->frames;
 		mad->audio.timestamp       = audio->timestamp;
 		mad->audio.samples_per_sec = aoi->samples_per_sec;
-		mad->audio.speakers        = aoi->speakers;
+		if (this->m_audio_layout != SPEAKERS_UNKNOWN) {
+			mad->audio.speakers = this->m_audio_layout;
+		} else {
+			mad->audio.speakers = aoi->speakers;
+		}
 	}
 
 	{ // Push used audio data element.

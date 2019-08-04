@@ -110,6 +110,7 @@ namespace source {
 			std::mutex                                     m_audio_lock_capturer;
 			std::queue<std::shared_ptr<mirror_audio_data>> m_audio_data_queue;
 			std::queue<std::shared_ptr<mirror_audio_data>> m_audio_data_free_queue;
+			speaker_layout                                 m_audio_layout;
 
 			// Input
 			std::shared_ptr<obs::source> m_source;
