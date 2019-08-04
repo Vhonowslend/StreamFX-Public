@@ -375,13 +375,17 @@ filter::color_grade::color_grade_instance::color_grade_instance(obs_data_t* data
 
 	{
 		char* file = obs_module_file("effects/color-grade.effect");
-		try {
-			_effect = gs::effect::create(file);
-			bfree(file);
-		} catch (std::runtime_error& ex) {
-			P_LOG_ERROR("<filter-color-grade> Loading _effect '%s' failed with error(s): %s", file, ex.what());
-			bfree(file);
-			throw ex;
+		if (file) {
+			try {
+				_effect = gs::effect::create(file);
+				bfree(file);
+			} catch (std::runtime_error& ex) {
+				P_LOG_ERROR("<filter-color-grade> Loading _effect '%s' failed with error(s): %s", file, ex.what());
+				bfree(file);
+				throw ex;
+			}
+		} else {
+			throw std::runtime_error("Missing file color-grade.effect.");
 		}
 	}
 	{
