@@ -27,12 +27,12 @@ gfx::source_texture::~source_texture()
 	_child.reset();
 }
 
-gfx::source_texture::source_texture(obs_source_t* _parent)
+gfx::source_texture::source_texture(obs_source_t* parent)
 {
-	if (!_parent) {
+	if (!parent) {
 		throw std::invalid_argument("_parent must not be null");
 	}
-	_parent        = std::make_shared<obs::source>(_parent, false, false);
+	_parent        = std::make_shared<obs::source>(parent, false, false);
 	_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 

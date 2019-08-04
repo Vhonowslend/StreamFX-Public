@@ -24,65 +24,65 @@
 
 void* util::vec2a::operator new(size_t count)
 {
-	return aligned_alloc(count, 16);
+	return util::malloc_aligned(16, count);
 }
 
 void* util::vec2a::operator new[](size_t count)
 {
-	return aligned_alloc(count, 16);
+	return util::malloc_aligned(16, count);
 }
 
 void util::vec2a::operator delete(void* p)
 {
-	aligned_free(p);
+	util::free_aligned(p);
 }
 
 void util::vec2a::operator delete[](void* p)
 {
-	aligned_free(p);
+	util::free_aligned(p);
 }
 
 void* util::vec3a::operator new(size_t count)
 {
-	return aligned_alloc(count, 16);
+	return util::malloc_aligned(16, count);
 }
 
 void* util::vec3a::operator new[](size_t count)
 {
-	return aligned_alloc(count, 16);
+	return util::malloc_aligned(16, count);
 }
 
 void util::vec3a::operator delete(void* p)
 {
-	aligned_free(p);
+	util::free_aligned(p);
 }
 
 void util::vec3a::operator delete[](void* p)
 {
-	aligned_free(p);
+	util::free_aligned(p);
 }
 
 void* util::vec4a::operator new(size_t count)
 {
-	return aligned_alloc(count, 16);
+	return util::malloc_aligned(16, count);
 }
 
 void* util::vec4a::operator new[](size_t count)
 {
-	return aligned_alloc(count, 16);
+	return util::malloc_aligned(16, count);
 }
 
 void util::vec4a::operator delete(void* p)
 {
-	aligned_free(p);
+	util::free_aligned(p);
 }
 
 void util::vec4a::operator delete[](void* p)
 {
-	aligned_free(p);
+	util::free_aligned(p);
 }
 
-std::pair<int64_t, int64_t> util::SizeFromString(std::string text, bool allowSquare)
+std::pair<int64_t, int64_t> util::size_from_string(std::string text, bool allowSquare)
 {
 	int64_t width, height;
 

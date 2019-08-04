@@ -86,7 +86,7 @@ namespace util {
 		static void  operator delete[](void* p);
 	};
 
-	std::pair<int64_t, int64_t> SizeFromString(std::string text, bool allowSquare = true);
+	std::pair<int64_t, int64_t> size_from_string(std::string text, bool allowSquare = true);
 
 	namespace math {
 		// Proven by tests to be the fastest implementation on Intel and AMD CPUs.

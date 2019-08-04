@@ -20,13 +20,6 @@
 #pragma once
 #include <cstdlib>
 
-#ifdef _MSC_VER
-#define aligned_alloc(a, s) _aligned_malloc(s, a)
-#define aligned_free _aligned_free
-#else
-#define aligned_free free
-#endif
-
 namespace util {
 	inline size_t aligned_offset(size_t align, size_t pos)
 	{
