@@ -59,10 +59,10 @@
 enum class ShaderType : int64_t { Text, File };
 
 static filter::CustomShader* handler;
-INITIALIZER(HandlerInit)
+P_INITIALIZER(HandlerInit)
 {
-	initializerFunctions.push_back([] { handler = new filter::CustomShader(); });
-	finalizerFunctions.push_back([] { delete handler; });
+	initializer_functions.push_back([] { handler = new filter::CustomShader(); });
+	finalizer_functions.push_back([] { delete handler; });
 }
 
 filter::CustomShader::CustomShader()
@@ -91,7 +91,7 @@ filter::CustomShader::~CustomShader() {}
 
 const char* filter::CustomShader::get_name(void*)
 {
-	return P_TRANSLATE(S);
+	return D_TRANSLATE(S);
 }
 
 void filter::CustomShader::get_defaults(obs_data_t* data)
@@ -153,7 +153,7 @@ void filter::CustomShader::video_render(void* ptr, gs_effect_t* effect)
 
 filter::CustomShader::Instance::Instance(obs_data_t* data, obs_source_t* source) : gfx::effect_source(data, source)
 {
-	m_defaultShaderPath = "shaders/filter/example.effect";
+	m_defaultShaderPath = "shaders/filter/example._effect";
 	m_renderTarget      = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	update(data);
 }

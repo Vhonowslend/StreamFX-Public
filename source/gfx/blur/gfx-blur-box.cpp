@@ -38,23 +38,23 @@ gfx::blur::box_data::box_data()
 {
 	auto gctx = gs::context();
 	try {
-		char* file = obs_module_file("effects/blur/box.effect");
-		m_effect   = std::make_shared<::gs::effect>(file);
+		char* file = obs_module_file("effects/blur/box._effect");
+		_effect   = std::make_shared<::gs::effect>(file);
 		bfree(file);
 	} catch (...) {
-		P_LOG_ERROR("<gfx::blur::box> Failed to load effect.");
+		P_LOG_ERROR("<gfx::blur::box> Failed to load _effect.");
 	}
 }
 
 gfx::blur::box_data::~box_data()
 {
 	auto gctx = gs::context();
-	m_effect.reset();
+	_effect.reset();
 }
 
 std::shared_ptr<::gs::effect> gfx::blur::box_data::get_effect()
 {
-	return m_effect;
+	return _effect;
 }
 
 gfx::blur::box_factory::box_factory() {}
@@ -77,7 +77,7 @@ bool gfx::blur::box_factory::is_type_supported(::gfx::blur::type type)
 	}
 }
 
-std::shared_ptr<::gfx::blur::ibase> gfx::blur::box_factory::create(::gfx::blur::type type)
+std::shared_ptr<::gfx::blur::base> gfx::blur::box_factory::create(::gfx::blur::type type)
 {
 	switch (type) {
 	case ::gfx::blur::type::Area:
@@ -179,11 +179,11 @@ double_t gfx::blur::box_factory::get_max_step_scale_y(::gfx::blur::type)
 
 std::shared_ptr<::gfx::blur::box_data> gfx::blur::box_factory::data()
 {
-	std::unique_lock<std::mutex>           ulock(m_data_lock);
-	std::shared_ptr<::gfx::blur::box_data> data = m_data.lock();
+	std::unique_lock<std::mutex>           ulock(_data_lock);
+	std::shared_ptr<::gfx::blur::box_data> data = _data.lock();
 	if (!data) {
 		data   = std::make_shared<::gfx::blur::box_data>();
-		m_data = data;
+		_data = data;
 	}
 	return data;
 }
@@ -194,18 +194,18 @@ std::shared_ptr<::gfx::blur::box_data> gfx::blur::box_factory::data()
 	return instance;
 }
 
-gfx::blur::box::box() : m_data(::gfx::blur::box_factory::get().data()), m_size(1.), m_step_scale({1., 1.})
+gfx::blur::box::box() : _data(::gfx::blur::box_factory::get().data()), _size(1.), _step_scale({1., 1.})
 {
 	auto gctx       = gs::context();
-	m_rendertarget  = std::make_shared<::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	m_rendertarget2 = std::make_shared<::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_rendertarget  = std::make_shared<::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_rendertarget2 = std::make_shared<::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
 gfx::blur::box::~box() {}
 
 void gfx::blur::box::set_input(std::shared_ptr<::gs::texture> texture)
 {
-	m_input_texture = texture;
+	_input_texture = texture;
 }
 
 ::gfx::blur::type gfx::blur::box::get_type()
@@ -215,46 +215,46 @@ void gfx::blur::box::set_input(std::shared_ptr<::gs::texture> texture)
 
 double_t gfx::blur::box::get_size()
 {
-	return m_size;
+	return _size;
 }
 
 void gfx::blur::box::set_size(double_t width)
 {
-	m_size = width;
-	if (m_size < 1.0) {
-		m_size = 1.0;
+	_size = width;
+	if (_size < 1.0) {
+		_size = 1.0;
 	}
-	if (m_size > MAX_BLUR_SIZE) {
-		m_size = MAX_BLUR_SIZE;
+	if (_size > MAX_BLUR_SIZE) {
+		_size = MAX_BLUR_SIZE;
 	}
 }
 
 void gfx::blur::box::set_step_scale(double_t x, double_t y)
 {
-	m_step_scale = {x, y};
+	_step_scale = {x, y};
 }
 
 void gfx::blur::box::get_step_scale(double_t& x, double_t& y)
 {
-	x = m_step_scale.first;
-	y = m_step_scale.second;
+	x = _step_scale.first;
+	y = _step_scale.second;
 }
 
 double_t gfx::blur::box::get_step_scale_x()
 {
-	return m_step_scale.first;
+	return _step_scale.first;
 }
 
 double_t gfx::blur::box::get_step_scale_y()
 {
-	return m_step_scale.second;
+	return _step_scale.second;
 }
 
 std::shared_ptr<::gs::texture> gfx::blur::box::render()
 {
 	auto    gctx   = gs::context();
-	float_t width  = float_t(m_input_texture->get_width());
-	float_t height = float_t(m_input_texture->get_height());
+	float_t width  = float_t(_input_texture->get_width());
+	float_t height = float_t(_input_texture->get_height());
 
 	gs_set_cull_mode(GS_NEITHER);
 	gs_enable_color(true, true, true, true);
@@ -270,17 +270,17 @@ std::shared_ptr<::gs::texture> gfx::blur::box::render()
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
 	// Two Pass Blur
-	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
+	std::shared_ptr<::gs::effect> effect = _data->get_effect();
 	if (effect) {
 		// Pass 1
-		effect->get_parameter("pImage").set_texture(m_input_texture);
+		effect->get_parameter("pImage").set_texture(_input_texture);
 		effect->get_parameter("pImageTexel").set_float2(float_t(1.f / width), 0.f);
-		effect->get_parameter("pStepScale").set_float2(float_t(m_step_scale.first), float_t(m_step_scale.second));
-		effect->get_parameter("pSize").set_float(float_t(m_size));
-		effect->get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(m_size) * 2.0f + 1.0f)));
+		effect->get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
+		effect->get_parameter("pSize").set_float(float_t(_size));
+		effect->get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(_size) * 2.0f + 1.0f)));
 
 		{
-			auto op = m_rendertarget2->render(uint32_t(width), uint32_t(height));
+			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect->get_object(), "Draw")) {
 				gs_draw_sprite(nullptr, 0, 1, 1);
@@ -288,11 +288,11 @@ std::shared_ptr<::gs::texture> gfx::blur::box::render()
 		}
 
 		// Pass 2
-		effect->get_parameter("pImage").set_texture(m_rendertarget2->get_texture());
+		effect->get_parameter("pImage").set_texture(_rendertarget2->get_texture());
 		effect->get_parameter("pImageTexel").set_float2(0.f, float_t(1.f / height));
 
 		{
-			auto op = m_rendertarget->render(uint32_t(width), uint32_t(height));
+			auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect->get_object(), "Draw")) {
 				gs_draw_sprite(nullptr, 0, 1, 1);
@@ -302,15 +302,15 @@ std::shared_ptr<::gs::texture> gfx::blur::box::render()
 
 	gs_blend_state_pop();
 
-	return m_rendertarget->get_texture();
+	return _rendertarget->get_texture();
 }
 
 std::shared_ptr<::gs::texture> gfx::blur::box::get()
 {
-	return m_rendertarget->get_texture();
+	return _rendertarget->get_texture();
 }
 
-gfx::blur::box_directional::box_directional() : m_angle(0) {}
+gfx::blur::box_directional::box_directional() : _angle(0) {}
 
 ::gfx::blur::type gfx::blur::box_directional::get_type()
 {
@@ -319,19 +319,19 @@ gfx::blur::box_directional::box_directional() : m_angle(0) {}
 
 double_t gfx::blur::box_directional::get_angle()
 {
-	return RAD_TO_DEG(m_angle);
+	return D_RAD_TO_DEG(_angle);
 }
 
 void gfx::blur::box_directional::set_angle(double_t angle)
 {
-	m_angle = DEG_TO_RAD(angle);
+	_angle = D_DEG_TO_RAD(angle);
 }
 
 std::shared_ptr<::gs::texture> gfx::blur::box_directional::render()
 {
 	auto    gctx   = gs::context();
-	float_t width  = float_t(m_input_texture->get_width());
-	float_t height = float_t(m_input_texture->get_height());
+	float_t width  = float_t(_input_texture->get_width());
+	float_t height = float_t(_input_texture->get_height());
 
 	gs_blend_state_push();
 	gs_reset_blend_state();
@@ -347,17 +347,17 @@ std::shared_ptr<::gs::texture> gfx::blur::box_directional::render()
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
 	// One Pass Blur
-	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
+	std::shared_ptr<::gs::effect> effect = _data->get_effect();
 	if (effect) {
-		effect->get_parameter("pImage").set_texture(m_input_texture);
+		effect->get_parameter("pImage").set_texture(_input_texture);
 		effect->get_parameter("pImageTexel")
-			.set_float2(float_t(1. / width * cos(m_angle)), float_t(1.f / height * sin(m_angle)));
-		effect->get_parameter("pStepScale").set_float2(float_t(m_step_scale.first), float_t(m_step_scale.second));
-		effect->get_parameter("pSize").set_float(float_t(m_size));
-		effect->get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(m_size) * 2.0f + 1.0f)));
+			.set_float2(float_t(1. / width * cos(_angle)), float_t(1.f / height * sin(_angle)));
+		effect->get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
+		effect->get_parameter("pSize").set_float(float_t(_size));
+		effect->get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(_size) * 2.0f + 1.0f)));
 
 		{
-			auto op = m_rendertarget->render(uint32_t(width), uint32_t(height));
+			auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect->get_object(), "Draw")) {
 				gs_draw_sprite(nullptr, 0, 1, 1);
@@ -367,7 +367,7 @@ std::shared_ptr<::gs::texture> gfx::blur::box_directional::render()
 
 	gs_blend_state_pop();
 
-	return m_rendertarget->get_texture();
+	return _rendertarget->get_texture();
 }
 
 ::gfx::blur::type gfx::blur::box_rotational::get_type()
@@ -377,31 +377,31 @@ std::shared_ptr<::gs::texture> gfx::blur::box_directional::render()
 
 void gfx::blur::box_rotational::set_center(double_t x, double_t y)
 {
-	m_center.first  = x;
-	m_center.second = y;
+	_center.first  = x;
+	_center.second = y;
 }
 
 void gfx::blur::box_rotational::get_center(double_t& x, double_t& y)
 {
-	x = m_center.first;
-	y = m_center.second;
+	x = _center.first;
+	y = _center.second;
 }
 
 double_t gfx::blur::box_rotational::get_angle()
 {
-	return RAD_TO_DEG(m_angle);
+	return D_RAD_TO_DEG(_angle);
 }
 
 void gfx::blur::box_rotational::set_angle(double_t angle)
 {
-	m_angle = DEG_TO_RAD(angle);
+	_angle = D_DEG_TO_RAD(angle);
 }
 
 std::shared_ptr<::gs::texture> gfx::blur::box_rotational::render()
 {
 	auto    gctx   = gs::context();
-	float_t width  = float_t(m_input_texture->get_width());
-	float_t height = float_t(m_input_texture->get_height());
+	float_t width  = float_t(_input_texture->get_width());
+	float_t height = float_t(_input_texture->get_height());
 
 	gs_blend_state_push();
 	gs_reset_blend_state();
@@ -417,18 +417,18 @@ std::shared_ptr<::gs::texture> gfx::blur::box_rotational::render()
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
 	// One Pass Blur
-	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
+	std::shared_ptr<::gs::effect> effect = _data->get_effect();
 	if (effect) {
-		effect->get_parameter("pImage").set_texture(m_input_texture);
+		effect->get_parameter("pImage").set_texture(_input_texture);
 		effect->get_parameter("pImageTexel").set_float2(float_t(1.f / width), float_t(1.f / height));
-		effect->get_parameter("pStepScale").set_float2(float_t(m_step_scale.first), float_t(m_step_scale.second));
-		effect->get_parameter("pSize").set_float(float_t(m_size));
-		effect->get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(m_size) * 2.0f + 1.0f)));
-		effect->get_parameter("pAngle").set_float(float_t(m_angle / m_size));
-		effect->get_parameter("pCenter").set_float2(float_t(m_center.first), float_t(m_center.second));
+		effect->get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
+		effect->get_parameter("pSize").set_float(float_t(_size));
+		effect->get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(_size) * 2.0f + 1.0f)));
+		effect->get_parameter("pAngle").set_float(float_t(_angle / _size));
+		effect->get_parameter("pCenter").set_float2(float_t(_center.first), float_t(_center.second));
 
 		{
-			auto op = m_rendertarget->render(uint32_t(width), uint32_t(height));
+			auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect->get_object(), "Rotate")) {
 				gs_draw_sprite(nullptr, 0, 1, 1);
@@ -438,7 +438,7 @@ std::shared_ptr<::gs::texture> gfx::blur::box_rotational::render()
 
 	gs_blend_state_pop();
 
-	return m_rendertarget->get_texture();
+	return _rendertarget->get_texture();
 }
 
 ::gfx::blur::type gfx::blur::box_zoom::get_type()
@@ -448,21 +448,21 @@ std::shared_ptr<::gs::texture> gfx::blur::box_rotational::render()
 
 void gfx::blur::box_zoom::set_center(double_t x, double_t y)
 {
-	m_center.first  = x;
-	m_center.second = y;
+	_center.first  = x;
+	_center.second = y;
 }
 
 void gfx::blur::box_zoom::get_center(double_t& x, double_t& y)
 {
-	x = m_center.first;
-	y = m_center.second;
+	x = _center.first;
+	y = _center.second;
 }
 
 std::shared_ptr<::gs::texture> gfx::blur::box_zoom::render()
 {
 	auto    gctx   = gs::context();
-	float_t width  = float_t(m_input_texture->get_width());
-	float_t height = float_t(m_input_texture->get_height());
+	float_t width  = float_t(_input_texture->get_width());
+	float_t height = float_t(_input_texture->get_height());
 
 	gs_blend_state_push();
 	gs_reset_blend_state();
@@ -478,17 +478,17 @@ std::shared_ptr<::gs::texture> gfx::blur::box_zoom::render()
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
 	// One Pass Blur
-	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
+	std::shared_ptr<::gs::effect> effect = _data->get_effect();
 	if (effect) {
-		effect->get_parameter("pImage").set_texture(m_input_texture);
+		effect->get_parameter("pImage").set_texture(_input_texture);
 		effect->get_parameter("pImageTexel").set_float2(float_t(1.f / width), float_t(1.f / height));
-		effect->get_parameter("pStepScale").set_float2(float_t(m_step_scale.first), float_t(m_step_scale.second));
-		effect->get_parameter("pSize").set_float(float_t(m_size));
-		effect->get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(m_size) * 2.0f + 1.0f)));
-		effect->get_parameter("pCenter").set_float2(float_t(m_center.first), float_t(m_center.second));
+		effect->get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
+		effect->get_parameter("pSize").set_float(float_t(_size));
+		effect->get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(_size) * 2.0f + 1.0f)));
+		effect->get_parameter("pCenter").set_float2(float_t(_center.first), float_t(_center.second));
 
 		{
-			auto op = m_rendertarget->render(uint32_t(width), uint32_t(height));
+			auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect->get_object(), "Zoom")) {
 				gs_draw_sprite(nullptr, 0, 1, 1);
@@ -498,5 +498,5 @@ std::shared_ptr<::gs::texture> gfx::blur::box_zoom::render()
 
 	gs_blend_state_pop();
 
-	return m_rendertarget->get_texture();
+	return _rendertarget->get_texture();
 }

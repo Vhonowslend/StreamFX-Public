@@ -22,10 +22,18 @@
 
 #define USE_STD_ALLOC_FREE
 
+#ifdef _MSC_VER
+#define D_ALIGNED_ALLOC(a, s) _aligned_malloc(s, a)
+#define D_ALIGNED_FREE _aligned_free
+#else
+#define D_ALIGNED_ALLOC(a, s) aligned_alloc(s, a)
+#define D_ALIGNED_FREE free
+#endif
+
 void* util::malloc_aligned(size_t align, size_t size)
 {
 #ifdef USE_STD_ALLOC_FREE
-	return aligned_alloc(align, size);
+	return D_ALIGNED_ALLOC(align, size);
 #else
 	// Ensure that we have space for the pointer and the data.
 	size_t asize = aligned_offset(align, size + (sizeof(void*) * 2));
@@ -47,7 +55,7 @@ void* util::malloc_aligned(size_t align, size_t size)
 void util::free_aligned(void* mem)
 {
 #ifdef USE_STD_ALLOC_FREE
-	aligned_free(mem);
+	D_ALIGNED_FREE(mem);
 #else
 	void* ptr = reinterpret_cast<void*>(*reinterpret_cast<intptr_t*>(static_cast<char*>(mem) - sizeof(void*)));
 	free(ptr);

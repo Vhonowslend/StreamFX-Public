@@ -34,10 +34,10 @@
 
 namespace gfx {
 	class source_texture {
-		std::shared_ptr<obs::source> parent;
-		std::shared_ptr<obs::source> child;
+		std::shared_ptr<obs::source> _parent;
+		std::shared_ptr<obs::source> _child;
 
-		std::shared_ptr<gs::rendertarget> render_target;
+		std::shared_ptr<gs::rendertarget> _rt;
 
 		source_texture(obs_source_t* parent);
 

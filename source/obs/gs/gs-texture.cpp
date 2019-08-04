@@ -52,15 +52,15 @@ gs::texture::texture(uint32_t width, uint32_t height, gs_color_format format, ui
 	}
 
 	auto gctx = gs::context();
-	m_texture = gs_texture_create(
+	_texture = gs_texture_create(
 		width, height, format, mip_levels, mip_data,
 		(((texture_flags & flags::Dynamic) == flags::Dynamic) ? GS_DYNAMIC : 0)
 			| (((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps) ? GS_BUILD_MIPMAPS : 0));
 
-	if (!m_texture)
+	if (!_texture)
 		throw std::runtime_error("Failed to create texture.");
 
-	m_textureType = type::Normal;
+	_type = type::Normal;
 }
 
 gs::texture::texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_format format, uint32_t mip_levels,
@@ -84,15 +84,15 @@ gs::texture::texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_f
 	}
 
 	auto gctx = gs::context();
-	m_texture = gs_voltexture_create(
+	_texture = gs_voltexture_create(
 		width, height, depth, format, mip_levels, mip_data,
 		(((texture_flags & flags::Dynamic) == flags::Dynamic) ? GS_DYNAMIC : 0)
 			| (((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps) ? GS_BUILD_MIPMAPS : 0));
 
-	if (!m_texture)
+	if (!_texture)
 		throw std::runtime_error("Failed to create texture.");
 
-	m_textureType = type::Volume;
+	_type = type::Volume;
 }
 
 gs::texture::texture(uint32_t size, gs_color_format format, uint32_t mip_levels, const uint8_t** mip_data,
@@ -110,15 +110,15 @@ gs::texture::texture(uint32_t size, gs_color_format format, uint32_t mip_levels,
 	}
 
 	auto gctx = gs::context();
-	m_texture = gs_cubetexture_create(
+	_texture = gs_cubetexture_create(
 		size, format, mip_levels, mip_data,
 		(((texture_flags & flags::Dynamic) == flags::Dynamic) ? GS_DYNAMIC : 0)
 			| (((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps) ? GS_BUILD_MIPMAPS : 0));
 
-	if (!m_texture)
+	if (!_texture)
 		throw std::runtime_error("Failed to create texture.");
 
-	m_textureType = type::Cube;
+	_type = type::Cube;
 }
 
 gs::texture::texture(std::string file)
@@ -128,75 +128,75 @@ gs::texture::texture(std::string file)
 		throw std::ios_base::failure(file);
 
 	auto gctx = gs::context();
-	m_texture = gs_texture_create_from_file(file.c_str());
+	_texture = gs_texture_create_from_file(file.c_str());
 
-	if (!m_texture)
+	if (!_texture)
 		throw std::runtime_error("Failed to load texture.");
 }
 
 gs::texture::~texture()
 {
-	if (m_isOwner && m_texture) {
+	if (_is_owner && _texture) {
 		auto gctx = gs::context();
-		switch (gs_get_texture_type(m_texture)) {
+		switch (gs_get_texture_type(_texture)) {
 		case GS_TEXTURE_2D:
-			gs_texture_destroy(m_texture);
+			gs_texture_destroy(_texture);
 			break;
 		case GS_TEXTURE_3D:
-			gs_voltexture_destroy(m_texture);
+			gs_voltexture_destroy(_texture);
 			break;
 		case GS_TEXTURE_CUBE:
-			gs_cubetexture_destroy(m_texture);
+			gs_cubetexture_destroy(_texture);
 			break;
 		}
 	}
-	m_texture = nullptr;
+	_texture = nullptr;
 }
 
 void gs::texture::load(int unit)
 {
 	auto gctx = gs::context();
-	gs_load_texture(m_texture, unit);
+	gs_load_texture(_texture, unit);
 }
 
 gs_texture_t* gs::texture::get_object()
 {
-	return m_texture;
+	return _texture;
 }
 
 uint32_t gs::texture::get_width()
 {
-	switch (m_textureType) {
+	switch (_type) {
 	case type::Normal:
-		return gs_texture_get_width(m_texture);
+		return gs_texture_get_width(_texture);
 	case type::Volume:
-		return gs_voltexture_get_width(m_texture);
+		return gs_voltexture_get_width(_texture);
 	case type::Cube:
-		return gs_cubetexture_get_size(m_texture);
+		return gs_cubetexture_get_size(_texture);
 	}
 	return 0;
 }
 
 uint32_t gs::texture::get_height()
 {
-	switch (m_textureType) {
+	switch (_type) {
 	case type::Normal:
-		return gs_texture_get_height(m_texture);
+		return gs_texture_get_height(_texture);
 	case type::Volume:
-		return gs_voltexture_get_height(m_texture);
+		return gs_voltexture_get_height(_texture);
 	case type::Cube:
-		return gs_cubetexture_get_size(m_texture);
+		return gs_cubetexture_get_size(_texture);
 	}
 	return 0;
 }
 
 uint32_t gs::texture::get_depth()
 {
-	switch (m_textureType) {
+	switch (_type) {
 	case type::Normal:
 		return 1;
 	case type::Volume:
-		return gs_voltexture_get_depth(m_texture);
+		return gs_voltexture_get_depth(_texture);
 	case type::Cube:
 		return 6;
 	}
@@ -205,10 +205,10 @@ uint32_t gs::texture::get_depth()
 
 gs::texture::type gs::texture::get_type()
 {
-	return m_textureType;
+	return _type;
 }
 
 gs_color_format gs::texture::get_color_format()
 {
-	return gs_texture_get_color_format(m_texture);
+	return gs_texture_get_color_format(_texture);
 }

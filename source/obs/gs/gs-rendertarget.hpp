@@ -39,11 +39,11 @@ namespace gs {
 		friend class rendertarget_op;
 
 		protected:
-		gs_texrender_t* render_target;
-		bool            is_being_rendered;
+		gs_texrender_t* _render_target;
+		bool            _is_being_rendered;
 
-		gs_color_format    color_format;
-		gs_zstencil_format zstencil_format;
+		gs_color_format    _color_format;
+		gs_zstencil_format _zstencil_format;
 
 		public:
 		~rendertarget();

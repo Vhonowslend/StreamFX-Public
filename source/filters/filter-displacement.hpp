@@ -34,16 +34,10 @@
 #pragma warning(pop)
 #endif
 
-#define S_FILTER_DISPLACEMENT "Filter.Displacement"
-#define S_FILTER_DISPLACEMENT_FILE "Filter.Displacement.File"
-#define S_FILTER_DISPLACEMENT_FILE_TYPES "Filter.Displacement.File.Types"
-#define S_FILTER_DISPLACEMENT_RATIO "Filter.Displacement.Ratio"
-#define S_FILTER_DISPLACEMENT_SCALE "Filter.Displacement.Scale"
-
 namespace filter {
 	namespace displacement {
 		class displacement_factory {
-			obs_source_info sourceInfo;
+			obs_source_info _source_info;
 
 			public: // Singleton
 			static void                                  initialize();
@@ -72,20 +66,20 @@ namespace filter {
 		};
 
 		class displacement_instance {
-			obs_source_t* m_self;
-			float_t       m_timer;
+			obs_source_t* _self;
+			float_t       _timer;
 
 			// Rendering
-			std::shared_ptr<gs::effect> m_effect;
-			float_t                     m_distance;
-			vec2                        m_displacement_scale;
+			std::shared_ptr<gs::effect> _effect;
+			float_t                     _distance;
+			vec2                        _displacement_scale;
 
 			// Displacement Map
-			std::string                  m_file_name;
-			std::shared_ptr<gs::texture> m_file_texture;
-			time_t                       m_file_create_time;
-			time_t                       m_file_modified_time;
-			size_t                       m_file_size;
+			std::string                  _file_name;
+			std::shared_ptr<gs::texture> _file_texture;
+			time_t                       _file_create_time;
+			time_t                       _file_modified_time;
+			size_t                       _file_size;
 
 			void validate_file_texture(std::string file);
 

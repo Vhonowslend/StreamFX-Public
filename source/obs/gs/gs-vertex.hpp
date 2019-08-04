@@ -45,7 +45,7 @@ namespace gs {
 		~vertex();
 
 		private:
-		bool  hasStore;
-		void* store;
+		bool  _has_store;
+		void* _store;
 	};
 } // namespace gs

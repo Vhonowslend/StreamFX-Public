@@ -44,9 +44,9 @@ namespace gs {
 		};
 
 		protected:
-		gs_texture_t* m_texture;
-		bool          m_isOwner     = true;
-		type          m_textureType = type::Normal;
+		gs_texture_t* _texture;
+		bool          _is_owner     = true;
+		type          _type = type::Normal;
 
 		public:
 		~texture();
@@ -105,7 +105,7 @@ namespace gs {
 		/*!
 		* \brief Create a texture from an existing gs_texture_t object.
 		*/
-		texture(gs_texture_t* tex, bool takeOwnership = false) : m_texture(tex), m_isOwner(takeOwnership) {}
+		texture(gs_texture_t* tex, bool takeOwnership = false) : _texture(tex), _is_owner(takeOwnership) {}
 
 		void load(int unit);
 
@@ -123,4 +123,4 @@ namespace gs {
 	};
 } // namespace gs
 
-ENABLE_BITMASK_OPERATORS(gs::texture::flags)
+P_ENABLE_BITMASK_OPERATORS(gs::texture::flags)

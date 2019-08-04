@@ -31,9 +31,9 @@ namespace gfx {
 			Zoom,
 		};
 
-		class ibase {
+		class base {
 			public:
-			virtual ~ibase() {}
+			virtual ~base() {}
 
 			virtual void set_input(std::shared_ptr<::gs::texture> texture) = 0;
 
@@ -60,18 +60,18 @@ namespace gfx {
 			virtual std::shared_ptr<::gs::texture> get() = 0;
 		};
 
-		class ibase_angle {
+		class base_angle {
 			public:
-			virtual ~ibase_angle() {}
+			virtual ~base_angle() {}
 
 			virtual double_t get_angle() = 0;
 
 			virtual void set_angle(double_t angle) = 0;
 		};
 
-		class ibase_center {
+		class base_center {
 			public:
-			virtual ~ibase_center() {}
+			virtual ~base_center() {}
 
 			virtual void set_center(double_t x, double_t y) = 0;
 
@@ -92,7 +92,7 @@ namespace gfx {
 
 			virtual bool is_type_supported(::gfx::blur::type type) = 0;
 
-			virtual std::shared_ptr<::gfx::blur::ibase> create(::gfx::blur::type type) = 0;
+			virtual std::shared_ptr<::gfx::blur::base> create(::gfx::blur::type type) = 0;
 
 			virtual double_t get_min_size(::gfx::blur::type type) = 0;
 

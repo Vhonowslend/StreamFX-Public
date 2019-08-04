@@ -43,7 +43,7 @@ void obs::source_tracker::source_create_handler(void* ptr, calldata_t* data)
 		return;
 	}
 
-	self->source_map.insert({std::string(name), weak});
+	self->_source_map.insert({std::string(name), weak});
 }
 
 void obs::source_tracker::source_destroy_handler(void* ptr, calldata_t* data)
@@ -63,13 +63,13 @@ void obs::source_tracker::source_destroy_handler(void* ptr, calldata_t* data)
 		return;
 	}
 
-	auto found = self->source_map.find(std::string(name));
-	if (found == self->source_map.end()) {
+	auto found = self->_source_map.find(std::string(name));
+	if (found == self->_source_map.end()) {
 		return;
 	}
 
 	obs_weak_source_release(found->second);
-	self->source_map.erase(found);
+	self->_source_map.erase(found);
 }
 
 void obs::source_tracker::source_rename_handler(void* ptr, calldata_t* data)
@@ -88,20 +88,20 @@ void obs::source_tracker::source_rename_handler(void* ptr, calldata_t* data)
 		return;
 	}
 
-	auto found = self->source_map.find(std::string(prev_name));
-	if (found == self->source_map.end()) {
+	auto found = self->_source_map.find(std::string(prev_name));
+	if (found == self->_source_map.end()) {
 		// Untracked source, insert.
 		obs_weak_source_t* weak = obs_source_get_weak_source(target);
 		if (!weak) {
 			return;
 		}
-		self->source_map.insert({new_name, weak});
+		self->_source_map.insert({new_name, weak});
 		return;
 	}
 
 	// Insert at new key, remove old pair.
-	self->source_map.insert({new_name, found->second});
-	self->source_map.erase(found);
+	self->_source_map.insert({new_name, found->second});
+	self->_source_map.erase(found);
 }
 
 void obs::source_tracker::initialize()
@@ -136,17 +136,17 @@ obs::source_tracker::~source_tracker()
 		signal_handler_disconnect(osi, "source_rename", &source_rename_handler, this);
 	}
 
-	for (auto kv : this->source_map) {
+	for (auto kv : this->_source_map) {
 		obs_weak_source_release(kv.second);
 	}
-	this->source_map.clear();
+	this->_source_map.clear();
 }
 
 void obs::source_tracker::enumerate(enumerate_cb_t ecb, filter_cb_t fcb)
 {
 	// Need func-local copy, otherwise we risk corruption if a new source is created or destroyed.
-	auto source_map_copy = this->source_map;
-	for (auto kv : this->source_map) {
+	auto source_map_copy = this->_source_map;
+	for (auto kv : this->_source_map) {
 		obs_source_t* source = obs_weak_source_get_source(kv.second);
 		if (!source) {
 			continue;

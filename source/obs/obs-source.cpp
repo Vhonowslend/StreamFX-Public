@@ -28,8 +28,8 @@ void obs::source::handle_destroy(void* p, calldata_t* calldata)
 		return;
 	}
 
-	if (self->self == source) {
-		self->self = nullptr;
+	if (self->_self == source) {
+		self->_self = nullptr;
 	}
 
 	if (self->events.destroy) {
@@ -397,10 +397,10 @@ obs::source::~source()
 	auto_signal_d(transition_stop);
 #undef auto_signal_d
 
-	if (this->track_ownership && this->self) {
-		obs_source_release(this->self);
+	if (this->_track_ownership && this->_self) {
+		obs_source_release(this->_self);
 	}
-	this->self = nullptr;
+	this->_self = nullptr;
 }
 
 obs::source::source()
@@ -411,17 +411,17 @@ obs::source::source()
 #define auto_signal_c(SIGNAL)                                                                  \
 	{                                                                                          \
 		this->events.SIGNAL.set_listen_callback([this] {                                       \
-			if (!this->self)                                                                   \
+			if (!this->_self)                                                                   \
 				return;                                                                        \
-			auto sh = obs_source_get_signal_handler(this->self);                               \
+			auto sh = obs_source_get_signal_handler(this->_self);                               \
 			if (sh) {                                                                          \
 				signal_handler_connect(sh, "" #SIGNAL, obs::source::handle_##SIGNAL, this);    \
 			}                                                                                  \
 		});                                                                                    \
 		this->events.SIGNAL.set_silence_callback([this] {                                      \
-			if (!this->self)                                                                   \
+			if (!this->_self)                                                                   \
 				return;                                                                        \
-			auto sh = obs_source_get_signal_handler(this->self);                               \
+			auto sh = obs_source_get_signal_handler(this->_self);                               \
 			if (sh) {                                                                          \
 				signal_handler_disconnect(sh, "" #SIGNAL, obs::source::handle_##SIGNAL, this); \
 			}                                                                                  \
@@ -441,51 +441,51 @@ obs::source::source()
 	//  things do. So instead we'll have to manually deal with it for now.
 	{
 		this->events.audio_data.set_listen_callback([this] {
-			if (!this->self)
+			if (!this->_self)
 				return;
-			obs_source_add_audio_capture_callback(this->self, obs::source::handle_audio_data, this);
+			obs_source_add_audio_capture_callback(this->_self, obs::source::handle_audio_data, this);
 		});
 		this->events.audio_data.set_silence_callback([this] {
-			if (!this->self)
+			if (!this->_self)
 				return;
-			obs_source_remove_audio_capture_callback(this->self, obs::source::handle_audio_data, this);
+			obs_source_remove_audio_capture_callback(this->_self, obs::source::handle_audio_data, this);
 		});
 	}
 }
 
 obs::source::source(std::string name, bool ptrack_ownership, bool add_reference) : ::obs::source::source()
 {
-	this->self = obs_get_source_by_name(name.c_str());
-	if (!this->self) {
+	this->_self = obs_get_source_by_name(name.c_str());
+	if (!this->_self) {
 		throw std::runtime_error("source with name not found");
 	}
 
-	this->track_ownership = ptrack_ownership;
+	this->_track_ownership = ptrack_ownership;
 	if (!add_reference) {
-		obs_source_release(this->self);
+		obs_source_release(this->_self);
 	}
 }
 
 obs::source::source(obs_source_t* source, bool ptrack_ownership, bool add_reference) : ::obs::source::source()
 {
-	this->self = source;
-	if (!this->self) {
+	this->_self = source;
+	if (!this->_self) {
 		throw std::invalid_argument("source must not be null");
 	}
 
-	this->track_ownership = ptrack_ownership;
+	this->_track_ownership = ptrack_ownership;
 	if (add_reference) {
-		obs_source_addref(this->self);
+		obs_source_addref(this->_self);
 	}
 }
 
 obs::source::source(source const& other)
 {
-	this->self            = other.self;
-	this->track_ownership = other.track_ownership;
+	this->_self            = other._self;
+	this->_track_ownership = other._track_ownership;
 
-	if (this->track_ownership) {
-		obs_source_addref(this->self);
+	if (this->_track_ownership) {
+		obs_source_addref(this->_self);
 	}
 
 #ifdef auto_signal_c
@@ -529,15 +529,15 @@ obs::source& obs::source::operator=(source const& other)
 	}
 
 	// Release previous source.
-	if (this->self && this->track_ownership) {
-		obs_source_release(this->self);
+	if (this->_self && this->_track_ownership) {
+		obs_source_release(this->_self);
 	}
 
-	this->self            = other.self;
-	this->track_ownership = other.track_ownership;
+	this->_self            = other._self;
+	this->_track_ownership = other._track_ownership;
 
-	if (this->track_ownership) {
-		obs_source_addref(this->self);
+	if (this->_track_ownership) {
+		obs_source_addref(this->_self);
 	}
 
 #ifdef auto_signal_c
@@ -576,11 +576,11 @@ obs::source& obs::source::operator=(source const& other)
 	return *this;
 }
 
-obs::source::source(source&& other) : self(std::move(other.self)), track_ownership(std::move(other.track_ownership))
+obs::source::source(source&& other) : _self(std::move(other._self)), _track_ownership(std::move(other._track_ownership))
 {
 	// Clean out other source
-	other.self            = nullptr;
-	other.track_ownership = false;
+	other._self            = nullptr;
+	other._track_ownership = false;
 
 #ifdef auto_signal_c
 #undef auto_signal_c
@@ -623,14 +623,14 @@ obs::source& obs::source::operator=(source&& other)
 	}
 
 	// Release previous source.
-	if (this->self && this->track_ownership) {
-		obs_source_release(this->self);
+	if (this->_self && this->_track_ownership) {
+		obs_source_release(this->_self);
 	}
 
-	this->self            = std::move(other.self);
-	this->track_ownership = std::move(other.track_ownership);
-	other.self            = nullptr;
-	other.track_ownership = false;
+	this->_self            = std::move(other._self);
+	this->_track_ownership = std::move(other._track_ownership);
+	other._self            = nullptr;
+	other._track_ownership = false;
 
 #ifdef auto_signal_c
 #undef auto_signal_c
@@ -670,47 +670,47 @@ obs::source& obs::source::operator=(source&& other)
 
 obs_source_type obs::source::type()
 {
-	if (!self) {
+	if (!_self) {
 		return (obs_source_type)-1;
 	}
-	return obs_source_get_type(self);
+	return obs_source_get_type(_self);
 }
 
 void* obs::source::type_data()
 {
-	if (!self) {
+	if (!_self) {
 		return nullptr;
 	}
-	return obs_source_get_type_data(self);
+	return obs_source_get_type_data(_self);
 }
 
 uint32_t obs::source::width()
 {
-	if (!self) {
+	if (!_self) {
 		return 0;
 	}
-	return obs_source_get_width(self);
+	return obs_source_get_width(_self);
 }
 
 uint32_t obs::source::height()
 {
-	if (!self) {
+	if (!_self) {
 		return 0;
 	}
-	return obs_source_get_height(self);
+	return obs_source_get_height(_self);
 }
 
 bool obs::source::destroyed()
 {
-	return self == nullptr;
+	return _self == nullptr;
 }
 
 void obs::source::clear()
 {
-	self = nullptr;
+	_self = nullptr;
 }
 
 obs_source_t* obs::source::get()
 {
-	return self;
+	return _self;
 }

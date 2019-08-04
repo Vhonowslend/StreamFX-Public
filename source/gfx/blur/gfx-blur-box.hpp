@@ -27,7 +27,7 @@
 namespace gfx {
 	namespace blur {
 		class box_data {
-			std::shared_ptr<::gs::effect> m_effect;
+			std::shared_ptr<::gs::effect> _effect;
 
 			public:
 			box_data();
@@ -37,8 +37,8 @@ namespace gfx {
 		};
 
 		class box_factory : public ::gfx::blur::ifactory {
-			std::mutex                           m_data_lock;
-			std::weak_ptr<::gfx::blur::box_data> m_data;
+			std::mutex                           _data_lock;
+			std::weak_ptr<::gfx::blur::box_data> _data;
 
 			public:
 			box_factory();
@@ -46,7 +46,7 @@ namespace gfx {
 
 			virtual bool is_type_supported(::gfx::blur::type type) override;
 
-			virtual std::shared_ptr<::gfx::blur::ibase> create(::gfx::blur::type type) override;
+			virtual std::shared_ptr<::gfx::blur::base> create(::gfx::blur::type type) override;
 
 			virtual double_t get_min_size(::gfx::blur::type type) override;
 
@@ -80,17 +80,17 @@ namespace gfx {
 			static ::gfx::blur::box_factory& get();
 		};
 
-		class box : public ::gfx::blur::ibase {
+		class box : public ::gfx::blur::base {
 			protected:
-			std::shared_ptr<::gfx::blur::box_data> m_data;
+			std::shared_ptr<::gfx::blur::box_data> _data;
 
-			double_t                            m_size;
-			std::pair<double_t, double_t>       m_step_scale;
-			std::shared_ptr<::gs::texture>      m_input_texture;
-			std::shared_ptr<::gs::rendertarget> m_rendertarget;
+			double_t                            _size;
+			std::pair<double_t, double_t>       _step_scale;
+			std::shared_ptr<::gs::texture>      _input_texture;
+			std::shared_ptr<::gs::rendertarget> _rendertarget;
 
 			private:
-			std::shared_ptr<::gs::rendertarget> m_rendertarget2;
+			std::shared_ptr<::gs::rendertarget> _rendertarget2;
 
 			public:
 			box();
@@ -112,8 +112,8 @@ namespace gfx {
 			virtual std::shared_ptr<::gs::texture> get() override;
 		};
 
-		class box_directional : public ::gfx::blur::box, public ::gfx::blur::ibase_angle {
-			double_t m_angle;
+		class box_directional : public ::gfx::blur::box, public ::gfx::blur::base_angle {
+			double_t _angle;
 
 			public:
 			box_directional();
@@ -127,10 +127,10 @@ namespace gfx {
 		};
 
 		class box_rotational : public ::gfx::blur::box,
-							   public ::gfx::blur::ibase_angle,
-							   public ::gfx::blur::ibase_center {
-			std::pair<double_t, double_t> m_center;
-			double_t                      m_angle;
+							   public ::gfx::blur::base_angle,
+							   public ::gfx::blur::base_center {
+			std::pair<double_t, double_t> _center;
+			double_t                      _angle;
 
 			public:
 			virtual ::gfx::blur::type get_type() override;
@@ -144,8 +144,8 @@ namespace gfx {
 			virtual std::shared_ptr<::gs::texture> render() override;
 		};
 
-		class box_zoom : public ::gfx::blur::box, public ::gfx::blur::ibase_center {
-			std::pair<double_t, double_t> m_center;
+		class box_zoom : public ::gfx::blur::box, public ::gfx::blur::base_center {
+			std::pair<double_t, double_t> _center;
 
 			public:
 			virtual ::gfx::blur::type get_type() override;

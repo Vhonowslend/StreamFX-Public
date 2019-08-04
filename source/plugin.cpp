@@ -20,15 +20,15 @@
 #include "plugin.hpp"
 #include "obs/obs-source-tracker.hpp"
 
-std::list<std::function<void()>> initializerFunctions;
-std::list<std::function<void()>> finalizerFunctions;
+std::list<std::function<void()>> initializer_functions;
+std::list<std::function<void()>> finalizer_functions;
 
 MODULE_EXPORT bool obs_module_load(void)
 {
 	P_LOG_INFO("Loading Version %u.%u.%u (Build %u)", PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR,
 			   PROJECT_VERSION_PATCH, PROJECT_VERSION_TWEAK);
 	obs::source_tracker::initialize();
-	for (auto func : initializerFunctions) {
+	for (auto func : initializer_functions) {
 		func();
 	}
 	return true;
@@ -38,7 +38,7 @@ MODULE_EXPORT void obs_module_unload(void)
 {
 	P_LOG_INFO("Unloading Version %u.%u.%u (Build %u)", PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR,
 			   PROJECT_VERSION_PATCH, PROJECT_VERSION_TWEAK);
-	for (auto func : finalizerFunctions) {
+	for (auto func : finalizer_functions) {
 		func();
 	}
 	obs::source_tracker::finalize();

@@ -36,7 +36,7 @@
 
 //#define OBS_LOAD_EFFECT_FILE
 
-gs::effect::effect() : m_effect(nullptr) {}
+gs::effect::effect() : _effect(nullptr) {}
 
 gs::effect::effect(std::string file) : effect()
 {
@@ -72,8 +72,8 @@ gs::effect::effect(std::string file) : effect()
 
 	char* errorMessage = nullptr;
 	auto  gctx         = gs::context();
-	m_effect           = gs_effect_create(shader_buf.data(), file.c_str(), &errorMessage);
-	if (!m_effect || errorMessage) {
+	_effect           = gs_effect_create(shader_buf.data(), file.c_str(), &errorMessage);
+	if (!_effect || errorMessage) {
 		std::string error = "Generic Error";
 		if (errorMessage) {
 			error = std::string(errorMessage);
@@ -88,8 +88,8 @@ gs::effect::effect(std::string code, std::string name) : effect()
 {
 	char* errorMessage = nullptr;
 	auto  gctx         = gs::context();
-	m_effect           = gs_effect_create(code.c_str(), name.c_str(), &errorMessage);
-	if (!m_effect || errorMessage) {
+	_effect           = gs_effect_create(code.c_str(), name.c_str(), &errorMessage);
+	if (!_effect || errorMessage) {
 		std::string error = "Generic Error";
 		if (errorMessage) {
 			error = std::string(errorMessage);
@@ -102,22 +102,22 @@ gs::effect::effect(std::string code, std::string name) : effect()
 gs::effect::~effect()
 {
 	auto gctx = gs::context();
-	gs_effect_destroy(m_effect);
+	gs_effect_destroy(_effect);
 }
 
 gs_effect_t* gs::effect::get_object()
 {
-	return m_effect;
+	return _effect;
 }
 
 size_t gs::effect::count_parameters()
 {
-	return (size_t)gs_effect_get_num_params(m_effect);
+	return (size_t)gs_effect_get_num_params(_effect);
 }
 
 std::list<gs::effect_parameter> gs::effect::get_parameters()
 {
-	size_t                          num = gs_effect_get_num_params(m_effect);
+	size_t                          num = gs_effect_get_num_params(_effect);
 	std::list<gs::effect_parameter> ps;
 	for (size_t idx = 0; idx < num; idx++) {
 		ps.emplace_back(get_parameter(idx));
@@ -127,7 +127,7 @@ std::list<gs::effect_parameter> gs::effect::get_parameters()
 
 gs::effect_parameter gs::effect::get_parameter(size_t idx)
 {
-	gs_eparam_t* param = gs_effect_get_param_by_idx(m_effect, idx);
+	gs_eparam_t* param = gs_effect_get_param_by_idx(_effect, idx);
 	if (!param)
 		throw std::invalid_argument("parameter with index not found");
 	return effect_parameter(param);
@@ -135,13 +135,13 @@ gs::effect_parameter gs::effect::get_parameter(size_t idx)
 
 bool gs::effect::has_parameter(std::string name)
 {
-	gs_eparam_t* param = gs_effect_get_param_by_name(m_effect, name.c_str());
+	gs_eparam_t* param = gs_effect_get_param_by_name(_effect, name.c_str());
 	return (param != nullptr);
 }
 
 bool gs::effect::has_parameter(std::string name, effect_parameter::type type)
 {
-	gs_eparam_t* param = gs_effect_get_param_by_name(m_effect, name.c_str());
+	gs_eparam_t* param = gs_effect_get_param_by_name(_effect, name.c_str());
 	if (param == nullptr)
 		return false;
 	gs::effect_parameter eprm(param);
@@ -150,28 +150,28 @@ bool gs::effect::has_parameter(std::string name, effect_parameter::type type)
 
 gs::effect_parameter gs::effect::get_parameter(std::string name)
 {
-	gs_eparam_t* param = gs_effect_get_param_by_name(m_effect, name.c_str());
+	gs_eparam_t* param = gs_effect_get_param_by_name(_effect, name.c_str());
 	if (!param)
 		throw std::invalid_argument("parameter with name not found");
 	return effect_parameter(param);
 }
 
-gs::effect_parameter::effect_parameter(gs_eparam_t* param) : m_param(param)
+gs::effect_parameter::effect_parameter(gs_eparam_t* param) : _param(param)
 {
 	if (!param)
 		throw std::invalid_argument("param is null");
 
-	gs_effect_get_param_info(m_param, &m_paramInfo);
+	gs_effect_get_param_info(_param, &_param_info);
 }
 
 std::string gs::effect_parameter::get_name()
 {
-	return m_paramInfo.name;
+	return _param_info.name;
 }
 
 gs::effect_parameter::type gs::effect_parameter::get_type()
 {
-	switch (m_paramInfo.type) {
+	switch (_param_info.type) {
 	case GS_SHADER_PARAM_BOOL:
 		return type::Boolean;
 	case GS_SHADER_PARAM_FLOAT:
@@ -206,28 +206,28 @@ void gs::effect_parameter::set_bool(bool v)
 {
 	if (get_type() != type::Boolean)
 		throw std::bad_cast();
-	gs_effect_set_bool(m_param, v);
+	gs_effect_set_bool(_param, v);
 }
 
 void gs::effect_parameter::set_bool_array(bool v[], size_t sz)
 {
 	if (get_type() != type::Boolean)
 		throw std::bad_cast();
-	gs_effect_set_val(m_param, v, sz);
+	gs_effect_set_val(_param, v, sz);
 }
 
 void gs::effect_parameter::set_float(float_t x)
 {
 	if (get_type() != type::Float)
 		throw std::bad_cast();
-	gs_effect_set_float(m_param, x);
+	gs_effect_set_float(_param, x);
 }
 
 void gs::effect_parameter::set_float2(vec2& v)
 {
 	if (get_type() != type::Float2)
 		throw std::bad_cast();
-	gs_effect_set_vec2(m_param, &v);
+	gs_effect_set_vec2(_param, &v);
 }
 
 void gs::effect_parameter::set_float2(float_t x, float_t y)
@@ -235,14 +235,14 @@ void gs::effect_parameter::set_float2(float_t x, float_t y)
 	if (get_type() != type::Float2)
 		throw std::bad_cast();
 	vec2 v = {{x, y}};
-	gs_effect_set_vec2(m_param, &v);
+	gs_effect_set_vec2(_param, &v);
 }
 
 void gs::effect_parameter::set_float3(vec3& v)
 {
 	if (get_type() != type::Float3)
 		throw std::bad_cast();
-	gs_effect_set_vec3(m_param, &v);
+	gs_effect_set_vec3(_param, &v);
 }
 
 void gs::effect_parameter::set_float3(float_t x, float_t y, float_t z)
@@ -250,14 +250,14 @@ void gs::effect_parameter::set_float3(float_t x, float_t y, float_t z)
 	if (get_type() != type::Float3)
 		throw std::bad_cast();
 	vec3 v = {{x, y, z, 0}};
-	gs_effect_set_vec3(m_param, &v);
+	gs_effect_set_vec3(_param, &v);
 }
 
 void gs::effect_parameter::set_float4(vec4& v)
 {
 	if (get_type() != type::Float4)
 		throw std::bad_cast();
-	gs_effect_set_vec4(m_param, &v);
+	gs_effect_set_vec4(_param, &v);
 }
 
 void gs::effect_parameter::set_float4(float_t x, float_t y, float_t z, float_t w)
@@ -265,7 +265,7 @@ void gs::effect_parameter::set_float4(float_t x, float_t y, float_t z, float_t w
 	if (get_type() != type::Float4)
 		throw std::bad_cast();
 	vec4 v = {{x, y, z, w}};
-	gs_effect_set_vec4(m_param, &v);
+	gs_effect_set_vec4(_param, &v);
 }
 
 void gs::effect_parameter::set_float_array(float_t v[], size_t sz)
@@ -273,14 +273,14 @@ void gs::effect_parameter::set_float_array(float_t v[], size_t sz)
 	if ((get_type() != type::Float) && (get_type() != type::Float2) && (get_type() != type::Float3)
 		&& (get_type() != type::Float4))
 		throw std::bad_cast();
-	gs_effect_set_val(m_param, v, sizeof(float_t) * sz);
+	gs_effect_set_val(_param, v, sizeof(float_t) * sz);
 }
 
 void gs::effect_parameter::set_int(int32_t x)
 {
 	if ((get_type() != type::Integer) && (get_type() != type::Unknown))
 		throw std::bad_cast();
-	gs_effect_set_int(m_param, x);
+	gs_effect_set_int(_param, x);
 }
 
 void gs::effect_parameter::set_int2(int32_t x, int32_t y)
@@ -288,7 +288,7 @@ void gs::effect_parameter::set_int2(int32_t x, int32_t y)
 	if ((get_type() != type::Integer2) && (get_type() != type::Unknown))
 		throw std::bad_cast();
 	int32_t v[2] = {x, y};
-	gs_effect_set_val(m_param, v, sizeof(int) * 2);
+	gs_effect_set_val(_param, v, sizeof(int) * 2);
 }
 
 void gs::effect_parameter::set_int3(int32_t x, int32_t y, int32_t z)
@@ -296,7 +296,7 @@ void gs::effect_parameter::set_int3(int32_t x, int32_t y, int32_t z)
 	if ((get_type() != type::Integer3) && (get_type() != type::Unknown))
 		throw std::bad_cast();
 	int32_t v[3] = {x, y, z};
-	gs_effect_set_val(m_param, v, sizeof(int) * 3);
+	gs_effect_set_val(_param, v, sizeof(int) * 3);
 }
 
 void gs::effect_parameter::set_int4(int32_t x, int32_t y, int32_t z, int32_t w)
@@ -304,7 +304,7 @@ void gs::effect_parameter::set_int4(int32_t x, int32_t y, int32_t z, int32_t w)
 	if ((get_type() != type::Integer4) && (get_type() != type::Unknown))
 		throw std::bad_cast();
 	int32_t v[4] = {x, y, z, w};
-	gs_effect_set_val(m_param, v, sizeof(int) * 4);
+	gs_effect_set_val(_param, v, sizeof(int) * 4);
 }
 
 void gs::effect_parameter::set_int_array(int32_t v[], size_t sz)
@@ -312,40 +312,40 @@ void gs::effect_parameter::set_int_array(int32_t v[], size_t sz)
 	if ((get_type() != type::Integer) && (get_type() != type::Integer2) && (get_type() != type::Integer3)
 		&& (get_type() != type::Integer4) && (get_type() != type::Unknown))
 		throw std::bad_cast();
-	gs_effect_set_val(m_param, v, sizeof(int) * sz);
+	gs_effect_set_val(_param, v, sizeof(int) * sz);
 }
 
 void gs::effect_parameter::set_matrix(matrix4& v)
 {
 	if (get_type() != type::Matrix)
 		throw std::bad_cast();
-	gs_effect_set_matrix4(m_param, &v);
+	gs_effect_set_matrix4(_param, &v);
 }
 
 void gs::effect_parameter::set_texture(std::shared_ptr<gs::texture> v)
 {
 	if (get_type() != type::Texture)
 		throw std::bad_cast();
-	gs_effect_set_texture(m_param, v->get_object());
+	gs_effect_set_texture(_param, v->get_object());
 }
 
 void gs::effect_parameter::set_texture(gs_texture_t* v)
 {
 	if (get_type() != type::Texture)
 		throw std::bad_cast();
-	gs_effect_set_texture(m_param, v);
+	gs_effect_set_texture(_param, v);
 }
 
 void gs::effect_parameter::set_sampler(std::shared_ptr<gs::sampler> v)
 {
 	if (get_type() != type::Texture)
 		throw std::bad_cast();
-	gs_effect_set_next_sampler(m_param, v->get_object());
+	gs_effect_set_next_sampler(_param, v->get_object());
 }
 
 void gs::effect_parameter::set_sampler(gs_sampler_state* v)
 {
 	if (get_type() != type::Texture)
 		throw std::bad_cast();
-	gs_effect_set_next_sampler(m_param, v);
+	gs_effect_set_next_sampler(_param, v);
 }

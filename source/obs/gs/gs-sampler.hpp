@@ -61,8 +61,8 @@ namespace gs {
 		gs_sampler_state* get_object();
 
 		private:
-		bool              m_dirty;
-		gs_sampler_info   m_samplerInfo;
-		gs_sampler_state* m_samplerState;
+		bool              _dirty;
+		gs_sampler_info   _sampler_info;
+		gs_sampler_state* _sampler_state;
 	};
 } // namespace gs

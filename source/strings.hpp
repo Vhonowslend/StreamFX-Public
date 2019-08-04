@@ -20,14 +20,14 @@
 #pragma once
 #include "plugin.hpp"
 
-#define P_TRANSLATE(x) obs_module_text(x)
-#define P_DESC(x) x ".Description"
+#define D_TRANSLATE(x) obs_module_text(x)
+#define D_DESC(x) x ".Description"
 
-#define T_FILEFILTERS_IMAGE "*.png *.webp *.tga *.tiff *.jpeg *.jpg *.bmp"
-#define T_FILEFILTERS_VIDEO "*.mkv *.webm *.mp4 *.mov *.flv"
-#define T_FILEFILTERS_SOUND "*.ogg *.flac *.mp3 *.wav"
-#define T_FILEFILTERS_EFFECT "*.effect *.txt"
-#define T_FILEFILTERS_ANY "*.*"
+#define S_FILEFILTERS_IMAGE "*.png *.webp *.tga *.tiff *.jpeg *.jpg *.bmp"
+#define S_FILEFILTERS_VIDEO "*.mkv *.webm *.mp4 *.mov *.flv"
+#define S_FILEFILTERS_SOUND "*.ogg *.flac *.mp3 *.wav"
+#define S_FILEFILTERS_EFFECT "*.effect *.txt"
+#define S_FILEFILTERS_ANY "*.*"
 
 #define S_VERSION "Version"
 

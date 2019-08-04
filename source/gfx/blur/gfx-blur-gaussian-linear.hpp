@@ -26,8 +26,8 @@
 namespace gfx {
 	namespace blur {
 		class gaussian_linear_data {
-			std::shared_ptr<::gs::effect>     m_effect;
-			std::vector<std::vector<float_t>> m_kernels;
+			std::shared_ptr<::gs::effect>     _effect;
+			std::vector<std::vector<float_t>> _kernels;
 
 			public:
 			gaussian_linear_data();
@@ -39,8 +39,8 @@ namespace gfx {
 		};
 
 		class gaussian_linear_factory : public ::gfx::blur::ifactory {
-			std::mutex                                       m_data_lock;
-			std::weak_ptr<::gfx::blur::gaussian_linear_data> m_data;
+			std::mutex                                       _data_lock;
+			std::weak_ptr<::gfx::blur::gaussian_linear_data> _data;
 
 			public:
 			gaussian_linear_factory();
@@ -48,7 +48,7 @@ namespace gfx {
 
 			virtual bool is_type_supported(::gfx::blur::type type) override;
 
-			virtual std::shared_ptr<::gfx::blur::ibase> create(::gfx::blur::type type) override;
+			virtual std::shared_ptr<::gfx::blur::base> create(::gfx::blur::type type) override;
 
 			virtual double_t get_min_size(::gfx::blur::type type) override;
 
@@ -82,17 +82,17 @@ namespace gfx {
 			static ::gfx::blur::gaussian_linear_factory& get();
 		};
 
-		class gaussian_linear : public ::gfx::blur::ibase {
+		class gaussian_linear : public ::gfx::blur::base {
 			protected:
-			std::shared_ptr<::gfx::blur::gaussian_linear_data> m_data;
+			std::shared_ptr<::gfx::blur::gaussian_linear_data> _data;
 
-			double_t                            m_size;
-			std::pair<double_t, double_t>       m_step_scale;
-			std::shared_ptr<::gs::texture>      m_input_texture;
-			std::shared_ptr<::gs::rendertarget> m_rendertarget;
+			double_t                            _size;
+			std::pair<double_t, double_t>       _step_scale;
+			std::shared_ptr<::gs::texture>      _input_texture;
+			std::shared_ptr<::gs::rendertarget> _rendertarget;
 
 			private:
-			std::shared_ptr<::gs::rendertarget> m_rendertarget2;
+			std::shared_ptr<::gs::rendertarget> _rendertarget2;
 
 			public:
 			gaussian_linear();
@@ -119,8 +119,8 @@ namespace gfx {
 			virtual std::shared_ptr<::gs::texture> get() override;
 		};
 
-		class gaussian_linear_directional : public ::gfx::blur::gaussian_linear, public ::gfx::blur::ibase_angle {
-			double_t m_angle;
+		class gaussian_linear_directional : public ::gfx::blur::gaussian_linear, public ::gfx::blur::base_angle {
+			double_t _angle;
 
 			public:
 			gaussian_linear_directional();

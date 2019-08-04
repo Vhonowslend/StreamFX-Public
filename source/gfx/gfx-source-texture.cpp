@@ -19,21 +19,21 @@
 
 gfx::source_texture::~source_texture()
 {
-	if (child && parent) {
-		obs_source_remove_active_child(parent->get(), child->get());
+	if (_child && _parent) {
+		obs_source_remove_active_child(_parent->get(), _child->get());
 	}
 
-	parent.reset();
-	child.reset();
+	_parent.reset();
+	_child.reset();
 }
 
 gfx::source_texture::source_texture(obs_source_t* _parent)
 {
 	if (!_parent) {
-		throw std::invalid_argument("parent must not be null");
+		throw std::invalid_argument("_parent must not be null");
 	}
-	parent        = std::make_shared<obs::source>(_parent, false, false);
-	render_target = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_parent        = std::make_shared<obs::source>(_parent, false, false);
+	_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
 gfx::source_texture::source_texture(obs_source_t* _source, obs_source_t* _parent) : source_texture(_parent)
@@ -42,9 +42,9 @@ gfx::source_texture::source_texture(obs_source_t* _source, obs_source_t* _parent
 		throw std::invalid_argument("source must not be null");
 	}
 	if (!obs_source_add_active_child(_parent, _source)) {
-		throw std::runtime_error("parent is contained in child");
+		throw std::runtime_error("_parent is contained in _child");
 	}
-	child = std::make_shared<obs::source>(_source, true, true);
+	_child = std::make_shared<obs::source>(_source, true, true);
 }
 
 gfx::source_texture::source_texture(const char* _name, obs_source_t* _parent) : source_texture(_parent)
@@ -52,9 +52,9 @@ gfx::source_texture::source_texture(const char* _name, obs_source_t* _parent) : 
 	if (!_name) {
 		throw std::invalid_argument("name must not be null");
 	}
-	child = std::make_shared<obs::source>(_name, true, true);
-	if (!obs_source_add_active_child(_parent, child->get())) {
-		throw std::runtime_error("parent is contained in child");
+	_child = std::make_shared<obs::source>(_name, true, true);
+	if (!obs_source_add_active_child(_parent, _child->get())) {
+		throw std::runtime_error("_parent is contained in _child");
 	}
 }
 
@@ -64,17 +64,17 @@ gfx::source_texture::source_texture(std::string _name, obs_source_t* _parent) : 
 gfx::source_texture::source_texture(std::shared_ptr<obs::source> pchild, std::shared_ptr<obs::source> pparent)
 {
 	if (!pchild) {
-		throw std::invalid_argument("child must not be null");
+		throw std::invalid_argument("_child must not be null");
 	}
 	if (!pparent) {
-		throw std::invalid_argument("parent must not be null");
+		throw std::invalid_argument("_parent must not be null");
 	}
 	if (!obs_source_add_active_child(pparent->get(), pchild->get())) {
-		throw std::runtime_error("parent is contained in child");
+		throw std::runtime_error("_parent is contained in _child");
 	}
-	this->child         = pchild;
-	this->parent        = pparent;
-	this->render_target = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	this->_child         = pchild;
+	this->_parent        = pparent;
+	this->_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
 gfx::source_texture::source_texture(std::shared_ptr<obs::source> _child, obs_source_t* _parent)
@@ -83,24 +83,24 @@ gfx::source_texture::source_texture(std::shared_ptr<obs::source> _child, obs_sou
 
 obs_source_t* gfx::source_texture::get_object()
 {
-	if (child) {
-		return child->get();
+	if (_child) {
+		return _child->get();
 	}
 	return nullptr;
 }
 
 obs_source_t* gfx::source_texture::get_parent()
 {
-	return parent->get();
+	return _parent->get();
 }
 
 void gfx::source_texture::clear()
 {
-	if (child && parent) {
-		obs_source_remove_active_child(parent->get(), child->get());
+	if (_child && _parent) {
+		obs_source_remove_active_child(_parent->get(), _child->get());
 	}
-	child->clear();
-	child.reset();
+	_child->clear();
+	_child.reset();
 }
 
 std::shared_ptr<gs::texture> gfx::source_texture::render(size_t width, size_t height)
@@ -111,22 +111,22 @@ std::shared_ptr<gs::texture> gfx::source_texture::render(size_t width, size_t he
 	if ((height == 0) || (height >= 16384)) {
 		throw std::runtime_error("Height too large or too small.");
 	}
-	if (child->destroyed() || parent->destroyed()) {
+	if (_child->destroyed() || _parent->destroyed()) {
 		return nullptr;
 	}
 
 	{
-		auto op = render_target->render((uint32_t)width, (uint32_t)height);
+		auto op = _rt->render((uint32_t)width, (uint32_t)height);
 		vec4 black;
 		vec4_zero(&black);
 		gs_ortho(0, (float_t)width, 0, (float_t)height, 0, 1);
 		gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
-		if (child) {
-			obs_source_video_render(child->get());
+		if (_child) {
+			obs_source_video_render(_child->get());
 		}
 	}
 
 	std::shared_ptr<gs::texture> tex;
-	render_target->get_texture(tex);
+	_rt->get_texture(tex);
 	return tex;
 }

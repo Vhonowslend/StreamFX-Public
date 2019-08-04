@@ -76,10 +76,10 @@ enum RotationOrder : int64_t {
 };
 
 // Initializer & Finalizer
-INITIALIZER(FilterTransformInit)
+P_INITIALIZER(FilterTransformInit)
 {
-	initializerFunctions.push_back([] { filter::transform::transform_factory::initialize(); });
-	finalizerFunctions.push_back([] { filter::transform::transform_factory::finalize(); });
+	initializer_functions.push_back([] { filter::transform::transform_factory::initialize(); });
+	finalizer_functions.push_back([] { filter::transform::transform_factory::finalize(); });
 }
 
 static std::shared_ptr<filter::transform::transform_factory> factory_instance = nullptr;
@@ -101,30 +101,30 @@ std::shared_ptr<filter::transform::transform_factory> filter::transform::transfo
 
 filter::transform::transform_factory::transform_factory()
 {
-	memset(&sourceInfo, 0, sizeof(obs_source_info));
-	sourceInfo.id             = "obs-stream-effects-filter-transform";
-	sourceInfo.type           = OBS_SOURCE_TYPE_FILTER;
-	sourceInfo.output_flags   = OBS_SOURCE_VIDEO;
-	sourceInfo.get_name       = get_name;
-	sourceInfo.get_defaults   = get_defaults;
-	sourceInfo.get_properties = get_properties;
+	memset(&_source_info, 0, sizeof(obs_source_info));
+	_source_info.id             = "obs-stream-effects-filter-transform";
+	_source_info.type           = OBS_SOURCE_TYPE_FILTER;
+	_source_info.output_flags   = OBS_SOURCE_VIDEO;
+	_source_info.get_name       = get_name;
+	_source_info.get_defaults   = get_defaults;
+	_source_info.get_properties = get_properties;
 
-	sourceInfo.create       = create;
-	sourceInfo.destroy      = destroy;
-	sourceInfo.update       = update;
-	sourceInfo.activate     = activate;
-	sourceInfo.deactivate   = deactivate;
-	sourceInfo.video_tick   = video_tick;
-	sourceInfo.video_render = video_render;
+	_source_info.create       = create;
+	_source_info.destroy      = destroy;
+	_source_info.update       = update;
+	_source_info.activate     = activate;
+	_source_info.deactivate   = deactivate;
+	_source_info.video_tick   = video_tick;
+	_source_info.video_render = video_render;
 
-	obs_register_source(&sourceInfo);
+	obs_register_source(&_source_info);
 }
 
 filter::transform::transform_factory::~transform_factory() {}
 
 const char* filter::transform::transform_factory::get_name(void*)
 {
-	return P_TRANSLATE(ST);
+	return D_TRANSLATE(ST);
 }
 
 void filter::transform::transform_factory::get_defaults(obs_data_t* data)
@@ -152,95 +152,95 @@ obs_properties_t* filter::transform::transform_factory::get_properties(void*)
 
 	// Camera
 	/// Projection Mode
-	p = obs_properties_add_list(pr, ST_CAMERA, P_TRANSLATE(ST_CAMERA), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(ST_CAMERA)));
-	obs_property_list_add_int(p, P_TRANSLATE(ST_CAMERA_ORTHOGRAPHIC), (int64_t)CameraMode::Orthographic);
-	obs_property_list_add_int(p, P_TRANSLATE(ST_CAMERA_PERSPECTIVE), (int64_t)CameraMode::Perspective);
+	p = obs_properties_add_list(pr, ST_CAMERA, D_TRANSLATE(ST_CAMERA), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_CAMERA)));
+	obs_property_list_add_int(p, D_TRANSLATE(ST_CAMERA_ORTHOGRAPHIC), (int64_t)CameraMode::Orthographic);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_CAMERA_PERSPECTIVE), (int64_t)CameraMode::Perspective);
 	obs_property_set_modified_callback(p, modified_properties);
 	/// Field Of View
-	p = obs_properties_add_float_slider(pr, ST_CAMERA_FIELDOFVIEW, P_TRANSLATE(ST_CAMERA_FIELDOFVIEW), 1.0, 179.0,
+	p = obs_properties_add_float_slider(pr, ST_CAMERA_FIELDOFVIEW, D_TRANSLATE(ST_CAMERA_FIELDOFVIEW), 1.0, 179.0,
 										0.01);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(ST_CAMERA_FIELDOFVIEW)));
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_CAMERA_FIELDOFVIEW)));
 
 	// Mesh
 	/// Position
 	{
 		std::pair<const char*, const char*> entries[] = {
-			std::make_pair(ST_POSITION_X, P_DESC(ST_POSITION)),
-			std::make_pair(ST_POSITION_Y, P_DESC(ST_POSITION)),
-			std::make_pair(ST_POSITION_Z, P_DESC(ST_POSITION)),
+			std::make_pair(ST_POSITION_X, D_DESC(ST_POSITION)),
+			std::make_pair(ST_POSITION_Y, D_DESC(ST_POSITION)),
+			std::make_pair(ST_POSITION_Z, D_DESC(ST_POSITION)),
 		};
 		for (auto kv : entries) {
-			p = obs_properties_add_float(pr, kv.first, P_TRANSLATE(kv.first), -10000, 10000, 0.01);
-			obs_property_set_long_description(p, P_TRANSLATE(kv.second));
+			p = obs_properties_add_float(pr, kv.first, D_TRANSLATE(kv.first), -10000, 10000, 0.01);
+			obs_property_set_long_description(p, D_TRANSLATE(kv.second));
 		}
 	}
 	/// Rotation
 	{
 		std::pair<const char*, const char*> entries[] = {
-			std::make_pair(ST_ROTATION_X, P_DESC(ST_ROTATION)),
-			std::make_pair(ST_ROTATION_Y, P_DESC(ST_ROTATION)),
-			std::make_pair(ST_ROTATION_Z, P_DESC(ST_ROTATION)),
+			std::make_pair(ST_ROTATION_X, D_DESC(ST_ROTATION)),
+			std::make_pair(ST_ROTATION_Y, D_DESC(ST_ROTATION)),
+			std::make_pair(ST_ROTATION_Z, D_DESC(ST_ROTATION)),
 		};
 		for (auto kv : entries) {
-			p = obs_properties_add_float_slider(pr, kv.first, P_TRANSLATE(kv.first), -180, 180, 0.01);
-			obs_property_set_long_description(p, P_TRANSLATE(kv.second));
+			p = obs_properties_add_float_slider(pr, kv.first, D_TRANSLATE(kv.first), -180, 180, 0.01);
+			obs_property_set_long_description(p, D_TRANSLATE(kv.second));
 		}
 	}
 	/// Scale
 	{
 		std::pair<const char*, const char*> entries[] = {
-			std::make_pair(ST_SCALE_X, P_DESC(ST_SCALE)),
-			std::make_pair(ST_SCALE_Y, P_DESC(ST_SCALE)),
+			std::make_pair(ST_SCALE_X, D_DESC(ST_SCALE)),
+			std::make_pair(ST_SCALE_Y, D_DESC(ST_SCALE)),
 		};
 		for (auto kv : entries) {
-			p = obs_properties_add_float_slider(pr, kv.first, P_TRANSLATE(kv.first), -1000, 1000, 0.01);
-			obs_property_set_long_description(p, P_TRANSLATE(kv.second));
+			p = obs_properties_add_float_slider(pr, kv.first, D_TRANSLATE(kv.first), -1000, 1000, 0.01);
+			obs_property_set_long_description(p, D_TRANSLATE(kv.second));
 		}
 	}
 	/// Shear
 	{
 		std::pair<const char*, const char*> entries[] = {
-			std::make_pair(ST_SHEAR_X, P_DESC(ST_SHEAR)),
-			std::make_pair(ST_SHEAR_Y, P_DESC(ST_SHEAR)),
+			std::make_pair(ST_SHEAR_X, D_DESC(ST_SHEAR)),
+			std::make_pair(ST_SHEAR_Y, D_DESC(ST_SHEAR)),
 		};
 		for (auto kv : entries) {
-			p = obs_properties_add_float_slider(pr, kv.first, P_TRANSLATE(kv.first), -100.0, 100.0, 0.01);
-			obs_property_set_long_description(p, P_TRANSLATE(kv.second));
+			p = obs_properties_add_float_slider(pr, kv.first, D_TRANSLATE(kv.first), -100.0, 100.0, 0.01);
+			obs_property_set_long_description(p, D_TRANSLATE(kv.second));
 		}
 	}
 
-	p = obs_properties_add_bool(pr, S_ADVANCED, P_TRANSLATE(S_ADVANCED));
+	p = obs_properties_add_bool(pr, S_ADVANCED, D_TRANSLATE(S_ADVANCED));
 	obs_property_set_modified_callback(p, modified_properties);
 
-	p = obs_properties_add_list(pr, ST_ROTATION_ORDER, P_TRANSLATE(ST_ROTATION_ORDER), OBS_COMBO_TYPE_LIST,
+	p = obs_properties_add_list(pr, ST_ROTATION_ORDER, D_TRANSLATE(ST_ROTATION_ORDER), OBS_COMBO_TYPE_LIST,
 								OBS_COMBO_FORMAT_INT);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(ST_ROTATION_ORDER)));
-	obs_property_list_add_int(p, P_TRANSLATE(ST_ROTATION_ORDER_XYZ), RotationOrder::XYZ);
-	obs_property_list_add_int(p, P_TRANSLATE(ST_ROTATION_ORDER_XZY), RotationOrder::XZY);
-	obs_property_list_add_int(p, P_TRANSLATE(ST_ROTATION_ORDER_YXZ), RotationOrder::YXZ);
-	obs_property_list_add_int(p, P_TRANSLATE(ST_ROTATION_ORDER_YZX), RotationOrder::YZX);
-	obs_property_list_add_int(p, P_TRANSLATE(ST_ROTATION_ORDER_ZXY), RotationOrder::ZXY);
-	obs_property_list_add_int(p, P_TRANSLATE(ST_ROTATION_ORDER_ZYX), RotationOrder::ZYX);
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_ROTATION_ORDER)));
+	obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_XYZ), RotationOrder::XYZ);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_XZY), RotationOrder::XZY);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_YXZ), RotationOrder::YXZ);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_YZX), RotationOrder::YZX);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_ZXY), RotationOrder::ZXY);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_ZYX), RotationOrder::ZYX);
 
-	p = obs_properties_add_bool(pr, ST_MIPMAPPING, P_TRANSLATE(ST_MIPMAPPING));
+	p = obs_properties_add_bool(pr, ST_MIPMAPPING, D_TRANSLATE(ST_MIPMAPPING));
 	obs_property_set_modified_callback(p, modified_properties);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(ST_MIPMAPPING)));
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_MIPMAPPING)));
 
-	p = obs_properties_add_list(pr, S_MIPGENERATOR, P_TRANSLATE(S_MIPGENERATOR), OBS_COMBO_TYPE_LIST,
+	p = obs_properties_add_list(pr, S_MIPGENERATOR, D_TRANSLATE(S_MIPGENERATOR), OBS_COMBO_TYPE_LIST,
 								OBS_COMBO_FORMAT_INT);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_MIPGENERATOR)));
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(S_MIPGENERATOR)));
 
-	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_POINT), (long long)gs::mipmapper::generator::Point);
-	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_LINEAR), (long long)gs::mipmapper::generator::Linear);
-	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_SHARPEN), (long long)gs::mipmapper::generator::Sharpen);
-	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_SMOOTHEN), (long long)gs::mipmapper::generator::Smoothen);
-	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_BICUBIC), (long long)gs::mipmapper::generator::Bicubic);
-	obs_property_list_add_int(p, P_TRANSLATE(S_MIPGENERATOR_LANCZOS), (long long)gs::mipmapper::generator::Lanczos);
+	obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_POINT), (long long)gs::mipmapper::generator::Point);
+	obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_LINEAR), (long long)gs::mipmapper::generator::Linear);
+	obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_SHARPEN), (long long)gs::mipmapper::generator::Sharpen);
+	obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_SMOOTHEN), (long long)gs::mipmapper::generator::Smoothen);
+	obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_BICUBIC), (long long)gs::mipmapper::generator::Bicubic);
+	obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_LANCZOS), (long long)gs::mipmapper::generator::Lanczos);
 
-	p = obs_properties_add_float_slider(pr, S_MIPGENERATOR_INTENSITY, P_TRANSLATE(S_MIPGENERATOR_INTENSITY), 0.0,
+	p = obs_properties_add_float_slider(pr, S_MIPGENERATOR_INTENSITY, D_TRANSLATE(S_MIPGENERATOR_INTENSITY), 0.0,
 										1000.0, 0.01);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(S_MIPGENERATOR_INTENSITY)));
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(S_MIPGENERATOR_INTENSITY)));
 
 	return pr;
 }
@@ -316,34 +316,34 @@ void filter::transform::transform_factory::video_render(void* ptr, gs_effect_t* 
 
 filter::transform::transform_instance::~transform_instance()
 {
-	m_shear.reset();
-	m_scale.reset();
-	m_rotation.reset();
-	m_position.reset();
-	m_vertex_buffer.reset();
-	m_shape_texture.reset();
-	m_shape_rendertarget.reset();
-	m_source_texture.reset();
-	m_source_rendertarget.reset();
+	_shear.reset();
+	_scale.reset();
+	_rotation.reset();
+	_position.reset();
+	_vertex_buffer.reset();
+	_shape_texture.reset();
+	_shape_rendertarget.reset();
+	_source_texture.reset();
+	_source_rendertarget.reset();
 }
 
 filter::transform::transform_instance::transform_instance(obs_data_t* data, obs_source_t* context)
-	: m_active(true), m_self(context), m_source_rendered(false), m_mipmap_enabled(false), m_mipmap_strength(50.0),
-	  m_mipmap_generator(gs::mipmapper::generator::Linear), m_update_mesh(false), m_rotation_order(RotationOrder::ZXY),
-	  m_camera_orthographic(true), m_camera_fov(90.0)
+	: _active(true), _self(context), _source_rendered(false), _mipmap_enabled(false), _mipmap_strength(50.0),
+	  _mipmap_generator(gs::mipmapper::generator::Linear), _update_mesh(false), _rotation_order(RotationOrder::ZXY),
+	  _camera_orthographic(true), _camera_fov(90.0)
 {
-	m_source_rendertarget = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	m_shape_rendertarget  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	m_vertex_buffer       = std::make_shared<gs::vertex_buffer>(uint32_t(4u), uint8_t(1u));
+	_source_rendertarget = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_shape_rendertarget  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_vertex_buffer       = std::make_shared<gs::vertex_buffer>(uint32_t(4u), uint8_t(1u));
 
-	m_position = std::make_unique<util::vec3a>();
-	m_rotation = std::make_unique<util::vec3a>();
-	m_scale    = std::make_unique<util::vec3a>();
-	m_shear    = std::make_unique<util::vec3a>();
+	_position = std::make_unique<util::vec3a>();
+	_rotation = std::make_unique<util::vec3a>();
+	_scale    = std::make_unique<util::vec3a>();
+	_shear    = std::make_unique<util::vec3a>();
 
-	vec3_set(m_position.get(), 0, 0, 0);
-	vec3_set(m_rotation.get(), 0, 0, 0);
-	vec3_set(m_scale.get(), 1, 1, 1);
+	vec3_set(_position.get(), 0, 0, 0);
+	vec3_set(_rotation.get(), 0, 0, 0);
+	vec3_set(_scale.get(), 1, 1, 1);
 
 	update(data);
 }
@@ -361,40 +361,40 @@ uint32_t filter::transform::transform_instance::get_height()
 void filter::transform::transform_instance::update(obs_data_t* data)
 {
 	// Camera
-	m_camera_orthographic = obs_data_get_int(data, ST_CAMERA) == 0;
-	m_camera_fov          = (float)obs_data_get_double(data, ST_CAMERA_FIELDOFVIEW);
+	_camera_orthographic = obs_data_get_int(data, ST_CAMERA) == 0;
+	_camera_fov          = (float)obs_data_get_double(data, ST_CAMERA_FIELDOFVIEW);
 
 	// Source
-	m_position->x    = static_cast<float_t>(obs_data_get_double(data, ST_POSITION_X) / 100.0);
-	m_position->y    = static_cast<float_t>(obs_data_get_double(data, ST_POSITION_Y) / 100.0);
-	m_position->z    = static_cast<float_t>(obs_data_get_double(data, ST_POSITION_Z) / 100.0);
-	m_scale->x       = static_cast<float_t>(obs_data_get_double(data, ST_SCALE_X) / 100.0);
-	m_scale->y       = static_cast<float_t>(obs_data_get_double(data, ST_SCALE_Y) / 100.0);
-	m_scale->z       = 1.0f;
-	m_rotation_order = static_cast<uint32_t>(obs_data_get_int(data, ST_ROTATION_ORDER));
-	m_rotation->x    = static_cast<float_t>(obs_data_get_double(data, ST_ROTATION_X) / 180.0 * PI);
-	m_rotation->y    = static_cast<float_t>(obs_data_get_double(data, ST_ROTATION_Y) / 180.0 * PI);
-	m_rotation->z    = static_cast<float_t>(obs_data_get_double(data, ST_ROTATION_Z) / 180.0 * PI);
-	m_shear->x       = static_cast<float_t>(obs_data_get_double(data, ST_SHEAR_X) / 100.0);
-	m_shear->y       = static_cast<float_t>(obs_data_get_double(data, ST_SHEAR_Y) / 100.0);
-	m_shear->z       = 0.0f;
+	_position->x    = static_cast<float_t>(obs_data_get_double(data, ST_POSITION_X) / 100.0);
+	_position->y    = static_cast<float_t>(obs_data_get_double(data, ST_POSITION_Y) / 100.0);
+	_position->z    = static_cast<float_t>(obs_data_get_double(data, ST_POSITION_Z) / 100.0);
+	_scale->x       = static_cast<float_t>(obs_data_get_double(data, ST_SCALE_X) / 100.0);
+	_scale->y       = static_cast<float_t>(obs_data_get_double(data, ST_SCALE_Y) / 100.0);
+	_scale->z       = 1.0f;
+	_rotation_order = static_cast<uint32_t>(obs_data_get_int(data, ST_ROTATION_ORDER));
+	_rotation->x    = static_cast<float_t>(obs_data_get_double(data, ST_ROTATION_X) / 180.0 * S_PI);
+	_rotation->y    = static_cast<float_t>(obs_data_get_double(data, ST_ROTATION_Y) / 180.0 * S_PI);
+	_rotation->z    = static_cast<float_t>(obs_data_get_double(data, ST_ROTATION_Z) / 180.0 * S_PI);
+	_shear->x       = static_cast<float_t>(obs_data_get_double(data, ST_SHEAR_X) / 100.0);
+	_shear->y       = static_cast<float_t>(obs_data_get_double(data, ST_SHEAR_Y) / 100.0);
+	_shear->z       = 0.0f;
 
 	// Mipmapping
-	m_mipmap_enabled   = obs_data_get_bool(data, ST_MIPMAPPING);
-	m_mipmap_strength  = obs_data_get_double(data, S_MIPGENERATOR_INTENSITY);
-	m_mipmap_generator = static_cast<gs::mipmapper::generator>(obs_data_get_int(data, S_MIPGENERATOR));
+	_mipmap_enabled   = obs_data_get_bool(data, ST_MIPMAPPING);
+	_mipmap_strength  = obs_data_get_double(data, S_MIPGENERATOR_INTENSITY);
+	_mipmap_generator = static_cast<gs::mipmapper::generator>(obs_data_get_int(data, S_MIPGENERATOR));
 
-	m_update_mesh = true;
+	_update_mesh = true;
 }
 
 void filter::transform::transform_instance::activate()
 {
-	m_active = true;
+	_active = true;
 }
 
 void filter::transform::transform_instance::deactivate()
 {
-	m_active = false;
+	_active = false;
 }
 
 void filter::transform::transform_instance::video_tick(float)
@@ -403,7 +403,7 @@ void filter::transform::transform_instance::video_tick(float)
 	uint32_t height = 0;
 
 	// Grab parent and target.
-	obs_source_t* target = obs_filter_get_target(m_self);
+	obs_source_t* target = obs_filter_get_target(_self);
 	if (target) {
 		// Grab width an height of the target source (child filter or source).
 		width  = obs_source_get_base_width(target);
@@ -411,16 +411,16 @@ void filter::transform::transform_instance::video_tick(float)
 	}
 
 	// If size mismatch, force an update.
-	if (width != m_source_size.first) {
-		m_update_mesh = true;
-	} else if (height != m_source_size.second) {
-		m_update_mesh = true;
+	if (width != _source_size.first) {
+		_update_mesh = true;
+	} else if (height != _source_size.second) {
+		_update_mesh = true;
 	}
 
 	// Update Mesh
-	if (m_update_mesh) {
-		m_source_size.first  = width;
-		m_source_size.second = height;
+	if (_update_mesh) {
+		_source_size.first  = width;
+		_source_size.second = height;
 
 		if (width == 0) {
 			width = 1;
@@ -431,99 +431,99 @@ void filter::transform::transform_instance::video_tick(float)
 
 		// Calculate Aspect Ratio
 		float_t aspectRatioX = float_t(width) / float_t(height);
-		if (m_camera_orthographic)
+		if (_camera_orthographic)
 			aspectRatioX = 1.0;
 
 		// Mesh
 		matrix4 ident;
 		matrix4_identity(&ident);
-		switch (m_rotation_order) {
+		switch (_rotation_order) {
 		case RotationOrder::XYZ: // XYZ
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, _rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, _rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, _rotation->z);
 			break;
 		case RotationOrder::XZY: // XZY
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, _rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, _rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, _rotation->y);
 			break;
 		case RotationOrder::YXZ: // YXZ
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, _rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, _rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, _rotation->z);
 			break;
 		case RotationOrder::YZX: // YZX
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, _rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, _rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, _rotation->x);
 			break;
 		case RotationOrder::ZXY: // ZXY
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, _rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, _rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, _rotation->y);
 			break;
 		case RotationOrder::ZYX: // ZYX
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, m_rotation->z);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, m_rotation->y);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, m_rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, _rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, _rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, _rotation->x);
 			break;
 		}
-		matrix4_translate3f(&ident, &ident, m_position->x, m_position->y, m_position->z);
+		matrix4_translate3f(&ident, &ident, _position->x, _position->y, _position->z);
 
 		/// Calculate vertex position once only.
-		float_t p_x = aspectRatioX * m_scale->x;
-		float_t p_y = 1.0f * m_scale->y;
+		float_t p_x = aspectRatioX * _scale->x;
+		float_t p_y = 1.0f * _scale->y;
 
 		/// Generate mesh
 		{
-			auto vtx   = m_vertex_buffer->at(0);
+			auto vtx   = _vertex_buffer->at(0);
 			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 0, 0, 0, 0);
-			vec3_set(vtx.position, -p_x + m_shear->x, -p_y - m_shear->y, 0);
+			vec3_set(vtx.position, -p_x + _shear->x, -p_y - _shear->y, 0);
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 		{
-			auto vtx   = m_vertex_buffer->at(1);
+			auto vtx   = _vertex_buffer->at(1);
 			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 1, 0, 0, 0);
-			vec3_set(vtx.position, p_x + m_shear->x, -p_y + m_shear->y, 0);
+			vec3_set(vtx.position, p_x + _shear->x, -p_y + _shear->y, 0);
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 		{
-			auto vtx   = m_vertex_buffer->at(2);
+			auto vtx   = _vertex_buffer->at(2);
 			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 0, 1, 0, 0);
-			vec3_set(vtx.position, -p_x - m_shear->x, p_y - m_shear->y, 0);
+			vec3_set(vtx.position, -p_x - _shear->x, p_y - _shear->y, 0);
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 		{
-			auto vtx   = m_vertex_buffer->at(3);
+			auto vtx   = _vertex_buffer->at(3);
 			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 1, 1, 0, 0);
-			vec3_set(vtx.position, p_x - m_shear->x, p_y + m_shear->y, 0);
+			vec3_set(vtx.position, p_x - _shear->x, p_y + _shear->y, 0);
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 
-		m_vertex_buffer->update(true);
-		m_update_mesh = false;
+		_vertex_buffer->update(true);
+		_update_mesh = false;
 	}
 
-	this->m_source_rendered = false;
+	this->_source_rendered = false;
 }
 
 void filter::transform::transform_instance::video_render(gs_effect_t* paramEffect)
 {
-	if (!m_active) {
-		obs_source_skip_video_filter(m_self);
+	if (!_active) {
+		obs_source_skip_video_filter(_self);
 		return;
 	}
 
 	// Grab parent and target.
-	obs_source_t* parent = obs_filter_get_parent(m_self);
-	obs_source_t* target = obs_filter_get_target(m_self);
+	obs_source_t* parent = obs_filter_get_parent(_self);
+	obs_source_t* target = obs_filter_get_target(_self);
 	if (!parent || !target) {
-		obs_source_skip_video_filter(m_self);
+		obs_source_skip_video_filter(_self);
 		return;
 	}
 
@@ -531,20 +531,20 @@ void filter::transform::transform_instance::video_render(gs_effect_t* paramEffec
 	uint32_t width  = obs_source_get_base_width(target);
 	uint32_t height = obs_source_get_base_height(target);
 	if ((width == 0) || (height == 0)) {
-		obs_source_skip_video_filter(m_self);
+		obs_source_skip_video_filter(_self);
 		return;
 	}
 
 	gs_effect_t* default_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
 
 	// Only render if we didn't already render.
-	if (!this->m_source_rendered) {
+	if (!this->_source_rendered) {
 		std::shared_ptr<gs::texture> source_tex;
 		uint32_t                     real_width  = width;
 		uint32_t                     real_height = height;
 
 		// If MipMapping is enabled, resize Render Target to be a Power of Two.
-		if (m_mipmap_enabled) {
+		if (_mipmap_enabled) {
 			real_width  = uint32_t(pow(2, util::math::get_power_of_two_exponent_ceil(width)));
 			real_height = uint32_t(pow(2, util::math::get_power_of_two_exponent_ceil(height)));
 			if ((real_width >= 8192) || (real_height >= 8192)) {
@@ -562,7 +562,7 @@ void filter::transform::transform_instance::video_render(gs_effect_t* paramEffec
 
 		// Draw previous filters to texture.
 		try {
-			auto op = m_source_rendertarget->render(real_width, real_height);
+			auto op = _source_rendertarget->render(real_width, real_height);
 
 			gs_set_cull_mode(GS_NEITHER);
 			gs_reset_blend_state();
@@ -579,20 +579,20 @@ void filter::transform::transform_instance::video_render(gs_effect_t* paramEffec
 			gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
 
 			/// Render original source
-			if (obs_source_process_filter_begin(m_self, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
-				obs_source_process_filter_end(m_self, paramEffect ? paramEffect : default_effect, width, height);
+			if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
+				obs_source_process_filter_end(_self, paramEffect ? paramEffect : default_effect, width, height);
 			} else {
-				obs_source_skip_video_filter(m_self);
+				obs_source_skip_video_filter(_self);
 			}
 		} catch (...) {
-			obs_source_skip_video_filter(m_self);
+			obs_source_skip_video_filter(_self);
 			return;
 		}
-		m_source_rendertarget->get_texture(source_tex);
+		_source_rendertarget->get_texture(source_tex);
 
-		if (m_mipmap_enabled) {
-			if ((!m_source_texture) || (m_source_texture->get_width() != real_width)
-				|| (m_source_texture->get_height() != real_height)) {
+		if (_mipmap_enabled) {
+			if ((!_source_texture) || (_source_texture->get_width() != real_width)
+				|| (_source_texture->get_height() != real_height)) {
 				size_t mip_levels = 0;
 				if (util::math::is_power_of_two(real_width) && util::math::is_power_of_two(real_height)) {
 					size_t w_level = util::math::get_power_of_two_exponent_ceil(real_width);
@@ -604,22 +604,22 @@ void filter::transform::transform_instance::video_render(gs_effect_t* paramEffec
 					}
 				}
 
-				m_source_texture =
+				_source_texture =
 					std::make_shared<gs::texture>(real_width, real_height, GS_RGBA, uint32_t(1u + mip_levels), nullptr,
 												  gs::texture::flags::BuildMipMaps);
 			}
 
-			m_mipmapper.rebuild(source_tex, m_source_texture, m_mipmap_generator, float_t(m_mipmap_strength));
+			_mipmapper.rebuild(source_tex, _source_texture, _mipmap_generator, float_t(_mipmap_strength));
 		}
 
 		// Draw shape to texture
 		try {
-			auto op = m_shape_rendertarget->render(width, height);
+			auto op = _shape_rendertarget->render(width, height);
 
-			if (m_camera_orthographic) {
+			if (_camera_orthographic) {
 				gs_ortho(-1.0, 1.0, -1.0, 1.0, -farZ, farZ);
 			} else {
-				gs_perspective(m_camera_fov, float_t(width) / float_t(height), nearZ, farZ);
+				gs_perspective(_camera_fov, float_t(width) / float_t(height), nearZ, farZ);
 				// Fix camera pointing at -Z instead of +Z.
 				gs_matrix_scale3f(1.0, 1.0, -1.0);
 				// Move backwards so we can actually see stuff.
@@ -637,28 +637,28 @@ void filter::transform::transform_instance::video_render(gs_effect_t* paramEffec
 			gs_enable_stencil_test(false);
 			gs_enable_stencil_write(false);
 			gs_enable_color(true, true, true, true);
-			gs_load_vertexbuffer(m_vertex_buffer->update(false));
+			gs_load_vertexbuffer(_vertex_buffer->update(false));
 			gs_load_indexbuffer(nullptr);
 			while (gs_effect_loop(default_effect, "Draw")) {
 				gs_effect_set_texture(gs_effect_get_param_by_name(default_effect, "image"),
-									  m_mipmap_enabled ? m_source_texture->get_object() : source_tex->get_object());
+									  _mipmap_enabled ? _source_texture->get_object() : source_tex->get_object());
 				gs_draw(GS_TRISTRIP, 0, 4);
 			}
 			gs_load_vertexbuffer(nullptr);
 		} catch (...) {
-			obs_source_skip_video_filter(m_self);
+			obs_source_skip_video_filter(_self);
 			return;
 		}
-		m_shape_rendertarget->get_texture(m_shape_texture);
+		_shape_rendertarget->get_texture(_shape_texture);
 
-		this->m_source_rendered = true;
+		this->_source_rendered = true;
 	}
 
 	// Draw final shape
 	gs_reset_blend_state();
 	gs_enable_depth_test(false);
 	while (gs_effect_loop(default_effect, "Draw")) {
-		gs_effect_set_texture(gs_effect_get_param_by_name(default_effect, "image"), m_shape_texture->get_object());
-		gs_draw_sprite(m_shape_texture->get_object(), 0, 0, 0);
+		gs_effect_set_texture(gs_effect_get_param_by_name(default_effect, "image"), _shape_texture->get_object());
+		gs_draw_sprite(_shape_texture->get_object(), 0, 0, 0);
 	}
 }

@@ -48,7 +48,7 @@ typename std::enable_if<enable_bitmask_operators<Enum>::enable, Enum>::type oper
 	return static_cast<Enum>(static_cast<underlying>(lhs) & static_cast<underlying>(rhs));
 }
 
-#define ENABLE_BITMASK_OPERATORS(x)      \
+#define P_ENABLE_BITMASK_OPERATORS(x)      \
 	template<>                           \
 	struct enable_bitmask_operators<x> { \
 		static const bool enable = true; \
@@ -58,7 +58,7 @@ typename std::enable_if<enable_bitmask_operators<Enum>::enable, Enum>::type oper
 #define D_VSTR(s) D_STR(s)
 
 #ifdef __cplusplus
-#define INITIALIZER(f)   \
+#define P_INITIALIZER(f)   \
 	static void f(void); \
 	struct f##_t_ {      \
 		f##_t_(void)     \
@@ -75,12 +75,12 @@ typename std::enable_if<enable_bitmask_operators<Enum>::enable, Enum>::type oper
 	__declspec(allocate(".CRT$XCU")) void (*f##_)(void) = f; \
 	__pragma(comment(linker, "/include:" p #f "_")) static void f(void)
 #ifdef _WIN64
-#define INITIALIZER(f) INITIALIZER2_(f, "")
+#define P_INITIALIZER(f) INITIALIZER2_(f, "")
 #else
-#define INITIALIZER(f) INITIALIZER2_(f, "_")
+#define P_INITIALIZER(f) INITIALIZER2_(f, "_")
 #endif
 #else
-#define INITIALIZER(f)                                \
+#define P_INITIALIZER(f)                                \
 	static void f(void) __attribute__((constructor)); \
 	static void f(void)
 #endif

@@ -52,12 +52,12 @@ namespace filter {
 		};
 
 		class blur_factory {
-			obs_source_info             source_info;
-			std::list<blur_instance*>   sources;
-			std::shared_ptr<gs::effect> color_converter_effect;
-			std::shared_ptr<gs::effect> mask_effect;
+			obs_source_info             _source_info;
+			std::list<blur_instance*>   _sources;
+			std::shared_ptr<gs::effect> _color_converter_effect;
+			std::shared_ptr<gs::effect> _mask_effect;
 
-			std::map<std::string, std::string> translation_map;
+			std::map<std::string, std::string> _translation_map;
 
 			public: // Singleton
 			static void                          initialize();
@@ -98,25 +98,25 @@ namespace filter {
 		};
 
 		class blur_instance {
-			obs_source_t* m_self;
+			obs_source_t* _self;
 
 			// Input
-			std::shared_ptr<gs::rendertarget> m_source_rt;
-			std::shared_ptr<gs::texture>      m_source_texture;
-			bool                              m_source_rendered;
+			std::shared_ptr<gs::rendertarget> _source_rt;
+			std::shared_ptr<gs::texture>      _source_texture;
+			bool                              _source_rendered;
 
 			// Rendering
-			std::shared_ptr<gs::texture>      m_output_texture;
-			std::shared_ptr<gs::rendertarget> m_output_rt;
-			bool                              m_output_rendered;
+			std::shared_ptr<gs::texture>      _output_texture;
+			std::shared_ptr<gs::rendertarget> _output_rt;
+			bool                              _output_rendered;
 
 			// Blur
-			std::shared_ptr<::gfx::blur::ibase> m_blur;
-			double_t                            m_blur_size;
-			double_t                            m_blur_angle;
-			std::pair<double_t, double_t>       m_blur_center;
-			bool                                m_blur_step_scaling;
-			std::pair<double_t, double_t>       m_blur_step_scale;
+			std::shared_ptr<::gfx::blur::base> _blur;
+			double_t                            _blur_size;
+			double_t                            _blur_angle;
+			std::pair<double_t, double_t>       _blur_center;
+			bool                                _blur_step_scaling;
+			std::pair<double_t, double_t>       _blur_step_scale;
 
 			// Masking
 			struct {
@@ -150,7 +150,7 @@ namespace filter {
 					float_t a;
 				} color;
 				float_t multiplier;
-			} m_mask;
+			} _mask;
 
 			public:
 			blur_instance(obs_data_t* settings, obs_source_t* self);

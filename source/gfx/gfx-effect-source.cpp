@@ -133,22 +133,22 @@ void gfx::effect_source::get_properties(obs_properties_t* properties)
 {
 	obs_property_t* p = nullptr;
 
-	p = obs_properties_add_list(properties, D_TYPE, P_TRANSLATE(T_TYPE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(T_TYPE)));
-	obs_property_list_add_int(p, P_TRANSLATE(T_TYPE_TEXT), (long long)InputTypes::Text);
-	obs_property_list_add_int(p, P_TRANSLATE(T_TYPE_FILE), (long long)InputTypes::File);
+	p = obs_properties_add_list(properties, D_TYPE, D_TRANSLATE(T_TYPE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(T_TYPE)));
+	obs_property_list_add_int(p, D_TRANSLATE(T_TYPE_TEXT), (long long)InputTypes::Text);
+	obs_property_list_add_int(p, D_TRANSLATE(T_TYPE_FILE), (long long)InputTypes::File);
 	obs_property_set_modified_callback2(p, property_type_modified, this);
 
-	p = obs_properties_add_text(properties, D_INPUT_TEXT, P_TRANSLATE(T_INPUT_TEXT), OBS_TEXT_MULTILINE);
-	obs_property_set_long_description(p, P_TRANSLATE(P_DESC(T_INPUT_TEXT)));
+	p = obs_properties_add_text(properties, D_INPUT_TEXT, D_TRANSLATE(T_INPUT_TEXT), OBS_TEXT_MULTILINE);
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(T_INPUT_TEXT)));
 	obs_property_set_modified_callback2(p, property_input_modified, this);
 
 	{
 		char* tmp_path = obs_module_file(m_defaultShaderPath.c_str());
 		p              = obs_properties_add_path(
-            properties, D_INPUT_FILE, P_TRANSLATE(T_INPUT_FILE), OBS_PATH_FILE,
-            "Any (*.effect *.shader *.hlsl);;Effect (*.effect);;Shader (*.shader);;DirectX (*.hlsl)", tmp_path);
-		obs_property_set_long_description(p, P_TRANSLATE(P_DESC(T_INPUT_FILE)));
+            properties, D_INPUT_FILE, D_TRANSLATE(T_INPUT_FILE), OBS_PATH_FILE,
+            "Any (*._effect *.shader *.hlsl);;Effect (*._effect);;Shader (*.shader);;DirectX (*.hlsl)", tmp_path);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(T_INPUT_FILE)));
 		obs_property_set_modified_callback2(p, property_input_modified, this);
 		bfree(tmp_path);
 	}
@@ -178,10 +178,10 @@ void gfx::effect_source::get_properties(obs_properties_t* properties)
 			// Switch between File and Source Input
 			p = obs_properties_add_list(properties, prm.second->ui.names[0], prm.second->ui.descs[0],
 										obs_combo_type::OBS_COMBO_TYPE_LIST, obs_combo_format::OBS_COMBO_FORMAT_INT);
-			obs_property_set_long_description(p, P_TRANSLATE(P_DESC(T_TEXTURE_TYPE)));
+			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(T_TEXTURE_TYPE)));
 			obs_property_set_modified_callback2(p, property_texture_type_modified, prm.second.get());
-			obs_property_list_add_int(p, P_TRANSLATE(T_TEXTURE_TYPE_FILE), 0);
-			obs_property_list_add_int(p, P_TRANSLATE(T_TEXTURE_TYPE_SOURCE), 1);
+			obs_property_list_add_int(p, D_TRANSLATE(T_TEXTURE_TYPE_FILE), 0);
+			obs_property_list_add_int(p, D_TRANSLATE(T_TEXTURE_TYPE_SOURCE), 1);
 
 			// Texture Path
 			char* defaultPath = obs_module_file("");

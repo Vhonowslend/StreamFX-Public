@@ -41,6 +41,9 @@
 
 namespace gs {
 	class effect_parameter {
+		gs_eparam_t*         _param;
+		gs_effect_param_info _param_info;
+
 		public:
 		enum class type : uint8_t {
 			Unknown,
@@ -84,13 +87,12 @@ namespace gs {
 		void set_texture(gs_texture_t* v);
 		void set_sampler(std::shared_ptr<gs::sampler> v);
 		void set_sampler(gs_sampler_state* v);
-
-		private:
-		gs_eparam_t*         m_param;
-		gs_effect_param_info m_paramInfo;
 	};
 
 	class effect {
+		protected:
+		gs_effect_t* _effect;
+
 		public:
 		effect();
 		effect(std::string file);
@@ -106,7 +108,5 @@ namespace gs {
 		bool                        has_parameter(std::string name);
 		bool                        has_parameter(std::string name, effect_parameter::type type);
 
-		protected:
-		gs_effect_t* m_effect;
 	};
 } // namespace gs

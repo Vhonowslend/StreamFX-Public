@@ -72,44 +72,44 @@ struct gs_d3d11_device {
 
 gs::mipmapper::~mipmapper()
 {
-	vertex_buffer.reset();
-	render_target.reset();
-	effect.reset();
+	_vb.reset();
+	_rt.reset();
+	_effect.reset();
 }
 
 gs::mipmapper::mipmapper()
 {
-	vertex_buffer  = std::make_unique<gs::vertex_buffer>(uint32_t(6u), uint8_t(1u));
-	auto v0        = vertex_buffer->at(0);
+	_vb  = std::make_unique<gs::vertex_buffer>(uint32_t(6u), uint8_t(1u));
+	auto v0        = _vb->at(0);
 	v0.position->x = 0;
 	v0.position->y = 0;
 	v0.uv[0]->x    = 0;
 	v0.uv[0]->y    = 0;
 
-	auto v1        = vertex_buffer->at(1);
-	auto v4        = vertex_buffer->at(4);
+	auto v1        = _vb->at(1);
+	auto v4        = _vb->at(4);
 	v4.position->x = v1.position->x = 1.0;
 	v4.position->y = v1.position->y = 0;
 	v4.uv[0]->x = v1.uv[0]->x = 1.0;
 	v4.uv[0]->y = v1.uv[0]->y = 0;
 
-	auto v2        = vertex_buffer->at(2);
-	auto v3        = vertex_buffer->at(3);
+	auto v2        = _vb->at(2);
+	auto v3        = _vb->at(3);
 	v3.position->x = v2.position->x = 0;
 	v3.position->y = v2.position->y = 1.0;
 	v3.uv[0]->x = v2.uv[0]->x = 0;
 	v3.uv[0]->y = v2.uv[0]->y = 1.0;
 
-	auto v5        = vertex_buffer->at(5);
+	auto v5        = _vb->at(5);
 	v5.position->x = 1.0;
 	v5.position->y = 1.0;
 	v5.uv[0]->x    = 1.0;
 	v5.uv[0]->y    = 1.0;
 
-	vertex_buffer->update();
+	_vb->update();
 
-	char* effect_file = obs_module_file("effects/mipgen.effect");
-	effect            = std::make_unique<gs::effect>(effect_file);
+	char* effect_file = obs_module_file("effects/mipgen._effect");
+	_effect            = std::make_unique<gs::effect>(effect_file);
 	bfree(effect_file);
 }
 
@@ -154,8 +154,8 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 	//gs_copy_texture(target->get_object(), source->get_object());
 
 	// Test if we actually need to recreate the render target for a different format or at all.
-	if ((!render_target) || (source->get_color_format() != render_target->get_color_format())) {
-		render_target = std::make_unique<gs::rendertarget>(source->get_color_format(), GS_ZS_NONE);
+	if ((!_rt) || (source->get_color_format() != _rt->get_color_format())) {
+		_rt = std::make_unique<gs::rendertarget>(source->get_color_format(), GS_ZS_NONE);
 	}
 
 	// Render
@@ -189,7 +189,7 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 		break;
 	}
 
-	gs_load_vertexbuffer(vertex_buffer->update());
+	gs_load_vertexbuffer(_vb->update());
 	gs_load_indexbuffer(nullptr);
 
 	if (source->get_type() == gs::texture::type::Normal) {
@@ -236,7 +236,7 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 
 			// Draw mipmap layer
 			try {
-				auto op = render_target->render(uint32_t(texture_width), uint32_t(texture_height));
+				auto op = _rt->render(uint32_t(texture_width), uint32_t(texture_height));
 
 				gs_set_cull_mode(GS_NEITHER);
 				gs_reset_blend_state();
@@ -252,13 +252,13 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 				vec4_zero(&black);
 				gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
 
-				effect->get_parameter("image").set_texture(target);
-				effect->get_parameter("level").set_int(int32_t(mip - 1));
-				effect->get_parameter("imageTexel").set_float2(texel_width, texel_height);
-				effect->get_parameter("strength").set_float(strength);
+				_effect->get_parameter("image").set_texture(target);
+				_effect->get_parameter("level").set_int(int32_t(mip - 1));
+				_effect->get_parameter("imageTexel").set_float2(texel_width, texel_height);
+				_effect->get_parameter("strength").set_float(strength);
 
-				while (gs_effect_loop(effect->get_object(), technique.c_str())) {
-					gs_draw(gs_draw_mode::GS_TRIS, 0, vertex_buffer->size());
+				while (gs_effect_loop(_effect->get_object(), technique.c_str())) {
+					gs_draw(gs_draw_mode::GS_TRIS, 0, _vb->size());
 				}
 			} catch (...) {
 				P_LOG_ERROR("Failed to render mipmap layer.");
@@ -268,7 +268,7 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 			if (device_type == GS_DEVICE_DIRECT3D_11) {
 				// Copy
 				ID3D11Texture2D* rt =
-					reinterpret_cast<ID3D11Texture2D*>(gs_texture_get_obj(render_target->get_object()));
+					reinterpret_cast<ID3D11Texture2D*>(gs_texture_get_obj(_rt->get_object()));
 				uint32_t level = uint32_t(D3D11CalcSubresource(UINT(mip), 0, UINT(mip_levels)));
 				dev->context->CopySubresourceRegion(target_t2, level, 0, 0, 0, rt, 0, NULL);
 			}

@@ -45,8 +45,8 @@ gfx::blur::gaussian_data::gaussian_data()
 {
 	auto gctx = gs::context();
 	{
-		char* file = obs_module_file("effects/blur/gaussian.effect");
-		m_effect   = std::make_shared<gs::effect>(file);
+		char* file = obs_module_file("effects/blur/gaussian._effect");
+		_effect   = std::make_shared<gs::effect>(file);
 		bfree(file);
 	}
 
@@ -77,19 +77,19 @@ gfx::blur::gaussian_data::gaussian_data()
 			kernel_data.at(p) = float_t(kernel_math[p] * inverse_sum);
 		}
 
-		m_kernels.push_back(std::move(kernel_data));
+		_kernels.push_back(std::move(kernel_data));
 	}
 }
 
 gfx::blur::gaussian_data::~gaussian_data()
 {
 	auto gctx = gs::context();
-	m_effect.reset();
+	_effect.reset();
 }
 
 std::shared_ptr<::gs::effect> gfx::blur::gaussian_data::get_effect()
 {
-	return m_effect;
+	return _effect;
 }
 
 std::vector<float_t> const& gfx::blur::gaussian_data::get_kernel(size_t width)
@@ -99,7 +99,7 @@ std::vector<float_t> const& gfx::blur::gaussian_data::get_kernel(size_t width)
 	if (width > MAX_BLUR_SIZE)
 		width = MAX_BLUR_SIZE;
 	width -= 1;
-	return m_kernels[width];
+	return _kernels[width];
 }
 
 gfx::blur::gaussian_factory::gaussian_factory() {}
@@ -122,7 +122,7 @@ bool gfx::blur::gaussian_factory::is_type_supported(::gfx::blur::type v)
 	}
 }
 
-std::shared_ptr<::gfx::blur::ibase> gfx::blur::gaussian_factory::create(::gfx::blur::type v)
+std::shared_ptr<::gfx::blur::base> gfx::blur::gaussian_factory::create(::gfx::blur::type v)
 {
 	switch (v) {
 	case ::gfx::blur::type::Area:
@@ -224,11 +224,11 @@ double_t gfx::blur::gaussian_factory::get_max_step_scale_y(::gfx::blur::type)
 
 std::shared_ptr<::gfx::blur::gaussian_data> gfx::blur::gaussian_factory::data()
 {
-	std::unique_lock<std::mutex>                ulock(m_data_lock);
-	std::shared_ptr<::gfx::blur::gaussian_data> data = m_data.lock();
+	std::unique_lock<std::mutex>                ulock(_data_lock);
+	std::shared_ptr<::gfx::blur::gaussian_data> data = _data.lock();
 	if (!data) {
 		data   = std::make_shared<::gfx::blur::gaussian_data>();
-		m_data = data;
+		_data = data;
 	}
 	return data;
 }
@@ -240,18 +240,18 @@ std::shared_ptr<::gfx::blur::gaussian_data> gfx::blur::gaussian_factory::data()
 }
 
 gfx::blur::gaussian::gaussian()
-	: m_data(::gfx::blur::gaussian_factory::get().data()), m_size(1.), m_step_scale({1., 1.})
+	: _data(::gfx::blur::gaussian_factory::get().data()), _size(1.), _step_scale({1., 1.})
 {
 	auto gctx       = gs::context();
-	m_rendertarget  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	m_rendertarget2 = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_rendertarget  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_rendertarget2 = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
 gfx::blur::gaussian::~gaussian() {}
 
 void gfx::blur::gaussian::set_input(std::shared_ptr<::gs::texture> texture)
 {
-	m_input_texture = texture;
+	_input_texture = texture;
 }
 
 ::gfx::blur::type gfx::blur::gaussian::get_type()
@@ -261,7 +261,7 @@ void gfx::blur::gaussian::set_input(std::shared_ptr<::gs::texture> texture)
 
 double_t gfx::blur::gaussian::get_size()
 {
-	return m_size;
+	return _size;
 }
 
 void gfx::blur::gaussian::set_size(double_t width)
@@ -270,44 +270,44 @@ void gfx::blur::gaussian::set_size(double_t width)
 		width = 1.;
 	if (width > MAX_BLUR_SIZE)
 		width = MAX_BLUR_SIZE;
-	m_size = width;
+	_size = width;
 }
 
 void gfx::blur::gaussian::set_step_scale(double_t x, double_t y)
 {
-	m_step_scale.first  = x;
-	m_step_scale.second = y;
+	_step_scale.first  = x;
+	_step_scale.second = y;
 }
 
 void gfx::blur::gaussian::get_step_scale(double_t& x, double_t& y)
 {
-	x = m_step_scale.first;
-	y = m_step_scale.second;
+	x = _step_scale.first;
+	y = _step_scale.second;
 }
 
 double_t gfx::blur::gaussian::get_step_scale_x()
 {
-	return m_step_scale.first;
+	return _step_scale.first;
 }
 
 double_t gfx::blur::gaussian::get_step_scale_y()
 {
-	return m_step_scale.second;
+	return _step_scale.second;
 }
 
 std::shared_ptr<::gs::texture> gfx::blur::gaussian::render()
 {
 	auto gctx = gs::context();
 
-	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
-	auto                          kernel = m_data->get_kernel(size_t(m_size));
+	std::shared_ptr<::gs::effect> effect = _data->get_effect();
+	auto                          kernel = _data->get_kernel(size_t(_size));
 
-	if (!effect || ((m_step_scale.first + m_step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
-		return m_input_texture;
+	if (!effect || ((_step_scale.first + _step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
+		return _input_texture;
 	}
 
-	float_t width  = float_t(m_input_texture->get_width());
-	float_t height = float_t(m_input_texture->get_height());
+	float_t width  = float_t(_input_texture->get_width());
+	float_t height = float_t(_input_texture->get_height());
 
 	// Setup
 	gs_set_cull_mode(GS_NEITHER);
@@ -323,40 +323,40 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian::render()
 	gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
-	effect->get_parameter("pImage").set_texture(m_input_texture);
-	effect->get_parameter("pStepScale").set_float2(float_t(m_step_scale.first), float_t(m_step_scale.second));
-	effect->get_parameter("pSize").set_float(float_t(m_size));
+	effect->get_parameter("pImage").set_texture(_input_texture);
+	effect->get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
+	effect->get_parameter("pSize").set_float(float_t(_size));
 	effect->get_parameter("pKernel").set_float_array(kernel.data(), MAX_KERNEL_SIZE);
 
 	// First Pass
-	if (m_step_scale.first > std::numeric_limits<double_t>::epsilon()) {
+	if (_step_scale.first > std::numeric_limits<double_t>::epsilon()) {
 		effect->get_parameter("pImageTexel").set_float2(float_t(1.f / width), 0.f);
 
 		{
-			auto op = m_rendertarget2->render(uint32_t(width), uint32_t(height));
+			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect->get_object(), "Draw")) {
 				gs_draw_sprite(nullptr, 0, 1, 1);
 			}
 		}
 
-		std::swap(m_rendertarget, m_rendertarget2);
-		effect->get_parameter("pImage").set_texture(m_rendertarget->get_texture());
+		std::swap(_rendertarget, _rendertarget2);
+		effect->get_parameter("pImage").set_texture(_rendertarget->get_texture());
 	}
 
 	// Second Pass
-	if (m_step_scale.second > std::numeric_limits<double_t>::epsilon()) {
+	if (_step_scale.second > std::numeric_limits<double_t>::epsilon()) {
 		effect->get_parameter("pImageTexel").set_float2(0.f, float_t(1.f / height));
 
 		{
-			auto op = m_rendertarget2->render(uint32_t(width), uint32_t(height));
+			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect->get_object(), "Draw")) {
 				gs_draw_sprite(nullptr, 0, 1, 1);
 			}
 		}
 
-		std::swap(m_rendertarget, m_rendertarget2);
+		std::swap(_rendertarget, _rendertarget2);
 	}
 
 	gs_blend_state_pop();
@@ -366,7 +366,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian::render()
 
 std::shared_ptr<::gs::texture> gfx::blur::gaussian::get()
 {
-	return m_rendertarget->get_texture();
+	return _rendertarget->get_texture();
 }
 
 gfx::blur::gaussian_directional::gaussian_directional() : m_angle(0.) {}
@@ -380,27 +380,27 @@ gfx::blur::gaussian_directional::~gaussian_directional() {}
 
 double_t gfx::blur::gaussian_directional::get_angle()
 {
-	return RAD_TO_DEG(m_angle);
+	return D_RAD_TO_DEG(m_angle);
 }
 
 void gfx::blur::gaussian_directional::set_angle(double_t angle)
 {
-	m_angle = DEG_TO_RAD(angle);
+	m_angle = D_DEG_TO_RAD(angle);
 }
 
 std::shared_ptr<::gs::texture> gfx::blur::gaussian_directional::render()
 {
 	auto gctx = gs::context();
 
-	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
-	auto                          kernel = m_data->get_kernel(size_t(m_size));
+	std::shared_ptr<::gs::effect> effect = _data->get_effect();
+	auto                          kernel = _data->get_kernel(size_t(_size));
 
-	if (!effect || ((m_step_scale.first + m_step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
-		return m_input_texture;
+	if (!effect || ((_step_scale.first + _step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
+		return _input_texture;
 	}
 
-	float_t width  = float_t(m_input_texture->get_width());
-	float_t height = float_t(m_input_texture->get_height());
+	float_t width  = float_t(_input_texture->get_width());
+	float_t height = float_t(_input_texture->get_height());
 
 	// Setup
 	obs_enter_graphics();
@@ -417,16 +417,16 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_directional::render()
 	gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
-	effect->get_parameter("pImage").set_texture(m_input_texture);
+	effect->get_parameter("pImage").set_texture(_input_texture);
 	effect->get_parameter("pImageTexel")
 		.set_float2(float_t(1.f / width * cos(m_angle)), float_t(1.f / height * sin(m_angle)));
-	effect->get_parameter("pStepScale").set_float2(float_t(m_step_scale.first), float_t(m_step_scale.second));
-	effect->get_parameter("pSize").set_float(float_t(m_size));
+	effect->get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
+	effect->get_parameter("pSize").set_float(float_t(_size));
 	effect->get_parameter("pKernel").set_float_array(kernel.data(), MAX_KERNEL_SIZE);
 
 	// First Pass
 	{
-		auto op = m_rendertarget->render(uint32_t(width), uint32_t(height));
+		auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
 		gs_ortho(0, 1., 0, 1., 0, 1.);
 		while (gs_effect_loop(effect->get_object(), "Draw")) {
 			gs_draw_sprite(nullptr, 0, 1, 1);
@@ -447,15 +447,15 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_rotational::render()
 {
 	auto gctx = gs::context();
 
-	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
-	auto                          kernel = m_data->get_kernel(size_t(m_size));
+	std::shared_ptr<::gs::effect> effect = _data->get_effect();
+	auto                          kernel = _data->get_kernel(size_t(_size));
 
-	if (!effect || ((m_step_scale.first + m_step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
-		return m_input_texture;
+	if (!effect || ((_step_scale.first + _step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
+		return _input_texture;
 	}
 
-	float_t width  = float_t(m_input_texture->get_width());
-	float_t height = float_t(m_input_texture->get_height());
+	float_t width  = float_t(_input_texture->get_width());
+	float_t height = float_t(_input_texture->get_height());
 
 	// Setup
 	gs_set_cull_mode(GS_NEITHER);
@@ -471,17 +471,17 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_rotational::render()
 	gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
-	effect->get_parameter("pImage").set_texture(m_input_texture);
+	effect->get_parameter("pImage").set_texture(_input_texture);
 	effect->get_parameter("pImageTexel").set_float2(float_t(1.f / width), float_t(1.f / height));
-	effect->get_parameter("pStepScale").set_float2(float_t(m_step_scale.first), float_t(m_step_scale.second));
-	effect->get_parameter("pSize").set_float(float_t(m_size));
-	effect->get_parameter("pAngle").set_float(float_t(m_angle / m_size));
+	effect->get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
+	effect->get_parameter("pSize").set_float(float_t(_size));
+	effect->get_parameter("pAngle").set_float(float_t(m_angle / _size));
 	effect->get_parameter("pCenter").set_float2(float_t(m_center.first), float_t(m_center.second));
 	effect->get_parameter("pKernel").set_float_array(kernel.data(), MAX_KERNEL_SIZE);
 
 	// First Pass
 	{
-		auto op = m_rendertarget->render(uint32_t(width), uint32_t(height));
+		auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
 		gs_ortho(0, 1., 0, 1., 0, 1.);
 		while (gs_effect_loop(effect->get_object(), "Rotate")) {
 			gs_draw_sprite(nullptr, 0, 1, 1);
@@ -507,12 +507,12 @@ void gfx::blur::gaussian_rotational::get_center(double_t& x, double_t& y)
 
 double_t gfx::blur::gaussian_rotational::get_angle()
 {
-	return double_t(RAD_TO_DEG(m_angle));
+	return double_t(D_RAD_TO_DEG(m_angle));
 }
 
 void gfx::blur::gaussian_rotational::set_angle(double_t angle)
 {
-	m_angle = DEG_TO_RAD(angle);
+	m_angle = D_DEG_TO_RAD(angle);
 }
 
 ::gfx::blur::type gfx::blur::gaussian_zoom::get_type()
@@ -524,15 +524,15 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_zoom::render()
 {
 	auto gctx = gs::context();
 
-	std::shared_ptr<::gs::effect> effect = m_data->get_effect();
-	auto                          kernel = m_data->get_kernel(size_t(m_size));
+	std::shared_ptr<::gs::effect> effect = _data->get_effect();
+	auto                          kernel = _data->get_kernel(size_t(_size));
 
-	if (!effect || ((m_step_scale.first + m_step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
-		return m_input_texture;
+	if (!effect || ((_step_scale.first + _step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
+		return _input_texture;
 	}
 
-	float_t width  = float_t(m_input_texture->get_width());
-	float_t height = float_t(m_input_texture->get_height());
+	float_t width  = float_t(_input_texture->get_width());
+	float_t height = float_t(_input_texture->get_height());
 
 	// Setup
 	gs_set_cull_mode(GS_NEITHER);
@@ -548,16 +548,16 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_zoom::render()
 	gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
-	effect->get_parameter("pImage").set_texture(m_input_texture);
+	effect->get_parameter("pImage").set_texture(_input_texture);
 	effect->get_parameter("pImageTexel").set_float2(float_t(1.f / width), float_t(1.f / height));
-	effect->get_parameter("pStepScale").set_float2(float_t(m_step_scale.first), float_t(m_step_scale.second));
-	effect->get_parameter("pSize").set_float(float_t(m_size));
+	effect->get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
+	effect->get_parameter("pSize").set_float(float_t(_size));
 	effect->get_parameter("pCenter").set_float2(float_t(m_center.first), float_t(m_center.second));
 	effect->get_parameter("pKernel").set_float_array(kernel.data(), MAX_KERNEL_SIZE);
 
 	// First Pass
 	{
-		auto op = m_rendertarget->render(uint32_t(width), uint32_t(height));
+		auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
 		gs_ortho(0, 1., 0, 1., 0, 1.);
 		while (gs_effect_loop(effect->get_object(), "Zoom")) {
 			gs_draw_sprite(nullptr, 0, 1, 1);

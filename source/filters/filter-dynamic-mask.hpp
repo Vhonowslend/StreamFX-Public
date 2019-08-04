@@ -42,7 +42,7 @@ namespace filter {
 		enum class channel : int8_t { Invalid = -1, Red, Green, Blue, Alpha };
 
 		class dynamic_mask_factory {
-			obs_source_info sourceInfo;
+			obs_source_info _source_info;
 
 			public: // Singleton
 			static void                                  initialize();
@@ -55,37 +55,37 @@ namespace filter {
 		};
 
 		class dynamic_mask_instance {
-			obs_source_t* self;
+			obs_source_t* _self;
 
-			std::map<std::tuple<channel, channel, std::string>, std::string> translation_map;
+			std::map<std::tuple<channel, channel, std::string>, std::string> _translation_map;
 
-			std::shared_ptr<gs::effect> effect;
+			std::shared_ptr<gs::effect> _effect;
 
-			bool                              have_filter_texture;
-			std::shared_ptr<gs::rendertarget> filter_rt;
-			std::shared_ptr<gs::texture>      filter_texture;
+			bool                              _have_filter_texture;
+			std::shared_ptr<gs::rendertarget> _filter_rt;
+			std::shared_ptr<gs::texture>      _filter_texture;
 
-			bool                                 have_input_texture;
-			std::shared_ptr<obs::source>         input;
-			std::shared_ptr<gfx::source_texture> input_capture;
-			std::shared_ptr<gs::texture>         input_texture;
+			bool                                 _have_input_texture;
+			std::shared_ptr<obs::source>         _input;
+			std::shared_ptr<gfx::source_texture> _input_capture;
+			std::shared_ptr<gs::texture>         _input_texture;
 
-			bool                              have_final_texture;
-			std::shared_ptr<gs::rendertarget> final_rt;
-			std::shared_ptr<gs::texture>      final_texture;
+			bool                              _have_final_texture;
+			std::shared_ptr<gs::rendertarget> _final_rt;
+			std::shared_ptr<gs::texture>      _final_texture;
 
 			struct channel_data {
 				float_t value  = 0.0;
 				float_t scale  = 1.0;
 				vec4    values = {0};
 			};
-			std::map<channel, channel_data> channels;
+			std::map<channel, channel_data> _channels;
 
 			struct _precalc {
 				vec4    base;
 				vec4    scale;
 				matrix4 matrix;
-			} precalc;
+			} _precalc;
 
 			public:
 			dynamic_mask_instance(obs_data_t* data, obs_source_t* self);

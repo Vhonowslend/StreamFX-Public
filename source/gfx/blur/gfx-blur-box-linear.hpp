@@ -27,7 +27,7 @@
 namespace gfx {
 	namespace blur {
 		class box_linear_data {
-			std::shared_ptr<::gs::effect> m_effect;
+			std::shared_ptr<::gs::effect> _effect;
 
 			public:
 			box_linear_data();
@@ -37,8 +37,8 @@ namespace gfx {
 		};
 
 		class box_linear_factory : public ::gfx::blur::ifactory {
-			std::mutex                                  m_data_lock;
-			std::weak_ptr<::gfx::blur::box_linear_data> m_data;
+			std::mutex                                  _data_lock;
+			std::weak_ptr<::gfx::blur::box_linear_data> _data;
 
 			public:
 			box_linear_factory();
@@ -46,7 +46,7 @@ namespace gfx {
 
 			virtual bool is_type_supported(::gfx::blur::type type) override;
 
-			virtual std::shared_ptr<::gfx::blur::ibase> create(::gfx::blur::type type) override;
+			virtual std::shared_ptr<::gfx::blur::base> create(::gfx::blur::type type) override;
 
 			virtual double_t get_min_size(::gfx::blur::type type) override;
 
@@ -80,17 +80,17 @@ namespace gfx {
 			static ::gfx::blur::box_linear_factory& get();
 		};
 
-		class box_linear : public ::gfx::blur::ibase {
+		class box_linear : public ::gfx::blur::base {
 			protected:
-			std::shared_ptr<::gfx::blur::box_linear_data> m_data;
+			std::shared_ptr<::gfx::blur::box_linear_data> _data;
 
-			double_t                            m_size;
-			std::pair<double_t, double_t>       m_step_scale;
-			std::shared_ptr<::gs::texture>      m_input_texture;
-			std::shared_ptr<::gs::rendertarget> m_rendertarget;
+			double_t                            _size;
+			std::pair<double_t, double_t>       _step_scale;
+			std::shared_ptr<::gs::texture>      _input_texture;
+			std::shared_ptr<::gs::rendertarget> _rendertarget;
 
 			private:
-			std::shared_ptr<::gs::rendertarget> m_rendertarget2;
+			std::shared_ptr<::gs::rendertarget> _rendertarget2;
 
 			public:
 			box_linear();
@@ -112,8 +112,8 @@ namespace gfx {
 			virtual std::shared_ptr<::gs::texture> get() override;
 		};
 
-		class box_linear_directional : public ::gfx::blur::box_linear, public ::gfx::blur::ibase_angle {
-			double_t m_angle;
+		class box_linear_directional : public ::gfx::blur::box_linear, public ::gfx::blur::base_angle {
+			double_t _angle;
 
 			public:
 			box_linear_directional();

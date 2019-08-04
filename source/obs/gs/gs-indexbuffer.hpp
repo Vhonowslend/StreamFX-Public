@@ -45,6 +45,6 @@ namespace gs {
 		gs_indexbuffer_t* get(bool refreshGPU);
 
 		protected:
-		gs_indexbuffer_t* m_indexBuffer;
+		gs_indexbuffer_t* _index_buffer;
 	};
 } // namespace gs

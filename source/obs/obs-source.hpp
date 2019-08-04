@@ -37,8 +37,8 @@
 
 namespace obs {
 	class source {
-		obs_source_t* self;
-		bool          track_ownership = false;
+		obs_source_t* _self;
+		bool          _track_ownership = false;
 
 		static void handle_destroy(void* p, calldata_t* calldata);
 		static void handle_remove(void* p, calldata_t* calldata);

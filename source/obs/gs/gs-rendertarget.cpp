@@ -35,16 +35,16 @@
 gs::rendertarget::~rendertarget()
 {
 	auto gctx = gs::context();
-	gs_texrender_destroy(render_target);
+	gs_texrender_destroy(_render_target);
 }
 
 gs::rendertarget::rendertarget(gs_color_format colorFormat, gs_zstencil_format zsFormat)
-	: color_format(colorFormat), zstencil_format(zsFormat)
+	: _color_format(colorFormat), _zstencil_format(zsFormat)
 {
-	is_being_rendered = false;
+	_is_being_rendered = false;
 	auto gctx         = gs::context();
-	render_target     = gs_texrender_create(colorFormat, zsFormat);
-	if (!render_target) {
+	_render_target     = gs_texrender_create(colorFormat, zsFormat);
+	if (!_render_target) {
 		throw std::runtime_error("Failed to create render target.");
 	}
 }
@@ -57,7 +57,7 @@ gs::rendertarget_op gs::rendertarget::render(uint32_t width, uint32_t height)
 gs_texture_t* gs::rendertarget::get_object()
 {
 	auto          gctx = gs::context();
-	gs_texture_t* tex  = gs_texrender_get_texture(render_target);
+	gs_texture_t* tex  = gs_texrender_get_texture(_render_target);
 	return tex;
 }
 
@@ -83,27 +83,27 @@ void gs::rendertarget::get_texture(std::unique_ptr<gs::texture>& tex)
 
 gs_color_format gs::rendertarget::get_color_format()
 {
-	return color_format;
+	return _color_format;
 }
 
 gs_zstencil_format gs::rendertarget::get_zstencil_format()
 {
-	return zstencil_format;
+	return _zstencil_format;
 }
 
 gs::rendertarget_op::rendertarget_op(gs::rendertarget* rt, uint32_t width, uint32_t height) : parent(rt)
 {
 	if (parent == nullptr)
 		throw std::invalid_argument("rt");
-	if (parent->is_being_rendered)
+	if (parent->_is_being_rendered)
 		throw std::logic_error("Can't start rendering to the same render target twice.");
 
 	auto gctx = gs::context();
-	gs_texrender_reset(parent->render_target);
-	if (!gs_texrender_begin(parent->render_target, width, height)) {
+	gs_texrender_reset(parent->_render_target);
+	if (!gs_texrender_begin(parent->_render_target, width, height)) {
 		throw std::runtime_error("Failed to begin rendering to render target.");
 	}
-	parent->is_being_rendered = true;
+	parent->_is_being_rendered = true;
 }
 
 gs::rendertarget_op::rendertarget_op(gs::rendertarget_op&& r)
@@ -118,6 +118,6 @@ gs::rendertarget_op::~rendertarget_op()
 		return;
 
 	auto gctx = gs::context();
-	gs_texrender_end(parent->render_target);
-	parent->is_being_rendered = false;
+	gs_texrender_end(parent->_render_target);
+	parent->_is_being_rendered = false;
 }

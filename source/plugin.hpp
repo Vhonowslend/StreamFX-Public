@@ -44,5 +44,5 @@
 #define P_LOG_DEBUG(...) P_LOG(LOG_DEBUG, __VA_ARGS__)
 
 // Initializer & Finalizer
-extern std::list<std::function<void()>> initializerFunctions;
-extern std::list<std::function<void()>> finalizerFunctions;
+extern std::list<std::function<void()>> initializer_functions;
+extern std::list<std::function<void()>> finalizer_functions;

@@ -54,23 +54,23 @@ gfx::blur::dual_filtering_data::dual_filtering_data()
 {
 	auto gctx = gs::context();
 	try {
-		char* file = obs_module_file("effects/blur/dual-filtering.effect");
-		m_effect   = std::make_shared<::gs::effect>(file);
+		char* file = obs_module_file("effects/blur/dual-filtering._effect");
+		_effect   = std::make_shared<::gs::effect>(file);
 		bfree(file);
 	} catch (...) {
-		P_LOG_ERROR("<gfx::blur::box_linear> Failed to load effect.");
+		P_LOG_ERROR("<gfx::blur::box_linear> Failed to load _effect.");
 	}
 }
 
 gfx::blur::dual_filtering_data::~dual_filtering_data()
 {
 	auto gctx = gs::context();
-	m_effect.reset();
+	_effect.reset();
 }
 
 std::shared_ptr<::gs::effect> gfx::blur::dual_filtering_data::get_effect()
 {
-	return m_effect;
+	return _effect;
 }
 
 gfx::blur::dual_filtering_factory::dual_filtering_factory() {}
@@ -87,7 +87,7 @@ bool gfx::blur::dual_filtering_factory::is_type_supported(::gfx::blur::type type
 	}
 }
 
-std::shared_ptr<::gfx::blur::ibase> gfx::blur::dual_filtering_factory::create(::gfx::blur::type type)
+std::shared_ptr<::gfx::blur::base> gfx::blur::dual_filtering_factory::create(::gfx::blur::type type)
 {
 	switch (type) {
 	case ::gfx::blur::type::Area:
@@ -164,11 +164,11 @@ double_t gfx::blur::dual_filtering_factory::get_max_step_scale_y(::gfx::blur::ty
 
 std::shared_ptr<::gfx::blur::dual_filtering_data> gfx::blur::dual_filtering_factory::data()
 {
-	std::unique_lock<std::mutex>                      ulock(m_data_lock);
-	std::shared_ptr<::gfx::blur::dual_filtering_data> data = m_data.lock();
+	std::unique_lock<std::mutex>                      ulock(_data_lock);
+	std::shared_ptr<::gfx::blur::dual_filtering_data> data = _data.lock();
 	if (!data) {
 		data   = std::make_shared<::gfx::blur::dual_filtering_data>();
-		m_data = data;
+		_data = data;
 	}
 	return data;
 }
@@ -180,12 +180,12 @@ std::shared_ptr<::gfx::blur::dual_filtering_data> gfx::blur::dual_filtering_fact
 }
 
 gfx::blur::dual_filtering::dual_filtering()
-	: m_data(::gfx::blur::dual_filtering_factory::get().data()), m_size(0), m_size_iterations(0)
+	: _data(::gfx::blur::dual_filtering_factory::get().data()), _size(0), _size_iterations(0)
 {
 	auto gctx = gs::context();
-	m_rendertargets.resize(MAX_LEVELS + 1);
+	_rendertargets.resize(MAX_LEVELS + 1);
 	for (size_t n = 0; n <= MAX_LEVELS; n++) {
-		m_rendertargets[n] = std::make_shared<gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
+		_rendertargets[n] = std::make_shared<gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
 	}
 }
 
@@ -193,7 +193,7 @@ gfx::blur::dual_filtering::~dual_filtering() {}
 
 void gfx::blur::dual_filtering::set_input(std::shared_ptr<::gs::texture> texture)
 {
-	m_input_texture = texture;
+	_input_texture = texture;
 }
 
 ::gfx::blur::type gfx::blur::dual_filtering::get_type()
@@ -203,15 +203,15 @@ void gfx::blur::dual_filtering::set_input(std::shared_ptr<::gs::texture> texture
 
 double_t gfx::blur::dual_filtering::get_size()
 {
-	return m_size;
+	return _size;
 }
 
 void gfx::blur::dual_filtering::set_size(double_t width)
 {
-	m_size            = width;
-	m_size_iterations = size_t(round(width));
-	if (m_size_iterations >= MAX_LEVELS) {
-		m_size_iterations = MAX_LEVELS;
+	_size            = width;
+	_size_iterations = size_t(round(width));
+	if (_size_iterations >= MAX_LEVELS) {
+		_size_iterations = MAX_LEVELS;
 	}
 }
 
@@ -222,12 +222,12 @@ void gfx::blur::dual_filtering::get_step_scale(double_t&, double_t&) {}
 std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 {
 	auto gctx   = gs::context();
-	auto effect = m_data->get_effect();
+	auto effect = _data->get_effect();
 	if (!effect) {
-		return m_input_texture;
+		return _input_texture;
 	}
 
-	size_t actual_iterations = m_size_iterations;
+	size_t actual_iterations = _size_iterations;
 
 	gs_blend_state_push();
 	gs_reset_blend_state();
@@ -249,9 +249,9 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 		// Select Texture
 		std::shared_ptr<gs::texture> tex_cur;
 		if (n > 1) {
-			tex_cur = m_rendertargets[n - 1]->get_texture();
+			tex_cur = _rendertargets[n - 1]->get_texture();
 		} else {
-			tex_cur = m_input_texture;
+			tex_cur = _input_texture;
 		}
 
 		// Reduce Size
@@ -269,7 +269,7 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 		effect->get_parameter("pImageHalfTexel").set_float2(0.5f / width, 0.5f / height);
 
 		{
-			auto op = m_rendertargets[n]->render(width, height);
+			auto op = _rendertargets[n]->render(width, height);
 			gs_ortho(0., 1., 0., 1., 0., 1.);
 			while (gs_effect_loop(effect->get_object(), "Down")) {
 				gs_draw_sprite(tex_cur->get_object(), 0, 1, 1);
@@ -280,7 +280,7 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 	// Upsample
 	for (size_t n = actual_iterations; n > 0; n--) {
 		// Select Texture
-		std::shared_ptr<gs::texture> tex_cur = m_rendertargets[n]->get_texture();
+		std::shared_ptr<gs::texture> tex_cur = _rendertargets[n]->get_texture();
 
 		// Get Size
 		uint32_t width  = tex_cur->get_width();
@@ -297,7 +297,7 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 		height *= 2;
 
 		{
-			auto op = m_rendertargets[n - 1]->render(width, height);
+			auto op = _rendertargets[n - 1]->render(width, height);
 			gs_ortho(0., 1., 0., 1., 0., 1.);
 			while (gs_effect_loop(effect->get_object(), "Up")) {
 				gs_draw_sprite(tex_cur->get_object(), 0, 1, 1);
@@ -307,10 +307,10 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 
 	gs_blend_state_pop();
 
-	return m_rendertargets[0]->get_texture();
+	return _rendertargets[0]->get_texture();
 }
 
 std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::get()
 {
-	return m_rendertargets[0]->get_texture();
+	return _rendertargets[0]->get_texture();
 }

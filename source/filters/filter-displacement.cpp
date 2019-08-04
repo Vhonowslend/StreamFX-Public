@@ -21,11 +21,17 @@
 #include <sys/stat.h>
 #include "strings.hpp"
 
+#define ST "Filter.Displacement"
+#define ST_FILE "Filter.Displacement.File"
+#define ST_FILE_TYPES "Filter.Displacement.File.Types"
+#define ST_RATIO "Filter.Displacement.Ratio"
+#define ST_SCALE "Filter.Displacement.Scale"
+
 // Initializer & Finalizer
-INITIALIZER(FilterDisplacementInit)
+P_INITIALIZER(FilterDisplacementInit)
 {
-	initializerFunctions.push_back([] { filter::displacement::displacement_factory::initialize(); });
-	finalizerFunctions.push_back([] { filter::displacement::displacement_factory::finalize(); });
+	initializer_functions.push_back([] { filter::displacement::displacement_factory::initialize(); });
+	finalizer_functions.push_back([] { filter::displacement::displacement_factory::finalize(); });
 }
 
 static std::shared_ptr<filter::displacement::displacement_factory> factory_instance = nullptr;
@@ -47,32 +53,32 @@ std::shared_ptr<filter::displacement::displacement_factory> filter::displacement
 
 filter::displacement::displacement_factory::displacement_factory()
 {
-	memset(&sourceInfo, 0, sizeof(obs_source_info));
-	sourceInfo.id             = "obs-stream-effects-filter-displacement";
-	sourceInfo.type           = OBS_SOURCE_TYPE_FILTER;
-	sourceInfo.output_flags   = OBS_SOURCE_VIDEO;
-	sourceInfo.get_name       = get_name;
-	sourceInfo.get_defaults   = get_defaults;
-	sourceInfo.get_properties = get_properties;
+	memset(&_source_info, 0, sizeof(obs_source_info));
+	_source_info.id             = "obs-stream-effects-filter-displacement";
+	_source_info.type           = OBS_SOURCE_TYPE_FILTER;
+	_source_info.output_flags   = OBS_SOURCE_VIDEO;
+	_source_info.get_name       = get_name;
+	_source_info.get_defaults   = get_defaults;
+	_source_info.get_properties = get_properties;
 
-	sourceInfo.create       = create;
-	sourceInfo.destroy      = destroy;
-	sourceInfo.update       = update;
-	sourceInfo.activate     = activate;
-	sourceInfo.deactivate   = deactivate;
-	sourceInfo.show         = show;
-	sourceInfo.hide         = hide;
-	sourceInfo.video_tick   = video_tick;
-	sourceInfo.video_render = video_render;
+	_source_info.create       = create;
+	_source_info.destroy      = destroy;
+	_source_info.update       = update;
+	_source_info.activate     = activate;
+	_source_info.deactivate   = deactivate;
+	_source_info.show         = show;
+	_source_info.hide         = hide;
+	_source_info.video_tick   = video_tick;
+	_source_info.video_render = video_render;
 
-	obs_register_source(&sourceInfo);
+	obs_register_source(&_source_info);
 }
 
 filter::displacement::displacement_factory::~displacement_factory() {}
 
 const char* filter::displacement::displacement_factory::get_name(void*)
 {
-	return P_TRANSLATE(S_FILTER_DISPLACEMENT);
+	return D_TRANSLATE(ST);
 }
 
 void* filter::displacement::displacement_factory::create(obs_data_t* data, obs_source_t* source)
@@ -98,9 +104,9 @@ uint32_t filter::displacement::displacement_factory::get_height(void* ptr)
 void filter::displacement::displacement_factory::get_defaults(obs_data_t* data)
 {
 	char* disp = obs_module_file("filter-displacement/neutral.png");
-	obs_data_set_default_string(data, S_FILTER_DISPLACEMENT_FILE, disp);
-	obs_data_set_default_double(data, S_FILTER_DISPLACEMENT_RATIO, 0);
-	obs_data_set_default_double(data, S_FILTER_DISPLACEMENT_SCALE, 0);
+	obs_data_set_default_string(data, ST_FILE, disp);
+	obs_data_set_default_double(data, ST_RATIO, 0);
+	obs_data_set_default_double(data, ST_SCALE, 0);
 	bfree(disp);
 }
 
@@ -112,11 +118,11 @@ obs_properties_t* filter::displacement::displacement_factory::get_properties(voi
 	if (ptr)
 		path = reinterpret_cast<displacement_instance*>(ptr)->get_file();
 
-	obs_properties_add_path(pr, S_FILTER_DISPLACEMENT_FILE, P_TRANSLATE(S_FILTER_DISPLACEMENT_FILE),
-							obs_path_type::OBS_PATH_FILE, P_TRANSLATE(S_FILTER_DISPLACEMENT_FILE_TYPES), path.c_str());
-	obs_properties_add_float_slider(pr, S_FILTER_DISPLACEMENT_RATIO, P_TRANSLATE(S_FILTER_DISPLACEMENT_RATIO), 0, 1,
+	obs_properties_add_path(pr, ST_FILE, D_TRANSLATE(ST_FILE),
+							obs_path_type::OBS_PATH_FILE, D_TRANSLATE(ST_FILE_TYPES), path.c_str());
+	obs_properties_add_float_slider(pr, ST_RATIO, D_TRANSLATE(ST_RATIO), 0, 1,
 									0.01);
-	obs_properties_add_float_slider(pr, S_FILTER_DISPLACEMENT_SCALE, P_TRANSLATE(S_FILTER_DISPLACEMENT_SCALE), -1000,
+	obs_properties_add_float_slider(pr, ST_SCALE, D_TRANSLATE(ST_SCALE), -1000,
 									1000, 0.01);
 	return pr;
 }
@@ -166,41 +172,41 @@ void filter::displacement::displacement_instance::validate_file_texture(std::str
 	}
 
 	// File name different
-	if (file != m_file_name) {
+	if (file != _file_name) {
 		do_update   = true;
-		m_file_name = file;
+		_file_name = file;
 	}
 
 	// Timestamp verification
 	struct stat stats;
-	if (os_stat(m_file_name.c_str(), &stats) != 0) {
-		do_update            = do_update || (stats.st_ctime != m_file_create_time);
-		do_update            = do_update || (stats.st_mtime != m_file_modified_time);
-		do_update            = do_update || (static_cast<size_t>(stats.st_size) != m_file_size);
-		m_file_create_time   = stats.st_ctime;
-		m_file_modified_time = stats.st_mtime;
-		m_file_size          = static_cast<size_t>(stats.st_size);
+	if (os_stat(_file_name.c_str(), &stats) != 0) {
+		do_update            = do_update || (stats.st_ctime != _file_create_time);
+		do_update            = do_update || (stats.st_mtime != _file_modified_time);
+		do_update            = do_update || (static_cast<size_t>(stats.st_size) != _file_size);
+		_file_create_time   = stats.st_ctime;
+		_file_modified_time = stats.st_mtime;
+		_file_size          = static_cast<size_t>(stats.st_size);
 	}
 
-	do_update = !m_file_texture || do_update;
+	do_update = !_file_texture || do_update;
 
 	if (do_update) {
 		try {		
-			m_file_texture = std::make_shared<gs::texture>(m_file_name);
+			_file_texture = std::make_shared<gs::texture>(_file_name);
 		} catch (...) {
 		}
 	}
 }
 
 filter::displacement::displacement_instance::displacement_instance(obs_data_t* data, obs_source_t* context)
-	: m_self(context), m_timer(0), m_effect(nullptr), m_distance(0), m_file_create_time(0), m_file_modified_time(0),
-	  m_file_size(0)
+	: _self(context), _timer(0), _effect(nullptr), _distance(0), _file_create_time(0), _file_modified_time(0),
+	  _file_size(0)
 {
-	char* effectFile = obs_module_file("effects/displace.effect");
+	char* effectFile = obs_module_file("effects/displace._effect");
 	try {
-		m_effect = std::make_shared<gs::effect>(effectFile);
+		_effect = std::make_shared<gs::effect>(effectFile);
 	} catch (...) {
-		P_LOG_ERROR("<Displacement Filter:%s> Failed to load displacement effect.", obs_source_get_name(m_self));
+		P_LOG_ERROR("<Displacement Filter:%s> Failed to load displacement _effect.", obs_source_get_name(_self));
 	}
 	bfree(effectFile);
 
@@ -209,17 +215,17 @@ filter::displacement::displacement_instance::displacement_instance(obs_data_t* d
 
 filter::displacement::displacement_instance::~displacement_instance()
 {
-	m_effect.reset();
-	m_file_texture.reset();
+	_effect.reset();
+	_file_texture.reset();
 }
 
 void filter::displacement::displacement_instance::update(obs_data_t* data)
 {
-	validate_file_texture(obs_data_get_string(data, S_FILTER_DISPLACEMENT_FILE));
+	validate_file_texture(obs_data_get_string(data, ST_FILE));
 
-	m_distance = float_t(obs_data_get_double(data, S_FILTER_DISPLACEMENT_RATIO));
-	vec2_set(&m_displacement_scale, float_t(obs_data_get_double(data, S_FILTER_DISPLACEMENT_SCALE)),
-			 float_t(obs_data_get_double(data, S_FILTER_DISPLACEMENT_SCALE)));
+	_distance = float_t(obs_data_get_double(data, ST_RATIO));
+	vec2_set(&_displacement_scale, float_t(obs_data_get_double(data, ST_SCALE)),
+			 float_t(obs_data_get_double(data, ST_SCALE)));
 }
 
 uint32_t filter::displacement::displacement_instance::get_width()
@@ -242,10 +248,10 @@ void filter::displacement::displacement_instance::hide() {}
 
 void filter::displacement::displacement_instance::video_tick(float time)
 {
-	m_timer += time;
-	if (m_timer >= 1.0f) {
-		m_timer -= 1.0f;
-		validate_file_texture(m_file_name);
+	_timer += time;
+	if (_timer >= 1.0f) {
+		_timer -= 1.0f;
+		validate_file_texture(_file_name);
 	}
 }
 
@@ -256,36 +262,36 @@ static float interp(float a, float b, float v)
 
 void filter::displacement::displacement_instance::video_render(gs_effect_t*)
 {
-	obs_source_t* parent = obs_filter_get_parent(m_self);
-	obs_source_t* target = obs_filter_get_target(m_self);
+	obs_source_t* parent = obs_filter_get_parent(_self);
+	obs_source_t* target = obs_filter_get_target(_self);
 	uint32_t      baseW = obs_source_get_base_width(target), baseH = obs_source_get_base_height(target);
 
 	// Skip rendering if our target, parent or context is not valid.
-	if (!parent || !target || !baseW || !baseH || !m_file_texture) {
-		obs_source_skip_video_filter(m_self);
+	if (!parent || !target || !baseW || !baseH || !_file_texture) {
+		obs_source_skip_video_filter(_self);
 		return;
 	}
 
-	if (!obs_source_process_filter_begin(m_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
-		obs_source_skip_video_filter(m_self);
+	if (!obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
+		obs_source_skip_video_filter(_self);
 		return;
 	}
 
-	if (m_effect->has_parameter("texelScale")) {
-		m_effect->get_parameter("texelScale")
-			.set_float2(interp((1.0f / baseW), 1.0f, m_distance), interp((1.0f / baseH), 1.0f, m_distance));
+	if (_effect->has_parameter("texelScale")) {
+		_effect->get_parameter("texelScale")
+			.set_float2(interp((1.0f / baseW), 1.0f, _distance), interp((1.0f / baseH), 1.0f, _distance));
 	}
-	if (m_effect->has_parameter("displacementScale")) {
-		m_effect->get_parameter("displacementScale").set_float2(m_displacement_scale);
+	if (_effect->has_parameter("displacementScale")) {
+		_effect->get_parameter("displacementScale").set_float2(_displacement_scale);
 	}
-	if (m_effect->has_parameter("displacementMap")) {
-		m_effect->get_parameter("displacementMap").set_texture(m_file_texture);
+	if (_effect->has_parameter("displacementMap")) {
+		_effect->get_parameter("displacementMap").set_texture(_file_texture);
 	}
 
-	obs_source_process_filter_end(m_self, m_effect->get_object(), baseW, baseH);
+	obs_source_process_filter_end(_self, _effect->get_object(), baseW, baseH);
 }
 
 std::string filter::displacement::displacement_instance::get_file()
 {
-	return m_file_name;
+	return _file_name;
 }
