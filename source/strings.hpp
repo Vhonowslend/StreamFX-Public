@@ -24,6 +24,7 @@
 #define D_DESC(x) x ".Description"
 
 #define S_FILEFILTERS_IMAGE "*.png *.webp *.tga *.tiff *.jpeg *.jpg *.bmp"
+#define S_FILEFILTERS_TEXTURE S_FILEFILTERS_IMAGE " *.dds"
 #define S_FILEFILTERS_VIDEO "*.mkv *.webm *.mp4 *.mov *.flv"
 #define S_FILEFILTERS_SOUND "*.ogg *.flac *.mp3 *.wav"
 #define S_FILEFILTERS_EFFECT "*.effect *.txt"
