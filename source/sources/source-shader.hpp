@@ -48,6 +48,10 @@ namespace source {
 
 			uint32_t _width, _height;
 
+			std::shared_ptr<gs::rendertarget> _rt;
+			bool                              _rt_updated;
+			std::shared_ptr<gs::texture>      _rt_tex;
+
 			std::shared_ptr<gfx::effect_source::effect_source> _fx;
 
 			public:

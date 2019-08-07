@@ -61,7 +61,7 @@ source::shader::shader_factory::shader_factory()
 	memset(&_source_info, 0, sizeof(obs_source_info));
 	_source_info.id           = "obs-stream-effects-source-shader";
 	_source_info.type         = OBS_SOURCE_TYPE_INPUT;
-	_source_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
+	_source_info.output_flags = OBS_SOURCE_VIDEO;
 	_source_info.get_name     = [](void*) { return D_TRANSLATE(ST); };
 	_source_info.get_defaults = get_defaults;
 
@@ -181,6 +181,8 @@ source::shader::shader_instance::shader_instance(obs_data_t* data, obs_source_t*
 	_fx->set_valid_property_cb(std::bind(&source::shader::shader_instance::valid_param, this, std::placeholders::_1));
 	_fx->set_override_cb(std::bind(&source::shader::shader_instance::override_param, this, std::placeholders::_1));
 
+	_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+
 	update(data);
 }
 
@@ -206,7 +208,7 @@ void source::shader::shader_instance::properties(obs_properties_t* props)
 
 void source::shader::shader_instance::update(obs_data_t* data)
 {
-	_width = obs_data_get_int(data, ST_WIDTH);
+	_width  = obs_data_get_int(data, ST_WIDTH);
 	_height = obs_data_get_int(data, ST_HEIGHT);
 
 	_fx->update(data);
@@ -231,13 +233,19 @@ void source::shader::shader_instance::override_param(std::shared_ptr<gs::effect>
 
 void source::shader::shader_instance::video_tick(float_t sec_since_last)
 {
-	_fx->tick(sec_since_last);
+	if (_fx->tick(sec_since_last)) {
+		obs_data_t* data = obs_source_get_settings(_self);
+		update(data);
+		obs_data_release(data);
+	}
+
+	_rt_updated = false;
 }
 
-void source::shader::shader_instance::video_render(gs_effect_t*)
+void source::shader::shader_instance::video_render(gs_effect_t* effect)
 {
 	// Grab initial values.
-	gs_effect_t*  effect_default = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
+	gs_effect_t* effect_default = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 
 	// Skip filter if anything is wrong.
 	if (!_active || !_width || !_height || !effect_default) {
@@ -245,9 +253,24 @@ void source::shader::shader_instance::video_render(gs_effect_t*)
 		return;
 	}
 
-	try {
-		_fx->render();
-	} catch (...) {
-		obs_source_skip_video_filter(_self);
+	if (!_rt_updated) {
+		try {
+			auto op = _rt->render(_width, _height);
+			_fx->render();
+		} catch (...) {
+		}
+		_rt_tex     = _rt->get_texture();
+		_rt_updated = true;
+	}
+
+	if (!_rt_tex)
+		return;
+
+	gs_effect_t* ef = effect ? effect : effect_default;
+	if (gs_eparam_t* prm = gs_effect_get_param_by_name(ef, "image"))
+		gs_effect_set_texture(prm, _rt_tex->get_object());
+
+	while (gs_effect_loop(ef, "Draw")) {
+		gs_draw_sprite(nullptr, 0, _width, _height);
 	}
 }
