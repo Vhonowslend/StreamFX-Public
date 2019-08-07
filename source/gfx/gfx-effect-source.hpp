@@ -43,6 +43,9 @@ extern "C" {
 #endif
 }
 
+#define S_SHADER_FILE "Shader.File"
+#define S_SHADER_TECHNIQUE ST "Shader.Technique"
+
 namespace gfx {
 	namespace effect_source {
 		enum class value_mode {
