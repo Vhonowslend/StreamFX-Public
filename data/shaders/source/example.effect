@@ -19,11 +19,35 @@ uniform float4x4 Random<
 // Shader Parameters
 uniform float4 p_my_val<
 	bool visible = true;
-	string name = "This is a Value";
+	string name = "Color";
 	float4 minimum = {0., 0., 0., 0.};
 	float4 maximum = {1., 1., 1., 1.};
 	float4 step = {.01, .01, .01, .01};
 > = {0., 0., 0., 1.};
+
+uniform float2 p_plasma1<
+	bool visible = true;
+	string name = "Plasma UV 1";
+	string mode = "slider";
+	float2 minimum = {0., 0.};
+	float2 maximum = {1., 1.};
+	float2 step = {.01, .01};
+> = {0.25, 0.25};
+uniform float2 p_plasma2<
+	bool visible = true;
+	string name = "Plasma UV 2";
+	string mode = "slider";
+	float2 minimum = {0., 0.};
+	float2 maximum = {1., 1.};
+	float2 step = {.01, .01};
+> = {0.75, 0.75};
+uniform float4 p_plasma_color<
+	bool visible = true;
+	string name = "Plasma Color";
+	float4 minimum = {0., 0., 0., 0.};
+	float4 maximum = {1., 1., 1., 1.};
+	float4 step = {.01, .01, .01, .01};
+> = {1.0, 1.0, 1.0, 1.0};
 
 // ---------- Shader Code
 sampler_state def_sampler {
@@ -60,6 +84,34 @@ technique Random
 	{
 		vertex_shader = VSDefault(v_in);
 		pixel_shader  = PS_Random(v_in);
+	}
+}
+
+// ---------- Plasma Color 
+float4 PS_Plasma(FragData v_in) : TARGET {
+	float dst1 = distance(v_in.uv, p_plasma1);
+	float dst2 = distance(v_in.uv, p_plasma2);
+	
+	float dst1s = dst1 * dst1;
+	float dst2s = dst2 * dst2;
+	
+	float dst = min(dst1s, dst2s) * (50. + (1. + sin(Time.y * 5.0)) * 100.0);
+
+	float4 t;
+	t.a = 1.;
+	t.r = p_plasma_color.r * ((1. + sin(dst)) * .5);
+	t.g = p_plasma_color.g * ((1. + cos(dst)) * .5);
+	t.b = p_plasma_color.b * ((1. + sin(dst)) * .5) * ((1. + cos(dst)) * .5);
+	
+	return t; 
+}
+
+technique Plasma
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PS_Plasma(v_in); 
 	}
 }
 

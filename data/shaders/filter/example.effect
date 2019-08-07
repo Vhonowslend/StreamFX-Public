@@ -19,25 +19,13 @@ uniform texture2d ImageSource<
 	bool visible = false;
 	string name = "Source Texture (Filter, Transition)";
 >;
-uniform texture2d ImageSource_Size<
+uniform float2 ImageSource_Size<
 	bool visible = false;
 	string name = "Source Texture Size (Filter, Transition)";
 >;
-uniform texture2d ImageSource_Texel<
+uniform float2 ImageSource_Texel<
 	bool visible = false;
 	string name = "Source Texture Texel Size (Filter, Transition)";
->;
-uniform texture2d ImageTarget<
-	bool visible = false;
-	string name = "Target Texture (Transition)";
->;
-uniform texture2d ImageTarget_Size<
-	bool visible = false;
-	string name = "Target Texture Size (Transition)";
->;
-uniform texture2d ImageTarget_Texel<
-	bool visible = false;
-	string name = "Target Texture Texel Size (Transition)";
 >;
 
 // Shader Parameters
@@ -57,11 +45,43 @@ uniform float p_hue_shift <
 	float step = 0.01;
 > = 0.0;
 
+uniform float p_flag_amplitude <
+	bool visible = true;
+	string name = "Flag Amplitude";
+	string mode = "slider"; // Default is input/spinbox
+	float minimum = 0.01;
+	float maximum = 100.0;
+	float step = 0.01;
+> = 1.0;
+uniform float p_flag_speed <
+	bool visible = true;
+	string name = "Flag Speed";
+	string mode = "slider"; // Default is input/spinbox
+	float minimum = 0.01;
+	float maximum = 100.0;
+	float step = 0.01;
+> = 1.0;
+uniform float p_flag_whatever <
+	bool visible = true;
+	string name = "Flag Repeats";
+	string mode = "slider"; // Default is input/spinbox
+	float minimum = 0.01;
+	float maximum = 100.0;
+	float step = 0.01;
+> = 8.0;
+
+
 // ---------- Shader Code
 sampler_state def_sampler {
 	AddressU  = Wrap;
 	AddressV  = Wrap;
 	Filter    = Linear;
+};
+sampler_state def_sampler2 {
+	AddressU  = Border;
+	AddressV  = Border;
+	Filter    = Linear;
+	Border = 0000000000;
 };
 
 struct VertData {
@@ -144,6 +164,35 @@ technique HueShift
 	}
 }
 
+// ---------- Flag
+float4 PS_Flag(FragData v_in) : TARGET {
+	float time = Time.y * p_flag_speed + v_in.uv.x * p_flag_whatever;
+	float v_offset = sin(time) + cos(Time.x);
+	float pi = 3.141;
+	float v_orig = v_offset;
+	v_offset = lerp(v_offset, v_orig * 0.25, 0.5 + cos(time + pi / 3) * 0.5);
+	v_offset = lerp(v_offset, v_orig * 0.125, 0.5 + sin(time + pi / 3 * 2) * 0.5);
+	v_offset = lerp(v_offset, v_orig * 0.333, 0.5 + cos(time + pi) * 0.5);
+	v_offset = lerp(v_offset, v_orig * 0.4, 0.5 + sin(time + pi / 3 * 4) * 0.5);
+	v_offset = lerp(v_offset, v_orig * 0.2, 0.5 + cos(time + pi / 3 * 5) * 0.5);
+	v_offset *= v_in.uv.x;
+	
+	float d = p_flag_amplitude * ImageSource_Texel.y * 2;
+	v_in.uv.x *= 1.0;
+	v_in.uv.y = v_in.uv.y + v_offset * d;
+	v_in.uv.y -= d / 2.;
+	v_in.uv.y *= 1.0 / (1.0 - d);
+	return ImageSource.Sample(def_sampler2, v_in.uv);
+}
+
+technique Flag
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PS_Flag(v_in);
+	}
+}
 
 // ---------- Pass Through
 float4 PS_Draw(FragData v_in) : TARGET {
