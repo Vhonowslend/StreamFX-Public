@@ -62,8 +62,12 @@ namespace gfx {
 			SOURCE,
 		};
 
+		class effect_source;
+
 		class parameter {
 			protected:
+			std::weak_ptr<gfx::effect_source::effect_source> _parent;
+
 			std::shared_ptr<gs::effect>           _effect;
 			std::shared_ptr<gs::effect_parameter> _param;
 
@@ -74,7 +78,8 @@ namespace gfx {
 			bool        _visible;
 
 			public:
-			parameter(std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
+			parameter(std::shared_ptr<gfx::effect_source::effect_source> parent, std::shared_ptr<gs::effect> effect,
+					  std::shared_ptr<gs::effect_parameter> param);
 			virtual ~parameter();
 
 			virtual void defaults(obs_properties_t* props, obs_data_t* data) = 0;
@@ -94,15 +99,17 @@ namespace gfx {
 			std::shared_ptr<gs::effect_parameter> get_param();
 
 			public:
-			static std::shared_ptr<gfx::effect_source::parameter> create(std::shared_ptr<gs::effect>           effect,
-																		 std::shared_ptr<gs::effect_parameter> param);
+			static std::shared_ptr<gfx::effect_source::parameter>
+				create(std::shared_ptr<gfx::effect_source::effect_source> parent, std::shared_ptr<gs::effect> effect,
+					   std::shared_ptr<gs::effect_parameter> param);
 		};
 
 		class bool_parameter : public parameter {
 			bool _value;
 
 			public:
-			bool_parameter(std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
+			bool_parameter(std::shared_ptr<gfx::effect_source::effect_source> parent,
+						   std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
 
 			virtual void defaults(obs_properties_t* props, obs_data_t* data) override;
 
@@ -144,7 +151,8 @@ namespace gfx {
 			} _cache;
 
 			public:
-			value_parameter(std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
+			value_parameter(std::shared_ptr<gfx::effect_source::effect_source> parent,
+							std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
 
 			virtual void defaults(obs_properties_t* props, obs_data_t* data) override;
 
@@ -174,7 +182,8 @@ namespace gfx {
 			} _cache;
 
 			public:
-			matrix_parameter(std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
+			matrix_parameter(std::shared_ptr<gfx::effect_source::effect_source> parent,
+							 std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
 
 			virtual void defaults(obs_properties_t* props, obs_data_t* data) override;
 
@@ -196,7 +205,8 @@ namespace gfx {
 			string_mode _mode = string_mode::TEXT;
 
 			public:
-			string_parameter(std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
+			string_parameter(std::shared_ptr<gfx::effect_source::effect_source> parent,
+							 std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
 
 			virtual void defaults(obs_properties_t* props, obs_data_t* data) override;
 
@@ -217,14 +227,30 @@ namespace gfx {
 			std::string                  _file_name;
 			std::shared_ptr<gs::texture> _file;
 
+			float_t _last_check;
+			size_t  _last_size;
+			time_t  _last_modify_time;
+			time_t  _last_create_time;
+
 			std::string                          _source_name;
 			std::shared_ptr<obs::source>         _source;
 			std::shared_ptr<gfx::source_texture> _source_renderer;
+			std::shared_ptr<gs::texture>         _source_tex;
 
 			texture_mode _mode = texture_mode::FILE;
 
+			struct {
+				std::string name[4];
+				std::string visible_name[4];
+			} _cache;
+
+			void load_texture(std::string file);
+
 			public:
-			texture_parameter(std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
+			texture_parameter(std::shared_ptr<gfx::effect_source::effect_source> parent,
+							  std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
+
+			bool modified2(obs_properties_t* props, obs_property_t* property, obs_data_t* settings);
 
 			virtual void defaults(obs_properties_t* props, obs_data_t* data) override;
 
@@ -245,7 +271,9 @@ namespace gfx {
 		typedef std::function<bool(std::shared_ptr<gs::effect_parameter> param)> valid_property_cb_t;
 		typedef std::function<void(std::shared_ptr<gs::effect> effect)>          param_override_cb_t;
 
-		class effect_source {
+		class effect_source : public std::enable_shared_from_this<effect_source> {
+			obs_source_t* _self;
+
 			std::string                                         _file;
 			std::shared_ptr<gs::effect>                         _effect;
 			std::string                                         _tech;
@@ -273,7 +301,7 @@ namespace gfx {
 			void load_file(std::string file);
 
 			public:
-			effect_source();
+			effect_source(obs_source_t* self);
 			~effect_source();
 
 			void properties(obs_properties_t* props);
@@ -283,6 +311,8 @@ namespace gfx {
 			bool tick(float_t time);
 
 			void render();
+
+			obs_source_t* get_self();
 
 			public:
 			void set_valid_property_cb(valid_property_cb_t cb);

@@ -173,7 +173,7 @@ filter::shader::shader_factory::~shader_factory() {}
 filter::shader::shader_instance::shader_instance(obs_data_t* data, obs_source_t* self)
 	: _self(self), _active(true), _width(0), _height(0)
 {
-	_fx = std::make_shared<gfx::effect_source::effect_source>();
+	_fx = std::make_shared<gfx::effect_source::effect_source>(self);
 	_fx->set_valid_property_cb(std::bind(&filter::shader::shader_instance::valid_param, this, std::placeholders::_1));
 	_fx->set_override_cb(std::bind(&filter::shader::shader_instance::override_param, this, std::placeholders::_1));
 
