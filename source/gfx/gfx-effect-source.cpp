@@ -128,7 +128,10 @@ gfx::effect_source::bool_parameter::bool_parameter(std::shared_ptr<gs::effect>  
 	param->get_default_bool(_value);
 }
 
-void gfx::effect_source::bool_parameter::defaults(obs_properties_t* props, obs_data_t* data) {}
+void gfx::effect_source::bool_parameter::defaults(obs_properties_t* props, obs_data_t* data) {
+	obs_data_set_default_bool(data, _name.c_str(), _value);
+	obs_data_set_bool(data, _name.c_str(), _value);
+}
 
 void gfx::effect_source::bool_parameter::properties(obs_properties_t* props)
 {
@@ -291,7 +294,56 @@ gfx::effect_source::value_parameter::value_parameter(std::shared_ptr<gs::effect>
 	}
 }
 
-void gfx::effect_source::value_parameter::defaults(obs_properties_t* props, obs_data_t* data) {}
+void gfx::effect_source::value_parameter::defaults(obs_properties_t* props, obs_data_t* data)
+{
+	bool   is_int = false;
+	size_t limit  = 0;
+
+	switch (_param->get_type()) {
+	case gs::effect_parameter::type::Integer:
+		is_int = true;
+		limit  = 1;
+		break;
+	case gs::effect_parameter::type::Integer2:
+		is_int = true;
+		limit  = 2;
+		break;
+	case gs::effect_parameter::type::Integer3:
+		is_int = true;
+		limit  = 3;
+		break;
+	case gs::effect_parameter::type::Integer4:
+		is_int = true;
+		limit  = 4;
+		break;
+	case gs::effect_parameter::type::Float:
+		is_int = false;
+		limit  = 1;
+		break;
+	case gs::effect_parameter::type::Float2:
+		is_int = false;
+		limit  = 2;
+		break;
+	case gs::effect_parameter::type::Float3:
+		is_int = false;
+		limit  = 3;
+		break;
+	case gs::effect_parameter::type::Float4:
+		is_int = false;
+		limit  = 4;
+		break;
+	}
+
+	for (size_t idx = 0; idx < limit; idx++) {
+		if (is_int) {
+			obs_data_set_default_int(data, _cache.name[idx].c_str(), _value.i[idx]);
+			obs_data_set_int(data, _cache.name[idx].c_str(), _value.i[idx]);
+		} else {
+			obs_data_set_default_double(data, _cache.name[idx].c_str(), _value.f[idx]);
+			obs_data_set_double(data, _cache.name[idx].c_str(), _value.f[idx]);
+		}
+	}
+}
 
 void gfx::effect_source::value_parameter::properties(obs_properties_t* props)
 {
@@ -550,7 +602,27 @@ gfx::effect_source::matrix_parameter::matrix_parameter(std::shared_ptr<gs::effec
 	}
 }
 
-void gfx::effect_source::matrix_parameter::defaults(obs_properties_t* props, obs_data_t* data) {}
+void gfx::effect_source::matrix_parameter::defaults(obs_properties_t* props, obs_data_t* data)
+{
+	for (size_t x = 0; x < 4; x++) {
+		vec4& v_ref = _value.x;
+		if (x == 0) {
+			vec4& v_ref = _value.x;
+		} else if (x == 1) {
+			vec4& v_ref = _value.y;
+		} else if (x == 2) {
+			vec4& v_ref = _value.z;
+		} else {
+			vec4& v_ref = _value.t;
+		}
+
+		for (size_t y = 0; y < 4; y++) {
+			size_t idx   = x * 4 + y;
+			obs_data_set_double(data, _cache.name[idx].c_str(), v_ref.ptr[y]);
+			obs_data_set_default_double(data, _cache.name[idx].c_str(), v_ref.ptr[y]);
+		}
+	}
+}
 
 void gfx::effect_source::matrix_parameter::properties(obs_properties_t* props)
 {
