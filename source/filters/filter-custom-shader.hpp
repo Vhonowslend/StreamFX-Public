@@ -20,6 +20,8 @@
 #pragma once
 
 #include "plugin.hpp"
+#include "gfx/gfx-effect-source.hpp"
+#include "obs/gs/gs-rendertarget.hpp"
 
 extern "C" {
 #include <obs.h>
@@ -45,6 +47,9 @@ namespace filter {
 			bool          _active;
 
 			uint32_t _width, _height;
+
+			std::shared_ptr<gs::rendertarget>                  _rt;
+			std::shared_ptr<gfx::effect_source::effect_source> _fx;
 
 			public:
 			shader_instance(obs_data_t* data, obs_source_t* self);

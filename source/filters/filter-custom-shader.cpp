@@ -146,7 +146,12 @@ filter::shader::shader_factory::~shader_factory() {}
 
 filter::shader::shader_instance::shader_instance(obs_data_t* data, obs_source_t* self)
 	: _self(self), _active(true), _width(0), _height(0)
-{}
+{
+	_fx = std::make_shared<gfx::effect_source::effect_source>();
+	_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+
+	update(data);
+}
 
 filter::shader::shader_instance::~shader_instance() {}
 
@@ -160,9 +165,13 @@ uint32_t filter::shader::shader_instance::height()
 	return _height;
 }
 
-void filter::shader::shader_instance::properties(obs_properties_t* props) {}
+void filter::shader::shader_instance::properties(obs_properties_t* props) {
+	_fx->properties(props);
+}
 
-void filter::shader::shader_instance::update(obs_data_t* data) {}
+void filter::shader::shader_instance::update(obs_data_t* data) {
+	_fx->update(data);
+}
 
 void filter::shader::shader_instance::activate()
 {
@@ -182,6 +191,8 @@ void filter::shader::shader_instance::video_tick(float_t sec_since_last)
 		_width  = obs_source_get_base_width(target);
 		_height = obs_source_get_base_height(target);
 	}
+
+	_fx->tick(sec_since_last);
 }
 
 void filter::shader::shader_instance::video_render(gs_effect_t* effect)
@@ -199,5 +210,9 @@ void filter::shader::shader_instance::video_render(gs_effect_t* effect)
 		return;
 	}
 
-	obs_source_skip_video_filter(_self);
+	try {
+		_fx->render();
+	} catch (...) {
+		obs_source_skip_video_filter(_self);
+	}
 }
