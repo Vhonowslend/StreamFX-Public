@@ -16,8 +16,10 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #pragma once
+#include <limits>
 #include <map>
 #include <memory>
+#include <random>
 #include <string>
 #include <utility>
 #include <vector>
@@ -43,61 +45,193 @@ extern "C" {
 
 namespace gfx {
 	namespace effect_source {
-		struct parameter {
-			std::shared_ptr<gs::effect>           effect;
-			std::shared_ptr<gs::effect_parameter> param;
-
-			std::string name;
-			std::string description;
-			std::string formulae;
-			bool        visible;
-
-			parameter(std::shared_ptr<gs::effect> effect, std::string name);
+		enum class value_mode {
+			INPUT,
+			SLIDER,
 		};
-		struct bool_parameter : parameter {
-			bool value;
-
-			bool_parameter(std::shared_ptr<gs::effect> effect, std::string name);
+		enum class string_mode {
+			TEXT,
+			MULTILINE,
+			PASSWORD,
 		};
-		struct value_parameter : parameter {
+		enum class texture_mode {
+			FILE,
+			SOURCE,
+		};
+
+		class parameter {
+			protected:
+			std::shared_ptr<gs::effect>           _effect;
+			std::shared_ptr<gs::effect_parameter> _param;
+
+			std::string _name;
+			std::string _visible_name;
+			std::string _description;
+			std::string _formulae;
+			bool        _visible;
+
+			public:
+			parameter(std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
+			virtual ~parameter();
+
+			virtual void properties(obs_properties_t* props) = 0;
+
+			virtual void remove_properties(obs_properties_t* props) = 0;
+
+			virtual void update(obs_data_t* data) = 0;
+
+			virtual void tick(float_t time) = 0;
+
+			virtual void prepare() = 0;
+
+			virtual void assign() = 0;
+
+			std::shared_ptr<gs::effect_parameter> get_param();
+
+			public:
+			static std::shared_ptr<gfx::effect_source::parameter> create(std::shared_ptr<gs::effect>           effect,
+																		 std::shared_ptr<gs::effect_parameter> param);
+		};
+
+		class bool_parameter : public parameter {
+			bool _value;
+
+			public:
+			bool_parameter(std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
+
+			virtual void properties(obs_properties_t* props) override;
+
+			virtual void remove_properties(obs_properties_t* props) override;
+
+			virtual void update(obs_data_t* data) override;
+
+			virtual void tick(float_t time) override;
+
+			virtual void prepare() override;
+
+			virtual void assign() override;
+		};
+
+		class value_parameter : public parameter {
 			union {
-				float_t f[16];
+				float_t f[4];
 				int32_t i[4];
-			} value;
+			} _value;
 			union {
-				float_t f[16];
+				float_t f[4];
 				int32_t i[4];
-			} minimum;
+			} _minimum;
 			union {
-				float_t f[16];
+				float_t f[4];
 				int32_t i[4];
-			} maximum;
+			} _maximum;
+			union {
+				float_t f[4];
+				int32_t i[4];
+			} _step;
+			value_mode _mode = value_mode::INPUT;
 
-			value_parameter(std::shared_ptr<gs::effect> effect, std::string name);
+			struct {
+				std::string name[4];
+				std::string visible_name[4];
+			} _cache;
+
+			public:
+			value_parameter(std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
+
+			virtual void properties(obs_properties_t* props) override;
+
+			virtual void remove_properties(obs_properties_t* props) override;
+
+			virtual void update(obs_data_t* data) override;
+
+			virtual void tick(float_t time) override;
+
+			virtual void prepare() override;
+
+			virtual void assign() override;
 		};
-		struct matrix_parameter : parameter {
-			matrix4 value;
-			matrix4 minimum;
-			matrix4 maximum;
 
-			matrix_parameter(std::shared_ptr<gs::effect> effect, std::string name);
+		class matrix_parameter : public parameter {
+			matrix4    _value;
+			matrix4    _minimum;
+			matrix4    _maximum;
+			matrix4    _step;
+			value_mode _mode = value_mode::INPUT;
+
+			struct {
+				std::string name[16];
+				std::string visible_name[16];
+			} _cache;
+
+			public:
+			matrix_parameter(std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
+
+			virtual void properties(obs_properties_t* props) override;
+
+			virtual void remove_properties(obs_properties_t* props) override;
+
+			virtual void update(obs_data_t* data) override;
+
+			virtual void tick(float_t time) override;
+
+			virtual void prepare() override;
+
+			virtual void assign() override;
 		};
-		struct string_parameter : parameter {
-			std::string value;
 
-			string_parameter(std::shared_ptr<gs::effect> effect, std::string name);
+		class string_parameter : public parameter {
+			std::string _value;
+			string_mode _mode = string_mode::TEXT;
+
+			public:
+			string_parameter(std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
+
+			virtual void properties(obs_properties_t* props) override;
+
+			virtual void remove_properties(obs_properties_t* props) override;
+
+			virtual void update(obs_data_t* data) override;
+
+			virtual void tick(float_t time) override;
+
+			virtual void prepare() override;
+
+			virtual void assign() override;
 		};
-		struct texture_parameter : parameter {
-			std::shared_ptr<gs::texture> value;
 
-			texture_parameter(std::shared_ptr<gs::effect> effect, std::string name);
+		class texture_parameter : public parameter {
+			std::string                  _file_name;
+			std::shared_ptr<gs::texture> _file;
+
+			std::string                          _source_name;
+			std::shared_ptr<obs::source>         _source;
+			std::shared_ptr<gfx::source_texture> _source_renderer;
+
+			texture_mode _mode = texture_mode::FILE;
+
+			public:
+			texture_parameter(std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
+
+			virtual void properties(obs_properties_t* props) override;
+
+			virtual void remove_properties(obs_properties_t* props) override;
+
+			virtual void update(obs_data_t* data) override;
+
+			virtual void tick(float_t time) override;
+
+			virtual void prepare() override;
+
+			virtual void assign() override;
 		};
 
 		typedef std::pair<gs::effect_parameter::type, std::string> param_ident_t;
 
-		class shader_instance {
+		class effect_source {
 			std::string                                         _file;
 			std::shared_ptr<gs::effect>                         _effect;
+			std::string                                         _tech;
 			std::map<param_ident_t, std::shared_ptr<parameter>> _params;
 
 			std::shared_ptr<gs::vertex_buffer> _tri;
@@ -107,15 +241,28 @@ namespace gfx {
 			time_t  _last_modify_time;
 			time_t  _last_create_time;
 
+			float_t _time;
+			float_t _time_active;
+			float_t _time_since_last_tick;
+
+			std::uniform_real_distribution<float_t> _random_dist{0.f, 1.f};
+			std::default_random_engine              _random_generator;
+
+			bool modified2(obs_properties_t* props, obs_property_t* property, obs_data_t* settings);
+
 			void load_file(std::string file);
 
 			public:
-			shader_instance(std::string file);
-			~shader_instance();
+			effect_source();
+			~effect_source();
+
+			void properties(obs_properties_t* props);
+
+			void update(obs_data_t* data);
 
 			void tick(float_t time);
 
-			void render(std::string technique);
+			void render();
 		};
 	} // namespace effect_source
 } // namespace gfx
