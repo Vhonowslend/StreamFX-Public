@@ -148,6 +148,9 @@ filter::shader::shader_instance::shader_instance(obs_data_t* data, obs_source_t*
 	: _self(self), _active(true), _width(0), _height(0)
 {
 	_fx = std::make_shared<gfx::effect_source::effect_source>();
+	_fx->set_valid_property_cb(std::bind(&filter::shader::shader_instance::valid_param, this, std::placeholders::_1));
+	_fx->set_override_cb(std::bind(&filter::shader::shader_instance::override_param, this, std::placeholders::_1));
+
 	_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 
 	update(data);
@@ -165,11 +168,13 @@ uint32_t filter::shader::shader_instance::height()
 	return _height;
 }
 
-void filter::shader::shader_instance::properties(obs_properties_t* props) {
+void filter::shader::shader_instance::properties(obs_properties_t* props)
+{
 	_fx->properties(props);
 }
 
-void filter::shader::shader_instance::update(obs_data_t* data) {
+void filter::shader::shader_instance::update(obs_data_t* data)
+{
 	_fx->update(data);
 }
 
@@ -183,6 +188,34 @@ void filter::shader::shader_instance::deactivate()
 	_active = false;
 }
 
+bool filter::shader::shader_instance::valid_param(std::shared_ptr<gs::effect_parameter> param)
+{
+	if (strcmpi(param->get_name().c_str(), "ImageSource"))
+		return false;
+	if (strcmpi(param->get_name().c_str(), "ImageSource_Size"))
+		return false;
+	if (strcmpi(param->get_name().c_str(), "ImageSource_Texel"))
+		return false;
+	return true;
+}
+
+void filter::shader::shader_instance::override_param(std::shared_ptr<gs::effect> effect)
+{
+	auto p_source       = effect->get_parameter("ImageSource");
+	auto p_source_size  = effect->get_parameter("ImageSource_Size");
+	auto p_source_texel = effect->get_parameter("ImageSource_Texel");
+
+	if (p_source && (p_source->get_type() == gs::effect_parameter::type::Texture)) {
+		p_source->set_texture(_rt_tex);
+	}
+	if (p_source_size && (p_source_size->get_type() == gs::effect_parameter::type::Float2)) {
+		p_source_size->set_float2(_width, _height);
+	}
+	if (p_source_texel && (p_source_size->get_type() == gs::effect_parameter::type::Float2)) {
+		p_source_texel->set_float2(1.0f / _width, 1.0f / _height);
+	}
+}
+
 void filter::shader::shader_instance::video_tick(float_t sec_since_last)
 {
 	obs_source_t* target = obs_filter_get_target(_self);
@@ -193,6 +226,8 @@ void filter::shader::shader_instance::video_tick(float_t sec_since_last)
 	}
 
 	_fx->tick(sec_since_last);
+
+	_rt_updated = false;
 }
 
 void filter::shader::shader_instance::video_render(gs_effect_t* effect)
@@ -200,14 +235,31 @@ void filter::shader::shader_instance::video_render(gs_effect_t* effect)
 	// Grab initial values.
 	obs_source_t* parent         = obs_filter_get_parent(_self);
 	obs_source_t* target         = obs_filter_get_target(_self);
-	uint32_t      width          = obs_source_get_base_width(target);
-	uint32_t      height         = obs_source_get_base_height(target);
 	gs_effect_t*  effect_default = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 
 	// Skip filter if anything is wrong.
-	if (!_active || !parent || !target || !width || !height || !effect_default) {
+	if (!_active || !parent || !target || !_width || !_height || !effect_default) {
 		obs_source_skip_video_filter(_self);
 		return;
+	}
+
+	if (!_rt_updated) {
+		if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
+			auto op = _rt->render(_width, _height);
+			gs_blend_state_push();
+			gs_reset_blend_state();
+			gs_set_cull_mode(GS_NEITHER);
+			gs_enable_color(true, true, true, true);
+			gs_enable_blending(false);
+			gs_enable_depth_test(false);
+			gs_enable_stencil_test(false);
+			gs_enable_stencil_write(false);
+			gs_ortho(0, static_cast<float_t>(_width), 0, static_cast<float_t>(_height), -1., 1.);
+			obs_source_process_filter_end(_self, effect_default, _width, _height);
+			gs_blend_state_pop();
+		}
+		_rt_tex     = _rt->get_texture();
+		_rt_updated = true;
 	}
 
 	try {

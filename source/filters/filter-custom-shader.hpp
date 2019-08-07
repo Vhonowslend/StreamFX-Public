@@ -19,9 +19,9 @@
 
 #pragma once
 
-#include "plugin.hpp"
 #include "gfx/gfx-effect-source.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
+#include "plugin.hpp"
 
 extern "C" {
 #include <obs.h>
@@ -48,7 +48,10 @@ namespace filter {
 
 			uint32_t _width, _height;
 
-			std::shared_ptr<gs::rendertarget>                  _rt;
+			std::shared_ptr<gs::rendertarget> _rt;
+			bool                              _rt_updated;
+			std::shared_ptr<gs::texture>      _rt_tex;
+
 			std::shared_ptr<gfx::effect_source::effect_source> _fx;
 
 			public:
@@ -64,6 +67,9 @@ namespace filter {
 
 			void activate();
 			void deactivate();
+
+			bool valid_param(std::shared_ptr<gs::effect_parameter> param);
+			void override_param(std::shared_ptr<gs::effect> effect);
 
 			void video_tick(float_t sec_since_last);
 			void video_render(gs_effect_t* effect);
