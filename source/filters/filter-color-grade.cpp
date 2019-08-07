@@ -282,6 +282,7 @@ try {
 	return reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->get_width();
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to get width: %s", ex.what());
+	return 0;
 }
 
 uint32_t get_height(void* ptr)
@@ -289,6 +290,7 @@ try {
 	return reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->get_height();
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to get height: %s", ex.what());
+	return 0;
 }
 
 void update(void* ptr, obs_data_t* data)
