@@ -251,7 +251,11 @@ void filter::shader::shader_instance::video_tick(float_t sec_since_last)
 		_height = obs_source_get_base_height(target);
 	}
 
-	_fx->tick(sec_since_last);
+	if (_fx->tick(sec_since_last)) {
+		obs_data_t* data = obs_source_get_settings(_self);
+		update(data);
+		obs_data_release(data);
+	}
 
 	_rt_updated = false;
 }
