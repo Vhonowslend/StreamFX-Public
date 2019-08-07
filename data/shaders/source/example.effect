@@ -68,7 +68,7 @@ float4 PS_Fixed(FragData v_in) : TARGET {
 	return p_my_val; 
 }
 
-technique Fixed
+technique Draw
 {
 	pass
 	{
