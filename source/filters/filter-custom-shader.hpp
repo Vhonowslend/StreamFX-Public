@@ -18,55 +18,50 @@
  */
 
 #pragma once
-#include <cinttypes>
-#include <list>
-#include <vector>
-#include "gfx/gfx-effect-source.hpp"
-#include "obs/gs/gs-effect.hpp"
-#include "obs/gs/gs-rendertarget.hpp"
+
 #include "plugin.hpp"
 
+extern "C" {
+#include <obs.h>
+}
+
 namespace filter {
-	class CustomShader {
-		public:
-		CustomShader();
-		~CustomShader();
+	namespace shader {
+		class shader_factory {
+			obs_source_info _source_info;
 
-		static const char*       get_name(void*);
-		static void              get_defaults(obs_data_t*);
-		static obs_properties_t* get_properties(void*);
-
-		static void*    create(obs_data_t*, obs_source_t*);
-		static void     destroy(void*);
-		static uint32_t get_width(void*);
-		static uint32_t get_height(void*);
-		static void     update(void*, obs_data_t*);
-		static void     activate(void*);
-		static void     deactivate(void*);
-		static void     video_tick(void*, float);
-		static void     video_render(void*, gs_effect_t*);
-
-		private:
-		obs_source_info sourceInfo;
-
-		private:
-		class Instance : public gfx::effect_source {
-			friend class CustomShader;
-
-			std::shared_ptr<gs::rendertarget> m_renderTarget;
-
-			protected:
-			bool         apply_special_parameters(uint32_t viewW, uint32_t viewH);
-			virtual bool is_special_parameter(std::string name, gs::effect_parameter::type type) override;
-			virtual bool video_tick_impl(float_t time) override;
-			virtual bool video_render_impl(gs_effect_t* parent_effect, uint32_t viewW, uint32_t viewH) override;
+			public: // Singleton
+			static void                            initialize();
+			static void                            finalize();
+			static std::shared_ptr<shader_factory> get();
 
 			public:
-			Instance(obs_data_t*, obs_source_t*);
-			virtual ~Instance() override;
-
-			uint32_t get_width();
-			uint32_t get_height();
+			shader_factory();
+			~shader_factory();
 		};
-	};
+
+		class shader_instance {
+			obs_source_t* _self;
+			bool          _active;
+
+			uint32_t _width, _height;
+
+			public:
+			shader_instance(obs_data_t* data, obs_source_t* self);
+			~shader_instance();
+
+			uint32_t width();
+			uint32_t height();
+
+			void properties(obs_properties_t* props);
+
+			void update(obs_data_t* data);
+
+			void activate();
+			void deactivate();
+
+			void video_tick(float_t sec_since_last);
+			void video_render(gs_effect_t* effect);
+		};
+	} // namespace shader
 } // namespace filter
