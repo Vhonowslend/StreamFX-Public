@@ -77,6 +77,8 @@ namespace gfx {
 			parameter(std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
 			virtual ~parameter();
 
+			virtual void defaults(obs_properties_t* props, obs_data_t* data) = 0;
+
 			virtual void properties(obs_properties_t* props) = 0;
 
 			virtual void remove_properties(obs_properties_t* props) = 0;
@@ -101,6 +103,8 @@ namespace gfx {
 
 			public:
 			bool_parameter(std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
+
+			virtual void defaults(obs_properties_t* props, obs_data_t* data) override;
 
 			virtual void properties(obs_properties_t* props) override;
 
@@ -142,6 +146,8 @@ namespace gfx {
 			public:
 			value_parameter(std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
 
+			virtual void defaults(obs_properties_t* props, obs_data_t* data) override;
+
 			virtual void properties(obs_properties_t* props) override;
 
 			virtual void remove_properties(obs_properties_t* props) override;
@@ -170,6 +176,8 @@ namespace gfx {
 			public:
 			matrix_parameter(std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
 
+			virtual void defaults(obs_properties_t* props, obs_data_t* data) override;
+
 			virtual void properties(obs_properties_t* props) override;
 
 			virtual void remove_properties(obs_properties_t* props) override;
@@ -189,6 +197,8 @@ namespace gfx {
 
 			public:
 			string_parameter(std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
+
+			virtual void defaults(obs_properties_t* props, obs_data_t* data) override;
 
 			virtual void properties(obs_properties_t* props) override;
 
@@ -215,6 +225,8 @@ namespace gfx {
 
 			public:
 			texture_parameter(std::shared_ptr<gs::effect> effect, std::shared_ptr<gs::effect_parameter> param);
+
+			virtual void defaults(obs_properties_t* props, obs_data_t* data) override;
 
 			virtual void properties(obs_properties_t* props) override;
 
@@ -268,7 +280,7 @@ namespace gfx {
 
 			void update(obs_data_t* data);
 
-			void tick(float_t time);
+			bool tick(float_t time);
 
 			void render();
 

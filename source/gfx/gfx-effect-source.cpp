@@ -28,6 +28,8 @@
 #define ST_FILE S_SHADER_FILE
 #define ST_TECHNIQUE S_SHADER_TECHNIQUE
 
+#define UNIQUE_PREFIX "HelloThisIsPatrick."
+
 static std::vector<std::string> static_parameters{
 	"ViewProj",
 	"Time",
@@ -44,7 +46,7 @@ gfx::effect_source::parameter::parameter(std::shared_ptr<gs::effect>           e
 		throw std::invalid_argument("param");
 	if (!effect->has_parameter(param->get_name(), param->get_type()))
 		throw std::invalid_argument("param");
-	_name = _param->get_name();
+	_name = UNIQUE_PREFIX + _param->get_name();
 
 	_visible_name = _name;
 	if (param->has_annotation("name", gs::effect_parameter::type::String)) {
@@ -64,6 +66,8 @@ gfx::effect_source::parameter::parameter(std::shared_ptr<gs::effect>           e
 }
 
 gfx::effect_source::parameter::~parameter() {}
+
+void gfx::effect_source::parameter::defaults(obs_properties_t* props, obs_data_t* data) {}
 
 void gfx::effect_source::parameter::properties(obs_properties_t* props) {}
 
@@ -123,6 +127,8 @@ gfx::effect_source::bool_parameter::bool_parameter(std::shared_ptr<gs::effect>  
 
 	param->get_default_bool(_value);
 }
+
+void gfx::effect_source::bool_parameter::defaults(obs_properties_t* props, obs_data_t* data) {}
 
 void gfx::effect_source::bool_parameter::properties(obs_properties_t* props)
 {
@@ -284,6 +290,8 @@ gfx::effect_source::value_parameter::value_parameter(std::shared_ptr<gs::effect>
 		_cache.visible_name[idx] = ui_sstr.str();
 	}
 }
+
+void gfx::effect_source::value_parameter::defaults(obs_properties_t* props, obs_data_t* data) {}
 
 void gfx::effect_source::value_parameter::properties(obs_properties_t* props)
 {
@@ -542,6 +550,8 @@ gfx::effect_source::matrix_parameter::matrix_parameter(std::shared_ptr<gs::effec
 	}
 }
 
+void gfx::effect_source::matrix_parameter::defaults(obs_properties_t* props, obs_data_t* data) {}
+
 void gfx::effect_source::matrix_parameter::properties(obs_properties_t* props)
 {
 	auto grp = props;
@@ -638,6 +648,8 @@ gfx::effect_source::string_parameter::string_parameter(std::shared_ptr<gs::effec
 	param->get_default_string(_value);
 }
 
+void gfx::effect_source::string_parameter::defaults(obs_properties_t* props, obs_data_t* data) {}
+
 void gfx::effect_source::string_parameter::properties(obs_properties_t* props) {}
 
 void gfx::effect_source::string_parameter::remove_properties(obs_properties_t* props) {}
@@ -655,6 +667,8 @@ gfx::effect_source::texture_parameter::texture_parameter(std::shared_ptr<gs::eff
 	: parameter(effect, param)
 {}
 
+void gfx::effect_source::texture_parameter::defaults(obs_properties_t* props, obs_data_t* data) {}
+
 void gfx::effect_source::texture_parameter::properties(obs_properties_t* props) {}
 
 void gfx::effect_source::texture_parameter::remove_properties(obs_properties_t* props) {}
@@ -670,6 +684,8 @@ void gfx::effect_source::texture_parameter::assign() {}
 bool gfx::effect_source::effect_source::modified2(obs_properties_t* props, obs_property_t* property,
 												  obs_data_t* settings)
 {
+	// Broken, gets stuck locking gs::context.
+	/*
 	auto gctx = gs::context();
 	for (auto& kv : _params) {
 		if (kv.second)
@@ -686,6 +702,11 @@ bool gfx::effect_source::effect_source::modified2(obs_properties_t* props, obs_p
 	for (auto& kv : _params) {
 		if (kv.second)
 			kv.second->properties(props);
+	}*/
+
+	for (auto& kv : _params) {
+		if (kv.second)
+			kv.second->defaults(props, settings);
 	}
 
 	return true;
@@ -697,7 +718,9 @@ void gfx::effect_source::effect_source::load_file(std::string file)
 
 	_params.clear();
 	_effect.reset();
-	_file = file;
+	_file        = file;
+	_time        = 0;
+	_time_active = 0;
 
 	struct stat st;
 	if (os_stat(_file.c_str(), &st) == -1) {
@@ -730,13 +753,13 @@ void gfx::effect_source::effect_source::load_file(std::string file)
 		if (skip)
 			continue;
 
-
 		_params.emplace(identity, parameter::create(_effect, prm));
 	}
 }
 
 gfx::effect_source::effect_source::effect_source()
-	: _last_check(0), _last_size(0), _last_modify_time(0), _last_create_time(0)
+	: _last_check(0), _last_size(0), _last_modify_time(0), _last_create_time(0), _time(0), _time_active(0),
+	  _time_since_last_tick(0)
 {
 	auto gctx = gs::context();
 
@@ -764,10 +787,12 @@ void gfx::effect_source::effect_source::properties(obs_properties_t* props)
 {
 	auto p = obs_properties_add_path(props, ST_FILE, D_TRANSLATE(ST_FILE), OBS_PATH_FILE, "Effects (*.effect);;*.*",
 									 nullptr);
-	/*obs_property_set_modified_callback2(p,
+	obs_property_set_modified_callback2(
+		p,
 		[](void* priv, obs_properties_t* props, obs_property_t* property, obs_data_t* settings) {
 			return reinterpret_cast<gfx::effect_source::effect_source*>(priv)->modified2(props, property, settings);
-		}, this);*/
+		},
+		this);
 	obs_properties_add_text(props, ST_TECHNIQUE, D_TRANSLATE(ST_TECHNIQUE), OBS_TEXT_DEFAULT);
 
 	for (auto& kv : _params) {
@@ -796,7 +821,7 @@ void gfx::effect_source::effect_source::update(obs_data_t* data)
 	}
 }
 
-void gfx::effect_source::effect_source::tick(float_t time)
+bool gfx::effect_source::effect_source::tick(float_t time)
 {
 	_last_check += time;
 	if (_last_check >= 0.5f) {
@@ -814,6 +839,7 @@ void gfx::effect_source::effect_source::tick(float_t time)
 			} catch (std::exception& ex) {
 				P_LOG_ERROR("Loading shader \"%s\" failed, error: %s", _file.c_str(), ex.what());
 			}
+			return true;
 		}
 	}
 
@@ -824,6 +850,8 @@ void gfx::effect_source::effect_source::tick(float_t time)
 
 	_time += time;
 	_time_since_last_tick = time;
+
+	return false;
 }
 
 void gfx::effect_source::effect_source::render()
@@ -888,10 +916,12 @@ void gfx::effect_source::effect_source::render()
 	gs_blend_state_pop();
 }
 
-void gfx::effect_source::effect_source::set_valid_property_cb(valid_property_cb_t cb) {
+void gfx::effect_source::effect_source::set_valid_property_cb(valid_property_cb_t cb)
+{
 	_cb_valid = cb;
 }
 
-void gfx::effect_source::effect_source::set_override_cb(param_override_cb_t cb) {
+void gfx::effect_source::effect_source::set_override_cb(param_override_cb_t cb)
+{
 	_cb_override = cb;
 }
