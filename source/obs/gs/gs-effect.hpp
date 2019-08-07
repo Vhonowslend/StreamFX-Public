@@ -140,9 +140,114 @@ namespace gs {
 		std::shared_ptr<effect_parameter> get_annotation(std::string name);
 		bool                              has_annotation(std::string name);
 		bool                              has_annotation(std::string name, effect_parameter::type type);
+
+		public /* Helpers */:
+		inline float_t get_bool()
+		{
+			bool v;
+			get_bool(v);
+			return v;
+		};
+		inline bool get_default_bool()
+		{
+			bool v;
+			get_default_bool(v);
+			return v;
+		};
+
+		inline float_t get_float()
+		{
+			float_t v;
+			get_float(v);
+			return v;
+		};
+		inline float_t get_default_float()
+		{
+			float_t v;
+			get_default_float(v);
+			return v;
+		};
+
+		inline vec2 get_float2()
+		{
+			vec2 v;
+			get_float2(v);
+			return v;
+		};
+		inline vec2 get_default_float2()
+		{
+			vec2 v;
+			get_default_float2(v);
+			return v;
+		};
+
+		inline vec3 get_float3()
+		{
+			vec3 v;
+			get_float3(v);
+			return v;
+		};
+		inline vec3 get_default_float3()
+		{
+			vec3 v;
+			get_default_float3(v);
+			return v;
+		};
+
+		inline vec4 get_float4()
+		{
+			vec4 v;
+			get_float4(v);
+			return v;
+		};
+		inline vec4 get_default_float4()
+		{
+			vec4 v;
+			get_default_float4(v);
+			return v;
+		};
+
+		inline int32_t get_int()
+		{
+			int32_t v;
+			get_int(v);
+			return v;
+		};
+		inline int32_t get_default_int()
+		{
+			int32_t v;
+			get_default_int(v);
+			return v;
+		};
+
+		inline matrix4 get_matrix()
+		{
+			matrix4 v;
+			get_matrix(v);
+			return v;
+		};
+		inline matrix4 get_default_matrix()
+		{
+			matrix4 v;
+			get_default_matrix(v);
+			return v;
+		};
+
+		inline std::string get_string()
+		{
+			std::string v;
+			get_string(v);
+			return v;
+		};
+		inline std::string get_default_string()
+		{
+			std::string v;
+			get_default_string(v);
+			return v;
+		};
 	};
 
-	class effect : std::enable_shared_from_this<::gs::effect> {
+	class effect : public std::enable_shared_from_this<::gs::effect> {
 		protected:
 		gs_effect_t* _effect;
 
