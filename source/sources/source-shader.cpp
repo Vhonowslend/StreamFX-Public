@@ -61,7 +61,7 @@ source::shader::shader_factory::shader_factory()
 	memset(&_source_info, 0, sizeof(obs_source_info));
 	_source_info.id           = "obs-stream-effects-source-shader";
 	_source_info.type         = OBS_SOURCE_TYPE_INPUT;
-	_source_info.output_flags = OBS_SOURCE_VIDEO;
+	_source_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
 	_source_info.get_name     = [](void*) { return D_TRANSLATE(ST); };
 	_source_info.get_defaults = get_defaults;
 
