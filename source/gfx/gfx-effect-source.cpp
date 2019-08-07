@@ -726,7 +726,7 @@ void gfx::effect_source::effect_source::load_file(std::string file)
 			}
 		}
 		if (_cb_valid)
-			skip = skip || _cb_valid(prm);
+			skip = skip || !_cb_valid(prm);
 		if (skip)
 			continue;
 
