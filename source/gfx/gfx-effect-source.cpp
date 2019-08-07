@@ -726,8 +726,11 @@ void gfx::effect_source::effect_source::load_file(std::string file)
 				break;
 			}
 		}
+		if (_cb_valid)
+			skip = skip || _cb_valid(prm);
 		if (skip)
 			continue;
+
 
 		_params.emplace(identity, parameter::create(_effect, prm));
 	}
@@ -861,6 +864,10 @@ void gfx::effect_source::effect_source::render()
 		}
 	}
 
+	if (_cb_override) {
+		_cb_override(_effect);
+	}
+
 	gs_blend_state_push();
 	gs_matrix_push();
 
@@ -880,4 +887,12 @@ void gfx::effect_source::effect_source::render()
 
 	gs_matrix_pop();
 	gs_blend_state_pop();
+}
+
+void gfx::effect_source::effect_source::set_valid_property_cb(valid_property_cb_t cb) {
+	_cb_valid = cb;
+}
+
+void gfx::effect_source::effect_source::set_override_cb(param_override_cb_t cb) {
+	_cb_override = cb;
 }
