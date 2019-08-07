@@ -168,7 +168,7 @@ std::shared_ptr<gs::effect> gs::effect::create(std::string code, std::string nam
 gs::effect_parameter::effect_parameter(std::shared_ptr<gs::effect> effect, gs_eparam_t* param)
 	: _effect(effect), _param(param)
 {
-	if (effect)
+	if (!effect)
 		throw std::invalid_argument("effect");
 	if (!param)
 		throw std::invalid_argument("param");
