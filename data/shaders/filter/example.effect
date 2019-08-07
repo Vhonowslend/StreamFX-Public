@@ -1,22 +1,64 @@
-// Basic Input Parameters
-uniform float4x4 ViewProj; // View Projection Matrix
-uniform float2 ViewSize; // View Size as Float2
-//uniform int2 ViewSizeI; // View Size as Int2
-//uniform float Time; // Time Existing
-uniform float TimeActive; // Time Active
+// Always provided by OBS
+uniform float4x4 ViewProj<
+	bool visible = false;
+	string name = "View Projection Matrix";
+>;
 
-// Filter Input Parameters
-uniform texture2d Image; // Input Image
-uniform float2 Image_Size;
-//uniform int2 Image_SizeI;
-//uniform float2 Image_Texel;
+// Provided by Stream Effects
+uniform float4 Time<
+	bool visible = false;
+	string name = "Time Array";
+	string description = "A float4 value containing the total time, rendering time and the time since the last tick. The last value is a random number between 0 and 1.";
+>;
+uniform float4x4 Random<
+	bool visible = false;
+	string name = "Random Array";
+	string description = "A float4x4 value containing random values between 0 and 1";
+>;
+uniform texture2d ImageSource<
+	bool visible = false;
+	string name = "Source Texture (Filter, Transition)";
+>;
+uniform texture2d ImageSource_Size<
+	bool visible = false;
+	string name = "Source Texture Size (Filter, Transition)";
+>;
+uniform texture2d ImageSource_Texel<
+	bool visible = false;
+	string name = "Source Texture Texel Size (Filter, Transition)";
+>;
+uniform texture2d ImageTarget<
+	bool visible = false;
+	string name = "Target Texture (Transition)";
+>;
+uniform texture2d ImageTarget_Size<
+	bool visible = false;
+	string name = "Target Texture Size (Transition)";
+>;
+uniform texture2d ImageTarget_Texel<
+	bool visible = false;
+	string name = "Target Texture Texel Size (Transition)";
+>;
 
-// Custom Parameters (These will be visible in the UI)
-//uniform float4 Color;
-uniform float WaveScale;
-uniform float WaveAmplitude;
+// Shader Parameters
+uniform float4 p_my_val<
+	bool visible = true;
+	string name = "This is a Value";
+	float4 minimum = {0., 0., 0., 0.};
+	float4 maximum = {1., 1., 1., 1.};
+	float4 step = {.01, .01, .01, .01};
+> = {0., 0., 0., 1.};
+uniform float p_hue_shift <
+	bool visible = true;
+	string name = "Hue Shift";
+	string mode = "slider"; // Default is input/spinbox
+	float minimum = -180.0;
+	float maximum = 180.0;
+	float step = 0.01;
+> = 0.0;
 
-sampler_state textureSampler {
+// ---------- Shader Code
+sampler_state def_sampler {
 	AddressU  = Wrap;
 	AddressV  = Wrap;
 	Filter    = Linear;
@@ -36,34 +78,76 @@ FragData VSDefault(VertData v_in) {
 	FragData vert_out;
 	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
 	vert_out.uv  = v_in.uv;
-
 	return vert_out;
 }
 
-// Simple texture sample, technically does nothing.
-float4 PS_Sample(FragData v_in) : TARGET {
-	return Image.Sample(textureSampler, v_in.uv);
+// ---------- Random Color
+float4 PS_Random(FragData v_in) : TARGET {
+	return float4(Random[0][0], Random[0][1], Random[0][2], 1.0); 
 }
 
-// Adding a little wave to the image makes a huge difference already.
-float4 PS_Wave(FragData v_in) : TARGET {
-	float2 realPos = v_in.uv * ViewSize;
-	float yoff = sin(realPos.x / WaveAmplitude + TimeActive) * ((WaveScale / 100.0) * Image_Size.y);	
-	return Image.Sample(textureSampler, v_in.uv + float2(0, yoff));
+technique Random
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PS_Random(v_in);
+	}
 }
 
-// Rotating is also rather easy to do.
-float4 PS_Rotate(FragData v_in) : TARGET {
-	float angle = TimeActive * 3.141 / 16.0;
+// ---------- Fixed Color 
+float4 PS_Fixed(FragData v_in) : TARGET {
+	return p_my_val; 
+}
+
+technique Fixed
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PS_Fixed(v_in); 
+	}
+}
+
+// ---------- Isolate Hue
+float4 RGBtoHSV(float4 RGBA) {
+	const float4 K = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+	const float e = 1.0e-10;	
+	float4 p = lerp(float4(RGBA.bg, K.wz), float4(RGBA.gb, K.xy), step(RGBA.b, RGBA.g));
+	float4 q = lerp(float4(p.xyw, RGBA.r), float4(RGBA.r, p.yzx), step(p.x, RGBA.r));	
+	float d = q.x - min(q.w, q.y);
+	return float4(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x, RGBA.a);
+}
+
+float4 HSVtoRGB(float4 HSVA) {
+	const float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+	float4 v = float4(0,0,0,0);
+	v.rgb = HSVA.z * lerp(K.xxx, clamp(abs(frac(HSVA.xxx + K.xyz) * 6.0 - K.www) - K.xxx, 0.0, 1.0), HSVA.y);
+	v.a = HSVA.a;
+	return v;
+}
+
+float4 PS_HueShift(FragData v_in) : TARGET {
+	float4 v = ImageSource.Sample(def_sampler, v_in.uv); 
 	
-	float cp = cos(angle);
-	float sp = sin(angle);
-	float sn = -sp;
-	float2 uv = v_in.uv * Image_Size;
-	uv = float2((uv.x * cp) + (uv.y * sn), (uv.x * sp) + (uv.y * cp));
-	uv /= Image_Size;
+	float4 hsv = RGBtoHSV(v);
+	hsv.r = hsv.r + p_hue_shift;
+	return HSVtoRGB(hsv);	
+}
 
-	return Image.Sample(textureSampler, uv);	
+technique HueShift
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PS_HueShift(v_in);
+	}
+}
+
+
+// ---------- Pass Through
+float4 PS_Draw(FragData v_in) : TARGET {
+	return ImageSource.Sample(def_sampler, v_in.uv); 
 }
 
 technique Draw
@@ -71,6 +155,6 @@ technique Draw
 	pass
 	{
 		vertex_shader = VSDefault(v_in);
-		pixel_shader  = PS_Rotate(v_in);
+		pixel_shader  = PS_Draw(v_in);
 	}
 }

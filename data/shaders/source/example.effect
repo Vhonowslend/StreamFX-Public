@@ -1,0 +1,78 @@
+// Always provided by OBS
+uniform float4x4 ViewProj<
+	bool visible = false;
+	string name = "View Projection Matrix";
+>;
+
+// Provided by Stream Effects
+uniform float4 Time<
+	bool visible = false;
+	string name = "Time Array";
+	string description = "A float4 value containing the total time, rendering time and the time since the last tick. The last value is a random number between 0 and 1.";
+>;
+uniform float4x4 Random<
+	bool visible = false;
+	string name = "Random Array";
+	string description = "A float4x4 value containing random values between 0 and 1";
+>;
+
+// Shader Parameters
+uniform float4 p_my_val<
+	bool visible = true;
+	string name = "This is a Value";
+	float4 minimum = {0., 0., 0., 0.};
+	float4 maximum = {1., 1., 1., 1.};
+	float4 step = {.01, .01, .01, .01};
+> = {0., 0., 0., 1.};
+
+// ---------- Shader Code
+sampler_state def_sampler {
+	AddressU  = Wrap;
+	AddressV  = Wrap;
+	Filter    = Linear;
+};
+
+struct VertData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+struct FragData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+FragData VSDefault(VertData v_in) {
+	FragData vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+	return vert_out;
+}
+
+// ---------- Random Color
+float4 PS_Random(FragData v_in) : TARGET {
+	return float4(Random[0][0], Random[0][1], Random[0][2], 1.0); 
+}
+
+technique Random
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PS_Random(v_in);
+	}
+}
+
+// ---------- Fixed Color 
+float4 PS_Fixed(FragData v_in) : TARGET {
+	return p_my_val; 
+}
+
+technique Fixed
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PS_Fixed(v_in); 
+	}
+}
