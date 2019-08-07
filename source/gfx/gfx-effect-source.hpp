@@ -29,143 +29,93 @@
 #include "obs/gs/gs-vertexbuffer.hpp"
 
 // OBS
+extern "C" {
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4201)
 #endif
 #include <obs.h>
+#include <util/platform.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
-
-// Data Defines
-#define D_TYPE "CustomShader.Type"
-#define D_INPUT_TEXT "CustomShader.Input.Text"
-#define D_INPUT_FILE "CustomShader.Input.File"
-
-// Translation Defines
-#define T_TYPE "CustomShader.Type"
-#define T_TYPE_TEXT "CustomShader.Type.Text"
-#define T_TYPE_FILE "CustomShader.Type.File"
-#define T_INPUT_TEXT "CustomShader.Input.Text"
-#define T_INPUT_FILE "CustomShader.Input.File"
-#define T_TEXTURE_TYPE "CustomShader.Texture.Type"
-#define T_TEXTURE_TYPE_FILE "CustomShader.Texture.Type.File"
-#define T_TEXTURE_TYPE_SOURCE "CustomShader.Texture.Type.Source"
+}
 
 namespace gfx {
-	class effect_source {
-		public:
+	namespace effect_source {
 		struct parameter {
-			std::string                           name = "";
+			std::shared_ptr<gs::effect>           effect;
 			std::shared_ptr<gs::effect_parameter> param;
 
-			struct {
-				std::vector<char>        buffer;
-				std::vector<const char*> names;
-				std::vector<const char*> descs;
-			} ui;
+			std::string name;
+			std::string description;
+			std::string formulae;
+			bool        visible;
+
+			parameter(std::shared_ptr<gs::effect> effect, std::string name);
 		};
 		struct bool_parameter : parameter {
-			bool value = false;
+			bool value;
+
+			bool_parameter(std::shared_ptr<gs::effect> effect, std::string name);
 		};
-		struct int_parameter : parameter {
-			int32_t value[4] = {0, 0, 0, 0};
+		struct value_parameter : parameter {
+			union {
+				float_t f[16];
+				int32_t i[4];
+			} value;
+			union {
+				float_t f[16];
+				int32_t i[4];
+			} minimum;
+			union {
+				float_t f[16];
+				int32_t i[4];
+			} maximum;
+
+			value_parameter(std::shared_ptr<gs::effect> effect, std::string name);
 		};
-		struct float_parameter : parameter {
-			float_t value[4] = {0, 0, 0, 0};
+		struct matrix_parameter : parameter {
+			matrix4 value;
+			matrix4 minimum;
+			matrix4 maximum;
+
+			matrix_parameter(std::shared_ptr<gs::effect> effect, std::string name);
+		};
+		struct string_parameter : parameter {
+			std::string value;
+
+			string_parameter(std::shared_ptr<gs::effect> effect, std::string name);
 		};
 		struct texture_parameter : parameter {
-			bool isSource = false;
+			std::shared_ptr<gs::texture> value;
 
-			struct {
-				std::string                  path = "";
-				std::shared_ptr<gs::texture> tex;
-				struct {
-					float_t time_updated  = 0;
-					time_t  time_create   = 0;
-					time_t  time_modified = 0;
-					size_t  file_size     = 0;
-					bool    modified      = true;
-				} info;
-			} file;
-			struct {
-				std::string                          name = "";
-				std::shared_ptr<gfx::source_texture> tex;
-				std::shared_ptr<gs::texture>         final_tex;
-			} source;
-
-			struct {
-				bool                              doResample = false;
-				std::pair<uint32_t, uint32_t>     resolution = {10, 10};
-				std::shared_ptr<gs::rendertarget> rt;
-			} resample;
+			texture_parameter(std::shared_ptr<gs::effect> effect, std::string name);
 		};
-		struct matrix_parameter : parameter {};
-		typedef std::pair<std::string, gs::effect_parameter::type> paramident_t;
 
-		private:
-		protected:
-		obs_source_t*                      m_source;
-		std::shared_ptr<gs::vertex_buffer> m_quadBuffer;
+		typedef std::pair<gs::effect_parameter::type, std::string> param_ident_t;
 
-		// Effect Information
-		struct {
-			std::shared_ptr<gs::effect> effect;
-			std::string                 text;
-			std::string                 path;
-			struct {
-				float_t time_updated;
-				time_t  time_create;
-				time_t  time_modified;
-				size_t  file_size;
-				bool    modified;
-			} file_info;
-		} m_shader;
-		std::map<paramident_t, std::shared_ptr<parameter>> m_parameters;
+		class shader_instance {
+			std::string                                         _file;
+			std::shared_ptr<gs::effect>                         _effect;
+			std::map<param_ident_t, std::shared_ptr<parameter>> _params;
 
-		// Status
-		float_t m_timeExisting;
-		float_t m_timeActive;
+			std::shared_ptr<gs::vertex_buffer> _tri;
 
-		std::string m_defaultShaderPath = "shaders/";
+			float_t _last_check;
+			size_t  _last_size;
+			time_t  _last_modify_time;
+			time_t  _last_create_time;
 
-		static bool property_type_modified(void* priv, obs_properties_t* props, obs_property_t* prop, obs_data_t* sett);
-		static bool property_input_modified(void* priv, obs_properties_t* props, obs_property_t* prop,
-											obs_data_t* sett);
-		static void fill_source_list(obs_property_t* prop);
-		static bool property_texture_type_modified(void* priv, obs_properties_t* props, obs_property_t* prop,
-												   obs_data_t* sett);
-		static bool property_texture_input_modified(void* priv, obs_properties_t* props, obs_property_t* prop,
-													obs_data_t* sett);
+			void load_file(std::string file);
 
-		virtual bool is_special_parameter(std::string name, gs::effect_parameter::type type) = 0;
+			public:
+			shader_instance(std::string file);
+			~shader_instance();
 
-		virtual bool video_tick_impl(float_t time)                                                 = 0;
-		virtual bool video_render_impl(gs_effect_t* parent_effect, uint32_t viewW, uint32_t viewH) = 0;
+			void tick(float_t time);
 
-		public:
-		effect_source(obs_data_t* data, obs_source_t* owner);
-		virtual ~effect_source();
-
-		void        get_properties(obs_properties_t* properties);
-		static void get_defaults(obs_data_t* data);
-		void        update(obs_data_t* data);
-		bool        test_for_updates(const char* text, const char* path);
-		void        update_parameters(obs_data_t* data);
-		void        apply_parameters();
-
-		void activate();
-		void deactivate();
-
-		std::string get_shader_file();
-
-		uint32_t get_width();
-		uint32_t get_height();
-		void     video_tick(float time);
-		void     video_render(gs_effect_t* parent_effect);
-
-		public:
-		enum class InputTypes { Text, File };
-	};
+			void render(std::string technique);
+		};
+	} // namespace effect_source
 } // namespace gfx
