@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#include "filter-custom-shader.hpp"
+#include "filter-shader.hpp"
 #include "strings.hpp"
 #include "utility.hpp"
 
@@ -46,7 +46,11 @@ std::shared_ptr<filter::shader::shader_factory> filter::shader::shader_factory::
 	return factory_instance;
 }
 
-static void get_defaults(obs_data_t* data) {}
+static void get_defaults(obs_data_t* data)
+{
+	obs_data_set_default_string(data, S_SHADER_FILE, obs_module_file("shaders/filter/example.effect"));
+	obs_data_set_default_string(data, S_SHADER_TECHNIQUE, "Draw");
+}
 
 filter::shader::shader_factory::shader_factory()
 {
@@ -87,6 +91,28 @@ filter::shader::shader_factory::shader_factory()
 			P_LOG_ERROR("<filter-shader> Failed to retrieve options.");
 		}
 		return pr;
+	};
+	_source_info.get_width = [](void* ptr) {
+		try {
+			if (ptr)
+				return reinterpret_cast<filter::shader::shader_instance*>(ptr)->width();
+		} catch (std::exception& ex) {
+			P_LOG_ERROR("<filter-shader> Failed to retrieve width, error: %s", ex.what());
+		} catch (...) {
+			P_LOG_ERROR("<filter-shader> Failed to retrieve width.");
+		}
+		return uint32_t(0);
+	};
+	_source_info.get_height = [](void* ptr) {
+		try {
+			if (ptr)
+				return reinterpret_cast<filter::shader::shader_instance*>(ptr)->height();
+		} catch (std::exception& ex) {
+			P_LOG_ERROR("<filter-shader> Failed to retrieve height, error: %s", ex.what());
+		} catch (...) {
+			P_LOG_ERROR("<filter-shader> Failed to retrieve height.");
+		}
+		return uint32_t(0);
 	};
 	_source_info.update = [](void* ptr, obs_data_t* data) {
 		try {
