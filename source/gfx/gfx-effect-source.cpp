@@ -25,9 +25,8 @@
 #include "obs/gs/gs-helper.hpp"
 #include "strings.hpp"
 
-#define ST "Shader"
-#define ST_FILE ST ".File"
-#define ST_TECHNIQUE ST ".Technique"
+#define ST_FILE S_SHADER_FILE
+#define ST_TECHNIQUE S_SHADER_TECHNIQUE
 
 static std::vector<std::string> static_parameters{
 	"ViewProj",

@@ -44,7 +44,7 @@ extern "C" {
 }
 
 #define S_SHADER_FILE "Shader.File"
-#define S_SHADER_TECHNIQUE ST "Shader.Technique"
+#define S_SHADER_TECHNIQUE "Shader.Technique"
 
 namespace gfx {
 	namespace effect_source {
