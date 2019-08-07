@@ -721,7 +721,7 @@ void gs::effect_parameter::set_string(std::string const& v)
 
 void gs::effect_parameter::get_string(std::string& v)
 {
-	if (get_type() != type::Matrix)
+	if (get_type() != type::String)
 		throw std::bad_cast();
 	size_t   ptr_len = gs_effect_get_val_size(_param);
 	uint8_t* ptr     = static_cast<uint8_t*>(gs_effect_get_val(_param));
@@ -735,7 +735,7 @@ void gs::effect_parameter::get_string(std::string& v)
 
 void gs::effect_parameter::get_default_string(std::string& v)
 {
-	if (get_type() != type::Matrix)
+	if (get_type() != type::String)
 		throw std::bad_cast();
 	size_t   ptr_len = gs_effect_get_val_size(_param);
 	uint8_t* ptr     = static_cast<uint8_t*>(gs_effect_get_default_val(_param));
