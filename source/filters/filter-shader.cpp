@@ -178,6 +178,7 @@ filter::shader::shader_instance::shader_instance(obs_data_t* data, obs_source_t*
 	_fx->set_override_cb(std::bind(&filter::shader::shader_instance::override_param, this, std::placeholders::_1));
 
 	_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_rt2 = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 
 	update(data);
 }
@@ -258,6 +259,7 @@ void filter::shader::shader_instance::video_tick(float_t sec_since_last)
 	}
 
 	_rt_updated = false;
+	_rt2_updated = false;
 }
 
 void filter::shader::shader_instance::video_render(gs_effect_t* effect)
@@ -292,9 +294,25 @@ void filter::shader::shader_instance::video_render(gs_effect_t* effect)
 		_rt_updated = true;
 	}
 
-	try {
-		_fx->render();
-	} catch (...) {
-		obs_source_skip_video_filter(_self);
+	if (!_rt2_updated) {
+		try {
+			auto op = _rt2->render(_width, _height);
+			_fx->render();
+		} catch (...) {
+			obs_source_skip_video_filter(_self);
+		}
+		_rt2_tex     = _rt2->get_texture();
+		_rt2_updated = true;
+	}
+
+	if (!_rt2_tex)
+		return;
+
+	gs_effect_t* ef = effect ? effect : effect_default;
+	if (gs_eparam_t* prm = gs_effect_get_param_by_name(ef, "image"))
+		gs_effect_set_texture(prm, _rt2_tex->get_object());
+
+	while (gs_effect_loop(ef, "Draw")) {
+		gs_draw_sprite(nullptr, 0, _width, _height);
 	}
 }

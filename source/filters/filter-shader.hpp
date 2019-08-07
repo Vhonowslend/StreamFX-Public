@@ -52,6 +52,10 @@ namespace filter {
 			bool                              _rt_updated;
 			std::shared_ptr<gs::texture>      _rt_tex;
 
+			std::shared_ptr<gs::rendertarget> _rt2;
+			bool                              _rt2_updated;
+			std::shared_ptr<gs::texture>      _rt2_tex;
+
 			std::shared_ptr<gfx::effect_source::effect_source> _fx;
 
 			public:
