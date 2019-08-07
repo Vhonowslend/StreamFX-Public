@@ -98,6 +98,8 @@ namespace gfx {
 
 			std::shared_ptr<gs::effect_parameter> get_param();
 
+			virtual void enum_active_sources(obs_source_enum_proc_t, void*){};
+
 			public:
 			static std::shared_ptr<gfx::effect_source::parameter>
 				create(std::shared_ptr<gfx::effect_source::effect_source> parent, std::shared_ptr<gs::effect> effect,
@@ -265,6 +267,8 @@ namespace gfx {
 			virtual void prepare() override;
 
 			virtual void assign() override;
+
+			virtual void enum_active_sources(obs_source_enum_proc_t, void*) override;
 		};
 
 		typedef std::pair<gs::effect_parameter::type, std::string>               param_ident_t;
@@ -313,6 +317,8 @@ namespace gfx {
 			void render();
 
 			obs_source_t* get_self();
+
+			void enum_active_sources(obs_source_enum_proc_t, void*);
 
 			public:
 			void set_valid_property_cb(valid_property_cb_t cb);

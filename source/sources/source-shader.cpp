@@ -118,6 +118,16 @@ source::shader::shader_factory::shader_factory()
 		}
 		return uint32_t(0);
 	};
+	_source_info.load = [](void* ptr, obs_data_t* data) {
+		try {
+			if (ptr)
+				reinterpret_cast<source::shader::shader_instance*>(ptr)->load(data);
+		} catch (std::exception& ex) {
+			P_LOG_ERROR("<source-shader> Failed to load, error: %s", ex.what());
+		} catch (...) {
+			P_LOG_ERROR("<source-shader> Failed to load.");
+		}
+	};
 	_source_info.update = [](void* ptr, obs_data_t* data) {
 		try {
 			if (ptr)
@@ -168,6 +178,16 @@ source::shader::shader_factory::shader_factory()
 			P_LOG_ERROR("<source-shader> Failed to render.");
 		}
 	};
+	_source_info.enum_active_sources = [](void* ptr, obs_source_enum_proc_t enum_callback, void* param) {
+		try {
+			if (ptr)
+				reinterpret_cast<source::shader::shader_instance*>(ptr)->enum_active_sources(enum_callback, param);
+		} catch (std::exception& ex) {
+			P_LOG_ERROR("<source-shader> Failed to enumerate sources, error: %s", ex.what());
+		} catch (...) {
+			P_LOG_ERROR("<source-shader> Failed to enumerate sources.");
+		}
+	};
 
 	obs_register_source(&_source_info);
 }
@@ -206,6 +226,11 @@ void source::shader::shader_instance::properties(obs_properties_t* props)
 	_fx->properties(props);
 }
 
+void source::shader::shader_instance::load(obs_data_t* data)
+{
+	update(data);
+}
+
 void source::shader::shader_instance::update(obs_data_t* data)
 {
 	_width  = obs_data_get_int(data, ST_WIDTH);
@@ -230,6 +255,10 @@ bool source::shader::shader_instance::valid_param(std::shared_ptr<gs::effect_par
 }
 
 void source::shader::shader_instance::override_param(std::shared_ptr<gs::effect> effect) {}
+
+void source::shader::shader_instance::enum_active_sources(obs_source_enum_proc_t r, void* p) {
+	_fx->enum_active_sources(r, p);
+}
 
 void source::shader::shader_instance::video_tick(float_t sec_since_last)
 {

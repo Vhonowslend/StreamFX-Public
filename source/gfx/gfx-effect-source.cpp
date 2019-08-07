@@ -138,8 +138,8 @@ gfx::effect_source::bool_parameter::bool_parameter(std::shared_ptr<gfx::effect_s
 
 void gfx::effect_source::bool_parameter::defaults(obs_properties_t* props, obs_data_t* data)
 {
-	obs_data_set_default_bool(data, _name.c_str(), _value);
-	obs_data_set_bool(data, _name.c_str(), _value);
+	//obs_data_set_default_bool(data, _name.c_str(), _value);
+	//obs_data_set_bool(data, _name.c_str(), _value);
 }
 
 void gfx::effect_source::bool_parameter::properties(obs_properties_t* props)
@@ -306,7 +306,7 @@ gfx::effect_source::value_parameter::value_parameter(std::shared_ptr<gfx::effect
 
 void gfx::effect_source::value_parameter::defaults(obs_properties_t* props, obs_data_t* data)
 {
-	bool   is_int = false;
+	/*bool   is_int = false;
 	size_t limit  = 0;
 
 	switch (_param->get_type()) {
@@ -352,7 +352,7 @@ void gfx::effect_source::value_parameter::defaults(obs_properties_t* props, obs_
 			obs_data_set_default_double(data, _cache.name[idx].c_str(), _value.f[idx]);
 			obs_data_set_double(data, _cache.name[idx].c_str(), _value.f[idx]);
 		}
-	}
+	}*/
 }
 
 void gfx::effect_source::value_parameter::properties(obs_properties_t* props)
@@ -615,7 +615,7 @@ gfx::effect_source::matrix_parameter::matrix_parameter(std::shared_ptr<gfx::effe
 
 void gfx::effect_source::matrix_parameter::defaults(obs_properties_t* props, obs_data_t* data)
 {
-	for (size_t x = 0; x < 4; x++) {
+	/*for (size_t x = 0; x < 4; x++) {
 		vec4& v_ref = _value.x;
 		if (x == 0) {
 			vec4& v_ref = _value.x;
@@ -629,10 +629,9 @@ void gfx::effect_source::matrix_parameter::defaults(obs_properties_t* props, obs
 
 		for (size_t y = 0; y < 4; y++) {
 			size_t idx = x * 4 + y;
-			obs_data_set_double(data, _cache.name[idx].c_str(), v_ref.ptr[y]);
 			obs_data_set_default_double(data, _cache.name[idx].c_str(), v_ref.ptr[y]);
 		}
-	}
+	}*/
 }
 
 void gfx::effect_source::matrix_parameter::properties(obs_properties_t* props)
@@ -794,9 +793,9 @@ bool gfx::effect_source::texture_parameter::modified2(obs_properties_t* props, o
 
 void gfx::effect_source::texture_parameter::defaults(obs_properties_t* props, obs_data_t* data)
 {
-	obs_data_set_int(data, _cache.name[0].c_str(), static_cast<int64_t>(_mode));
-	obs_data_set_string(data, _cache.name[1].c_str(), _file_name.c_str());
-	obs_data_set_string(data, _cache.name[2].c_str(), _source_name.c_str());
+	obs_data_set_default_int(data, _cache.name[0].c_str(), static_cast<int64_t>(_mode));
+	obs_data_set_default_string(data, _cache.name[1].c_str(), _file_name.c_str());
+	obs_data_set_default_string(data, _cache.name[2].c_str(), _source_name.c_str());
 }
 
 void gfx::effect_source::texture_parameter::properties(obs_properties_t* props)
@@ -905,6 +904,13 @@ void gfx::effect_source::texture_parameter::assign()
 	} else {
 		if (_source_tex)
 			_param->set_texture(_source_tex);
+	}
+}
+
+void gfx::effect_source::texture_parameter::enum_active_sources(obs_source_enum_proc_t p, void* t)
+{
+	if ((_mode == texture_mode::SOURCE) && !_parent.expired() && _source) {
+		p(_parent.lock()->get_self(), _source->get(), t);
 	}
 }
 
@@ -1146,6 +1152,14 @@ void gfx::effect_source::effect_source::render()
 obs_source_t* gfx::effect_source::effect_source::get_self()
 {
 	return _self;
+}
+
+void gfx::effect_source::effect_source::enum_active_sources(obs_source_enum_proc_t p, void* t)
+{
+	for (auto& kv : _params) {
+		if (kv.second)
+			kv.second->enum_active_sources(p, t);
+	}
 }
 
 void gfx::effect_source::effect_source::set_valid_property_cb(valid_property_cb_t cb)

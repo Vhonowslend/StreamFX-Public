@@ -114,6 +114,16 @@ filter::shader::shader_factory::shader_factory()
 		}
 		return uint32_t(0);
 	};
+	_source_info.load = [](void* ptr, obs_data_t* data) {
+		try {
+			if (ptr)
+				reinterpret_cast<filter::shader::shader_instance*>(ptr)->load(data);
+		} catch (std::exception& ex) {
+			P_LOG_ERROR("<filter-shader> Failed to load, error: %s", ex.what());
+		} catch (...) {
+			P_LOG_ERROR("<filter-shader> Failed to load.");
+		}
+	};
 	_source_info.update = [](void* ptr, obs_data_t* data) {
 		try {
 			if (ptr)
@@ -164,6 +174,16 @@ filter::shader::shader_factory::shader_factory()
 			P_LOG_ERROR("<filter-shader> Failed to render.");
 		}
 	};
+	_source_info.enum_active_sources = [](void* ptr, obs_source_enum_proc_t enum_callback, void* param) {
+		try {
+			if (ptr)
+				reinterpret_cast<filter::shader::shader_instance*>(ptr)->enum_active_sources(enum_callback, param);
+		} catch (std::exception& ex) {
+			P_LOG_ERROR("<filter-shader> Failed to enumerate sources, error: %s", ex.what());
+		} catch (...) {
+			P_LOG_ERROR("<filter-shader> Failed to enumerate sources.");
+		}
+	};
 
 	obs_register_source(&_source_info);
 }
@@ -177,7 +197,7 @@ filter::shader::shader_instance::shader_instance(obs_data_t* data, obs_source_t*
 	_fx->set_valid_property_cb(std::bind(&filter::shader::shader_instance::valid_param, this, std::placeholders::_1));
 	_fx->set_override_cb(std::bind(&filter::shader::shader_instance::override_param, this, std::placeholders::_1));
 
-	_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_rt  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	_rt2 = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 
 	update(data);
@@ -198,6 +218,11 @@ uint32_t filter::shader::shader_instance::height()
 void filter::shader::shader_instance::properties(obs_properties_t* props)
 {
 	_fx->properties(props);
+}
+
+void filter::shader::shader_instance::load(obs_data_t* data)
+{
+	update(data);
 }
 
 void filter::shader::shader_instance::update(obs_data_t* data)
@@ -243,6 +268,11 @@ void filter::shader::shader_instance::override_param(std::shared_ptr<gs::effect>
 	}
 }
 
+void filter::shader::shader_instance::enum_active_sources(obs_source_enum_proc_t r, void* p)
+{
+	_fx->enum_active_sources(r, p);
+}
+
 void filter::shader::shader_instance::video_tick(float_t sec_since_last)
 {
 	obs_source_t* target = obs_filter_get_target(_self);
@@ -258,7 +288,7 @@ void filter::shader::shader_instance::video_tick(float_t sec_since_last)
 		obs_data_release(data);
 	}
 
-	_rt_updated = false;
+	_rt_updated  = false;
 	_rt2_updated = false;
 }
 

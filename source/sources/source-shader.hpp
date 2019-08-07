@@ -63,6 +63,7 @@ namespace source {
 
 			void properties(obs_properties_t* props);
 
+			void load(obs_data_t* data);
 			void update(obs_data_t* data);
 
 			void activate();
@@ -70,6 +71,8 @@ namespace source {
 
 			bool valid_param(std::shared_ptr<gs::effect_parameter> param);
 			void override_param(std::shared_ptr<gs::effect> effect);
+
+			void enum_active_sources(obs_source_enum_proc_t, void*);
 
 			void video_tick(float_t sec_since_last);
 			void video_render(gs_effect_t* effect);
