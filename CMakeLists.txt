@@ -333,20 +333,22 @@ SET(PROJECT_PRIVATE_SOURCE
 	# Sources
 	"${PROJECT_SOURCE_DIR}/source/sources/source-mirror.hpp"
 	"${PROJECT_SOURCE_DIR}/source/sources/source-mirror.cpp"
+	"${PROJECT_SOURCE_DIR}/source/sources/source-shader.hpp"
+	"${PROJECT_SOURCE_DIR}/source/sources/source-shader.cpp"
 
 	# Filters
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-blur.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-blur.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-color-grade.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-color-grade.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-custom-shader.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-custom-shader.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-displacement.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-displacement.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-dynamic-mask.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-dynamic-mask.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-sdf-effects.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-sdf-effects.cpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-shader.hpp"
+	"${PROJECT_SOURCE_DIR}/source/filters/filter-shader.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-transform.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-transform.cpp"
 
