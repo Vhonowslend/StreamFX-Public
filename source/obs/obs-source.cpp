@@ -411,17 +411,17 @@ obs::source::source()
 #define auto_signal_c(SIGNAL)                                                                  \
 	{                                                                                          \
 		this->events.SIGNAL.set_listen_callback([this] {                                       \
-			if (!this->_self)                                                                   \
+			if (!this->_self)                                                                  \
 				return;                                                                        \
-			auto sh = obs_source_get_signal_handler(this->_self);                               \
+			auto sh = obs_source_get_signal_handler(this->_self);                              \
 			if (sh) {                                                                          \
 				signal_handler_connect(sh, "" #SIGNAL, obs::source::handle_##SIGNAL, this);    \
 			}                                                                                  \
 		});                                                                                    \
 		this->events.SIGNAL.set_silence_callback([this] {                                      \
-			if (!this->_self)                                                                   \
+			if (!this->_self)                                                                  \
 				return;                                                                        \
-			auto sh = obs_source_get_signal_handler(this->_self);                               \
+			auto sh = obs_source_get_signal_handler(this->_self);                              \
 			if (sh) {                                                                          \
 				signal_handler_disconnect(sh, "" #SIGNAL, obs::source::handle_##SIGNAL, this); \
 			}                                                                                  \

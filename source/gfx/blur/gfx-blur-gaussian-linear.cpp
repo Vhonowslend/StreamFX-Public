@@ -46,7 +46,7 @@ gfx::blur::gaussian_linear_data::gaussian_linear_data()
 
 	{
 		char* file = obs_module_file("effects/blur/gaussian-linear.effect");
-		_effect   = gs::effect::create(file);
+		_effect    = gs::effect::create(file);
 		bfree(file);
 	}
 
@@ -219,7 +219,7 @@ std::shared_ptr<::gfx::blur::gaussian_linear_data> gfx::blur::gaussian_linear_fa
 	std::unique_lock<std::mutex>                       ulock(_data_lock);
 	std::shared_ptr<::gfx::blur::gaussian_linear_data> data = _data.lock();
 	if (!data) {
-		data   = std::make_shared<::gfx::blur::gaussian_linear_data>();
+		data  = std::make_shared<::gfx::blur::gaussian_linear_data>();
 		_data = data;
 	}
 	return data;

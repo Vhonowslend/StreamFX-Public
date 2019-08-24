@@ -256,7 +256,8 @@ bool source::shader::shader_instance::valid_param(std::shared_ptr<gs::effect_par
 
 void source::shader::shader_instance::override_param(std::shared_ptr<gs::effect> effect) {}
 
-void source::shader::shader_instance::enum_active_sources(obs_source_enum_proc_t r, void* p) {
+void source::shader::shader_instance::enum_active_sources(obs_source_enum_proc_t r, void* p)
+{
 	_fx->enum_active_sources(r, p);
 }
 

@@ -79,7 +79,7 @@ gs::mipmapper::~mipmapper()
 
 gs::mipmapper::mipmapper()
 {
-	_vb  = std::make_unique<gs::vertex_buffer>(uint32_t(6u), uint8_t(1u));
+	_vb            = std::make_unique<gs::vertex_buffer>(uint32_t(6u), uint8_t(1u));
 	auto v0        = _vb->at(0);
 	v0.position->x = 0;
 	v0.position->y = 0;
@@ -109,7 +109,7 @@ gs::mipmapper::mipmapper()
 	_vb->update();
 
 	char* effect_file = obs_module_file("effects/mipgen.effect");
-	_effect            = std::make_unique<gs::effect>(effect_file);
+	_effect           = std::make_unique<gs::effect>(effect_file);
 	bfree(effect_file);
 }
 
@@ -267,9 +267,8 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 #if defined(WIN32) || defined(WIN64)
 			if (device_type == GS_DEVICE_DIRECT3D_11) {
 				// Copy
-				ID3D11Texture2D* rt =
-					reinterpret_cast<ID3D11Texture2D*>(gs_texture_get_obj(_rt->get_object()));
-				uint32_t level = uint32_t(D3D11CalcSubresource(UINT(mip), 0, UINT(mip_levels)));
+				ID3D11Texture2D* rt    = reinterpret_cast<ID3D11Texture2D*>(gs_texture_get_obj(_rt->get_object()));
+				uint32_t         level = uint32_t(D3D11CalcSubresource(UINT(mip), 0, UINT(mip_levels)));
 				dev->context->CopySubresourceRegion(target_t2, level, 0, 0, 0, rt, 0, NULL);
 			}
 #endif

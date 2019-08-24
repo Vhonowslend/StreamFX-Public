@@ -55,7 +55,7 @@ gfx::blur::dual_filtering_data::dual_filtering_data()
 	auto gctx = gs::context();
 	try {
 		char* file = obs_module_file("effects/blur/dual-filtering.effect");
-		_effect   = std::make_shared<::gs::effect>(file);
+		_effect    = std::make_shared<::gs::effect>(file);
 		bfree(file);
 	} catch (...) {
 		P_LOG_ERROR("<gfx::blur::box_linear> Failed to load _effect.");
@@ -167,7 +167,7 @@ std::shared_ptr<::gfx::blur::dual_filtering_data> gfx::blur::dual_filtering_fact
 	std::unique_lock<std::mutex>                      ulock(_data_lock);
 	std::shared_ptr<::gfx::blur::dual_filtering_data> data = _data.lock();
 	if (!data) {
-		data   = std::make_shared<::gfx::blur::dual_filtering_data>();
+		data  = std::make_shared<::gfx::blur::dual_filtering_data>();
 		_data = data;
 	}
 	return data;

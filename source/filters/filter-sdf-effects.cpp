@@ -375,8 +375,8 @@ obs_properties_t* filter::sdf_effects::sdf_effects_instance::get_properties()
 		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_OUTER_OFFSET_Y)));
 		p = obs_properties_add_color(props, ST_SHADOW_OUTER_COLOR, D_TRANSLATE(ST_SHADOW_OUTER_COLOR));
 		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_OUTER_COLOR)));
-		p = obs_properties_add_float_slider(props, ST_SHADOW_OUTER_ALPHA, D_TRANSLATE(ST_SHADOW_OUTER_ALPHA), 0.0, 100.0,
-											0.1);
+		p = obs_properties_add_float_slider(props, ST_SHADOW_OUTER_ALPHA, D_TRANSLATE(ST_SHADOW_OUTER_ALPHA), 0.0,
+											100.0, 0.1);
 		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_OUTER_ALPHA)));
 	}
 
@@ -398,8 +398,8 @@ obs_properties_t* filter::sdf_effects::sdf_effects_instance::get_properties()
 		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_INNER_OFFSET_Y)));
 		p = obs_properties_add_color(props, ST_SHADOW_INNER_COLOR, D_TRANSLATE(ST_SHADOW_INNER_COLOR));
 		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_INNER_COLOR)));
-		p = obs_properties_add_float_slider(props, ST_SHADOW_INNER_ALPHA, D_TRANSLATE(ST_SHADOW_INNER_ALPHA), 0.0, 100.0,
-											0.1);
+		p = obs_properties_add_float_slider(props, ST_SHADOW_INNER_ALPHA, D_TRANSLATE(ST_SHADOW_INNER_ALPHA), 0.0,
+											100.0, 0.1);
 		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_INNER_ALPHA)));
 	}
 
@@ -456,7 +456,8 @@ obs_properties_t* filter::sdf_effects::sdf_effects_instance::get_properties()
 		p = obs_properties_add_float_slider(props, ST_OUTLINE_WIDTH, D_TRANSLATE(ST_OUTLINE_WIDTH), 0.0, 16.0, 0.01);
 
 		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OUTLINE_OFFSET)));
-		p = obs_properties_add_float_slider(props, ST_OUTLINE_OFFSET, D_TRANSLATE(ST_OUTLINE_OFFSET), -16.0, 16.0, 0.01);
+		p = obs_properties_add_float_slider(props, ST_OUTLINE_OFFSET, D_TRANSLATE(ST_OUTLINE_OFFSET), -16.0, 16.0,
+											0.01);
 
 		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OUTLINE_SHARPNESS)));
 		p = obs_properties_add_float_slider(props, ST_OUTLINE_SHARPNESS, D_TRANSLATE(ST_OUTLINE_SHARPNESS), 0.00, 100.0,
@@ -492,7 +493,7 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 					uint8_t r, g, b, a;
 				} c;
 			};
-			color                        = uint32_t(obs_data_get_int(data, ST_SHADOW_OUTER_COLOR));
+			color                       = uint32_t(obs_data_get_int(data, ST_SHADOW_OUTER_COLOR));
 			this->_outer_shadow_color.x = float_t(c.r / 255.0);
 			this->_outer_shadow_color.y = float_t(c.g / 255.0);
 			this->_outer_shadow_color.z = float_t(c.b / 255.0);
@@ -516,7 +517,7 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 					uint8_t r, g, b, a;
 				} c;
 			};
-			color                        = uint32_t(obs_data_get_int(data, ST_SHADOW_INNER_COLOR));
+			color                       = uint32_t(obs_data_get_int(data, ST_SHADOW_INNER_COLOR));
 			this->_inner_shadow_color.x = float_t(c.r / 255.0);
 			this->_inner_shadow_color.y = float_t(c.g / 255.0);
 			this->_inner_shadow_color.z = float_t(c.b / 255.0);
@@ -540,7 +541,7 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 					uint8_t r, g, b, a;
 				} c;
 			};
-			color                      = uint32_t(obs_data_get_int(data, ST_GLOW_OUTER_COLOR));
+			color                     = uint32_t(obs_data_get_int(data, ST_GLOW_OUTER_COLOR));
 			this->_outer_glow_color.x = float_t(c.r / 255.0);
 			this->_outer_glow_color.y = float_t(c.g / 255.0);
 			this->_outer_glow_color.z = float_t(c.b / 255.0);
@@ -566,7 +567,7 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 					uint8_t r, g, b, a;
 				} c;
 			};
-			color                      = uint32_t(obs_data_get_int(data, ST_GLOW_INNER_COLOR));
+			color                     = uint32_t(obs_data_get_int(data, ST_GLOW_INNER_COLOR));
 			this->_inner_glow_color.x = float_t(c.r / 255.0);
 			this->_inner_glow_color.y = float_t(c.g / 255.0);
 			this->_inner_glow_color.z = float_t(c.b / 255.0);
@@ -582,7 +583,7 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 
 	{
 		this->_outline = obs_data_get_bool(data, ST_OUTLINE)
-						  && (obs_data_get_double(data, ST_OUTLINE_ALPHA) >= std::numeric_limits<double_t>::epsilon());
+						 && (obs_data_get_double(data, ST_OUTLINE_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			union {
 				uint32_t color;
@@ -591,7 +592,7 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 					uint8_t r, g, b, a;
 				} c;
 			};
-			color                   = uint32_t(obs_data_get_int(data, ST_OUTLINE_COLOR));
+			color                  = uint32_t(obs_data_get_int(data, ST_OUTLINE_COLOR));
 			this->_outline_color.x = float_t(c.r / 255.0);
 			this->_outline_color.y = float_t(c.g / 255.0);
 			this->_outline_color.z = float_t(c.b / 255.0);
@@ -801,7 +802,7 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect
 				consumer_effect->get_parameter("pShadowMax")->set_float(this->_outer_shadow_range_max);
 				consumer_effect->get_parameter("pShadowOffset")
 					->set_float2(this->_outer_shadow_offset_x / float_t(baseW),
-								this->_outer_shadow_offset_y / float_t(baseH));
+								 this->_outer_shadow_offset_y / float_t(baseH));
 				while (gs_effect_loop(consumer_effect->get_object(), "ShadowOuter")) {
 					gs_draw_sprite(0, 0, 1, 1);
 				}
@@ -815,7 +816,7 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect
 				consumer_effect->get_parameter("pShadowMax")->set_float(this->_inner_shadow_range_max);
 				consumer_effect->get_parameter("pShadowOffset")
 					->set_float2(this->_inner_shadow_offset_x / float_t(baseW),
-								this->_inner_shadow_offset_y / float_t(baseH));
+								 this->_inner_shadow_offset_y / float_t(baseH));
 				while (gs_effect_loop(consumer_effect->get_object(), "ShadowInner")) {
 					gs_draw_sprite(0, 0, 1, 1);
 				}

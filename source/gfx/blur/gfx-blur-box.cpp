@@ -39,7 +39,7 @@ gfx::blur::box_data::box_data()
 	auto gctx = gs::context();
 	try {
 		char* file = obs_module_file("effects/blur/box.effect");
-		_effect   = std::make_shared<::gs::effect>(file);
+		_effect    = std::make_shared<::gs::effect>(file);
 		bfree(file);
 	} catch (...) {
 		P_LOG_ERROR("<gfx::blur::box> Failed to load _effect.");
@@ -182,7 +182,7 @@ std::shared_ptr<::gfx::blur::box_data> gfx::blur::box_factory::data()
 	std::unique_lock<std::mutex>           ulock(_data_lock);
 	std::shared_ptr<::gfx::blur::box_data> data = _data.lock();
 	if (!data) {
-		data   = std::make_shared<::gfx::blur::box_data>();
+		data  = std::make_shared<::gfx::blur::box_data>();
 		_data = data;
 	}
 	return data;
@@ -196,7 +196,7 @@ std::shared_ptr<::gfx::blur::box_data> gfx::blur::box_factory::data()
 
 gfx::blur::box::box() : _data(::gfx::blur::box_factory::get().data()), _size(1.), _step_scale({1., 1.})
 {
-	auto gctx       = gs::context();
+	auto gctx      = gs::context();
 	_rendertarget  = std::make_shared<::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	_rendertarget2 = std::make_shared<::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }

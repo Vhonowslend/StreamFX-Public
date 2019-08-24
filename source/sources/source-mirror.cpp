@@ -412,7 +412,7 @@ void source::mirror::mirror_instance::acquire_input(std::string source_name)
 	// If everything worked fine, we now set everything up.
 	this->_source = new_source;
 	this->_source->events.rename += std::bind(&source::mirror::mirror_instance::on_source_rename, this,
-											   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+											  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 	if ((obs_source_get_output_flags(this->_source->get()) & OBS_SOURCE_AUDIO) != 0) {
 		this->_source->events.audio_data +=
 			std::bind(&source::mirror::mirror_instance::on_audio_data, this, std::placeholders::_1,
@@ -580,8 +580,8 @@ void source::mirror::mirror_instance::video_tick(float time)
 		}
 		obs_sceneitem_set_info(this->_source_item, &info);
 		obs_sceneitem_force_update_transform(this->_source_item);
-		obs_sceneitem_set_scale_filter(this->_source_item, this->_rescale_enabled ? this->_rescale_type
-																					: obs_scale_type::OBS_SCALE_POINT);
+		obs_sceneitem_set_scale_filter(this->_source_item,
+									   this->_rescale_enabled ? this->_rescale_type : obs_scale_type::OBS_SCALE_POINT);
 	}
 
 	_scene_rendered = false;
@@ -742,7 +742,7 @@ void source::mirror::mirror_instance::on_audio_data(obs::source*, const audio_da
 			memcpy(mad->data[plane].data(), audio->data[plane], audio->frames * sizeof(float_t));
 			mad->audio.data[plane] = reinterpret_cast<uint8_t*>(mad->data[plane].data());
 		}
-		mad->audio.format = aoi->format;
+		mad->audio.format          = aoi->format;
 		mad->audio.frames          = audio->frames;
 		mad->audio.timestamp       = audio->timestamp;
 		mad->audio.samples_per_sec = aoi->samples_per_sec;

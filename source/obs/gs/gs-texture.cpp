@@ -52,10 +52,10 @@ gs::texture::texture(uint32_t width, uint32_t height, gs_color_format format, ui
 	}
 
 	auto gctx = gs::context();
-	_texture = gs_texture_create(
-		width, height, format, mip_levels, mip_data,
-		(((texture_flags & flags::Dynamic) == flags::Dynamic) ? GS_DYNAMIC : 0)
-			| (((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps) ? GS_BUILD_MIPMAPS : 0));
+	_texture  = gs_texture_create(
+        width, height, format, mip_levels, mip_data,
+        (((texture_flags & flags::Dynamic) == flags::Dynamic) ? GS_DYNAMIC : 0)
+            | (((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps) ? GS_BUILD_MIPMAPS : 0));
 
 	if (!_texture)
 		throw std::runtime_error("Failed to create texture.");
@@ -84,10 +84,10 @@ gs::texture::texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_f
 	}
 
 	auto gctx = gs::context();
-	_texture = gs_voltexture_create(
-		width, height, depth, format, mip_levels, mip_data,
-		(((texture_flags & flags::Dynamic) == flags::Dynamic) ? GS_DYNAMIC : 0)
-			| (((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps) ? GS_BUILD_MIPMAPS : 0));
+	_texture  = gs_voltexture_create(
+        width, height, depth, format, mip_levels, mip_data,
+        (((texture_flags & flags::Dynamic) == flags::Dynamic) ? GS_DYNAMIC : 0)
+            | (((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps) ? GS_BUILD_MIPMAPS : 0));
 
 	if (!_texture)
 		throw std::runtime_error("Failed to create texture.");
@@ -110,10 +110,10 @@ gs::texture::texture(uint32_t size, gs_color_format format, uint32_t mip_levels,
 	}
 
 	auto gctx = gs::context();
-	_texture = gs_cubetexture_create(
-		size, format, mip_levels, mip_data,
-		(((texture_flags & flags::Dynamic) == flags::Dynamic) ? GS_DYNAMIC : 0)
-			| (((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps) ? GS_BUILD_MIPMAPS : 0));
+	_texture  = gs_cubetexture_create(
+        size, format, mip_levels, mip_data,
+        (((texture_flags & flags::Dynamic) == flags::Dynamic) ? GS_DYNAMIC : 0)
+            | (((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps) ? GS_BUILD_MIPMAPS : 0));
 
 	if (!_texture)
 		throw std::runtime_error("Failed to create texture.");
@@ -128,7 +128,7 @@ gs::texture::texture(std::string file)
 		throw std::ios_base::failure(file);
 
 	auto gctx = gs::context();
-	_texture = gs_texture_create_from_file(file.c_str());
+	_texture  = gs_texture_create_from_file(file.c_str());
 
 	if (!_texture)
 		throw std::runtime_error("Failed to load texture.");

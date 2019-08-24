@@ -71,7 +71,7 @@ const char* obs_module_recursive_text(const char* to_translate, size_t depth)
 
 			translate_map.insert({key, out.str()});
 		}
-				
+
 		auto value = translate_map.find(key);
 		if (value != translate_map.end()) {
 			return value->second.c_str();

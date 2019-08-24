@@ -42,7 +42,7 @@ gs::rendertarget::rendertarget(gs_color_format colorFormat, gs_zstencil_format z
 	: _color_format(colorFormat), _zstencil_format(zsFormat)
 {
 	_is_being_rendered = false;
-	auto gctx         = gs::context();
+	auto gctx          = gs::context();
 	_render_target     = gs_texrender_create(colorFormat, zsFormat);
 	if (!_render_target) {
 		throw std::runtime_error("Failed to create render target.");

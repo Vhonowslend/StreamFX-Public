@@ -107,11 +107,10 @@ gs::vertex_buffer::vertex_buffer(uint32_t vertices, uint8_t uvlayers)
 
 	_data->num_tex = _layers;
 	if (_layers > 0) {
-		_data->tvarray = _layer_data =
-			(gs_tvertarray*)util::malloc_aligned(16, sizeof(gs_tvertarray) * _layers);
+		_data->tvarray = _layer_data = (gs_tvertarray*)util::malloc_aligned(16, sizeof(gs_tvertarray) * _layers);
 		for (size_t n = 0; n < _layers; n++) {
 			_layer_data[n].array = _uvs[n] = (vec4*)util::malloc_aligned(16, sizeof(vec4) * _capacity);
-			_layer_data[n].width            = 4;
+			_layer_data[n].width           = 4;
 			memset(_uvs[n], 0, sizeof(vec4) * _capacity);
 		}
 	} else {
@@ -119,8 +118,8 @@ gs::vertex_buffer::vertex_buffer(uint32_t vertices, uint8_t uvlayers)
 	}
 
 	// Allocate GPU
-	auto gctx      = gs::context();
-	_buffer = gs_vertexbuffer_create(_data, GS_DYNAMIC);
+	auto gctx = gs::context();
+	_buffer   = gs_vertexbuffer_create(_data, GS_DYNAMIC);
 	memset(_data, 0, sizeof(gs_vb_data));
 	_data->num     = _capacity;
 	_data->num_tex = _layers;
@@ -191,9 +190,9 @@ gs::vertex_buffer::vertex_buffer(vertex_buffer const&& other)
 	for (size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
 		_uvs[n] = other._uvs[n];
 	}
-	_data = other._data;
+	_data       = other._data;
 	_buffer     = other._buffer;
-	_layer_data        = other._layer_data;
+	_layer_data = other._layer_data;
 }
 
 void gs::vertex_buffer::operator=(vertex_buffer const&& other)
@@ -249,9 +248,9 @@ void gs::vertex_buffer::operator=(vertex_buffer const&& other)
 	for (size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
 		_uvs[n] = other._uvs[n];
 	}
-	_data = other._data;
+	_data       = other._data;
 	_buffer     = other._buffer;
-	_layer_data        = other._layer_data;
+	_layer_data = other._layer_data;
 }
 
 void gs::vertex_buffer::resize(uint32_t new_size)
@@ -337,8 +336,8 @@ gs_vertbuffer_t* gs::vertex_buffer::update(bool refreshGPU)
 		throw std::out_of_range("size is larger than capacity");
 
 	// Update VertexBuffer data.
-	auto gctx          = gs::context();
-	_data = gs_vertexbuffer_get_data(_buffer);
+	auto gctx = gs::context();
+	_data     = gs_vertexbuffer_get_data(_buffer);
 	memset(_data, 0, sizeof(gs_vb_data));
 	_data->num      = _capacity;
 	_data->points   = _positions;

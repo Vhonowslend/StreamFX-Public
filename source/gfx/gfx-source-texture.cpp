@@ -32,8 +32,8 @@ gfx::source_texture::source_texture(obs_source_t* parent)
 	if (!parent) {
 		throw std::invalid_argument("_parent must not be null");
 	}
-	_parent        = std::make_shared<obs::source>(parent, false, false);
-	_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_parent = std::make_shared<obs::source>(parent, false, false);
+	_rt     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
 gfx::source_texture::source_texture(obs_source_t* _source, obs_source_t* _parent) : source_texture(_parent)
@@ -72,9 +72,9 @@ gfx::source_texture::source_texture(std::shared_ptr<obs::source> pchild, std::sh
 	if (!obs_source_add_active_child(pparent->get(), pchild->get())) {
 		throw std::runtime_error("_parent is contained in _child");
 	}
-	this->_child         = pchild;
-	this->_parent        = pparent;
-	this->_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	this->_child  = pchild;
+	this->_parent = pparent;
+	this->_rt     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
 gfx::source_texture::source_texture(std::shared_ptr<obs::source> _child, obs_source_t* _parent)

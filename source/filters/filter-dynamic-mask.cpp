@@ -251,7 +251,7 @@ void filter::dynamic_mask::dynamic_mask_instance::update(obs_data_t* settings)
 		this->_input         = std::make_shared<obs::source>(obs_data_get_string(settings, ST_INPUT));
 		this->_input_capture = std::make_shared<gfx::source_texture>(this->_input, _self);
 		this->_input->events.rename += std::bind(&filter::dynamic_mask::dynamic_mask_instance::input_renamed, this,
-												std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+												 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 	} catch (...) {
 		this->_input.reset();
 		this->_input_capture.reset();
@@ -477,7 +477,8 @@ void filter::dynamic_mask::dynamic_mask_instance::video_render(gs_effect_t* in_e
 		obs_source_skip_video_filter(this->_self);
 		return;
 	}
-	if (!this->_filter_texture->get_object() || !this->_input_texture->get_object() || !this->_final_texture->get_object()) {
+	if (!this->_filter_texture->get_object() || !this->_input_texture->get_object()
+		|| !this->_final_texture->get_object()) {
 		obs_source_skip_video_filter(this->_self);
 		return;
 	}

@@ -147,8 +147,8 @@ filter::blur::blur_factory::blur_factory()
 	// Translation Cache
 	/// File Filter for Images
 	_translation_map.insert({std::string("image-filter"), std::string(D_TRANSLATE(S_FILETYPE_IMAGES))
-															 + std::string(" (" S_FILEFILTERS_IMAGE ");;")
-															 + std::string("* (*.*)")});
+															  + std::string(" (" S_FILEFILTERS_IMAGE ");;")
+															  + std::string("* (*.*)")});
 }
 
 filter::blur::blur_factory::~blur_factory() {}
@@ -669,7 +669,8 @@ obs_properties_t* filter::blur::blur_instance::get_properties()
 		obs_property_list_add_int(p, D_TRANSLATE(ST_MASK_TYPE_IMAGE), mask_type::Image);
 		obs_property_list_add_int(p, D_TRANSLATE(ST_MASK_TYPE_SOURCE), mask_type::Source);
 		/// Region
-		p = obs_properties_add_float_slider(pr, ST_MASK_REGION_LEFT, D_TRANSLATE(ST_MASK_REGION_LEFT), 0.0, 100.0, 0.01);
+		p = obs_properties_add_float_slider(pr, ST_MASK_REGION_LEFT, D_TRANSLATE(ST_MASK_REGION_LEFT), 0.0, 100.0,
+											0.01);
 		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_MASK_REGION_LEFT)));
 		p = obs_properties_add_float_slider(pr, ST_MASK_REGION_TOP, D_TRANSLATE(ST_MASK_REGION_TOP), 0.0, 100.0, 0.01);
 		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_MASK_REGION_TOP)));
@@ -780,7 +781,7 @@ void filter::blur::blur_instance::update(obs_data_t* settings)
 				break;
 			}
 			if ((_mask.type == mask_type::Image) || (_mask.type == mask_type::Source)) {
-				uint32_t color    = static_cast<uint32_t>(obs_data_get_int(settings, ST_MASK_COLOR));
+				uint32_t color   = static_cast<uint32_t>(obs_data_get_int(settings, ST_MASK_COLOR));
 				_mask.color.r    = ((color >> 0) & 0xFF) / 255.0f;
 				_mask.color.g    = ((color >> 8) & 0xFF) / 255.0f;
 				_mask.color.b    = ((color >> 16) & 0xFF) / 255.0f;

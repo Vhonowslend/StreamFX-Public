@@ -46,7 +46,7 @@ gfx::blur::gaussian_data::gaussian_data()
 	auto gctx = gs::context();
 	{
 		char* file = obs_module_file("effects/blur/gaussian.effect");
-		_effect   = gs::effect::create(file);
+		_effect    = gs::effect::create(file);
 		bfree(file);
 	}
 
@@ -227,7 +227,7 @@ std::shared_ptr<::gfx::blur::gaussian_data> gfx::blur::gaussian_factory::data()
 	std::unique_lock<std::mutex>                ulock(_data_lock);
 	std::shared_ptr<::gfx::blur::gaussian_data> data = _data.lock();
 	if (!data) {
-		data   = std::make_shared<::gfx::blur::gaussian_data>();
+		data  = std::make_shared<::gfx::blur::gaussian_data>();
 		_data = data;
 	}
 	return data;
@@ -239,10 +239,9 @@ std::shared_ptr<::gfx::blur::gaussian_data> gfx::blur::gaussian_factory::data()
 	return instance;
 }
 
-gfx::blur::gaussian::gaussian()
-	: _data(::gfx::blur::gaussian_factory::get().data()), _size(1.), _step_scale({1., 1.})
+gfx::blur::gaussian::gaussian() : _data(::gfx::blur::gaussian_factory::get().data()), _size(1.), _step_scale({1., 1.})
 {
-	auto gctx       = gs::context();
+	auto gctx      = gs::context();
 	_rendertarget  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	_rendertarget2 = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
