@@ -19,10 +19,10 @@ environment:
 # Resource Cache
 cache:
   - inno.exe
-  - build/32/libobs-download
-  - build/32/libobs-src
-  - build/64/libobs-download
-  - build/64/libobs-src
+#  - build/32/libobs-download
+#  - build/32/libobs-src
+#  - build/64/libobs-download
+#  - build/64/libobs-src
 
 # Repository Settings
 branches:
