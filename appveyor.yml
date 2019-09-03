@@ -7,6 +7,9 @@ matrix:
 # Build Image & Environment
 platform: x64
 
+# Build Tags only
+skip_non_tags: true
+
 image:
   - Visual Studio 2017
 
