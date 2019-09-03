@@ -29,16 +29,30 @@
 namespace filter {
 	namespace color_grade {
 		class color_grade_factory {
-			obs_source_info             sourceInfo;
+			obs_source_info sourceInfo;
 
 			public: // Singleton
-			static void                               initialize();
-			static void                               finalize();
+			static void                                 initialize();
+			static void                                 finalize();
 			static std::shared_ptr<color_grade_factory> get();
 
 			public:
 			color_grade_factory();
 			~color_grade_factory();
+		};
+
+		enum class detection_mode {
+			HSV,
+			HSL,
+			YUV_SDR,
+		};
+
+		enum class luma_mode {
+			Linear,
+			Exp,
+			Exp2,
+			Log,
+			Log10,
 		};
 
 		class color_grade_instance {
@@ -58,14 +72,17 @@ namespace filter {
 			bool                              _grade_updated;
 
 			// Parameters
-			vec4 _lift;
-			vec4 _gamma;
-			vec4 _gain;
-			vec4 _offset;
-			vec3 _tint_low;
-			vec3 _tint_mid;
-			vec3 _tint_hig;
-			vec4 _correction;
+			vec4           _lift;
+			vec4           _gamma;
+			vec4           _gain;
+			vec4           _offset;
+			detection_mode _tint_detection;
+			luma_mode      _tint_luma;
+			float_t        _tint_exponent;
+			vec3           _tint_low;
+			vec3           _tint_mid;
+			vec3           _tint_hig;
+			vec4           _correction;
 
 			public:
 			~color_grade_instance();

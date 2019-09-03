@@ -44,6 +44,11 @@
 #define ST_OFFSET ST ".Offset"
 #define ST_OFFSET_(x) ST_OFFSET "." D_VSTR(x)
 #define ST_TINT ST ".Tint"
+#define ST_TINT_DETECTION ST_TINT ".Detection"
+#define ST_TINT_DETECTION_(x) ST_TINT_DETECTION "." D_VSTR(x)
+#define ST_TINT_MODE ST_TINT ".Mode"
+#define ST_TINT_MODE_(x) ST_TINT_MODE "." D_VSTR(x)
+#define ST_TINT_EXPONENT ST_TINT ".Exponent"
 #define ST_TINT_(x, y) ST_TINT "." D_VSTR(x) "." D_VSTR(y)
 #define ST_CORRECTION ST ".Correction"
 #define ST_CORRECTION_(x) ST_CORRECTION "." D_VSTR(x)
@@ -59,6 +64,14 @@
 #define TONE_LOW Shadow
 #define TONE_MID Midtone
 #define TONE_HIG Highlight
+#define DETECTION_HSV HSV
+#define DETECTION_HSL HSL
+#define DETECTION_YUV_SDR YUV.SDR
+#define MODE_LINEAR Linear
+#define MODE_EXP Exp
+#define MODE_EXP2 Exp2
+#define MODE_LOG Log
+#define MODE_LOG10 Log2
 
 // Initializer & Finalizer
 P_INITIALIZER(FilterColorGradeInit)
@@ -91,6 +104,9 @@ void get_defaults(obs_data_t* data)
 	obs_data_set_default_double(data, ST_OFFSET_(GREEN), 0.0);
 	obs_data_set_default_double(data, ST_OFFSET_(BLUE), 0.0);
 	obs_data_set_default_double(data, ST_OFFSET_(ALL), 0.0);
+	obs_data_set_default_int(data, ST_TINT_MODE, static_cast<int64_t>(filter::color_grade::luma_mode::Exp2));
+	obs_data_set_default_int(data, ST_TINT_DETECTION, static_cast<int64_t>(filter::color_grade::detection_mode::HSL));
+	obs_data_set_default_double(data, ST_TINT_EXPONENT, 1.0);
 	obs_data_set_default_double(data, ST_TINT_(TONE_LOW, RED), 100.0);
 	obs_data_set_default_double(data, ST_TINT_(TONE_LOW, GREEN), 100.0);
 	obs_data_set_default_double(data, ST_TINT_(TONE_LOW, BLUE), 100.0);
@@ -117,6 +133,9 @@ bool tool_modified(obs_properties_t* props, obs_property_t* property, obs_data_t
 		{ST_OFFSET, {ST_OFFSET_(RED), ST_OFFSET_(GREEN), ST_OFFSET_(BLUE), ST_OFFSET_(ALL)}},
 		{ST_TINT,
 		 {
+			 ST_TINT_MODE,
+			 ST_TINT_DETECTION,
+			 ST_TINT_EXPONENT,
 			 ST_TINT_(TONE_LOW, RED),
 			 ST_TINT_(TONE_LOW, GREEN),
 			 ST_TINT_(TONE_LOW, BLUE),
@@ -221,6 +240,34 @@ obs_properties_t* get_properties(void*)
 			obs_properties_add_group(pr, ST_TINT, D_TRANSLATE(ST_TINT), OBS_GROUP_NORMAL, grp);
 		}
 
+		{
+			auto p = obs_properties_add_list(grp, ST_TINT_MODE, D_TRANSLATE(ST_TINT_MODE), OBS_COMBO_TYPE_LIST,
+											 OBS_COMBO_FORMAT_INT);
+			std::pair<const char*, filter::color_grade::luma_mode> els[] = {
+				{ST_TINT_MODE_(MODE_LINEAR), filter::color_grade::luma_mode::Linear},
+				{ST_TINT_MODE_(MODE_EXP), filter::color_grade::luma_mode::Exp},
+				{ST_TINT_MODE_(MODE_EXP2), filter::color_grade::luma_mode::Exp2},
+				{ST_TINT_MODE_(MODE_LOG), filter::color_grade::luma_mode::Log},
+				{ST_TINT_MODE_(MODE_LOG10), filter::color_grade::luma_mode::Log10}};
+			for (auto kv : els) {
+				obs_property_list_add_int(p, D_TRANSLATE(kv.first), static_cast<int64_t>(kv.second));
+			}
+		}
+
+		{
+			auto p = obs_properties_add_list(grp, ST_TINT_DETECTION, D_TRANSLATE(ST_TINT_DETECTION),
+											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			std::pair<const char*, filter::color_grade::detection_mode> els[] = {
+				{ST_TINT_DETECTION_(DETECTION_HSV), filter::color_grade::detection_mode::HSV},
+				{ST_TINT_DETECTION_(DETECTION_HSL), filter::color_grade::detection_mode::HSL},
+				{ST_TINT_DETECTION_(DETECTION_YUV_SDR), filter::color_grade::detection_mode::YUV_SDR}};
+			for (auto kv : els) {
+				obs_property_list_add_int(p, D_TRANSLATE(kv.first), static_cast<int64_t>(kv.second));
+			}
+		}
+
+		obs_properties_add_float_slider(grp, ST_TINT_EXPONENT, D_TRANSLATE(ST_TINT_EXPONENT), 0., 10., 0.01);
+
 		obs_properties_add_float_slider(grp, ST_TINT_(TONE_LOW, RED), D_TRANSLATE(ST_TINT_(TONE_LOW, RED)), 0, 1000.0,
 										0.01);
 		obs_properties_add_float_slider(grp, ST_TINT_(TONE_LOW, GREEN), D_TRANSLATE(ST_TINT_(TONE_LOW, GREEN)), 0,
@@ -262,67 +309,58 @@ obs_properties_t* get_properties(void*)
 	return pr;
 }
 
-void* create(obs_data_t* data, obs_source_t* source)
-try {
+void* create(obs_data_t* data, obs_source_t* source) try {
 	return new filter::color_grade::color_grade_instance(data, source);
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to create: %s", obs_source_get_name(source), ex.what());
 	return nullptr;
 }
 
-void destroy(void* ptr)
-try {
+void destroy(void* ptr) try {
 	delete reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr);
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to destroy: %s", ex.what());
 }
 
-uint32_t get_width(void* ptr)
-try {
+uint32_t get_width(void* ptr) try {
 	return reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->get_width();
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to get width: %s", ex.what());
 	return 0;
 }
 
-uint32_t get_height(void* ptr)
-try {
+uint32_t get_height(void* ptr) try {
 	return reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->get_height();
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to get height: %s", ex.what());
 	return 0;
 }
 
-void update(void* ptr, obs_data_t* data)
-try {
+void update(void* ptr, obs_data_t* data) try {
 	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->update(data);
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to update: %s", ex.what());
 }
 
-void activate(void* ptr)
-try {
+void activate(void* ptr) try {
 	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->activate();
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to activate: %s", ex.what());
 }
 
-void deactivate(void* ptr)
-try {
+void deactivate(void* ptr) try {
 	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->deactivate();
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to deactivate: %s", ex.what());
 }
 
-void video_tick(void* ptr, float time)
-try {
+void video_tick(void* ptr, float time) try {
 	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->video_tick(time);
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to tick video: %s", ex.what());
 }
 
-void video_render(void* ptr, gs_effect_t* effect)
-try {
+void video_render(void* ptr, gs_effect_t* effect) try {
 	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->video_render(effect);
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to render video: %s", ex.what());
@@ -427,35 +465,38 @@ float_t fix_gamma_value(double_t v)
 
 void filter::color_grade::color_grade_instance::update(obs_data_t* data)
 {
-	_lift.x       = static_cast<float_t>(obs_data_get_double(data, ST_LIFT_(RED)) / 100.0);
-	_lift.y       = static_cast<float_t>(obs_data_get_double(data, ST_LIFT_(GREEN)) / 100.0);
-	_lift.z       = static_cast<float_t>(obs_data_get_double(data, ST_LIFT_(BLUE)) / 100.0);
-	_lift.w       = static_cast<float_t>(obs_data_get_double(data, ST_LIFT_(ALL)) / 100.0);
-	_gamma.x      = fix_gamma_value(obs_data_get_double(data, ST_GAMMA_(RED)) / 100.0);
-	_gamma.y      = fix_gamma_value(obs_data_get_double(data, ST_GAMMA_(GREEN)) / 100.0);
-	_gamma.z      = fix_gamma_value(obs_data_get_double(data, ST_GAMMA_(BLUE)) / 100.0);
-	_gamma.w      = fix_gamma_value(obs_data_get_double(data, ST_GAMMA_(ALL)) / 100.0);
-	_gain.x       = static_cast<float_t>(obs_data_get_double(data, ST_GAIN_(RED)) / 100.0);
-	_gain.y       = static_cast<float_t>(obs_data_get_double(data, ST_GAIN_(GREEN)) / 100.0);
-	_gain.z       = static_cast<float_t>(obs_data_get_double(data, ST_GAIN_(BLUE)) / 100.0);
-	_gain.w       = static_cast<float_t>(obs_data_get_double(data, ST_GAIN_(ALL)) / 100.0);
-	_offset.x     = static_cast<float_t>(obs_data_get_double(data, ST_OFFSET_(RED)) / 100.0);
-	_offset.y     = static_cast<float_t>(obs_data_get_double(data, ST_OFFSET_(GREEN)) / 100.0);
-	_offset.z     = static_cast<float_t>(obs_data_get_double(data, ST_OFFSET_(BLUE)) / 100.0);
-	_offset.w     = static_cast<float_t>(obs_data_get_double(data, ST_OFFSET_(ALL)) / 100.0);
-	_tint_low.x   = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_LOW, RED)) / 100.0);
-	_tint_low.y   = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_LOW, GREEN)) / 100.0);
-	_tint_low.z   = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_LOW, BLUE)) / 100.0);
-	_tint_mid.x   = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_MID, RED)) / 100.0);
-	_tint_mid.y   = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_MID, GREEN)) / 100.0);
-	_tint_mid.z   = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_MID, BLUE)) / 100.0);
-	_tint_hig.x   = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_HIG, RED)) / 100.0);
-	_tint_hig.y   = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_HIG, GREEN)) / 100.0);
-	_tint_hig.z   = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_HIG, BLUE)) / 100.0);
-	_correction.x = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(HUE)) / 360.0);
-	_correction.y = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(SATURATION)) / 100.0);
-	_correction.z = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(LIGHTNESS)) / 100.0);
-	_correction.w = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(CONTRAST)) / 100.0);
+	_lift.x         = static_cast<float_t>(obs_data_get_double(data, ST_LIFT_(RED)) / 100.0);
+	_lift.y         = static_cast<float_t>(obs_data_get_double(data, ST_LIFT_(GREEN)) / 100.0);
+	_lift.z         = static_cast<float_t>(obs_data_get_double(data, ST_LIFT_(BLUE)) / 100.0);
+	_lift.w         = static_cast<float_t>(obs_data_get_double(data, ST_LIFT_(ALL)) / 100.0);
+	_gamma.x        = fix_gamma_value(obs_data_get_double(data, ST_GAMMA_(RED)) / 100.0);
+	_gamma.y        = fix_gamma_value(obs_data_get_double(data, ST_GAMMA_(GREEN)) / 100.0);
+	_gamma.z        = fix_gamma_value(obs_data_get_double(data, ST_GAMMA_(BLUE)) / 100.0);
+	_gamma.w        = fix_gamma_value(obs_data_get_double(data, ST_GAMMA_(ALL)) / 100.0);
+	_gain.x         = static_cast<float_t>(obs_data_get_double(data, ST_GAIN_(RED)) / 100.0);
+	_gain.y         = static_cast<float_t>(obs_data_get_double(data, ST_GAIN_(GREEN)) / 100.0);
+	_gain.z         = static_cast<float_t>(obs_data_get_double(data, ST_GAIN_(BLUE)) / 100.0);
+	_gain.w         = static_cast<float_t>(obs_data_get_double(data, ST_GAIN_(ALL)) / 100.0);
+	_offset.x       = static_cast<float_t>(obs_data_get_double(data, ST_OFFSET_(RED)) / 100.0);
+	_offset.y       = static_cast<float_t>(obs_data_get_double(data, ST_OFFSET_(GREEN)) / 100.0);
+	_offset.z       = static_cast<float_t>(obs_data_get_double(data, ST_OFFSET_(BLUE)) / 100.0);
+	_offset.w       = static_cast<float_t>(obs_data_get_double(data, ST_OFFSET_(ALL)) / 100.0);
+	_tint_detection = static_cast<detection_mode>(obs_data_get_int(data, ST_TINT_DETECTION));
+	_tint_luma      = static_cast<luma_mode>(obs_data_get_int(data, ST_TINT_MODE));
+	_tint_exponent  = static_cast<float_t>(obs_data_get_double(data, ST_TINT_EXPONENT));
+	_tint_low.x     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_LOW, RED)) / 100.0);
+	_tint_low.y     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_LOW, GREEN)) / 100.0);
+	_tint_low.z     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_LOW, BLUE)) / 100.0);
+	_tint_mid.x     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_MID, RED)) / 100.0);
+	_tint_mid.y     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_MID, GREEN)) / 100.0);
+	_tint_mid.z     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_MID, BLUE)) / 100.0);
+	_tint_hig.x     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_HIG, RED)) / 100.0);
+	_tint_hig.y     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_HIG, GREEN)) / 100.0);
+	_tint_hig.z     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_HIG, BLUE)) / 100.0);
+	_correction.x   = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(HUE)) / 360.0);
+	_correction.y   = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(SATURATION)) / 100.0);
+	_correction.z   = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(LIGHTNESS)) / 100.0);
+	_correction.w   = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(CONTRAST)) / 100.0);
 }
 
 void filter::color_grade::color_grade_instance::activate()
@@ -532,6 +573,12 @@ void filter::color_grade::color_grade_instance::video_render(gs_effect_t*)
 				_effect->get_parameter("pGain")->set_float4(_gain);
 			if (_effect->has_parameter("pOffset"))
 				_effect->get_parameter("pOffset")->set_float4(_offset);
+			if (_effect->has_parameter("pTintDetection"))
+				_effect->get_parameter("pTintDetection")->set_int(static_cast<int32_t>(_tint_detection));
+			if (_effect->has_parameter("pTintMode"))
+				_effect->get_parameter("pTintMode")->set_int(static_cast<int32_t>(_tint_luma));
+			if (_effect->has_parameter("pTintExponent"))
+				_effect->get_parameter("pTintExponent")->set_float(_tint_exponent);
 			if (_effect->has_parameter("pTintLow"))
 				_effect->get_parameter("pTintLow")->set_float3(_tint_low);
 			if (_effect->has_parameter("pTintMid"))
