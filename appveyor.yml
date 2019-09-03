@@ -12,6 +12,8 @@ image:
 
 environment:
   CMAKE_SYSTEM_VERSION: 10.0.17134.0
+  CMAKE_GENERATOR_32: "Visual Studio 15 2017"
+  CMAKE_GENERATOR_64: "Visual Studio 15 2017 Win64"
   PACKAGE_PREFIX: obs-stream-effects
   INNOSETUP_URL: http://www.jrsoftware.org/download.php/is.exe
   CURL_VERSION: 7.39.0
@@ -42,6 +44,7 @@ build_script:
 - cmd: node ci/builder.js
 
 after_build:
+- cmd: node ci/packager.js
 - cmd: ci/appveyor-package.bat
 
 # Testing

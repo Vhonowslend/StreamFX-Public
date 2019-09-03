@@ -1,0 +1,34 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows-2016, windows-2019]
+        include:
+          - os: windows-2016
+            generator_32: "Visual Studio 15 2017"
+            generator_64: "Visual Studio 15 2017 Win64"
+            sysversion: "10.0.17763.0"
+          - os: windows-2019
+            generator_32: 
+            generator_64: "Visual Studio 16 2019"
+            sysversion: "10.0.18362.0"
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Clone Repository
+      uses: actions/checkout@v1      
+    - name: Update Submodules
+      run: git submodule update --init --force --recursive
+    - name: Install Node.JS 10.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 10
+    - name: Build
+      env:
+        CMAKE_GENERATOR_32: ${{ matrix.generator_32 }}
+        CMAKE_GENERATOR_64: ${{ matrix.generator_64 }}
+        CMAKE_SYSTEM_VERSION: ${{ matrix.sysversion }}
+      run: node ./ci/builder.js

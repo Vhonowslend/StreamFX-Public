@@ -2,108 +2,94 @@
 
 const process = require('process');
 const runner = require('./runner.js');
+let env = process.env;
 
-// Steps
-let configure_runners = [];
-let build_runners = [];
-let package_runners = [];
+let x32_steps = [];
+let x64_steps = [];
 
-{
-	let cmake_configure_extra = [
+if ((process.platform == "win32") || (process.platform == "win64")) {
+	// Windows
+	let extra_conf = [
 		`-DCMAKE_SYSTEM_VERSION=${process.env.CMAKE_SYSTEM_VERSION}`,
+		`-DCMAKE_PACKAGE_NAME=obs-stream-effects`,
 		'-DCMAKE_INSTALL_PREFIX="build/distrib/"',
 		'-DCMAKE_PACKAGE_PREFIX="build/"',
-		`-DCMAKE_PACKAGE_NAME="${process.env.PACKAGE_PREFIX}"`,
 	];
-	let cmake_build_extra = [
+	let extra_build = [
+
 	];
 
-	// Configuration depends on platform
-	if (process.platform == "win32" || process.platform == "win64") {
-		configure_runners.push(new runner('32-bit', 'cmake', [
+	if(process.env.APPVEYOR) {
+		extra_build.concat(['--', '/logger:"C:\\Program Files\\AppVeyor\\BuildAgent\\Appveyor.MSBuildLogger.dll"']);
+	}
+
+	if ((process.env.CMAKE_GENERATOR_32 !== undefined) && (process.env.CMAKE_GENERATOR_32 !== "")) {
+		x32_steps.push(
+			[ 'cmake', [
 				'-H.',
 				'-Bbuild/32',
-				`-G"Visual Studio 15 2017"`,
-			].concat(cmake_configure_extra)));
-		configure_runners.push(new runner('64-bit', 'cmake', [
+				`-G"${process.env.CMAKE_GENERATOR_32}"`,
+			].concat(extra_conf), env ]
+		);
+		x32_steps.push(
+			[ 'cmake', [
+				'--build', 'build/32', 
+				'--config', 'RelWithDebInfo',
+				'--target', 'INSTALL'
+			].concat(extra_build), env ]
+		);
+	}
+	if ((process.env.CMAKE_GENERATOR_64 !== undefined) && (process.env.CMAKE_GENERATOR_64 !== "")) {
+		x64_steps.push(
+			[ 'cmake', [
 				'-H.',
 				'-Bbuild/64',
-				`-G"Visual Studio 15 2017 Win64"`,
-				'-T"host=x64"',
-			].concat(cmake_configure_extra)));
-		
-		// Extra build steps for AppVeyor on Windows for Logging purposes.
-		if(process.env.APPVEYOR) {
-			cmake_build_extra.concat(['--', '/logger:"C:\\Program Files\\AppVeyor\\BuildAgent\\Appveyor.MSBuildLogger.dll"']);
-		}
-	} else if (process.platform == "linux") {
-		configure_runners.push(new runner('32-bit', 'cmake', [
-				'-H.',
-				'-Bbuild32',
-				`-G"Unix Makefiles"`,
-				`-DCOPIED_DEPENDENCIES=false`,
-			].concat(cmake_configure_extra),
-			{ ...process.env, ...{
-				CFLAGS: `${process.env.COMPILER_FLAGS_32}`,
-				CXXFLAGS: `${process.env.COMPILER_FLAGS_32}`,
-			}}));
-		configure_runners.push(new runner('64-bit', 'cmake', [
-				'-H.',
-				'-Bbuild64',
-				`-G"Unix Makefiles"`,
-				`-DCOPIED_DEPENDENCIES=false`,
-			].concat(cmake_configure_extra),
-			{ ...process.env, ...{
-				CFLAGS: `${process.env.COMPILER_FLAGS_64}`,
-				CXXFLAGS: `${process.env.COMPILER_FLAGS_64}`,
-			}}));
+				`-G"${process.env.CMAKE_GENERATOR_64}"`,
+				'-T"host=x64"'
+			].concat(extra_conf), env ]
+		);
+		x64_steps.push(
+			[ 'cmake', [
+				'--build', 'build/64', 
+				'--config', 'RelWithDebInfo',
+				'--target', 'INSTALL'
+			].concat(extra_build), env ]
+		);
 	}
-	
-	build_runners.push(new runner('32-bit', 'cmake', [
-		'--build', 'build/32', 
-		'--config', 'RelWithDebInfo',
-		'--target', 'INSTALL'
-	].concat(cmake_build_extra)));
-	build_runners.push(new runner('64-bit', 'cmake', [
-		'--build', 'build/64', 
-		'--config', 'RelWithDebInfo',
-		'--target', 'INSTALL'
-	].concat(cmake_build_extra)));
-	package_runners.push(new runner('32-bit', 'cmake', [
-		'--build', 'build/32',
-		'--target', 'PACKAGE_7Z',
-		'--config', 'RelWithDebInfo'
-	].concat(cmake_build_extra)));
-	package_runners.push(new runner('64-bit', 'cmake', [
-		'--build', 'build/64',
-		'--target', 'PACKAGE_ZIP',
-		'--config', 'RelWithDebInfo'
-	].concat(cmake_build_extra)));
+} else {
+	// Unix
+
 }
 
-// Run Configure steps.
-let configure_promises = [];
-for (let config of configure_runners) {
-	configure_promises.push(config.run());
-}
-Promise.all(configure_promises).then(function(result) {    
-	let build_promises = [];
-	for (let build of build_runners) {
-		build_promises.push(build.run());
-	}
-	Promise.all(build_promises).then(function(result) {    
-		let package_promises = [];
-		for (let pack of package_runners) {
-			package_promises.push(pack.run());
+function runRunners(runnerArray, name) {
+	return new Promise(async (resolve, reject) => {
+		let local = runnerArray.reverse();
+		while (local.length > 0) {	
+			try {
+				let task = local.pop();
+				let work = new runner(name, task[0], task[1], task[2]);
+				await work.run();
+			} catch (e) {
+				reject(e);
+				return;
+			}
 		}
-		Promise.all(package_promises).then(function(result) {    
-			process.exit(result);
-		}).catch(function(result) {
-			process.exit(result);
-		});
-	}).catch(function(result) {
-		process.exit(result);
+		resolve(0);
 	});
-}).catch(function(result) {
-	process.exit(result);
-});
+}
+
+let promises = [];
+promises.push(runRunners(x32_steps, "32-Bit"));
+promises.push(runRunners(x64_steps, "64-Bit"));
+Promise.all(promises).then(
+	res => {
+		process.exit(0);
+	},
+	err => {
+		console.log(err);
+		process.exit(1);
+	}
+).catch(err => {
+	console.log(err);
+	process.exit(1);
+})
