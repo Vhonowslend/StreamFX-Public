@@ -18,7 +18,6 @@ class Runner {
 	run() {
         let self = this;
         return new Promise(function(resolve, reject) {
-			console.log(self.cmd, self.args);
             self.proc = cp.spawn(
                 self.cmd, self.args, {
                     windowsVerbatimArguments: true,
