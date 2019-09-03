@@ -22,7 +22,7 @@ Include("cmake/util.cmake")
 # Automatic Versioning
 Set(VERSION_MAJOR 0)
 Set(VERSION_MINOR 7)
-Set(VERSION_PATCH 0)
+Set(VERSION_PATCH 1)
 Set(VERSION_TWEAK 0)
 Set(PROJECT_COMMIT "N/A")
 If(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
@@ -152,7 +152,7 @@ mark_as_advanced(FORCE OBS_NATIVE OBS_PACKAGE OBS_REFERENCE OBS_DOWNLOAD)
 
 if(NOT TARGET libobs)
 	set(${PropertyPrefix}OBS_STUDIO_DIR "" CACHE PATH "OBS Studio Source/Package Directory")
-	set(${PropertyPrefix}OBS_DOWNLOAD_VERSION "24.0.0-rc1-ci" CACHE STRING "OBS Studio Version to download")
+	set(${PropertyPrefix}OBS_DOWNLOAD_VERSION "24.0.0-rc2-ci" CACHE STRING "OBS Studio Version to download")
 endif()
 
 if(NOT ${PropertyPrefix}OBS_NATIVE)
