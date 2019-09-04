@@ -479,12 +479,13 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 			obs_data_get_bool(data, ST_SHADOW_OUTER)
 			&& (obs_data_get_double(data, ST_SHADOW_OUTER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
+			struct cs {
+				uint8_t r, g, b, a;
+			};
 			union {
 				uint32_t color;
 				uint8_t  channel[4];
-				struct c {
-					uint8_t r, g, b, a;
-				} c;
+				cs       c;
 			};
 			color                       = uint32_t(obs_data_get_int(data, ST_SHADOW_OUTER_COLOR));
 			this->_outer_shadow_color.x = float_t(c.r / 255.0);
@@ -503,12 +504,13 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 			obs_data_get_bool(data, ST_SHADOW_INNER)
 			&& (obs_data_get_double(data, ST_SHADOW_INNER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
+			struct cs {
+				uint8_t r, g, b, a;
+			};
 			union {
 				uint32_t color;
 				uint8_t  channel[4];
-				struct c {
-					uint8_t r, g, b, a;
-				} c;
+				cs       c;
 			};
 			color                       = uint32_t(obs_data_get_int(data, ST_SHADOW_INNER_COLOR));
 			this->_inner_shadow_color.x = float_t(c.r / 255.0);
@@ -527,12 +529,13 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 			obs_data_get_bool(data, ST_GLOW_OUTER)
 			&& (obs_data_get_double(data, ST_GLOW_OUTER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
+			struct cs {
+				uint8_t r, g, b, a;
+			};
 			union {
 				uint32_t color;
 				uint8_t  channel[4];
-				struct c {
-					uint8_t r, g, b, a;
-				} c;
+				cs       c;
 			};
 			color                     = uint32_t(obs_data_get_int(data, ST_GLOW_OUTER_COLOR));
 			this->_outer_glow_color.x = float_t(c.r / 255.0);
@@ -553,12 +556,13 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 			obs_data_get_bool(data, ST_GLOW_INNER)
 			&& (obs_data_get_double(data, ST_GLOW_INNER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
+			struct cs {
+				uint8_t r, g, b, a;
+			};
 			union {
 				uint32_t color;
 				uint8_t  channel[4];
-				struct c {
-					uint8_t r, g, b, a;
-				} c;
+				cs       c;
 			};
 			color                     = uint32_t(obs_data_get_int(data, ST_GLOW_INNER_COLOR));
 			this->_inner_glow_color.x = float_t(c.r / 255.0);
@@ -578,12 +582,13 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 		this->_outline = obs_data_get_bool(data, ST_OUTLINE)
 						 && (obs_data_get_double(data, ST_OUTLINE_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
+			struct cs {
+				uint8_t r, g, b, a;
+			};
 			union {
 				uint32_t color;
 				uint8_t  channel[4];
-				struct c {
-					uint8_t r, g, b, a;
-				} c;
+				cs       c;
 			};
 			color                  = uint32_t(obs_data_get_int(data, ST_OUTLINE_COLOR));
 			this->_outline_color.x = float_t(c.r / 255.0);
