@@ -60,13 +60,6 @@
 #define ST_SCALING_BOUNDS_FILLHEIGHT "Source.Mirror.Scaling.Bounds.FillHeight"
 #define ST_SCALING_ALIGNMENT "Source.Mirror.Scaling.Alignment"
 
-// Initializer & Finalizer
-P_INITIALIZER(SourceMirrorInit)
-{
-	initializer_functions.push_back([] { source::mirror::mirror_factory::initialize(); });
-	finalizer_functions.push_back([] { source::mirror::mirror_factory::finalize(); });
-}
-
 static std::shared_ptr<source::mirror::mirror_factory> factory_instance = nullptr;
 
 void source::mirror::mirror_factory::initialize()

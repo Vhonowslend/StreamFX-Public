@@ -1087,7 +1087,7 @@ bool gfx::effect_source::effect_source::tick(float_t time)
 	return false;
 }
 
-void gfx::effect_source::effect_source::render()
+void gfx::effect_source::effect_source::render(bool is_matrix_valid)
 {
 	if (!_effect)
 		return;
@@ -1129,7 +1129,6 @@ void gfx::effect_source::effect_source::render()
 	}
 
 	gs_blend_state_push();
-	gs_matrix_push();
 
 	gs_reset_blend_state();
 	gs_enable_blending(false);
@@ -1137,7 +1136,10 @@ void gfx::effect_source::effect_source::render()
 	gs_enable_depth_test(false);
 	gs_enable_stencil_test(false);
 	gs_enable_stencil_write(false);
-	gs_ortho(0, 1, 0, 1, -1., 1.);
+	if (!is_matrix_valid) {
+		gs_matrix_push();
+		gs_ortho(0, 1, 0, 1, -1., 1.);
+	}
 
 	while (gs_effect_loop(_effect->get_object(), _tech.c_str())) {
 		gs_load_vertexbuffer(_tri->update());
@@ -1145,7 +1147,9 @@ void gfx::effect_source::effect_source::render()
 		gs_draw(gs_draw_mode::GS_TRIS, 0, _tri->size());
 	}
 
-	gs_matrix_pop();
+	if (!is_matrix_valid) {
+		gs_matrix_pop();
+	}
 	gs_blend_state_pop();
 }
 

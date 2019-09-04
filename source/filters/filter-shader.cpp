@@ -22,12 +22,10 @@
 #include "utility.hpp"
 
 #define ST "Filter.Shader"
-
-P_INITIALIZER(FilterShaderInit)
-{
-	initializer_functions.push_back([] { filter::shader::shader_factory::initialize(); });
-	finalizer_functions.push_back([] { filter::shader::shader_factory::finalize(); });
-}
+#define ST_SCALE_LOCKED "Filter.Shader.Scale.Locked"
+#define ST_SCALE_SCALE "Filter.Shader.Scale.Scale"
+#define ST_SCALE_WIDTH "Filter.Shader.Scale.Width"
+#define ST_SCALE_HEIGHT "Filter.Shader.Scale.Height"
 
 static std::shared_ptr<filter::shader::shader_factory> factory_instance = nullptr;
 
@@ -50,6 +48,10 @@ static void get_defaults(obs_data_t* data)
 {
 	obs_data_set_default_string(data, S_SHADER_FILE, obs_module_file("shaders/filter/example.effect"));
 	obs_data_set_default_string(data, S_SHADER_TECHNIQUE, "Draw");
+	obs_data_set_default_bool(data, ST_SCALE_LOCKED, true);
+	obs_data_set_default_double(data, ST_SCALE_SCALE, 1.0);
+	obs_data_set_default_double(data, ST_SCALE_WIDTH, 1.0);
+	obs_data_set_default_double(data, ST_SCALE_HEIGHT, 1.0);
 }
 
 filter::shader::shader_factory::shader_factory()
@@ -207,16 +209,30 @@ filter::shader::shader_instance::~shader_instance() {}
 
 uint32_t filter::shader::shader_instance::width()
 {
-	return _width;
+	return _swidth;
 }
 
 uint32_t filter::shader::shader_instance::height()
 {
-	return _height;
+	return _sheight;
 }
 
 void filter::shader::shader_instance::properties(obs_properties_t* props)
 {
+	auto p = obs_properties_add_bool(props, ST_SCALE_LOCKED, D_TRANSLATE(ST_SCALE_LOCKED));
+	obs_property_set_modified_callback(p, [](obs_properties_t* props, obs_property_t* property, obs_data_t* settings) {
+		obs_property_set_visible(obs_properties_get(props, ST_SCALE_SCALE),
+								 obs_data_get_bool(settings, ST_SCALE_LOCKED));
+		obs_property_set_visible(obs_properties_get(props, ST_SCALE_WIDTH),
+								 !obs_data_get_bool(settings, ST_SCALE_LOCKED));
+		obs_property_set_visible(obs_properties_get(props, ST_SCALE_HEIGHT),
+								 !obs_data_get_bool(settings, ST_SCALE_LOCKED));
+		return true;
+	});
+	obs_properties_add_float(props, ST_SCALE_SCALE, D_TRANSLATE(ST_SCALE_SCALE), 0.01, 5.0, 0.01);
+	obs_properties_add_float(props, ST_SCALE_WIDTH, D_TRANSLATE(ST_SCALE_WIDTH), 0.01, 5.0, 0.01);
+	obs_properties_add_float(props, ST_SCALE_HEIGHT, D_TRANSLATE(ST_SCALE_HEIGHT), 0.01, 5.0, 0.01);
+
 	_fx->properties(props);
 }
 
@@ -227,6 +243,13 @@ void filter::shader::shader_instance::load(obs_data_t* data)
 
 void filter::shader::shader_instance::update(obs_data_t* data)
 {
+	_scale_locked = obs_data_get_bool(data, ST_SCALE_LOCKED);
+	if (_scale_locked) {
+		_hscale = _wscale = obs_data_get_double(data, ST_SCALE_SCALE);
+	} else {
+		_wscale = obs_data_get_double(data, ST_SCALE_WIDTH);
+		_hscale = obs_data_get_double(data, ST_SCALE_HEIGHT);
+	}
 	_fx->update(data);
 }
 
@@ -248,6 +271,10 @@ bool filter::shader::shader_instance::valid_param(std::shared_ptr<gs::effect_par
 		return false;
 	if (strcmpi(param->get_name().c_str(), "ImageSource_Texel") == 0)
 		return false;
+	if (strcmpi(param->get_name().c_str(), "ImageTarget_Size") == 0)
+		return false;
+	if (strcmpi(param->get_name().c_str(), "ImageTarget_Texel") == 0)
+		return false;
 	return true;
 }
 
@@ -256,7 +283,6 @@ void filter::shader::shader_instance::override_param(std::shared_ptr<gs::effect>
 	auto p_source       = effect->get_parameter("ImageSource");
 	auto p_source_size  = effect->get_parameter("ImageSource_Size");
 	auto p_source_texel = effect->get_parameter("ImageSource_Texel");
-
 	if (p_source && (p_source->get_type() == gs::effect_parameter::type::Texture)) {
 		p_source->set_texture(_rt_tex);
 	}
@@ -265,6 +291,15 @@ void filter::shader::shader_instance::override_param(std::shared_ptr<gs::effect>
 	}
 	if (p_source_texel && (p_source_size->get_type() == gs::effect_parameter::type::Float2)) {
 		p_source_texel->set_float2(1.0f / _width, 1.0f / _height);
+	}
+
+	auto p_target_size  = effect->get_parameter("ImageTarget_Size");
+	auto p_target_texel = effect->get_parameter("ImageTarget_Texel");
+	if (p_target_size && (p_target_size->get_type() == gs::effect_parameter::type::Float2)) {
+		p_target_size->set_float2(_swidth, _sheight);
+	}
+	if (p_target_texel && (p_target_texel->get_type() == gs::effect_parameter::type::Float2)) {
+		p_target_texel->set_float2(1.0f / _swidth, 1.0f / _sheight);
 	}
 }
 
@@ -280,6 +315,8 @@ void filter::shader::shader_instance::video_tick(float_t sec_since_last)
 	{ // Update width and height.
 		_width  = obs_source_get_base_width(target);
 		_height = obs_source_get_base_height(target);
+		_swidth = _width * _wscale;
+		_sheight = _height * _hscale;
 	}
 
 	if (_fx->tick(sec_since_last)) {
@@ -326,7 +363,7 @@ void filter::shader::shader_instance::video_render(gs_effect_t* effect)
 
 	if (!_rt2_updated) {
 		try {
-			auto op = _rt2->render(_width, _height);
+			auto op = _rt2->render(_swidth, _sheight);
 			_fx->render();
 		} catch (...) {
 			obs_source_skip_video_filter(_self);
@@ -343,6 +380,6 @@ void filter::shader::shader_instance::video_render(gs_effect_t* effect)
 		gs_effect_set_texture(prm, _rt2_tex->get_object());
 
 	while (gs_effect_loop(ef, "Draw")) {
-		gs_draw_sprite(nullptr, 0, _width, _height);
+		gs_draw_sprite(nullptr, 0, _swidth, _sheight);
 	}
 }

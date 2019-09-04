@@ -99,13 +99,6 @@ static std::map<std::string, local_blur_subtype_t> list_of_subtypes = {
 	{"zoom", {::gfx::blur::type::Zoom, S_BLUR_SUBTYPE_ZOOM}},
 };
 
-// Initializer & Finalizer
-P_INITIALIZER(filterBlurFactoryInitializer)
-{
-	initializer_functions.push_back([] { filter::blur::blur_factory::initialize(); });
-	finalizer_functions.push_back([] { filter::blur::blur_factory::finalize(); });
-}
-
 static std::shared_ptr<filter::blur::blur_factory> factory_instance = nullptr;
 
 void filter::blur::blur_factory::initialize()

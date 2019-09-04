@@ -27,13 +27,6 @@
 #define ST_RATIO "Filter.Displacement.Ratio"
 #define ST_SCALE "Filter.Displacement.Scale"
 
-// Initializer & Finalizer
-P_INITIALIZER(FilterDisplacementInit)
-{
-	initializer_functions.push_back([] { filter::displacement::displacement_factory::initialize(); });
-	finalizer_functions.push_back([] { filter::displacement::displacement_factory::finalize(); });
-}
-
 static std::shared_ptr<filter::displacement::displacement_factory> factory_instance = nullptr;
 
 void filter::displacement::displacement_factory::initialize()

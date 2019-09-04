@@ -45,12 +45,6 @@ static std::pair<filter::dynamic_mask::channel, const char*> channel_translation
 	{filter::dynamic_mask::channel::Alpha, S_CHANNEL_ALPHA},
 };
 
-P_INITIALIZER(FilterDynamicMaskInit)
-{
-	initializer_functions.push_back([] { filter::dynamic_mask::dynamic_mask_factory::initialize(); });
-	finalizer_functions.push_back([] { filter::dynamic_mask::dynamic_mask_factory::finalize(); });
-}
-
 static std::shared_ptr<filter::dynamic_mask::dynamic_mask_factory> factory_instance = nullptr;
 
 void filter::dynamic_mask::dynamic_mask_factory::initialize()

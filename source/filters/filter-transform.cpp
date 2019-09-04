@@ -75,13 +75,6 @@ enum RotationOrder : int64_t {
 	ZYX,
 };
 
-// Initializer & Finalizer
-P_INITIALIZER(FilterTransformInit)
-{
-	initializer_functions.push_back([] { filter::transform::transform_factory::initialize(); });
-	finalizer_functions.push_back([] { filter::transform::transform_factory::finalize(); });
-}
-
 static std::shared_ptr<filter::transform::transform_factory> factory_instance = nullptr;
 
 void filter::transform::transform_factory::initialize()

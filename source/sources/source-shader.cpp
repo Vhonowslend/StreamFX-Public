@@ -25,12 +25,6 @@
 #define ST_WIDTH ST ".Width"
 #define ST_HEIGHT ST ".Height"
 
-P_INITIALIZER(SourceShaderInit)
-{
-	initializer_functions.push_back([] { source::shader::shader_factory::initialize(); });
-	finalizer_functions.push_back([] { source::shader::shader_factory::finalize(); });
-}
-
 static std::shared_ptr<source::shader::shader_factory> factory_instance = nullptr;
 
 void source::shader::shader_factory::initialize()

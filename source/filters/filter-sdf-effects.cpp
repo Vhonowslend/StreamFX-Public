@@ -64,13 +64,6 @@
 #define ST_SDF_SCALE "Filter.SDFEffects.SDF.Scale"
 #define ST_SDF_THRESHOLD "Filter.SDFEffects.SDF.Threshold"
 
-// Initializer & Finalizer
-P_INITIALIZER(filterShadowFactoryInitializer)
-{
-	initializer_functions.push_back([] { filter::sdf_effects::sdf_effects_factory::initialize(); });
-	finalizer_functions.push_back([] { filter::sdf_effects::sdf_effects_factory::finalize(); });
-}
-
 static std::shared_ptr<filter::sdf_effects::sdf_effects_factory> factory_instance = nullptr;
 
 void filter::sdf_effects::sdf_effects_factory::initialize()

@@ -314,7 +314,7 @@ namespace gfx {
 
 			bool tick(float_t time);
 
-			void render();
+			void render(bool is_matrix_valid = false);
 
 			obs_source_t* get_self();
 

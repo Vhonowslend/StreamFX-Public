@@ -57,34 +57,6 @@ typename std::enable_if<enable_bitmask_operators<Enum>::enable, Enum>::type oper
 #define D_STR(s) #s
 #define D_VSTR(s) D_STR(s)
 
-#ifdef __cplusplus
-#define P_INITIALIZER(f)   \
-	static void f(void); \
-	struct f##_t_ {      \
-		f##_t_(void)     \
-		{                \
-			f();         \
-		}                \
-	};                   \
-	static f##_t_ f##_;  \
-	static void   f(void)
-#elif defined(_MSC_VER)
-#pragma section(".CRT$XCU", read)
-#define INITIALIZER2_(f, p)                                  \
-	static void f(void);                                     \
-	__declspec(allocate(".CRT$XCU")) void (*f##_)(void) = f; \
-	__pragma(comment(linker, "/include:" p #f "_")) static void f(void)
-#ifdef _WIN64
-#define P_INITIALIZER(f) INITIALIZER2_(f, "")
-#else
-#define P_INITIALIZER(f) INITIALIZER2_(f, "_")
-#endif
-#else
-#define P_INITIALIZER(f)                                \
-	static void f(void) __attribute__((constructor)); \
-	static void f(void)
-#endif
-
 namespace util {
 	bool inline are_property_groups_broken()
 	{

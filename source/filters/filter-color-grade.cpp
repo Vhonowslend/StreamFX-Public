@@ -73,12 +73,6 @@
 #define MODE_LOG Log
 #define MODE_LOG10 Log10
 
-// Initializer & Finalizer
-P_INITIALIZER(FilterColorGradeInit)
-{
-	initializer_functions.push_back([] { filter::color_grade::color_grade_factory::initialize(); });
-	finalizer_functions.push_back([] { filter::color_grade::color_grade_factory::finalize(); });
-}
 
 const char* get_name(void*)
 {

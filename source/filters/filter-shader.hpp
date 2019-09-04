@@ -48,6 +48,10 @@ namespace filter {
 
 			uint32_t _width, _height;
 
+			bool     _scale_locked;
+			float_t  _wscale, _hscale;
+			uint32_t _swidth, _sheight;
+
 			std::shared_ptr<gs::rendertarget> _rt;
 			bool                              _rt_updated;
 			std::shared_ptr<gs::texture>      _rt_tex;
