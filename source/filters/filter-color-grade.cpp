@@ -71,7 +71,7 @@
 #define MODE_EXP Exp
 #define MODE_EXP2 Exp2
 #define MODE_LOG Log
-#define MODE_LOG10 Log2
+#define MODE_LOG10 Log10
 
 // Initializer & Finalizer
 P_INITIALIZER(FilterColorGradeInit)
@@ -104,9 +104,10 @@ void get_defaults(obs_data_t* data)
 	obs_data_set_default_double(data, ST_OFFSET_(GREEN), 0.0);
 	obs_data_set_default_double(data, ST_OFFSET_(BLUE), 0.0);
 	obs_data_set_default_double(data, ST_OFFSET_(ALL), 0.0);
-	obs_data_set_default_int(data, ST_TINT_MODE, static_cast<int64_t>(filter::color_grade::luma_mode::Exp2));
-	obs_data_set_default_int(data, ST_TINT_DETECTION, static_cast<int64_t>(filter::color_grade::detection_mode::HSL));
-	obs_data_set_default_double(data, ST_TINT_EXPONENT, 1.0);
+	obs_data_set_default_int(data, ST_TINT_MODE, static_cast<int64_t>(filter::color_grade::luma_mode::Linear));
+	obs_data_set_default_int(data, ST_TINT_DETECTION,
+							 static_cast<int64_t>(filter::color_grade::detection_mode::YUV_SDR));
+	obs_data_set_default_double(data, ST_TINT_EXPONENT, 1.5);
 	obs_data_set_default_double(data, ST_TINT_(TONE_LOW, RED), 100.0);
 	obs_data_set_default_double(data, ST_TINT_(TONE_LOW, GREEN), 100.0);
 	obs_data_set_default_double(data, ST_TINT_(TONE_LOW, BLUE), 100.0);
@@ -148,7 +149,12 @@ bool tool_modified(obs_properties_t* props, obs_property_t* property, obs_data_t
 		 }},
 		{ST_CORRECTION,
 		 {ST_CORRECTION_(HUE), ST_CORRECTION_(SATURATION), ST_CORRECTION_(LIGHTNESS), ST_CORRECTION_(CONTRAST)}},
-	};
+		{S_ADVANCED,
+		 {
+			 ST_TINT_MODE,
+			 ST_TINT_DETECTION,
+			 ST_TINT_EXPONENT,
+		 }}};
 
 	for (auto kv : tool_to_property) {
 		if (mode == kv.first) {
@@ -178,6 +184,7 @@ obs_properties_t* get_properties(void*)
 		obs_property_list_add_string(p, D_TRANSLATE(ST_OFFSET), ST_OFFSET);
 		obs_property_list_add_string(p, D_TRANSLATE(ST_TINT), ST_TINT);
 		obs_property_list_add_string(p, D_TRANSLATE(ST_CORRECTION), ST_CORRECTION);
+		obs_property_list_add_string(p, D_TRANSLATE(S_ADVANCED), S_ADVANCED);
 		obs_property_set_modified_callback(p, &tool_modified);
 	}
 
@@ -240,34 +247,6 @@ obs_properties_t* get_properties(void*)
 			obs_properties_add_group(pr, ST_TINT, D_TRANSLATE(ST_TINT), OBS_GROUP_NORMAL, grp);
 		}
 
-		{
-			auto p = obs_properties_add_list(grp, ST_TINT_MODE, D_TRANSLATE(ST_TINT_MODE), OBS_COMBO_TYPE_LIST,
-											 OBS_COMBO_FORMAT_INT);
-			std::pair<const char*, filter::color_grade::luma_mode> els[] = {
-				{ST_TINT_MODE_(MODE_LINEAR), filter::color_grade::luma_mode::Linear},
-				{ST_TINT_MODE_(MODE_EXP), filter::color_grade::luma_mode::Exp},
-				{ST_TINT_MODE_(MODE_EXP2), filter::color_grade::luma_mode::Exp2},
-				{ST_TINT_MODE_(MODE_LOG), filter::color_grade::luma_mode::Log},
-				{ST_TINT_MODE_(MODE_LOG10), filter::color_grade::luma_mode::Log10}};
-			for (auto kv : els) {
-				obs_property_list_add_int(p, D_TRANSLATE(kv.first), static_cast<int64_t>(kv.second));
-			}
-		}
-
-		{
-			auto p = obs_properties_add_list(grp, ST_TINT_DETECTION, D_TRANSLATE(ST_TINT_DETECTION),
-											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			std::pair<const char*, filter::color_grade::detection_mode> els[] = {
-				{ST_TINT_DETECTION_(DETECTION_HSV), filter::color_grade::detection_mode::HSV},
-				{ST_TINT_DETECTION_(DETECTION_HSL), filter::color_grade::detection_mode::HSL},
-				{ST_TINT_DETECTION_(DETECTION_YUV_SDR), filter::color_grade::detection_mode::YUV_SDR}};
-			for (auto kv : els) {
-				obs_property_list_add_int(p, D_TRANSLATE(kv.first), static_cast<int64_t>(kv.second));
-			}
-		}
-
-		obs_properties_add_float_slider(grp, ST_TINT_EXPONENT, D_TRANSLATE(ST_TINT_EXPONENT), 0., 10., 0.01);
-
 		obs_properties_add_float_slider(grp, ST_TINT_(TONE_LOW, RED), D_TRANSLATE(ST_TINT_(TONE_LOW, RED)), 0, 1000.0,
 										0.01);
 		obs_properties_add_float_slider(grp, ST_TINT_(TONE_LOW, GREEN), D_TRANSLATE(ST_TINT_(TONE_LOW, GREEN)), 0,
@@ -304,6 +283,42 @@ obs_properties_t* get_properties(void*)
 										1000.0, 0.01);
 		obs_properties_add_float_slider(grp, ST_CORRECTION_(CONTRAST), D_TRANSLATE(ST_CORRECTION_(CONTRAST)), 0.0,
 										1000.0, 0.01);
+	}
+
+	{
+		obs_properties_t* grp = pr;
+		if (!util::are_property_groups_broken()) {
+			grp = obs_properties_create();
+			obs_properties_add_group(pr, S_ADVANCED, D_TRANSLATE(S_ADVANCED), OBS_GROUP_NORMAL, grp);
+		}
+
+		{
+			auto p = obs_properties_add_list(grp, ST_TINT_MODE, D_TRANSLATE(ST_TINT_MODE), OBS_COMBO_TYPE_LIST,
+											 OBS_COMBO_FORMAT_INT);
+			std::pair<const char*, filter::color_grade::luma_mode> els[] = {
+				{ST_TINT_MODE_(MODE_LINEAR), filter::color_grade::luma_mode::Linear},
+				{ST_TINT_MODE_(MODE_EXP), filter::color_grade::luma_mode::Exp},
+				{ST_TINT_MODE_(MODE_EXP2), filter::color_grade::luma_mode::Exp2},
+				{ST_TINT_MODE_(MODE_LOG), filter::color_grade::luma_mode::Log},
+				{ST_TINT_MODE_(MODE_LOG10), filter::color_grade::luma_mode::Log10}};
+			for (auto kv : els) {
+				obs_property_list_add_int(p, D_TRANSLATE(kv.first), static_cast<int64_t>(kv.second));
+			}
+		}
+
+		{
+			auto p = obs_properties_add_list(grp, ST_TINT_DETECTION, D_TRANSLATE(ST_TINT_DETECTION),
+											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			std::pair<const char*, filter::color_grade::detection_mode> els[] = {
+				{ST_TINT_DETECTION_(DETECTION_HSV), filter::color_grade::detection_mode::HSV},
+				{ST_TINT_DETECTION_(DETECTION_HSL), filter::color_grade::detection_mode::HSL},
+				{ST_TINT_DETECTION_(DETECTION_YUV_SDR), filter::color_grade::detection_mode::YUV_SDR}};
+			for (auto kv : els) {
+				obs_property_list_add_int(p, D_TRANSLATE(kv.first), static_cast<int64_t>(kv.second));
+			}
+		}
+
+		obs_properties_add_float_slider(grp, ST_TINT_EXPONENT, D_TRANSLATE(ST_TINT_EXPONENT), 0., 10., 0.01);
 	}
 
 	return pr;

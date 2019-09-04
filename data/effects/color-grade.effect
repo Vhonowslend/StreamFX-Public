@@ -7,7 +7,7 @@ uniform float4 pGain;
 uniform float4 pOffset;
 uniform int pTintDetection; // 0 = HSV, 1 = HSL, 2 = YUV HD SDR
 uniform int pTintMode; // 0 = Linear, 1 = Exp, 2 = Exp2, 3 = Log, 4 = Log10
-uniform float pTintLumaExponent;
+uniform float pTintExponent;
 uniform float3 pTintLow;
 uniform float3 pTintMid;
 uniform float3 pTintHig;
@@ -182,21 +182,20 @@ float4 Tint(float4 v)
 
 	if (pTintMode == TINT_MODE_LINEAR) { // Linear
 	} else if (pTintMode == TINT_MODE_EXP) { // Exp
-		value = 1.0 - exp2(value * pTintLumaExponent * -C_log2_e);		
+		value = 1.0 - exp2(value * pTintExponent * -C_log2_e);		
 	} else if (pTintMode == TINT_MODE_EXP2) { // Exp2
-		value = 1.0 - exp2(value * value * pTintLumaExponent * pTintLumaExponent * -C_log2_e);
+		value = 1.0 - exp2(value * value * pTintExponent * pTintExponent * -C_log2_e);
 	} else if (pTintMode == TINT_MODE_LOG) { // Log
 		value = (log2(value) + 2.) / 2.333333;
 	} else if (pTintMode == TINT_MODE_LOG10) { // Log10
 		value = (log10(value) + 1.) / 2.;		
 	}
 
-	float4 v1 = RGBtoHSV(v);
 	float3 tint = float3(0,0,0);
-	if (v1.b > 0.5) {
-		tint = lerp(pTintMid, pTintHig, v1.b * 2.0 - 1.0);
+	if (value > 0.5) {
+		tint = lerp(pTintMid, pTintHig, value * 2.0 - 1.0);
 	} else {
-		tint = lerp(pTintLow, pTintMid, v1.b * 2.0);
+		tint = lerp(pTintLow, pTintMid, value * 2.0);
 	}
 	v.rgb *= tint;
 	return v;
