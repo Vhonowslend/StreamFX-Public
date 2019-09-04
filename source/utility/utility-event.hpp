@@ -29,15 +29,38 @@
 #include <string>
 
 namespace utility {
-	typedef std::map<std::string, void*>                  arguments_t;
-	typedef std::shared_ptr<void>                         lifeline_t;
-	typedef std::function<bool(lifeline_t, arguments_t&)> callback_t;
-	typedef std::pair<lifeline_t, callback_t>             listener_t;
+	typedef std::weak_ptr<void>          lifeline_t;
+	typedef std::map<std::string, void*> event_args_t;
+#define D_EVENT_FUNC_T void(std::weak_ptr<void>, event_args_t)
+	typedef std::function<D_EVENT_FUNC_T> event_cb_t;
+
+	struct event_pair {
+		lifeline_t lifeline;
+		event_cb_t callback;
+
+		event_pair(lifeline_t _lifeline, event_cb_t _callback)
+		{
+			lifeline = _lifeline;
+			callback = _callback;
+		}
+
+		bool operator==(const event_pair& rhs)
+		{
+			return (!lifeline.owner_before(rhs.lifeline) && !rhs.lifeline.owner_before(lifeline))
+				   && (lifeline.lock() == rhs.lifeline.lock())
+				   && (callback.target<D_EVENT_FUNC_T>() == rhs.callback.target<D_EVENT_FUNC_T>());
+		}
+	};
+
+	typedef event_pair listener_t;
 
 	class event {
 		std::list<listener_t> _listeners;
 
 		public:
+		event();
+		virtual ~event();
+
 		size_t add(listener_t listener);
 
 		inline event operator+=(listener_t listener)
@@ -65,28 +88,29 @@ namespace utility {
 
 		void clear();
 
-		size_t call(arguments_t& arguments);
+		size_t call(event_args_t& arguments);
 
-		inline size_t operator()(arguments_t& arguments)
+		inline size_t operator()(event_args_t& arguments)
 		{
 			return call(arguments);
 		}
 
 		inline size_t call()
 		{
-			return call(arguments_t{});
+			event_args_t args{};
+			return call(args);
 		}
 
 		inline size_t operator()()
 		{
-			return call(arguments_t{});
+			return call();
 		}
 
 		public:
 		struct {
-			utility::event add;
-			utility::event remove;
-			utility::event empty;
+			std::shared_ptr<utility::event> add;
+			std::shared_ptr<utility::event> remove;
+			std::shared_ptr<utility::event> empty;
 		} on;
 	};
 } // namespace utility

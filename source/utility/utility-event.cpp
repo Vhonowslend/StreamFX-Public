@@ -19,15 +19,30 @@
 
 #include "utility-event.hpp"
 
+utility::event::event()
+{
+	on.add    = std::make_shared<utility::event>();
+	on.remove = std::make_shared<utility::event>();
+	on.empty  = std::make_shared<utility::event>();
+}
+
+utility::event::~event()
+{
+	clear();
+	on.add.reset();
+	on.remove.reset();
+	on.empty.reset();
+}
+
 size_t utility::event::add(listener_t callback)
 {
 	_listeners.push_back(callback);
 
 	{
-		arguments_t args;
+		event_args_t args;
 		args.emplace("event", this);
 		args.emplace("listener", &callback);
-		on.add(args);
+		on.add->call(args);
 	}
 
 	return _listeners.size();
@@ -38,16 +53,16 @@ size_t utility::event::remove(listener_t callback)
 	_listeners.remove(callback);
 
 	{
-		arguments_t args;
+		event_args_t args;
 		args.emplace("event", this);
 		args.emplace("listener", &callback);
-		on.remove(args);
+		on.remove->call(args);
 	}
-	
+
 	if (_listeners.empty()) {
-		arguments_t args;
+		event_args_t args;
 		args.emplace("event", this);
-		on.empty(args);
+		on.empty->call(args);
 	}
 
 	return _listeners.size();
@@ -65,22 +80,26 @@ bool utility::event::empty()
 
 void utility::event::clear()
 {
-	return _listeners.clear();
+	_listeners.clear();
+	event_args_t args;
+	args.emplace("event", this);
+	on.empty->call(args);
 }
 
-size_t utility::event::call(arguments_t& arguments)
+size_t utility::event::call(event_args_t& arguments)
 {
 	size_t idx = 0;
 	for (auto const& listener : _listeners) {
-		if (listener.second(listener.first, arguments)) {
-			break;
-		}
+		/*if (listener.first.expired()) {
+			// Lifeline has expired, so remove it.
+			_listeners.remove(listener);
+			continue;
+		}*/
+
+		//if (listener.second(listener.first, arguments)) {
+//			break;
+	//	}
 		idx++;
 	}
 	return idx;
-}
-
-size_t utility::event::operator()(arguments_t& arguments)
-{
-	return call(arguments);
 }
