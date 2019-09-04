@@ -161,7 +161,7 @@ namespace filter {
 									   gs_texture_t* blurred_texture);
 
 			static bool modified_properties(void* ptr, obs_properties_t* props, obs_property* prop,
-											obs_data_t* settings);
+											obs_data_t* settings) noexcept;
 
 			void translate_old_settings(obs_data_t*);
 

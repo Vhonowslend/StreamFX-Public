@@ -393,8 +393,7 @@ bool filter::blur::blur_instance::apply_mask_parameters(std::shared_ptr<gs::effe
 }
 
 bool filter::blur::blur_instance::modified_properties(void*, obs_properties_t* props, obs_property* prop,
-													  obs_data_t* settings)
-{
+													  obs_data_t* settings) noexcept try {
 	obs_property_t* p;
 	const char*     propname = obs_property_name(prop);
 	const char*     vtype    = obs_data_get_string(settings, ST_TYPE);
@@ -552,6 +551,9 @@ bool filter::blur::blur_instance::modified_properties(void*, obs_properties_t* p
 	}
 
 	return true;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in modified_properties callback.");
+	return false;
 }
 
 void filter::blur::blur_instance::translate_old_settings(obs_data_t* settings)
