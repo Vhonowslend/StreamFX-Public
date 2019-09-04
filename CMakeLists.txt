@@ -94,7 +94,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
 	# using Intel C++
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-	set(MSVC_EXTRA_FLAGS "/wd4100 /wd4201 /wd4464 /wd4514 /wd4571 /wd4623 /wd4625 /wd4626 /wd4710 /wd4820 /wd5026 /wd5027")
+	set(MSVC_EXTRA_FLAGS "/wd4100 /wd4180 /wd4201 /wd4464 /wd4514 /wd4571 /wd4623 /wd4625 /wd4626 /wd4710 /wd4774 /wd4820 /wd5026 /wd5027")
 	# Force to always compile with W4
 	if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
 		string(REGEX REPLACE "/W[0-4]" "/Wall" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -289,6 +289,8 @@ SET(PROJECT_PRIVATE_SOURCE
 	"${PROJECT_SOURCE_DIR}/source/util-math.cpp"
 	"${PROJECT_SOURCE_DIR}/source/util-memory.hpp"
 	"${PROJECT_SOURCE_DIR}/source/util-memory.cpp"
+	"${PROJECT_SOURCE_DIR}/source/utility/utility-event.hpp"
+	"${PROJECT_SOURCE_DIR}/source/utility/utility-event.cpp"
 	
 	# Graphics
 	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-effect-source.hpp"
