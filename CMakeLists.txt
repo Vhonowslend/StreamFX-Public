@@ -94,20 +94,21 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
 	# using Intel C++
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+	set(MSVC_EXTRA_FLAGS "/diagnostics:column /wd4201 /wd4514 /wd4623 /wd4625 /wd4626 /wd4820 /wd5026 /wd5027")
 	# Force to always compile with W4
 	if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
 		string(REGEX REPLACE "/W[0-4]" "/Wall" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 	else()
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Wall")
 	endif()
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /diagnostics:column /wd4514 /wd4201")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MSVC_EXTRA_FLAGS}")
 	
 	if(CMAKE_C_FLAGS MATCHES "/W[0-4]")
 		string(REGEX REPLACE "/W[0-4]" "/Wall" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 	else()
 		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /Wall")
 	endif()
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /diagnostics:column /wd4514 /wd4201")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MSVC_EXTRA_FLAGS}")
 endif()
 
 # C++ Standard and Extensions
