@@ -54,25 +54,25 @@ namespace source {
 			mirror_factory();
 			~mirror_factory();
 
-			static const char*       get_name(void*);
-			static void              get_defaults(obs_data_t*);
-			static bool              modified_properties(obs_properties_t*, obs_property_t*, obs_data_t*);
-			static obs_properties_t* get_properties(void*);
+			static const char*       get_name(void*) noexcept;
+			static void              get_defaults(obs_data_t*) noexcept;
+			static bool              modified_properties(obs_properties_t*, obs_property_t*, obs_data_t*) noexcept;
+			static obs_properties_t* get_properties(void*) noexcept;
 
-			static void* create(obs_data_t*, obs_source_t*);
-			static void  destroy(void*);
+			static void* create(obs_data_t*, obs_source_t*) noexcept;
+			static void  destroy(void*) noexcept;
 
-			static uint32_t get_width(void*);
-			static uint32_t get_height(void*);
+			static uint32_t get_width(void*) noexcept;
+			static uint32_t get_height(void*) noexcept;
 
-			static void update(void*, obs_data_t*);
-			static void activate(void*);
-			static void deactivate(void*);
-			static void video_tick(void*, float);
-			static void video_render(void*, gs_effect_t*);
-			static void enum_active_sources(void*, obs_source_enum_proc_t, void*);
-			static void load(void*, obs_data_t*);
-			static void save(void*, obs_data_t*);
+			static void update(void*, obs_data_t*) noexcept;
+			static void activate(void*) noexcept;
+			static void deactivate(void*) noexcept;
+			static void video_tick(void*, float) noexcept;
+			static void video_render(void*, gs_effect_t*) noexcept;
+			static void enum_active_sources(void*, obs_source_enum_proc_t, void*) noexcept;
+			static void load(void*, obs_data_t*) noexcept;
+			static void save(void*, obs_data_t*) noexcept;
 		};
 
 		struct mirror_audio_data {

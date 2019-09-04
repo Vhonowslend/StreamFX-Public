@@ -106,13 +106,13 @@ source::mirror::mirror_factory::mirror_factory()
 
 source::mirror::mirror_factory::~mirror_factory() {}
 
-const char* source::mirror::mirror_factory::get_name(void*)
-{
+const char* source::mirror::mirror_factory::get_name(void*) noexcept try {
 	return D_TRANSLATE(ST);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void source::mirror::mirror_factory::get_defaults(obs_data_t* data)
-{
+void source::mirror::mirror_factory::get_defaults(obs_data_t* data) noexcept try {
 	obs_data_set_default_string(data, ST_SOURCE, "");
 	obs_data_set_default_bool(data, ST_AUDIO, false);
 	obs_data_set_default_int(data, ST_AUDIO_LAYOUT, static_cast<int64_t>(SPEAKERS_UNKNOWN));
@@ -122,10 +122,12 @@ void source::mirror::mirror_factory::get_defaults(obs_data_t* data)
 	obs_data_set_default_bool(data, ST_SCALING_TRANSFORMKEEPORIGINAL, false);
 	obs_data_set_default_int(data, ST_SCALING_BOUNDS, (int64_t)obs_bounds_type::OBS_BOUNDS_STRETCH);
 	obs_data_set_default_int(data, ST_SCALING_ALIGNMENT, OBS_ALIGN_CENTER);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-bool source::mirror::mirror_factory::modified_properties(obs_properties_t* pr, obs_property_t* p, obs_data_t* data)
-{
+bool source::mirror::mirror_factory::modified_properties(obs_properties_t* pr, obs_property_t* p,
+														 obs_data_t* data) noexcept try {
 	if (obs_properties_get(pr, ST_SOURCE) == p) {
 		obs_source_t* target = obs_get_source_by_name(obs_data_get_string(data, ST_SOURCE));
 		if (target) {
@@ -181,10 +183,12 @@ bool source::mirror::mirror_factory::modified_properties(obs_properties_t* pr, o
 	}
 
 	return false;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return false;
 }
 
-obs_properties_t* source::mirror::mirror_factory::get_properties(void*)
-{
+obs_properties_t* source::mirror::mirror_factory::get_properties(void*) noexcept try {
 	obs_properties_t* pr = obs_properties_create();
 	obs_property_t*   p  = nullptr;
 
@@ -274,90 +278,109 @@ obs_properties_t* source::mirror::mirror_factory::get_properties(void*)
 							  OBS_ALIGN_RIGHT | OBS_ALIGN_BOTTOM);
 
 	return pr;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return nullptr;
 }
 
-void* source::mirror::mirror_factory::create(obs_data_t* data, obs_source_t* source)
-{
+void* source::mirror::mirror_factory::create(obs_data_t* data, obs_source_t* source) noexcept try {
 	return new source::mirror::mirror_instance(data, source);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return nullptr;
 }
 
-void source::mirror::mirror_factory::destroy(void* p)
-{
+void source::mirror::mirror_factory::destroy(void* p) noexcept try {
 	if (p) {
 		delete static_cast<source::mirror::mirror_instance*>(p);
 	}
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-uint32_t source::mirror::mirror_factory::get_width(void* p)
-{
+uint32_t source::mirror::mirror_factory::get_width(void* p) noexcept try {
 	if (p) {
 		return static_cast<source::mirror::mirror_instance*>(p)->get_width();
 	}
 	return 0;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return 0;
 }
 
-uint32_t source::mirror::mirror_factory::get_height(void* p)
-{
+uint32_t source::mirror::mirror_factory::get_height(void* p) noexcept try {
 	if (p) {
 		return static_cast<source::mirror::mirror_instance*>(p)->get_height();
 	}
 	return 0;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return 0;
 }
 
-void source::mirror::mirror_factory::update(void* p, obs_data_t* data)
-{
+void source::mirror::mirror_factory::update(void* p, obs_data_t* data) noexcept try {
 	if (p) {
 		static_cast<source::mirror::mirror_instance*>(p)->update(data);
 	}
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void source::mirror::mirror_factory::activate(void* p)
-{
+void source::mirror::mirror_factory::activate(void* p) noexcept try {
 	if (p) {
 		static_cast<source::mirror::mirror_instance*>(p)->activate();
 	}
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void source::mirror::mirror_factory::deactivate(void* p)
-{
+void source::mirror::mirror_factory::deactivate(void* p) noexcept try {
 	if (p) {
 		static_cast<source::mirror::mirror_instance*>(p)->deactivate();
 	}
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void source::mirror::mirror_factory::video_tick(void* p, float t)
-{
+void source::mirror::mirror_factory::video_tick(void* p, float t) noexcept try {
 	if (p) {
 		static_cast<source::mirror::mirror_instance*>(p)->video_tick(t);
 	}
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void source::mirror::mirror_factory::video_render(void* p, gs_effect_t* ef)
-{
+void source::mirror::mirror_factory::video_render(void* p, gs_effect_t* ef) noexcept try {
 	if (p) {
 		static_cast<source::mirror::mirror_instance*>(p)->video_render(ef);
 	}
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void source::mirror::mirror_factory::enum_active_sources(void* p, obs_source_enum_proc_t enum_callback, void* param)
-{
+void source::mirror::mirror_factory::enum_active_sources(void* p, obs_source_enum_proc_t enum_callback,
+														 void* param) noexcept try {
 	if (p) {
 		static_cast<source::mirror::mirror_instance*>(p)->enum_active_sources(enum_callback, param);
 	}
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void source::mirror::mirror_factory::load(void* p, obs_data_t* d)
-{
+void source::mirror::mirror_factory::load(void* p, obs_data_t* d) noexcept try {
 	if (p) {
 		static_cast<source::mirror::mirror_instance*>(p)->load(d);
 	}
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void source::mirror::mirror_factory::save(void* p, obs_data_t* d)
-{
+void source::mirror::mirror_factory::save(void* p, obs_data_t* d) noexcept try {
 	if (p) {
 		static_cast<source::mirror::mirror_instance*>(p)->save(d);
 	}
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void source::mirror::mirror_instance::release_input()
