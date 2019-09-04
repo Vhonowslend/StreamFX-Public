@@ -266,15 +266,15 @@ void filter::shader::shader_instance::deactivate()
 
 bool filter::shader::shader_instance::valid_param(std::shared_ptr<gs::effect_parameter> param)
 {
-	if (strcmpi(param->get_name().c_str(), "ImageSource") == 0)
+	if (strcmp(param->get_name().c_str(), "ImageSource") == 0)
 		return false;
-	if (strcmpi(param->get_name().c_str(), "ImageSource_Size") == 0)
+	if (strcmp(param->get_name().c_str(), "ImageSource_Size") == 0)
 		return false;
-	if (strcmpi(param->get_name().c_str(), "ImageSource_Texel") == 0)
+	if (strcmp(param->get_name().c_str(), "ImageSource_Texel") == 0)
 		return false;
-	if (strcmpi(param->get_name().c_str(), "ImageTarget_Size") == 0)
+	if (strcmp(param->get_name().c_str(), "ImageTarget_Size") == 0)
 		return false;
-	if (strcmpi(param->get_name().c_str(), "ImageTarget_Texel") == 0)
+	if (strcmp(param->get_name().c_str(), "ImageTarget_Texel") == 0)
 		return false;
 	return true;
 }

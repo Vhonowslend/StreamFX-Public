@@ -286,7 +286,7 @@ gfx::effect_source::value_parameter::value_parameter(std::shared_ptr<gfx::effect
 	std::shared_ptr<gs::effect_parameter> mode = param->get_annotation("mode");
 	if (mode && (mode->get_type() == gs::effect_parameter::type::String)) {
 		std::string mode_str = mode->get_default_string();
-		if (strcmpi(mode_str.c_str(), "slider") == 0) {
+		if (strcmp(mode_str.c_str(), "slider") == 0) {
 			_mode = value_mode::SLIDER;
 		} else {
 			_mode = value_mode::INPUT;
@@ -593,7 +593,7 @@ gfx::effect_source::matrix_parameter::matrix_parameter(std::shared_ptr<gfx::effe
 	std::shared_ptr<gs::effect_parameter> mode = param->get_annotation("mode");
 	if (mode && (mode->get_type() == gs::effect_parameter::type::String)) {
 		std::string mode_str = mode->get_default_string();
-		if (strcmpi(mode_str.c_str(), "slider") == 0) {
+		if (strcmp(mode_str.c_str(), "slider") == 0) {
 			_mode = value_mode::SLIDER;
 		} else {
 			_mode = value_mode::INPUT;
