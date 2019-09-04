@@ -74,7 +74,6 @@
 #define MODE_LOG Log
 #define MODE_LOG10 Log10
 
-
 const char* get_name(void*)
 {
 	return D_TRANSLATE(ST);
@@ -319,58 +318,67 @@ obs_properties_t* get_properties(void*)
 	return pr;
 }
 
-void* create(obs_data_t* data, obs_source_t* source) try {
+void* create(obs_data_t* data, obs_source_t* source)
+try {
 	return new filter::color_grade::color_grade_instance(data, source);
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to create: %s", obs_source_get_name(source), ex.what());
 	return nullptr;
 }
 
-void destroy(void* ptr) try {
+void destroy(void* ptr)
+try {
 	delete reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr);
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to destroy: %s", ex.what());
 }
 
-uint32_t get_width(void* ptr) try {
+uint32_t get_width(void* ptr)
+try {
 	return reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->get_width();
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to get width: %s", ex.what());
 	return 0;
 }
 
-uint32_t get_height(void* ptr) try {
+uint32_t get_height(void* ptr)
+try {
 	return reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->get_height();
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to get height: %s", ex.what());
 	return 0;
 }
 
-void update(void* ptr, obs_data_t* data) try {
+void update(void* ptr, obs_data_t* data)
+try {
 	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->update(data);
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to update: %s", ex.what());
 }
 
-void activate(void* ptr) try {
+void activate(void* ptr)
+try {
 	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->activate();
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to activate: %s", ex.what());
 }
 
-void deactivate(void* ptr) try {
+void deactivate(void* ptr)
+try {
 	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->deactivate();
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to deactivate: %s", ex.what());
 }
 
-void video_tick(void* ptr, float time) try {
+void video_tick(void* ptr, float time)
+try {
 	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->video_tick(time);
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to tick video: %s", ex.what());
 }
 
-void video_render(void* ptr, gs_effect_t* effect) try {
+void video_render(void* ptr, gs_effect_t* effect)
+try {
 	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->video_render(effect);
 } catch (std::exception& ex) {
 	P_LOG_ERROR("<filter-color-grade> Failed to render video: %s", ex.what());

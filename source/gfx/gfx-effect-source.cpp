@@ -16,12 +16,12 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "gfx-effect-source.hpp"
-#include <stdexcept>
 #include <cfloat>
 #include <climits>
 #include <cstdint>
 #include <fstream>
 #include <sstream>
+#include <stdexcept>
 #include <sys/stat.h>
 #include "obs/gs/gs-helper.hpp"
 #include "obs/obs-source-tracker.hpp"

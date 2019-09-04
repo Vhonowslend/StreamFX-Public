@@ -18,11 +18,11 @@
  */
 
 #include "filter-blur.hpp"
-#include <stdexcept>
 #include <cfloat>
 #include <cinttypes>
 #include <cmath>
 #include <map>
+#include <stdexcept>
 #include "gfx/blur/gfx-blur-box-linear.hpp"
 #include "gfx/blur/gfx-blur-box.hpp"
 #include "gfx/blur/gfx-blur-dual-filtering.hpp"

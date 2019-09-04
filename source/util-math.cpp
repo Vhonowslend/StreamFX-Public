@@ -18,9 +18,9 @@
 */
 
 #include "util-math.hpp"
-#include <stdexcept>
 #include <cctype>
 #include <cstdlib>
+#include <stdexcept>
 #include "util-memory.hpp"
 
 void* util::vec2a::operator new(size_t count)

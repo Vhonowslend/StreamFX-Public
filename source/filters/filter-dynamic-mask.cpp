@@ -18,8 +18,8 @@
 */
 
 #include "filter-dynamic-mask.hpp"
-#include <stdexcept>
 #include <sstream>
+#include <stdexcept>
 #include "strings.hpp"
 
 // Filter to allow dynamic masking

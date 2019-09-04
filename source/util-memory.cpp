@@ -18,8 +18,8 @@
 */
 
 #include "util-memory.hpp"
-#include <stdexcept>
 #include <cstdlib>
+#include <stdexcept>
 
 #define USE_STD_ALLOC_FREE
 

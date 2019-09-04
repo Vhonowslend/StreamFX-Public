@@ -18,11 +18,11 @@
 */
 
 #include "source-mirror.hpp"
-#include <stdexcept>
 #include <bitset>
 #include <cstring>
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <vector>
 #include "obs/obs-source-tracker.hpp"
 #include "obs/obs-tools.hpp"

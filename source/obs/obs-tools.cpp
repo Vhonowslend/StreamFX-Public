@@ -18,8 +18,8 @@
  */
 
 #include "obs-tools.hpp"
-#include <stdexcept>
 #include <map>
+#include <stdexcept>
 
 struct scs_searchdata {
 	obs_source_t*                 source;

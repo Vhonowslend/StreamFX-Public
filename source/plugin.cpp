@@ -19,7 +19,6 @@
 
 #include "plugin.hpp"
 #include <stdexcept>
-#include "obs/obs-source-tracker.hpp"
 #include "filters/filter-blur.hpp"
 #include "filters/filter-color-grade.hpp"
 #include "filters/filter-displacement.hpp"
@@ -27,6 +26,7 @@
 #include "filters/filter-sdf-effects.hpp"
 #include "filters/filter-shader.hpp"
 #include "filters/filter-transform.hpp"
+#include "obs/obs-source-tracker.hpp"
 #include "sources/source-mirror.hpp"
 #include "sources/source-shader.hpp"
 
