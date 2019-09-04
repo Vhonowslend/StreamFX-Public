@@ -18,6 +18,7 @@
  */
 
 #include "obs-tools.hpp"
+#include <stdexcept>
 #include <map>
 
 struct scs_searchdata {

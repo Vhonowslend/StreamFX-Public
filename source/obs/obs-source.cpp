@@ -18,6 +18,7 @@
  */
 
 #include "obs-source.hpp"
+#include <stdexcept>
 
 void obs::source::handle_destroy(void* p, calldata_t* calldata)
 {

@@ -18,6 +18,7 @@
  */
 
 #include "filter-color-grade.hpp"
+#include <stdexcept>
 #include "strings.hpp"
 #include "util-math.hpp"
 

@@ -18,6 +18,7 @@
  */
 
 #include "filter-sdf-effects.hpp"
+#include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
 #include "strings.hpp"
 

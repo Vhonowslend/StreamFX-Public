@@ -16,6 +16,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "gfx-blur-base.hpp"
+#include <stdexcept>
 
 void gfx::blur::base::set_step_scale_x(double_t v)
 {

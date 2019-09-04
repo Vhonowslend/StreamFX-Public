@@ -18,6 +18,7 @@
 */
 
 #include "filter-displacement.hpp"
+#include <stdexcept>
 #include <sys/stat.h>
 #include "strings.hpp"
 

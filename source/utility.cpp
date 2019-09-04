@@ -18,6 +18,7 @@
 */
 
 #include "utility.hpp"
+#include <stdexcept>
 #include <sstream>
 #include "plugin.hpp"
 

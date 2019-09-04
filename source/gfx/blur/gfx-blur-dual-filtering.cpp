@@ -16,6 +16,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "gfx-blur-dual-filtering.hpp"
+#include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
 #include "util-math.hpp"

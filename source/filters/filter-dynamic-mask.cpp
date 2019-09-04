@@ -18,6 +18,7 @@
 */
 
 #include "filter-dynamic-mask.hpp"
+#include <stdexcept>
 #include <sstream>
 #include "strings.hpp"
 
@@ -260,7 +261,7 @@ void filter::dynamic_mask::dynamic_mask_instance::update(obs_data_t* settings)
 			found = this->_channels.find(kv1.first);
 			if (found == this->_channels.end()) {
 				assert(found != this->_channels.end());
-				throw std::exception("Unable to insert element into data _store.");
+				throw std::runtime_error("Unable to insert element into data _store.");
 			}
 		}
 
@@ -315,7 +316,7 @@ void filter::dynamic_mask::dynamic_mask_instance::save(obs_data_t* settings)
 			found = this->_channels.find(kv1.first);
 			if (found == this->_channels.end()) {
 				assert(found != this->_channels.end());
-				throw std::exception("Unable to insert element into data _store.");
+				throw std::runtime_error("Unable to insert element into data _store.");
 			}
 		}
 
@@ -411,7 +412,7 @@ void filter::dynamic_mask::dynamic_mask_instance::video_render(gs_effect_t* in_e
 
 				gs_blend_state_pop();
 			} else {
-				throw std::exception("Failed to render filter.");
+				throw std::runtime_error("Failed to render filter.");
 			}
 
 			this->_filter_texture      = this->_filter_rt->get_texture();

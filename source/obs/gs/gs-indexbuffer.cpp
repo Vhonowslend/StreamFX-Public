@@ -18,6 +18,7 @@
  */
 
 #include "gs-indexbuffer.hpp"
+#include <stdexcept>
 #include "gs-limits.hpp"
 #include "obs/gs/gs-helper.hpp"
 

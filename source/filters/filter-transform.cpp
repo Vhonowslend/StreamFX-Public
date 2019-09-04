@@ -18,6 +18,7 @@
  */
 
 #include "filter-transform.hpp"
+#include <stdexcept>
 #include "strings.hpp"
 #include "util-math.hpp"
 

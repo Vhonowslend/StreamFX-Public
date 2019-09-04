@@ -18,6 +18,7 @@
 */
 
 #include "util-math.hpp"
+#include <stdexcept>
 #include <cctype>
 #include <cstdlib>
 #include "util-memory.hpp"

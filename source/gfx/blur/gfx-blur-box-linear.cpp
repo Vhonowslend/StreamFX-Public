@@ -16,6 +16,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "gfx-blur-box-linear.hpp"
+#include <stdexcept>
 #include <cmath>
 #include <memory>
 #include "obs/gs/gs-helper.hpp"

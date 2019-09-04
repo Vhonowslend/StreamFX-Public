@@ -18,6 +18,7 @@
 */
 
 #include "source-mirror.hpp"
+#include <stdexcept>
 #include <bitset>
 #include <cstring>
 #include <functional>

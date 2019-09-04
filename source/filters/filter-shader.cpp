@@ -18,6 +18,7 @@
  */
 
 #include "filter-shader.hpp"
+#include <stdexcept>
 #include "strings.hpp"
 #include "utility.hpp"
 
@@ -313,9 +314,9 @@ void filter::shader::shader_instance::video_tick(float_t sec_since_last)
 	obs_source_t* target = obs_filter_get_target(_self);
 
 	{ // Update width and height.
-		_width  = obs_source_get_base_width(target);
-		_height = obs_source_get_base_height(target);
-		_swidth = _width * _wscale;
+		_width   = obs_source_get_base_width(target);
+		_height  = obs_source_get_base_height(target);
+		_swidth  = _width * _wscale;
 		_sheight = _height * _hscale;
 	}
 

@@ -18,6 +18,7 @@
  */
 
 #include "gs-mipmapper.hpp"
+#include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
 

@@ -18,6 +18,7 @@
 */
 
 #include "plugin.hpp"
+#include <stdexcept>
 #include "obs/obs-source-tracker.hpp"
 #include "filters/filter-blur.hpp"
 #include "filters/filter-color-grade.hpp"

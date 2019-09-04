@@ -18,6 +18,7 @@
  */
 
 #include "source-shader.hpp"
+#include <stdexcept>
 #include "strings.hpp"
 #include "utility.hpp"
 

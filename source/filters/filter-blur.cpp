@@ -18,6 +18,7 @@
  */
 
 #include "filter-blur.hpp"
+#include <stdexcept>
 #include <cfloat>
 #include <cinttypes>
 #include <cmath>

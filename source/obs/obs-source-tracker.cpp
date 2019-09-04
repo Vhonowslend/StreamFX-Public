@@ -18,6 +18,7 @@
  */
 
 #include "obs-source-tracker.hpp"
+#include <stdexcept>
 
 static std::shared_ptr<obs::source_tracker> source_tracker_instance;
 

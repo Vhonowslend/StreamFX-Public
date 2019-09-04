@@ -18,6 +18,7 @@
  */
 
 #include "gs-vertex.hpp"
+#include <stdexcept>
 #include "util-memory.hpp"
 
 gs::vertex::vertex()
