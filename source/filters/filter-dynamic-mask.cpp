@@ -197,7 +197,7 @@ void filter::dynamic_mask::dynamic_mask_instance::get_properties(obs_properties_
 			{
 				std::string       _chv = D_TRANSLATE(ST_CHANNEL_VALUE);
 				std::vector<char> _chv_data(_chv.size() * 2 + color.size() * 2, '\0');
-				sprintf_s(_chv_data.data(), _chv_data.size(), _chv.c_str(), color.c_str());
+				snprintf(_chv_data.data(), _chv_data.size(), _chv.c_str(), color.c_str());
 				auto _chv_key = std::tuple{kv.first, channel::Invalid, std::string(ST_CHANNEL_VALUE)};
 				_translation_map.insert({_chv_key, std::string(_chv_data.begin(), _chv_data.end())});
 				auto        chv     = _translation_map.find(_chv_key);
@@ -209,7 +209,7 @@ void filter::dynamic_mask::dynamic_mask_instance::get_properties(obs_properties_
 
 				std::string       _chm = D_TRANSLATE(ST_CHANNEL_MULTIPLIER);
 				std::vector<char> _chm_data(_chm.size() * 2 + color.size() * 2, '\0');
-				sprintf_s(_chm_data.data(), _chm_data.size(), _chm.c_str(), color.c_str());
+				snprintf(_chm_data.data(), _chm_data.size(), _chm.c_str(), color.c_str());
 				auto _chm_key = std::tuple{kv.first, channel::Invalid, std::string(ST_CHANNEL_MULTIPLIER)};
 				_translation_map.insert({_chm_key, std::string(_chm_data.begin(), _chm_data.end())});
 				auto        chm     = _translation_map.find(_chm_key);
@@ -230,7 +230,7 @@ void filter::dynamic_mask::dynamic_mask_instance::get_properties(obs_properties_
 
 				std::string       _chm = D_TRANSLATE(ST_CHANNEL_INPUT);
 				std::vector<char> _chm_data(_chm.size() * 2 + color1.size() * 2 + color2.size() * 2, '\0');
-				sprintf_s(_chm_data.data(), _chm_data.size(), _chm.c_str(), color1.c_str(), color2.c_str());
+				snprintf(_chm_data.data(), _chm_data.size(), _chm.c_str(), color1.c_str(), color2.c_str());
 				auto _chm_key = std::tuple{kv1.first, kv2.first, std::string(ST_CHANNEL_INPUT)};
 				_translation_map.insert({_chm_key, std::string(_chm_data.begin(), _chm_data.end())});
 				auto        chm     = _translation_map.find(_chm_key);
