@@ -20,21 +20,22 @@
 #include "util-memory.hpp"
 #include <cstdlib>
 #include <stdexcept>
+#include <stdlib.h>
 
-#define USE_STD_ALLOC_FREE
-
-#ifdef _MSC_VER
-#define D_ALIGNED_ALLOC(a, s) _aligned_malloc(s, a)
-#define D_ALIGNED_FREE _aligned_free
-#else
-#define D_ALIGNED_ALLOC(a, s) aligned_alloc(s, a)
-#define D_ALIGNED_FREE free
+#if defined(_MSC_VER) && (_MSC_VER <= 2100)
+//#define USE_MSC_ALLOC
+#elif defined(_cplusplus) && (__cplusplus >= 201103L)
+#define USE_STD_ALLOC
 #endif
+
+using namespace std;
 
 void* util::malloc_aligned(size_t align, size_t size)
 {
-#ifdef USE_STD_ALLOC_FREE
-	return D_ALIGNED_ALLOC(align, size);
+#ifdef USE_MSC_ALLOC
+	return _aligned_malloc(size, align);
+#elif defined(USE_STD_ALLOC)
+	return aligned_alloc(size, align);
 #else
 	// Ensure that we have space for the pointer and the data.
 	size_t asize = aligned_offset(align, size + (sizeof(void*) * 2));
@@ -55,8 +56,10 @@ void* util::malloc_aligned(size_t align, size_t size)
 
 void util::free_aligned(void* mem)
 {
-#ifdef USE_STD_ALLOC_FREE
-	D_ALIGNED_FREE(mem);
+#ifdef USE_MSC_ALLOC
+	_aligned_free(mem);
+#elif defined(USE_STD_ALLOC_FREE)
+	free(mem);
 #else
 	void* ptr = reinterpret_cast<void*>(*reinterpret_cast<intptr_t*>(static_cast<char*>(mem) - sizeof(void*)));
 	free(ptr);
