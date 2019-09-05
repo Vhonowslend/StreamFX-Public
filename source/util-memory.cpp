@@ -44,7 +44,7 @@ void* util::malloc_aligned(size_t align, size_t size)
 	void* ptr = malloc(asize);
 
 	// Calculate actual aligned position
-	intptr_t ptr_off = aligned_offset(align, reinterpret_cast<size_t>(ptr) + sizeof(void*));
+	intptr_t ptr_off = static_cast<intptr_t>(aligned_offset(align, reinterpret_cast<size_t>(ptr) + sizeof(void*)));
 
 	// Store actual pointer at ptr_off - sizeof(void*).
 	*reinterpret_cast<intptr_t*>(ptr_off - sizeof(void*)) = reinterpret_cast<intptr_t>(ptr);
