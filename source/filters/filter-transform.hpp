@@ -40,22 +40,22 @@ namespace filter {
 			transform_factory();
 			~transform_factory();
 
-			static const char*       get_name(void*);
-			static void              get_defaults(obs_data_t*);
-			static obs_properties_t* get_properties(void*);
-			static bool              modified_properties(obs_properties_t*, obs_property_t*, obs_data_t*);
+			static const char*       get_name(void*) noexcept;
+			static void              get_defaults(obs_data_t*) noexcept;
+			static obs_properties_t* get_properties(void*) noexcept;
+			static bool              modified_properties(obs_properties_t*, obs_property_t*, obs_data_t*) noexcept;
 
-			static void*    create(obs_data_t*, obs_source_t*);
-			static void     destroy(void*);
-			static uint32_t get_width(void*);
-			static uint32_t get_height(void*);
-			static void     update(void*, obs_data_t*);
-			static void     activate(void*);
-			static void     deactivate(void*);
-			static void     show(void*);
-			static void     hide(void*);
-			static void     video_tick(void*, float);
-			static void     video_render(void*, gs_effect_t*);
+			static void*    create(obs_data_t*, obs_source_t*) noexcept;
+			static void     destroy(void*) noexcept;
+			static uint32_t get_width(void*) noexcept;
+			static uint32_t get_height(void*) noexcept;
+			static void     update(void*, obs_data_t*) noexcept;
+			static void     activate(void*) noexcept;
+			static void     deactivate(void*) noexcept;
+			static void     show(void*) noexcept;
+			static void     hide(void*) noexcept;
+			static void     video_tick(void*, float) noexcept;
+			static void     video_render(void*, gs_effect_t*) noexcept;
 		};
 
 		class transform_instance {

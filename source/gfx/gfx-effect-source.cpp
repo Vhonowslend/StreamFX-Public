@@ -121,6 +121,8 @@ std::shared_ptr<gfx::effect_source::parameter>
 		return std::make_shared<gfx::effect_source::matrix_parameter>(parent, effect, param);
 	case gs::effect_parameter::type::Texture:
 		return std::make_shared<gfx::effect_source::texture_parameter>(parent, effect, param);
+	default:
+		return nullptr;
 	}
 
 	return nullptr;
@@ -402,6 +404,8 @@ void gfx::effect_source::value_parameter::properties(obs_properties_t* props)
 		is_int = false;
 		limit  = 4;
 		break;
+	default:
+		break;
 	}
 
 	for (size_t idx = 0; idx < limit; idx++) {
@@ -468,6 +472,8 @@ void gfx::effect_source::value_parameter::remove_properties(obs_properties_t* pr
 		is_int = false;
 		limit  = 4;
 		break;
+	default:
+		break;
 	}
 
 	for (size_t idx = 0; idx < limit; idx++) {
@@ -513,6 +519,8 @@ void gfx::effect_source::value_parameter::update(obs_data_t* data)
 		is_int = false;
 		limit  = 4;
 		break;
+	default:
+		break;
 	}
 
 	for (size_t idx = 0; idx < limit; idx++) {
@@ -554,6 +562,8 @@ void gfx::effect_source::value_parameter::assign()
 		break;
 	case gs::effect_parameter::type::Float4:
 		_param->set_float4(_value.f[0], _value.f[1], _value.f[2], _value.f[3]);
+		break;
+	default:
 		break;
 	}
 }
@@ -699,13 +709,13 @@ void gfx::effect_source::matrix_parameter::update(obs_data_t* data)
 	for (size_t x = 0; x < 4; x++) {
 		vec4& v_ref = _value.x;
 		if (x == 0) {
-			vec4& v_ref = _value.x;
+			v_ref = _value.x;
 		} else if (x == 1) {
-			vec4& v_ref = _value.y;
+			v_ref = _value.y;
 		} else if (x == 2) {
-			vec4& v_ref = _value.z;
+			v_ref = _value.z;
 		} else {
-			vec4& v_ref = _value.t;
+			v_ref = _value.t;
 		}
 
 		for (size_t y = 0; y < 4; y++) {
@@ -799,6 +809,13 @@ void gfx::effect_source::texture_parameter::defaults(obs_properties_t* props, ob
 	obs_data_set_default_string(data, _cache.name[2].c_str(), _source_name.c_str());
 }
 
+bool modifiedcb(void* priv, obs_properties_t* props, obs_property_t* property, obs_data_t* settings) noexcept try {
+	return reinterpret_cast<gfx::effect_source::texture_parameter*>(priv)->modified2(props, property, settings);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return false;
+}
+
 void gfx::effect_source::texture_parameter::properties(obs_properties_t* props)
 {
 	auto grp = props;
@@ -812,12 +829,7 @@ void gfx::effect_source::texture_parameter::properties(obs_properties_t* props)
 	{
 		auto p = obs_properties_add_list(grp, _cache.name[0].c_str(), _cache.visible_name[0].c_str(),
 										 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-		obs_property_set_modified_callback2(
-			p,
-			[](void* priv, obs_properties_t* props, obs_property_t* property, obs_data_t* settings) {
-				return reinterpret_cast<texture_parameter*>(priv)->modified2(props, property, settings);
-			},
-			this);
+		obs_property_set_modified_callback2(p, modifiedcb, this);
 		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_TEXTURE_TYPE)));
 		obs_property_list_add_int(p, D_TRANSLATE(ST_TEXTURE_FILE), static_cast<int64_t>(texture_mode::FILE));
 		obs_property_list_add_int(p, D_TRANSLATE(ST_TEXTURE_SOURCE), static_cast<int64_t>(texture_mode::SOURCE));
@@ -1017,16 +1029,18 @@ gfx::effect_source::effect_source::effect_source(obs_source_t* self)
 
 gfx::effect_source::effect_source::~effect_source() {}
 
+bool modifiedcb2(void* priv, obs_properties_t* props, obs_property_t* property, obs_data_t* settings) noexcept try {
+	return reinterpret_cast<gfx::effect_source::effect_source*>(priv)->modified2(props, property, settings);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return false;
+}
+
 void gfx::effect_source::effect_source::properties(obs_properties_t* props)
 {
 	auto p = obs_properties_add_path(props, ST_FILE, D_TRANSLATE(ST_FILE), OBS_PATH_FILE, "Effects (*.effect);;*.*",
 									 nullptr);
-	obs_property_set_modified_callback2(
-		p,
-		[](void* priv, obs_properties_t* props, obs_property_t* property, obs_data_t* settings) {
-			return reinterpret_cast<gfx::effect_source::effect_source*>(priv)->modified2(props, property, settings);
-		},
-		this);
+	obs_property_set_modified_callback2(p, modifiedcb2, this);
 	obs_properties_add_text(props, ST_TECHNIQUE, D_TRANSLATE(ST_TECHNIQUE), OBS_TEXT_DEFAULT);
 
 	for (auto& kv : _params) {

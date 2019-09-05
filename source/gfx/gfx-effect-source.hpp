@@ -300,8 +300,6 @@ namespace gfx {
 			valid_property_cb_t _cb_valid;
 			param_override_cb_t _cb_override;
 
-			bool modified2(obs_properties_t* props, obs_property_t* property, obs_data_t* settings);
-
 			void load_file(std::string file);
 
 			public:
@@ -324,6 +322,8 @@ namespace gfx {
 			void set_valid_property_cb(valid_property_cb_t cb);
 
 			void set_override_cb(param_override_cb_t cb);
+
+			bool modified2(obs_properties_t* props, obs_property_t* property, obs_data_t* settings);
 		};
 	} // namespace effect_source
 } // namespace gfx

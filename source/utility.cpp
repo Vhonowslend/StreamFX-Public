@@ -21,6 +21,7 @@
 #include <sstream>
 #include <stdexcept>
 #include "plugin.hpp"
+#include <unordered_map>
 
 // OBS
 #ifdef _MSC_VER
@@ -49,7 +50,7 @@ const char* obs_module_recursive_text(const char* to_translate, size_t depth)
 		std::stringstream out;
 
 		{
-			size_t seq_start, seq_end = 0;
+			size_t seq_start = 0, seq_end = 0;
 			bool   seq_got = false;
 
 			for (size_t pos = 0; pos <= orig.length(); pos++) {

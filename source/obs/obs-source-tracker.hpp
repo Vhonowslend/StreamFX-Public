@@ -36,9 +36,9 @@ namespace obs {
 	class source_tracker {
 		std::map<std::string, obs_weak_source_t*> _source_map;
 
-		static void source_create_handler(void* ptr, calldata_t* data);
-		static void source_destroy_handler(void* ptr, calldata_t* data);
-		static void source_rename_handler(void* ptr, calldata_t* data);
+		static void source_create_handler(void* ptr, calldata_t* data) noexcept;
+		static void source_destroy_handler(void* ptr, calldata_t* data) noexcept;
+		static void source_rename_handler(void* ptr, calldata_t* data) noexcept;
 
 		public: // Singleton
 		static void                                 initialize();

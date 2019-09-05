@@ -273,7 +273,7 @@ bool gs::vertex_buffer::empty()
 
 const gs::vertex gs::vertex_buffer::at(uint32_t idx)
 {
-	if ((idx < 0) || (idx >= _size)) {
+	if (idx >= _size) {
 		throw std::out_of_range("idx out of range");
 	}
 
@@ -321,7 +321,7 @@ uint32_t* gs::vertex_buffer::get_colors()
 
 vec4* gs::vertex_buffer::get_uv_layer(size_t idx)
 {
-	if ((idx < 0) || (idx >= _layers)) {
+	if (idx >= _layers) {
 		throw std::out_of_range("idx out of range");
 	}
 	return _uvs[idx];

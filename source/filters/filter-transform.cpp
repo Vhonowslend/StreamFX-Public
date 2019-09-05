@@ -116,13 +116,13 @@ filter::transform::transform_factory::transform_factory()
 
 filter::transform::transform_factory::~transform_factory() {}
 
-const char* filter::transform::transform_factory::get_name(void*)
-{
+const char* filter::transform::transform_factory::get_name(void*) noexcept try {
 	return D_TRANSLATE(ST);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void filter::transform::transform_factory::get_defaults(obs_data_t* data)
-{
+void filter::transform::transform_factory::get_defaults(obs_data_t* data) noexcept try {
 	obs_data_set_default_int(data, ST_CAMERA, (int64_t)CameraMode::Orthographic);
 	obs_data_set_default_double(data, ST_CAMERA_FIELDOFVIEW, 90.0);
 	obs_data_set_default_double(data, ST_POSITION_X, 0);
@@ -137,10 +137,11 @@ void filter::transform::transform_factory::get_defaults(obs_data_t* data)
 	obs_data_set_default_double(data, ST_SHEAR_Y, 0);
 	obs_data_set_default_bool(data, S_ADVANCED, false);
 	obs_data_set_default_int(data, ST_ROTATION_ORDER, RotationOrder::ZXY);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-obs_properties_t* filter::transform::transform_factory::get_properties(void*)
-{
+obs_properties_t* filter::transform::transform_factory::get_properties(void*) noexcept try {
 	obs_properties_t* pr = obs_properties_create();
 	obs_property_t*   p  = NULL;
 
@@ -237,10 +238,12 @@ obs_properties_t* filter::transform::transform_factory::get_properties(void*)
 	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(S_MIPGENERATOR_INTENSITY)));
 
 	return pr;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-bool filter::transform::transform_factory::modified_properties(obs_properties_t* pr, obs_property_t*, obs_data_t* d)
-{
+bool filter::transform::transform_factory::modified_properties(obs_properties_t* pr, obs_property_t*,
+															   obs_data_t*       d) noexcept try {
 	switch ((CameraMode)obs_data_get_int(d, ST_CAMERA)) {
 	case CameraMode::Orthographic:
 		obs_property_set_visible(obs_properties_get(pr, ST_CAMERA_FIELDOFVIEW), false);
@@ -261,51 +264,62 @@ bool filter::transform::transform_factory::modified_properties(obs_properties_t*
 	obs_property_set_visible(obs_properties_get(pr, S_MIPGENERATOR_INTENSITY), mipmappingVisible);
 
 	return true;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void* filter::transform::transform_factory::create(obs_data_t* data, obs_source_t* source)
-{
+void* filter::transform::transform_factory::create(obs_data_t* data, obs_source_t* source) noexcept try {
 	return new transform_instance(data, source);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void filter::transform::transform_factory::destroy(void* ptr)
-{
+void filter::transform::transform_factory::destroy(void* ptr) noexcept try {
 	delete reinterpret_cast<transform_instance*>(ptr);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-uint32_t filter::transform::transform_factory::get_width(void* ptr)
-{
+uint32_t filter::transform::transform_factory::get_width(void* ptr) noexcept try {
 	return reinterpret_cast<transform_instance*>(ptr)->get_width();
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-uint32_t filter::transform::transform_factory::get_height(void* ptr)
-{
+uint32_t filter::transform::transform_factory::get_height(void* ptr) noexcept try {
 	return reinterpret_cast<transform_instance*>(ptr)->get_height();
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void filter::transform::transform_factory::update(void* ptr, obs_data_t* data)
-{
+void filter::transform::transform_factory::update(void* ptr, obs_data_t* data) noexcept try {
 	reinterpret_cast<transform_instance*>(ptr)->update(data);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void filter::transform::transform_factory::activate(void* ptr)
-{
+void filter::transform::transform_factory::activate(void* ptr) noexcept try {
 	reinterpret_cast<transform_instance*>(ptr)->activate();
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void filter::transform::transform_factory::deactivate(void* ptr)
-{
+void filter::transform::transform_factory::deactivate(void* ptr) noexcept try {
 	reinterpret_cast<transform_instance*>(ptr)->deactivate();
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void filter::transform::transform_factory::video_tick(void* ptr, float time)
-{
+void filter::transform::transform_factory::video_tick(void* ptr, float time) noexcept try {
 	reinterpret_cast<transform_instance*>(ptr)->video_tick(time);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void filter::transform::transform_factory::video_render(void* ptr, gs_effect_t* effect)
-{
+void filter::transform::transform_factory::video_render(void* ptr, gs_effect_t* effect) noexcept try {
 	reinterpret_cast<transform_instance*>(ptr)->video_render(effect);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 filter::transform::transform_instance::~transform_instance()

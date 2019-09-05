@@ -20,6 +20,8 @@
 #pragma once
 #include "plugin.hpp"
 
+#define PLUGIN_NAME "Stream Effects"
+
 #define D_TRANSLATE(x) obs_module_text(x)
 #define D_DESC(x) x ".Description"
 

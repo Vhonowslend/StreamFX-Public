@@ -287,6 +287,8 @@ void filter::dynamic_mask::dynamic_mask_instance::update(obs_data_t* settings)
 		case channel::Alpha:
 			ch = &this->_precalc.matrix.t;
 			break;
+		default:
+			break;
 		}
 
 		for (auto kv2 : channel_translations) {
@@ -343,7 +345,7 @@ void filter::dynamic_mask::dynamic_mask_instance::input_renamed(obs::source*, st
 }
 
 bool filter::dynamic_mask::dynamic_mask_instance::modified(void*, obs_properties_t* properties, obs_property_t*,
-														   obs_data_t* settings)
+														   obs_data_t* settings) noexcept try
 {
 	channel mask = static_cast<channel>(obs_data_get_int(settings, ST_CHANNEL));
 
@@ -360,6 +362,9 @@ bool filter::dynamic_mask::dynamic_mask_instance::modified(void*, obs_properties
 	}
 
 	return true;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in modified_properties callback.");
+	return false;
 }
 
 void filter::dynamic_mask::dynamic_mask_instance::video_tick(float)

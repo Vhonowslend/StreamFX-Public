@@ -133,7 +133,7 @@ namespace source {
 			void deactivate();
 			void video_tick(float);
 			void video_render(gs_effect_t*);
-			void audio_output_cb();
+			void audio_output_cb() noexcept;
 			void enum_active_sources(obs_source_enum_proc_t, void*);
 			void load(obs_data_t*);
 			void save(obs_data_t*);

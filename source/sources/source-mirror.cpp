@@ -654,7 +654,7 @@ void source::mirror::mirror_instance::video_render(gs_effect_t* effect)
 	}
 }
 
-void source::mirror::mirror_instance::audio_output_cb()
+void source::mirror::mirror_instance::audio_output_cb() noexcept try
 {
 	std::unique_lock<std::mutex> ulock(this->_audio_lock_outputter);
 
@@ -686,6 +686,8 @@ void source::mirror::mirror_instance::audio_output_cb()
 			}
 		}
 	}
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void source::mirror::mirror_instance::enum_active_sources(obs_source_enum_proc_t enum_callback, void* param)

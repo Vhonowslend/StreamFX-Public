@@ -322,7 +322,7 @@ void gs::effect_parameter::get_float2(float_t& x, float_t& y)
 		y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t));
 		bfree(ptr);
 	} else {
-		x, y = 0;
+		x = y = 0;
 	}
 }
 
@@ -336,7 +336,7 @@ void gs::effect_parameter::get_default_float2(float_t& x, float_t& y)
 		y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t));
 		bfree(ptr);
 	} else {
-		x, y = 0;
+		x = y = 0;
 	}
 }
 
@@ -376,7 +376,7 @@ void gs::effect_parameter::get_float3(float_t& x, float_t& y, float_t& z)
 		z = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 2);
 		bfree(ptr);
 	} else {
-		x, y, z = 0;
+		x = y = z = 0;
 	}
 }
 
@@ -391,7 +391,7 @@ void gs::effect_parameter::get_default_float3(float_t& x, float_t& y, float_t& z
 		z = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 2);
 		bfree(ptr);
 	} else {
-		x, y, z = 0;
+		x = y = z = 0;
 	}
 }
 
@@ -432,7 +432,7 @@ void gs::effect_parameter::get_float4(float_t& x, float_t& y, float_t& z, float_
 		w = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 3);
 		bfree(ptr);
 	} else {
-		x, y, z, w = 0;
+		x = y = z = w = 0;
 	}
 }
 
@@ -448,7 +448,7 @@ void gs::effect_parameter::get_default_float4(float_t& x, float_t& y, float_t& z
 		w = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 3);
 		bfree(ptr);
 	} else {
-		x, y, z, w = 0;
+		x = y = z = w = 0;
 	}
 }
 
@@ -511,7 +511,7 @@ void gs::effect_parameter::get_int2(int32_t& x, int32_t& y)
 		y = *reinterpret_cast<int32_t*>(ptr + sizeof(int32_t));
 		bfree(ptr);
 	} else {
-		x, y = 0;
+		x = y = 0;
 	}
 }
 
@@ -525,7 +525,7 @@ void gs::effect_parameter::get_default_int2(int32_t& x, int32_t& y)
 		y = *reinterpret_cast<int32_t*>(ptr + sizeof(int32_t));
 		bfree(ptr);
 	} else {
-		x, y = 0;
+		x = y = 0;
 	}
 }
 
@@ -548,7 +548,7 @@ void gs::effect_parameter::get_int3(int32_t& x, int32_t& y, int32_t& z)
 		z = *reinterpret_cast<int32_t*>(ptr + sizeof(int32_t) * 2);
 		bfree(ptr);
 	} else {
-		x, y, z = 0;
+		x = y = z = 0;
 	}
 }
 
@@ -563,7 +563,7 @@ void gs::effect_parameter::get_default_int3(int32_t& x, int32_t& y, int32_t& z)
 		z = *reinterpret_cast<int32_t*>(ptr + sizeof(int32_t) * 2);
 		bfree(ptr);
 	} else {
-		x, y, z = 0;
+		x = y = z = 0;
 	}
 }
 
@@ -587,7 +587,7 @@ void gs::effect_parameter::get_int4(int32_t& x, int32_t& y, int32_t& z, int32_t&
 		w = *reinterpret_cast<int32_t*>(ptr + sizeof(int32_t) * 3);
 		bfree(ptr);
 	} else {
-		x, y, z, w = 0;
+		x = y = z = w = 0;
 	}
 }
 
@@ -603,7 +603,7 @@ void gs::effect_parameter::get_default_int4(int32_t& x, int32_t& y, int32_t& z, 
 		w = *reinterpret_cast<int32_t*>(ptr + sizeof(int32_t) * 3);
 		bfree(ptr);
 	} else {
-		x, y, z, w = 0;
+		x = y = z = w = 0;
 	}
 }
 

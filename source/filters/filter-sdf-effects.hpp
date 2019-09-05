@@ -60,22 +60,22 @@ namespace filter {
 			void on_list_fill();
 			void on_list_empty();
 
-			static void* create(obs_data_t* settings, obs_source_t* self);
-			static void  destroy(void* source);
+			static void* create(obs_data_t* settings, obs_source_t* self) noexcept;
+			static void  destroy(void* source) noexcept;
 
-			static void              get_defaults(obs_data_t* settings);
-			static obs_properties_t* get_properties(void* source);
-			static void              update(void* source, obs_data_t* settings);
+			static void              get_defaults(obs_data_t* settings) noexcept;
+			static obs_properties_t* get_properties(void* source) noexcept;
+			static void              update(void* source, obs_data_t* settings) noexcept;
 
-			static const char* get_name(void* source);
-			static uint32_t    get_width(void* source);
-			static uint32_t    get_height(void* source);
+			static const char* get_name(void* source) noexcept;
+			static uint32_t    get_width(void* source) noexcept;
+			static uint32_t    get_height(void* source) noexcept;
 
-			static void activate(void* source);
-			static void deactivate(void* source);
+			static void activate(void* source) noexcept;
+			static void deactivate(void* source) noexcept;
 
-			static void video_tick(void* source, float delta);
-			static void video_render(void* source, gs_effect_t* effect);
+			static void video_tick(void* source, float delta) noexcept;
+			static void video_render(void* source, gs_effect_t* effect) noexcept;
 
 			public:
 			std::shared_ptr<gs::effect> get_sdf_producer_effect();
@@ -136,22 +136,22 @@ namespace filter {
 			float_t _outline_sharpness_inv;
 
 			static bool cb_modified_shadow_inside(void* ptr, obs_properties_t* props, obs_property* prop,
-												  obs_data_t* settings);
+												  obs_data_t* settings) noexcept;
 
 			static bool cb_modified_shadow_outside(void* ptr, obs_properties_t* props, obs_property* prop,
-												   obs_data_t* settings);
+												   obs_data_t* settings) noexcept;
 
 			static bool cb_modified_glow_inside(void* ptr, obs_properties_t* props, obs_property* prop,
-												obs_data_t* settings);
+												obs_data_t* settings) noexcept;
 
 			static bool cb_modified_glow_outside(void* ptr, obs_properties_t* props, obs_property* prop,
-												 obs_data_t* settings);
+												 obs_data_t* settings) noexcept;
 
 			static bool cb_modified_outline(void* ptr, obs_properties_t* props, obs_property* prop,
-											obs_data_t* settings);
+											obs_data_t* settings) noexcept;
 
 			static bool cb_modified_advanced(void* ptr, obs_properties_t* props, obs_property* prop,
-											 obs_data_t* settings);
+											 obs_data_t* settings) noexcept;
 
 			public:
 			sdf_effects_instance(obs_data_t* settings, obs_source_t* self);

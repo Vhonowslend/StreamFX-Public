@@ -19,11 +19,11 @@
 
 #include "obs-source-tracker.hpp"
 #include <stdexcept>
+#include "plugin.hpp"
 
 static std::shared_ptr<obs::source_tracker> source_tracker_instance;
 
-void obs::source_tracker::source_create_handler(void* ptr, calldata_t* data)
-{
+void obs::source_tracker::source_create_handler(void* ptr, calldata_t* data) noexcept try {
 	obs::source_tracker* self = reinterpret_cast<obs::source_tracker*>(ptr);
 
 	obs_source_t* target = nullptr;
@@ -45,10 +45,11 @@ void obs::source_tracker::source_create_handler(void* ptr, calldata_t* data)
 	}
 
 	self->_source_map.insert({std::string(name), weak});
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source_tracker::source_destroy_handler(void* ptr, calldata_t* data)
-{
+void obs::source_tracker::source_destroy_handler(void* ptr, calldata_t* data) noexcept try {
 	obs::source_tracker* self = reinterpret_cast<obs::source_tracker*>(ptr);
 
 	obs_source_t* target = nullptr;
@@ -71,10 +72,11 @@ void obs::source_tracker::source_destroy_handler(void* ptr, calldata_t* data)
 
 	obs_weak_source_release(found->second);
 	self->_source_map.erase(found);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source_tracker::source_rename_handler(void* ptr, calldata_t* data)
-{
+void obs::source_tracker::source_rename_handler(void* ptr, calldata_t* data) noexcept try {
 	obs::source_tracker* self = reinterpret_cast<obs::source_tracker*>(ptr);
 
 	obs_source_t* target    = nullptr;
@@ -103,6 +105,8 @@ void obs::source_tracker::source_rename_handler(void* ptr, calldata_t* data)
 	// Insert at new key, remove old pair.
 	self->_source_map.insert({new_name, found->second});
 	self->_source_map.erase(found);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::source_tracker::initialize()

@@ -218,18 +218,20 @@ uint32_t filter::shader::shader_instance::height()
 	return _sheight;
 }
 
+bool modifiedcb3(obs_properties_t* props, obs_property_t* property, obs_data_t* settings) noexcept try {
+	obs_property_set_visible(obs_properties_get(props, ST_SCALE_SCALE), obs_data_get_bool(settings, ST_SCALE_LOCKED));
+	obs_property_set_visible(obs_properties_get(props, ST_SCALE_WIDTH), !obs_data_get_bool(settings, ST_SCALE_LOCKED));
+	obs_property_set_visible(obs_properties_get(props, ST_SCALE_HEIGHT), !obs_data_get_bool(settings, ST_SCALE_LOCKED));
+	return true;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return false;
+}
+
 void filter::shader::shader_instance::properties(obs_properties_t* props)
 {
 	auto p = obs_properties_add_bool(props, ST_SCALE_LOCKED, D_TRANSLATE(ST_SCALE_LOCKED));
-	obs_property_set_modified_callback(p, [](obs_properties_t* props, obs_property_t* property, obs_data_t* settings) {
-		obs_property_set_visible(obs_properties_get(props, ST_SCALE_SCALE),
-								 obs_data_get_bool(settings, ST_SCALE_LOCKED));
-		obs_property_set_visible(obs_properties_get(props, ST_SCALE_WIDTH),
-								 !obs_data_get_bool(settings, ST_SCALE_LOCKED));
-		obs_property_set_visible(obs_properties_get(props, ST_SCALE_HEIGHT),
-								 !obs_data_get_bool(settings, ST_SCALE_LOCKED));
-		return true;
-	});
+	obs_property_set_modified_callback(p, modifiedcb3);
 	obs_properties_add_float(props, ST_SCALE_SCALE, D_TRANSLATE(ST_SCALE_SCALE), 0.01, 5.0, 0.01);
 	obs_properties_add_float(props, ST_SCALE_WIDTH, D_TRANSLATE(ST_SCALE_WIDTH), 0.01, 5.0, 0.01);
 	obs_properties_add_float(props, ST_SCALE_HEIGHT, D_TRANSLATE(ST_SCALE_HEIGHT), 0.01, 5.0, 0.01);

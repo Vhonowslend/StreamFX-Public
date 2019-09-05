@@ -135,18 +135,18 @@ void filter::sdf_effects::sdf_effects_factory::on_list_empty()
 	this->_sdf_consumer_effect.reset();
 }
 
-void* filter::sdf_effects::sdf_effects_factory::create(obs_data_t* data, obs_source_t* parent)
-{
+void* filter::sdf_effects::sdf_effects_factory::create(obs_data_t* data, obs_source_t* parent) noexcept try {
 	if (get()->_sources.empty()) {
 		get()->on_list_fill();
 	}
 	filter::sdf_effects::sdf_effects_instance* ptr = new filter::sdf_effects::sdf_effects_instance(data, parent);
 	get()->_sources.push_back(ptr);
 	return ptr;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void filter::sdf_effects::sdf_effects_factory::destroy(void* inptr)
-{
+void filter::sdf_effects::sdf_effects_factory::destroy(void* inptr) noexcept try {
 	filter::sdf_effects::sdf_effects_instance* ptr =
 		reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr);
 	get()->_sources.remove(ptr);
@@ -154,10 +154,11 @@ void filter::sdf_effects::sdf_effects_factory::destroy(void* inptr)
 		get()->on_list_empty();
 	}
 	delete ptr;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void filter::sdf_effects::sdf_effects_factory::get_defaults(obs_data_t* data)
-{
+void filter::sdf_effects::sdf_effects_factory::get_defaults(obs_data_t* data) noexcept try {
 	obs_data_set_default_bool(data, ST_SHADOW_OUTER, false);
 	obs_data_set_default_int(data, ST_SHADOW_OUTER_COLOR, 0x00000000);
 	obs_data_set_default_double(data, ST_SHADOW_OUTER_ALPHA, 100.0);
@@ -196,51 +197,62 @@ void filter::sdf_effects::sdf_effects_factory::get_defaults(obs_data_t* data)
 	obs_data_set_default_bool(data, S_ADVANCED, false);
 	obs_data_set_default_double(data, ST_SDF_SCALE, 100.0);
 	obs_data_set_default_double(data, ST_SDF_THRESHOLD, 50.0);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-obs_properties_t* filter::sdf_effects::sdf_effects_factory::get_properties(void* inptr)
-{
+obs_properties_t* filter::sdf_effects::sdf_effects_factory::get_properties(void* inptr) noexcept try {
 	return reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->get_properties();
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void filter::sdf_effects::sdf_effects_factory::update(void* inptr, obs_data_t* settings)
-{
+void filter::sdf_effects::sdf_effects_factory::update(void* inptr, obs_data_t* settings) noexcept try {
 	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->update(settings);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-const char* filter::sdf_effects::sdf_effects_factory::get_name(void*)
-{
+const char* filter::sdf_effects::sdf_effects_factory::get_name(void*) noexcept try {
 	return D_TRANSLATE(ST);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-uint32_t filter::sdf_effects::sdf_effects_factory::get_width(void* inptr)
-{
+uint32_t filter::sdf_effects::sdf_effects_factory::get_width(void* inptr) noexcept try {
 	return reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->get_width();
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-uint32_t filter::sdf_effects::sdf_effects_factory::get_height(void* inptr)
-{
+uint32_t filter::sdf_effects::sdf_effects_factory::get_height(void* inptr) noexcept try {
 	return reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->get_height();
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void filter::sdf_effects::sdf_effects_factory::activate(void* inptr)
-{
+void filter::sdf_effects::sdf_effects_factory::activate(void* inptr) noexcept try {
 	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->activate();
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void filter::sdf_effects::sdf_effects_factory::deactivate(void* inptr)
-{
+void filter::sdf_effects::sdf_effects_factory::deactivate(void* inptr) noexcept try {
 	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->deactivate();
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void filter::sdf_effects::sdf_effects_factory::video_tick(void* inptr, float delta)
-{
+void filter::sdf_effects::sdf_effects_factory::video_tick(void* inptr, float delta) noexcept try {
 	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->video_tick(delta);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void filter::sdf_effects::sdf_effects_factory::video_render(void* inptr, gs_effect_t* effect)
-{
+void filter::sdf_effects::sdf_effects_factory::video_render(void* inptr, gs_effect_t* effect) noexcept try {
 	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->video_render(effect);
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 std::shared_ptr<gs::effect> filter::sdf_effects::sdf_effects_factory::get_sdf_producer_effect()
@@ -254,8 +266,7 @@ std::shared_ptr<gs::effect> filter::sdf_effects::sdf_effects_factory::get_sdf_co
 }
 
 bool filter::sdf_effects::sdf_effects_instance::cb_modified_shadow_inside(void*, obs_properties_t* props, obs_property*,
-																		  obs_data_t* settings)
-{
+																		  obs_data_t* settings) noexcept try {
 	bool v = obs_data_get_bool(settings, ST_SHADOW_INNER);
 	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_RANGE_MINIMUM), v);
 	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_RANGE_MAXIMUM), v);
@@ -264,11 +275,13 @@ bool filter::sdf_effects::sdf_effects_instance::cb_modified_shadow_inside(void*,
 	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_COLOR), v);
 	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_ALPHA), v);
 	return true;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-bool filter::sdf_effects::sdf_effects_instance::cb_modified_shadow_outside(void*, obs_properties_t*   props,
-																		   obs_property*, obs_data_t* settings)
-{
+bool filter::sdf_effects::sdf_effects_instance::cb_modified_shadow_outside(void*, obs_properties_t* props,
+																		   obs_property*,
+																		   obs_data_t* settings) noexcept try {
 	bool v = obs_data_get_bool(settings, ST_SHADOW_OUTER);
 	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_RANGE_MINIMUM), v);
 	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_RANGE_MAXIMUM), v);
@@ -277,33 +290,36 @@ bool filter::sdf_effects::sdf_effects_instance::cb_modified_shadow_outside(void*
 	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_COLOR), v);
 	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_ALPHA), v);
 	return true;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 bool filter::sdf_effects::sdf_effects_instance::cb_modified_glow_inside(void*, obs_properties_t* props, obs_property*,
-																		obs_data_t* settings)
-{
+																		obs_data_t* settings) noexcept try {
 	bool v = obs_data_get_bool(settings, ST_GLOW_INNER);
 	obs_property_set_visible(obs_properties_get(props, ST_GLOW_INNER_COLOR), v);
 	obs_property_set_visible(obs_properties_get(props, ST_GLOW_INNER_ALPHA), v);
 	obs_property_set_visible(obs_properties_get(props, ST_GLOW_INNER_WIDTH), v);
 	obs_property_set_visible(obs_properties_get(props, ST_GLOW_INNER_SHARPNESS), v);
 	return true;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 bool filter::sdf_effects::sdf_effects_instance::cb_modified_glow_outside(void*, obs_properties_t* props, obs_property*,
-																		 obs_data_t* settings)
-{
+																		 obs_data_t* settings) noexcept try {
 	bool v = obs_data_get_bool(settings, ST_GLOW_OUTER);
 	obs_property_set_visible(obs_properties_get(props, ST_GLOW_OUTER_COLOR), v);
 	obs_property_set_visible(obs_properties_get(props, ST_GLOW_OUTER_ALPHA), v);
 	obs_property_set_visible(obs_properties_get(props, ST_GLOW_OUTER_WIDTH), v);
 	obs_property_set_visible(obs_properties_get(props, ST_GLOW_OUTER_SHARPNESS), v);
 	return true;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 bool filter::sdf_effects::sdf_effects_instance::cb_modified_outline(void*, obs_properties_t* props, obs_property*,
-																	obs_data_t* settings)
-{
+																	obs_data_t* settings) noexcept try {
 	bool v = obs_data_get_bool(settings, ST_OUTLINE);
 	obs_property_set_visible(obs_properties_get(props, ST_OUTLINE_COLOR), v);
 	obs_property_set_visible(obs_properties_get(props, ST_OUTLINE_ALPHA), v);
@@ -311,15 +327,18 @@ bool filter::sdf_effects::sdf_effects_instance::cb_modified_outline(void*, obs_p
 	obs_property_set_visible(obs_properties_get(props, ST_OUTLINE_OFFSET), v);
 	obs_property_set_visible(obs_properties_get(props, ST_OUTLINE_SHARPNESS), v);
 	return true;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 bool filter::sdf_effects::sdf_effects_instance::cb_modified_advanced(void*, obs_properties_t* props, obs_property*,
-																	 obs_data_t* settings)
-{
+																	 obs_data_t* settings) noexcept try {
 	bool show_advanced = obs_data_get_bool(settings, S_ADVANCED);
 	obs_property_set_visible(obs_properties_get(props, ST_SDF_SCALE), show_advanced);
 	obs_property_set_visible(obs_properties_get(props, ST_SDF_THRESHOLD), show_advanced);
 	return true;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 filter::sdf_effects::sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* self)
