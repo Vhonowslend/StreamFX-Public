@@ -272,6 +272,7 @@ void* filter::transform::transform_factory::create(obs_data_t* data, obs_source_
 	return new transform_instance(data, source);
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return nullptr;
 }
 
 void filter::transform::transform_factory::destroy(void* ptr) noexcept try {

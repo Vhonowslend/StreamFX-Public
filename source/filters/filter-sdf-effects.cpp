@@ -144,6 +144,7 @@ void* filter::sdf_effects::sdf_effects_factory::create(obs_data_t* data, obs_sou
 	return ptr;
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return nullptr;
 }
 
 void filter::sdf_effects::sdf_effects_factory::destroy(void* inptr) noexcept try {
