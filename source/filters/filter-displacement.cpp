@@ -28,6 +28,122 @@
 #define ST_RATIO "Filter.Displacement.Ratio"
 #define ST_SCALE "Filter.Displacement.Scale"
 
+static const char* get_name(void*) noexcept try {
+	return D_TRANSLATE(ST);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return "";
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return "";
+}
+
+static void* create(obs_data_t* data, obs_source_t* source) noexcept try {
+	return new filter::displacement::displacement_instance(data, source);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return nullptr;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return nullptr;
+}
+
+static void destroy(void* ptr) noexcept try {
+	delete reinterpret_cast<filter::displacement::displacement_instance*>(ptr);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+static void get_defaults(obs_data_t* data) noexcept try {
+	char* disp = obs_module_file("filter-displacement/neutral.png");
+	obs_data_set_default_string(data, ST_FILE, disp);
+	obs_data_set_default_double(data, ST_RATIO, 0);
+	obs_data_set_default_double(data, ST_SCALE, 0);
+	bfree(disp);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+static obs_properties_t* get_properties(void* ptr) noexcept try {
+	obs_properties_t* pr = obs_properties_create();
+
+	std::string path = "";
+	if (ptr)
+		path = reinterpret_cast<filter::displacement::displacement_instance*>(ptr)->get_file();
+
+	obs_properties_add_path(pr, ST_FILE, D_TRANSLATE(ST_FILE), obs_path_type::OBS_PATH_FILE, D_TRANSLATE(ST_FILE_TYPES),
+							path.c_str());
+	obs_properties_add_float_slider(pr, ST_RATIO, D_TRANSLATE(ST_RATIO), 0, 1, 0.01);
+	obs_properties_add_float_slider(pr, ST_SCALE, D_TRANSLATE(ST_SCALE), -1000, 1000, 0.01);
+	return pr;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return nullptr;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return nullptr;
+}
+
+static void update(void* ptr, obs_data_t* data) noexcept try {
+	reinterpret_cast<filter::displacement::displacement_instance*>(ptr)->update(data);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+static void activate(void* ptr) noexcept try {
+	reinterpret_cast<filter::displacement::displacement_instance*>(ptr)->activate();
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+static void deactivate(void* ptr) noexcept try {
+	reinterpret_cast<filter::displacement::displacement_instance*>(ptr)->deactivate();
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+static void show(void* ptr) noexcept try {
+	reinterpret_cast<filter::displacement::displacement_instance*>(ptr)->show();
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+static void hide(void* ptr) noexcept try {
+	reinterpret_cast<filter::displacement::displacement_instance*>(ptr)->hide();
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+static void video_tick(void* ptr, float time) noexcept try {
+	reinterpret_cast<filter::displacement::displacement_instance*>(ptr)->video_tick(time);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+static void video_render(void* ptr, gs_effect_t* effect) noexcept try {
+	reinterpret_cast<filter::displacement::displacement_instance*>(ptr)->video_render(effect);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
 static std::shared_ptr<filter::displacement::displacement_factory> factory_instance = nullptr;
 
 void filter::displacement::displacement_factory::initialize()
@@ -70,90 +186,6 @@ filter::displacement::displacement_factory::displacement_factory()
 
 filter::displacement::displacement_factory::~displacement_factory() {}
 
-const char* filter::displacement::displacement_factory::get_name(void*)
-{
-	return D_TRANSLATE(ST);
-}
-
-void* filter::displacement::displacement_factory::create(obs_data_t* data, obs_source_t* source)
-{
-	return new displacement_instance(data, source);
-}
-
-void filter::displacement::displacement_factory::destroy(void* ptr)
-{
-	delete reinterpret_cast<displacement_instance*>(ptr);
-}
-
-uint32_t filter::displacement::displacement_factory::get_width(void* ptr)
-{
-	return reinterpret_cast<displacement_instance*>(ptr)->get_width();
-}
-
-uint32_t filter::displacement::displacement_factory::get_height(void* ptr)
-{
-	return reinterpret_cast<displacement_instance*>(ptr)->get_height();
-}
-
-void filter::displacement::displacement_factory::get_defaults(obs_data_t* data)
-{
-	char* disp = obs_module_file("filter-displacement/neutral.png");
-	obs_data_set_default_string(data, ST_FILE, disp);
-	obs_data_set_default_double(data, ST_RATIO, 0);
-	obs_data_set_default_double(data, ST_SCALE, 0);
-	bfree(disp);
-}
-
-obs_properties_t* filter::displacement::displacement_factory::get_properties(void* ptr)
-{
-	obs_properties_t* pr = obs_properties_create();
-
-	std::string path = "";
-	if (ptr)
-		path = reinterpret_cast<displacement_instance*>(ptr)->get_file();
-
-	obs_properties_add_path(pr, ST_FILE, D_TRANSLATE(ST_FILE), obs_path_type::OBS_PATH_FILE, D_TRANSLATE(ST_FILE_TYPES),
-							path.c_str());
-	obs_properties_add_float_slider(pr, ST_RATIO, D_TRANSLATE(ST_RATIO), 0, 1, 0.01);
-	obs_properties_add_float_slider(pr, ST_SCALE, D_TRANSLATE(ST_SCALE), -1000, 1000, 0.01);
-	return pr;
-}
-
-void filter::displacement::displacement_factory::update(void* ptr, obs_data_t* data)
-{
-	reinterpret_cast<displacement_instance*>(ptr)->update(data);
-}
-
-void filter::displacement::displacement_factory::activate(void* ptr)
-{
-	reinterpret_cast<displacement_instance*>(ptr)->activate();
-}
-
-void filter::displacement::displacement_factory::deactivate(void* ptr)
-{
-	reinterpret_cast<displacement_instance*>(ptr)->deactivate();
-}
-
-void filter::displacement::displacement_factory::show(void* ptr)
-{
-	reinterpret_cast<displacement_instance*>(ptr)->show();
-}
-
-void filter::displacement::displacement_factory::hide(void* ptr)
-{
-	reinterpret_cast<displacement_instance*>(ptr)->hide();
-}
-
-void filter::displacement::displacement_factory::video_tick(void* ptr, float time)
-{
-	reinterpret_cast<displacement_instance*>(ptr)->video_tick(time);
-}
-
-void filter::displacement::displacement_factory::video_render(void* ptr, gs_effect_t* effect)
-{
-	reinterpret_cast<displacement_instance*>(ptr)->video_render(effect);
-}
-
 void filter::displacement::displacement_instance::validate_file_texture(std::string file)
 {
 	bool do_update = false;
@@ -191,8 +223,8 @@ void filter::displacement::displacement_instance::validate_file_texture(std::str
 }
 
 filter::displacement::displacement_instance::displacement_instance(obs_data_t* data, obs_source_t* context)
-	: _self(context), _timer(0), _effect(nullptr), _distance(0), _file_create_time(0), _file_modified_time(0),
-	  _file_size(0)
+	: _self(context), _timer(), _effect(), _distance(), _displacement_scale(), _file_create_time(),
+	  _file_modified_time(), _file_size()
 {
 	char* effectFile = obs_module_file("effects/displace.effect");
 	if (effectFile) {

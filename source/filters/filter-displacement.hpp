@@ -47,22 +47,6 @@ namespace filter {
 			public:
 			displacement_factory();
 			~displacement_factory();
-
-			static const char* get_name(void*);
-
-			static void*             create(obs_data_t*, obs_source_t*);
-			static void              destroy(void*);
-			static uint32_t          get_width(void*);
-			static uint32_t          get_height(void*);
-			static void              get_defaults(obs_data_t*);
-			static obs_properties_t* get_properties(void*);
-			static void              update(void*, obs_data_t*);
-			static void              activate(void*);
-			static void              deactivate(void*);
-			static void              show(void*);
-			static void              hide(void*);
-			static void              video_tick(void*, float);
-			static void              video_render(void*, gs_effect_t*);
 		};
 
 		class displacement_instance {
