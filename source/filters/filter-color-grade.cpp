@@ -74,13 +74,17 @@
 #define MODE_LOG Log
 #define MODE_LOG10 Log10
 
-const char* get_name(void*)
-{
+static const char* get_name(void*) noexcept try {
 	return D_TRANSLATE(ST);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return "";
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return "";
 }
 
-void get_defaults(obs_data_t* data)
-{
+static void get_defaults(obs_data_t* data) noexcept try {
 	obs_data_set_default_string(data, ST_TOOL, ST_CORRECTION);
 	obs_data_set_default_double(data, ST_LIFT_(RED), 0);
 	obs_data_set_default_double(data, ST_LIFT_(GREEN), 0);
@@ -115,10 +119,13 @@ void get_defaults(obs_data_t* data)
 	obs_data_set_default_double(data, ST_CORRECTION_(SATURATION), 100.0);
 	obs_data_set_default_double(data, ST_CORRECTION_(LIGHTNESS), 100.0);
 	obs_data_set_default_double(data, ST_CORRECTION_(CONTRAST), 100.0);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-bool tool_modified(obs_properties_t* props, obs_property_t* property, obs_data_t* settings)
-{
+static bool tool_modified(obs_properties_t* props, obs_property_t* property, obs_data_t* settings) noexcept try {
 	const std::string mode{obs_data_get_string(settings, ST_TOOL)};
 
 	std::vector<std::pair<std::string, std::vector<std::string>>> tool_to_property{
@@ -163,10 +170,15 @@ bool tool_modified(obs_properties_t* props, obs_property_t* property, obs_data_t
 	}
 
 	return true;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return false;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return false;
 }
 
-obs_properties_t* get_properties(void*)
-{
+static obs_properties_t* get_properties(void*) noexcept try {
 	obs_properties_t* pr = obs_properties_create();
 
 	if (util::are_property_groups_broken()) {
@@ -316,72 +328,70 @@ obs_properties_t* get_properties(void*)
 	}
 
 	return pr;
-}
-
-void* create(obs_data_t* data, obs_source_t* source)
-try {
-	return new filter::color_grade::color_grade_instance(data, source);
-} catch (std::exception& ex) {
-	P_LOG_ERROR("<filter-color-grade> Failed to create: %s", obs_source_get_name(source), ex.what());
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return nullptr;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return nullptr;
 }
 
-void destroy(void* ptr)
-try {
+static void* create(obs_data_t* data, obs_source_t* source) noexcept try {
+	return new filter::color_grade::color_grade_instance(data, source);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return nullptr;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return nullptr;
+}
+
+static void destroy(void* ptr) noexcept try {
 	delete reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr);
-} catch (std::exception& ex) {
-	P_LOG_ERROR("<filter-color-grade> Failed to destroy: %s", ex.what());
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-uint32_t get_width(void* ptr)
-try {
-	return reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->get_width();
-} catch (std::exception& ex) {
-	P_LOG_ERROR("<filter-color-grade> Failed to get width: %s", ex.what());
-	return 0;
-}
-
-uint32_t get_height(void* ptr)
-try {
-	return reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->get_height();
-} catch (std::exception& ex) {
-	P_LOG_ERROR("<filter-color-grade> Failed to get height: %s", ex.what());
-	return 0;
-}
-
-void update(void* ptr, obs_data_t* data)
-try {
+static void update(void* ptr, obs_data_t* data) try {
 	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->update(data);
-} catch (std::exception& ex) {
-	P_LOG_ERROR("<filter-color-grade> Failed to update: %s", ex.what());
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void activate(void* ptr)
-try {
+static void activate(void* ptr) try {
 	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->activate();
-} catch (std::exception& ex) {
-	P_LOG_ERROR("<filter-color-grade> Failed to activate: %s", ex.what());
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void deactivate(void* ptr)
-try {
+static void deactivate(void* ptr) try {
 	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->deactivate();
-} catch (std::exception& ex) {
-	P_LOG_ERROR("<filter-color-grade> Failed to deactivate: %s", ex.what());
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void video_tick(void* ptr, float time)
-try {
+static void video_tick(void* ptr, float time) try {
 	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->video_tick(time);
-} catch (std::exception& ex) {
-	P_LOG_ERROR("<filter-color-grade> Failed to tick video: %s", ex.what());
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void video_render(void* ptr, gs_effect_t* effect)
-try {
+static void video_render(void* ptr, gs_effect_t* effect) try {
 	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->video_render(effect);
-} catch (std::exception& ex) {
-	P_LOG_ERROR("<filter-color-grade> Failed to render video: %s", ex.what());
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 static std::shared_ptr<filter::color_grade::color_grade_factory> factory_instance = nullptr;
