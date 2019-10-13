@@ -312,7 +312,7 @@ filter::blur::blur_instance::blur_instance(obs_data_t* settings, obs_source_t* p
 	try {
 		this->_source_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 		this->_output_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	} catch (std::exception& ex) {
+	} catch (const std::exception& ex) {
 		P_LOG_ERROR("<filter-blur:%s> Failed to create rendertargets, error %s.", obs_source_get_name(_self),
 					ex.what());
 	}
@@ -560,11 +560,6 @@ void filter::blur::blur_instance::translate_old_settings(obs_data_t* settings)
 {
 	obs_data_set_default_int(settings, S_VERSION, -1);
 	int64_t version = obs_data_get_int(settings, S_VERSION);
-
-	// If it's the same as the current version, return.
-	if (version == STREAMEFFECTS_VERSION) {
-		return;
-	}
 
 	// Now we use a fall-through switch to gradually upgrade each known version change.
 	switch (version) {
