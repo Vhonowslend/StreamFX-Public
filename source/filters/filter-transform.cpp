@@ -238,8 +238,12 @@ obs_properties_t* filter::transform::transform_factory::get_properties(void*) no
 	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(S_MIPGENERATOR_INTENSITY)));
 
 	return pr;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return nullptr;
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return nullptr;
 }
 
 bool filter::transform::transform_factory::modified_properties(obs_properties_t* pr, obs_property_t*,
@@ -264,12 +268,17 @@ bool filter::transform::transform_factory::modified_properties(obs_properties_t*
 	obs_property_set_visible(obs_properties_get(pr, S_MIPGENERATOR_INTENSITY), mipmappingVisible);
 
 	return true;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void* filter::transform::transform_factory::create(obs_data_t* data, obs_source_t* source) noexcept try {
 	return new transform_instance(data, source);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return nullptr;
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return nullptr;
@@ -277,48 +286,68 @@ void* filter::transform::transform_factory::create(obs_data_t* data, obs_source_
 
 void filter::transform::transform_factory::destroy(void* ptr) noexcept try {
 	delete reinterpret_cast<transform_instance*>(ptr);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 uint32_t filter::transform::transform_factory::get_width(void* ptr) noexcept try {
 	return reinterpret_cast<transform_instance*>(ptr)->get_width();
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return 0;
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return 0;
 }
 
 uint32_t filter::transform::transform_factory::get_height(void* ptr) noexcept try {
 	return reinterpret_cast<transform_instance*>(ptr)->get_height();
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return 0;
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return 0;
 }
 
 void filter::transform::transform_factory::update(void* ptr, obs_data_t* data) noexcept try {
 	reinterpret_cast<transform_instance*>(ptr)->update(data);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void filter::transform::transform_factory::activate(void* ptr) noexcept try {
 	reinterpret_cast<transform_instance*>(ptr)->activate();
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void filter::transform::transform_factory::deactivate(void* ptr) noexcept try {
 	reinterpret_cast<transform_instance*>(ptr)->deactivate();
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void filter::transform::transform_factory::video_tick(void* ptr, float time) noexcept try {
 	reinterpret_cast<transform_instance*>(ptr)->video_tick(time);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void filter::transform::transform_factory::video_render(void* ptr, gs_effect_t* effect) noexcept try {
 	reinterpret_cast<transform_instance*>(ptr)->video_render(effect);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
