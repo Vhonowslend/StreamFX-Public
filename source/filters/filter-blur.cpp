@@ -562,7 +562,7 @@ void filter::blur::blur_instance::translate_old_settings(obs_data_t* settings)
 	int64_t version = obs_data_get_int(settings, S_VERSION);
 
 	// If it's the same as the current version, return.
-	if (version == PROJECT_VERSION) {
+	if (version == STREAMEFFECTS_VERSION) {
 		return;
 	}
 
@@ -601,7 +601,7 @@ void filter::blur::blur_instance::translate_old_settings(obs_data_t* settings)
 		obs_data_unset_user_value(settings, "Filter.Blur.Directional.Angle");
 	}
 
-	obs_data_set_int(settings, S_VERSION, PROJECT_VERSION);
+	obs_data_set_int(settings, S_VERSION, STREAMEFFECTS_VERSION);
 }
 
 obs_properties_t* filter::blur::blur_instance::get_properties()

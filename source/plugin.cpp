@@ -31,8 +31,7 @@
 #include "sources/source-shader.hpp"
 
 MODULE_EXPORT bool obs_module_load(void) try {
-	P_LOG_INFO("Loading Version %u.%u.%u (Build %u)", PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR,
-			   PROJECT_VERSION_PATCH, PROJECT_VERSION_TWEAK);
+	P_LOG_INFO("Loading Version %s", STREAMEFFECTS_VERSION_STRING);
 
 	// Initialize Source Tracker
 	obs::source_tracker::initialize();
@@ -57,8 +56,7 @@ MODULE_EXPORT bool obs_module_load(void) try {
 }
 
 MODULE_EXPORT void obs_module_unload(void) try {
-	P_LOG_INFO("Unloading Version %u.%u.%u (Build %u)", PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR,
-			   PROJECT_VERSION_PATCH, PROJECT_VERSION_TWEAK);
+	P_LOG_INFO("Unloading Version %s", STREAMEFFECTS_VERSION_STRING);
 
 	// Clean up Sources
 	source::mirror::mirror_factory::finalize();
