@@ -20,14 +20,14 @@ CMake_Minimum_Required(VERSION 3.8.0)
 Include("cmake/util.cmake")
 
 # Automatic Versioning
-Set(VERSION_MAJOR 0)
-Set(VERSION_MINOR 7)
-Set(VERSION_PATCH 1)
-Set(VERSION_TWEAK 0)
-Set(PROJECT_COMMIT "N/A")
-If(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
-	Set(GIT_RESULT "")
-	Set(GIT_OUTPUT "")
+set(VERSION_MAJOR 0)
+set(VERSION_MINOR 7)
+set(VERSION_PATCH 1)
+set(VERSION_TWEAK 0)
+set(PROJECT_COMMIT "N/A")
+if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
+	set(GIT_RESULT "")
+	set(GIT_OUTPUT "")
 	EXECUTE_PROCESS(
 		COMMAND git rev-list --count --topo-order ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}..HEAD
 		WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
@@ -35,9 +35,9 @@ If(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
 		OUTPUT_VARIABLE GIT_OUTPUT
 		OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE ERROR_QUIET
 	)
-	If(GIT_RESULT EQUAL 0)
-		Set(VERSION_TWEAK ${GIT_OUTPUT})
-	EndIf()
+	if(GIT_RESULT EQUAL 0)
+		set(VERSION_TWEAK ${GIT_OUTPUT})
+	endif()
 	EXECUTE_PROCESS(
 		COMMAND git rev-parse HEAD
 		WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
@@ -45,10 +45,10 @@ If(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
 		OUTPUT_VARIABLE GIT_OUTPUT
 		OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE ERROR_QUIET
 	)
-	If(GIT_RESULT EQUAL 0)
-		Set(PROJECT_COMMIT ${GIT_OUTPUT})
-	EndIf()
-EndIf()
+	if(GIT_RESULT EQUAL 0)
+		set(PROJECT_COMMIT ${GIT_OUTPUT})
+	endif()
+endif()
 
 # Define Project
 PROJECT(
@@ -113,8 +113,8 @@ endif()
 
 # C++ Standard and Extensions
 ## Use C++17 and no non-standard extensions.
-SET(_CXX_STANDARD 17)
-SET(_CXX_EXTENSIONS OFF)
+set(_CXX_STANDARD 17)
+set(_CXX_EXTENSIONS OFF)
 
 ################################################################################
 # CMake / Compiler
@@ -133,7 +133,7 @@ configure_file(
 # Windows
 if(WIN32)
 	## Installer (InnoSetup)
-	Configure_File(
+	configure_file(
 		"${PROJECT_SOURCE_DIR}/cmake/installer.iss.in"
 		"${PROJECT_BINARY_DIR}/installer.iss"
 	)
@@ -223,10 +223,10 @@ endif()
 ################################################################################
 # Code
 ################################################################################
-SET(PROJECT_DATA_LOCALE
+set(PROJECT_DATA_LOCALE
 	"${PROJECT_SOURCE_DIR}/data/locale/en-US.ini"
 )
-SET(PROJECT_DATA_EFFECTS
+set(PROJECT_DATA_EFFECTS
 	"${PROJECT_SOURCE_DIR}/data/effects/channel-mask.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/color-conversion.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/color-grade.effect"
@@ -245,20 +245,20 @@ SET(PROJECT_DATA_EFFECTS
 	"${PROJECT_SOURCE_DIR}/data/effects/sdf/sdf-producer.effect"
 	"${PROJECT_SOURCE_DIR}/data/effects/sdf/sdf-consumer.effect"
 )
-SET(PROJECT_DATA_SHADERS
+set(PROJECT_DATA_SHADERS
 #	"${PROJECT_SOURCE_DIR}/data/shaders/name.effect"
 	"${PROJECT_SOURCE_DIR}/data/shaders/filter/example.effect"
 )
-SET(PROJECT_DATA
+set(PROJECT_DATA
 	${PROJECT_DATA_LOCALE}
 	${PROJECT_DATA_EFFECTS}
 	${PROJECT_DATA_SHADERS}
 )
 
-SET(PROJECT_LIBRARIES
+set(PROJECT_LIBRARIES
 )
 
-SET(PROJECT_TEMPLATES
+set(PROJECT_TEMPLATES
 	"${PROJECT_SOURCE_DIR}/cmake/version.hpp.in"
 	"${PROJECT_SOURCE_DIR}/cmake/module.cpp.in"
 )
@@ -269,13 +269,13 @@ if(WIN32)
 	)
 endif()
 
-SET(PROJECT_PUBLIC
+set(PROJECT_PUBLIC
 )
-SET(PROJECT_PRIVATE_GENERATED
+set(PROJECT_PRIVATE_GENERATED
 	"${PROJECT_BINARY_DIR}/source/module.cpp"
 	"${PROJECT_BINARY_DIR}/source/version.hpp"
 )
-SET(PROJECT_PRIVATE_SOURCE
+set(PROJECT_PRIVATE_SOURCE
 
 	# Plugin
 	"${PROJECT_SOURCE_DIR}/source/plugin.hpp"
@@ -289,8 +289,6 @@ SET(PROJECT_PRIVATE_SOURCE
 	"${PROJECT_SOURCE_DIR}/source/util-math.cpp"
 	"${PROJECT_SOURCE_DIR}/source/util-memory.hpp"
 	"${PROJECT_SOURCE_DIR}/source/util-memory.cpp"
-	"${PROJECT_SOURCE_DIR}/source/utility/utility-event.hpp"
-	"${PROJECT_SOURCE_DIR}/source/utility/utility-event.cpp"
 	
 	# Graphics
 	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-effect-source.hpp"
@@ -366,6 +364,7 @@ set(PROJECT_PRIVATE
 	${PROJECT_DATA}
 	${PROJECT_PRIVATE_GENERATED}
 	${PROJECT_PRIVATE_SOURCE}
+	${PROJECT_TEMPLATES}
 )
 
 source_group(TREE "${PROJECT_SOURCE_DIR}/data" PREFIX "Data Files" FILES ${PROJECT_DATA})
