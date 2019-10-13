@@ -48,7 +48,7 @@ static std::pair<filter::dynamic_mask::channel, const char*> channel_translation
 
 static const char* get_name(void*) noexcept try {
 	return D_TRANSLATE(ST);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 	return "";
 } catch (...) {
@@ -58,7 +58,7 @@ static const char* get_name(void*) noexcept try {
 
 static void* create(obs_data_t* data, obs_source_t* source) noexcept try {
 	return new filter::dynamic_mask::dynamic_mask_instance(data, source);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 	return nullptr;
 } catch (...) {
@@ -68,7 +68,7 @@ static void* create(obs_data_t* data, obs_source_t* source) noexcept try {
 
 static void destroy(void* ptr) noexcept try {
 	delete reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(ptr);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -84,7 +84,7 @@ static void get_defaults2(void* type_data, obs_data_t* data) noexcept try {
 				data, (std::string(ST_CHANNEL_INPUT) + "." + kv.second + "." + kv2.second).c_str(), 0.0);
 		}
 	}
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -94,7 +94,7 @@ static obs_properties_t* get_properties2(void* ptr, void* type_data) noexcept tr
 	obs_properties_t* props = obs_properties_create_param(type_data, nullptr);
 	reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(ptr)->get_properties(props);
 	return props;
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 	return nullptr;
 } catch (...) {
@@ -104,7 +104,7 @@ static obs_properties_t* get_properties2(void* ptr, void* type_data) noexcept tr
 
 static void update(void* ptr, obs_data_t* data) noexcept try {
 	reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(ptr)->update(data);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -112,7 +112,7 @@ static void update(void* ptr, obs_data_t* data) noexcept try {
 
 static void load(void* ptr, obs_data_t* data) noexcept try {
 	reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(ptr)->load(data);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -120,7 +120,7 @@ static void load(void* ptr, obs_data_t* data) noexcept try {
 
 static void save(void* ptr, obs_data_t* data) noexcept try {
 	reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(ptr)->save(data);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -128,7 +128,7 @@ static void save(void* ptr, obs_data_t* data) noexcept try {
 
 static void video_tick(void* ptr, float time) noexcept try {
 	reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(ptr)->video_tick(time);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -136,7 +136,7 @@ static void video_tick(void* ptr, float time) noexcept try {
 
 static void video_render(void* ptr, gs_effect_t* effect) noexcept try {
 	reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(ptr)->video_render(effect);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -193,7 +193,7 @@ filter::dynamic_mask::dynamic_mask_instance::dynamic_mask_instance(obs_data_t* d
 		char* file = obs_module_file("effects/channel-mask.effect");
 		try {
 			this->_effect = gs::effect::create(file);
-		} catch (std::exception& ex) {
+		} catch (const std::exception& ex) {
 			P_LOG_ERROR("Loading channel mask _effect failed with error(s):\n%s", ex.what());
 		}
 		assert(this->_effect != nullptr);
@@ -426,7 +426,7 @@ bool filter::dynamic_mask::dynamic_mask_instance::modified(void*, obs_properties
 	}
 
 	return true;
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 	return false;
 } catch (...) {
