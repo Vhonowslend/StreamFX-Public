@@ -52,6 +52,8 @@ namespace gs {
 		gs_vertbuffer_t* _buffer;
 		gs_tvertarray*   _layer_data;
 
+		void initialize(size_t capacity, size_t layers);
+
 		public:
 		virtual ~vertex_buffer();
 
@@ -109,7 +111,7 @@ namespace gs {
 		*
 		* \param other
 		*/
-		vertex_buffer(vertex_buffer const&& other);
+		vertex_buffer(vertex_buffer const&& other) noexcept;
 
 		/*!
 		* \brief Move Assignment
@@ -117,7 +119,7 @@ namespace gs {
 		*
 		* \param other
 		*/
-		void operator=(vertex_buffer const&& other);
+		void operator=(vertex_buffer const&& other) noexcept;
 
 		void resize(uint32_t new_size);
 

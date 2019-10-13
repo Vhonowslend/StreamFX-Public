@@ -32,6 +32,35 @@
 #pragma warning(pop)
 #endif
 
+void gs::vertex_buffer::initialize(size_t capacity, size_t layers)
+{
+	if (capacity > MAXIMUM_VERTICES) {
+		throw std::out_of_range("capacity too large");
+	}
+	if (layers > MAXIMUM_UVW_LAYERS) {
+		throw std::out_of_range("too many layers");
+	}
+
+	// Allocate memory for data.
+	_data          = gs_vbdata_create();
+	_data->num     = _capacity;
+	_data->num_tex = _layers;
+	_data->points = _positions = (vec3*)util::malloc_aligned(16, sizeof(vec3) * _capacity);
+	_data->normals = _normals = (vec3*)util::malloc_aligned(16, sizeof(vec3) * _capacity);
+	_data->tangents = _tangents = (vec3*)util::malloc_aligned(16, sizeof(vec3) * _capacity);
+	_data->colors = _colors = (uint32_t*)util::malloc_aligned(16, sizeof(uint32_t) * _capacity);
+	if (_layers > 0) {
+		_data->tvarray = _layer_data = (gs_tvertarray*)util::malloc_aligned(16, sizeof(gs_tvertarray) * _layers);
+		for (size_t n = 0; n < _layers; n++) {
+			_layer_data[n].array = _uvs[n] = (vec4*)util::malloc_aligned(16, sizeof(vec4) * _capacity);
+			_layer_data[n].width           = 4;
+			memset(_uvs[n], 0, sizeof(vec4) * _capacity);
+		}
+	} else {
+		_data->tvarray = nullptr;
+	}
+}
+
 gs::vertex_buffer::~vertex_buffer()
 {
 	if (_positions) {
@@ -82,39 +111,13 @@ gs::vertex_buffer::vertex_buffer(uint32_t vertices, uint8_t uvlayers)
 	: _size(vertices), _capacity(vertices), _layers(uvlayers), _positions(nullptr), _normals(nullptr),
 	  _tangents(nullptr), _colors(nullptr), _data(nullptr), _buffer(nullptr), _layer_data(nullptr)
 {
+	initialize(vertices, uvlayers);
+
 	if (vertices > MAXIMUM_VERTICES) {
 		throw std::out_of_range("vertices out of range");
 	}
 	if (uvlayers > MAXIMUM_UVW_LAYERS) {
 		throw std::out_of_range("uvlayers out of range");
-	}
-
-	// Allocate memory for data.
-	_data         = gs_vbdata_create();
-	_data->num    = _capacity;
-	_data->points = _positions = (vec3*)util::malloc_aligned(16, sizeof(vec3) * _capacity);
-	_data->normals = _normals = (vec3*)util::malloc_aligned(16, sizeof(vec3) * _capacity);
-	_data->tangents = _tangents = (vec3*)util::malloc_aligned(16, sizeof(vec3) * _capacity);
-	_data->colors = _colors = (uint32_t*)util::malloc_aligned(16, sizeof(uint32_t) * _capacity);
-
-	// cppcheck-suppress memsetClassFloat
-	memset(_positions, 0, sizeof(vec3) * _capacity);
-	// cppcheck-suppress memsetClassFloat
-	memset(_normals, 0, sizeof(vec3) * _capacity);
-	// cppcheck-suppress memsetClassFloat
-	memset(_tangents, 0, sizeof(vec3) * _capacity);
-	memset(_colors, 0, sizeof(uint32_t) * _capacity);
-
-	_data->num_tex = _layers;
-	if (_layers > 0) {
-		_data->tvarray = _layer_data = (gs_tvertarray*)util::malloc_aligned(16, sizeof(gs_tvertarray) * _layers);
-		for (size_t n = 0; n < _layers; n++) {
-			_layer_data[n].array = _uvs[n] = (vec4*)util::malloc_aligned(16, sizeof(vec4) * _capacity);
-			_layer_data[n].width           = 4;
-			memset(_uvs[n], 0, sizeof(vec4) * _capacity);
-		}
-	} else {
-		_data->tvarray = nullptr;
 	}
 
 	// Allocate GPU
@@ -130,29 +133,30 @@ gs::vertex_buffer::vertex_buffer(uint32_t vertices, uint8_t uvlayers)
 
 // cppcheck-suppress uninitMemberVar
 gs::vertex_buffer::vertex_buffer(gs_vertbuffer_t* vb)
+	: _size(0), _capacity(0), _layers(0), _positions(nullptr), _normals(nullptr), _tangents(nullptr), _colors(nullptr),
+	  _uvs(), _data(nullptr), _buffer(nullptr), _layer_data(nullptr)
 {
 	auto        gctx = gs::context();
 	gs_vb_data* vbd  = gs_vertexbuffer_get_data(vb);
 	if (!vbd)
 		throw std::runtime_error("vertex buffer with no data");
 
-	vertex_buffer((uint32_t)vbd->num);
-	this->set_uv_layers((uint32_t)vbd->num_tex);
+	initialize(vbd->num, vbd->num_tex);
 
-	if (vbd->points != nullptr)
+	if (_positions && vbd->points)
 		memcpy(_positions, vbd->points, vbd->num * sizeof(vec3));
-	if (vbd->normals != nullptr)
+	if (_normals && vbd->normals)
 		memcpy(_normals, vbd->normals, vbd->num * sizeof(vec3));
-	if (vbd->tangents != nullptr)
+	if (_tangents && vbd->tangents)
 		memcpy(_tangents, vbd->tangents, vbd->num * sizeof(vec3));
-	if (vbd->colors != nullptr)
+	if (_colors && vbd->colors)
 		memcpy(_colors, vbd->colors, vbd->num * sizeof(uint32_t));
 	if (vbd->tvarray != nullptr) {
 		for (size_t n = 0; n < vbd->num_tex; n++) {
 			if (vbd->tvarray[n].array != nullptr && vbd->tvarray[n].width <= 4 && vbd->tvarray[n].width > 0) {
 				if (vbd->tvarray[n].width == 4) {
 					memcpy(_uvs[n], vbd->tvarray[n].array, vbd->num * sizeof(vec4));
-				} else {
+				} else if (vbd->tvarray[n].width < 4) {
 					for (size_t idx = 0; idx < _capacity; idx++) {
 						float* mem = reinterpret_cast<float*>(vbd->tvarray[n].array) + (idx * vbd->tvarray[n].width);
 						// cppcheck-suppress memsetClassFloat
@@ -178,7 +182,7 @@ gs::vertex_buffer::vertex_buffer(vertex_buffer const& other) : vertex_buffer(oth
 	}
 }
 
-gs::vertex_buffer::vertex_buffer(vertex_buffer const&& other)
+gs::vertex_buffer::vertex_buffer(vertex_buffer const&& other) noexcept : _uvs()
 {
 	// Move Constructor
 	_capacity  = other._capacity;
@@ -187,6 +191,7 @@ gs::vertex_buffer::vertex_buffer(vertex_buffer const&& other)
 	_positions = other._positions;
 	_normals   = other._normals;
 	_tangents  = other._tangents;
+	_colors    = other._colors;
 	for (size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
 		_uvs[n] = other._uvs[n];
 	}
@@ -195,7 +200,7 @@ gs::vertex_buffer::vertex_buffer(vertex_buffer const&& other)
 	_layer_data = other._layer_data;
 }
 
-void gs::vertex_buffer::operator=(vertex_buffer const&& other)
+void gs::vertex_buffer::operator=(vertex_buffer const&& other) noexcept
 {
 	// Move Assignment
 	/// First self-destruct (semi-destruct itself).
