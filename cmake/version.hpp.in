@@ -23,7 +23,10 @@
 #pragma once
 #include <cinttypes>
 
-#define STREAMEFFECTS_MAKE_VERSION(major,minor,patch,tweak) ((uint64_t(major) & 0xFFFFull) << 48ull) | ((uint64_t(minor) & 0xFFFFull) << 32ull) | ((uint64_t(patch) & 0xFFFFull) << 16ull) | ((uint64_t(patch) & 0xFFFFull))
+#define STREAMEFFECTS_MAKE_VERSION(major,minor,patch,tweak) ((uint64_t(major) & 0xFFFFull) << 48ull) | ((uint64_t(minor) & 0xFFFFull) << 32ull) | ((uint64_t(patch) & 0xFFFFull) << 16ull) | ((uint64_t(tweak) & 0xFFFFull))
+
+#define STREAMEFFECTS_MASK_COMPAT 0xFFFFFFFF00000000ull
+#define STREAMEFFECTS_MASK_UPDATE 0xFFFFFFFFFFFF0000ull
 
 #define STREAMEFFECTS_COMMIT "@PROJECT_COMMIT@"
 #define STREAMEFFECTS_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
