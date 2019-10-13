@@ -121,7 +121,7 @@ void filter::sdf_effects::sdf_effects_factory::on_list_fill()
 		}
 		try {
 			kv.second = gs::effect::create(path);
-		} catch (std::exception& ex) {
+		} catch (const std::exception& ex) {
 			P_LOG_ERROR(LOG_PREFIX "Failed to load _effect '%s' (located at '%s') with error(s): %s", kv.first, path,
 						ex.what());
 		}
@@ -142,6 +142,9 @@ void* filter::sdf_effects::sdf_effects_factory::create(obs_data_t* data, obs_sou
 	filter::sdf_effects::sdf_effects_instance* ptr = new filter::sdf_effects::sdf_effects_instance(data, parent);
 	get()->_sources.push_back(ptr);
 	return ptr;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return nullptr;
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return nullptr;
@@ -155,6 +158,8 @@ void filter::sdf_effects::sdf_effects_factory::destroy(void* inptr) noexcept try
 		get()->on_list_empty();
 	}
 	delete ptr;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -198,60 +203,86 @@ void filter::sdf_effects::sdf_effects_factory::get_defaults(obs_data_t* data) no
 	obs_data_set_default_bool(data, S_ADVANCED, false);
 	obs_data_set_default_double(data, ST_SDF_SCALE, 100.0);
 	obs_data_set_default_double(data, ST_SDF_THRESHOLD, 50.0);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 obs_properties_t* filter::sdf_effects::sdf_effects_factory::get_properties(void* inptr) noexcept try {
 	return reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->get_properties();
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return nullptr;
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return nullptr;
 }
 
 void filter::sdf_effects::sdf_effects_factory::update(void* inptr, obs_data_t* settings) noexcept try {
 	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->update(settings);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 const char* filter::sdf_effects::sdf_effects_factory::get_name(void*) noexcept try {
 	return D_TRANSLATE(ST);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 uint32_t filter::sdf_effects::sdf_effects_factory::get_width(void* inptr) noexcept try {
 	return reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->get_width();
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return 0;
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return 0;
 }
 
 uint32_t filter::sdf_effects::sdf_effects_factory::get_height(void* inptr) noexcept try {
 	return reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->get_height();
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return 0;
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return 0;
 }
 
 void filter::sdf_effects::sdf_effects_factory::activate(void* inptr) noexcept try {
 	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->activate();
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void filter::sdf_effects::sdf_effects_factory::deactivate(void* inptr) noexcept try {
 	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->deactivate();
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void filter::sdf_effects::sdf_effects_factory::video_tick(void* inptr, float delta) noexcept try {
 	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->video_tick(delta);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void filter::sdf_effects::sdf_effects_factory::video_render(void* inptr, gs_effect_t* effect) noexcept try {
 	reinterpret_cast<filter::sdf_effects::sdf_effects_instance*>(inptr)->video_render(effect);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -276,6 +307,8 @@ bool filter::sdf_effects::sdf_effects_instance::cb_modified_shadow_inside(void*,
 	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_COLOR), v);
 	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_ALPHA), v);
 	return true;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -291,6 +324,8 @@ bool filter::sdf_effects::sdf_effects_instance::cb_modified_shadow_outside(void*
 	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_COLOR), v);
 	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_ALPHA), v);
 	return true;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -303,6 +338,8 @@ bool filter::sdf_effects::sdf_effects_instance::cb_modified_glow_inside(void*, o
 	obs_property_set_visible(obs_properties_get(props, ST_GLOW_INNER_WIDTH), v);
 	obs_property_set_visible(obs_properties_get(props, ST_GLOW_INNER_SHARPNESS), v);
 	return true;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -315,6 +352,8 @@ bool filter::sdf_effects::sdf_effects_instance::cb_modified_glow_outside(void*, 
 	obs_property_set_visible(obs_properties_get(props, ST_GLOW_OUTER_WIDTH), v);
 	obs_property_set_visible(obs_properties_get(props, ST_GLOW_OUTER_SHARPNESS), v);
 	return true;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -328,6 +367,8 @@ bool filter::sdf_effects::sdf_effects_instance::cb_modified_outline(void*, obs_p
 	obs_property_set_visible(obs_properties_get(props, ST_OUTLINE_OFFSET), v);
 	obs_property_set_visible(obs_properties_get(props, ST_OUTLINE_SHARPNESS), v);
 	return true;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -338,12 +379,21 @@ bool filter::sdf_effects::sdf_effects_instance::cb_modified_advanced(void*, obs_
 	obs_property_set_visible(obs_properties_get(props, ST_SDF_SCALE), show_advanced);
 	obs_property_set_visible(obs_properties_get(props, ST_SDF_THRESHOLD), show_advanced);
 	return true;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 filter::sdf_effects::sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* self)
-	: _self(self), _source_rendered(false), _sdf_scale(1.0)
+	: _self(self), _source_rendered(false), _sdf_scale(1.0), _sdf_threshold(), _output_rendered(false),
+	  _inner_shadow(false), _inner_shadow_color(), _inner_shadow_range_min(), _inner_shadow_range_max(),
+	  _inner_shadow_offset_x(), _inner_shadow_offset_y(), _outer_shadow(false), _outer_shadow_color(),
+	  _outer_shadow_range_min(), _outer_shadow_range_max(), _outer_shadow_offset_x(), _outer_shadow_offset_y(),
+	  _inner_glow(false), _inner_glow_color(), _inner_glow_width(), _inner_glow_sharpness(),
+	  _inner_glow_sharpness_inv(), _outer_glow(false), _outer_glow_color(), _outer_glow_width(),
+	  _outer_glow_sharpness(), _outer_glow_sharpness_inv(), _outline(false), _outline_color(), _outline_width(),
+	  _outline_offset(), _outline_sharpness(), _outline_sharpness_inv()
 {
 	{
 		auto gctx        = gs::context();
