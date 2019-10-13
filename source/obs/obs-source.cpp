@@ -37,7 +37,7 @@ void obs::source::handle_destroy(void* p, calldata_t* calldata) noexcept try {
 		return;
 	}
 	self->events.destroy(self);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -49,7 +49,7 @@ void obs::source::handle_remove(void* p, calldata_t*) noexcept try {
 		return;
 	}
 	self->events.remove(self);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -61,7 +61,7 @@ void obs::source::handle_save(void* p, calldata_t*) noexcept try {
 		return;
 	}
 	self->events.save(self);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -73,7 +73,7 @@ void obs::source::handle_load(void* p, calldata_t*) noexcept try {
 		return;
 	}
 	self->events.load(self);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -85,7 +85,7 @@ void obs::source::handle_activate(void* p, calldata_t*) noexcept try {
 		return;
 	}
 	self->events.activate(self);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -97,7 +97,7 @@ void obs::source::handle_deactivate(void* p, calldata_t*) noexcept try {
 		return;
 	}
 	self->events.deactivate(self);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -109,7 +109,7 @@ void obs::source::handle_show(void* p, calldata_t*) noexcept try {
 		return;
 	}
 	self->events.show(self);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -121,7 +121,7 @@ void obs::source::handle_hide(void* p, calldata_t*) noexcept try {
 		return;
 	}
 	self->events.hide(self);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -139,7 +139,7 @@ void obs::source::handle_enable(void* p, calldata_t* calldata) noexcept try {
 	}
 
 	self->events.enable(self, enabled);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -157,7 +157,7 @@ void obs::source::handle_push_to_mute_changed(void* p, calldata_t* calldata) noe
 	}
 
 	self->events.push_to_mute_changed(self, enabled);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -175,7 +175,7 @@ void obs::source::handle_push_to_mute_delay(void* p, calldata_t* calldata) noexc
 	}
 
 	self->events.push_to_mute_delay(self, delay);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -193,7 +193,7 @@ void obs::source::handle_push_to_talk_changed(void* p, calldata_t* calldata) noe
 	}
 
 	self->events.push_to_talk_changed(self, enabled);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -211,7 +211,7 @@ void obs::source::handle_push_to_talk_delay(void* p, calldata_t* calldata) noexc
 	}
 
 	self->events.push_to_talk_delay(self, delay);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -234,7 +234,7 @@ void obs::source::handle_rename(void* p, calldata_t* calldata) noexcept try {
 	}
 
 	self->events.rename(self, std::string(new_name ? new_name : ""), std::string(prev_name ? prev_name : ""));
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -246,7 +246,7 @@ void obs::source::handle_update_properties(void* p, calldata_t*) noexcept try {
 		return;
 	}
 	self->events.update_properties(self);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -264,7 +264,7 @@ void obs::source::handle_update_flags(void* p, calldata_t* calldata) noexcept tr
 	}
 
 	self->events.update_flags(self, flags);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -282,7 +282,7 @@ void obs::source::handle_mute(void* p, calldata_t* calldata) noexcept try {
 	}
 
 	self->events.mute(self, muted);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -302,7 +302,7 @@ void obs::source::handle_volume(void* p, calldata_t* calldata) noexcept try {
 	self->events.volume(self, volume);
 
 	calldata_set_float(calldata, "volume", volume);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -322,7 +322,7 @@ void obs::source::handle_audio_sync(void* p, calldata_t* calldata) noexcept try 
 	self->events.audio_sync(self, mixers);
 
 	calldata_set_int(calldata, "offset", mixers);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -342,7 +342,7 @@ void obs::source::handle_audio_mixers(void* p, calldata_t* calldata) noexcept tr
 	self->events.audio_mixers(self, mixers);
 
 	calldata_set_int(calldata, "mixers", mixers);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -355,7 +355,7 @@ void obs::source::handle_audio_data(void* p, obs_source_t*, const audio_data* au
 	}
 
 	self->events.audio_data(self, audio, muted);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -373,7 +373,7 @@ void obs::source::handle_filter_add(void* p, calldata_t* calldata) noexcept try 
 	}
 
 	self->events.filter_add(self, filter);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -391,7 +391,7 @@ void obs::source::handle_filter_remove(void* p, calldata_t* calldata) noexcept t
 	}
 
 	self->events.filter_remove(self, filter);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -403,7 +403,7 @@ void obs::source::handle_reorder_filters(void* p, calldata_t*) noexcept try {
 		return;
 	}
 	self->events.reorder_filters(self);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -415,7 +415,7 @@ void obs::source::handle_transition_start(void* p, calldata_t*) noexcept try {
 		return;
 	}
 	self->events.transition_start(self);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -427,7 +427,7 @@ void obs::source::handle_transition_video_stop(void* p, calldata_t*) noexcept tr
 		return;
 	}
 	self->events.transition_video_stop(self);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -439,7 +439,7 @@ void obs::source::handle_transition_stop(void* p, calldata_t*) noexcept try {
 		return;
 	}
 	self->events.transition_stop(self);
-} catch (std::exception& ex) {
+} catch (const std::exception& ex) {
 	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
