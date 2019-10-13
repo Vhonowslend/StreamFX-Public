@@ -46,6 +46,102 @@ static std::pair<filter::dynamic_mask::channel, const char*> channel_translation
 	{filter::dynamic_mask::channel::Alpha, S_CHANNEL_ALPHA},
 };
 
+static const char* get_name(void*) noexcept try {
+	return D_TRANSLATE(ST);
+} catch (std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return "";
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return "";
+}
+
+static void* create(obs_data_t* data, obs_source_t* source) noexcept try {
+	return new filter::dynamic_mask::dynamic_mask_instance(data, source);
+} catch (std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return nullptr;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return nullptr;
+}
+
+static void destroy(void* ptr) noexcept try {
+	delete reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(ptr);
+} catch (std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+static void get_defaults2(void* type_data, obs_data_t* data) noexcept try {
+	obs_data_set_default_int(data, ST_CHANNEL, static_cast<int64_t>(filter::dynamic_mask::channel::Red));
+	for (auto kv : channel_translations) {
+		obs_data_set_default_double(data, (std::string(ST_CHANNEL_VALUE) + "." + kv.second).c_str(), 1.0);
+		obs_data_set_default_double(data, (std::string(ST_CHANNEL_MULTIPLIER) + "." + kv.second).c_str(), 1.0);
+		for (auto kv2 : channel_translations) {
+			obs_data_set_default_double(
+				data, (std::string(ST_CHANNEL_INPUT) + "." + kv.second + "." + kv2.second).c_str(), 0.0);
+		}
+	}
+} catch (std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+static obs_properties_t* get_properties2(void* ptr, void* type_data) noexcept try {
+	obs_properties_t* props = obs_properties_create_param(type_data, nullptr);
+	reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(ptr)->get_properties(props);
+	return props;
+} catch (std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return nullptr;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return nullptr;
+}
+
+static void update(void* ptr, obs_data_t* data) noexcept try {
+	reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(ptr)->update(data);
+} catch (std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+static void load(void* ptr, obs_data_t* data) noexcept try {
+	reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(ptr)->load(data);
+} catch (std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+static void save(void* ptr, obs_data_t* data) noexcept try {
+	reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(ptr)->save(data);
+} catch (std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+static void video_tick(void* ptr, float time) noexcept try {
+	reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(ptr)->video_tick(time);
+} catch (std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+static void video_render(void* ptr, gs_effect_t* effect) noexcept try {
+	reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(ptr)->video_render(effect);
+} catch (std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
 static std::shared_ptr<filter::dynamic_mask::dynamic_mask_factory> factory_instance = nullptr;
 
 void filter::dynamic_mask::dynamic_mask_factory::initialize()
@@ -66,58 +162,27 @@ std::shared_ptr<filter::dynamic_mask::dynamic_mask_factory> filter::dynamic_mask
 filter::dynamic_mask::dynamic_mask_factory::dynamic_mask_factory()
 {
 	memset(&_source_info, 0, sizeof(obs_source_info));
-	_source_info.id           = "obs-stream-effects-filter-dynamic-mask";
-	_source_info.type         = OBS_SOURCE_TYPE_FILTER;
-	_source_info.output_flags = OBS_SOURCE_VIDEO;
-
-	_source_info.get_name = [](void*) { return D_TRANSLATE(ST); };
-
-	_source_info.create = [](obs_data_t* settings, obs_source_t* source) {
-		return reinterpret_cast<void*>(new filter::dynamic_mask::dynamic_mask_instance(settings, source));
-	};
-	_source_info.destroy = [](void* _ptr) {
-		delete reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(_ptr);
-	};
-
-	_source_info.get_defaults2 = [](void*, obs_data_t* settings) {
-		obs_data_set_default_int(settings, ST_CHANNEL, static_cast<int64_t>(channel::Red));
-		for (auto kv : channel_translations) {
-			obs_data_set_default_double(settings, (std::string(ST_CHANNEL_VALUE) + "." + kv.second).c_str(), 1.0);
-			obs_data_set_default_double(settings, (std::string(ST_CHANNEL_MULTIPLIER) + "." + kv.second).c_str(), 1.0);
-			for (auto kv2 : channel_translations) {
-				obs_data_set_default_double(
-					settings, (std::string(ST_CHANNEL_INPUT) + "." + kv.second + "." + kv2.second).c_str(), 0.0);
-			}
-		}
-	};
-	_source_info.get_properties2 = [](void* _ptr, void* _type_data_ptr) {
-		obs_properties_t* props = obs_properties_create_param(_type_data_ptr, nullptr);
-		reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(_ptr)->get_properties(props);
-		return props;
-	};
-	_source_info.update = [](void* _ptr, obs_data_t* settings) {
-		reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(_ptr)->update(settings);
-	};
-	_source_info.load = [](void* _ptr, obs_data_t* settings) {
-		reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(_ptr)->load(settings);
-	};
-	_source_info.save = [](void* _ptr, obs_data_t* settings) {
-		reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(_ptr)->save(settings);
-	};
-
-	_source_info.video_tick = [](void* _ptr, float_t _seconds) {
-		reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(_ptr)->video_tick(_seconds);
-	};
-	_source_info.video_render = [](void* _ptr, gs_effect_t* _effect) {
-		reinterpret_cast<filter::dynamic_mask::dynamic_mask_instance*>(_ptr)->video_render(_effect);
-	};
+	_source_info.id              = "obs-stream-effects-filter-dynamic-mask";
+	_source_info.type            = OBS_SOURCE_TYPE_FILTER;
+	_source_info.output_flags    = OBS_SOURCE_VIDEO;
+	_source_info.get_name        = get_name;
+	_source_info.create          = create;
+	_source_info.destroy         = destroy;
+	_source_info.get_defaults2   = get_defaults2;
+	_source_info.get_properties2 = get_properties2;
+	_source_info.update          = update;
+	_source_info.load            = load;
+	_source_info.save            = save;
+	_source_info.video_tick      = video_tick;
+	_source_info.video_render    = video_render;
 
 	obs_register_source(&_source_info);
 }
 
 filter::dynamic_mask::dynamic_mask_factory::~dynamic_mask_factory() {}
 
-filter::dynamic_mask::dynamic_mask_instance::dynamic_mask_instance(obs_data_t* data, obs_source_t* self) : _self(self)
+filter::dynamic_mask::dynamic_mask_instance::dynamic_mask_instance(obs_data_t* data, obs_source_t* self)
+	: _self(self), _have_filter_texture(false), _have_input_texture(false), _have_final_texture(false), _precalc()
 {
 	this->update(data);
 
@@ -194,7 +259,7 @@ void filter::dynamic_mask::dynamic_mask_instance::get_properties(obs_properties_
 				std::vector<char> _chv_data(_chv.size() * 2 + color.size() * 2, '\0');
 				snprintf(_chv_data.data(), _chv_data.size(), _chv.c_str(), color.c_str());
 				auto _chv_key = std::tuple{kv.first, channel::Invalid, std::string(ST_CHANNEL_VALUE)};
-				_translation_map.insert({_chv_key, std::string(_chv_data.begin(), _chv_data.end())});
+				_translation_map.emplace(_chv_key, std::string(_chv_data.begin(), _chv_data.end()));
 				auto        chv     = _translation_map.find(_chv_key);
 				std::string chv_key = std::string(ST_CHANNEL_VALUE) + "." + kv.second;
 
@@ -206,7 +271,7 @@ void filter::dynamic_mask::dynamic_mask_instance::get_properties(obs_properties_
 				std::vector<char> _chm_data(_chm.size() * 2 + color.size() * 2, '\0');
 				snprintf(_chm_data.data(), _chm_data.size(), _chm.c_str(), color.c_str());
 				auto _chm_key = std::tuple{kv.first, channel::Invalid, std::string(ST_CHANNEL_MULTIPLIER)};
-				_translation_map.insert({_chm_key, std::string(_chm_data.begin(), _chm_data.end())});
+				_translation_map.emplace(_chm_key, std::string(_chm_data.begin(), _chm_data.end()));
 				auto        chm     = _translation_map.find(_chm_key);
 				std::string chm_key = std::string(ST_CHANNEL_MULTIPLIER) + "." + kv.second;
 
@@ -227,7 +292,7 @@ void filter::dynamic_mask::dynamic_mask_instance::get_properties(obs_properties_
 				std::vector<char> _chm_data(_chm.size() * 2 + color1.size() * 2 + color2.size() * 2, '\0');
 				snprintf(_chm_data.data(), _chm_data.size(), _chm.c_str(), color1.c_str(), color2.c_str());
 				auto _chm_key = std::tuple{kv1.first, kv2.first, std::string(ST_CHANNEL_INPUT)};
-				_translation_map.insert({_chm_key, std::string(_chm_data.begin(), _chm_data.end())});
+				_translation_map.emplace(_chm_key, std::string(_chm_data.begin(), _chm_data.end()));
 				auto        chm     = _translation_map.find(_chm_key);
 				std::string chm_key = std::string(ST_CHANNEL_INPUT) + "." + kv1.second + "." + kv2.second;
 
@@ -273,7 +338,7 @@ void filter::dynamic_mask::dynamic_mask_instance::update(obs_data_t* settings)
 		found->second.scale = static_cast<float_t>(obs_data_get_double(settings, chm_key.c_str()));
 		this->_precalc.scale.ptr[static_cast<size_t>(kv1.first)] = found->second.scale;
 
-		vec4* ch = nullptr;
+		vec4* ch = &_precalc.matrix.x;
 		switch (kv1.first) {
 		case channel::Red:
 			ch = &this->_precalc.matrix.x;
@@ -345,8 +410,7 @@ void filter::dynamic_mask::dynamic_mask_instance::input_renamed(obs::source*, st
 }
 
 bool filter::dynamic_mask::dynamic_mask_instance::modified(void*, obs_properties_t* properties, obs_property_t*,
-														   obs_data_t* settings) noexcept try
-{
+														   obs_data_t* settings) noexcept try {
 	channel mask = static_cast<channel>(obs_data_get_int(settings, ST_CHANNEL));
 
 	for (auto kv1 : channel_translations) {
@@ -362,6 +426,9 @@ bool filter::dynamic_mask::dynamic_mask_instance::modified(void*, obs_properties
 	}
 
 	return true;
+} catch (std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return false;
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in modified_properties callback.");
 	return false;
