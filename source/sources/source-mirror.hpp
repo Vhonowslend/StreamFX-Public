@@ -76,7 +76,7 @@ namespace source {
 		};
 
 		struct mirror_audio_data {
-			obs_source_audio                  audio;
+			obs_source_audio                  audio = {};
 			std::vector<std::vector<float_t>> data;
 		};
 
@@ -90,7 +90,7 @@ namespace source {
 			std::shared_ptr<gfx::source_texture> _scene_texture_renderer;
 			std::shared_ptr<gs::texture>         _scene_texture;
 			bool                                 _scene_rendered;
-			int                                  _rescale_alignment;
+			uint32_t                             _rescale_alignment;
 
 			// Rescaling
 			bool            _rescale_enabled;

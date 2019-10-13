@@ -108,6 +108,8 @@ source::mirror::mirror_factory::~mirror_factory() {}
 
 const char* source::mirror::mirror_factory::get_name(void*) noexcept try {
 	return D_TRANSLATE(ST);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -122,6 +124,8 @@ void source::mirror::mirror_factory::get_defaults(obs_data_t* data) noexcept try
 	obs_data_set_default_bool(data, ST_SCALING_TRANSFORMKEEPORIGINAL, false);
 	obs_data_set_default_int(data, ST_SCALING_BOUNDS, (int64_t)obs_bounds_type::OBS_BOUNDS_STRETCH);
 	obs_data_set_default_int(data, ST_SCALING_ALIGNMENT, OBS_ALIGN_CENTER);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -182,6 +186,9 @@ bool source::mirror::mirror_factory::modified_properties(obs_properties_t* pr, o
 		return true;
 	}
 
+	return false;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 	return false;
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -278,6 +285,9 @@ obs_properties_t* source::mirror::mirror_factory::get_properties(void*) noexcept
 							  OBS_ALIGN_RIGHT | OBS_ALIGN_BOTTOM);
 
 	return pr;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return nullptr;
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return nullptr;
@@ -285,6 +295,9 @@ obs_properties_t* source::mirror::mirror_factory::get_properties(void*) noexcept
 
 void* source::mirror::mirror_factory::create(obs_data_t* data, obs_source_t* source) noexcept try {
 	return new source::mirror::mirror_instance(data, source);
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return nullptr;
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return nullptr;
@@ -294,6 +307,8 @@ void source::mirror::mirror_factory::destroy(void* p) noexcept try {
 	if (p) {
 		delete static_cast<source::mirror::mirror_instance*>(p);
 	}
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -302,6 +317,9 @@ uint32_t source::mirror::mirror_factory::get_width(void* p) noexcept try {
 	if (p) {
 		return static_cast<source::mirror::mirror_instance*>(p)->get_width();
 	}
+	return 0;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 	return 0;
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -313,6 +331,9 @@ uint32_t source::mirror::mirror_factory::get_height(void* p) noexcept try {
 		return static_cast<source::mirror::mirror_instance*>(p)->get_height();
 	}
 	return 0;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return 0;
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return 0;
@@ -322,6 +343,8 @@ void source::mirror::mirror_factory::update(void* p, obs_data_t* data) noexcept 
 	if (p) {
 		static_cast<source::mirror::mirror_instance*>(p)->update(data);
 	}
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -330,6 +353,8 @@ void source::mirror::mirror_factory::activate(void* p) noexcept try {
 	if (p) {
 		static_cast<source::mirror::mirror_instance*>(p)->activate();
 	}
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -338,6 +363,8 @@ void source::mirror::mirror_factory::deactivate(void* p) noexcept try {
 	if (p) {
 		static_cast<source::mirror::mirror_instance*>(p)->deactivate();
 	}
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -346,6 +373,8 @@ void source::mirror::mirror_factory::video_tick(void* p, float t) noexcept try {
 	if (p) {
 		static_cast<source::mirror::mirror_instance*>(p)->video_tick(t);
 	}
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -354,6 +383,8 @@ void source::mirror::mirror_factory::video_render(void* p, gs_effect_t* ef) noex
 	if (p) {
 		static_cast<source::mirror::mirror_instance*>(p)->video_render(ef);
 	}
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -363,6 +394,8 @@ void source::mirror::mirror_factory::enum_active_sources(void* p, obs_source_enu
 	if (p) {
 		static_cast<source::mirror::mirror_instance*>(p)->enum_active_sources(enum_callback, param);
 	}
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -371,6 +404,8 @@ void source::mirror::mirror_factory::load(void* p, obs_data_t* d) noexcept try {
 	if (p) {
 		static_cast<source::mirror::mirror_instance*>(p)->load(d);
 	}
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -379,6 +414,8 @@ void source::mirror::mirror_factory::save(void* p, obs_data_t* d) noexcept try {
 	if (p) {
 		static_cast<source::mirror::mirror_instance*>(p)->save(d);
 	}
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -438,10 +475,11 @@ void source::mirror::mirror_instance::acquire_input(std::string source_name)
 }
 
 source::mirror::mirror_instance::mirror_instance(obs_data_t*, obs_source_t* src)
-	: _self(src), _active(true), _tick(0), _scene_rendered(false), _rescale_enabled(false), _rescale_width(1),
-	  _rescale_height(1), _rescale_keep_orig_size(false), _rescale_type(obs_scale_type::OBS_SCALE_BICUBIC),
-	  _rescale_bounds(obs_bounds_type::OBS_BOUNDS_STRETCH), _audio_enabled(false), _audio_kill_thread(false),
-	  _audio_have_output(false), _source_item(nullptr)
+	: _self(src), _active(true), _tick(0), _scene_rendered(false), _rescale_alignment(0), _rescale_enabled(false),
+	  _rescale_width(1), _rescale_height(1), _rescale_keep_orig_size(false),
+	  _rescale_type(obs_scale_type::OBS_SCALE_BICUBIC), _rescale_bounds(obs_bounds_type::OBS_BOUNDS_STRETCH),
+	  _audio_enabled(false), _audio_kill_thread(false), _audio_have_output(false), _audio_layout(SPEAKERS_UNKNOWN),
+	  _source_item(nullptr)
 {
 	// Initialize Video Rendering
 	this->_scene =
@@ -547,7 +585,7 @@ void source::mirror::mirror_instance::update(obs_data_t* data)
 		this->_rescale_keep_orig_size = obs_data_get_bool(data, ST_SCALING_TRANSFORMKEEPORIGINAL);
 		this->_rescale_type           = static_cast<obs_scale_type>(obs_data_get_int(data, ST_SCALING_METHOD));
 		this->_rescale_bounds         = static_cast<obs_bounds_type>(obs_data_get_int(data, ST_SCALING_BOUNDS));
-		this->_rescale_alignment      = static_cast<int32_t>(obs_data_get_int(data, ST_SCALING_ALIGNMENT));
+		this->_rescale_alignment      = static_cast<uint32_t>(obs_data_get_int(data, ST_SCALING_ALIGNMENT));
 	}
 }
 
@@ -654,8 +692,7 @@ void source::mirror::mirror_instance::video_render(gs_effect_t* effect)
 	}
 }
 
-void source::mirror::mirror_instance::audio_output_cb() noexcept try
-{
+void source::mirror::mirror_instance::audio_output_cb() noexcept try {
 	std::unique_lock<std::mutex> ulock(this->_audio_lock_outputter);
 
 	while (!this->_audio_kill_thread) {
@@ -686,6 +723,8 @@ void source::mirror::mirror_instance::audio_output_cb() noexcept try
 			}
 		}
 	}
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
