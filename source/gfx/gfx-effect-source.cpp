@@ -873,7 +873,7 @@ void gfx::effect_source::texture_parameter::update(obs_data_t* data)
 					_source_renderer = std::make_shared<gfx::source_texture>(_source, _parent.lock()->get_self());
 			}
 		}
-	} catch (std::exception& ex) {
+	} catch (const std::exception& ex) {
 		P_LOG_ERROR("Update failed, error: %s", ex.what());
 	}
 }
@@ -893,7 +893,7 @@ void gfx::effect_source::texture_parameter::tick(float_t time)
 		if (changed) {
 			try {
 				load_texture(_file_name);
-			} catch (std::exception& ex) {
+			} catch (const std::exception& ex) {
 				P_LOG_ERROR("Loading texture \"%s\" failed, error: %s", _file_name.c_str(), ex.what());
 			}
 		}
@@ -941,7 +941,7 @@ bool gfx::effect_source::effect_source::modified2(obs_properties_t* props, obs_p
 	try {
 		const char* str = obs_data_get_string(settings, ST_FILE);
 		load_file(str ? str : "");
-	} catch (std::exception& ex) {
+	} catch (const std::exception& ex) {
 		P_LOG_ERROR("<gfx::effect_source> Failed to load effect \"%s\" due to error: %s", _file.c_str(), ex.what());
 	}
 
@@ -1055,7 +1055,7 @@ void gfx::effect_source::effect_source::update(obs_data_t* data)
 	if (file != _file) {
 		try {
 			load_file(file);
-		} catch (std::exception& ex) {
+		} catch (const std::exception& ex) {
 			P_LOG_ERROR("<gfx::effect_source> Failed to load effect \"%s\" due to error: %s", _file.c_str(), ex.what());
 		}
 	}
@@ -1084,7 +1084,7 @@ bool gfx::effect_source::effect_source::tick(float_t time)
 		if (changed) {
 			try {
 				load_file(_file);
-			} catch (std::exception& ex) {
+			} catch (const std::exception& ex) {
 				P_LOG_ERROR("Loading shader \"%s\" failed, error: %s", _file.c_str(), ex.what());
 			}
 			return true;

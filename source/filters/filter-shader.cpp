@@ -67,7 +67,7 @@ filter::shader::shader_factory::shader_factory()
 	_source_info.create = [](obs_data_t* data, obs_source_t* self) {
 		try {
 			return static_cast<void*>(new filter::shader::shader_instance(data, self));
-		} catch (std::exception& ex) {
+		} catch (const std::exception& ex) {
 			P_LOG_ERROR("<filter-shader> Failed to create source, error: %s", ex.what());
 		} catch (...) {
 			P_LOG_ERROR("<filter-shader> Failed to create source.");
@@ -77,7 +77,7 @@ filter::shader::shader_factory::shader_factory()
 	_source_info.destroy = [](void* ptr) {
 		try {
 			delete reinterpret_cast<filter::shader::shader_instance*>(ptr);
-		} catch (std::exception& ex) {
+		} catch (const std::exception& ex) {
 			P_LOG_ERROR("<filter-shader> Failed to delete source, error: %s", ex.what());
 		} catch (...) {
 			P_LOG_ERROR("<filter-shader> Failed to delete source.");
@@ -88,7 +88,7 @@ filter::shader::shader_factory::shader_factory()
 		try {
 			if (ptr)
 				reinterpret_cast<filter::shader::shader_instance*>(ptr)->properties(pr);
-		} catch (std::exception& ex) {
+		} catch (const std::exception& ex) {
 			P_LOG_ERROR("<filter-shader> Failed to retrieve options, error: %s", ex.what());
 		} catch (...) {
 			P_LOG_ERROR("<filter-shader> Failed to retrieve options.");
@@ -99,7 +99,7 @@ filter::shader::shader_factory::shader_factory()
 		try {
 			if (ptr)
 				return reinterpret_cast<filter::shader::shader_instance*>(ptr)->width();
-		} catch (std::exception& ex) {
+		} catch (const std::exception& ex) {
 			P_LOG_ERROR("<filter-shader> Failed to retrieve width, error: %s", ex.what());
 		} catch (...) {
 			P_LOG_ERROR("<filter-shader> Failed to retrieve width.");
@@ -110,7 +110,7 @@ filter::shader::shader_factory::shader_factory()
 		try {
 			if (ptr)
 				return reinterpret_cast<filter::shader::shader_instance*>(ptr)->height();
-		} catch (std::exception& ex) {
+		} catch (const std::exception& ex) {
 			P_LOG_ERROR("<filter-shader> Failed to retrieve height, error: %s", ex.what());
 		} catch (...) {
 			P_LOG_ERROR("<filter-shader> Failed to retrieve height.");
@@ -121,7 +121,7 @@ filter::shader::shader_factory::shader_factory()
 		try {
 			if (ptr)
 				reinterpret_cast<filter::shader::shader_instance*>(ptr)->load(data);
-		} catch (std::exception& ex) {
+		} catch (const std::exception& ex) {
 			P_LOG_ERROR("<filter-shader> Failed to load, error: %s", ex.what());
 		} catch (...) {
 			P_LOG_ERROR("<filter-shader> Failed to load.");
@@ -131,7 +131,7 @@ filter::shader::shader_factory::shader_factory()
 		try {
 			if (ptr)
 				reinterpret_cast<filter::shader::shader_instance*>(ptr)->update(data);
-		} catch (std::exception& ex) {
+		} catch (const std::exception& ex) {
 			P_LOG_ERROR("<filter-shader> Failed to update, error: %s", ex.what());
 		} catch (...) {
 			P_LOG_ERROR("<filter-shader> Failed to update.");
@@ -141,7 +141,7 @@ filter::shader::shader_factory::shader_factory()
 		try {
 			if (ptr)
 				reinterpret_cast<filter::shader::shader_instance*>(ptr)->activate();
-		} catch (std::exception& ex) {
+		} catch (const std::exception& ex) {
 			P_LOG_ERROR("<filter-shader> Failed to activate, error: %s", ex.what());
 		} catch (...) {
 			P_LOG_ERROR("<filter-shader> Failed to activate.");
@@ -151,7 +151,7 @@ filter::shader::shader_factory::shader_factory()
 		try {
 			if (ptr)
 				reinterpret_cast<filter::shader::shader_instance*>(ptr)->deactivate();
-		} catch (std::exception& ex) {
+		} catch (const std::exception& ex) {
 			P_LOG_ERROR("<filter-shader> Failed to deactivate, error: %s", ex.what());
 		} catch (...) {
 			P_LOG_ERROR("<filter-shader> Failed to deactivate.");
@@ -161,7 +161,7 @@ filter::shader::shader_factory::shader_factory()
 		try {
 			if (ptr)
 				reinterpret_cast<filter::shader::shader_instance*>(ptr)->video_tick(time);
-		} catch (std::exception& ex) {
+		} catch (const std::exception& ex) {
 			P_LOG_ERROR("<filter-shader> Failed to tick, error: %s", ex.what());
 		} catch (...) {
 			P_LOG_ERROR("<filter-shader> Failed to tick.");
@@ -171,7 +171,7 @@ filter::shader::shader_factory::shader_factory()
 		try {
 			if (ptr)
 				reinterpret_cast<filter::shader::shader_instance*>(ptr)->video_render(effect);
-		} catch (std::exception& ex) {
+		} catch (const std::exception& ex) {
 			P_LOG_ERROR("<filter-shader> Failed to render, error: %s", ex.what());
 		} catch (...) {
 			P_LOG_ERROR("<filter-shader> Failed to render.");
@@ -181,7 +181,7 @@ filter::shader::shader_factory::shader_factory()
 		try {
 			if (ptr)
 				reinterpret_cast<filter::shader::shader_instance*>(ptr)->enum_active_sources(enum_callback, param);
-		} catch (std::exception& ex) {
+		} catch (const std::exception& ex) {
 			P_LOG_ERROR("<filter-shader> Failed to enumerate sources, error: %s", ex.what());
 		} catch (...) {
 			P_LOG_ERROR("<filter-shader> Failed to enumerate sources.");
@@ -223,6 +223,8 @@ bool modifiedcb3(obs_properties_t* props, obs_property_t* property, obs_data_t* 
 	obs_property_set_visible(obs_properties_get(props, ST_SCALE_WIDTH), !obs_data_get_bool(settings, ST_SCALE_LOCKED));
 	obs_property_set_visible(obs_properties_get(props, ST_SCALE_HEIGHT), !obs_data_get_bool(settings, ST_SCALE_LOCKED));
 	return true;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return false;
