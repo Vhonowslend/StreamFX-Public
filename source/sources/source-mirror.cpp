@@ -61,365 +61,6 @@
 #define ST_SCALING_BOUNDS_FILLHEIGHT "Source.Mirror.Scaling.Bounds.FillHeight"
 #define ST_SCALING_ALIGNMENT "Source.Mirror.Scaling.Alignment"
 
-static std::shared_ptr<source::mirror::mirror_factory> factory_instance = nullptr;
-
-void source::mirror::mirror_factory::initialize()
-{
-	factory_instance = std::make_shared<source::mirror::mirror_factory>();
-}
-
-void source::mirror::mirror_factory::finalize()
-{
-	factory_instance.reset();
-}
-
-std::shared_ptr<source::mirror::mirror_factory> source::mirror::mirror_factory::get()
-{
-	return factory_instance;
-}
-
-source::mirror::mirror_factory::mirror_factory()
-{
-	memset(&_source_info, 0, sizeof(obs_source_info));
-	_source_info.id           = "obs-stream-effects-source-mirror";
-	_source_info.type         = OBS_SOURCE_TYPE_INPUT;
-	_source_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_AUDIO | OBS_SOURCE_CUSTOM_DRAW;
-
-	_source_info.get_name            = get_name;
-	_source_info.get_defaults        = get_defaults;
-	_source_info.get_properties      = get_properties;
-	_source_info.get_width           = get_width;
-	_source_info.get_height          = get_height;
-	_source_info.create              = create;
-	_source_info.destroy             = destroy;
-	_source_info.update              = update;
-	_source_info.activate            = activate;
-	_source_info.deactivate          = deactivate;
-	_source_info.video_tick          = video_tick;
-	_source_info.video_render        = video_render;
-	_source_info.enum_active_sources = enum_active_sources;
-	_source_info.load                = load;
-	_source_info.save                = save;
-
-	obs_register_source(&_source_info);
-}
-
-source::mirror::mirror_factory::~mirror_factory() {}
-
-const char* source::mirror::mirror_factory::get_name(void*) noexcept try {
-	return D_TRANSLATE(ST);
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-void source::mirror::mirror_factory::get_defaults(obs_data_t* data) noexcept try {
-	obs_data_set_default_string(data, ST_SOURCE, "");
-	obs_data_set_default_bool(data, ST_AUDIO, false);
-	obs_data_set_default_int(data, ST_AUDIO_LAYOUT, static_cast<int64_t>(SPEAKERS_UNKNOWN));
-	obs_data_set_default_bool(data, ST_SCALING, false);
-	obs_data_set_default_string(data, ST_SCALING_SIZE, "100x100");
-	obs_data_set_default_int(data, ST_SCALING_METHOD, (int64_t)obs_scale_type::OBS_SCALE_BILINEAR);
-	obs_data_set_default_bool(data, ST_SCALING_TRANSFORMKEEPORIGINAL, false);
-	obs_data_set_default_int(data, ST_SCALING_BOUNDS, (int64_t)obs_bounds_type::OBS_BOUNDS_STRETCH);
-	obs_data_set_default_int(data, ST_SCALING_ALIGNMENT, OBS_ALIGN_CENTER);
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-bool source::mirror::mirror_factory::modified_properties(obs_properties_t* pr, obs_property_t* p,
-														 obs_data_t* data) noexcept try {
-	if (obs_properties_get(pr, ST_SOURCE) == p) {
-		obs_source_t* target = obs_get_source_by_name(obs_data_get_string(data, ST_SOURCE));
-		if (target) {
-			std::vector<char> buf(256);
-			snprintf(buf.data(), buf.size(), "%" PRIu32 "x%" PRIu32, obs_source_get_width(target),
-					 obs_source_get_height(target));
-			obs_data_set_string(data, ST_SOURCE_SIZE, buf.data());
-		} else {
-			obs_data_set_string(data, ST_SOURCE_SIZE, "0x0");
-		}
-		obs_source_release(target);
-	}
-
-	if (obs_properties_get(pr, ST_AUDIO) == p) {
-		bool show = obs_data_get_bool(data, ST_AUDIO);
-		obs_property_set_visible(obs_properties_get(pr, ST_AUDIO_LAYOUT), show);
-		return true;
-	}
-
-	if (obs_properties_get(pr, ST_SCALING) == p) {
-		bool show = obs_data_get_bool(data, ST_SCALING);
-		obs_property_set_visible(obs_properties_get(pr, ST_SCALING_METHOD), show);
-		obs_property_set_visible(obs_properties_get(pr, ST_SCALING_SIZE), show);
-		obs_property_set_visible(obs_properties_get(pr, ST_SCALING_BOUNDS), show);
-		obs_property_set_visible(obs_properties_get(pr, ST_SCALING_ALIGNMENT), show);
-		return true;
-	}
-
-	if (obs_properties_get(pr, ST_SCALING_BOUNDS) == p) {
-		obs_bounds_type scaling_type = static_cast<obs_bounds_type>(obs_data_get_int(data, ST_SCALING_BOUNDS));
-		obs_property_t* p2           = obs_properties_get(pr, ST_SCALING_BOUNDS);
-		switch (scaling_type) {
-		case obs_bounds_type::OBS_BOUNDS_STRETCH:
-			obs_property_set_long_description(p2, D_TRANSLATE(D_DESC(ST_SCALING_BOUNDS_STRETCH)));
-			break;
-		case obs_bounds_type::OBS_BOUNDS_SCALE_INNER:
-			obs_property_set_long_description(p2, D_TRANSLATE(D_DESC(ST_SCALING_BOUNDS_FIT)));
-			break;
-		case obs_bounds_type::OBS_BOUNDS_SCALE_OUTER:
-			obs_property_set_long_description(p2, D_TRANSLATE(D_DESC(ST_SCALING_BOUNDS_FILL)));
-			break;
-		case obs_bounds_type::OBS_BOUNDS_SCALE_TO_WIDTH:
-			obs_property_set_long_description(p2, D_TRANSLATE(D_DESC(ST_SCALING_BOUNDS_FILLWIDTH)));
-			break;
-		case obs_bounds_type::OBS_BOUNDS_SCALE_TO_HEIGHT:
-			obs_property_set_long_description(p2, D_TRANSLATE(D_DESC(ST_SCALING_BOUNDS_FILLHEIGHT)));
-			break;
-		default:
-			obs_property_set_long_description(p2, D_TRANSLATE(D_DESC(ST_SCALING_BOUNDS)));
-			break;
-		}
-		return true;
-	}
-
-	return false;
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return false;
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return false;
-}
-
-obs_properties_t* source::mirror::mirror_factory::get_properties(void*) noexcept try {
-	obs_properties_t* pr = obs_properties_create();
-	obs_property_t*   p  = nullptr;
-
-	p = obs_properties_add_list(pr, ST_SOURCE, D_TRANSLATE(ST_SOURCE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
-	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SOURCE)));
-	obs_property_set_modified_callback(p, modified_properties);
-	obs_property_list_add_string(p, "", "");
-	obs::source_tracker::get()->enumerate(
-		[&p](std::string name, obs_source_t*) {
-			obs_property_list_add_string(p, std::string(name + " (Source)").c_str(), name.c_str());
-			return false;
-		},
-		obs::source_tracker::filter_sources);
-	obs::source_tracker::get()->enumerate(
-		[&p](std::string name, obs_source_t*) {
-			obs_property_list_add_string(p, std::string(name + " (Scene)").c_str(), name.c_str());
-			return false;
-		},
-		obs::source_tracker::filter_scenes);
-
-	p = obs_properties_add_text(pr, ST_SOURCE_SIZE, D_TRANSLATE(ST_SOURCE_SIZE), OBS_TEXT_DEFAULT);
-	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SOURCE_SIZE)));
-	obs_property_set_enabled(p, false);
-
-	p = obs_properties_add_bool(pr, ST_AUDIO, D_TRANSLATE(ST_AUDIO));
-	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_AUDIO)));
-	obs_property_set_modified_callback(p, modified_properties);
-	p = obs_properties_add_list(pr, ST_AUDIO_LAYOUT, D_TRANSLATE(ST_AUDIO_LAYOUT), OBS_COMBO_TYPE_LIST,
-								OBS_COMBO_FORMAT_INT);
-	obs_property_list_add_int(p, D_TRANSLATE(ST_AUDIO_LAYOUT_(Unknown)), static_cast<int64_t>(SPEAKERS_UNKNOWN));
-	obs_property_list_add_int(p, D_TRANSLATE(ST_AUDIO_LAYOUT_(Mono)), static_cast<int64_t>(SPEAKERS_MONO));
-	obs_property_list_add_int(p, D_TRANSLATE(ST_AUDIO_LAYOUT_(Stereo)), static_cast<int64_t>(SPEAKERS_STEREO));
-	obs_property_list_add_int(p, D_TRANSLATE(ST_AUDIO_LAYOUT_(StereoLFE)), static_cast<int64_t>(SPEAKERS_2POINT1));
-	obs_property_list_add_int(p, D_TRANSLATE(ST_AUDIO_LAYOUT_(Quadraphonic)), static_cast<int64_t>(SPEAKERS_4POINT0));
-	obs_property_list_add_int(p, D_TRANSLATE(ST_AUDIO_LAYOUT_(QuadraphonicLFE)),
-							  static_cast<int64_t>(SPEAKERS_4POINT1));
-	obs_property_list_add_int(p, D_TRANSLATE(ST_AUDIO_LAYOUT_(Surround)), static_cast<int64_t>(SPEAKERS_5POINT1));
-	obs_property_list_add_int(p, D_TRANSLATE(ST_AUDIO_LAYOUT_(FullSurround)), static_cast<int64_t>(SPEAKERS_7POINT1));
-	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_AUDIO_LAYOUT)));
-
-	p = obs_properties_add_bool(pr, ST_SCALING, D_TRANSLATE(ST_SCALING));
-	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SCALING)));
-	obs_property_set_modified_callback(p, modified_properties);
-
-	p = obs_properties_add_list(pr, ST_SCALING_METHOD, D_TRANSLATE(ST_SCALING_METHOD), OBS_COMBO_TYPE_LIST,
-								OBS_COMBO_FORMAT_INT);
-	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SCALING_METHOD)));
-	obs_property_set_modified_callback(p, modified_properties);
-	obs_property_list_add_int(p, D_TRANSLATE(ST_SCALING_METHOD_POINT), (int64_t)obs_scale_type::OBS_SCALE_POINT);
-	obs_property_list_add_int(p, D_TRANSLATE(ST_SCALING_METHOD_BILINEAR), (int64_t)obs_scale_type::OBS_SCALE_BILINEAR);
-	obs_property_list_add_int(p, D_TRANSLATE(ST_SCALING_METHOD_BICUBIC), (int64_t)obs_scale_type::OBS_SCALE_BICUBIC);
-	obs_property_list_add_int(p, D_TRANSLATE(ST_SCALING_METHOD_LANCZOS), (int64_t)obs_scale_type::OBS_SCALE_LANCZOS);
-
-	p = obs_properties_add_text(pr, ST_SCALING_SIZE, D_TRANSLATE(ST_SCALING_SIZE), OBS_TEXT_DEFAULT);
-	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SCALING_SIZE)));
-
-	p = obs_properties_add_bool(pr, ST_SCALING_TRANSFORMKEEPORIGINAL, D_TRANSLATE(ST_SCALING_TRANSFORMKEEPORIGINAL));
-	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SCALING_TRANSFORMKEEPORIGINAL)));
-
-	p = obs_properties_add_list(pr, ST_SCALING_BOUNDS, D_TRANSLATE(ST_SCALING_BOUNDS), OBS_COMBO_TYPE_LIST,
-								OBS_COMBO_FORMAT_INT);
-	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SCALING_BOUNDS)));
-	obs_property_set_modified_callback(p, modified_properties);
-	obs_property_list_add_int(p, D_TRANSLATE(ST_SCALING_BOUNDS_STRETCH), (int64_t)obs_bounds_type::OBS_BOUNDS_STRETCH);
-	obs_property_list_add_int(p, D_TRANSLATE(ST_SCALING_BOUNDS_FIT), (int64_t)obs_bounds_type::OBS_BOUNDS_SCALE_INNER);
-	obs_property_list_add_int(p, D_TRANSLATE(ST_SCALING_BOUNDS_FILL), (int64_t)obs_bounds_type::OBS_BOUNDS_SCALE_OUTER);
-	obs_property_list_add_int(p, D_TRANSLATE(ST_SCALING_BOUNDS_FILLWIDTH),
-							  (int64_t)obs_bounds_type::OBS_BOUNDS_SCALE_TO_WIDTH);
-	obs_property_list_add_int(p, D_TRANSLATE(ST_SCALING_BOUNDS_FILLHEIGHT),
-							  (int64_t)obs_bounds_type::OBS_BOUNDS_SCALE_TO_HEIGHT);
-
-	p = obs_properties_add_list(pr, ST_SCALING_ALIGNMENT, D_TRANSLATE(ST_SCALING_ALIGNMENT), OBS_COMBO_TYPE_LIST,
-								OBS_COMBO_FORMAT_INT);
-	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SCALING_ALIGNMENT)));
-	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_LEFT "\\@ \\@" S_ALIGNMENT_TOP "\\@"),
-							  OBS_ALIGN_LEFT | OBS_ALIGN_TOP);
-	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_TOP "\\@"), OBS_ALIGN_TOP);
-	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_RIGHT "\\@ \\@" S_ALIGNMENT_TOP "\\@"),
-							  OBS_ALIGN_RIGHT | OBS_ALIGN_TOP);
-	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_LEFT "\\@"), OBS_ALIGN_LEFT);
-	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_CENTER "\\@"), OBS_ALIGN_CENTER);
-	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_RIGHT "\\@"), OBS_ALIGN_RIGHT);
-	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_LEFT "\\@ \\@" S_ALIGNMENT_BOTTOM "\\@"),
-							  OBS_ALIGN_LEFT | OBS_ALIGN_BOTTOM);
-	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_BOTTOM "\\@"), OBS_ALIGN_BOTTOM);
-	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_RIGHT "\\@ \\@" S_ALIGNMENT_BOTTOM "\\@"),
-							  OBS_ALIGN_RIGHT | OBS_ALIGN_BOTTOM);
-
-	return pr;
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return nullptr;
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return nullptr;
-}
-
-void* source::mirror::mirror_factory::create(obs_data_t* data, obs_source_t* source) noexcept try {
-	return new source::mirror::mirror_instance(data, source);
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return nullptr;
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return nullptr;
-}
-
-void source::mirror::mirror_factory::destroy(void* p) noexcept try {
-	if (p) {
-		delete static_cast<source::mirror::mirror_instance*>(p);
-	}
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-uint32_t source::mirror::mirror_factory::get_width(void* p) noexcept try {
-	if (p) {
-		return static_cast<source::mirror::mirror_instance*>(p)->get_width();
-	}
-	return 0;
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return 0;
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return 0;
-}
-
-uint32_t source::mirror::mirror_factory::get_height(void* p) noexcept try {
-	if (p) {
-		return static_cast<source::mirror::mirror_instance*>(p)->get_height();
-	}
-	return 0;
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return 0;
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return 0;
-}
-
-void source::mirror::mirror_factory::update(void* p, obs_data_t* data) noexcept try {
-	if (p) {
-		static_cast<source::mirror::mirror_instance*>(p)->update(data);
-	}
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-void source::mirror::mirror_factory::activate(void* p) noexcept try {
-	if (p) {
-		static_cast<source::mirror::mirror_instance*>(p)->activate();
-	}
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-void source::mirror::mirror_factory::deactivate(void* p) noexcept try {
-	if (p) {
-		static_cast<source::mirror::mirror_instance*>(p)->deactivate();
-	}
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-void source::mirror::mirror_factory::video_tick(void* p, float t) noexcept try {
-	if (p) {
-		static_cast<source::mirror::mirror_instance*>(p)->video_tick(t);
-	}
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-void source::mirror::mirror_factory::video_render(void* p, gs_effect_t* ef) noexcept try {
-	if (p) {
-		static_cast<source::mirror::mirror_instance*>(p)->video_render(ef);
-	}
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-void source::mirror::mirror_factory::enum_active_sources(void* p, obs_source_enum_proc_t enum_callback,
-														 void* param) noexcept try {
-	if (p) {
-		static_cast<source::mirror::mirror_instance*>(p)->enum_active_sources(enum_callback, param);
-	}
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-void source::mirror::mirror_factory::load(void* p, obs_data_t* d) noexcept try {
-	if (p) {
-		static_cast<source::mirror::mirror_instance*>(p)->load(d);
-	}
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-void source::mirror::mirror_factory::save(void* p, obs_data_t* d) noexcept try {
-	if (p) {
-		static_cast<source::mirror::mirror_instance*>(p)->save(d);
-	}
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
 void source::mirror::mirror_instance::release_input()
 {
 	// Clear any references to the previous source.
@@ -474,9 +115,9 @@ void source::mirror::mirror_instance::acquire_input(std::string source_name)
 	}
 }
 
-source::mirror::mirror_instance::mirror_instance(obs_data_t*, obs_source_t* src)
-	: _self(src), _active(true), _tick(0), _scene_rendered(false), _rescale_alignment(0), _rescale_enabled(false),
-	  _rescale_width(1), _rescale_height(1), _rescale_keep_orig_size(false),
+source::mirror::mirror_instance::mirror_instance(obs_data_t* settings, obs_source_t* self)
+	: obs::source_instance(settings, self), _active(true), _tick(0), _scene_rendered(false), _rescale_alignment(0),
+	  _rescale_enabled(false), _rescale_width(1), _rescale_height(1), _rescale_keep_orig_size(false),
 	  _rescale_type(obs_scale_type::OBS_SCALE_BICUBIC), _rescale_bounds(obs_bounds_type::OBS_BOUNDS_STRETCH),
 	  _audio_enabled(false), _audio_kill_thread(false), _audio_have_output(false), _audio_layout(SPEAKERS_UNKNOWN),
 	  _source_item(nullptr)
@@ -744,6 +385,13 @@ void source::mirror::mirror_instance::enum_active_sources(obs_source_enum_proc_t
 	}
 }
 
+void source::mirror::mirror_instance::enum_all_sources(obs_source_enum_proc_t enum_callback, void* param)
+{
+	if (this->_scene) {
+		enum_callback(this->_self, this->_scene->get(), param);
+	}
+}
+
 void source::mirror::mirror_instance::load(obs_data_t* data)
 {
 	this->update(data);
@@ -829,4 +477,192 @@ void source::mirror::mirror_instance::on_audio_data(obs::source*, const audio_da
 		this->_audio_have_output = true;
 	}
 	this->_audio_notify.notify_all();
+}
+
+std::shared_ptr<source::mirror::mirror_factory> source::mirror::mirror_factory::factory_instance;
+
+source::mirror::mirror_factory::mirror_factory()
+{
+	_info.id           = "obs-stream-effects-source-mirror";
+	_info.type         = OBS_SOURCE_TYPE_INPUT;
+	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_AUDIO | OBS_SOURCE_CUSTOM_DRAW;
+
+	obs_register_source(&_info);
+}
+
+source::mirror::mirror_factory::~mirror_factory() {}
+
+const char* source::mirror::mirror_factory::get_name()
+{
+	return D_TRANSLATE(ST);
+}
+
+void source::mirror::mirror_factory::get_defaults2(obs_data_t* data)
+{
+	obs_data_set_default_string(data, ST_SOURCE, "");
+	obs_data_set_default_bool(data, ST_AUDIO, false);
+	obs_data_set_default_int(data, ST_AUDIO_LAYOUT, static_cast<int64_t>(SPEAKERS_UNKNOWN));
+	obs_data_set_default_bool(data, ST_SCALING, false);
+	obs_data_set_default_string(data, ST_SCALING_SIZE, "100x100");
+	obs_data_set_default_int(data, ST_SCALING_METHOD, (int64_t)obs_scale_type::OBS_SCALE_BILINEAR);
+	obs_data_set_default_bool(data, ST_SCALING_TRANSFORMKEEPORIGINAL, false);
+	obs_data_set_default_int(data, ST_SCALING_BOUNDS, (int64_t)obs_bounds_type::OBS_BOUNDS_STRETCH);
+	obs_data_set_default_int(data, ST_SCALING_ALIGNMENT, OBS_ALIGN_CENTER);
+}
+
+static bool modified_properties(obs_properties_t* pr, obs_property_t* p, obs_data_t* data) noexcept try {
+	if (obs_properties_get(pr, ST_SOURCE) == p) {
+		obs_source_t* target = obs_get_source_by_name(obs_data_get_string(data, ST_SOURCE));
+		if (target) {
+			std::vector<char> buf(256);
+			snprintf(buf.data(), buf.size(), "%" PRIu32 "x%" PRIu32, obs_source_get_width(target),
+					 obs_source_get_height(target));
+			obs_data_set_string(data, ST_SOURCE_SIZE, buf.data());
+		} else {
+			obs_data_set_string(data, ST_SOURCE_SIZE, "0x0");
+		}
+		obs_source_release(target);
+	}
+
+	if (obs_properties_get(pr, ST_AUDIO) == p) {
+		bool show = obs_data_get_bool(data, ST_AUDIO);
+		obs_property_set_visible(obs_properties_get(pr, ST_AUDIO_LAYOUT), show);
+		return true;
+	}
+
+	if (obs_properties_get(pr, ST_SCALING) == p) {
+		bool show = obs_data_get_bool(data, ST_SCALING);
+		obs_property_set_visible(obs_properties_get(pr, ST_SCALING_METHOD), show);
+		obs_property_set_visible(obs_properties_get(pr, ST_SCALING_SIZE), show);
+		obs_property_set_visible(obs_properties_get(pr, ST_SCALING_BOUNDS), show);
+		obs_property_set_visible(obs_properties_get(pr, ST_SCALING_ALIGNMENT), show);
+		return true;
+	}
+
+	if (obs_properties_get(pr, ST_SCALING_BOUNDS) == p) {
+		obs_bounds_type scaling_type = static_cast<obs_bounds_type>(obs_data_get_int(data, ST_SCALING_BOUNDS));
+		obs_property_t* p2           = obs_properties_get(pr, ST_SCALING_BOUNDS);
+		switch (scaling_type) {
+		case obs_bounds_type::OBS_BOUNDS_STRETCH:
+			obs_property_set_long_description(p2, D_TRANSLATE(D_DESC(ST_SCALING_BOUNDS_STRETCH)));
+			break;
+		case obs_bounds_type::OBS_BOUNDS_SCALE_INNER:
+			obs_property_set_long_description(p2, D_TRANSLATE(D_DESC(ST_SCALING_BOUNDS_FIT)));
+			break;
+		case obs_bounds_type::OBS_BOUNDS_SCALE_OUTER:
+			obs_property_set_long_description(p2, D_TRANSLATE(D_DESC(ST_SCALING_BOUNDS_FILL)));
+			break;
+		case obs_bounds_type::OBS_BOUNDS_SCALE_TO_WIDTH:
+			obs_property_set_long_description(p2, D_TRANSLATE(D_DESC(ST_SCALING_BOUNDS_FILLWIDTH)));
+			break;
+		case obs_bounds_type::OBS_BOUNDS_SCALE_TO_HEIGHT:
+			obs_property_set_long_description(p2, D_TRANSLATE(D_DESC(ST_SCALING_BOUNDS_FILLHEIGHT)));
+			break;
+		default:
+			obs_property_set_long_description(p2, D_TRANSLATE(D_DESC(ST_SCALING_BOUNDS)));
+			break;
+		}
+		return true;
+	}
+
+	return false;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return false;
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return false;
+}
+
+obs_properties_t* source::mirror::mirror_factory::get_properties2(source::mirror::mirror_instance* data)
+{
+	obs_properties_t* pr = obs_properties_create();
+	obs_property_t*   p  = nullptr;
+
+	p = obs_properties_add_list(pr, ST_SOURCE, D_TRANSLATE(ST_SOURCE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SOURCE)));
+	obs_property_set_modified_callback(p, modified_properties);
+	obs_property_list_add_string(p, "", "");
+	obs::source_tracker::get()->enumerate(
+		[&p](std::string name, obs_source_t*) {
+			obs_property_list_add_string(p, std::string(name + " (Source)").c_str(), name.c_str());
+			return false;
+		},
+		obs::source_tracker::filter_sources);
+	obs::source_tracker::get()->enumerate(
+		[&p](std::string name, obs_source_t*) {
+			obs_property_list_add_string(p, std::string(name + " (Scene)").c_str(), name.c_str());
+			return false;
+		},
+		obs::source_tracker::filter_scenes);
+
+	p = obs_properties_add_text(pr, ST_SOURCE_SIZE, D_TRANSLATE(ST_SOURCE_SIZE), OBS_TEXT_DEFAULT);
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SOURCE_SIZE)));
+	obs_property_set_enabled(p, false);
+
+	p = obs_properties_add_bool(pr, ST_AUDIO, D_TRANSLATE(ST_AUDIO));
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_AUDIO)));
+	obs_property_set_modified_callback(p, modified_properties);
+	p = obs_properties_add_list(pr, ST_AUDIO_LAYOUT, D_TRANSLATE(ST_AUDIO_LAYOUT), OBS_COMBO_TYPE_LIST,
+								OBS_COMBO_FORMAT_INT);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_AUDIO_LAYOUT_(Unknown)), static_cast<int64_t>(SPEAKERS_UNKNOWN));
+	obs_property_list_add_int(p, D_TRANSLATE(ST_AUDIO_LAYOUT_(Mono)), static_cast<int64_t>(SPEAKERS_MONO));
+	obs_property_list_add_int(p, D_TRANSLATE(ST_AUDIO_LAYOUT_(Stereo)), static_cast<int64_t>(SPEAKERS_STEREO));
+	obs_property_list_add_int(p, D_TRANSLATE(ST_AUDIO_LAYOUT_(StereoLFE)), static_cast<int64_t>(SPEAKERS_2POINT1));
+	obs_property_list_add_int(p, D_TRANSLATE(ST_AUDIO_LAYOUT_(Quadraphonic)), static_cast<int64_t>(SPEAKERS_4POINT0));
+	obs_property_list_add_int(p, D_TRANSLATE(ST_AUDIO_LAYOUT_(QuadraphonicLFE)),
+							  static_cast<int64_t>(SPEAKERS_4POINT1));
+	obs_property_list_add_int(p, D_TRANSLATE(ST_AUDIO_LAYOUT_(Surround)), static_cast<int64_t>(SPEAKERS_5POINT1));
+	obs_property_list_add_int(p, D_TRANSLATE(ST_AUDIO_LAYOUT_(FullSurround)), static_cast<int64_t>(SPEAKERS_7POINT1));
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_AUDIO_LAYOUT)));
+
+	p = obs_properties_add_bool(pr, ST_SCALING, D_TRANSLATE(ST_SCALING));
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SCALING)));
+	obs_property_set_modified_callback(p, modified_properties);
+
+	p = obs_properties_add_list(pr, ST_SCALING_METHOD, D_TRANSLATE(ST_SCALING_METHOD), OBS_COMBO_TYPE_LIST,
+								OBS_COMBO_FORMAT_INT);
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SCALING_METHOD)));
+	obs_property_set_modified_callback(p, modified_properties);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_SCALING_METHOD_POINT), (int64_t)obs_scale_type::OBS_SCALE_POINT);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_SCALING_METHOD_BILINEAR), (int64_t)obs_scale_type::OBS_SCALE_BILINEAR);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_SCALING_METHOD_BICUBIC), (int64_t)obs_scale_type::OBS_SCALE_BICUBIC);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_SCALING_METHOD_LANCZOS), (int64_t)obs_scale_type::OBS_SCALE_LANCZOS);
+
+	p = obs_properties_add_text(pr, ST_SCALING_SIZE, D_TRANSLATE(ST_SCALING_SIZE), OBS_TEXT_DEFAULT);
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SCALING_SIZE)));
+
+	p = obs_properties_add_bool(pr, ST_SCALING_TRANSFORMKEEPORIGINAL, D_TRANSLATE(ST_SCALING_TRANSFORMKEEPORIGINAL));
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SCALING_TRANSFORMKEEPORIGINAL)));
+
+	p = obs_properties_add_list(pr, ST_SCALING_BOUNDS, D_TRANSLATE(ST_SCALING_BOUNDS), OBS_COMBO_TYPE_LIST,
+								OBS_COMBO_FORMAT_INT);
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SCALING_BOUNDS)));
+	obs_property_set_modified_callback(p, modified_properties);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_SCALING_BOUNDS_STRETCH), (int64_t)obs_bounds_type::OBS_BOUNDS_STRETCH);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_SCALING_BOUNDS_FIT), (int64_t)obs_bounds_type::OBS_BOUNDS_SCALE_INNER);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_SCALING_BOUNDS_FILL), (int64_t)obs_bounds_type::OBS_BOUNDS_SCALE_OUTER);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_SCALING_BOUNDS_FILLWIDTH),
+							  (int64_t)obs_bounds_type::OBS_BOUNDS_SCALE_TO_WIDTH);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_SCALING_BOUNDS_FILLHEIGHT),
+							  (int64_t)obs_bounds_type::OBS_BOUNDS_SCALE_TO_HEIGHT);
+
+	p = obs_properties_add_list(pr, ST_SCALING_ALIGNMENT, D_TRANSLATE(ST_SCALING_ALIGNMENT), OBS_COMBO_TYPE_LIST,
+								OBS_COMBO_FORMAT_INT);
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SCALING_ALIGNMENT)));
+	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_LEFT "\\@ \\@" S_ALIGNMENT_TOP "\\@"),
+							  OBS_ALIGN_LEFT | OBS_ALIGN_TOP);
+	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_TOP "\\@"), OBS_ALIGN_TOP);
+	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_RIGHT "\\@ \\@" S_ALIGNMENT_TOP "\\@"),
+							  OBS_ALIGN_RIGHT | OBS_ALIGN_TOP);
+	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_LEFT "\\@"), OBS_ALIGN_LEFT);
+	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_CENTER "\\@"), OBS_ALIGN_CENTER);
+	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_RIGHT "\\@"), OBS_ALIGN_RIGHT);
+	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_LEFT "\\@ \\@" S_ALIGNMENT_BOTTOM "\\@"),
+							  OBS_ALIGN_LEFT | OBS_ALIGN_BOTTOM);
+	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_BOTTOM "\\@"), OBS_ALIGN_BOTTOM);
+	obs_property_list_add_int(p, obs_module_recursive_text("\\@" S_ALIGNMENT_RIGHT "\\@ \\@" S_ALIGNMENT_BOTTOM "\\@"),
+							  OBS_ALIGN_RIGHT | OBS_ALIGN_BOTTOM);
+
+	return pr;
 }

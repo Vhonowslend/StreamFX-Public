@@ -27,6 +27,7 @@
 #include "gfx/gfx-source-texture.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-sampler.hpp"
+#include "obs/obs-source-factory.hpp"
 #include "obs/obs-source.hpp"
 #include "plugin.hpp"
 
@@ -42,46 +43,12 @@
 
 namespace source {
 	namespace mirror {
-		class mirror_factory {
-			obs_source_info _source_info;
-
-			public: // Singleton
-			static void                            initialize();
-			static void                            finalize();
-			static std::shared_ptr<mirror_factory> get();
-
-			public:
-			mirror_factory();
-			~mirror_factory();
-
-			static const char*       get_name(void*) noexcept;
-			static void              get_defaults(obs_data_t*) noexcept;
-			static bool              modified_properties(obs_properties_t*, obs_property_t*, obs_data_t*) noexcept;
-			static obs_properties_t* get_properties(void*) noexcept;
-
-			static void* create(obs_data_t*, obs_source_t*) noexcept;
-			static void  destroy(void*) noexcept;
-
-			static uint32_t get_width(void*) noexcept;
-			static uint32_t get_height(void*) noexcept;
-
-			static void update(void*, obs_data_t*) noexcept;
-			static void activate(void*) noexcept;
-			static void deactivate(void*) noexcept;
-			static void video_tick(void*, float) noexcept;
-			static void video_render(void*, gs_effect_t*) noexcept;
-			static void enum_active_sources(void*, obs_source_enum_proc_t, void*) noexcept;
-			static void load(void*, obs_data_t*) noexcept;
-			static void save(void*, obs_data_t*) noexcept;
-		};
-
 		struct mirror_audio_data {
 			obs_source_audio                  audio = {};
 			std::vector<std::vector<float_t>> data;
 		};
 
-		class mirror_instance {
-			obs_source_t* _self;
+		class mirror_instance : public obs::source_instance {
 			bool          _active;
 			float_t       _tick;
 
@@ -122,24 +89,59 @@ namespace source {
 			void acquire_input(std::string source_name);
 
 			public:
-			mirror_instance(obs_data_t*, obs_source_t*);
-			~mirror_instance();
+			mirror_instance(obs_data_t* settings, obs_source_t* self);
+			virtual ~mirror_instance();
 
-			uint32_t get_width();
-			uint32_t get_height();
+			virtual uint32_t get_width() override;
+			virtual uint32_t get_height() override;
 
-			void update(obs_data_t*);
-			void activate();
-			void deactivate();
-			void video_tick(float);
-			void video_render(gs_effect_t*);
+			virtual void update(obs_data_t*) override;
+			virtual void load(obs_data_t*) override;
+			virtual void save(obs_data_t*) override;
+
+			virtual void activate() override;
+			virtual void deactivate() override;
+
+			virtual void video_tick(float) override;
+			virtual void video_render(gs_effect_t*) override;
+
+			virtual void enum_active_sources(obs_source_enum_proc_t, void*) override;
+			virtual void enum_all_sources(obs_source_enum_proc_t, void*) override;
+
 			void audio_output_cb() noexcept;
-			void enum_active_sources(obs_source_enum_proc_t, void*);
-			void load(obs_data_t*);
-			void save(obs_data_t*);
 
 			void on_source_rename(obs::source* source, std::string new_name, std::string old_name);
 			void on_audio_data(obs::source* source, const audio_data* audio, bool muted);
+		};
+
+		class mirror_factory : public obs::source_factory<source::mirror::mirror_factory, source::mirror::mirror_instance> {
+			static std::shared_ptr<source::mirror::mirror_factory> factory_instance;
+
+			public: // Singleton
+			static void initialize()
+			{
+				factory_instance = std::make_shared<source::mirror::mirror_factory>();
+			}
+
+			static void finalize()
+			{
+				factory_instance.reset();
+			}
+
+			static std::shared_ptr<mirror_factory> get()
+			{
+				return factory_instance;
+			}
+
+			public:
+			mirror_factory();
+			virtual ~mirror_factory() override;
+
+			virtual const char* get_name();
+
+			virtual void get_defaults2(obs_data_t* data);
+
+			virtual obs_properties_t* get_properties2(source::mirror::mirror_instance* data);
 		};
 	} // namespace mirror
 };    // namespace source
