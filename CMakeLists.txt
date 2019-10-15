@@ -333,6 +333,8 @@ set(PROJECT_PRIVATE_SOURCE
 	"${PROJECT_SOURCE_DIR}/source/obs/obs-tools.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/obs-source.hpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/obs-source.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-source-factory.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-source-factory.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/obs-source-tracker.hpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/obs-source-tracker.cpp"
 	
