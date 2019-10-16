@@ -654,8 +654,12 @@ void source::mirror::mirror_instance::video_render(gs_effect_t* effect)
 		return;
 	}
 
+	GS_DEBUG_MARKER_BEGIN_FORMAT(GS_DEBUG_COLOR_SOURCE, "Source Mirror: %s", obs_source_get_name(_source->get()));
+
 	// Only re-render the scene if there was a video_tick, saves GPU cycles.
 	if (!_scene_rendered) {
+		GS_DEBUG_MARKER_BEGIN_FORMAT(GS_DEBUG_COLOR_RENDER_VIDEO, "Cache: %s",
+									 obs_source_get_name(_source->get()));
 		// Override render size if rescaling is enabled.
 		uint32_t render_width  = this->_source->width();
 		uint32_t render_height = this->_source->height();
@@ -676,6 +680,7 @@ void source::mirror::mirror_instance::video_render(gs_effect_t* effect)
 			// If we fail to render the source, just render nothing.
 			return;
 		}
+		GS_DEBUG_MARKER_END();
 	}
 
 	if (_scene_texture) {
@@ -690,6 +695,9 @@ void source::mirror::mirror_instance::video_render(gs_effect_t* effect)
 			gs_draw_sprite(_scene_texture->get_object(), 0, this->get_width(), this->get_height());
 		}
 	}
+
+	GS_DEBUG_MARKER_END();
+
 }
 
 void source::mirror::mirror_instance::audio_output_cb() noexcept try {
