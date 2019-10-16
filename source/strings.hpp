@@ -33,6 +33,7 @@
 #define S_FILEFILTERS_ANY "*.*"
 
 #define S_VERSION "Version"
+#define S_COMMIT "Commit"
 
 #define S_ADVANCED "Advanced"
 
@@ -78,5 +79,3 @@
 #define S_CHANNEL_GREEN "Channel.Green"
 #define S_CHANNEL_BLUE "Channel.Blue"
 #define S_CHANNEL_ALPHA "Channel.Alpha"
-
-

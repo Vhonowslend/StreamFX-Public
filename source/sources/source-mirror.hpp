@@ -49,26 +49,13 @@ namespace source {
 		};
 
 		class mirror_instance : public obs::source_instance {
-			bool          _active;
-			float_t       _tick;
+			// Source
+			std::shared_ptr<obs::source> _source;
+			std::string                  _source_name;
 
-			// Video Rendering
-			std::shared_ptr<obs::source>         _scene;
-			std::shared_ptr<gfx::source_texture> _scene_texture_renderer;
-			std::shared_ptr<gs::texture>         _scene_texture;
-			bool                                 _scene_rendered;
-			uint32_t                             _rescale_alignment;
-
-			// Rescaling
-			bool            _rescale_enabled;
-			uint32_t        _rescale_width;
-			uint32_t        _rescale_height;
-			bool            _rescale_keep_orig_size;
-			obs_scale_type  _rescale_type;
-			obs_bounds_type _rescale_bounds;
-
-			// Audio Rendering
+			// Audio
 			bool                                           _audio_enabled;
+			speaker_layout                                 _audio_layout;
 			std::condition_variable                        _audio_notify;
 			std::thread                                    _audio_thread;
 			bool                                           _audio_kill_thread;
@@ -77,16 +64,29 @@ namespace source {
 			std::mutex                                     _audio_lock_capturer;
 			std::queue<std::shared_ptr<mirror_audio_data>> _audio_data_queue;
 			std::queue<std::shared_ptr<mirror_audio_data>> _audio_data_free_queue;
-			speaker_layout                                 _audio_layout;
 
-			// Input
-			std::shared_ptr<obs::source> _source;
-			obs_sceneitem_t*             _source_item;
-			std::string                  _source_name;
+			// Scaling
+			bool            _rescale_enabled;
+			uint32_t        _rescale_width;
+			uint32_t        _rescale_height;
+			bool            _rescale_keep_orig_size;
+			obs_scale_type  _rescale_type;
+			obs_bounds_type _rescale_bounds;
+			uint32_t        _rescale_alignment;
+
+			// Caching
+			bool                                 _cache_enabled;
+			bool                                 _cache_rendered;
+			std::shared_ptr<gfx::source_texture> _cache_renderer;
+			std::shared_ptr<gs::texture>         _cache_texture;
+
+			// Scene
+			std::shared_ptr<obs_source_t>    _scene;
+			std::shared_ptr<obs_sceneitem_t> _source_item;
 
 			private:
-			void release_input();
-			void acquire_input(std::string source_name);
+			void release();
+			void acquire(std::string source_name);
 
 			public:
 			mirror_instance(obs_data_t* settings, obs_source_t* self);
@@ -98,9 +98,6 @@ namespace source {
 			virtual void update(obs_data_t*) override;
 			virtual void load(obs_data_t*) override;
 			virtual void save(obs_data_t*) override;
-
-			virtual void activate() override;
-			virtual void deactivate() override;
 
 			virtual void video_tick(float) override;
 			virtual void video_render(gs_effect_t*) override;
@@ -114,7 +111,8 @@ namespace source {
 			void on_audio_data(obs::source* source, const audio_data* audio, bool muted);
 		};
 
-		class mirror_factory : public obs::source_factory<source::mirror::mirror_factory, source::mirror::mirror_instance> {
+		class mirror_factory
+			: public obs::source_factory<source::mirror::mirror_factory, source::mirror::mirror_instance> {
 			static std::shared_ptr<source::mirror::mirror_factory> factory_instance;
 
 			public: // Singleton
@@ -137,11 +135,11 @@ namespace source {
 			mirror_factory();
 			virtual ~mirror_factory() override;
 
-			virtual const char* get_name();
+			virtual const char* get_name() override;
 
-			virtual void get_defaults2(obs_data_t* data);
+			virtual void get_defaults2(obs_data_t* data) override;
 
-			virtual obs_properties_t* get_properties2(source::mirror::mirror_instance* data);
+			virtual obs_properties_t* get_properties2(source::mirror::mirror_instance* data) override;
 		};
 	} // namespace mirror
 };    // namespace source
