@@ -24,44 +24,12 @@
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
 #include "obs/gs/gs-vertexbuffer.hpp"
+#include "obs/obs-source-factory.hpp"
 #include "plugin.hpp"
 
 namespace filter {
 	namespace transform {
-		class transform_factory {
-			obs_source_info _source_info;
-
-			public: // Singleton
-			static void                               initialize();
-			static void                               finalize();
-			static std::shared_ptr<transform_factory> get();
-
-			public:
-			transform_factory();
-			~transform_factory();
-
-			static const char*       get_name(void*) noexcept;
-			static void              get_defaults(obs_data_t*) noexcept;
-			static obs_properties_t* get_properties(void*) noexcept;
-			static bool              modified_properties(obs_properties_t*, obs_property_t*, obs_data_t*) noexcept;
-
-			static void*    create(obs_data_t*, obs_source_t*) noexcept;
-			static void     destroy(void*) noexcept;
-			static uint32_t get_width(void*) noexcept;
-			static uint32_t get_height(void*) noexcept;
-			static void     update(void*, obs_data_t*) noexcept;
-			static void     activate(void*) noexcept;
-			static void     deactivate(void*) noexcept;
-			static void     show(void*) noexcept;
-			static void     hide(void*) noexcept;
-			static void     video_tick(void*, float) noexcept;
-			static void     video_render(void*, gs_effect_t*) noexcept;
-		};
-
-		class transform_instance {
-			bool          _active;
-			obs_source_t* _self;
-
+		class transform_instance : public obs::source_instance {
 			// Input
 			std::shared_ptr<gs::rendertarget> _source_rendertarget;
 			std::shared_ptr<gs::texture>      _source_texture;
@@ -92,17 +60,43 @@ namespace filter {
 			float_t _camera_fov;
 
 			public:
-			~transform_instance();
 			transform_instance(obs_data_t*, obs_source_t*);
+			virtual ~transform_instance() override;
 
-			uint32_t get_width();
-			uint32_t get_height();
+			virtual void update(obs_data_t*) override;
+			virtual void video_tick(float) override;
+			virtual void video_render(gs_effect_t*) override;
+		};
 
-			void update(obs_data_t*);
-			void activate();
-			void deactivate();
-			void video_tick(float);
-			void video_render(gs_effect_t*);
+		class transform_factory
+			: public obs::source_factory<filter::transform::transform_factory, filter::transform::transform_instance> {
+			static std::shared_ptr<filter::transform::transform_factory> factory_instance;
+
+			public: // Singleton
+			static void initialize()
+			{
+				factory_instance = std::make_shared<filter::transform::transform_factory>();
+			}
+
+			static void finalize()
+			{
+				factory_instance.reset();
+			}
+
+			static std::shared_ptr<transform_factory> get()
+			{
+				return factory_instance;
+			}
+
+			public:
+			transform_factory();
+			virtual ~transform_factory() override;
+
+			virtual const char* get_name() override;
+
+			virtual void get_defaults2(obs_data_t* data) override;
+
+			virtual obs_properties_t* get_properties2(filter::transform::transform_instance* data) override;
 		};
 	} // namespace transform
 } // namespace filter

@@ -65,7 +65,7 @@
 static const float farZ  = 2097152.0f; // 2 pow 21
 static const float nearZ = 1.0f / farZ;
 
-enum class CameraMode : int32_t { Orthographic, Perspective };
+enum class CameraMode : int64_t { Orthographic, Perspective };
 
 enum RotationOrder : int64_t {
 	XYZ,
@@ -76,297 +76,8 @@ enum RotationOrder : int64_t {
 	ZYX,
 };
 
-static std::shared_ptr<filter::transform::transform_factory> factory_instance = nullptr;
-
-void filter::transform::transform_factory::initialize()
-{
-	factory_instance = std::make_shared<filter::transform::transform_factory>();
-}
-
-void filter::transform::transform_factory::finalize()
-{
-	factory_instance.reset();
-}
-
-std::shared_ptr<filter::transform::transform_factory> filter::transform::transform_factory::get()
-{
-	return factory_instance;
-}
-
-filter::transform::transform_factory::transform_factory()
-{
-	memset(&_source_info, 0, sizeof(obs_source_info));
-	_source_info.id             = "obs-stream-effects-filter-transform";
-	_source_info.type           = OBS_SOURCE_TYPE_FILTER;
-	_source_info.output_flags   = OBS_SOURCE_VIDEO;
-	_source_info.get_name       = get_name;
-	_source_info.get_defaults   = get_defaults;
-	_source_info.get_properties = get_properties;
-
-	_source_info.create       = create;
-	_source_info.destroy      = destroy;
-	_source_info.update       = update;
-	_source_info.activate     = activate;
-	_source_info.deactivate   = deactivate;
-	_source_info.video_tick   = video_tick;
-	_source_info.video_render = video_render;
-
-	obs_register_source(&_source_info);
-}
-
-filter::transform::transform_factory::~transform_factory() {}
-
-const char* filter::transform::transform_factory::get_name(void*) noexcept try {
-	return D_TRANSLATE(ST);
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-void filter::transform::transform_factory::get_defaults(obs_data_t* data) noexcept try {
-	obs_data_set_default_int(data, ST_CAMERA, (int64_t)CameraMode::Orthographic);
-	obs_data_set_default_double(data, ST_CAMERA_FIELDOFVIEW, 90.0);
-	obs_data_set_default_double(data, ST_POSITION_X, 0);
-	obs_data_set_default_double(data, ST_POSITION_Y, 0);
-	obs_data_set_default_double(data, ST_POSITION_Z, 0);
-	obs_data_set_default_double(data, ST_ROTATION_X, 0);
-	obs_data_set_default_double(data, ST_ROTATION_Y, 0);
-	obs_data_set_default_double(data, ST_ROTATION_Z, 0);
-	obs_data_set_default_double(data, ST_SCALE_X, 100);
-	obs_data_set_default_double(data, ST_SCALE_Y, 100);
-	obs_data_set_default_double(data, ST_SHEAR_X, 0);
-	obs_data_set_default_double(data, ST_SHEAR_Y, 0);
-	obs_data_set_default_bool(data, S_ADVANCED, false);
-	obs_data_set_default_int(data, ST_ROTATION_ORDER, RotationOrder::ZXY);
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-obs_properties_t* filter::transform::transform_factory::get_properties(void*) noexcept try {
-	obs_properties_t* pr = obs_properties_create();
-	obs_property_t*   p  = NULL;
-
-	// Camera
-	/// Projection Mode
-	p = obs_properties_add_list(pr, ST_CAMERA, D_TRANSLATE(ST_CAMERA), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_CAMERA)));
-	obs_property_list_add_int(p, D_TRANSLATE(ST_CAMERA_ORTHOGRAPHIC), (int64_t)CameraMode::Orthographic);
-	obs_property_list_add_int(p, D_TRANSLATE(ST_CAMERA_PERSPECTIVE), (int64_t)CameraMode::Perspective);
-	obs_property_set_modified_callback(p, modified_properties);
-	/// Field Of View
-	p = obs_properties_add_float_slider(pr, ST_CAMERA_FIELDOFVIEW, D_TRANSLATE(ST_CAMERA_FIELDOFVIEW), 1.0, 179.0,
-										0.01);
-	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_CAMERA_FIELDOFVIEW)));
-
-	// Mesh
-	/// Position
-	{
-		std::pair<const char*, const char*> entries[] = {
-			std::make_pair(ST_POSITION_X, D_DESC(ST_POSITION)),
-			std::make_pair(ST_POSITION_Y, D_DESC(ST_POSITION)),
-			std::make_pair(ST_POSITION_Z, D_DESC(ST_POSITION)),
-		};
-		for (auto kv : entries) {
-			p = obs_properties_add_float(pr, kv.first, D_TRANSLATE(kv.first), -10000, 10000, 0.01);
-			obs_property_set_long_description(p, D_TRANSLATE(kv.second));
-		}
-	}
-	/// Rotation
-	{
-		std::pair<const char*, const char*> entries[] = {
-			std::make_pair(ST_ROTATION_X, D_DESC(ST_ROTATION)),
-			std::make_pair(ST_ROTATION_Y, D_DESC(ST_ROTATION)),
-			std::make_pair(ST_ROTATION_Z, D_DESC(ST_ROTATION)),
-		};
-		for (auto kv : entries) {
-			p = obs_properties_add_float_slider(pr, kv.first, D_TRANSLATE(kv.first), -180, 180, 0.01);
-			obs_property_set_long_description(p, D_TRANSLATE(kv.second));
-		}
-	}
-	/// Scale
-	{
-		std::pair<const char*, const char*> entries[] = {
-			std::make_pair(ST_SCALE_X, D_DESC(ST_SCALE)),
-			std::make_pair(ST_SCALE_Y, D_DESC(ST_SCALE)),
-		};
-		for (auto kv : entries) {
-			p = obs_properties_add_float_slider(pr, kv.first, D_TRANSLATE(kv.first), -1000, 1000, 0.01);
-			obs_property_set_long_description(p, D_TRANSLATE(kv.second));
-		}
-	}
-	/// Shear
-	{
-		std::pair<const char*, const char*> entries[] = {
-			std::make_pair(ST_SHEAR_X, D_DESC(ST_SHEAR)),
-			std::make_pair(ST_SHEAR_Y, D_DESC(ST_SHEAR)),
-		};
-		for (auto kv : entries) {
-			p = obs_properties_add_float_slider(pr, kv.first, D_TRANSLATE(kv.first), -100.0, 100.0, 0.01);
-			obs_property_set_long_description(p, D_TRANSLATE(kv.second));
-		}
-	}
-
-	p = obs_properties_add_bool(pr, S_ADVANCED, D_TRANSLATE(S_ADVANCED));
-	obs_property_set_modified_callback(p, modified_properties);
-
-	p = obs_properties_add_list(pr, ST_ROTATION_ORDER, D_TRANSLATE(ST_ROTATION_ORDER), OBS_COMBO_TYPE_LIST,
-								OBS_COMBO_FORMAT_INT);
-	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_ROTATION_ORDER)));
-	obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_XYZ), RotationOrder::XYZ);
-	obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_XZY), RotationOrder::XZY);
-	obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_YXZ), RotationOrder::YXZ);
-	obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_YZX), RotationOrder::YZX);
-	obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_ZXY), RotationOrder::ZXY);
-	obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_ZYX), RotationOrder::ZYX);
-
-	p = obs_properties_add_bool(pr, ST_MIPMAPPING, D_TRANSLATE(ST_MIPMAPPING));
-	obs_property_set_modified_callback(p, modified_properties);
-	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_MIPMAPPING)));
-
-	p = obs_properties_add_list(pr, S_MIPGENERATOR, D_TRANSLATE(S_MIPGENERATOR), OBS_COMBO_TYPE_LIST,
-								OBS_COMBO_FORMAT_INT);
-	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(S_MIPGENERATOR)));
-
-	obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_POINT), (long long)gs::mipmapper::generator::Point);
-	obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_LINEAR), (long long)gs::mipmapper::generator::Linear);
-	obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_SHARPEN), (long long)gs::mipmapper::generator::Sharpen);
-	obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_SMOOTHEN), (long long)gs::mipmapper::generator::Smoothen);
-	obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_BICUBIC), (long long)gs::mipmapper::generator::Bicubic);
-	obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_LANCZOS), (long long)gs::mipmapper::generator::Lanczos);
-
-	p = obs_properties_add_float_slider(pr, S_MIPGENERATOR_INTENSITY, D_TRANSLATE(S_MIPGENERATOR_INTENSITY), 0.0,
-										1000.0, 0.01);
-	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(S_MIPGENERATOR_INTENSITY)));
-
-	return pr;
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return nullptr;
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return nullptr;
-}
-
-bool filter::transform::transform_factory::modified_properties(obs_properties_t* pr, obs_property_t*,
-															   obs_data_t*       d) noexcept try {
-	switch ((CameraMode)obs_data_get_int(d, ST_CAMERA)) {
-	case CameraMode::Orthographic:
-		obs_property_set_visible(obs_properties_get(pr, ST_CAMERA_FIELDOFVIEW), false);
-		obs_property_set_visible(obs_properties_get(pr, ST_POSITION_Z), false);
-		break;
-	case CameraMode::Perspective:
-		obs_property_set_visible(obs_properties_get(pr, ST_CAMERA_FIELDOFVIEW), true);
-		obs_property_set_visible(obs_properties_get(pr, ST_POSITION_Z), true);
-		break;
-	}
-
-	bool advancedVisible = obs_data_get_bool(d, S_ADVANCED);
-	obs_property_set_visible(obs_properties_get(pr, ST_ROTATION_ORDER), advancedVisible);
-	obs_property_set_visible(obs_properties_get(pr, ST_MIPMAPPING), advancedVisible);
-
-	bool mipmappingVisible = obs_data_get_bool(d, ST_MIPMAPPING) && advancedVisible;
-	obs_property_set_visible(obs_properties_get(pr, S_MIPGENERATOR), mipmappingVisible);
-	obs_property_set_visible(obs_properties_get(pr, S_MIPGENERATOR_INTENSITY), mipmappingVisible);
-
-	return true;
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-void* filter::transform::transform_factory::create(obs_data_t* data, obs_source_t* source) noexcept try {
-	return new transform_instance(data, source);
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return nullptr;
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return nullptr;
-}
-
-void filter::transform::transform_factory::destroy(void* ptr) noexcept try {
-	delete reinterpret_cast<transform_instance*>(ptr);
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-uint32_t filter::transform::transform_factory::get_width(void* ptr) noexcept try {
-	return reinterpret_cast<transform_instance*>(ptr)->get_width();
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return 0;
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return 0;
-}
-
-uint32_t filter::transform::transform_factory::get_height(void* ptr) noexcept try {
-	return reinterpret_cast<transform_instance*>(ptr)->get_height();
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return 0;
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return 0;
-}
-
-void filter::transform::transform_factory::update(void* ptr, obs_data_t* data) noexcept try {
-	reinterpret_cast<transform_instance*>(ptr)->update(data);
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-void filter::transform::transform_factory::activate(void* ptr) noexcept try {
-	reinterpret_cast<transform_instance*>(ptr)->activate();
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-void filter::transform::transform_factory::deactivate(void* ptr) noexcept try {
-	reinterpret_cast<transform_instance*>(ptr)->deactivate();
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-void filter::transform::transform_factory::video_tick(void* ptr, float time) noexcept try {
-	reinterpret_cast<transform_instance*>(ptr)->video_tick(time);
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-void filter::transform::transform_factory::video_render(void* ptr, gs_effect_t* effect) noexcept try {
-	reinterpret_cast<transform_instance*>(ptr)->video_render(effect);
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-filter::transform::transform_instance::~transform_instance()
-{
-	_shear.reset();
-	_scale.reset();
-	_rotation.reset();
-	_position.reset();
-	_vertex_buffer.reset();
-	_shape_texture.reset();
-	_shape_rendertarget.reset();
-	_source_texture.reset();
-	_source_rendertarget.reset();
-}
-
 filter::transform::transform_instance::transform_instance(obs_data_t* data, obs_source_t* context)
-	: _active(true), _self(context), _source_rendered(false), _mipmap_enabled(false), _mipmap_strength(50.0),
+	: obs::source_instance(data, context), _source_rendered(false), _mipmap_enabled(false), _mipmap_strength(50.0),
 	  _mipmap_generator(gs::mipmapper::generator::Linear), _update_mesh(false), _rotation_order(RotationOrder::ZXY),
 	  _camera_orthographic(true), _camera_fov(90.0)
 {
@@ -386,14 +97,17 @@ filter::transform::transform_instance::transform_instance(obs_data_t* data, obs_
 	update(data);
 }
 
-uint32_t filter::transform::transform_instance::get_width()
+filter::transform::transform_instance::~transform_instance()
 {
-	return 0;
-}
-
-uint32_t filter::transform::transform_instance::get_height()
-{
-	return 0;
+	_shear.reset();
+	_scale.reset();
+	_rotation.reset();
+	_position.reset();
+	_vertex_buffer.reset();
+	_shape_texture.reset();
+	_shape_rendertarget.reset();
+	_source_texture.reset();
+	_source_rendertarget.reset();
 }
 
 void filter::transform::transform_instance::update(obs_data_t* data)
@@ -423,16 +137,6 @@ void filter::transform::transform_instance::update(obs_data_t* data)
 	_mipmap_generator = static_cast<gs::mipmapper::generator>(obs_data_get_int(data, S_MIPGENERATOR));
 
 	_update_mesh = true;
-}
-
-void filter::transform::transform_instance::activate()
-{
-	_active = true;
-}
-
-void filter::transform::transform_instance::deactivate()
-{
-	_active = false;
 }
 
 void filter::transform::transform_instance::video_tick(float)
@@ -552,11 +256,6 @@ void filter::transform::transform_instance::video_tick(float)
 
 void filter::transform::transform_instance::video_render(gs_effect_t* paramEffect)
 {
-	if (!_active) {
-		obs_source_skip_video_filter(_self);
-		return;
-	}
-
 	// Grab parent and target.
 	obs_source_t* parent = obs_filter_get_parent(_self);
 	obs_source_t* target = obs_filter_get_target(_self);
@@ -699,4 +398,169 @@ void filter::transform::transform_instance::video_render(gs_effect_t* paramEffec
 		gs_effect_set_texture(gs_effect_get_param_by_name(default_effect, "image"), _shape_texture->get_object());
 		gs_draw_sprite(_shape_texture->get_object(), 0, 0, 0);
 	}
+}
+
+std::shared_ptr<filter::transform::transform_factory> filter::transform::transform_factory::factory_instance = nullptr;
+
+filter::transform::transform_factory::transform_factory()
+{
+	_info.id           = "obs-stream-effects-filter-transform";
+	_info.type         = OBS_SOURCE_TYPE_FILTER;
+	_info.output_flags = OBS_SOURCE_VIDEO;
+
+	_info.get_width = _info.get_height = nullptr;
+
+	obs_register_source(&_info);
+}
+
+filter::transform::transform_factory::~transform_factory() {}
+
+const char* filter::transform::transform_factory::get_name()
+{
+	return D_TRANSLATE(ST);
+}
+
+void filter::transform::transform_factory::get_defaults2(obs_data_t* data)
+{
+	obs_data_set_default_int(data, ST_CAMERA, (int64_t)CameraMode::Orthographic);
+	obs_data_set_default_double(data, ST_CAMERA_FIELDOFVIEW, 90.0);
+	obs_data_set_default_double(data, ST_POSITION_X, 0);
+	obs_data_set_default_double(data, ST_POSITION_Y, 0);
+	obs_data_set_default_double(data, ST_POSITION_Z, 0);
+	obs_data_set_default_double(data, ST_ROTATION_X, 0);
+	obs_data_set_default_double(data, ST_ROTATION_Y, 0);
+	obs_data_set_default_double(data, ST_ROTATION_Z, 0);
+	obs_data_set_default_double(data, ST_SCALE_X, 100);
+	obs_data_set_default_double(data, ST_SCALE_Y, 100);
+	obs_data_set_default_double(data, ST_SHEAR_X, 0);
+	obs_data_set_default_double(data, ST_SHEAR_Y, 0);
+	obs_data_set_default_bool(data, S_ADVANCED, false);
+	obs_data_set_default_int(data, ST_ROTATION_ORDER, RotationOrder::ZXY);
+}
+
+static bool modified_properties(obs_properties_t* pr, obs_property_t*, obs_data_t* d) noexcept try {
+	switch ((CameraMode)obs_data_get_int(d, ST_CAMERA)) {
+	case CameraMode::Orthographic:
+		obs_property_set_visible(obs_properties_get(pr, ST_CAMERA_FIELDOFVIEW), false);
+		obs_property_set_visible(obs_properties_get(pr, ST_POSITION_Z), false);
+		break;
+	case CameraMode::Perspective:
+		obs_property_set_visible(obs_properties_get(pr, ST_CAMERA_FIELDOFVIEW), true);
+		obs_property_set_visible(obs_properties_get(pr, ST_POSITION_Z), true);
+		break;
+	}
+
+	bool advancedVisible = obs_data_get_bool(d, S_ADVANCED);
+	obs_property_set_visible(obs_properties_get(pr, ST_ROTATION_ORDER), advancedVisible);
+	obs_property_set_visible(obs_properties_get(pr, ST_MIPMAPPING), advancedVisible);
+
+	bool mipmappingVisible = obs_data_get_bool(d, ST_MIPMAPPING) && advancedVisible;
+	obs_property_set_visible(obs_properties_get(pr, S_MIPGENERATOR), mipmappingVisible);
+	obs_property_set_visible(obs_properties_get(pr, S_MIPGENERATOR_INTENSITY), mipmappingVisible);
+
+	return true;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+obs_properties_t* filter::transform::transform_factory::get_properties2(filter::transform::transform_instance* data)
+{
+	obs_properties_t* pr = obs_properties_create();
+	obs_property_t*   p  = NULL;
+
+	// Camera
+	/// Projection Mode
+	p = obs_properties_add_list(pr, ST_CAMERA, D_TRANSLATE(ST_CAMERA), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_CAMERA)));
+	obs_property_list_add_int(p, D_TRANSLATE(ST_CAMERA_ORTHOGRAPHIC), (int64_t)CameraMode::Orthographic);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_CAMERA_PERSPECTIVE), (int64_t)CameraMode::Perspective);
+	obs_property_set_modified_callback(p, modified_properties);
+	/// Field Of View
+	p = obs_properties_add_float_slider(pr, ST_CAMERA_FIELDOFVIEW, D_TRANSLATE(ST_CAMERA_FIELDOFVIEW), 1.0, 179.0,
+										0.01);
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_CAMERA_FIELDOFVIEW)));
+
+	// Mesh
+	/// Position
+	{
+		std::pair<const char*, const char*> entries[] = {
+			std::make_pair(ST_POSITION_X, D_DESC(ST_POSITION)),
+			std::make_pair(ST_POSITION_Y, D_DESC(ST_POSITION)),
+			std::make_pair(ST_POSITION_Z, D_DESC(ST_POSITION)),
+		};
+		for (auto kv : entries) {
+			p = obs_properties_add_float(pr, kv.first, D_TRANSLATE(kv.first), -10000, 10000, 0.01);
+			obs_property_set_long_description(p, D_TRANSLATE(kv.second));
+		}
+	}
+	/// Rotation
+	{
+		std::pair<const char*, const char*> entries[] = {
+			std::make_pair(ST_ROTATION_X, D_DESC(ST_ROTATION)),
+			std::make_pair(ST_ROTATION_Y, D_DESC(ST_ROTATION)),
+			std::make_pair(ST_ROTATION_Z, D_DESC(ST_ROTATION)),
+		};
+		for (auto kv : entries) {
+			p = obs_properties_add_float_slider(pr, kv.first, D_TRANSLATE(kv.first), -180, 180, 0.01);
+			obs_property_set_long_description(p, D_TRANSLATE(kv.second));
+		}
+	}
+	/// Scale
+	{
+		std::pair<const char*, const char*> entries[] = {
+			std::make_pair(ST_SCALE_X, D_DESC(ST_SCALE)),
+			std::make_pair(ST_SCALE_Y, D_DESC(ST_SCALE)),
+		};
+		for (auto kv : entries) {
+			p = obs_properties_add_float_slider(pr, kv.first, D_TRANSLATE(kv.first), -1000, 1000, 0.01);
+			obs_property_set_long_description(p, D_TRANSLATE(kv.second));
+		}
+	}
+	/// Shear
+	{
+		std::pair<const char*, const char*> entries[] = {
+			std::make_pair(ST_SHEAR_X, D_DESC(ST_SHEAR)),
+			std::make_pair(ST_SHEAR_Y, D_DESC(ST_SHEAR)),
+		};
+		for (auto kv : entries) {
+			p = obs_properties_add_float_slider(pr, kv.first, D_TRANSLATE(kv.first), -100.0, 100.0, 0.01);
+			obs_property_set_long_description(p, D_TRANSLATE(kv.second));
+		}
+	}
+
+	p = obs_properties_add_bool(pr, S_ADVANCED, D_TRANSLATE(S_ADVANCED));
+	obs_property_set_modified_callback(p, modified_properties);
+
+	p = obs_properties_add_list(pr, ST_ROTATION_ORDER, D_TRANSLATE(ST_ROTATION_ORDER), OBS_COMBO_TYPE_LIST,
+								OBS_COMBO_FORMAT_INT);
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_ROTATION_ORDER)));
+	obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_XYZ), RotationOrder::XYZ);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_XZY), RotationOrder::XZY);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_YXZ), RotationOrder::YXZ);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_YZX), RotationOrder::YZX);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_ZXY), RotationOrder::ZXY);
+	obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_ZYX), RotationOrder::ZYX);
+
+	p = obs_properties_add_bool(pr, ST_MIPMAPPING, D_TRANSLATE(ST_MIPMAPPING));
+	obs_property_set_modified_callback(p, modified_properties);
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_MIPMAPPING)));
+
+	p = obs_properties_add_list(pr, S_MIPGENERATOR, D_TRANSLATE(S_MIPGENERATOR), OBS_COMBO_TYPE_LIST,
+								OBS_COMBO_FORMAT_INT);
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(S_MIPGENERATOR)));
+
+	obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_POINT), (long long)gs::mipmapper::generator::Point);
+	obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_LINEAR), (long long)gs::mipmapper::generator::Linear);
+	obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_SHARPEN), (long long)gs::mipmapper::generator::Sharpen);
+	obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_SMOOTHEN), (long long)gs::mipmapper::generator::Smoothen);
+	obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_BICUBIC), (long long)gs::mipmapper::generator::Bicubic);
+	obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_LANCZOS), (long long)gs::mipmapper::generator::Lanczos);
+
+	p = obs_properties_add_float_slider(pr, S_MIPGENERATOR_INTENSITY, D_TRANSLATE(S_MIPGENERATOR_INTENSITY), 0.0,
+										1000.0, 0.01);
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(S_MIPGENERATOR_INTENSITY)));
+
+	return pr;
 }
