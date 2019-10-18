@@ -42,7 +42,7 @@ namespace gs {
 		std::string _name;
 
 		public:
-		debug_marker(const float color[4], std::string name);
+		//debug_marker(const float color[4], std::string name);
 		debug_marker(const float color[4], std::string format, ...);
 		~debug_marker();
 	};

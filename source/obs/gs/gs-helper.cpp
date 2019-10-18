@@ -29,10 +29,10 @@ gs::context::~context()
 	obs_leave_graphics();
 }
 
-gs::debug_marker::debug_marker(const float color[4], std::string name) : _name(name)
+/*gs::debug_marker::debug_marker(const float color[4], std::string name) : _name(name)
 {
 	gs_debug_marker_begin(color, _name.c_str());
-}
+}*/
 
 gs::debug_marker::debug_marker(const float color[4], std::string format, ...)
 {
