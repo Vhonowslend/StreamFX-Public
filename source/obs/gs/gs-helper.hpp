@@ -19,6 +19,7 @@
 
 #pragma once
 #include <vector>
+#include <string>
 #include "plugin.hpp"
 
 // OBS
@@ -37,6 +38,12 @@ namespace gs {
 		context();
 		~context();
 	};
+
+	static const float debug_color_source[4]       = {0.f, .5f, 5.f, 1.f};
+	static const float debug_color_cache[4]        = {1.f, .75f, 0.f, 1.f};
+	static const float debug_color_cache_render[4] = {.2f, .15f, 0.f, 1.f};
+	static const float debug_color_convert[4]      = {.5f, .5f, 0.5f, 1.f};
+	static const float debug_color_render[4]       = {0.f, 1.f, 0.0f, 1.f};
 
 	class debug_marker {
 		std::string _name;
