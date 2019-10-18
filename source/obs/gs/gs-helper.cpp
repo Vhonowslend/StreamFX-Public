@@ -28,3 +28,27 @@ gs::context::~context()
 {
 	obs_leave_graphics();
 }
+
+gs::debug_marker::debug_marker(const float color[4], std::string name) : _name(name)
+{
+	gs_debug_marker_begin(color, _name.c_str());
+}
+
+gs::debug_marker::debug_marker(const float color[4], std::string format, ...)
+{
+	size_t            size;
+	std::vector<char> buffer(64);
+
+	va_list vargs;
+	va_start(vargs, format);
+	size = vsnprintf(buffer.data(), buffer.size(), format.c_str(), vargs);
+	va_end(vargs);
+
+	_name = std::string(buffer.data(), buffer.data() + size);
+	gs_debug_marker_begin(color, _name.c_str());
+}
+
+gs::debug_marker::~debug_marker()
+{
+	gs_debug_marker_end();
+}
