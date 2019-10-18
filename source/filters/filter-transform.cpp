@@ -299,6 +299,7 @@ void filter::transform::transform_instance::video_render(gs_effect_t* paramEffec
 
 		// Draw previous filters to texture.
 		try {
+			GS_DEBUG_MARKER_BEGIN(GS_DEBUG_COLOR_ITEM_TEXTURE, "Filter Cache");
 			auto op = _source_rendertarget->render(real_width, real_height);
 
 			gs_set_cull_mode(GS_NEITHER);
@@ -321,13 +322,16 @@ void filter::transform::transform_instance::video_render(gs_effect_t* paramEffec
 			} else {
 				obs_source_skip_video_filter(_self);
 			}
+			GS_DEBUG_MARKER_END();
 		} catch (...) {
+			GS_DEBUG_MARKER_END();
 			obs_source_skip_video_filter(_self);
 			return;
 		}
 		_source_rendertarget->get_texture(source_tex);
 
 		if (_mipmap_enabled) {
+			GS_DEBUG_MARKER_BEGIN(GS_DEBUG_COLOR_ITEM_TEXTURE, "Mipmapping");
 			if ((!_source_texture) || (_source_texture->get_width() != real_width)
 				|| (_source_texture->get_height() != real_height)) {
 				size_t mip_levels = 0;
@@ -347,10 +351,12 @@ void filter::transform::transform_instance::video_render(gs_effect_t* paramEffec
 			}
 
 			_mipmapper.rebuild(source_tex, _source_texture, _mipmap_generator, float_t(_mipmap_strength));
+			GS_DEBUG_MARKER_END();
 		}
 
 		// Draw shape to texture
 		try {
+			GS_DEBUG_MARKER_BEGIN(GS_DEBUG_COLOR_ITEM_TEXTURE, "Transforming");
 			auto op = _shape_rendertarget->render(width, height);
 
 			if (_camera_orthographic) {
@@ -382,7 +388,9 @@ void filter::transform::transform_instance::video_render(gs_effect_t* paramEffec
 				gs_draw(GS_TRISTRIP, 0, 4);
 			}
 			gs_load_vertexbuffer(nullptr);
+			GS_DEBUG_MARKER_END();
 		} catch (...) {
+			GS_DEBUG_MARKER_END();
 			obs_source_skip_video_filter(_self);
 			return;
 		}
@@ -392,12 +400,14 @@ void filter::transform::transform_instance::video_render(gs_effect_t* paramEffec
 	}
 
 	// Draw final shape
+	GS_DEBUG_MARKER_BEGIN_FORMAT(GS_DEBUG_COLOR_SOURCE, "3D Transform: %s", obs_source_get_name(_self));
 	gs_reset_blend_state();
 	gs_enable_depth_test(false);
 	while (gs_effect_loop(default_effect, "Draw")) {
 		gs_effect_set_texture(gs_effect_get_param_by_name(default_effect, "image"), _shape_texture->get_object());
 		gs_draw_sprite(_shape_texture->get_object(), 0, 0, 0);
 	}
+	GS_DEBUG_MARKER_END();
 }
 
 std::shared_ptr<filter::transform::transform_factory> filter::transform::transform_factory::factory_instance = nullptr;
