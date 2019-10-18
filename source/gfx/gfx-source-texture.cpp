@@ -117,6 +117,7 @@ std::shared_ptr<gs::texture> gfx::source_texture::render(size_t width, size_t he
 	}
 
 	{
+		GS_DEBUG_MARKER_BEGIN(GS_DEBUG_COLOR_ITEM, "gfx::source_texture");
 		auto op = _rt->render((uint32_t)width, (uint32_t)height);
 		vec4 black;
 		vec4_zero(&black);
@@ -125,6 +126,7 @@ std::shared_ptr<gs::texture> gfx::source_texture::render(size_t width, size_t he
 		if (_child) {
 			obs_source_video_render(_child->get());
 		}
+		GS_DEBUG_MARKER_END();
 	}
 
 	std::shared_ptr<gs::texture> tex;
