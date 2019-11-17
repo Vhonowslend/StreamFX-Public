@@ -246,8 +246,10 @@ set(PROJECT_DATA_EFFECTS
 	"${PROJECT_SOURCE_DIR}/data/effects/sdf/sdf-consumer.effect"
 )
 set(PROJECT_DATA_SHADERS
-#	"${PROJECT_SOURCE_DIR}/data/shaders/name.effect"
-	"${PROJECT_SOURCE_DIR}/data/shaders/filter/example.effect"
+	"${PROJECT_SOURCE_DIR}/data/examples/shaders/filter/drunk.effect"
+	"${PROJECT_SOURCE_DIR}/data/examples/shaders/filter/example.effect"
+	"${PROJECT_SOURCE_DIR}/data/examples/shaders/filter/example_displace_by_texture.effect"
+	"${PROJECT_SOURCE_DIR}/data/examples/shaders/source/example.effect"
 )
 set(PROJECT_DATA
 	${PROJECT_DATA_LOCALE}
