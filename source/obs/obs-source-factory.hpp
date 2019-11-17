@@ -83,6 +83,7 @@ namespace obs {
 		try {
 			if (type_data)
 				return reinterpret_cast<_factory*>(type_data)->get_name();
+			return nullptr;
 		} catch (const std::exception& ex) {
 			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return nullptr;
@@ -116,6 +117,7 @@ namespace obs {
 		try {
 			if (type_data)
 				return reinterpret_cast<_factory*>(type_data)->get_properties2(reinterpret_cast<_instance*>(data));
+			return nullptr;
 		} catch (const std::exception& ex) {
 			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return nullptr;
@@ -139,6 +141,7 @@ namespace obs {
 		try {
 			if (data)
 				return reinterpret_cast<_instance*>(data)->get_width();
+			return 0;
 		} catch (const std::exception& ex) {
 			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return 0;
@@ -151,6 +154,7 @@ namespace obs {
 		try {
 			if (data)
 				return reinterpret_cast<_instance*>(data)->get_height();
+			return 0;
 		} catch (const std::exception& ex) {
 			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return 0;
@@ -233,6 +237,7 @@ namespace obs {
 		try {
 			if (data)
 				return reinterpret_cast<_instance*>(data)->filter_video(frame);
+			return frame;
 		} catch (const std::exception& ex) {
 			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return frame;
@@ -245,6 +250,7 @@ namespace obs {
 		try {
 			if (data)
 				return reinterpret_cast<_instance*>(data)->filter_audio(frame);
+			return frame;
 		} catch (const std::exception& ex) {
 			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return frame;
@@ -326,8 +332,8 @@ namespace obs {
 
 		static void _key_click(void* data, const struct obs_key_event* event, bool key_up) noexcept
 		try {
-			reinterpret_cast<_instance*>(data)->key_click(event, key_up);
 			if (data)
+				reinterpret_cast<_instance*>(data)->key_click(event, key_up);
 		} catch (const std::exception& ex) {
 			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
@@ -350,6 +356,7 @@ namespace obs {
 			if (data)
 				return reinterpret_cast<_instance*>(data)->audio_render(ts_out, audio_output, mixers, channels,
 																		sample_rate);
+			return false;
 		} catch (const std::exception& ex) {
 			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return false;
@@ -393,6 +400,7 @@ namespace obs {
 		try {
 			if (data)
 				return reinterpret_cast<_instance*>(data)->audio_mix(ts_out, audio_output, channels, sample_rate);
+			return false;
 		} catch (const std::exception& ex) {
 			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return false;
