@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include "obs/gs/gs-effect.hpp"
+#include "obs/obs-source-factory.hpp"
 #include "plugin.hpp"
 
 // OBS
@@ -36,52 +37,61 @@
 
 namespace filter {
 	namespace displacement {
-		class displacement_factory {
-			obs_source_info _source_info;
-
-			public: // Singleton
-			static void                                  initialize();
-			static void                                  finalize();
-			static std::shared_ptr<displacement_factory> get();
-
-			public:
-			displacement_factory();
-			~displacement_factory();
-		};
-
-		class displacement_instance {
-			obs_source_t* _self;
-			float_t       _timer;
-
-			// Rendering
+		class displacement_instance : public obs::source_instance {
 			std::shared_ptr<gs::effect> _effect;
-			float_t                     _distance;
-			vec2                        _displacement_scale;
 
 			// Displacement Map
-			std::string                  _file_name;
-			std::shared_ptr<gs::texture> _file_texture;
-			time_t                       _file_create_time;
-			time_t                       _file_modified_time;
-			size_t                       _file_size;
+			std::shared_ptr<gs::texture> _texture;
+			std::string                  _texture_file;
+			float_t                      _scale[2];
+			float_t                      _scale_type;
 
-			void validate_file_texture(std::string file);
+			// Cache
+			uint32_t _width;
+			uint32_t _height;
 
 			public:
 			displacement_instance(obs_data_t*, obs_source_t*);
-			~displacement_instance();
+			virtual ~displacement_instance();
 
-			void     update(obs_data_t*);
-			uint32_t get_width();
-			uint32_t get_height();
-			void     activate();
-			void     deactivate();
-			void     show();
-			void     hide();
-			void     video_tick(float);
-			void     video_render(gs_effect_t*);
+			virtual void load(obs_data_t* settings) override;
+			virtual void update(obs_data_t* settings) override;
+
+			virtual void video_tick(float_t) override;
+			virtual void video_render(gs_effect_t*) override;
 
 			std::string get_file();
+		};
+
+		class displacement_factory : public obs::source_factory<filter::displacement::displacement_factory,
+																filter::displacement::displacement_instance> {
+			static std::shared_ptr<filter::displacement::displacement_factory> factory_instance;
+
+			public: // Singleton
+			static void initialize()
+			{
+				factory_instance = std::make_shared<filter::displacement::displacement_factory>();
+			}
+
+			static void finalize()
+			{
+				factory_instance.reset();
+			}
+
+			static std::shared_ptr<displacement_factory> get()
+			{
+				return factory_instance;
+			}
+
+			public:
+			displacement_factory();
+			virtual ~displacement_factory();
+
+			virtual const char* get_name() override;
+
+			virtual void get_defaults2(obs_data_t* data) override;
+
+			virtual obs_properties_t* get_properties2(filter::displacement::displacement_instance* data) override;
 		};
 	} // namespace displacement
 } // namespace filter
