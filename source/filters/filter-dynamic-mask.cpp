@@ -171,12 +171,12 @@ obs_properties_t*
 	return props;
 }
 
-std::string filter::dynamic_mask::dynamic_mask_factory::translate_string(std::string format, ...)
+std::string filter::dynamic_mask::dynamic_mask_factory::translate_string(const char* format, ...)
 {
 	va_list vargs;
 	va_start(vargs, format);
 	std::vector<char> buffer(2048);
-	size_t            len = vsnprintf(buffer.data(), buffer.size(), format.c_str(), vargs);
+	size_t            len = static_cast<size_t>(vsnprintf(buffer.data(), buffer.size(), format, vargs));
 	va_end(vargs);
 	return std::string(buffer.data(), buffer.data() + len);
 }

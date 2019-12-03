@@ -125,7 +125,7 @@ namespace filter {
 
 			virtual obs_properties_t* get_properties2(filter::dynamic_mask::dynamic_mask_instance* data) override;
 
-			std::string translate_string(std::string format, ...);
+			std::string translate_string(const char* format, ...);
 		};
 	} // namespace dynamic_mask
 } // namespace filter
