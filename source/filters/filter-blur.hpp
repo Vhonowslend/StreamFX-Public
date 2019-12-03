@@ -29,6 +29,7 @@
 #include "obs/gs/gs-helper.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
+#include "obs/obs-source-factory.hpp"
 #include "plugin.hpp"
 
 // OBS
@@ -43,62 +44,15 @@
 
 namespace filter {
 	namespace blur {
-		class blur_instance;
-
 		enum mask_type : int64_t {
 			Region,
 			Image,
 			Source,
 		};
 
-		class blur_factory {
-			obs_source_info             _source_info;
-			std::list<blur_instance*>   _sources;
-			std::shared_ptr<gs::effect> _color_converter_effect;
-			std::shared_ptr<gs::effect> _mask_effect;
-
-			std::map<std::string, std::string> _translation_map;
-
-			public: // Singleton
-			static void                          initialize();
-			static void                          finalize();
-			static std::shared_ptr<blur_factory> get();
-
-			public:
-			blur_factory();
-			~blur_factory();
-
-			void on_list_fill();
-			void on_list_empty();
-
-			std::string const& get_translation(std::string const key);
-
-			static void* create(obs_data_t* settings, obs_source_t* self);
-			static void  destroy(void* source);
-
-			static void              get_defaults(obs_data_t* settings);
-			static obs_properties_t* get_properties(void* source);
-			static void              update(void* source, obs_data_t* settings);
-			static void              load(void* source, obs_data_t* settings);
-
-			static const char* get_name(void* source);
-			static uint32_t    get_width(void* source);
-			static uint32_t    get_height(void* source);
-
-			static void activate(void* source);
-			static void deactivate(void* source);
-
-			static void video_tick(void* source, float delta);
-			static void video_render(void* source, gs_effect_t* effect);
-
-			public:
-			std::shared_ptr<gs::effect> get_color_converter_effect();
-
-			std::shared_ptr<gs::effect> get_mask_effect();
-		};
-
-		class blur_instance {
-			obs_source_t* _self;
+		class blur_instance : public obs::source_instance {
+			// Effects
+			std::shared_ptr<gs::effect> _effect_mask;
 
 			// Input
 			std::shared_ptr<gs::rendertarget> _source_rt;
@@ -112,11 +66,11 @@ namespace filter {
 
 			// Blur
 			std::shared_ptr<::gfx::blur::base> _blur;
-			double_t                            _blur_size;
-			double_t                            _blur_angle;
-			std::pair<double_t, double_t>       _blur_center;
-			bool                                _blur_step_scaling;
-			std::pair<double_t, double_t>       _blur_step_scale;
+			double_t                           _blur_size;
+			double_t                           _blur_angle;
+			std::pair<double_t, double_t>      _blur_center;
+			bool                               _blur_step_scaling;
+			std::pair<double_t, double_t>      _blur_step_scale;
 
 			// Masking
 			struct {
@@ -156,28 +110,51 @@ namespace filter {
 			blur_instance(obs_data_t* settings, obs_source_t* self);
 			~blur_instance();
 
+			public:
+			virtual void update(obs_data_t* settings) override;
+			virtual void load(obs_data_t* settings) override;
+
+			virtual void video_tick(float time) override;
+			virtual void video_render(gs_effect_t* effect) override;
+
 			private:
 			bool apply_mask_parameters(std::shared_ptr<gs::effect> effect, gs_texture_t* original_texture,
 									   gs_texture_t* blurred_texture);
+		};
 
-			static bool modified_properties(void* ptr, obs_properties_t* props, obs_property* prop,
-											obs_data_t* settings) noexcept;
+		class blur_factory : public obs::source_factory<filter::blur::blur_factory, filter::blur::blur_instance> {
+			static std::shared_ptr<filter::blur::blur_factory> factory_instance;
 
-			void translate_old_settings(obs_data_t*);
+			public: // Singleton
+			static void initialize()
+			{
+				factory_instance = std::make_shared<filter::blur::blur_factory>();
+			}
+
+			static void finalize()
+			{
+				factory_instance.reset();
+			}
+
+			static std::shared_ptr<blur_factory> get()
+			{
+				return factory_instance;
+			}
+
+			private:
+			std::vector<std::string> _translation_cache;
 
 			public:
-			obs_properties_t* get_properties();
-			void              update(obs_data_t*);
-			void              load(obs_data_t*);
+			blur_factory();
+			virtual ~blur_factory();
 
-			uint32_t get_width();
-			uint32_t get_height();
+			virtual const char* get_name() override;
 
-			void activate();
-			void deactivate();
+			virtual void get_defaults2(obs_data_t* settings) override;
 
-			void video_tick(float);
-			void video_render(gs_effect_t*);
+			virtual obs_properties_t* get_properties2(filter::blur::blur_instance* data) override;
+
+			std::string translate_string(const char* format, ...);
 		};
 	} // namespace blur
 } // namespace filter
