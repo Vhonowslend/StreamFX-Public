@@ -552,8 +552,8 @@ obs_properties_t* source::mirror::mirror_factory::get_properties2(source::mirror
 		obs_properties_t* grp = pr;
 		if (!util::are_property_groups_broken()) {
 			grp = obs_properties_create();
-			p   = obs_properties_add_group(pr, ST_SOURCE, D_TRANSLATE(ST_SOURCE), OBS_GROUP_NORMAL, grp);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SOURCE)));
+			p   = obs_properties_add_group(pr, ST, D_TRANSLATE(ST_SOURCE), OBS_GROUP_NORMAL, grp);
+			//obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST)));
 		}
 
 		{
