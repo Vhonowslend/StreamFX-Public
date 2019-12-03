@@ -24,6 +24,7 @@
 #include "obs/gs/gs-sampler.hpp"
 #include "obs/gs/gs-texture.hpp"
 #include "obs/gs/gs-vertexbuffer.hpp"
+#include "obs/obs-source-factory.hpp"
 #include "plugin.hpp"
 
 // OBS
@@ -38,52 +39,9 @@
 
 namespace filter {
 	namespace sdf_effects {
-		class sdf_effects_instance;
-
-		class sdf_effects_factory {
-			obs_source_info _source_info;
-
-			std::list<sdf_effects_instance*> _sources;
-
+		class sdf_effects_instance : public obs::source_instance {			
 			std::shared_ptr<gs::effect> _sdf_producer_effect;
 			std::shared_ptr<gs::effect> _sdf_consumer_effect;
-
-			public: // Singleton
-			static void                                 initialize();
-			static void                                 finalize();
-			static std::shared_ptr<sdf_effects_factory> get();
-
-			public:
-			sdf_effects_factory();
-			~sdf_effects_factory();
-
-			void on_list_fill();
-			void on_list_empty();
-
-			static void* create(obs_data_t* settings, obs_source_t* self) noexcept;
-			static void  destroy(void* source) noexcept;
-
-			static void              get_defaults(obs_data_t* settings) noexcept;
-			static obs_properties_t* get_properties(void* source) noexcept;
-			static void              update(void* source, obs_data_t* settings) noexcept;
-
-			static const char* get_name(void* source) noexcept;
-			static uint32_t    get_width(void* source) noexcept;
-			static uint32_t    get_height(void* source) noexcept;
-
-			static void activate(void* source) noexcept;
-			static void deactivate(void* source) noexcept;
-
-			static void video_tick(void* source, float delta) noexcept;
-			static void video_render(void* source, gs_effect_t* effect) noexcept;
-
-			public:
-			std::shared_ptr<gs::effect> get_sdf_producer_effect();
-			std::shared_ptr<gs::effect> get_sdf_consumer_effect();
-		};
-
-		class sdf_effects_instance {
-			obs_source_t* _self;
 
 			// Input
 			std::shared_ptr<gs::rendertarget> _source_rt;
@@ -135,39 +93,47 @@ namespace filter {
 			float_t _outline_sharpness;
 			float_t _outline_sharpness_inv;
 
-			static bool cb_modified_shadow_inside(void* ptr, obs_properties_t* props, obs_property* prop,
-												  obs_data_t* settings) noexcept;
-
-			static bool cb_modified_shadow_outside(void* ptr, obs_properties_t* props, obs_property* prop,
-												   obs_data_t* settings) noexcept;
-
-			static bool cb_modified_glow_inside(void* ptr, obs_properties_t* props, obs_property* prop,
-												obs_data_t* settings) noexcept;
-
-			static bool cb_modified_glow_outside(void* ptr, obs_properties_t* props, obs_property* prop,
-												 obs_data_t* settings) noexcept;
-
-			static bool cb_modified_outline(void* ptr, obs_properties_t* props, obs_property* prop,
-											obs_data_t* settings) noexcept;
-
-			static bool cb_modified_advanced(void* ptr, obs_properties_t* props, obs_property* prop,
-											 obs_data_t* settings) noexcept;
-
 			public:
 			sdf_effects_instance(obs_data_t* settings, obs_source_t* self);
-			~sdf_effects_instance();
+			virtual ~sdf_effects_instance();
 
-			obs_properties_t* get_properties();
-			void              update(obs_data_t*);
+			virtual void update(obs_data_t* settings) override;
+			virtual void load(obs_data_t* settings) override;
 
-			uint32_t get_width();
-			uint32_t get_height();
-
-			void activate();
-			void deactivate();
-
-			void video_tick(float);
-			void video_render(gs_effect_t*);
+			virtual void video_tick(float) override;
+			virtual void video_render(gs_effect_t*) override;
 		};
+
+		class sdf_effects_factory : public obs::source_factory<filter::sdf_effects::sdf_effects_factory,
+															   filter::sdf_effects::sdf_effects_instance> {
+			static std::shared_ptr<filter::sdf_effects::sdf_effects_factory> factory_instance;
+
+			public: // Singleton
+			static void initialize()
+			{
+				factory_instance = std::make_shared<filter::sdf_effects::sdf_effects_factory>();
+			}
+
+			static void finalize()
+			{
+				factory_instance.reset();
+			}
+
+			static std::shared_ptr<sdf_effects_factory> get()
+			{
+				return factory_instance;
+			}
+
+			public:
+			sdf_effects_factory();
+			virtual ~sdf_effects_factory();
+
+			virtual const char* get_name() override;
+
+			virtual void get_defaults2(obs_data_t* data) override;
+
+			virtual obs_properties_t* get_properties2(filter::sdf_effects::sdf_effects_instance* data) override;
+		};
+
 	} // namespace sdf_effects
 } // namespace filter
