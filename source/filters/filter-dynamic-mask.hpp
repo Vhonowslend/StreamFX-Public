@@ -18,10 +18,13 @@
 */
 
 #pragma once
+#include <list>
+#include <map>
 #include <memory>
 #include <string>
 #include "gfx/gfx-source-texture.hpp"
 #include "obs/gs/gs-effect.hpp"
+#include "obs/obs-source-factory.hpp"
 #include "obs/obs-source-tracker.hpp"
 #include "obs/obs-source.hpp"
 #include "plugin.hpp"
@@ -41,22 +44,7 @@ namespace filter {
 	namespace dynamic_mask {
 		enum class channel : int8_t { Invalid = -1, Red, Green, Blue, Alpha };
 
-		class dynamic_mask_factory {
-			obs_source_info _source_info;
-
-			public: // Singleton
-			static void                                  initialize();
-			static void                                  finalize();
-			static std::shared_ptr<dynamic_mask_factory> get();
-
-			public:
-			dynamic_mask_factory();
-			~dynamic_mask_factory();
-		};
-
-		class dynamic_mask_instance {
-			obs_source_t* _self;
-
+		class dynamic_mask_instance : public obs::source_instance {
 			std::map<std::tuple<channel, channel, std::string>, std::string> _translation_map;
 
 			std::shared_ptr<gs::effect> _effect;
@@ -89,15 +77,11 @@ namespace filter {
 
 			public:
 			dynamic_mask_instance(obs_data_t* data, obs_source_t* self);
-			~dynamic_mask_instance();
+			virtual ~dynamic_mask_instance();
 
-			uint32_t get_width();
-			uint32_t get_height();
-
-			void get_properties(obs_properties_t* properties);
-			void update(obs_data_t* settings);
-			void load(obs_data_t* settings);
-			void save(obs_data_t* settings);
+			virtual void update(obs_data_t* settings) override;
+			virtual void load(obs_data_t* settings) override;
+			virtual void save(obs_data_t* settings) override;
 
 			void input_renamed(obs::source* src, std::string old_name, std::string new_name);
 
@@ -106,6 +90,42 @@ namespace filter {
 
 			void video_tick(float _time);
 			void video_render(gs_effect_t* effect);
+		};
+
+		class dynamic_mask_factory : public obs::source_factory<filter::dynamic_mask::dynamic_mask_factory,
+																filter::dynamic_mask::dynamic_mask_instance> {
+			static std::shared_ptr<filter::dynamic_mask::dynamic_mask_factory> factory_instance;
+
+			public: // Singleton
+			static void initialize()
+			{
+				factory_instance = std::make_shared<filter::dynamic_mask::dynamic_mask_factory>();
+			}
+
+			static void finalize()
+			{
+				factory_instance.reset();
+			}
+
+			static std::shared_ptr<dynamic_mask_factory> get()
+			{
+				return factory_instance;
+			}
+
+			private:
+			std::list<std::string> _translation_cache;
+
+			public:
+			dynamic_mask_factory();
+			virtual ~dynamic_mask_factory() override;
+
+			virtual const char* get_name() override;
+
+			virtual void get_defaults2(obs_data_t* data) override;
+
+			virtual obs_properties_t* get_properties2(filter::dynamic_mask::dynamic_mask_instance* data) override;
+
+			std::string translate_string(std::string format, ...);
 		};
 	} // namespace dynamic_mask
 } // namespace filter

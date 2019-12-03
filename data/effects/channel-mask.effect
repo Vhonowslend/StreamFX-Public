@@ -39,6 +39,13 @@ uniform float4x4 pMaskMatrix <
 //		0, 0, 1, 0,
 //		0, 0, 0, 1);
 >;
+/* pMaskMatrix Content:
+ *   [Red,Green,Blue,Alpha] (Red)
+ *   [Red,Green,Blue,Alpha] (Green)
+ *   [Red,Green,Blue,Alpha] (Blue)
+ *   [Red,Green,Blue,Alpha] (Alpha)
+ */
+
 uniform float4 pMaskMultiplier <
 	string name = "Channel Multiplier";
 //	float4 minimum = float4(-100, -100, -100, -100);
@@ -86,19 +93,32 @@ VertDataOut VSDefault(VertDataIn v_in)
 // -------------------------------------------------------------------------------- //
 // Channel Masking
 
+
 float4 PSChannelMask(VertDataOut v_in) : TARGET
 {
+	// Sample both inputs at current UV.
 	float4 imageA = pMaskInputA.Sample(maskSamplerA, v_in.uv);
-
-	// Create Mask
-	float4 mask = pMaskBase;
 	float4 imageB = pMaskInputB.Sample(maskSamplerB, v_in.uv);
+
+	// Assign the base value as the mask.
+	float4 mask = pMaskBase;
+
+	// pMaskMatrix[0] contains all the "x Value from Red Input"
 	mask += pMaskMatrix[0] * imageB.r;
+	
+	// pMaskMatrix[1] contains all the "x Value from Green Input"
 	mask += pMaskMatrix[1] * imageB.g;
+	
+	// pMaskMatrix[2] contains all the "x Value from Blue Input"
 	mask += pMaskMatrix[2] * imageB.b;
+	
+	// pMaskMatrix[3] contains all the "x Value from Alpha Input"
 	mask += pMaskMatrix[3] * imageB.a;
+
+	// Multiply the mask value by the per channel multiplier.
 	mask *= pMaskMultiplier;
 
+	// And finally multiply the input image with the mask.
 	return imageA * mask;
 }
 
