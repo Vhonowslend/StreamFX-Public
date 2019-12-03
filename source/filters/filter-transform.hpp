@@ -30,21 +30,24 @@
 namespace filter {
 	namespace transform {
 		class transform_instance : public obs::source_instance {
+			// Cache
+			bool                              _cache_rendered;
+			std::shared_ptr<gs::rendertarget> _cache_rt;
+			std::shared_ptr<gs::texture>      _cache_texture;
+
+			// Mip-mapping
+			bool                         _mipmap_enabled;
+			bool                         _mipmap_rendered;
+			double_t                     _mipmap_strength;
+			gs::mipmapper::generator     _mipmap_generator;
+			gs::mipmapper                _mipmapper;
+			std::shared_ptr<gs::texture> _mipmap_texture;
+
 			// Input
-			std::shared_ptr<gs::rendertarget> _source_rendertarget;
-			std::shared_ptr<gs::texture>      _source_texture;
 			bool                              _source_rendered;
 			std::pair<uint32_t, uint32_t>     _source_size;
-
-			// Mipmapping
-			bool                     _mipmap_enabled;
-			double_t                 _mipmap_strength;
-			gs::mipmapper::generator _mipmap_generator;
-			gs::mipmapper            _mipmapper;
-
-			// Rendering
-			std::shared_ptr<gs::rendertarget> _shape_rendertarget;
-			std::shared_ptr<gs::texture>      _shape_texture;
+			std::shared_ptr<gs::rendertarget> _source_rt;
+			std::shared_ptr<gs::texture>      _source_texture;
 
 			// Mesh
 			bool                               _update_mesh;
@@ -63,7 +66,9 @@ namespace filter {
 			transform_instance(obs_data_t*, obs_source_t*);
 			virtual ~transform_instance() override;
 
+			virtual void load(obs_data_t* settings) override;
 			virtual void update(obs_data_t*) override;
+
 			virtual void video_tick(float) override;
 			virtual void video_render(gs_effect_t*) override;
 		};
