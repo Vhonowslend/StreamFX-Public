@@ -68,301 +68,6 @@
 std::shared_ptr<filter::sdf_effects::sdf_effects_factory> filter::sdf_effects::sdf_effects_factory::factory_instance =
 	nullptr;
 
-filter::sdf_effects::sdf_effects_factory::sdf_effects_factory()
-{
-	_info.id           = "obs-stream-effects-filter-sdf-effects";
-	_info.type         = OBS_SOURCE_TYPE_FILTER;
-	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
-
-	// Strip all unnecessary callbacks.
-	_info.get_width           = nullptr;
-	_info.get_height          = nullptr;
-	_info.activate            = nullptr;
-	_info.deactivate          = nullptr;
-	_info.show                = nullptr;
-	_info.hide                = nullptr;
-	_info.mouse_click         = nullptr;
-	_info.mouse_move          = nullptr;
-	_info.mouse_wheel         = nullptr;
-	_info.key_click           = nullptr;
-	_info.focus               = nullptr;
-	_info.filter_remove       = nullptr;
-	_info.enum_active_sources = nullptr;
-	_info.enum_all_sources    = nullptr;
-	_info.transition_start    = nullptr;
-	_info.transition_stop     = nullptr;
-	_info.filter_audio        = nullptr;
-	_info.filter_video        = nullptr;
-	_info.audio_mix           = nullptr;
-	_info.audio_render        = nullptr;
-
-	obs_register_source(&_info);
-}
-
-filter::sdf_effects::sdf_effects_factory::~sdf_effects_factory() {}
-
-const char* filter::sdf_effects::sdf_effects_factory::get_name()
-{
-	return D_TRANSLATE(ST);
-}
-
-void filter::sdf_effects::sdf_effects_factory::get_defaults2(obs_data_t* data)
-{
-	obs_data_set_default_bool(data, ST_SHADOW_OUTER, false);
-	obs_data_set_default_int(data, ST_SHADOW_OUTER_COLOR, 0x00000000);
-	obs_data_set_default_double(data, ST_SHADOW_OUTER_ALPHA, 100.0);
-	obs_data_set_default_double(data, ST_SHADOW_OUTER_RANGE_MINIMUM, 0.0);
-	obs_data_set_default_double(data, ST_SHADOW_OUTER_RANGE_MAXIMUM, 4.0);
-	obs_data_set_default_double(data, ST_SHADOW_OUTER_OFFSET_X, 0.0);
-	obs_data_set_default_double(data, ST_SHADOW_OUTER_OFFSET_Y, 0.0);
-
-	obs_data_set_default_bool(data, ST_SHADOW_INNER, false);
-	obs_data_set_default_int(data, ST_SHADOW_INNER_COLOR, 0x00000000);
-	obs_data_set_default_double(data, ST_SHADOW_INNER_ALPHA, 100.0);
-	obs_data_set_default_double(data, ST_SHADOW_INNER_RANGE_MINIMUM, 0.0);
-	obs_data_set_default_double(data, ST_SHADOW_INNER_RANGE_MAXIMUM, 4.0);
-	obs_data_set_default_double(data, ST_SHADOW_INNER_OFFSET_X, 0.0);
-	obs_data_set_default_double(data, ST_SHADOW_INNER_OFFSET_Y, 0.0);
-
-	obs_data_set_default_bool(data, ST_GLOW_OUTER, false);
-	obs_data_set_default_int(data, ST_GLOW_OUTER_COLOR, 0xFFFFFFFF);
-	obs_data_set_default_double(data, ST_GLOW_OUTER_ALPHA, 100.0);
-	obs_data_set_default_double(data, ST_GLOW_OUTER_WIDTH, 4.0);
-	obs_data_set_default_double(data, ST_GLOW_OUTER_SHARPNESS, 50.0);
-
-	obs_data_set_default_bool(data, ST_GLOW_INNER, false);
-	obs_data_set_default_int(data, ST_GLOW_INNER_COLOR, 0xFFFFFFFF);
-	obs_data_set_default_double(data, ST_GLOW_INNER_ALPHA, 100.0);
-	obs_data_set_default_double(data, ST_GLOW_INNER_WIDTH, 4.0);
-	obs_data_set_default_double(data, ST_GLOW_INNER_SHARPNESS, 50.0);
-
-	obs_data_set_default_bool(data, ST_OUTLINE, false);
-	obs_data_set_default_int(data, ST_OUTLINE_COLOR, 0x00000000);
-	obs_data_set_default_double(data, ST_OUTLINE_ALPHA, 100.0);
-	obs_data_set_default_double(data, ST_OUTLINE_WIDTH, 4.0);
-	obs_data_set_default_double(data, ST_OUTLINE_OFFSET, 0.0);
-	obs_data_set_default_double(data, ST_OUTLINE_SHARPNESS, 50.0);
-
-	obs_data_set_default_bool(data, S_ADVANCED, false);
-	obs_data_set_default_double(data, ST_SDF_SCALE, 100.0);
-	obs_data_set_default_double(data, ST_SDF_THRESHOLD, 50.0);
-}
-
-bool cb_modified_shadow_inside(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
-try {
-	bool v = obs_data_get_bool(settings, ST_SHADOW_INNER);
-	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_RANGE_MINIMUM), v);
-	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_RANGE_MAXIMUM), v);
-	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_OFFSET_X), v);
-	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_OFFSET_Y), v);
-	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_COLOR), v);
-	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_ALPHA), v);
-	return true;
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-bool cb_modified_shadow_outside(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
-try {
-	bool v = obs_data_get_bool(settings, ST_SHADOW_OUTER);
-	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_RANGE_MINIMUM), v);
-	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_RANGE_MAXIMUM), v);
-	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_OFFSET_X), v);
-	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_OFFSET_Y), v);
-	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_COLOR), v);
-	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_ALPHA), v);
-	return true;
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-bool cb_modified_glow_inside(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
-try {
-	bool v = obs_data_get_bool(settings, ST_GLOW_INNER);
-	obs_property_set_visible(obs_properties_get(props, ST_GLOW_INNER_COLOR), v);
-	obs_property_set_visible(obs_properties_get(props, ST_GLOW_INNER_ALPHA), v);
-	obs_property_set_visible(obs_properties_get(props, ST_GLOW_INNER_WIDTH), v);
-	obs_property_set_visible(obs_properties_get(props, ST_GLOW_INNER_SHARPNESS), v);
-	return true;
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-bool cb_modified_glow_outside(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
-try {
-	bool v = obs_data_get_bool(settings, ST_GLOW_OUTER);
-	obs_property_set_visible(obs_properties_get(props, ST_GLOW_OUTER_COLOR), v);
-	obs_property_set_visible(obs_properties_get(props, ST_GLOW_OUTER_ALPHA), v);
-	obs_property_set_visible(obs_properties_get(props, ST_GLOW_OUTER_WIDTH), v);
-	obs_property_set_visible(obs_properties_get(props, ST_GLOW_OUTER_SHARPNESS), v);
-	return true;
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-bool cb_modified_outline(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
-try {
-	bool v = obs_data_get_bool(settings, ST_OUTLINE);
-	obs_property_set_visible(obs_properties_get(props, ST_OUTLINE_COLOR), v);
-	obs_property_set_visible(obs_properties_get(props, ST_OUTLINE_ALPHA), v);
-	obs_property_set_visible(obs_properties_get(props, ST_OUTLINE_WIDTH), v);
-	obs_property_set_visible(obs_properties_get(props, ST_OUTLINE_OFFSET), v);
-	obs_property_set_visible(obs_properties_get(props, ST_OUTLINE_SHARPNESS), v);
-	return true;
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-bool cb_modified_advanced(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
-try {
-	bool show_advanced = obs_data_get_bool(settings, S_ADVANCED);
-	obs_property_set_visible(obs_properties_get(props, ST_SDF_SCALE), show_advanced);
-	obs_property_set_visible(obs_properties_get(props, ST_SDF_THRESHOLD), show_advanced);
-	return true;
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-obs_properties_t*
-	filter::sdf_effects::sdf_effects_factory::get_properties2(filter::sdf_effects::sdf_effects_instance* data)
-{
-	obs_properties_t* props = obs_properties_create();
-	obs_property_t*   p     = nullptr;
-
-	{
-		p = obs_properties_add_bool(props, ST_SHADOW_OUTER, D_TRANSLATE(ST_SHADOW_OUTER));
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_OUTER)));
-		obs_property_set_modified_callback2(p, cb_modified_shadow_outside, data);
-		p = obs_properties_add_float_slider(props, ST_SHADOW_OUTER_RANGE_MINIMUM,
-											D_TRANSLATE(ST_SHADOW_OUTER_RANGE_MINIMUM), -16.0, 16.0, 0.01);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_OUTER_RANGE_MINIMUM)));
-		p = obs_properties_add_float_slider(props, ST_SHADOW_OUTER_RANGE_MAXIMUM,
-											D_TRANSLATE(ST_SHADOW_OUTER_RANGE_MAXIMUM), -16.0, 16.0, 0.01);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_OUTER_RANGE_MAXIMUM)));
-		p = obs_properties_add_float_slider(props, ST_SHADOW_OUTER_OFFSET_X, D_TRANSLATE(ST_SHADOW_OUTER_OFFSET_X),
-											-100.0, 100.0, 0.01);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_OUTER_OFFSET_X)));
-		p = obs_properties_add_float_slider(props, ST_SHADOW_OUTER_OFFSET_Y, D_TRANSLATE(ST_SHADOW_OUTER_OFFSET_Y),
-											-100.0, 100.0, 0.01);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_OUTER_OFFSET_Y)));
-		p = obs_properties_add_color(props, ST_SHADOW_OUTER_COLOR, D_TRANSLATE(ST_SHADOW_OUTER_COLOR));
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_OUTER_COLOR)));
-		p = obs_properties_add_float_slider(props, ST_SHADOW_OUTER_ALPHA, D_TRANSLATE(ST_SHADOW_OUTER_ALPHA), 0.0,
-											100.0, 0.1);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_OUTER_ALPHA)));
-	}
-
-	{
-		p = obs_properties_add_bool(props, ST_SHADOW_INNER, D_TRANSLATE(ST_SHADOW_INNER));
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_INNER)));
-		obs_property_set_modified_callback2(p, cb_modified_shadow_inside, data);
-		p = obs_properties_add_float_slider(props, ST_SHADOW_INNER_RANGE_MINIMUM,
-											D_TRANSLATE(ST_SHADOW_INNER_RANGE_MINIMUM), -16.0, 16.0, 0.01);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_INNER_RANGE_MINIMUM)));
-		p = obs_properties_add_float_slider(props, ST_SHADOW_INNER_RANGE_MAXIMUM,
-											D_TRANSLATE(ST_SHADOW_INNER_RANGE_MAXIMUM), -16.0, 16.0, 0.01);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_INNER_RANGE_MAXIMUM)));
-		p = obs_properties_add_float_slider(props, ST_SHADOW_INNER_OFFSET_X, D_TRANSLATE(ST_SHADOW_INNER_OFFSET_X),
-											-100.0, 100.0, 0.01);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_INNER_OFFSET_X)));
-		p = obs_properties_add_float_slider(props, ST_SHADOW_INNER_OFFSET_Y, D_TRANSLATE(ST_SHADOW_INNER_OFFSET_Y),
-											-100.0, 100.0, 0.01);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_INNER_OFFSET_Y)));
-		p = obs_properties_add_color(props, ST_SHADOW_INNER_COLOR, D_TRANSLATE(ST_SHADOW_INNER_COLOR));
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_INNER_COLOR)));
-		p = obs_properties_add_float_slider(props, ST_SHADOW_INNER_ALPHA, D_TRANSLATE(ST_SHADOW_INNER_ALPHA), 0.0,
-											100.0, 0.1);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_INNER_ALPHA)));
-	}
-
-	{
-		p = obs_properties_add_bool(props, ST_GLOW_OUTER, D_TRANSLATE(ST_GLOW_OUTER));
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_OUTER)));
-		obs_property_set_modified_callback2(p, cb_modified_glow_outside, data);
-
-		p = obs_properties_add_color(props, ST_GLOW_OUTER_COLOR, D_TRANSLATE(ST_GLOW_OUTER_COLOR));
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_OUTER_COLOR)));
-		p = obs_properties_add_float_slider(props, ST_GLOW_OUTER_ALPHA, D_TRANSLATE(ST_GLOW_OUTER_ALPHA), 0.0, 100.0,
-											0.1);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_OUTER_ALPHA)));
-
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_OUTER_WIDTH)));
-		p = obs_properties_add_float_slider(props, ST_GLOW_OUTER_WIDTH, D_TRANSLATE(ST_GLOW_OUTER_WIDTH), 0.0, 16.0,
-											0.01);
-
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_OUTER_SHARPNESS)));
-		p = obs_properties_add_float_slider(props, ST_GLOW_OUTER_SHARPNESS, D_TRANSLATE(ST_GLOW_OUTER_SHARPNESS), 0.00,
-											100.0, 0.01);
-	}
-
-	{
-		p = obs_properties_add_bool(props, ST_GLOW_INNER, D_TRANSLATE(ST_GLOW_INNER));
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_INNER)));
-		obs_property_set_modified_callback2(p, cb_modified_glow_inside, data);
-
-		p = obs_properties_add_color(props, ST_GLOW_INNER_COLOR, D_TRANSLATE(ST_GLOW_INNER_COLOR));
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_INNER_COLOR)));
-		p = obs_properties_add_float_slider(props, ST_GLOW_INNER_ALPHA, D_TRANSLATE(ST_GLOW_INNER_ALPHA), 0.0, 100.0,
-											0.1);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_INNER_ALPHA)));
-
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_INNER_WIDTH)));
-		p = obs_properties_add_float_slider(props, ST_GLOW_INNER_WIDTH, D_TRANSLATE(ST_GLOW_INNER_WIDTH), 0.0, 16.0,
-											0.01);
-
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_INNER_SHARPNESS)));
-		p = obs_properties_add_float_slider(props, ST_GLOW_INNER_SHARPNESS, D_TRANSLATE(ST_GLOW_INNER_SHARPNESS), 0.00,
-											100.0, 0.01);
-	}
-
-	{
-		p = obs_properties_add_bool(props, ST_OUTLINE, D_TRANSLATE(ST_OUTLINE));
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OUTLINE)));
-		obs_property_set_modified_callback2(p, cb_modified_outline, data);
-		p = obs_properties_add_color(props, ST_OUTLINE_COLOR, D_TRANSLATE(ST_OUTLINE_COLOR));
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OUTLINE_COLOR)));
-		p = obs_properties_add_float_slider(props, ST_OUTLINE_ALPHA, D_TRANSLATE(ST_OUTLINE_ALPHA), 0.0, 100.0, 0.1);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OUTLINE_ALPHA)));
-
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OUTLINE_WIDTH)));
-		p = obs_properties_add_float_slider(props, ST_OUTLINE_WIDTH, D_TRANSLATE(ST_OUTLINE_WIDTH), 0.0, 16.0, 0.01);
-
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OUTLINE_OFFSET)));
-		p = obs_properties_add_float_slider(props, ST_OUTLINE_OFFSET, D_TRANSLATE(ST_OUTLINE_OFFSET), -16.0, 16.0,
-											0.01);
-
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OUTLINE_SHARPNESS)));
-		p = obs_properties_add_float_slider(props, ST_OUTLINE_SHARPNESS, D_TRANSLATE(ST_OUTLINE_SHARPNESS), 0.00, 100.0,
-											0.01);
-	}
-
-	{
-		p = obs_properties_add_bool(props, S_ADVANCED, D_TRANSLATE(S_ADVANCED));
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(S_ADVANCED)));
-		obs_property_set_modified_callback2(p, cb_modified_advanced, data);
-
-		p = obs_properties_add_float_slider(props, ST_SDF_SCALE, D_TRANSLATE(ST_SDF_SCALE), 0.1, 500.0, 0.1);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SDF_SCALE)));
-
-		p = obs_properties_add_float_slider(props, ST_SDF_THRESHOLD, D_TRANSLATE(ST_SDF_THRESHOLD), 0.0, 100.0, 0.01);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SDF_THRESHOLD)));
-	}
-
-	return props;
-}
-
 filter::sdf_effects::sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* self)
 	: obs::source_instance(settings, self), _source_rendered(false), _sdf_scale(1.0), _sdf_threshold(),
 	  _output_rendered(false), _inner_shadow(false), _inner_shadow_color(), _inner_shadow_range_min(),
@@ -807,4 +512,299 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect
 	while (gs_effect_loop(final_effect, "Draw")) {
 		gs_draw_sprite(0, 0, baseW, baseH);
 	}
+}
+
+filter::sdf_effects::sdf_effects_factory::sdf_effects_factory()
+{
+	_info.id           = "obs-stream-effects-filter-sdf-effects";
+	_info.type         = OBS_SOURCE_TYPE_FILTER;
+	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
+
+	// Strip all unnecessary callbacks.
+	_info.get_width           = nullptr;
+	_info.get_height          = nullptr;
+	_info.activate            = nullptr;
+	_info.deactivate          = nullptr;
+	_info.show                = nullptr;
+	_info.hide                = nullptr;
+	_info.mouse_click         = nullptr;
+	_info.mouse_move          = nullptr;
+	_info.mouse_wheel         = nullptr;
+	_info.key_click           = nullptr;
+	_info.focus               = nullptr;
+	_info.filter_remove       = nullptr;
+	_info.enum_active_sources = nullptr;
+	_info.enum_all_sources    = nullptr;
+	_info.transition_start    = nullptr;
+	_info.transition_stop     = nullptr;
+	_info.filter_audio        = nullptr;
+	_info.filter_video        = nullptr;
+	_info.audio_mix           = nullptr;
+	_info.audio_render        = nullptr;
+
+	obs_register_source(&_info);
+}
+
+filter::sdf_effects::sdf_effects_factory::~sdf_effects_factory() {}
+
+const char* filter::sdf_effects::sdf_effects_factory::get_name()
+{
+	return D_TRANSLATE(ST);
+}
+
+void filter::sdf_effects::sdf_effects_factory::get_defaults2(obs_data_t* data)
+{
+	obs_data_set_default_bool(data, ST_SHADOW_OUTER, false);
+	obs_data_set_default_int(data, ST_SHADOW_OUTER_COLOR, 0x00000000);
+	obs_data_set_default_double(data, ST_SHADOW_OUTER_ALPHA, 100.0);
+	obs_data_set_default_double(data, ST_SHADOW_OUTER_RANGE_MINIMUM, 0.0);
+	obs_data_set_default_double(data, ST_SHADOW_OUTER_RANGE_MAXIMUM, 4.0);
+	obs_data_set_default_double(data, ST_SHADOW_OUTER_OFFSET_X, 0.0);
+	obs_data_set_default_double(data, ST_SHADOW_OUTER_OFFSET_Y, 0.0);
+
+	obs_data_set_default_bool(data, ST_SHADOW_INNER, false);
+	obs_data_set_default_int(data, ST_SHADOW_INNER_COLOR, 0x00000000);
+	obs_data_set_default_double(data, ST_SHADOW_INNER_ALPHA, 100.0);
+	obs_data_set_default_double(data, ST_SHADOW_INNER_RANGE_MINIMUM, 0.0);
+	obs_data_set_default_double(data, ST_SHADOW_INNER_RANGE_MAXIMUM, 4.0);
+	obs_data_set_default_double(data, ST_SHADOW_INNER_OFFSET_X, 0.0);
+	obs_data_set_default_double(data, ST_SHADOW_INNER_OFFSET_Y, 0.0);
+
+	obs_data_set_default_bool(data, ST_GLOW_OUTER, false);
+	obs_data_set_default_int(data, ST_GLOW_OUTER_COLOR, 0xFFFFFFFF);
+	obs_data_set_default_double(data, ST_GLOW_OUTER_ALPHA, 100.0);
+	obs_data_set_default_double(data, ST_GLOW_OUTER_WIDTH, 4.0);
+	obs_data_set_default_double(data, ST_GLOW_OUTER_SHARPNESS, 50.0);
+
+	obs_data_set_default_bool(data, ST_GLOW_INNER, false);
+	obs_data_set_default_int(data, ST_GLOW_INNER_COLOR, 0xFFFFFFFF);
+	obs_data_set_default_double(data, ST_GLOW_INNER_ALPHA, 100.0);
+	obs_data_set_default_double(data, ST_GLOW_INNER_WIDTH, 4.0);
+	obs_data_set_default_double(data, ST_GLOW_INNER_SHARPNESS, 50.0);
+
+	obs_data_set_default_bool(data, ST_OUTLINE, false);
+	obs_data_set_default_int(data, ST_OUTLINE_COLOR, 0x00000000);
+	obs_data_set_default_double(data, ST_OUTLINE_ALPHA, 100.0);
+	obs_data_set_default_double(data, ST_OUTLINE_WIDTH, 4.0);
+	obs_data_set_default_double(data, ST_OUTLINE_OFFSET, 0.0);
+	obs_data_set_default_double(data, ST_OUTLINE_SHARPNESS, 50.0);
+
+	obs_data_set_default_bool(data, S_ADVANCED, false);
+	obs_data_set_default_double(data, ST_SDF_SCALE, 100.0);
+	obs_data_set_default_double(data, ST_SDF_THRESHOLD, 50.0);
+}
+
+bool cb_modified_shadow_inside(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
+try {
+	bool v = obs_data_get_bool(settings, ST_SHADOW_INNER);
+	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_RANGE_MINIMUM), v);
+	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_RANGE_MAXIMUM), v);
+	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_OFFSET_X), v);
+	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_OFFSET_Y), v);
+	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_COLOR), v);
+	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_ALPHA), v);
+	return true;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+bool cb_modified_shadow_outside(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
+try {
+	bool v = obs_data_get_bool(settings, ST_SHADOW_OUTER);
+	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_RANGE_MINIMUM), v);
+	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_RANGE_MAXIMUM), v);
+	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_OFFSET_X), v);
+	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_OFFSET_Y), v);
+	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_COLOR), v);
+	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_ALPHA), v);
+	return true;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+bool cb_modified_glow_inside(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
+try {
+	bool v = obs_data_get_bool(settings, ST_GLOW_INNER);
+	obs_property_set_visible(obs_properties_get(props, ST_GLOW_INNER_COLOR), v);
+	obs_property_set_visible(obs_properties_get(props, ST_GLOW_INNER_ALPHA), v);
+	obs_property_set_visible(obs_properties_get(props, ST_GLOW_INNER_WIDTH), v);
+	obs_property_set_visible(obs_properties_get(props, ST_GLOW_INNER_SHARPNESS), v);
+	return true;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+bool cb_modified_glow_outside(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
+try {
+	bool v = obs_data_get_bool(settings, ST_GLOW_OUTER);
+	obs_property_set_visible(obs_properties_get(props, ST_GLOW_OUTER_COLOR), v);
+	obs_property_set_visible(obs_properties_get(props, ST_GLOW_OUTER_ALPHA), v);
+	obs_property_set_visible(obs_properties_get(props, ST_GLOW_OUTER_WIDTH), v);
+	obs_property_set_visible(obs_properties_get(props, ST_GLOW_OUTER_SHARPNESS), v);
+	return true;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+bool cb_modified_outline(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
+try {
+	bool v = obs_data_get_bool(settings, ST_OUTLINE);
+	obs_property_set_visible(obs_properties_get(props, ST_OUTLINE_COLOR), v);
+	obs_property_set_visible(obs_properties_get(props, ST_OUTLINE_ALPHA), v);
+	obs_property_set_visible(obs_properties_get(props, ST_OUTLINE_WIDTH), v);
+	obs_property_set_visible(obs_properties_get(props, ST_OUTLINE_OFFSET), v);
+	obs_property_set_visible(obs_properties_get(props, ST_OUTLINE_SHARPNESS), v);
+	return true;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+bool cb_modified_advanced(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
+try {
+	bool show_advanced = obs_data_get_bool(settings, S_ADVANCED);
+	obs_property_set_visible(obs_properties_get(props, ST_SDF_SCALE), show_advanced);
+	obs_property_set_visible(obs_properties_get(props, ST_SDF_THRESHOLD), show_advanced);
+	return true;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+} catch (...) {
+	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+}
+
+obs_properties_t*
+	filter::sdf_effects::sdf_effects_factory::get_properties2(filter::sdf_effects::sdf_effects_instance* data)
+{
+	obs_properties_t* props = obs_properties_create();
+	obs_property_t*   p     = nullptr;
+
+	{
+		p = obs_properties_add_bool(props, ST_SHADOW_OUTER, D_TRANSLATE(ST_SHADOW_OUTER));
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_OUTER)));
+		obs_property_set_modified_callback2(p, cb_modified_shadow_outside, data);
+		p = obs_properties_add_float_slider(props, ST_SHADOW_OUTER_RANGE_MINIMUM,
+											D_TRANSLATE(ST_SHADOW_OUTER_RANGE_MINIMUM), -16.0, 16.0, 0.01);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_OUTER_RANGE_MINIMUM)));
+		p = obs_properties_add_float_slider(props, ST_SHADOW_OUTER_RANGE_MAXIMUM,
+											D_TRANSLATE(ST_SHADOW_OUTER_RANGE_MAXIMUM), -16.0, 16.0, 0.01);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_OUTER_RANGE_MAXIMUM)));
+		p = obs_properties_add_float_slider(props, ST_SHADOW_OUTER_OFFSET_X, D_TRANSLATE(ST_SHADOW_OUTER_OFFSET_X),
+											-100.0, 100.0, 0.01);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_OUTER_OFFSET_X)));
+		p = obs_properties_add_float_slider(props, ST_SHADOW_OUTER_OFFSET_Y, D_TRANSLATE(ST_SHADOW_OUTER_OFFSET_Y),
+											-100.0, 100.0, 0.01);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_OUTER_OFFSET_Y)));
+		p = obs_properties_add_color(props, ST_SHADOW_OUTER_COLOR, D_TRANSLATE(ST_SHADOW_OUTER_COLOR));
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_OUTER_COLOR)));
+		p = obs_properties_add_float_slider(props, ST_SHADOW_OUTER_ALPHA, D_TRANSLATE(ST_SHADOW_OUTER_ALPHA), 0.0,
+											100.0, 0.1);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_OUTER_ALPHA)));
+	}
+
+	{
+		p = obs_properties_add_bool(props, ST_SHADOW_INNER, D_TRANSLATE(ST_SHADOW_INNER));
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_INNER)));
+		obs_property_set_modified_callback2(p, cb_modified_shadow_inside, data);
+		p = obs_properties_add_float_slider(props, ST_SHADOW_INNER_RANGE_MINIMUM,
+											D_TRANSLATE(ST_SHADOW_INNER_RANGE_MINIMUM), -16.0, 16.0, 0.01);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_INNER_RANGE_MINIMUM)));
+		p = obs_properties_add_float_slider(props, ST_SHADOW_INNER_RANGE_MAXIMUM,
+											D_TRANSLATE(ST_SHADOW_INNER_RANGE_MAXIMUM), -16.0, 16.0, 0.01);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_INNER_RANGE_MAXIMUM)));
+		p = obs_properties_add_float_slider(props, ST_SHADOW_INNER_OFFSET_X, D_TRANSLATE(ST_SHADOW_INNER_OFFSET_X),
+											-100.0, 100.0, 0.01);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_INNER_OFFSET_X)));
+		p = obs_properties_add_float_slider(props, ST_SHADOW_INNER_OFFSET_Y, D_TRANSLATE(ST_SHADOW_INNER_OFFSET_Y),
+											-100.0, 100.0, 0.01);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_INNER_OFFSET_Y)));
+		p = obs_properties_add_color(props, ST_SHADOW_INNER_COLOR, D_TRANSLATE(ST_SHADOW_INNER_COLOR));
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_INNER_COLOR)));
+		p = obs_properties_add_float_slider(props, ST_SHADOW_INNER_ALPHA, D_TRANSLATE(ST_SHADOW_INNER_ALPHA), 0.0,
+											100.0, 0.1);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADOW_INNER_ALPHA)));
+	}
+
+	{
+		p = obs_properties_add_bool(props, ST_GLOW_OUTER, D_TRANSLATE(ST_GLOW_OUTER));
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_OUTER)));
+		obs_property_set_modified_callback2(p, cb_modified_glow_outside, data);
+
+		p = obs_properties_add_color(props, ST_GLOW_OUTER_COLOR, D_TRANSLATE(ST_GLOW_OUTER_COLOR));
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_OUTER_COLOR)));
+		p = obs_properties_add_float_slider(props, ST_GLOW_OUTER_ALPHA, D_TRANSLATE(ST_GLOW_OUTER_ALPHA), 0.0, 100.0,
+											0.1);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_OUTER_ALPHA)));
+
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_OUTER_WIDTH)));
+		p = obs_properties_add_float_slider(props, ST_GLOW_OUTER_WIDTH, D_TRANSLATE(ST_GLOW_OUTER_WIDTH), 0.0, 16.0,
+											0.01);
+
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_OUTER_SHARPNESS)));
+		p = obs_properties_add_float_slider(props, ST_GLOW_OUTER_SHARPNESS, D_TRANSLATE(ST_GLOW_OUTER_SHARPNESS), 0.00,
+											100.0, 0.01);
+	}
+
+	{
+		p = obs_properties_add_bool(props, ST_GLOW_INNER, D_TRANSLATE(ST_GLOW_INNER));
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_INNER)));
+		obs_property_set_modified_callback2(p, cb_modified_glow_inside, data);
+
+		p = obs_properties_add_color(props, ST_GLOW_INNER_COLOR, D_TRANSLATE(ST_GLOW_INNER_COLOR));
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_INNER_COLOR)));
+		p = obs_properties_add_float_slider(props, ST_GLOW_INNER_ALPHA, D_TRANSLATE(ST_GLOW_INNER_ALPHA), 0.0, 100.0,
+											0.1);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_INNER_ALPHA)));
+
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_INNER_WIDTH)));
+		p = obs_properties_add_float_slider(props, ST_GLOW_INNER_WIDTH, D_TRANSLATE(ST_GLOW_INNER_WIDTH), 0.0, 16.0,
+											0.01);
+
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_GLOW_INNER_SHARPNESS)));
+		p = obs_properties_add_float_slider(props, ST_GLOW_INNER_SHARPNESS, D_TRANSLATE(ST_GLOW_INNER_SHARPNESS), 0.00,
+											100.0, 0.01);
+	}
+
+	{
+		p = obs_properties_add_bool(props, ST_OUTLINE, D_TRANSLATE(ST_OUTLINE));
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OUTLINE)));
+		obs_property_set_modified_callback2(p, cb_modified_outline, data);
+		p = obs_properties_add_color(props, ST_OUTLINE_COLOR, D_TRANSLATE(ST_OUTLINE_COLOR));
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OUTLINE_COLOR)));
+		p = obs_properties_add_float_slider(props, ST_OUTLINE_ALPHA, D_TRANSLATE(ST_OUTLINE_ALPHA), 0.0, 100.0, 0.1);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OUTLINE_ALPHA)));
+
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OUTLINE_WIDTH)));
+		p = obs_properties_add_float_slider(props, ST_OUTLINE_WIDTH, D_TRANSLATE(ST_OUTLINE_WIDTH), 0.0, 16.0, 0.01);
+
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OUTLINE_OFFSET)));
+		p = obs_properties_add_float_slider(props, ST_OUTLINE_OFFSET, D_TRANSLATE(ST_OUTLINE_OFFSET), -16.0, 16.0,
+											0.01);
+
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OUTLINE_SHARPNESS)));
+		p = obs_properties_add_float_slider(props, ST_OUTLINE_SHARPNESS, D_TRANSLATE(ST_OUTLINE_SHARPNESS), 0.00, 100.0,
+											0.01);
+	}
+
+	{
+		p = obs_properties_add_bool(props, S_ADVANCED, D_TRANSLATE(S_ADVANCED));
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(S_ADVANCED)));
+		obs_property_set_modified_callback2(p, cb_modified_advanced, data);
+
+		p = obs_properties_add_float_slider(props, ST_SDF_SCALE, D_TRANSLATE(ST_SDF_SCALE), 0.1, 500.0, 0.1);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SDF_SCALE)));
+
+		p = obs_properties_add_float_slider(props, ST_SDF_THRESHOLD, D_TRANSLATE(ST_SDF_THRESHOLD), 0.0, 100.0, 0.01);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SDF_THRESHOLD)));
+	}
+
+	return props;
 }
