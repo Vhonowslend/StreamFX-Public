@@ -49,138 +49,6 @@ static std::pair<filter::dynamic_mask::channel, const char*> channel_translation
 	{filter::dynamic_mask::channel::Alpha, S_CHANNEL_ALPHA},
 };
 
-filter::dynamic_mask::dynamic_mask_factory::dynamic_mask_factory()
-{
-	_info.id           = "obs-stream-effects-filter-dynamic-mask";
-	_info.type         = OBS_SOURCE_TYPE_FILTER;
-	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
-
-	// Strip all unnecessary callbacks.
-	_info.get_width           = nullptr;
-	_info.get_height          = nullptr;
-	_info.activate            = nullptr;
-	_info.deactivate          = nullptr;
-	_info.show                = nullptr;
-	_info.hide                = nullptr;
-	_info.mouse_click         = nullptr;
-	_info.mouse_move          = nullptr;
-	_info.mouse_wheel         = nullptr;
-	_info.key_click           = nullptr;
-	_info.focus               = nullptr;
-	_info.filter_remove       = nullptr;
-	_info.enum_active_sources = nullptr;
-	_info.enum_all_sources    = nullptr;
-	_info.transition_start    = nullptr;
-	_info.transition_stop     = nullptr;
-	_info.filter_audio        = nullptr;
-	_info.filter_video        = nullptr;
-	_info.audio_mix           = nullptr;
-	_info.audio_render        = nullptr;
-
-	obs_register_source(&_info);
-}
-
-filter::dynamic_mask::dynamic_mask_factory::~dynamic_mask_factory() {}
-
-const char* filter::dynamic_mask::dynamic_mask_factory::get_name()
-{
-	return D_TRANSLATE(ST);
-}
-
-void filter::dynamic_mask::dynamic_mask_factory::get_defaults2(obs_data_t* data)
-{
-	obs_data_set_default_int(data, ST_CHANNEL, static_cast<int64_t>(filter::dynamic_mask::channel::Red));
-	for (auto kv : channel_translations) {
-		obs_data_set_default_double(data, (std::string(ST_CHANNEL_VALUE) + "." + kv.second).c_str(), 1.0);
-		obs_data_set_default_double(data, (std::string(ST_CHANNEL_MULTIPLIER) + "." + kv.second).c_str(), 1.0);
-		for (auto kv2 : channel_translations) {
-			obs_data_set_default_double(
-				data, (std::string(ST_CHANNEL_INPUT) + "." + kv.second + "." + kv2.second).c_str(), 0.0);
-		}
-	}
-}
-
-obs_properties_t*
-	filter::dynamic_mask::dynamic_mask_factory::get_properties2(filter::dynamic_mask::dynamic_mask_instance* data)
-{
-	obs_properties_t* props = obs_properties_create();
-	obs_property_t*   p;
-
-	_translation_cache.clear();
-
-	{ // Input
-		p = obs_properties_add_list(props, ST_INPUT, D_TRANSLATE(ST_INPUT), OBS_COMBO_TYPE_LIST,
-									OBS_COMBO_FORMAT_STRING);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_INPUT)));
-		obs_property_list_add_string(p, "", "");
-		obs::source_tracker::get()->enumerate(
-			[&p](std::string name, obs_source_t*) {
-				std::stringstream sstr;
-				sstr << name << " (" << D_TRANSLATE(S_SOURCETYPE_SOURCE) << ")";
-				obs_property_list_add_string(p, sstr.str().c_str(), name.c_str());
-				return false;
-			},
-			obs::source_tracker::filter_video_sources);
-		obs::source_tracker::get()->enumerate(
-			[&p](std::string name, obs_source_t*) {
-				std::stringstream sstr;
-				sstr << name << " (" << D_TRANSLATE(S_SOURCETYPE_SCENE) << ")";
-				obs_property_list_add_string(p, sstr.str().c_str(), name.c_str());
-				return false;
-			},
-			obs::source_tracker::filter_scenes);
-	}
-
-	const char* pri_chs[] = {S_CHANNEL_RED, S_CHANNEL_GREEN, S_CHANNEL_BLUE, S_CHANNEL_ALPHA};
-	for (auto pri_ch : pri_chs) {
-		auto grp = obs_properties_create();
-
-		{
-			_translation_cache.push_back(translate_string(D_TRANSLATE(ST_CHANNEL_VALUE), D_TRANSLATE(pri_ch)));
-			std::string buf = std::string(ST_CHANNEL_VALUE) + "." + pri_ch;
-			p = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0,
-												0.01);
-			obs_property_set_long_description(p, D_TRANSLATE(ST_CHANNEL_VALUE));
-		}
-
-		const char* sec_chs[] = {S_CHANNEL_RED, S_CHANNEL_GREEN, S_CHANNEL_BLUE, S_CHANNEL_ALPHA};
-		for (auto sec_ch : sec_chs) {
-			_translation_cache.push_back(translate_string(D_TRANSLATE(ST_CHANNEL_INPUT), D_TRANSLATE(sec_ch)));
-			std::string buf = std::string(ST_CHANNEL_INPUT) + "." + pri_ch + "." + sec_ch;
-			p = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0,
-												0.01);
-			obs_property_set_long_description(p, D_TRANSLATE(ST_CHANNEL_INPUT));
-		}
-
-		{
-			_translation_cache.push_back(translate_string(D_TRANSLATE(ST_CHANNEL_MULTIPLIER), D_TRANSLATE(pri_ch)));
-			std::string buf = std::string(ST_CHANNEL_MULTIPLIER) + "." + pri_ch;
-			p = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0,
-												0.01);
-			obs_property_set_long_description(p, D_TRANSLATE(ST_CHANNEL_MULTIPLIER));
-		}
-
-		{
-			_translation_cache.push_back(translate_string(D_TRANSLATE(ST_CHANNEL), D_TRANSLATE(pri_ch)));
-			std::string buf = std::string(ST_CHANNEL) + "." + pri_ch;
-			obs_properties_add_group(props, buf.c_str(), _translation_cache.back().c_str(),
-									 obs_group_type::OBS_GROUP_NORMAL, grp);
-		}
-	}
-
-	return props;
-}
-
-std::string filter::dynamic_mask::dynamic_mask_factory::translate_string(const char* format, ...)
-{
-	va_list vargs;
-	va_start(vargs, format);
-	std::vector<char> buffer(2048);
-	size_t            len = static_cast<size_t>(vsnprintf(buffer.data(), buffer.size(), format, vargs));
-	va_end(vargs);
-	return std::string(buffer.data(), buffer.data() + len);
-}
-
 filter::dynamic_mask::dynamic_mask_instance::dynamic_mask_instance(obs_data_t* settings, obs_source_t* self)
 	: obs::source_instance(settings, self), _have_filter_texture(false), _have_input_texture(false),
 	  _have_final_texture(false), _precalc()
@@ -476,4 +344,114 @@ void filter::dynamic_mask::dynamic_mask_instance::video_render(gs_effect_t* in_e
 			gs_draw_sprite(0, 0, width, height);
 		}
 	}
+}
+
+filter::dynamic_mask::dynamic_mask_factory::dynamic_mask_factory()
+{
+	_info.id           = "obs-stream-effects-filter-dynamic-mask";
+	_info.type         = OBS_SOURCE_TYPE_FILTER;
+	_info.output_flags = OBS_SOURCE_VIDEO;
+
+	finish_setup();
+}
+
+filter::dynamic_mask::dynamic_mask_factory::~dynamic_mask_factory() {}
+
+const char* filter::dynamic_mask::dynamic_mask_factory::get_name()
+{
+	return D_TRANSLATE(ST);
+}
+
+void filter::dynamic_mask::dynamic_mask_factory::get_defaults2(obs_data_t* data)
+{
+	obs_data_set_default_int(data, ST_CHANNEL, static_cast<int64_t>(filter::dynamic_mask::channel::Red));
+	for (auto kv : channel_translations) {
+		obs_data_set_default_double(data, (std::string(ST_CHANNEL_VALUE) + "." + kv.second).c_str(), 1.0);
+		obs_data_set_default_double(data, (std::string(ST_CHANNEL_MULTIPLIER) + "." + kv.second).c_str(), 1.0);
+		for (auto kv2 : channel_translations) {
+			obs_data_set_default_double(
+				data, (std::string(ST_CHANNEL_INPUT) + "." + kv.second + "." + kv2.second).c_str(), 0.0);
+		}
+	}
+}
+
+obs_properties_t*
+	filter::dynamic_mask::dynamic_mask_factory::get_properties2(filter::dynamic_mask::dynamic_mask_instance* data)
+{
+	obs_properties_t* props = obs_properties_create();
+	obs_property_t*   p;
+
+	_translation_cache.clear();
+
+	{ // Input
+		p = obs_properties_add_list(props, ST_INPUT, D_TRANSLATE(ST_INPUT), OBS_COMBO_TYPE_LIST,
+									OBS_COMBO_FORMAT_STRING);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_INPUT)));
+		obs_property_list_add_string(p, "", "");
+		obs::source_tracker::get()->enumerate(
+			[&p](std::string name, obs_source_t*) {
+				std::stringstream sstr;
+				sstr << name << " (" << D_TRANSLATE(S_SOURCETYPE_SOURCE) << ")";
+				obs_property_list_add_string(p, sstr.str().c_str(), name.c_str());
+				return false;
+			},
+			obs::source_tracker::filter_video_sources);
+		obs::source_tracker::get()->enumerate(
+			[&p](std::string name, obs_source_t*) {
+				std::stringstream sstr;
+				sstr << name << " (" << D_TRANSLATE(S_SOURCETYPE_SCENE) << ")";
+				obs_property_list_add_string(p, sstr.str().c_str(), name.c_str());
+				return false;
+			},
+			obs::source_tracker::filter_scenes);
+	}
+
+	const char* pri_chs[] = {S_CHANNEL_RED, S_CHANNEL_GREEN, S_CHANNEL_BLUE, S_CHANNEL_ALPHA};
+	for (auto pri_ch : pri_chs) {
+		auto grp = obs_properties_create();
+
+		{
+			_translation_cache.push_back(translate_string(D_TRANSLATE(ST_CHANNEL_VALUE), D_TRANSLATE(pri_ch)));
+			std::string buf = std::string(ST_CHANNEL_VALUE) + "." + pri_ch;
+			p = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0,
+												0.01);
+			obs_property_set_long_description(p, D_TRANSLATE(ST_CHANNEL_VALUE));
+		}
+
+		const char* sec_chs[] = {S_CHANNEL_RED, S_CHANNEL_GREEN, S_CHANNEL_BLUE, S_CHANNEL_ALPHA};
+		for (auto sec_ch : sec_chs) {
+			_translation_cache.push_back(translate_string(D_TRANSLATE(ST_CHANNEL_INPUT), D_TRANSLATE(sec_ch)));
+			std::string buf = std::string(ST_CHANNEL_INPUT) + "." + pri_ch + "." + sec_ch;
+			p = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0,
+												0.01);
+			obs_property_set_long_description(p, D_TRANSLATE(ST_CHANNEL_INPUT));
+		}
+
+		{
+			_translation_cache.push_back(translate_string(D_TRANSLATE(ST_CHANNEL_MULTIPLIER), D_TRANSLATE(pri_ch)));
+			std::string buf = std::string(ST_CHANNEL_MULTIPLIER) + "." + pri_ch;
+			p = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0,
+												0.01);
+			obs_property_set_long_description(p, D_TRANSLATE(ST_CHANNEL_MULTIPLIER));
+		}
+
+		{
+			_translation_cache.push_back(translate_string(D_TRANSLATE(ST_CHANNEL), D_TRANSLATE(pri_ch)));
+			std::string buf = std::string(ST_CHANNEL) + "." + pri_ch;
+			obs_properties_add_group(props, buf.c_str(), _translation_cache.back().c_str(),
+									 obs_group_type::OBS_GROUP_NORMAL, grp);
+		}
+	}
+
+	return props;
+}
+
+std::string filter::dynamic_mask::dynamic_mask_factory::translate_string(const char* format, ...)
+{
+	va_list vargs;
+	va_start(vargs, format);
+	std::vector<char> buffer(2048);
+	size_t            len = static_cast<size_t>(vsnprintf(buffer.data(), buffer.size(), format, vargs));
+	va_end(vargs);
+	return std::string(buffer.data(), buffer.data() + len);
 }
