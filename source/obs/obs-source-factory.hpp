@@ -49,34 +49,131 @@ namespace obs {
 			_info.destroy         = _destroy;
 			_info.get_defaults2   = _get_defaults2;
 			_info.get_properties2 = _get_properties2;
+			_info.update          = _update;
+			_info.save            = _save;
+			_info.load            = _load;
+			_info.filter_remove   = _filter_remove;
 
-			_info.get_width           = _get_width;
-			_info.get_height          = _get_height;
-			_info.update              = _update;
-			_info.activate            = _activate;
-			_info.deactivate          = _deactivate;
-			_info.show                = _show;
-			_info.hide                = _hide;
-			_info.video_tick          = _video_tick;
-			_info.video_render        = _video_render;
-			_info.filter_video        = _filter_video;
-			_info.filter_audio        = _filter_audio;
-			_info.enum_active_sources = _enum_active_sources;
-			_info.save                = _save;
-			_info.load                = _load;
-			_info.mouse_click         = _mouse_click;
-			_info.mouse_move          = _mouse_move;
-			_info.mouse_wheel         = _mouse_wheel;
-			_info.focus               = _focus;
-			_info.key_click           = _key_click;
-			_info.filter_remove       = _filter_remove;
-			_info.audio_render        = _audio_render;
-			_info.enum_all_sources    = _enum_all_sources;
-			_info.transition_start    = _transition_start;
-			_info.transition_stop     = _transition_stop;
-			_info.audio_mix           = _audio_mix;
+			set_resolution_enabled(true);
+			set_activity_tracking_enabled(false);
+			set_visibility_tracking_enabled(false);
+			set_input_enabled(false);
+			set_have_child_sources(false);
 		}
 		virtual ~source_factory() {}
+
+		protected:
+		void set_resolution_enabled(bool v)
+		{
+			if (v) {
+				_info.get_width  = _get_width;
+				_info.get_height = _get_height;
+			} else {
+				_info.get_width  = nullptr;
+				_info.get_height = nullptr;
+			}
+		}
+
+		void set_activity_tracking_enabled(bool v)
+		{
+			if (v) {
+				_info.activate   = _activate;
+				_info.deactivate = _deactivate;
+			} else {
+				_info.activate   = nullptr;
+				_info.deactivate = nullptr;
+			}
+		}
+
+		void set_visibility_tracking_enabled(bool v)
+		{
+			if (v) {
+				_info.show = _show;
+				_info.hide = _hide;
+			} else {
+				_info.show = nullptr;
+				_info.hide = nullptr;
+			}
+		}
+
+		void set_input_enabled(bool v)
+		{
+			if (v) {
+				_info.mouse_click = _mouse_click;
+				_info.mouse_move  = _mouse_move;
+				_info.mouse_wheel = _mouse_wheel;
+				_info.focus       = _focus;
+				_info.key_click   = _key_click;
+			} else {
+				_info.mouse_click = nullptr;
+				_info.mouse_move  = nullptr;
+				_info.mouse_wheel = nullptr;
+				_info.focus       = nullptr;
+				_info.key_click   = nullptr;
+			}
+		}
+
+		void set_have_child_sources(bool v)
+		{
+			if (v) {
+				_info.enum_active_sources = _enum_active_sources;
+				_info.enum_all_sources    = _enum_all_sources;
+			} else {
+				_info.enum_active_sources = nullptr;
+				_info.enum_all_sources    = nullptr;
+			}
+		}
+
+		void finish_setup()
+		{
+			if (_info.output_flags & OBS_SOURCE_INTERACTION) {
+				set_input_enabled(true);
+			} else {
+				set_input_enabled(false);
+			}
+
+			if (_info.type == OBS_SOURCE_TYPE_TRANSITION) {
+				set_resolution_enabled(false);
+				_info.transition_start = _transition_start;
+				_info.transition_stop  = _transition_stop;
+				if ((_info.output_flags & OBS_SOURCE_VIDEO) != 0) {
+					_info.video_tick   = _video_tick;
+					_info.video_render = _video_render;
+				}
+				if ((_info.output_flags & OBS_SOURCE_AUDIO) != 0) {
+					_info.audio_render = _audio_render;
+				}
+			} else if (_info.type == OBS_SOURCE_TYPE_FILTER) {
+				switch (_info.output_flags & OBS_SOURCE_ASYNC_VIDEO) {
+				case OBS_SOURCE_ASYNC_VIDEO:
+					_info.filter_video = _filter_video;
+					break;
+				case OBS_SOURCE_VIDEO:
+					_info.video_tick   = _video_tick;
+					_info.video_render = _video_render;
+					break;
+				}
+				if ((_info.output_flags & OBS_SOURCE_AUDIO) != 0) {
+					_info.filter_audio = _filter_audio;
+					if ((_info.output_flags & OBS_SOURCE_COMPOSITE) != 0) {
+						_info.audio_render = _audio_render;
+					}
+				}
+			} else {
+				if ((_info.output_flags & OBS_SOURCE_ASYNC_VIDEO) != 0) {
+					if ((_info.output_flags & OBS_SOURCE_ASYNC) == 0) {
+						set_resolution_enabled(true);
+					}
+					_info.video_tick   = _video_tick;
+					_info.video_render = _video_render;
+				}
+				if ((_info.output_flags & OBS_SOURCE_COMPOSITE) != 0) {
+					_info.audio_render = _audio_render;
+				}
+			}
+
+			obs_register_source(&_info);
+		}
 
 		private /* Factory */:
 		static const char* _get_name(void* type_data) noexcept
