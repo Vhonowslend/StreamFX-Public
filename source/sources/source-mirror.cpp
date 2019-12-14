@@ -454,9 +454,9 @@ source::mirror::mirror_factory::mirror_factory()
 {
 	_info.id           = "obs-stream-effects-source-mirror";
 	_info.type         = OBS_SOURCE_TYPE_INPUT;
-	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_AUDIO | OBS_SOURCE_CUSTOM_DRAW;
+	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_AUDIO;
 
-	obs_register_source(&_info);
+	finish_setup();
 }
 
 source::mirror::mirror_factory::~mirror_factory() {}
