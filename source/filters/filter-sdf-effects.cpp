@@ -518,31 +518,9 @@ filter::sdf_effects::sdf_effects_factory::sdf_effects_factory()
 {
 	_info.id           = "obs-stream-effects-filter-sdf-effects";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
-	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
+	_info.output_flags = OBS_SOURCE_VIDEO;
 
-	// Strip all unnecessary callbacks.
-	_info.get_width           = nullptr;
-	_info.get_height          = nullptr;
-	_info.activate            = nullptr;
-	_info.deactivate          = nullptr;
-	_info.show                = nullptr;
-	_info.hide                = nullptr;
-	_info.mouse_click         = nullptr;
-	_info.mouse_move          = nullptr;
-	_info.mouse_wheel         = nullptr;
-	_info.key_click           = nullptr;
-	_info.focus               = nullptr;
-	_info.filter_remove       = nullptr;
-	_info.enum_active_sources = nullptr;
-	_info.enum_all_sources    = nullptr;
-	_info.transition_start    = nullptr;
-	_info.transition_stop     = nullptr;
-	_info.filter_audio        = nullptr;
-	_info.filter_video        = nullptr;
-	_info.audio_mix           = nullptr;
-	_info.audio_render        = nullptr;
-
-	obs_register_source(&_info);
+	finish_setup();
 }
 
 filter::sdf_effects::sdf_effects_factory::~sdf_effects_factory() {}
