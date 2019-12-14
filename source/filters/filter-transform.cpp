@@ -403,11 +403,9 @@ filter::transform::transform_factory::transform_factory()
 {
 	_info.id           = "obs-stream-effects-filter-transform";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
-	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
+	_info.output_flags = OBS_SOURCE_VIDEO;
 
-	_info.get_width = _info.get_height = nullptr;
-
-	obs_register_source(&_info);
+	finish_setup();
 }
 
 filter::transform::transform_factory::~transform_factory() {}
