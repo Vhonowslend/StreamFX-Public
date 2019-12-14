@@ -24,23 +24,11 @@
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
 #include "obs/gs/gs-vertexbuffer.hpp"
+#include "obs/obs-source-factory.hpp"
 #include "plugin.hpp"
 
 namespace filter {
 	namespace color_grade {
-		class color_grade_factory {
-			obs_source_info sourceInfo;
-
-			public: // Singleton
-			static void                                 initialize();
-			static void                                 finalize();
-			static std::shared_ptr<color_grade_factory> get();
-
-			public:
-			color_grade_factory();
-			~color_grade_factory();
-		};
-
 		enum class detection_mode {
 			HSV,
 			HSL,
@@ -55,10 +43,7 @@ namespace filter {
 			Log10,
 		};
 
-		class color_grade_instance {
-			bool          _active;
-			obs_source_t* _self;
-
+		class color_grade_instance : public obs::source_instance {
 			std::shared_ptr<gs::effect> _effect;
 
 			// Source
@@ -85,17 +70,45 @@ namespace filter {
 			vec4           _correction;
 
 			public:
-			~color_grade_instance();
-			color_grade_instance(obs_data_t*, obs_source_t*);
+			color_grade_instance(obs_data_t* data, obs_source_t* self);
+			virtual ~color_grade_instance();
 
-			uint32_t get_width();
-			uint32_t get_height();
+			virtual void load(obs_data_t* data) override;
+			virtual void update(obs_data_t* data) override;
 
-			void update(obs_data_t*);
-			void activate();
-			void deactivate();
-			void video_tick(float);
-			void video_render(gs_effect_t*);
+			virtual void video_tick(float time) override;
+			virtual void video_render(gs_effect_t* effect) override;
+		};
+
+		class color_grade_factory : public obs::source_factory<filter::color_grade::color_grade_factory,
+															   filter::color_grade::color_grade_instance> {
+			static std::shared_ptr<filter::color_grade::color_grade_factory> factory_instance;
+
+			public: // Singleton
+			static void initialize()
+			{
+				factory_instance = std::make_shared<filter::color_grade::color_grade_factory>();
+			}
+
+			static void finalize()
+			{
+				factory_instance.reset();
+			}
+
+			static std::shared_ptr<color_grade_factory> get()
+			{
+				return factory_instance;
+			}
+
+			public:
+			color_grade_factory();
+			virtual ~color_grade_factory();
+
+			virtual const char* get_name() override;
+
+			virtual void get_defaults2(obs_data_t* data) override;
+
+			virtual obs_properties_t* get_properties2(color_grade_instance* data) override;
 		};
 	} // namespace color_grade
 } // namespace filter

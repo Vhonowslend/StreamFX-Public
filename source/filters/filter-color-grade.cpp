@@ -64,7 +64,7 @@
 #define CONTRAST Contrast
 #define TONE_LOW Shadow
 #define TONE_MID Midtone
-#define TONE_HIG Highlight
+#define TONE_HIGH Highlight
 #define DETECTION_HSV HSV
 #define DETECTION_HSL HSL
 #define DETECTION_YUV_SDR YUV.SDR
@@ -74,370 +74,10 @@
 #define MODE_LOG Log
 #define MODE_LOG10 Log10
 
-static const char* get_name(void*) noexcept try {
-	return D_TRANSLATE(ST);
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return "";
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return "";
-}
-
-static void get_defaults(obs_data_t* data) noexcept try {
-	obs_data_set_default_string(data, ST_TOOL, ST_CORRECTION);
-	obs_data_set_default_double(data, ST_LIFT_(RED), 0);
-	obs_data_set_default_double(data, ST_LIFT_(GREEN), 0);
-	obs_data_set_default_double(data, ST_LIFT_(BLUE), 0);
-	obs_data_set_default_double(data, ST_LIFT_(ALL), 0);
-	obs_data_set_default_double(data, ST_GAMMA_(RED), 0);
-	obs_data_set_default_double(data, ST_GAMMA_(GREEN), 0);
-	obs_data_set_default_double(data, ST_GAMMA_(BLUE), 0);
-	obs_data_set_default_double(data, ST_GAMMA_(ALL), 0);
-	obs_data_set_default_double(data, ST_GAIN_(RED), 100.0);
-	obs_data_set_default_double(data, ST_GAIN_(GREEN), 100.0);
-	obs_data_set_default_double(data, ST_GAIN_(BLUE), 100.0);
-	obs_data_set_default_double(data, ST_GAIN_(ALL), 100.0);
-	obs_data_set_default_double(data, ST_OFFSET_(RED), 0.0);
-	obs_data_set_default_double(data, ST_OFFSET_(GREEN), 0.0);
-	obs_data_set_default_double(data, ST_OFFSET_(BLUE), 0.0);
-	obs_data_set_default_double(data, ST_OFFSET_(ALL), 0.0);
-	obs_data_set_default_int(data, ST_TINT_MODE, static_cast<int64_t>(filter::color_grade::luma_mode::Linear));
-	obs_data_set_default_int(data, ST_TINT_DETECTION,
-							 static_cast<int64_t>(filter::color_grade::detection_mode::YUV_SDR));
-	obs_data_set_default_double(data, ST_TINT_EXPONENT, 1.5);
-	obs_data_set_default_double(data, ST_TINT_(TONE_LOW, RED), 100.0);
-	obs_data_set_default_double(data, ST_TINT_(TONE_LOW, GREEN), 100.0);
-	obs_data_set_default_double(data, ST_TINT_(TONE_LOW, BLUE), 100.0);
-	obs_data_set_default_double(data, ST_TINT_(TONE_MID, RED), 100.0);
-	obs_data_set_default_double(data, ST_TINT_(TONE_MID, GREEN), 100.0);
-	obs_data_set_default_double(data, ST_TINT_(TONE_MID, BLUE), 100.0);
-	obs_data_set_default_double(data, ST_TINT_(TONE_HIG, RED), 100.0);
-	obs_data_set_default_double(data, ST_TINT_(TONE_HIG, GREEN), 100.0);
-	obs_data_set_default_double(data, ST_TINT_(TONE_HIG, BLUE), 100.0);
-	obs_data_set_default_double(data, ST_CORRECTION_(HUE), 0.0);
-	obs_data_set_default_double(data, ST_CORRECTION_(SATURATION), 100.0);
-	obs_data_set_default_double(data, ST_CORRECTION_(LIGHTNESS), 100.0);
-	obs_data_set_default_double(data, ST_CORRECTION_(CONTRAST), 100.0);
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-static bool tool_modified(obs_properties_t* props, obs_property_t* property, obs_data_t* settings) noexcept try {
-	const std::string mode{obs_data_get_string(settings, ST_TOOL)};
-
-	std::vector<std::pair<std::string, std::vector<std::string>>> tool_to_property{
-		{ST_LIFT, {ST_LIFT_(RED), ST_LIFT_(GREEN), ST_LIFT_(BLUE), ST_LIFT_(ALL)}},
-		{ST_GAMMA, {ST_GAMMA_(RED), ST_GAMMA_(GREEN), ST_GAMMA_(BLUE), ST_GAMMA_(ALL)}},
-		{ST_GAIN, {ST_GAIN_(RED), ST_GAIN_(GREEN), ST_GAIN_(BLUE), ST_GAIN_(ALL)}},
-		{ST_OFFSET, {ST_OFFSET_(RED), ST_OFFSET_(GREEN), ST_OFFSET_(BLUE), ST_OFFSET_(ALL)}},
-		{ST_TINT,
-		 {
-			 ST_TINT_MODE,
-			 ST_TINT_DETECTION,
-			 ST_TINT_EXPONENT,
-			 ST_TINT_(TONE_LOW, RED),
-			 ST_TINT_(TONE_LOW, GREEN),
-			 ST_TINT_(TONE_LOW, BLUE),
-			 ST_TINT_(TONE_MID, RED),
-			 ST_TINT_(TONE_MID, GREEN),
-			 ST_TINT_(TONE_MID, BLUE),
-			 ST_TINT_(TONE_HIG, RED),
-			 ST_TINT_(TONE_HIG, GREEN),
-			 ST_TINT_(TONE_HIG, BLUE),
-		 }},
-		{ST_CORRECTION,
-		 {ST_CORRECTION_(HUE), ST_CORRECTION_(SATURATION), ST_CORRECTION_(LIGHTNESS), ST_CORRECTION_(CONTRAST)}},
-		{S_ADVANCED,
-		 {
-			 ST_TINT_MODE,
-			 ST_TINT_DETECTION,
-			 ST_TINT_EXPONENT,
-		 }}};
-
-	for (auto kv : tool_to_property) {
-		if (mode == kv.first) {
-			for (auto kv2 : kv.second) {
-				obs_property_set_visible(obs_properties_get(props, kv2.c_str()), true);
-			}
-		} else {
-			for (auto kv2 : kv.second) {
-				obs_property_set_visible(obs_properties_get(props, kv2.c_str()), false);
-			}
-		}
-	}
-
-	return true;
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return false;
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return false;
-}
-
-static obs_properties_t* get_properties(void*) noexcept try {
-	obs_properties_t* pr = obs_properties_create();
-
-	if (util::are_property_groups_broken()) {
-		auto p =
-			obs_properties_add_list(pr, ST_TOOL, D_TRANSLATE(ST_TOOL), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
-		obs_property_list_add_string(p, D_TRANSLATE(ST_LIFT), ST_LIFT);
-		obs_property_list_add_string(p, D_TRANSLATE(ST_GAMMA), ST_GAMMA);
-		obs_property_list_add_string(p, D_TRANSLATE(ST_GAIN), ST_GAIN);
-		obs_property_list_add_string(p, D_TRANSLATE(ST_OFFSET), ST_OFFSET);
-		obs_property_list_add_string(p, D_TRANSLATE(ST_TINT), ST_TINT);
-		obs_property_list_add_string(p, D_TRANSLATE(ST_CORRECTION), ST_CORRECTION);
-		obs_property_list_add_string(p, D_TRANSLATE(S_ADVANCED), S_ADVANCED);
-		obs_property_set_modified_callback(p, &tool_modified);
-	}
-
-	{
-		obs_properties_t* grp = pr;
-		if (!util::are_property_groups_broken()) {
-			grp = obs_properties_create();
-			obs_properties_add_group(pr, ST_LIFT, D_TRANSLATE(ST_LIFT), OBS_GROUP_NORMAL, grp);
-		}
-
-		obs_properties_add_float_slider(grp, ST_LIFT_(RED), D_TRANSLATE(ST_LIFT_(RED)), -1000.0, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_LIFT_(GREEN), D_TRANSLATE(ST_LIFT_(GREEN)), -1000.0, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_LIFT_(BLUE), D_TRANSLATE(ST_LIFT_(BLUE)), -1000.0, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_LIFT_(ALL), D_TRANSLATE(ST_LIFT_(ALL)), -1000.0, 1000.0, 0.01);
-	}
-
-	{
-		obs_properties_t* grp = pr;
-		if (!util::are_property_groups_broken()) {
-			grp = obs_properties_create();
-			obs_properties_add_group(pr, ST_GAMMA, D_TRANSLATE(ST_GAMMA), OBS_GROUP_NORMAL, grp);
-		}
-
-		obs_properties_add_float_slider(grp, ST_GAMMA_(RED), D_TRANSLATE(ST_GAMMA_(RED)), -1000.0, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_GAMMA_(GREEN), D_TRANSLATE(ST_GAMMA_(GREEN)), -1000.0, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_GAMMA_(BLUE), D_TRANSLATE(ST_GAMMA_(BLUE)), -1000.0, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_GAMMA_(ALL), D_TRANSLATE(ST_GAMMA_(ALL)), -1000.0, 1000.0, 0.01);
-	}
-
-	{
-		obs_properties_t* grp = pr;
-		if (!util::are_property_groups_broken()) {
-			grp = obs_properties_create();
-			obs_properties_add_group(pr, ST_GAIN, D_TRANSLATE(ST_GAIN), OBS_GROUP_NORMAL, grp);
-		}
-
-		obs_properties_add_float_slider(grp, ST_GAIN_(RED), D_TRANSLATE(ST_GAIN_(RED)), 0.01, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_GAIN_(GREEN), D_TRANSLATE(ST_GAIN_(GREEN)), 0.01, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_GAIN_(BLUE), D_TRANSLATE(ST_GAIN_(BLUE)), 0.01, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_GAIN_(ALL), D_TRANSLATE(ST_GAIN_(ALL)), 0.01, 1000.0, 0.01);
-	}
-
-	{
-		obs_properties_t* grp = pr;
-		if (!util::are_property_groups_broken()) {
-			grp = obs_properties_create();
-			obs_properties_add_group(pr, ST_OFFSET, D_TRANSLATE(ST_OFFSET), OBS_GROUP_NORMAL, grp);
-		}
-
-		obs_properties_add_float_slider(grp, ST_OFFSET_(RED), D_TRANSLATE(ST_OFFSET_(RED)), -1000.0, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_OFFSET_(GREEN), D_TRANSLATE(ST_OFFSET_(GREEN)), -1000.0, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_OFFSET_(BLUE), D_TRANSLATE(ST_OFFSET_(BLUE)), -1000.0, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_OFFSET_(ALL), D_TRANSLATE(ST_OFFSET_(ALL)), -1000.0, 1000.0, 0.01);
-	}
-
-	{
-		obs_properties_t* grp = pr;
-		if (!util::are_property_groups_broken()) {
-			grp = obs_properties_create();
-			obs_properties_add_group(pr, ST_TINT, D_TRANSLATE(ST_TINT), OBS_GROUP_NORMAL, grp);
-		}
-
-		obs_properties_add_float_slider(grp, ST_TINT_(TONE_LOW, RED), D_TRANSLATE(ST_TINT_(TONE_LOW, RED)), 0, 1000.0,
-										0.01);
-		obs_properties_add_float_slider(grp, ST_TINT_(TONE_LOW, GREEN), D_TRANSLATE(ST_TINT_(TONE_LOW, GREEN)), 0,
-										1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_TINT_(TONE_LOW, BLUE), D_TRANSLATE(ST_TINT_(TONE_LOW, BLUE)), 0, 1000.0,
-										0.01);
-
-		obs_properties_add_float_slider(grp, ST_TINT_(TONE_MID, RED), D_TRANSLATE(ST_TINT_(TONE_MID, RED)), 0, 1000.0,
-										0.01);
-		obs_properties_add_float_slider(grp, ST_TINT_(TONE_MID, GREEN), D_TRANSLATE(ST_TINT_(TONE_MID, GREEN)), 0,
-										1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_TINT_(TONE_MID, BLUE), D_TRANSLATE(ST_TINT_(TONE_MID, BLUE)), 0, 1000.0,
-										0.01);
-
-		obs_properties_add_float_slider(grp, ST_TINT_(TONE_HIG, RED), D_TRANSLATE(ST_TINT_(TONE_HIG, RED)), 0, 1000.0,
-										0.01);
-		obs_properties_add_float_slider(grp, ST_TINT_(TONE_HIG, GREEN), D_TRANSLATE(ST_TINT_(TONE_HIG, GREEN)), 0,
-										1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_TINT_(TONE_HIG, BLUE), D_TRANSLATE(ST_TINT_(TONE_HIG, BLUE)), 0, 1000.0,
-										0.01);
-	}
-
-	{
-		obs_properties_t* grp = pr;
-		if (!util::are_property_groups_broken()) {
-			grp = obs_properties_create();
-			obs_properties_add_group(pr, ST_CORRECTION, D_TRANSLATE(ST_CORRECTION), OBS_GROUP_NORMAL, grp);
-		}
-
-		obs_properties_add_float_slider(grp, ST_CORRECTION_(HUE), D_TRANSLATE(ST_CORRECTION_(HUE)), -180, 180.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_CORRECTION_(SATURATION), D_TRANSLATE(ST_CORRECTION_(SATURATION)), 0.0,
-										1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_CORRECTION_(LIGHTNESS), D_TRANSLATE(ST_CORRECTION_(LIGHTNESS)), 0.0,
-										1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_CORRECTION_(CONTRAST), D_TRANSLATE(ST_CORRECTION_(CONTRAST)), 0.0,
-										1000.0, 0.01);
-	}
-
-	{
-		obs_properties_t* grp = pr;
-		if (!util::are_property_groups_broken()) {
-			grp = obs_properties_create();
-			obs_properties_add_group(pr, S_ADVANCED, D_TRANSLATE(S_ADVANCED), OBS_GROUP_NORMAL, grp);
-		}
-
-		{
-			auto p = obs_properties_add_list(grp, ST_TINT_MODE, D_TRANSLATE(ST_TINT_MODE), OBS_COMBO_TYPE_LIST,
-											 OBS_COMBO_FORMAT_INT);
-			std::pair<const char*, filter::color_grade::luma_mode> els[] = {
-				{ST_TINT_MODE_(MODE_LINEAR), filter::color_grade::luma_mode::Linear},
-				{ST_TINT_MODE_(MODE_EXP), filter::color_grade::luma_mode::Exp},
-				{ST_TINT_MODE_(MODE_EXP2), filter::color_grade::luma_mode::Exp2},
-				{ST_TINT_MODE_(MODE_LOG), filter::color_grade::luma_mode::Log},
-				{ST_TINT_MODE_(MODE_LOG10), filter::color_grade::luma_mode::Log10}};
-			for (auto kv : els) {
-				obs_property_list_add_int(p, D_TRANSLATE(kv.first), static_cast<int64_t>(kv.second));
-			}
-		}
-
-		{
-			auto p = obs_properties_add_list(grp, ST_TINT_DETECTION, D_TRANSLATE(ST_TINT_DETECTION),
-											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			std::pair<const char*, filter::color_grade::detection_mode> els[] = {
-				{ST_TINT_DETECTION_(DETECTION_HSV), filter::color_grade::detection_mode::HSV},
-				{ST_TINT_DETECTION_(DETECTION_HSL), filter::color_grade::detection_mode::HSL},
-				{ST_TINT_DETECTION_(DETECTION_YUV_SDR), filter::color_grade::detection_mode::YUV_SDR}};
-			for (auto kv : els) {
-				obs_property_list_add_int(p, D_TRANSLATE(kv.first), static_cast<int64_t>(kv.second));
-			}
-		}
-
-		obs_properties_add_float_slider(grp, ST_TINT_EXPONENT, D_TRANSLATE(ST_TINT_EXPONENT), 0., 10., 0.01);
-	}
-
-	return pr;
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return nullptr;
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return nullptr;
-}
-
-static void* create(obs_data_t* data, obs_source_t* source) noexcept try {
-	return new filter::color_grade::color_grade_instance(data, source);
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return nullptr;
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return nullptr;
-}
-
-static void destroy(void* ptr) noexcept try {
-	delete reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr);
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-static void update(void* ptr, obs_data_t* data) try {
-	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->update(data);
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-static void activate(void* ptr) try {
-	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->activate();
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-static void deactivate(void* ptr) try {
-	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->deactivate();
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-static void video_tick(void* ptr, float time) try {
-	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->video_tick(time);
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-static void video_render(void* ptr, gs_effect_t* effect) try {
-	reinterpret_cast<filter::color_grade::color_grade_instance*>(ptr)->video_render(effect);
-} catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
-static std::shared_ptr<filter::color_grade::color_grade_factory> factory_instance = nullptr;
-
-void filter::color_grade::color_grade_factory::initialize()
-{
-	factory_instance = std::make_shared<filter::color_grade::color_grade_factory>();
-}
-
-void filter::color_grade::color_grade_factory::finalize()
-{
-	factory_instance.reset();
-}
-
-std::shared_ptr<filter::color_grade::color_grade_factory> filter::color_grade::color_grade_factory::get()
-{
-	return factory_instance;
-}
-
-filter::color_grade::color_grade_factory::color_grade_factory()
-{
-	memset(&sourceInfo, 0, sizeof(obs_source_info));
-	sourceInfo.id             = "obs-stream-effects-filter-color-grade";
-	sourceInfo.type           = OBS_SOURCE_TYPE_FILTER;
-	sourceInfo.output_flags   = OBS_SOURCE_VIDEO;
-	sourceInfo.get_name       = get_name;
-	sourceInfo.get_defaults   = get_defaults;
-	sourceInfo.get_properties = get_properties;
-
-	sourceInfo.create       = create;
-	sourceInfo.destroy      = destroy;
-	sourceInfo.update       = update;
-	sourceInfo.activate     = activate;
-	sourceInfo.deactivate   = deactivate;
-	sourceInfo.video_tick   = video_tick;
-	sourceInfo.video_render = video_render;
-
-	obs_register_source(&sourceInfo);
-}
-
-filter::color_grade::color_grade_factory::~color_grade_factory() {}
-
 filter::color_grade::color_grade_instance::~color_grade_instance() {}
 
-filter::color_grade::color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* context)
-	: _active(true), _self(context)
+filter::color_grade::color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self)
+	: obs::source_instance(data, self)
 {
 	update(data);
 
@@ -472,16 +112,6 @@ filter::color_grade::color_grade_instance::color_grade_instance(obs_data_t* data
 	}
 }
 
-uint32_t filter::color_grade::color_grade_instance::get_width()
-{
-	return 0;
-}
-
-uint32_t filter::color_grade::color_grade_instance::get_height()
-{
-	return 0;
-}
-
 float_t fix_gamma_value(double_t v)
 {
 	if (v < 0.0) {
@@ -489,6 +119,11 @@ float_t fix_gamma_value(double_t v)
 	} else {
 		return static_cast<float_t>(1.0 / (v + 1.0));
 	}
+}
+
+void filter::color_grade::color_grade_instance::load(obs_data_t* data)
+{
+	update(data);
 }
 
 void filter::color_grade::color_grade_instance::update(obs_data_t* data)
@@ -518,23 +153,13 @@ void filter::color_grade::color_grade_instance::update(obs_data_t* data)
 	_tint_mid.x     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_MID, RED)) / 100.0);
 	_tint_mid.y     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_MID, GREEN)) / 100.0);
 	_tint_mid.z     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_MID, BLUE)) / 100.0);
-	_tint_hig.x     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_HIG, RED)) / 100.0);
-	_tint_hig.y     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_HIG, GREEN)) / 100.0);
-	_tint_hig.z     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_HIG, BLUE)) / 100.0);
+	_tint_hig.x     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_HIGH, RED)) / 100.0);
+	_tint_hig.y     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_HIGH, GREEN)) / 100.0);
+	_tint_hig.z     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_HIGH, BLUE)) / 100.0);
 	_correction.x   = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(HUE)) / 360.0);
 	_correction.y   = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(SATURATION)) / 100.0);
 	_correction.z   = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(LIGHTNESS)) / 100.0);
 	_correction.w   = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(CONTRAST)) / 100.0);
-}
-
-void filter::color_grade::color_grade_instance::activate()
-{
-	_active = true;
-}
-
-void filter::color_grade::color_grade_instance::deactivate()
-{
-	_active = false;
 }
 
 void filter::color_grade::color_grade_instance::video_tick(float)
@@ -543,7 +168,7 @@ void filter::color_grade::color_grade_instance::video_tick(float)
 	_grade_updated  = false;
 }
 
-void filter::color_grade::color_grade_instance::video_render(gs_effect_t*)
+void filter::color_grade::color_grade_instance::video_render(gs_effect_t* effect)
 {
 	// Grab initial values.
 	obs_source_t* parent         = obs_filter_get_parent(_self);
@@ -553,7 +178,7 @@ void filter::color_grade::color_grade_instance::video_render(gs_effect_t*)
 	gs_effect_t*  effect_default = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 
 	// Skip filter if anything is wrong.
-	if (!_active || !parent || !target || !width || !height || !effect_default) {
+	if (!parent || !target || !width || !height || !effect_default) {
 		obs_source_skip_video_filter(_self);
 		return;
 	}
@@ -570,7 +195,7 @@ void filter::color_grade::color_grade_instance::video_render(gs_effect_t*)
 			gs_enable_stencil_test(false);
 			gs_enable_stencil_write(false);
 			gs_ortho(0, static_cast<float_t>(width), 0, static_cast<float_t>(height), -1., 1.);
-			obs_source_process_filter_end(_self, effect_default, width, height);
+			obs_source_process_filter_end(_self, effect ? effect : effect_default, width, height);
 			gs_blend_state_pop();
 		}
 
@@ -637,4 +262,180 @@ void filter::color_grade::color_grade_instance::video_render(gs_effect_t*)
 			gs_draw_sprite(nullptr, 0, width, height);
 		}
 	}
+}
+
+std::shared_ptr<filter::color_grade::color_grade_factory> filter::color_grade::color_grade_factory::factory_instance =
+	nullptr;
+
+filter::color_grade::color_grade_factory::color_grade_factory()
+{
+	_info.id           = "obs-stream-effects-filter-color-grade";
+	_info.type         = OBS_SOURCE_TYPE_FILTER;
+	_info.output_flags = OBS_SOURCE_VIDEO;
+
+	finish_setup();
+}
+
+filter::color_grade::color_grade_factory::~color_grade_factory() {}
+
+const char* filter::color_grade::color_grade_factory::get_name()
+{
+	return D_TRANSLATE(ST);
+}
+
+void filter::color_grade::color_grade_factory::get_defaults2(obs_data_t* data)
+{
+	obs_data_set_default_string(data, ST_TOOL, ST_CORRECTION);
+	obs_data_set_default_double(data, ST_LIFT_(RED), 0);
+	obs_data_set_default_double(data, ST_LIFT_(GREEN), 0);
+	obs_data_set_default_double(data, ST_LIFT_(BLUE), 0);
+	obs_data_set_default_double(data, ST_LIFT_(ALL), 0);
+	obs_data_set_default_double(data, ST_GAMMA_(RED), 0);
+	obs_data_set_default_double(data, ST_GAMMA_(GREEN), 0);
+	obs_data_set_default_double(data, ST_GAMMA_(BLUE), 0);
+	obs_data_set_default_double(data, ST_GAMMA_(ALL), 0);
+	obs_data_set_default_double(data, ST_GAIN_(RED), 100.0);
+	obs_data_set_default_double(data, ST_GAIN_(GREEN), 100.0);
+	obs_data_set_default_double(data, ST_GAIN_(BLUE), 100.0);
+	obs_data_set_default_double(data, ST_GAIN_(ALL), 100.0);
+	obs_data_set_default_double(data, ST_OFFSET_(RED), 0.0);
+	obs_data_set_default_double(data, ST_OFFSET_(GREEN), 0.0);
+	obs_data_set_default_double(data, ST_OFFSET_(BLUE), 0.0);
+	obs_data_set_default_double(data, ST_OFFSET_(ALL), 0.0);
+	obs_data_set_default_int(data, ST_TINT_MODE, static_cast<int64_t>(filter::color_grade::luma_mode::Linear));
+	obs_data_set_default_int(data, ST_TINT_DETECTION,
+							 static_cast<int64_t>(filter::color_grade::detection_mode::YUV_SDR));
+	obs_data_set_default_double(data, ST_TINT_EXPONENT, 1.5);
+	obs_data_set_default_double(data, ST_TINT_(TONE_LOW, RED), 100.0);
+	obs_data_set_default_double(data, ST_TINT_(TONE_LOW, GREEN), 100.0);
+	obs_data_set_default_double(data, ST_TINT_(TONE_LOW, BLUE), 100.0);
+	obs_data_set_default_double(data, ST_TINT_(TONE_MID, RED), 100.0);
+	obs_data_set_default_double(data, ST_TINT_(TONE_MID, GREEN), 100.0);
+	obs_data_set_default_double(data, ST_TINT_(TONE_MID, BLUE), 100.0);
+	obs_data_set_default_double(data, ST_TINT_(TONE_HIGH, RED), 100.0);
+	obs_data_set_default_double(data, ST_TINT_(TONE_HIGH, GREEN), 100.0);
+	obs_data_set_default_double(data, ST_TINT_(TONE_HIGH, BLUE), 100.0);
+	obs_data_set_default_double(data, ST_CORRECTION_(HUE), 0.0);
+	obs_data_set_default_double(data, ST_CORRECTION_(SATURATION), 100.0);
+	obs_data_set_default_double(data, ST_CORRECTION_(LIGHTNESS), 100.0);
+	obs_data_set_default_double(data, ST_CORRECTION_(CONTRAST), 100.0);
+}
+
+obs_properties_t* filter::color_grade::color_grade_factory::get_properties2(color_grade_instance* data)
+{
+	obs_properties_t* pr = obs_properties_create();
+
+	{
+		obs_properties_t* grp = obs_properties_create();
+		obs_properties_add_group(pr, ST_LIFT, D_TRANSLATE(ST_LIFT), OBS_GROUP_NORMAL, grp);
+
+		obs_properties_add_float_slider(grp, ST_LIFT_(RED), D_TRANSLATE(ST_LIFT_(RED)), -1000.0, 1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_LIFT_(GREEN), D_TRANSLATE(ST_LIFT_(GREEN)), -1000.0, 1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_LIFT_(BLUE), D_TRANSLATE(ST_LIFT_(BLUE)), -1000.0, 1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_LIFT_(ALL), D_TRANSLATE(ST_LIFT_(ALL)), -1000.0, 1000.0, 0.01);
+	}
+
+	{
+		obs_properties_t* grp = obs_properties_create();
+		obs_properties_add_group(pr, ST_GAMMA, D_TRANSLATE(ST_GAMMA), OBS_GROUP_NORMAL, grp);
+
+		obs_properties_add_float_slider(grp, ST_GAMMA_(RED), D_TRANSLATE(ST_GAMMA_(RED)), -1000.0, 1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_GAMMA_(GREEN), D_TRANSLATE(ST_GAMMA_(GREEN)), -1000.0, 1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_GAMMA_(BLUE), D_TRANSLATE(ST_GAMMA_(BLUE)), -1000.0, 1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_GAMMA_(ALL), D_TRANSLATE(ST_GAMMA_(ALL)), -1000.0, 1000.0, 0.01);
+	}
+
+	{
+		obs_properties_t* grp = obs_properties_create();
+		obs_properties_add_group(pr, ST_GAIN, D_TRANSLATE(ST_GAIN), OBS_GROUP_NORMAL, grp);
+
+		obs_properties_add_float_slider(grp, ST_GAIN_(RED), D_TRANSLATE(ST_GAIN_(RED)), 0.01, 1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_GAIN_(GREEN), D_TRANSLATE(ST_GAIN_(GREEN)), 0.01, 1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_GAIN_(BLUE), D_TRANSLATE(ST_GAIN_(BLUE)), 0.01, 1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_GAIN_(ALL), D_TRANSLATE(ST_GAIN_(ALL)), 0.01, 1000.0, 0.01);
+	}
+
+	{
+		obs_properties_t* grp = obs_properties_create();
+		obs_properties_add_group(pr, ST_OFFSET, D_TRANSLATE(ST_OFFSET), OBS_GROUP_NORMAL, grp);
+
+		obs_properties_add_float_slider(grp, ST_OFFSET_(RED), D_TRANSLATE(ST_OFFSET_(RED)), -1000.0, 1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_OFFSET_(GREEN), D_TRANSLATE(ST_OFFSET_(GREEN)), -1000.0, 1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_OFFSET_(BLUE), D_TRANSLATE(ST_OFFSET_(BLUE)), -1000.0, 1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_OFFSET_(ALL), D_TRANSLATE(ST_OFFSET_(ALL)), -1000.0, 1000.0, 0.01);
+	}
+
+	{
+		obs_properties_t* grp = obs_properties_create();
+		obs_properties_add_group(pr, ST_TINT, D_TRANSLATE(ST_TINT), OBS_GROUP_NORMAL, grp);
+
+		obs_properties_add_float_slider(grp, ST_TINT_(TONE_LOW, RED), D_TRANSLATE(ST_TINT_(TONE_LOW, RED)), 0, 1000.0,
+										0.01);
+		obs_properties_add_float_slider(grp, ST_TINT_(TONE_LOW, GREEN), D_TRANSLATE(ST_TINT_(TONE_LOW, GREEN)), 0,
+										1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_TINT_(TONE_LOW, BLUE), D_TRANSLATE(ST_TINT_(TONE_LOW, BLUE)), 0, 1000.0,
+										0.01);
+
+		obs_properties_add_float_slider(grp, ST_TINT_(TONE_MID, RED), D_TRANSLATE(ST_TINT_(TONE_MID, RED)), 0, 1000.0,
+										0.01);
+		obs_properties_add_float_slider(grp, ST_TINT_(TONE_MID, GREEN), D_TRANSLATE(ST_TINT_(TONE_MID, GREEN)), 0,
+										1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_TINT_(TONE_MID, BLUE), D_TRANSLATE(ST_TINT_(TONE_MID, BLUE)), 0, 1000.0,
+										0.01);
+
+		obs_properties_add_float_slider(grp, ST_TINT_(TONE_HIGH, RED), D_TRANSLATE(ST_TINT_(TONE_HIGH, RED)), 0, 1000.0,
+										0.01);
+		obs_properties_add_float_slider(grp, ST_TINT_(TONE_HIGH, GREEN), D_TRANSLATE(ST_TINT_(TONE_HIGH, GREEN)), 0,
+										1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_TINT_(TONE_HIGH, BLUE), D_TRANSLATE(ST_TINT_(TONE_HIGH, BLUE)), 0, 1000.0,
+										0.01);
+	}
+
+	{
+		obs_properties_t* grp = obs_properties_create();
+		obs_properties_add_group(pr, ST_CORRECTION, D_TRANSLATE(ST_CORRECTION), OBS_GROUP_NORMAL, grp);
+
+		obs_properties_add_float_slider(grp, ST_CORRECTION_(HUE), D_TRANSLATE(ST_CORRECTION_(HUE)), -180, 180.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_CORRECTION_(SATURATION), D_TRANSLATE(ST_CORRECTION_(SATURATION)), 0.0,
+										1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_CORRECTION_(LIGHTNESS), D_TRANSLATE(ST_CORRECTION_(LIGHTNESS)), 0.0,
+										1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_CORRECTION_(CONTRAST), D_TRANSLATE(ST_CORRECTION_(CONTRAST)), 0.0,
+										1000.0, 0.01);
+	}
+
+	{
+		obs_properties_t* grp = obs_properties_create();
+		obs_properties_add_group(pr, S_ADVANCED, D_TRANSLATE(S_ADVANCED), OBS_GROUP_NORMAL, grp);
+
+		{
+			auto p = obs_properties_add_list(grp, ST_TINT_MODE, D_TRANSLATE(ST_TINT_MODE), OBS_COMBO_TYPE_LIST,
+											 OBS_COMBO_FORMAT_INT);
+			std::pair<const char*, filter::color_grade::luma_mode> els[] = {
+				{ST_TINT_MODE_(MODE_LINEAR), filter::color_grade::luma_mode::Linear},
+				{ST_TINT_MODE_(MODE_EXP), filter::color_grade::luma_mode::Exp},
+				{ST_TINT_MODE_(MODE_EXP2), filter::color_grade::luma_mode::Exp2},
+				{ST_TINT_MODE_(MODE_LOG), filter::color_grade::luma_mode::Log},
+				{ST_TINT_MODE_(MODE_LOG10), filter::color_grade::luma_mode::Log10}};
+			for (auto kv : els) {
+				obs_property_list_add_int(p, D_TRANSLATE(kv.first), static_cast<int64_t>(kv.second));
+			}
+		}
+
+		{
+			auto p = obs_properties_add_list(grp, ST_TINT_DETECTION, D_TRANSLATE(ST_TINT_DETECTION),
+											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			std::pair<const char*, filter::color_grade::detection_mode> els[] = {
+				{ST_TINT_DETECTION_(DETECTION_HSV), filter::color_grade::detection_mode::HSV},
+				{ST_TINT_DETECTION_(DETECTION_HSL), filter::color_grade::detection_mode::HSL},
+				{ST_TINT_DETECTION_(DETECTION_YUV_SDR), filter::color_grade::detection_mode::YUV_SDR}};
+			for (auto kv : els) {
+				obs_property_list_add_int(p, D_TRANSLATE(kv.first), static_cast<int64_t>(kv.second));
+			}
+		}
+
+		obs_properties_add_float_slider(grp, ST_TINT_EXPONENT, D_TRANSLATE(ST_TINT_EXPONENT), 0., 10., 0.01);
+	}
+
+	return pr;
 }
