@@ -48,7 +48,7 @@ extern "C" {
 
 namespace gfx {
 	namespace effect_source {
-		enum class value_mode {
+		/*		enum class value_mode {
 			INPUT,
 			SLIDER,
 		};
@@ -274,9 +274,11 @@ namespace gfx {
 		typedef std::pair<gs::effect_parameter::type, std::string>               param_ident_t;
 		typedef std::function<bool(std::shared_ptr<gs::effect_parameter> param)> valid_property_cb_t;
 		typedef std::function<void(std::shared_ptr<gs::effect> effect)>          param_override_cb_t;
-
-		class effect_source : public std::enable_shared_from_this<effect_source> {
-			obs_source_t* _self;
+		*/
+		class effect_source {
+			// Shader
+			std::string                 _source_file;
+			std::shared_ptr<gs::effect> _effect;
 
 			std::string                                         _file;
 			std::shared_ptr<gs::effect>                         _effect;
@@ -297,9 +299,6 @@ namespace gfx {
 			std::uniform_real_distribution<float_t> _random_dist{0.f, 1.f};
 			std::default_random_engine              _random_generator;
 
-			valid_property_cb_t _cb_valid;
-			param_override_cb_t _cb_override;
-
 			void load_file(std::string file);
 
 			public:
@@ -317,11 +316,6 @@ namespace gfx {
 			obs_source_t* get_self();
 
 			void enum_active_sources(obs_source_enum_proc_t, void*);
-
-			public:
-			void set_valid_property_cb(valid_property_cb_t cb);
-
-			void set_override_cb(param_override_cb_t cb);
 
 			bool modified2(obs_properties_t* props, obs_property_t* property, obs_data_t* settings);
 		};

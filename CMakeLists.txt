@@ -294,8 +294,6 @@ set(PROJECT_PRIVATE_SOURCE
 	"${PROJECT_SOURCE_DIR}/source/util-memory.cpp"
 	
 	# Graphics
-	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-effect-source.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-effect-source.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-source-texture.hpp"
 	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-source-texture.cpp"
 	# Graphics/Blur
@@ -311,6 +309,19 @@ set(PROJECT_PRIVATE_SOURCE
 	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-gaussian.cpp"
 	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-gaussian-linear.hpp"
 	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-gaussian-linear.cpp"
+	# Graphics/Shader	
+	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param-audio.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param-audio.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param-basic.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param-basic.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param-matrix.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param-matrix.cpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param-texture.hpp"
+	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param-texture.cpp"
 
 	# OBS
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-helper.hpp"
