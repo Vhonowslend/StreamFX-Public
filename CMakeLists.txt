@@ -328,6 +328,8 @@ set(PROJECT_PRIVATE_SOURCE
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-helper.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-effect.hpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-effect.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-effect-parameter.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-effect-parameter.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-effect-pass.hpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-effect-pass.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-effect-technique.hpp"
