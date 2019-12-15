@@ -23,7 +23,8 @@
 
 #include <graphics/effect.h>
 
-gs::effect_technique::effect_technique(gs_technique_t* technique, std::shared_ptr<gs_effect_t>* parent) : _parent(parent)
+gs::effect_technique::effect_technique(gs_technique_t* technique, std::shared_ptr<gs_effect_t>* parent)
+	: _parent(parent)
 {
 	reset(technique, [](void*) {});
 }
@@ -32,7 +33,6 @@ gs::effect_technique::~effect_technique() {}
 
 std::string gs::effect_technique::name()
 {
-	
 	return std::string(get()->name, get()->name + strnlen_s(get()->name, 256));
 }
 
@@ -44,7 +44,7 @@ size_t gs::effect_technique::count_passes()
 gs::effect_pass gs::effect_technique::get_pass(size_t idx)
 {
 	if (idx >= get()->passes.num) {
-		throw std::out_of_range("Index is out of range.");
+		return nullptr;
 	}
 
 	return gs::effect_pass(get()->passes.array + idx, this);
@@ -58,7 +58,7 @@ gs::effect_pass gs::effect_technique::get_pass(std::string name)
 			return gs::effect_pass(ptr, this);
 	}
 
-	throw std::invalid_argument("Pass with given name does not exist.");
+	return nullptr;
 }
 
 bool gs::effect_technique::has_pass(std::string name)
