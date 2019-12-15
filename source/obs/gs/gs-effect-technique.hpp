@@ -23,10 +23,20 @@
 #include <string>
 #include "gs-effect-pass.hpp"
 
+// OBS
+extern "C" {
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#endif
 #include <graphics/graphics.h>
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+}
 
 namespace gs {
-	class effect_technique : protected std::shared_ptr<gs_technique_t> {
+	class effect_technique : public std::shared_ptr<gs_technique_t> {
 		std::shared_ptr<gs_effect_t>* _parent;
 
 		public:
@@ -35,10 +45,9 @@ namespace gs {
 
 		std::string name();
 
-		size_t count_passes();
+		size_t          count_passes();
 		gs::effect_pass get_pass(size_t idx);
 		gs::effect_pass get_pass(std::string name);
-		bool has_pass(std::string name);
-
+		bool            has_pass(std::string name);
 	};
 } // namespace gs

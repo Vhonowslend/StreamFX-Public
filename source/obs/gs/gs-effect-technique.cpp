@@ -63,10 +63,7 @@ gs::effect_pass gs::effect_technique::get_pass(std::string name)
 
 bool gs::effect_technique::has_pass(std::string name)
 {
-	for (size_t idx = 0; idx < get()->passes.num; idx++) {
-		auto ptr = get()->passes.array + idx;
-		if (strcmp(ptr->name, name.c_str()) == 0)
-			return true;
-	}
+	if (get_pass(name) != nullptr)
+		return true;
 	return false;
 }

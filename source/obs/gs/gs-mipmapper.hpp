@@ -37,7 +37,7 @@ namespace gs {
 	class mipmapper {
 		std::unique_ptr<gs::vertex_buffer> _vb;
 		std::unique_ptr<gs::rendertarget>  _rt;
-		std::unique_ptr<gs::effect>        _effect;
+		gs::effect                         _effect;
 
 		public:
 		enum class generator : uint8_t {

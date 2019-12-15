@@ -34,8 +34,7 @@
 #pragma warning(pop)
 #endif
 
-//#define OBS_LOAD_EFFECT_FILE
-#define MAX_EFFECT_SIZE 32 * 1024 * 1024;
+#define MAX_EFFECT_SIZE 32 * 1024 * 1024
 
 static std::string load_file_as_code(std::filesystem::path file)
 {

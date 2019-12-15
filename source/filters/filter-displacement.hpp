@@ -38,7 +38,7 @@
 namespace filter {
 	namespace displacement {
 		class displacement_instance : public obs::source_instance {
-			std::shared_ptr<gs::effect> _effect;
+			gs::effect _effect;
 
 			// Displacement Map
 			std::shared_ptr<gs::texture> _texture;

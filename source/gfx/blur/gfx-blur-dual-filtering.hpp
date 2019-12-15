@@ -28,13 +28,13 @@
 namespace gfx {
 	namespace blur {
 		class dual_filtering_data {
-			std::shared_ptr<::gs::effect> _effect;
+			gs::effect _effect;
 
 			public:
 			dual_filtering_data();
 			virtual ~dual_filtering_data();
 
-			std::shared_ptr<::gs::effect> get_effect();
+			gs::effect get_effect();
 		};
 
 		class dual_filtering_factory : public ::gfx::blur::ifactory {

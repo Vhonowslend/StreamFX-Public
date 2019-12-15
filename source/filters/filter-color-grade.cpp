@@ -216,32 +216,20 @@ void filter::color_grade::color_grade_instance::video_render(gs_effect_t* effect
 			gs_enable_stencil_write(false);
 			gs_ortho(0, static_cast<float_t>(width), 0, static_cast<float_t>(height), -1., 1.);
 
-			if (_effect->has_parameter("image"))
-				_effect->get_parameter("image")->set_texture(_tex_source);
-			if (_effect->has_parameter("pLift"))
-				_effect->get_parameter("pLift")->set_float4(_lift);
-			if (_effect->has_parameter("pGamma"))
-				_effect->get_parameter("pGamma")->set_float4(_gamma);
-			if (_effect->has_parameter("pGain"))
-				_effect->get_parameter("pGain")->set_float4(_gain);
-			if (_effect->has_parameter("pOffset"))
-				_effect->get_parameter("pOffset")->set_float4(_offset);
-			if (_effect->has_parameter("pTintDetection"))
-				_effect->get_parameter("pTintDetection")->set_int(static_cast<int32_t>(_tint_detection));
-			if (_effect->has_parameter("pTintMode"))
-				_effect->get_parameter("pTintMode")->set_int(static_cast<int32_t>(_tint_luma));
-			if (_effect->has_parameter("pTintExponent"))
-				_effect->get_parameter("pTintExponent")->set_float(_tint_exponent);
-			if (_effect->has_parameter("pTintLow"))
-				_effect->get_parameter("pTintLow")->set_float3(_tint_low);
-			if (_effect->has_parameter("pTintMid"))
-				_effect->get_parameter("pTintMid")->set_float3(_tint_mid);
-			if (_effect->has_parameter("pTintHig"))
-				_effect->get_parameter("pTintHig")->set_float3(_tint_hig);
-			if (_effect->has_parameter("pCorrection"))
-				_effect->get_parameter("pCorrection")->set_float4(_correction);
+			_effect.get_parameter("image").set_texture(_tex_source);
+			_effect.get_parameter("pLift").set_float4(_lift);
+			_effect.get_parameter("pGamma").set_float4(_gamma);
+			_effect.get_parameter("pGain").set_float4(_gain);
+			_effect.get_parameter("pOffset").set_float4(_offset);
+			_effect.get_parameter("pTintDetection").set_int(static_cast<int32_t>(_tint_detection));
+			_effect.get_parameter("pTintMode").set_int(static_cast<int32_t>(_tint_luma));
+			_effect.get_parameter("pTintExponent").set_float(_tint_exponent);
+			_effect.get_parameter("pTintLow").set_float3(_tint_low);
+			_effect.get_parameter("pTintMid").set_float3(_tint_mid);
+			_effect.get_parameter("pTintHig").set_float3(_tint_hig);
+			_effect.get_parameter("pCorrection").set_float4(_correction);
 
-			while (gs_effect_loop(_effect->get_object(), "Draw")) {
+			while (gs_effect_loop(_effect.get_object(), "Draw")) {
 				gs_draw_sprite(nullptr, 0, width, height);
 			}
 
@@ -387,8 +375,8 @@ obs_properties_t* filter::color_grade::color_grade_factory::get_properties2(colo
 										0.01);
 		obs_properties_add_float_slider(grp, ST_TINT_(TONE_HIGH, GREEN), D_TRANSLATE(ST_TINT_(TONE_HIGH, GREEN)), 0,
 										1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_TINT_(TONE_HIGH, BLUE), D_TRANSLATE(ST_TINT_(TONE_HIGH, BLUE)), 0, 1000.0,
-										0.01);
+		obs_properties_add_float_slider(grp, ST_TINT_(TONE_HIGH, BLUE), D_TRANSLATE(ST_TINT_(TONE_HIGH, BLUE)), 0,
+										1000.0, 0.01);
 	}
 
 	{

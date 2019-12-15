@@ -44,7 +44,7 @@
 
 namespace filter {
 	namespace blur {
-		enum mask_type : int64_t {
+		enum class mask_type : int64_t {
 			Region,
 			Image,
 			Source,
@@ -52,7 +52,7 @@ namespace filter {
 
 		class blur_instance : public obs::source_instance {
 			// Effects
-			std::shared_ptr<gs::effect> _effect_mask;
+			gs::effect _effect_mask;
 
 			// Input
 			std::shared_ptr<gs::rendertarget> _source_rt;
@@ -118,7 +118,7 @@ namespace filter {
 			virtual void video_render(gs_effect_t* effect) override;
 
 			private:
-			bool apply_mask_parameters(std::shared_ptr<gs::effect> effect, gs_texture_t* original_texture,
+			bool apply_mask_parameters(gs::effect effect, gs_texture_t* original_texture,
 									   gs_texture_t* blurred_texture);
 		};
 

@@ -87,7 +87,7 @@ gfx::blur::gaussian_linear_data::~gaussian_linear_data()
 	_effect.reset();
 }
 
-std::shared_ptr<::gs::effect> gfx::blur::gaussian_linear_data::get_effect()
+gs::effect gfx::blur::gaussian_linear_data::get_effect()
 {
 	return _effect;
 }
@@ -293,8 +293,8 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_linear::render()
 {
 	auto gctx = gs::context();
 
-	std::shared_ptr<::gs::effect> effect = _data->get_effect();
-	auto                          kernel = _data->get_kernel(size_t(_size));
+	gs::effect effect = _data->get_effect();
+	auto       kernel = _data->get_kernel(size_t(_size));
 
 	if (!effect || ((_step_scale.first + _step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
 		return _input_texture;
@@ -317,35 +317,35 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_linear::render()
 	gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
-	effect->get_parameter("pImage")->set_texture(_input_texture);
-	effect->get_parameter("pStepScale")->set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
-	effect->get_parameter("pSize")->set_float(float_t(_size));
-	effect->get_parameter("pKernel")->set_float_array(kernel.data(), MAX_KERNEL_SIZE);
+	effect.get_parameter("pImage").set_texture(_input_texture);
+	effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
+	effect.get_parameter("pSize").set_float(float_t(_size));
+	effect.get_parameter("pKernel").set_float_array(kernel.data(), MAX_KERNEL_SIZE);
 
 	// First Pass
 	if (_step_scale.first > std::numeric_limits<double_t>::epsilon()) {
-		effect->get_parameter("pImageTexel")->set_float2(float_t(1.f / width), 0.f);
+		effect.get_parameter("pImageTexel").set_float2(float_t(1.f / width), 0.f);
 
 		{
 			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
-			while (gs_effect_loop(effect->get_object(), "Draw")) {
+			while (gs_effect_loop(effect.get_object(), "Draw")) {
 				gs_draw_sprite(nullptr, 0, 1, 1);
 			}
 		}
 
 		std::swap(_rendertarget, _rendertarget2);
-		effect->get_parameter("pImage")->set_texture(_rendertarget->get_texture());
+		effect.get_parameter("pImage").set_texture(_rendertarget->get_texture());
 	}
 
 	// Second Pass
 	if (_step_scale.second > std::numeric_limits<double_t>::epsilon()) {
-		effect->get_parameter("pImageTexel")->set_float2(0.f, float_t(1.f / height));
+		effect.get_parameter("pImageTexel").set_float2(0.f, float_t(1.f / height));
 
 		{
 			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
-			while (gs_effect_loop(effect->get_object(), "Draw")) {
+			while (gs_effect_loop(effect.get_object(), "Draw")) {
 				gs_draw_sprite(nullptr, 0, 1, 1);
 			}
 		}
@@ -386,8 +386,8 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_linear_directional::render()
 {
 	auto gctx = gs::context();
 
-	std::shared_ptr<::gs::effect> effect = _data->get_effect();
-	auto                          kernel = _data->get_kernel(size_t(_size));
+	gs::effect effect = _data->get_effect();
+	auto       kernel = _data->get_kernel(size_t(_size));
 
 	if (!effect || ((_step_scale.first + _step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
 		return _input_texture;
@@ -410,18 +410,18 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_linear_directional::render()
 	gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
-	effect->get_parameter("pImage")->set_texture(_input_texture);
-	effect->get_parameter("pImageTexel")
-		->set_float2(float_t(1.f / width * cos(_angle)), float_t(1.f / height * sin(_angle)));
-	effect->get_parameter("pStepScale")->set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
-	effect->get_parameter("pSize")->set_float(float_t(_size));
-	effect->get_parameter("pKernel")->set_float_array(kernel.data(), MAX_KERNEL_SIZE);
+	effect.get_parameter("pImage").set_texture(_input_texture);
+	effect.get_parameter("pImageTexel")
+		.set_float2(float_t(1.f / width * cos(_angle)), float_t(1.f / height * sin(_angle)));
+	effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
+	effect.get_parameter("pSize").set_float(float_t(_size));
+	effect.get_parameter("pKernel").set_float_array(kernel.data(), MAX_KERNEL_SIZE);
 
 	// First Pass
 	{
 		auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
 		gs_ortho(0, 1., 0, 1., 0, 1.);
-		while (gs_effect_loop(effect->get_object(), "Draw")) {
+		while (gs_effect_loop(effect.get_object(), "Draw")) {
 			gs_draw_sprite(nullptr, 0, 1, 1);
 		}
 	}

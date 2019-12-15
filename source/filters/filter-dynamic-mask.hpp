@@ -47,7 +47,7 @@ namespace filter {
 		class dynamic_mask_instance : public obs::source_instance {
 			std::map<std::tuple<channel, channel, std::string>, std::string> _translation_map;
 
-			std::shared_ptr<gs::effect> _effect;
+			gs::effect _effect;
 
 			bool                              _have_filter_texture;
 			std::shared_ptr<gs::rendertarget> _filter_rt;

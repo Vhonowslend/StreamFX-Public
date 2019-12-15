@@ -27,13 +27,13 @@
 namespace gfx {
 	namespace blur {
 		class box_data {
-			std::shared_ptr<::gs::effect> _effect;
+			gs::effect _effect;
 
 			public:
 			box_data();
 			virtual ~box_data();
 
-			std::shared_ptr<::gs::effect> get_effect();
+			gs::effect get_effect();
 		};
 
 		class box_factory : public ::gfx::blur::ifactory {

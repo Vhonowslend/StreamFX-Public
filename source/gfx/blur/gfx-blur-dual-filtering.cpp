@@ -56,7 +56,7 @@ gfx::blur::dual_filtering_data::dual_filtering_data()
 	auto gctx = gs::context();
 	try {
 		char* file = obs_module_file("effects/blur/dual-filtering.effect");
-		_effect    = std::make_shared<::gs::effect>(file);
+		_effect    = gs::effect::create(file);
 		bfree(file);
 	} catch (...) {
 		P_LOG_ERROR("<gfx::blur::box_linear> Failed to load _effect.");
@@ -69,7 +69,7 @@ gfx::blur::dual_filtering_data::~dual_filtering_data()
 	_effect.reset();
 }
 
-std::shared_ptr<::gs::effect> gfx::blur::dual_filtering_data::get_effect()
+gs::effect gfx::blur::dual_filtering_data::get_effect()
 {
 	return _effect;
 }
@@ -264,15 +264,15 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 		}
 
 		// Apply
-		effect->get_parameter("pImage")->set_texture(tex_cur);
-		effect->get_parameter("pImageSize")->set_float2(float_t(width), float_t(height));
-		effect->get_parameter("pImageTexel")->set_float2(1.0f / width, 1.0f / height);
-		effect->get_parameter("pImageHalfTexel")->set_float2(0.5f / width, 0.5f / height);
+		effect.get_parameter("pImage").set_texture(tex_cur);
+		effect.get_parameter("pImageSize").set_float2(float_t(width), float_t(height));
+		effect.get_parameter("pImageTexel").set_float2(1.0f / width, 1.0f / height);
+		effect.get_parameter("pImageHalfTexel").set_float2(0.5f / width, 0.5f / height);
 
 		{
 			auto op = _rendertargets[n]->render(width, height);
 			gs_ortho(0., 1., 0., 1., 0., 1.);
-			while (gs_effect_loop(effect->get_object(), "Down")) {
+			while (gs_effect_loop(effect.get_object(), "Down")) {
 				gs_draw_sprite(tex_cur->get_object(), 0, 1, 1);
 			}
 		}
@@ -288,10 +288,10 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 		uint32_t height = tex_cur->get_height();
 
 		// Apply
-		effect->get_parameter("pImage")->set_texture(tex_cur);
-		effect->get_parameter("pImageSize")->set_float2(float_t(width), float_t(height));
-		effect->get_parameter("pImageTexel")->set_float2(1.0f / width, 1.0f / height);
-		effect->get_parameter("pImageHalfTexel")->set_float2(0.5f / width, 0.5f / height);
+		effect.get_parameter("pImage").set_texture(tex_cur);
+		effect.get_parameter("pImageSize").set_float2(float_t(width), float_t(height));
+		effect.get_parameter("pImageTexel").set_float2(1.0f / width, 1.0f / height);
+		effect.get_parameter("pImageHalfTexel").set_float2(0.5f / width, 0.5f / height);
 
 		// Increase Size
 		width *= 2;
@@ -300,7 +300,7 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 		{
 			auto op = _rendertargets[n - 1]->render(width, height);
 			gs_ortho(0., 1., 0., 1., 0., 1.);
-			while (gs_effect_loop(effect->get_object(), "Up")) {
+			while (gs_effect_loop(effect.get_object(), "Up")) {
 				gs_draw_sprite(tex_cur->get_object(), 0, 1, 1);
 			}
 		}

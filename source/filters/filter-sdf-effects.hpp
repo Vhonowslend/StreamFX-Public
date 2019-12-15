@@ -40,8 +40,8 @@
 namespace filter {
 	namespace sdf_effects {
 		class sdf_effects_instance : public obs::source_instance {			
-			std::shared_ptr<gs::effect> _sdf_producer_effect;
-			std::shared_ptr<gs::effect> _sdf_consumer_effect;
+			gs::effect _sdf_producer_effect;
+			gs::effect _sdf_consumer_effect;
 
 			// Input
 			std::shared_ptr<gs::rendertarget> _source_rt;

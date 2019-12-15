@@ -42,7 +42,6 @@ filter::displacement::displacement_instance::displacement_instance(obs_data_t* d
 
 filter::displacement::displacement_instance::~displacement_instance()
 {
-	_effect.reset();
 	_texture.reset();
 }
 
@@ -78,7 +77,7 @@ void filter::displacement::displacement_instance::update(obs_data_t* settings)
 	std::string new_file = obs_data_get_string(settings, ST_FILE);
 	if (new_file != _texture_file) {
 		try {
-			_texture = std::make_shared<gs::texture>(new_file);
+			_texture      = std::make_shared<gs::texture>(new_file);
 			_texture_file = new_file;
 		} catch (...) {
 			_texture.reset();
@@ -103,15 +102,15 @@ void filter::displacement::displacement_instance::video_render(gs_effect_t*)
 		obs_source_skip_video_filter(_self);
 		return;
 	}
-	
-	_effect->get_parameter("image_size")->set_float2(static_cast<float_t>(_width), static_cast<float_t>(_height));
-	_effect->get_parameter("image_inverse_size")
-		->set_float2(static_cast<float_t>(1.0 / _width), static_cast<float_t>(1.0 / _height));
-	_effect->get_parameter("normal")->set_texture(_texture->get_object());
-	_effect->get_parameter("scale")->set_float2(_scale[0], _scale[1]);
-	_effect->get_parameter("scale_type")->set_float(_scale_type);
 
-	obs_source_process_filter_end(_self, _effect->get_object(), _width, _height);
+	_effect.get_parameter("image_size").set_float2(static_cast<float_t>(_width), static_cast<float_t>(_height));
+	_effect.get_parameter("image_inverse_size")
+		.set_float2(static_cast<float_t>(1.0 / _width), static_cast<float_t>(1.0 / _height));
+	_effect.get_parameter("normal").set_texture(_texture->get_object());
+	_effect.get_parameter("scale").set_float2(_scale[0], _scale[1]);
+	_effect.get_parameter("scale_type").set_float(_scale_type);
+
+	obs_source_process_filter_end(_self, _effect.get_object(), _width, _height);
 }
 
 std::string filter::displacement::displacement_instance::get_file()

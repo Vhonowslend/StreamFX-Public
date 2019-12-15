@@ -26,14 +26,14 @@
 namespace gfx {
 	namespace blur {
 		class gaussian_data {
-			std::shared_ptr<::gs::effect>     _effect;
+			gs::effect                        _effect;
 			std::vector<std::vector<float_t>> _kernels;
 
 			public:
 			gaussian_data();
 			virtual ~gaussian_data();
 
-			std::shared_ptr<::gs::effect> get_effect();
+			gs::effect get_effect();
 
 			std::vector<float_t> const& get_kernel(size_t width);
 		};

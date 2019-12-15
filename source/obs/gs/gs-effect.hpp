@@ -26,9 +26,22 @@
 #include "gs-effect-parameter.hpp"
 #include "gs-effect-technique.hpp"
 
+// OBS
+extern "C" {
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#endif
+#include <graphics/graphics.h>
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+}
+
 namespace gs {
-	class effect : private std::shared_ptr<gs_effect_t> {
+	class effect : public std::shared_ptr<gs_effect_t> {
 		public:
+		effect() {};
 		effect(std::string code, std::string name);
 		effect(std::filesystem::path file);
 		~effect();

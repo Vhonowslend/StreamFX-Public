@@ -44,7 +44,7 @@ namespace filter {
 		};
 
 		class color_grade_instance : public obs::source_instance {
-			std::shared_ptr<gs::effect> _effect;
+			gs::effect _effect;
 
 			// Source
 			std::unique_ptr<gs::rendertarget> _rt_source;

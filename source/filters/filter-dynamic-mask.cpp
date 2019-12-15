@@ -51,7 +51,7 @@ static std::pair<filter::dynamic_mask::channel, const char*> channel_translation
 
 filter::dynamic_mask::dynamic_mask_instance::dynamic_mask_instance(obs_data_t* settings, obs_source_t* self)
 	: obs::source_instance(settings, self), _have_filter_texture(false), _have_input_texture(false),
-	  _have_final_texture(false), _precalc()
+	  _have_final_texture(false), _precalc(), _effect()
 {
 	this->_filter_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	this->_final_rt  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
@@ -61,7 +61,7 @@ filter::dynamic_mask::dynamic_mask_instance::dynamic_mask_instance(obs_data_t* s
 		try {
 			this->_effect = gs::effect::create(file);
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Loading channel mask _effect failed with error(s):\n%s", ex.what());
+			P_LOG_ERROR("Loading channel mask effect failed with error(s):\n%s", ex.what());
 		}
 		assert(this->_effect != nullptr);
 		bfree(file);
@@ -287,14 +287,14 @@ void filter::dynamic_mask::dynamic_mask_instance::video_render(gs_effect_t* in_e
 				gs_stencil_op(GS_STENCIL_BOTH, GS_KEEP, GS_KEEP, GS_KEEP);
 				gs_ortho(0, (float)width, 0, (float)height, -1., 1.);
 
-				this->_effect->get_parameter("pMaskInputA")->set_texture(this->_filter_texture);
-				this->_effect->get_parameter("pMaskInputB")->set_texture(this->_input_texture);
+				_effect.get_parameter("pMaskInputA").set_texture(this->_filter_texture);
+				_effect.get_parameter("pMaskInputB").set_texture(this->_input_texture);
 
-				this->_effect->get_parameter("pMaskBase")->set_float4(this->_precalc.base);
-				this->_effect->get_parameter("pMaskMatrix")->set_matrix(this->_precalc.matrix);
-				this->_effect->get_parameter("pMaskMultiplier")->set_float4(this->_precalc.scale);
+				_effect.get_parameter("pMaskBase").set_float4(this->_precalc.base);
+				_effect.get_parameter("pMaskMatrix").set_matrix(this->_precalc.matrix);
+				_effect.get_parameter("pMaskMultiplier").set_float4(this->_precalc.scale);
 
-				while (gs_effect_loop(this->_effect->get_object(), "Mask")) {
+				while (gs_effect_loop(_effect.get(), "Mask")) {
 					gs_draw_sprite(0, 0, width, height);
 				}
 

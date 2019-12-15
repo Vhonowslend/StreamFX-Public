@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "gfx/gfx-effect-source.hpp"
+#include "gfx/shader/gfx-shader.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "plugin.hpp"
 
