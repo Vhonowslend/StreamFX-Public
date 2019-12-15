@@ -26,7 +26,7 @@
 #include <graphics/graphics.h>
 
 namespace gs {
-	class effect_technique : public std::shared_ptr<gs_technique_t> {
+	class effect_technique : protected std::shared_ptr<gs_technique_t> {
 		std::shared_ptr<gs_effect_t>* _parent;
 
 		public:

@@ -25,7 +25,7 @@
 #include <graphics/graphics.h>
 
 namespace gs {
-	class effect_pass : public std::shared_ptr<gs_epass_t> {
+	class effect_pass : protected std::shared_ptr<gs_epass_t> {
 		std::shared_ptr<gs_technique_t>* _parent;
 
 		public:
