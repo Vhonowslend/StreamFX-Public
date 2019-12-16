@@ -142,20 +142,12 @@ source::mirror::mirror_instance::~mirror_instance()
 
 uint32_t source::mirror::mirror_instance::get_width()
 {
-	if (!_source || !_source_item || !(obs_source_get_output_flags(_source->get()) & OBS_SOURCE_VIDEO))
-		return 0;
-	if (_rescale_enabled && _rescale_width > 0 && !_rescale_keep_orig_size)
-		return _rescale_width;
-	return _source->width();
+	return _source_size.first;
 }
 
 uint32_t source::mirror::mirror_instance::get_height()
 {
-	if (!_source || !_source_item || !(obs_source_get_output_flags(_source->get()) & OBS_SOURCE_VIDEO))
-		return 0;
-	if (_rescale_enabled && _rescale_height > 0 && !_rescale_keep_orig_size)
-		return _rescale_height;
-	return _source->height();
+	return _source_size.second;
 }
 
 static void convert_config(obs_data_t* data)
@@ -242,21 +234,28 @@ void source::mirror::mirror_instance::save(obs_data_t* data)
 
 void source::mirror::mirror_instance::video_tick(float time)
 {
+	if (_source && ((obs_source_get_output_flags(_source->get()) & OBS_SOURCE_VIDEO) != 0)) {
+		if (_rescale_keep_orig_size || !_rescale_enabled) {
+			_source_size.first  = _source->width();
+			_source_size.second = _source->height();
+		} else {
+			_source_size.first  = _rescale_width;
+			_source_size.second = _rescale_height;
+		}
+	} else {
+		_source_size.first  = 0;
+		_source_size.second = 0;
+	}
+
 	if (_source_item && ((obs_source_get_output_flags(_source->get()) & OBS_SOURCE_VIDEO) != 0)) {
 		obs_transform_info info;
 
-		/// Position, Rotation, Scale, Alignment
+		/// Position, Rotation, Scale, Alignment, Bounding Box
 		vec2_set(&info.pos, 0, 0);
 		info.rot = 0;
 		vec2_set(&info.scale, 1., 1.);
 		info.alignment = OBS_ALIGN_LEFT | OBS_ALIGN_TOP;
-
-		/// Bounding Box
-		if (_rescale_enabled && _rescale_keep_orig_size) {
-			vec2_set(&info.bounds, static_cast<float_t>(_rescale_width), static_cast<float_t>(_rescale_height));
-		} else {
-			vec2_set(&info.bounds, static_cast<float_t>(get_width()), static_cast<float_t>(get_height()));
-		}
+		vec2_set(&info.bounds, static_cast<float_t>(_source_size.first), static_cast<float_t>(_source_size.second));
 
 		info.bounds_alignment = _rescale_alignment;
 		info.bounds_type      = OBS_BOUNDS_STRETCH;
@@ -284,18 +283,11 @@ void source::mirror::mirror_instance::video_render(gs_effect_t* effect)
 	// Rendering depends on cached or uncached.
 	if (_cache_enabled || _rescale_enabled) {
 		if (!_cache_rendered) {
-			uint32_t width  = get_width();
-			uint32_t height = get_height();
-			if (_rescale_enabled) {
-				width  = _rescale_width;
-				height = _rescale_height;
-			}
-
-			if (!width || !height)
+			if (!_source_size.first || !_source_size.second)
 				return;
 
 			try {
-				_cache_texture  = this->_cache_renderer->render(width, height);
+				_cache_texture  = this->_cache_renderer->render(_source_size.first, _source_size.second);
 				_cache_rendered = true;
 			} catch (...) {
 			}
@@ -310,7 +302,7 @@ void source::mirror::mirror_instance::video_render(gs_effect_t* effect)
 		GS_DEBUG_MARKER_BEGIN(GS_DEBUG_COLOR_ITEM_TEXTURE, "render_cache");
 		gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), _cache_texture->get_object());
 		while (gs_effect_loop(effect, "Draw")) {
-			gs_draw_sprite(nullptr, 0, get_width(), get_height());
+			gs_draw_sprite(nullptr, 0, _source_size.first, _source_size.second);
 		}
 		GS_DEBUG_MARKER_END();
 	} else {
@@ -320,7 +312,8 @@ void source::mirror::mirror_instance::video_render(gs_effect_t* effect)
 	GS_DEBUG_MARKER_END();
 }
 
-void source::mirror::mirror_instance::audio_output_cb() noexcept try {
+void source::mirror::mirror_instance::audio_output_cb() noexcept
+try {
 	std::unique_lock<std::mutex> ulock(this->_audio_lock_outputter);
 
 	while (!this->_audio_kill_thread) {
@@ -359,9 +352,9 @@ void source::mirror::mirror_instance::audio_output_cb() noexcept try {
 
 void source::mirror::mirror_instance::enum_active_sources(obs_source_enum_proc_t enum_callback, void* param)
 {
-	if (_scene) {
+	/*	if (_scene) {
 		enum_callback(_self, _scene.get(), param);
-	}
+	}*/
 	if (_source) {
 		enum_callback(_self, _source->get(), param);
 	}
@@ -369,9 +362,9 @@ void source::mirror::mirror_instance::enum_active_sources(obs_source_enum_proc_t
 
 void source::mirror::mirror_instance::enum_all_sources(obs_source_enum_proc_t enum_callback, void* param)
 {
-	if (_scene) {
+	/*	if (_scene) {
 		enum_callback(_self, _scene.get(), param);
-	}
+	}*/
 	if (_source) {
 		enum_callback(_self, _source->get(), param);
 	}
@@ -479,7 +472,8 @@ void source::mirror::mirror_factory::get_defaults2(obs_data_t* data)
 	obs_data_set_default_int(data, ST_SCALING_ALIGNMENT, OBS_ALIGN_CENTER);
 }
 
-static bool modified_properties(obs_properties_t* pr, obs_property_t* p, obs_data_t* data) noexcept try {
+static bool modified_properties(obs_properties_t* pr, obs_property_t* p, obs_data_t* data) noexcept
+try {
 	if (obs_properties_get(pr, ST_SOURCE) == p) {
 		obs_source_t* target = obs_get_source_by_name(obs_data_get_string(data, ST_SOURCE));
 		if (target) {

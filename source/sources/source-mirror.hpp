@@ -53,6 +53,9 @@ namespace source {
 			std::shared_ptr<obs::source> _source;
 			std::string                  _source_name;
 
+			// Cached Data
+			std::pair<uint32_t, uint32_t> _source_size;
+
 			// Audio
 			bool                                           _audio_enabled;
 			speaker_layout                                 _audio_layout;
