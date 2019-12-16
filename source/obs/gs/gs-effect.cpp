@@ -126,7 +126,7 @@ gs::effect_parameter gs::effect::get_parameter(size_t idx)
 
 gs::effect_parameter gs::effect::get_parameter(std::string name)
 {
-	for (size_t idx = 0; idx < count_techniques(); idx++) {
+	for (size_t idx = 0; idx < count_parameters(); idx++) {
 		auto ptr = get()->params.array + idx;
 		if (strcmp(ptr->name, name.c_str()) == 0) {
 			return gs::effect_parameter(ptr, this);
