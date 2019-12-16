@@ -66,7 +66,7 @@ gs::effect::effect(std::string code, std::string name)
 						   : std::runtime_error("Unknown error during effect compile.");
 	}
 
-	reset(effect);
+	reset(effect, [](gs_effect_t* ptr) { gs_effect_destroy(ptr); });
 }
 
 gs::effect::effect(std::filesystem::path file) : effect(load_file_as_code(file), file.string()) {}
@@ -74,7 +74,7 @@ gs::effect::effect(std::filesystem::path file) : effect(load_file_as_code(file),
 gs::effect::~effect()
 {
 	auto gctx = gs::context();
-	gs_effect_destroy(get());
+	reset();
 }
 
 size_t gs::effect::count_techniques()
