@@ -403,7 +403,6 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_directional::render()
 	float_t height = float_t(_input_texture->get_height());
 
 	// Setup
-	obs_enter_graphics();
 	gs_set_cull_mode(GS_NEITHER);
 	gs_enable_color(true, true, true, true);
 	gs_enable_depth_test(false);
