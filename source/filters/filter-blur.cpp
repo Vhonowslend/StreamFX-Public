@@ -547,6 +547,7 @@ filter::blur::blur_factory::blur_factory()
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO;
 
+	set_resolution_enabled(false);
 	finish_setup();
 }
 

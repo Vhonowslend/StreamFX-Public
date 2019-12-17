@@ -120,6 +120,8 @@ source::mirror::mirror_instance::mirror_instance(obs_data_t* settings, obs_sourc
 	// Spawn Audio Thread
 	/// ToDo: Use ThreadPool for this?
 	_audio_thread = std::thread(std::bind(&source::mirror::mirror_instance::audio_output_cb, this));
+
+	update(settings);
 }
 
 source::mirror::mirror_instance::~mirror_instance()

@@ -79,8 +79,6 @@ filter::color_grade::color_grade_instance::~color_grade_instance() {}
 filter::color_grade::color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self)
 	: obs::source_instance(data, self)
 {
-	update(data);
-
 	{
 		char* file = obs_module_file("effects/color-grade.effect");
 		if (file) {
@@ -110,6 +108,8 @@ filter::color_grade::color_grade_instance::color_grade_instance(obs_data_t* data
 		}
 		_tex_grade = _rt_grade->get_texture();
 	}
+	
+	update(data);
 }
 
 float_t fix_gamma_value(double_t v)
@@ -260,7 +260,8 @@ filter::color_grade::color_grade_factory::color_grade_factory()
 	_info.id           = "obs-stream-effects-filter-color-grade";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO;
-
+	
+	set_resolution_enabled(false);
 	finish_setup();
 }
 

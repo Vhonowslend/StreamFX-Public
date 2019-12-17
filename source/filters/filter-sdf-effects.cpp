@@ -82,13 +82,12 @@ filter::sdf_effects::sdf_effects_instance::sdf_effects_instance(obs_data_t* sett
 		auto gctx        = gs::context();
 		vec4 transparent = {0};
 
-		this->_source_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-		this->_sdf_write = std::make_shared<gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
-		this->_sdf_read  = std::make_shared<gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
-		this->_output_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+		_source_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+		_sdf_write = std::make_shared<gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
+		_sdf_read  = std::make_shared<gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
+		_output_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 
-		std::shared_ptr<gs::rendertarget> initialize_rts[] = {this->_source_rt, this->_sdf_write, this->_sdf_read,
-															  this->_output_rt};
+		std::shared_ptr<gs::rendertarget> initialize_rts[] = {_source_rt, _sdf_write, _sdf_read, _output_rt};
 		for (auto rt : initialize_rts) {
 			auto op = rt->render(1, 1);
 			gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &transparent, 0, 0);
@@ -113,6 +112,7 @@ filter::sdf_effects::sdf_effects_instance::sdf_effects_instance(obs_data_t* sett
 			bfree(path);
 		}
 	}
+
 	update(settings);
 }
 
@@ -121,7 +121,7 @@ filter::sdf_effects::sdf_effects_instance::~sdf_effects_instance() {}
 void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 {
 	{
-		this->_outer_shadow =
+		_outer_shadow =
 			obs_data_get_bool(data, ST_SHADOW_OUTER)
 			&& (obs_data_get_double(data, ST_SHADOW_OUTER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
@@ -133,20 +133,20 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 				uint8_t  channel[4];
 				cs       c;
 			};
-			color                       = uint32_t(obs_data_get_int(data, ST_SHADOW_OUTER_COLOR));
-			this->_outer_shadow_color.x = float_t(c.r / 255.0);
-			this->_outer_shadow_color.y = float_t(c.g / 255.0);
-			this->_outer_shadow_color.z = float_t(c.b / 255.0);
-			this->_outer_shadow_color.w = float_t(obs_data_get_double(data, ST_SHADOW_OUTER_ALPHA) / 100.0);
+			color                 = uint32_t(obs_data_get_int(data, ST_SHADOW_OUTER_COLOR));
+			_outer_shadow_color.x = float_t(c.r / 255.0);
+			_outer_shadow_color.y = float_t(c.g / 255.0);
+			_outer_shadow_color.z = float_t(c.b / 255.0);
+			_outer_shadow_color.w = float_t(obs_data_get_double(data, ST_SHADOW_OUTER_ALPHA) / 100.0);
 		}
-		this->_outer_shadow_range_min = float_t(obs_data_get_double(data, ST_SHADOW_OUTER_RANGE_MINIMUM));
-		this->_outer_shadow_range_max = float_t(obs_data_get_double(data, ST_SHADOW_OUTER_RANGE_MAXIMUM));
-		this->_outer_shadow_offset_x  = float_t(obs_data_get_double(data, ST_SHADOW_OUTER_OFFSET_X));
-		this->_outer_shadow_offset_y  = float_t(obs_data_get_double(data, ST_SHADOW_OUTER_OFFSET_Y));
+		_outer_shadow_range_min = float_t(obs_data_get_double(data, ST_SHADOW_OUTER_RANGE_MINIMUM));
+		_outer_shadow_range_max = float_t(obs_data_get_double(data, ST_SHADOW_OUTER_RANGE_MAXIMUM));
+		_outer_shadow_offset_x  = float_t(obs_data_get_double(data, ST_SHADOW_OUTER_OFFSET_X));
+		_outer_shadow_offset_y  = float_t(obs_data_get_double(data, ST_SHADOW_OUTER_OFFSET_Y));
 	}
 
 	{
-		this->_inner_shadow =
+		_inner_shadow =
 			obs_data_get_bool(data, ST_SHADOW_INNER)
 			&& (obs_data_get_double(data, ST_SHADOW_INNER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
@@ -158,22 +158,21 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 				uint8_t  channel[4];
 				cs       c;
 			};
-			color                       = uint32_t(obs_data_get_int(data, ST_SHADOW_INNER_COLOR));
-			this->_inner_shadow_color.x = float_t(c.r / 255.0);
-			this->_inner_shadow_color.y = float_t(c.g / 255.0);
-			this->_inner_shadow_color.z = float_t(c.b / 255.0);
-			this->_inner_shadow_color.w = float_t(obs_data_get_double(data, ST_SHADOW_INNER_ALPHA) / 100.0);
+			color                 = uint32_t(obs_data_get_int(data, ST_SHADOW_INNER_COLOR));
+			_inner_shadow_color.x = float_t(c.r / 255.0);
+			_inner_shadow_color.y = float_t(c.g / 255.0);
+			_inner_shadow_color.z = float_t(c.b / 255.0);
+			_inner_shadow_color.w = float_t(obs_data_get_double(data, ST_SHADOW_INNER_ALPHA) / 100.0);
 		}
-		this->_inner_shadow_range_min = float_t(obs_data_get_double(data, ST_SHADOW_INNER_RANGE_MINIMUM));
-		this->_inner_shadow_range_max = float_t(obs_data_get_double(data, ST_SHADOW_INNER_RANGE_MAXIMUM));
-		this->_inner_shadow_offset_x  = float_t(obs_data_get_double(data, ST_SHADOW_INNER_OFFSET_X));
-		this->_inner_shadow_offset_y  = float_t(obs_data_get_double(data, ST_SHADOW_INNER_OFFSET_Y));
+		_inner_shadow_range_min = float_t(obs_data_get_double(data, ST_SHADOW_INNER_RANGE_MINIMUM));
+		_inner_shadow_range_max = float_t(obs_data_get_double(data, ST_SHADOW_INNER_RANGE_MAXIMUM));
+		_inner_shadow_offset_x  = float_t(obs_data_get_double(data, ST_SHADOW_INNER_OFFSET_X));
+		_inner_shadow_offset_y  = float_t(obs_data_get_double(data, ST_SHADOW_INNER_OFFSET_Y));
 	}
 
 	{
-		this->_outer_glow =
-			obs_data_get_bool(data, ST_GLOW_OUTER)
-			&& (obs_data_get_double(data, ST_GLOW_OUTER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
+		_outer_glow = obs_data_get_bool(data, ST_GLOW_OUTER)
+					  && (obs_data_get_double(data, ST_GLOW_OUTER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			struct cs {
 				uint8_t r, g, b, a;
@@ -183,24 +182,23 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 				uint8_t  channel[4];
 				cs       c;
 			};
-			color                     = uint32_t(obs_data_get_int(data, ST_GLOW_OUTER_COLOR));
-			this->_outer_glow_color.x = float_t(c.r / 255.0);
-			this->_outer_glow_color.y = float_t(c.g / 255.0);
-			this->_outer_glow_color.z = float_t(c.b / 255.0);
-			this->_outer_glow_color.w = float_t(obs_data_get_double(data, ST_GLOW_OUTER_ALPHA) / 100.0);
+			color               = uint32_t(obs_data_get_int(data, ST_GLOW_OUTER_COLOR));
+			_outer_glow_color.x = float_t(c.r / 255.0);
+			_outer_glow_color.y = float_t(c.g / 255.0);
+			_outer_glow_color.z = float_t(c.b / 255.0);
+			_outer_glow_color.w = float_t(obs_data_get_double(data, ST_GLOW_OUTER_ALPHA) / 100.0);
 		}
-		this->_outer_glow_width         = float_t(obs_data_get_double(data, ST_GLOW_OUTER_WIDTH));
-		this->_outer_glow_sharpness     = float_t(obs_data_get_double(data, ST_GLOW_OUTER_SHARPNESS) / 100.0);
-		this->_outer_glow_sharpness_inv = float_t(1.0f / (1.0f - this->_outer_glow_sharpness));
-		if (this->_outer_glow_sharpness >= (1.0f - std::numeric_limits<float_t>::epsilon())) {
-			this->_outer_glow_sharpness = 1.0f - std::numeric_limits<float_t>::epsilon();
+		_outer_glow_width         = float_t(obs_data_get_double(data, ST_GLOW_OUTER_WIDTH));
+		_outer_glow_sharpness     = float_t(obs_data_get_double(data, ST_GLOW_OUTER_SHARPNESS) / 100.0);
+		_outer_glow_sharpness_inv = float_t(1.0f / (1.0f - _outer_glow_sharpness));
+		if (_outer_glow_sharpness >= (1.0f - std::numeric_limits<float_t>::epsilon())) {
+			_outer_glow_sharpness = 1.0f - std::numeric_limits<float_t>::epsilon();
 		}
 	}
 
 	{
-		this->_inner_glow =
-			obs_data_get_bool(data, ST_GLOW_INNER)
-			&& (obs_data_get_double(data, ST_GLOW_INNER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
+		_inner_glow = obs_data_get_bool(data, ST_GLOW_INNER)
+					  && (obs_data_get_double(data, ST_GLOW_INNER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			struct cs {
 				uint8_t r, g, b, a;
@@ -210,23 +208,23 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 				uint8_t  channel[4];
 				cs       c;
 			};
-			color                     = uint32_t(obs_data_get_int(data, ST_GLOW_INNER_COLOR));
-			this->_inner_glow_color.x = float_t(c.r / 255.0);
-			this->_inner_glow_color.y = float_t(c.g / 255.0);
-			this->_inner_glow_color.z = float_t(c.b / 255.0);
-			this->_inner_glow_color.w = float_t(obs_data_get_double(data, ST_GLOW_INNER_ALPHA) / 100.0);
+			color               = uint32_t(obs_data_get_int(data, ST_GLOW_INNER_COLOR));
+			_inner_glow_color.x = float_t(c.r / 255.0);
+			_inner_glow_color.y = float_t(c.g / 255.0);
+			_inner_glow_color.z = float_t(c.b / 255.0);
+			_inner_glow_color.w = float_t(obs_data_get_double(data, ST_GLOW_INNER_ALPHA) / 100.0);
 		}
-		this->_inner_glow_width         = float_t(obs_data_get_double(data, ST_GLOW_INNER_WIDTH));
-		this->_inner_glow_sharpness     = float_t(obs_data_get_double(data, ST_GLOW_INNER_SHARPNESS) / 100.0);
-		this->_inner_glow_sharpness_inv = float_t(1.0f / (1.0f - this->_inner_glow_sharpness));
-		if (this->_inner_glow_sharpness >= (1.0f - std::numeric_limits<float_t>::epsilon())) {
-			this->_inner_glow_sharpness = 1.0f - std::numeric_limits<float_t>::epsilon();
+		_inner_glow_width         = float_t(obs_data_get_double(data, ST_GLOW_INNER_WIDTH));
+		_inner_glow_sharpness     = float_t(obs_data_get_double(data, ST_GLOW_INNER_SHARPNESS) / 100.0);
+		_inner_glow_sharpness_inv = float_t(1.0f / (1.0f - _inner_glow_sharpness));
+		if (_inner_glow_sharpness >= (1.0f - std::numeric_limits<float_t>::epsilon())) {
+			_inner_glow_sharpness = 1.0f - std::numeric_limits<float_t>::epsilon();
 		}
 	}
 
 	{
-		this->_outline = obs_data_get_bool(data, ST_OUTLINE)
-						 && (obs_data_get_double(data, ST_OUTLINE_ALPHA) >= std::numeric_limits<double_t>::epsilon());
+		_outline = obs_data_get_bool(data, ST_OUTLINE)
+				   && (obs_data_get_double(data, ST_OUTLINE_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			struct cs {
 				uint8_t r, g, b, a;
@@ -236,23 +234,23 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 				uint8_t  channel[4];
 				cs       c;
 			};
-			color                  = uint32_t(obs_data_get_int(data, ST_OUTLINE_COLOR));
-			this->_outline_color.x = float_t(c.r / 255.0);
-			this->_outline_color.y = float_t(c.g / 255.0);
-			this->_outline_color.z = float_t(c.b / 255.0);
-			this->_outline_color.w = float_t(obs_data_get_double(data, ST_OUTLINE_ALPHA) / 100.0);
+			color            = uint32_t(obs_data_get_int(data, ST_OUTLINE_COLOR));
+			_outline_color.x = float_t(c.r / 255.0);
+			_outline_color.y = float_t(c.g / 255.0);
+			_outline_color.z = float_t(c.b / 255.0);
+			_outline_color.w = float_t(obs_data_get_double(data, ST_OUTLINE_ALPHA) / 100.0);
 		}
-		this->_outline_width         = float_t(obs_data_get_double(data, ST_OUTLINE_WIDTH));
-		this->_outline_offset        = float_t(obs_data_get_double(data, ST_OUTLINE_OFFSET));
-		this->_outline_sharpness     = float_t(obs_data_get_double(data, ST_OUTLINE_SHARPNESS) / 100.0);
-		this->_outline_sharpness_inv = float_t(1.0f / (1.0f - this->_outline_sharpness));
-		if (this->_outline_sharpness >= (1.0f - std::numeric_limits<float_t>::epsilon())) {
-			this->_outline_sharpness = 1.0f - std::numeric_limits<float_t>::epsilon();
+		_outline_width         = float_t(obs_data_get_double(data, ST_OUTLINE_WIDTH));
+		_outline_offset        = float_t(obs_data_get_double(data, ST_OUTLINE_OFFSET));
+		_outline_sharpness     = float_t(obs_data_get_double(data, ST_OUTLINE_SHARPNESS) / 100.0);
+		_outline_sharpness_inv = float_t(1.0f / (1.0f - _outline_sharpness));
+		if (_outline_sharpness >= (1.0f - std::numeric_limits<float_t>::epsilon())) {
+			_outline_sharpness = 1.0f - std::numeric_limits<float_t>::epsilon();
 		}
 	}
 
-	this->_sdf_scale     = double_t(obs_data_get_double(data, ST_SDF_SCALE) / 100.0);
-	this->_sdf_threshold = float_t(obs_data_get_double(data, ST_SDF_THRESHOLD) / 100.0);
+	_sdf_scale     = double_t(obs_data_get_double(data, ST_SDF_SCALE) / 100.0);
+	_sdf_threshold = float_t(obs_data_get_double(data, ST_SDF_THRESHOLD) / 100.0);
 }
 
 void filter::sdf_effects::sdf_effects_instance::load(obs_data_t* settings)
@@ -267,7 +265,7 @@ void filter::sdf_effects::sdf_effects_instance::video_tick(float)
 
 	// Figure out the actual source size.
 	do {
-		obs_source_t* target = obs_filter_get_target(this->_self);
+		obs_source_t* target = obs_filter_get_target(_self);
 		if (target == nullptr) {
 			break;
 		}
@@ -277,21 +275,21 @@ void filter::sdf_effects::sdf_effects_instance::video_tick(float)
 		height = obs_source_get_height(target);
 	} while (false);
 
-	this->_source_rendered = false;
-	this->_output_rendered = false;
+	_source_rendered = false;
+	_output_rendered = false;
 }
 
 void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect)
 {
-	obs_source_t* parent         = obs_filter_get_parent(this->_self);
-	obs_source_t* target         = obs_filter_get_target(this->_self);
+	obs_source_t* parent         = obs_filter_get_parent(_self);
+	obs_source_t* target         = obs_filter_get_target(_self);
 	uint32_t      baseW          = obs_source_get_base_width(target);
 	uint32_t      baseH          = obs_source_get_base_height(target);
 	gs_effect_t*  final_effect   = effect ? effect : obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 	gs_effect_t*  default_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 
-	if (!this->_self || !parent || !target || !baseW || !baseH || !final_effect) {
-		obs_source_skip_video_filter(this->_self);
+	if (!_self || !parent || !target || !baseW || !baseH || !final_effect) {
+		obs_source_skip_video_filter(_self);
 		return;
 	}
 
@@ -314,28 +312,28 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect
 		gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
 		gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
-		if (!this->_source_rendered) {
+		if (!_source_rendered) {
 			// Store input texture.
 			{
 				auto op = _source_rt->render(baseW, baseH);
 				gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
 				gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &color_transparent, 0, 0);
 
-				if (obs_source_process_filter_begin(this->_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
-					obs_source_process_filter_end(this->_self, final_effect, baseW, baseH);
+				if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
+					obs_source_process_filter_end(_self, final_effect, baseW, baseH);
 				} else {
 					throw std::runtime_error("failed to process source");
 				}
 			}
-			this->_source_rt->get_texture(this->_source_texture);
-			if (!this->_source_texture) {
+			_source_rt->get_texture(_source_texture);
+			if (!_source_texture) {
 				throw std::runtime_error("failed to draw source");
 			}
 
 			// Generate SDF Buffers
 			{
-				this->_sdf_read->get_texture(this->_sdf_texture);
-				if (!this->_sdf_texture) {
+				_sdf_read->get_texture(_sdf_texture);
+				if (!_sdf_texture) {
 					throw std::runtime_error("SDF Backbuffer empty");
 				}
 
@@ -355,41 +353,41 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect
 				}
 
 				{
-					auto op = this->_sdf_write->render(uint32_t(sdfW), uint32_t(sdfH));
+					auto op = _sdf_write->render(uint32_t(sdfW), uint32_t(sdfH));
 					gs_ortho(0, (float)sdfW, 0, (float)sdfH, -1, 1);
 					gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &color_transparent, 0, 0);
 
-					_sdf_producer_effect.get_parameter("_image").set_texture(this->_source_texture);
+					_sdf_producer_effect.get_parameter("_image").set_texture(_source_texture);
 					_sdf_producer_effect.get_parameter("_size").set_float2(float_t(sdfW), float_t(sdfH));
-					_sdf_producer_effect.get_parameter("_sdf").set_texture(this->_sdf_texture);
-					_sdf_producer_effect.get_parameter("_threshold").set_float(this->_sdf_threshold);
+					_sdf_producer_effect.get_parameter("_sdf").set_texture(_sdf_texture);
+					_sdf_producer_effect.get_parameter("_threshold").set_float(_sdf_threshold);
 
 					while (gs_effect_loop(_sdf_producer_effect.get_object(), "Draw")) {
-						gs_draw_sprite(this->_sdf_texture->get_object(), 0, uint32_t(sdfW), uint32_t(sdfH));
+						gs_draw_sprite(_sdf_texture->get_object(), 0, uint32_t(sdfW), uint32_t(sdfH));
 					}
 				}
-				std::swap(this->_sdf_read, this->_sdf_write);
-				this->_sdf_read->get_texture(this->_sdf_texture);
-				if (!this->_sdf_texture) {
+				std::swap(_sdf_read, _sdf_write);
+				_sdf_read->get_texture(_sdf_texture);
+				if (!_sdf_texture) {
 					throw std::runtime_error("SDF Backbuffer empty");
 				}
 			}
 
-			this->_source_rendered = true;
+			_source_rendered = true;
 		}
 
 		gs_blend_state_pop();
 	} catch (...) {
 		gs_blend_state_pop();
-		obs_source_skip_video_filter(this->_self);
+		obs_source_skip_video_filter(_self);
 		return;
 	}
 
-	if (!this->_output_rendered) {
-		this->_output_texture = this->_source_texture;
+	if (!_output_rendered) {
+		_output_texture = _source_texture;
 
 		if (!_sdf_consumer_effect) {
-			obs_source_skip_video_filter(this->_self);
+			obs_source_skip_video_filter(_self);
 			return;
 		}
 
@@ -409,14 +407,14 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect
 
 		// Optimized Render path.
 		try {
-			auto op = this->_output_rt->render(baseW, baseH);
+			auto op = _output_rt->render(baseW, baseH);
 			gs_ortho(0, 1, 0, 1, 0, 1);
 
 			gs_enable_blending(false);
 			gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
 			auto param = gs_effect_get_param_by_name(default_effect, "image");
 			if (param) {
-				gs_effect_set_texture(param, this->_output_texture->get_object());
+				gs_effect_set_texture(param, _output_texture->get_object());
 			}
 			while (gs_effect_loop(default_effect, "Draw")) {
 				gs_draw_sprite(0, 0, 1, 1);
@@ -424,67 +422,65 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect
 
 			gs_enable_blending(true);
 			gs_blend_function_separate(GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA, GS_BLEND_ONE, GS_BLEND_ONE);
-			if (this->_outer_shadow) {
-				_sdf_consumer_effect.get_parameter("pSDFTexture").set_texture(this->_sdf_texture);
-				_sdf_consumer_effect.get_parameter("pSDFThreshold").set_float(this->_sdf_threshold);
-				_sdf_consumer_effect.get_parameter("pImageTexture").set_texture(this->_source_texture->get_object());
-				_sdf_consumer_effect.get_parameter("pShadowColor").set_float4(this->_outer_shadow_color);
-				_sdf_consumer_effect.get_parameter("pShadowMin").set_float(this->_outer_shadow_range_min);
-				_sdf_consumer_effect.get_parameter("pShadowMax").set_float(this->_outer_shadow_range_max);
+			if (_outer_shadow) {
+				_sdf_consumer_effect.get_parameter("pSDFTexture").set_texture(_sdf_texture);
+				_sdf_consumer_effect.get_parameter("pSDFThreshold").set_float(_sdf_threshold);
+				_sdf_consumer_effect.get_parameter("pImageTexture").set_texture(_source_texture->get_object());
+				_sdf_consumer_effect.get_parameter("pShadowColor").set_float4(_outer_shadow_color);
+				_sdf_consumer_effect.get_parameter("pShadowMin").set_float(_outer_shadow_range_min);
+				_sdf_consumer_effect.get_parameter("pShadowMax").set_float(_outer_shadow_range_max);
 				_sdf_consumer_effect.get_parameter("pShadowOffset")
-					.set_float2(this->_outer_shadow_offset_x / float_t(baseW),
-								this->_outer_shadow_offset_y / float_t(baseH));
+					.set_float2(_outer_shadow_offset_x / float_t(baseW), _outer_shadow_offset_y / float_t(baseH));
 				while (gs_effect_loop(_sdf_consumer_effect.get_object(), "ShadowOuter")) {
 					gs_draw_sprite(0, 0, 1, 1);
 				}
 			}
-			if (this->_inner_shadow) {
-				_sdf_consumer_effect.get_parameter("pSDFTexture").set_texture(this->_sdf_texture);
-				_sdf_consumer_effect.get_parameter("pSDFThreshold").set_float(this->_sdf_threshold);
-				_sdf_consumer_effect.get_parameter("pImageTexture").set_texture(this->_source_texture->get_object());
-				_sdf_consumer_effect.get_parameter("pShadowColor").set_float4(this->_inner_shadow_color);
-				_sdf_consumer_effect.get_parameter("pShadowMin").set_float(this->_inner_shadow_range_min);
-				_sdf_consumer_effect.get_parameter("pShadowMax").set_float(this->_inner_shadow_range_max);
+			if (_inner_shadow) {
+				_sdf_consumer_effect.get_parameter("pSDFTexture").set_texture(_sdf_texture);
+				_sdf_consumer_effect.get_parameter("pSDFThreshold").set_float(_sdf_threshold);
+				_sdf_consumer_effect.get_parameter("pImageTexture").set_texture(_source_texture->get_object());
+				_sdf_consumer_effect.get_parameter("pShadowColor").set_float4(_inner_shadow_color);
+				_sdf_consumer_effect.get_parameter("pShadowMin").set_float(_inner_shadow_range_min);
+				_sdf_consumer_effect.get_parameter("pShadowMax").set_float(_inner_shadow_range_max);
 				_sdf_consumer_effect.get_parameter("pShadowOffset")
-					.set_float2(this->_inner_shadow_offset_x / float_t(baseW),
-								this->_inner_shadow_offset_y / float_t(baseH));
+					.set_float2(_inner_shadow_offset_x / float_t(baseW), _inner_shadow_offset_y / float_t(baseH));
 				while (gs_effect_loop(_sdf_consumer_effect.get_object(), "ShadowInner")) {
 					gs_draw_sprite(0, 0, 1, 1);
 				}
 			}
-			if (this->_outer_glow) {
-				_sdf_consumer_effect.get_parameter("pSDFTexture").set_texture(this->_sdf_texture);
-				_sdf_consumer_effect.get_parameter("pSDFThreshold").set_float(this->_sdf_threshold);
-				_sdf_consumer_effect.get_parameter("pImageTexture").set_texture(this->_source_texture->get_object());
-				_sdf_consumer_effect.get_parameter("pGlowColor").set_float4(this->_outer_glow_color);
-				_sdf_consumer_effect.get_parameter("pGlowWidth").set_float(this->_outer_glow_width);
-				_sdf_consumer_effect.get_parameter("pGlowSharpness").set_float(this->_outer_glow_sharpness);
-				_sdf_consumer_effect.get_parameter("pGlowSharpnessInverse").set_float(this->_outer_glow_sharpness_inv);
+			if (_outer_glow) {
+				_sdf_consumer_effect.get_parameter("pSDFTexture").set_texture(_sdf_texture);
+				_sdf_consumer_effect.get_parameter("pSDFThreshold").set_float(_sdf_threshold);
+				_sdf_consumer_effect.get_parameter("pImageTexture").set_texture(_source_texture->get_object());
+				_sdf_consumer_effect.get_parameter("pGlowColor").set_float4(_outer_glow_color);
+				_sdf_consumer_effect.get_parameter("pGlowWidth").set_float(_outer_glow_width);
+				_sdf_consumer_effect.get_parameter("pGlowSharpness").set_float(_outer_glow_sharpness);
+				_sdf_consumer_effect.get_parameter("pGlowSharpnessInverse").set_float(_outer_glow_sharpness_inv);
 				while (gs_effect_loop(_sdf_consumer_effect.get_object(), "GlowOuter")) {
 					gs_draw_sprite(0, 0, 1, 1);
 				}
 			}
-			if (this->_inner_glow) {
-				_sdf_consumer_effect.get_parameter("pSDFTexture").set_texture(this->_sdf_texture);
-				_sdf_consumer_effect.get_parameter("pSDFThreshold").set_float(this->_sdf_threshold);
-				_sdf_consumer_effect.get_parameter("pImageTexture").set_texture(this->_source_texture->get_object());
-				_sdf_consumer_effect.get_parameter("pGlowColor").set_float4(this->_inner_glow_color);
-				_sdf_consumer_effect.get_parameter("pGlowWidth").set_float(this->_inner_glow_width);
-				_sdf_consumer_effect.get_parameter("pGlowSharpness").set_float(this->_inner_glow_sharpness);
-				_sdf_consumer_effect.get_parameter("pGlowSharpnessInverse").set_float(this->_inner_glow_sharpness_inv);
+			if (_inner_glow) {
+				_sdf_consumer_effect.get_parameter("pSDFTexture").set_texture(_sdf_texture);
+				_sdf_consumer_effect.get_parameter("pSDFThreshold").set_float(_sdf_threshold);
+				_sdf_consumer_effect.get_parameter("pImageTexture").set_texture(_source_texture->get_object());
+				_sdf_consumer_effect.get_parameter("pGlowColor").set_float4(_inner_glow_color);
+				_sdf_consumer_effect.get_parameter("pGlowWidth").set_float(_inner_glow_width);
+				_sdf_consumer_effect.get_parameter("pGlowSharpness").set_float(_inner_glow_sharpness);
+				_sdf_consumer_effect.get_parameter("pGlowSharpnessInverse").set_float(_inner_glow_sharpness_inv);
 				while (gs_effect_loop(_sdf_consumer_effect.get_object(), "GlowInner")) {
 					gs_draw_sprite(0, 0, 1, 1);
 				}
 			}
-			if (this->_outline) {
-				_sdf_consumer_effect.get_parameter("pSDFTexture").set_texture(this->_sdf_texture);
-				_sdf_consumer_effect.get_parameter("pSDFThreshold").set_float(this->_sdf_threshold);
-				_sdf_consumer_effect.get_parameter("pImageTexture").set_texture(this->_source_texture->get_object());
-				_sdf_consumer_effect.get_parameter("pOutlineColor").set_float4(this->_outline_color);
-				_sdf_consumer_effect.get_parameter("pOutlineWidth").set_float(this->_outline_width);
-				_sdf_consumer_effect.get_parameter("pOutlineOffset").set_float(this->_outline_offset);
-				_sdf_consumer_effect.get_parameter("pOutlineSharpness").set_float(this->_outline_sharpness);
-				_sdf_consumer_effect.get_parameter("pOutlineSharpnessInverse").set_float(this->_outline_sharpness_inv);
+			if (_outline) {
+				_sdf_consumer_effect.get_parameter("pSDFTexture").set_texture(_sdf_texture);
+				_sdf_consumer_effect.get_parameter("pSDFThreshold").set_float(_sdf_threshold);
+				_sdf_consumer_effect.get_parameter("pImageTexture").set_texture(_source_texture->get_object());
+				_sdf_consumer_effect.get_parameter("pOutlineColor").set_float4(_outline_color);
+				_sdf_consumer_effect.get_parameter("pOutlineWidth").set_float(_outline_width);
+				_sdf_consumer_effect.get_parameter("pOutlineOffset").set_float(_outline_offset);
+				_sdf_consumer_effect.get_parameter("pOutlineSharpness").set_float(_outline_sharpness);
+				_sdf_consumer_effect.get_parameter("pOutlineSharpnessInverse").set_float(_outline_sharpness_inv);
 				while (gs_effect_loop(_sdf_consumer_effect.get_object(), "Outline")) {
 					gs_draw_sprite(0, 0, 1, 1);
 				}
@@ -492,20 +488,20 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect
 		} catch (...) {
 		}
 
-		this->_output_rt->get_texture(this->_output_texture);
+		_output_rt->get_texture(_output_texture);
 
 		gs_blend_state_pop();
-		this->_output_rendered = true;
+		_output_rendered = true;
 	}
 
-	if (!this->_output_texture) {
-		obs_source_skip_video_filter(this->_self);
+	if (!_output_texture) {
+		obs_source_skip_video_filter(_self);
 		return;
 	}
 
 	gs_eparam_t* ep = gs_effect_get_param_by_name(final_effect, "image");
 	if (ep) {
-		gs_effect_set_texture(ep, this->_output_texture->get_object());
+		gs_effect_set_texture(ep, _output_texture->get_object());
 	}
 	while (gs_effect_loop(final_effect, "Draw")) {
 		gs_draw_sprite(0, 0, baseW, baseH);
@@ -518,6 +514,7 @@ filter::sdf_effects::sdf_effects_factory::sdf_effects_factory()
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO;
 
+	set_resolution_enabled(false);
 	finish_setup();
 }
 

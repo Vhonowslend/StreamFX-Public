@@ -53,21 +53,21 @@ filter::dynamic_mask::dynamic_mask_instance::dynamic_mask_instance(obs_data_t* s
 	: obs::source_instance(settings, self), _have_filter_texture(false), _have_input_texture(false),
 	  _have_final_texture(false), _precalc(), _effect()
 {
-	this->_filter_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	this->_final_rt  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_filter_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_final_rt  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 
 	{
 		char* file = obs_module_file("effects/channel-mask.effect");
 		try {
-			this->_effect = gs::effect::create(file);
+			_effect = gs::effect::create(file);
 		} catch (const std::exception& ex) {
 			P_LOG_ERROR("Loading channel mask effect failed with error(s):\n%s", ex.what());
 		}
-		assert(this->_effect != nullptr);
+		assert(_effect != nullptr);
 		bfree(file);
 	}
 
-	this->update(settings);
+	update(settings);
 }
 
 filter::dynamic_mask::dynamic_mask_instance::~dynamic_mask_instance() {}
@@ -76,49 +76,49 @@ void filter::dynamic_mask::dynamic_mask_instance::update(obs_data_t* settings)
 {
 	// Update source.
 	try {
-		this->_input         = std::make_shared<obs::source>(obs_data_get_string(settings, ST_INPUT));
-		this->_input_capture = std::make_shared<gfx::source_texture>(this->_input, _self);
-		this->_input->events.rename += std::bind(&filter::dynamic_mask::dynamic_mask_instance::input_renamed, this,
-												 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		_input         = std::make_shared<obs::source>(obs_data_get_string(settings, ST_INPUT));
+		_input_capture = std::make_shared<gfx::source_texture>(_input, _self);
+		_input->events.rename += std::bind(&filter::dynamic_mask::dynamic_mask_instance::input_renamed, this,
+										   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 	} catch (...) {
-		this->_input.reset();
-		this->_input_capture.reset();
-		this->_input_texture.reset();
+		_input.reset();
+		_input_capture.reset();
+		_input_texture.reset();
 	}
 
 	// Update data store
 	for (auto kv1 : channel_translations) {
-		auto found = this->_channels.find(kv1.first);
-		if (found == this->_channels.end()) {
-			this->_channels.insert({kv1.first, channel_data()});
-			found = this->_channels.find(kv1.first);
-			if (found == this->_channels.end()) {
-				assert(found != this->_channels.end());
+		auto found = _channels.find(kv1.first);
+		if (found == _channels.end()) {
+			_channels.insert({kv1.first, channel_data()});
+			found = _channels.find(kv1.first);
+			if (found == _channels.end()) {
+				assert(found != _channels.end());
 				throw std::runtime_error("Unable to insert element into data _store.");
 			}
 		}
 
 		std::string chv_key = std::string(ST_CHANNEL_VALUE) + "." + kv1.second;
 		found->second.value = static_cast<float_t>(obs_data_get_double(settings, chv_key.c_str()));
-		this->_precalc.base.ptr[static_cast<size_t>(kv1.first)] = found->second.value;
+		_precalc.base.ptr[static_cast<size_t>(kv1.first)] = found->second.value;
 
 		std::string chm_key = std::string(ST_CHANNEL_MULTIPLIER) + "." + kv1.second;
 		found->second.scale = static_cast<float_t>(obs_data_get_double(settings, chm_key.c_str()));
-		this->_precalc.scale.ptr[static_cast<size_t>(kv1.first)] = found->second.scale;
+		_precalc.scale.ptr[static_cast<size_t>(kv1.first)] = found->second.scale;
 
 		vec4* ch = &_precalc.matrix.x;
 		switch (kv1.first) {
 		case channel::Red:
-			ch = &this->_precalc.matrix.x;
+			ch = &_precalc.matrix.x;
 			break;
 		case channel::Green:
-			ch = &this->_precalc.matrix.y;
+			ch = &_precalc.matrix.y;
 			break;
 		case channel::Blue:
-			ch = &this->_precalc.matrix.z;
+			ch = &_precalc.matrix.z;
 			break;
 		case channel::Alpha:
-			ch = &this->_precalc.matrix.t;
+			ch = &_precalc.matrix.t;
 			break;
 		default:
 			break;
@@ -140,17 +140,17 @@ void filter::dynamic_mask::dynamic_mask_instance::load(obs_data_t* settings)
 
 void filter::dynamic_mask::dynamic_mask_instance::save(obs_data_t* settings)
 {
-	if (this->_input) {
-		obs_data_set_string(settings, ST_INPUT, obs_source_get_name(this->_input->get()));
+	if (_input) {
+		obs_data_set_string(settings, ST_INPUT, obs_source_get_name(_input->get()));
 	}
 
 	for (auto kv1 : channel_translations) {
-		auto found = this->_channels.find(kv1.first);
-		if (found == this->_channels.end()) {
-			this->_channels.insert({kv1.first, channel_data()});
-			found = this->_channels.find(kv1.first);
-			if (found == this->_channels.end()) {
-				assert(found != this->_channels.end());
+		auto found = _channels.find(kv1.first);
+		if (found == _channels.end()) {
+			_channels.insert({kv1.first, channel_data()});
+			found = _channels.find(kv1.first);
+			if (found == _channels.end()) {
+				assert(found != _channels.end());
 				throw std::runtime_error("Unable to insert element into data _store.");
 			}
 		}
@@ -212,8 +212,8 @@ void filter::dynamic_mask::dynamic_mask_instance::video_tick(float)
 
 void filter::dynamic_mask::dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 {
-	obs_source_t* parent = obs_filter_get_parent(this->_self);
-	obs_source_t* target = obs_filter_get_target(this->_self);
+	obs_source_t* parent = obs_filter_get_parent(_self);
+	obs_source_t* target = obs_filter_get_target(_self);
 	uint32_t      width  = obs_source_get_base_width(target);
 	uint32_t      height = obs_source_get_base_height(target);
 
@@ -229,8 +229,8 @@ void filter::dynamic_mask::dynamic_mask_instance::video_render(gs_effect_t* in_e
 
 	try { // Capture filter and input
 		if (!_have_filter_texture) {
-			if (obs_source_process_filter_begin(this->_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
-				auto op = this->_filter_rt->render(width, height);
+			if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
+				auto op = _filter_rt->render(width, height);
 
 				gs_blend_state_push();
 				gs_reset_blend_state();
@@ -249,26 +249,26 @@ void filter::dynamic_mask::dynamic_mask_instance::video_render(gs_effect_t* in_e
 				gs_stencil_op(GS_STENCIL_BOTH, GS_KEEP, GS_KEEP, GS_KEEP);
 				gs_ortho(0, (float)width, 0, (float)height, -1., 1.);
 
-				obs_source_process_filter_end(this->_self, default_effect, width, height);
+				obs_source_process_filter_end(_self, default_effect, width, height);
 
 				gs_blend_state_pop();
 			} else {
 				throw std::runtime_error("Failed to render filter.");
 			}
 
-			this->_filter_texture      = this->_filter_rt->get_texture();
-			this->_have_filter_texture = true;
+			_filter_texture      = _filter_rt->get_texture();
+			_have_filter_texture = true;
 		}
 
 		if (!_have_input_texture) {
-			this->_input_texture      = this->_input_capture->render(_input->width(), _input->height());
-			this->_have_input_texture = true;
+			_input_texture      = _input_capture->render(_input->width(), _input->height());
+			_have_input_texture = true;
 		}
 
 		// Draw source
-		if (!this->_have_final_texture) {
+		if (!_have_final_texture) {
 			{
-				auto op = this->_final_rt->render(width, height);
+				auto op = _final_rt->render(width, height);
 
 				gs_blend_state_push();
 				gs_reset_blend_state();
@@ -287,12 +287,12 @@ void filter::dynamic_mask::dynamic_mask_instance::video_render(gs_effect_t* in_e
 				gs_stencil_op(GS_STENCIL_BOTH, GS_KEEP, GS_KEEP, GS_KEEP);
 				gs_ortho(0, (float)width, 0, (float)height, -1., 1.);
 
-				_effect.get_parameter("pMaskInputA").set_texture(this->_filter_texture);
-				_effect.get_parameter("pMaskInputB").set_texture(this->_input_texture);
+				_effect.get_parameter("pMaskInputA").set_texture(_filter_texture);
+				_effect.get_parameter("pMaskInputB").set_texture(_input_texture);
 
-				_effect.get_parameter("pMaskBase").set_float4(this->_precalc.base);
-				_effect.get_parameter("pMaskMatrix").set_matrix(this->_precalc.matrix);
-				_effect.get_parameter("pMaskMultiplier").set_float4(this->_precalc.scale);
+				_effect.get_parameter("pMaskBase").set_float4(_precalc.base);
+				_effect.get_parameter("pMaskMatrix").set_matrix(_precalc.matrix);
+				_effect.get_parameter("pMaskMultiplier").set_float4(_precalc.scale);
 
 				while (gs_effect_loop(_effect.get(), "Mask")) {
 					gs_draw_sprite(0, 0, width, height);
@@ -301,21 +301,20 @@ void filter::dynamic_mask::dynamic_mask_instance::video_render(gs_effect_t* in_e
 				gs_blend_state_pop();
 			}
 
-			this->_final_texture      = this->_final_rt->get_texture();
-			this->_have_final_texture = true;
+			_final_texture      = _final_rt->get_texture();
+			_have_final_texture = true;
 		}
 	} catch (...) {
-		obs_source_skip_video_filter(this->_self);
+		obs_source_skip_video_filter(_self);
 		return;
 	}
 
 	if (!_have_filter_texture || !_have_input_texture || !_have_final_texture) {
-		obs_source_skip_video_filter(this->_self);
+		obs_source_skip_video_filter(_self);
 		return;
 	}
-	if (!this->_filter_texture->get_object() || !this->_input_texture->get_object()
-		|| !this->_final_texture->get_object()) {
-		obs_source_skip_video_filter(this->_self);
+	if (!_filter_texture->get_object() || !_input_texture->get_object() || !_final_texture->get_object()) {
+		obs_source_skip_video_filter(_self);
 		return;
 	}
 
@@ -334,11 +333,11 @@ void filter::dynamic_mask::dynamic_mask_instance::video_render(gs_effect_t* in_e
 		gs_effect_t* final_effect = in_effect ? in_effect : default_effect;
 		gs_eparam_t* param        = gs_effect_get_param_by_name(final_effect, "image");
 		if (!param) {
-			P_LOG_ERROR("<filter-dynamic-mask:%s> Failed to set image param.", obs_source_get_name(this->_self));
-			obs_source_skip_video_filter(this->_self);
+			P_LOG_ERROR("<filter-dynamic-mask:%s> Failed to set image param.", obs_source_get_name(_self));
+			obs_source_skip_video_filter(_self);
 			return;
 		} else {
-			gs_effect_set_texture(param, this->_final_texture->get_object());
+			gs_effect_set_texture(param, _final_texture->get_object());
 		}
 		while (gs_effect_loop(final_effect, "Draw")) {
 			gs_draw_sprite(0, 0, width, height);
@@ -352,6 +351,7 @@ filter::dynamic_mask::dynamic_mask_factory::dynamic_mask_factory()
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO;
 
+	set_resolution_enabled(false);
 	finish_setup();
 }
 
