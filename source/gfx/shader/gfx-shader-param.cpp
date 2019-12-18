@@ -30,6 +30,13 @@ std::shared_ptr<gfx::shader::parameter> gfx::shader::parameter::make_parameter(g
 	if (!param)
 		return nullptr;
 
+	// ToDo: Allow other parameters to specify hidden properties, as well as the shader itself, and the source/filter/transition.
+	if (auto anno = param.get_annotation("visible"); anno != nullptr) {
+		if (!anno.get_default_bool()) {
+			return nullptr;
+		}
+	}
+
 	typedef gs::effect_parameter::type eptype;
 	switch (param.get_type()) {
 	case eptype::Boolean: {
