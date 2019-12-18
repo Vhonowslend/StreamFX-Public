@@ -24,7 +24,7 @@
 #include "filters/filter-displacement.hpp"
 #include "filters/filter-dynamic-mask.hpp"
 #include "filters/filter-sdf-effects.hpp"
-#include "filters/filter-shader.hpp"
+//#include "filters/filter-shader.hpp"
 #include "filters/filter-transform.hpp"
 #include "obs/obs-source-tracker.hpp"
 #include "sources/source-mirror.hpp"
@@ -42,7 +42,7 @@ MODULE_EXPORT bool obs_module_load(void) try {
 	filter::displacement::displacement_factory::initialize();
 	filter::dynamic_mask::dynamic_mask_factory::initialize();
 	filter::sdf_effects::sdf_effects_factory::initialize();
-	filter::shader::shader_factory::initialize();
+	//filter::shader::shader_factory::initialize();
 	filter::transform::transform_factory::initialize();
 
 	// Initialize Sources
@@ -68,7 +68,7 @@ MODULE_EXPORT void obs_module_unload(void) try {
 	filter::displacement::displacement_factory::finalize();
 	filter::dynamic_mask::dynamic_mask_factory::finalize();
 	filter::sdf_effects::sdf_effects_factory::finalize();
-	filter::shader::shader_factory::finalize();
+	//filter::shader::shader_factory::finalize();
 	filter::transform::transform_factory::finalize();
 
 	// Clean up Source Tracker

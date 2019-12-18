@@ -375,8 +375,8 @@ set(PROJECT_PRIVATE_SOURCE
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-dynamic-mask.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-sdf-effects.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-sdf-effects.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-shader.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-shader.cpp"
+	#"${PROJECT_SOURCE_DIR}/source/filters/filter-shader.hpp"
+	#"${PROJECT_SOURCE_DIR}/source/filters/filter-shader.cpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-transform.hpp"
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-transform.cpp"
 
