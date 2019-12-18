@@ -25,7 +25,7 @@
 #define ST "Filter.Displacement"
 #define ST_FILE "Filter.Displacement.File"
 #define ST_SCALE "Filter.Displacement.Scale"
-#define ST_SCALE_TYPE "Filter.Displacment.Scale.Type"
+#define ST_SCALE_TYPE "Filter.Displacement.Scale.Type"
 
 filter::displacement::displacement_instance::displacement_instance(obs_data_t* data, obs_source_t* context)
 	: obs::source_instance(data, context)
