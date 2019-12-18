@@ -37,6 +37,11 @@
 
 #define S_ADVANCED "Advanced"
 
+#define S_STATE_DISABLED "State.Disabled"
+#define S_STATE_ENABLED "State.Enabled"
+#define S_STATE_MANUAL "State.Manual"
+#define S_STATE_AUTOMATIC "State.Automatic"
+
 #define S_FILETYPE_IMAGE "FileType.Image"
 #define S_FILETYPE_IMAGES "FileType.Images"
 #define S_FILETYPE_VIDEO "FileType.Video"
