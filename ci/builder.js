@@ -11,9 +11,9 @@ if ((process.platform == "win32") || (process.platform == "win64")) {
 	// Windows
 	let extra_conf = [
 		`-DCMAKE_SYSTEM_VERSION=${process.env.CMAKE_SYSTEM_VERSION}`,
-		`-DCMAKE_PACKAGE_NAME=obs-stream-effects`,
+		`-DCMAKE_PACKAGE_NAME=obs-ffmpeg-encoder`,
 		'-DCMAKE_INSTALL_PREFIX="build/distrib/"',
-		'-DCMAKE_PACKAGE_PREFIX="build/"',
+		'-DCMAKE_PACKAGE_PREFIX="build/package/"',
 	];
 	let extra_build = [
 
@@ -26,9 +26,8 @@ if ((process.platform == "win32") || (process.platform == "win64")) {
 	if ((process.env.CMAKE_GENERATOR_32 !== undefined) && (process.env.CMAKE_GENERATOR_32 !== "")) {
 		x32_steps.push(
 			[ 'cmake', [
-				'-H.',
-				'-Bbuild/32',
-				`-G"${process.env.CMAKE_GENERATOR_32}"`,
+				'-H.', '-Bbuild/32',
+				`-G"${process.env.CMAKE_GENERATOR_32}"`, '-AWin32', '-T"host=x64"',
 			].concat(extra_conf), env ]
 		);
 		x32_steps.push(
@@ -42,10 +41,8 @@ if ((process.platform == "win32") || (process.platform == "win64")) {
 	if ((process.env.CMAKE_GENERATOR_64 !== undefined) && (process.env.CMAKE_GENERATOR_64 !== "")) {
 		x64_steps.push(
 			[ 'cmake', [
-				'-H.',
-				'-Bbuild/64',
-				`-G"${process.env.CMAKE_GENERATOR_64}"`,
-				'-T"host=x64"'
+				'-H.', '-Bbuild/64',
+				`-G"${process.env.CMAKE_GENERATOR_64}"`, '-Ax64', '-T"host=x64"',
 			].concat(extra_conf), env ]
 		);
 		x64_steps.push(

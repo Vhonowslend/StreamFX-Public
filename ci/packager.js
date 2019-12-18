@@ -2,20 +2,8 @@
 
 const process = require('process');
 const runner = require('./runner.js');
-
-function runRunners(runnerArray, name) {
-	return new Promise(async (resolve, reject) => {
-		let local = runnerArray.reverse();
-		while (local.length > 0) {	
-			let task = local.pop();
-			let work = new runner(name, task[0], task[1], task[2]);
-			await work.run();
-		}
-		resolve(0);
-	});
-}
-
 let env = process.env;
+
 let steps = [];
 
 if ((process.env.CMAKE_GENERATOR_64 !== undefined) && (process.env.CMAKE_GENERATOR_64 !== "")) {
@@ -49,6 +37,24 @@ if ((process.env.CMAKE_GENERATOR_64 !== undefined) && (process.env.CMAKE_GENERAT
 		], env ]
 	);
 }
+
+function runRunners(runnerArray, name) {
+	return new Promise(async (resolve, reject) => {
+		let local = runnerArray.reverse();
+		while (local.length > 0) {	
+			try {
+				let task = local.pop();
+				let work = new runner(name, task[0], task[1], task[2]);
+				await work.run();
+			} catch (e) {
+				reject(e);
+				return;
+			}
+		}
+		resolve(0);
+	});
+}
+
 
 let promises = [];
 promises.push(runRunners(steps, "32-Bit"));
