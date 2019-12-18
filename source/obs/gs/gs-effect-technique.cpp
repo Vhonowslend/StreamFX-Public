@@ -33,7 +33,9 @@ gs::effect_technique::~effect_technique() {}
 
 std::string gs::effect_technique::name()
 {
-	return std::string(get()->name, get()->name + strnlen_s(get()->name, 256));
+	const char* name_c = get()->name;
+	size_t name_len = strnlen_s(name_c, 256);
+	return name_c ? std::string(name_c, name_c + name_len) : std::string();
 }
 
 size_t gs::effect_technique::count_passes()
