@@ -320,7 +320,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_linear::render()
 	effect.get_parameter("pImage").set_texture(_input_texture);
 	effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
 	effect.get_parameter("pSize").set_float(float_t(_size));
-	effect.get_parameter("pKernel").set_float_array(kernel.data(), MAX_KERNEL_SIZE);
+	effect.get_parameter("pKernel").set_value(kernel.data(), MAX_KERNEL_SIZE);
 
 	// First Pass
 	if (_step_scale.first > std::numeric_limits<double_t>::epsilon()) {
@@ -415,7 +415,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_linear_directional::render()
 		.set_float2(float_t(1.f / width * cos(_angle)), float_t(1.f / height * sin(_angle)));
 	effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
 	effect.get_parameter("pSize").set_float(float_t(_size));
-	effect.get_parameter("pKernel").set_float_array(kernel.data(), MAX_KERNEL_SIZE);
+	effect.get_parameter("pKernel").set_value(kernel.data(), MAX_KERNEL_SIZE);
 
 	// First Pass
 	{
