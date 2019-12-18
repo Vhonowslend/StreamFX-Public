@@ -25,6 +25,11 @@
 #include <graphics/effect.h>
 #include <graphics/vec2.h>
 
+gs::effect_parameter::effect_parameter() : _effect_parent(nullptr), _pass_parent(nullptr), _param_parent(nullptr)
+{
+	reset();
+}
+
 gs::effect_parameter::effect_parameter(gs_eparam_t* param)
 	: _effect_parent(nullptr), _pass_parent(nullptr), _param_parent(nullptr)
 {
@@ -53,7 +58,9 @@ gs::effect_parameter::~effect_parameter() {}
 
 std::string gs::effect_parameter::get_name()
 {
-	return std::string(get()->name, get()->name + strnlen_s(get()->name, 256));
+	const char* name_c   = get()->name;
+	size_t      name_len = strnlen_s(name_c, 256);
+	return name_c ? std::string(name_c, name_c + name_len) : std::string();
 }
 
 gs::effect_parameter::type gs::effect_parameter::get_type()
@@ -94,21 +101,21 @@ inline size_t gs::effect_parameter::count_annotations()
 	return gs_param_get_num_annotations(get());
 }
 
-std::shared_ptr<gs::effect_parameter> gs::effect_parameter::get_annotation(size_t idx)
+gs::effect_parameter gs::effect_parameter::get_annotation(size_t idx)
 {
 	if (idx >= get()->annotations.num) {
 		return nullptr;
 	}
 
-	return std::make_shared<effect_parameter>(get()->annotations.array + idx, this);
+	return effect_parameter(get()->annotations.array + idx, this);
 }
 
-std::shared_ptr<gs::effect_parameter> gs::effect_parameter::get_annotation(std::string name)
+gs::effect_parameter gs::effect_parameter::get_annotation(std::string name)
 {
 	for (size_t idx = 0; idx < get()->annotations.num; idx++) {
 		auto ptr = get()->annotations.array + idx;
 		if (strcmp(ptr->name, name.c_str()) == 0) {
-			return std::make_shared<effect_parameter>(ptr, this);
+			return gs::effect_parameter(ptr, this);
 		}
 	}
 
@@ -127,7 +134,7 @@ bool gs::effect_parameter::has_annotation(std::string name, effect_parameter::ty
 {
 	auto eprm = get_annotation(name);
 	if (eprm)
-		return eprm->get_type() == type;
+		return eprm.get_type() == type;
 	return false;
 }
 
@@ -369,14 +376,6 @@ void gs::effect_parameter::get_default_float4(float_t& x, float_t& y, float_t& z
 	}
 }
 
-void gs::effect_parameter::set_float_array(float_t v[], size_t sz)
-{
-	if ((get_type() != type::Float) && (get_type() != type::Float2) && (get_type() != type::Float3)
-		&& (get_type() != type::Float4))
-		throw std::bad_cast();
-	gs_effect_set_val(get(), v, sizeof(float_t) * sz);
-}
-
 void gs::effect_parameter::set_int(int32_t x)
 {
 	if ((get_type() != type::Integer) && (get_type() != type::Unknown))
@@ -522,14 +521,6 @@ void gs::effect_parameter::get_default_int4(int32_t& x, int32_t& y, int32_t& z, 
 	} else {
 		x = y = z = w = 0;
 	}
-}
-
-void gs::effect_parameter::set_int_array(int32_t v[], size_t sz)
-{
-	if ((get_type() != type::Integer) && (get_type() != type::Integer2) && (get_type() != type::Integer3)
-		&& (get_type() != type::Integer4) && (get_type() != type::Unknown))
-		throw std::bad_cast();
-	gs_effect_set_val(get(), v, sizeof(int) * sz);
 }
 
 void gs::effect_parameter::set_matrix(matrix4 const& v)
