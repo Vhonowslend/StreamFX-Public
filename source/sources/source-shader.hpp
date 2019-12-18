@@ -19,8 +19,9 @@
 
 #pragma once
 
-#include "gfx/gfx-effect-source.hpp"
+#include "gfx/shader/gfx-shader.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
+#include "obs/obs-source-factory.hpp"
 #include "plugin.hpp"
 
 extern "C" {
@@ -29,53 +30,56 @@ extern "C" {
 
 namespace source {
 	namespace shader {
-		class shader_factory {
-			obs_source_info _source_info;
+		class shader_instance : public obs::source_instance {			
+			std::shared_ptr<gfx::shader::shader> _fx;
 
-			public: // Singleton
-			static void                            initialize();
-			static void                            finalize();
-			static std::shared_ptr<shader_factory> get();
-
-			public:
-			shader_factory();
-			~shader_factory();
-		};
-
-		class shader_instance {
-			obs_source_t* _self;
-			bool          _active;
-
-			uint32_t _width, _height;
-
-			std::shared_ptr<gs::rendertarget> _rt;
-			bool                              _rt_updated;
-			std::shared_ptr<gs::texture>      _rt_tex;
-
-			std::shared_ptr<gfx::effect_source::effect_source> _fx;
+			bool _is_main;
 
 			public:
 			shader_instance(obs_data_t* data, obs_source_t* self);
-			~shader_instance();
+			virtual ~shader_instance();
 
-			uint32_t width();
-			uint32_t height();
+			virtual uint32_t get_width() override;
+			virtual uint32_t get_height() override;
 
 			void properties(obs_properties_t* props);
 
-			void load(obs_data_t* data);
-			void update(obs_data_t* data);
+			virtual void load(obs_data_t* data) override;
+			virtual void update(obs_data_t* data) override;
 
-			void activate();
-			void deactivate();
+			virtual void video_tick(float_t sec_since_last) override;
+			virtual void video_render(gs_effect_t* effect) override;
+		};
 
-			bool valid_param(std::shared_ptr<gs::effect_parameter> param);
-			void override_param(std::shared_ptr<gs::effect> effect);
+		class shader_factory
+			: public obs::source_factory<source::shader::shader_factory, source::shader::shader_instance> {
+			static std::shared_ptr<source::shader::shader_factory> factory_instance;
 
-			void enum_active_sources(obs_source_enum_proc_t, void*);
+			public: // Singleton
+			static void initialize()
+			{
+				factory_instance = std::make_shared<source::shader::shader_factory>();
+			}
 
-			void video_tick(float_t sec_since_last);
-			void video_render(gs_effect_t* effect);
+			static void finalize()
+			{
+				factory_instance.reset();
+			}
+
+			static std::shared_ptr<shader_factory> get()
+			{
+				return factory_instance;
+			}
+
+			public:
+			shader_factory();
+			virtual ~shader_factory();
+
+			virtual const char* get_name() override;
+
+			virtual void get_defaults2(obs_data_t* data) override;
+
+			virtual obs_properties_t* get_properties2(source::shader::shader_instance* data) override;
 		};
 	} // namespace shader
 } // namespace source
