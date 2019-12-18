@@ -116,12 +116,12 @@ gfx::shader::float_parameter::float_parameter(gs::effect_parameter param, std::s
 
 	// Build sub-keys
 	for (size_t len = 0; len < _len; len++) {
-		char buf[4];
-		snprintf(buf, 4, "[%d]", static_cast<int32_t>(len - 1));
+		char buf[5];
+		snprintf(buf, 4, "[%d]", static_cast<int32_t>(len));
 		_name[len] = std::string(buf, buf + sizeof(buf));
 		_key[len]  = _key[4] + _name[len];
 
-		_min[len]  = std::numeric_limits<float_t>::min();
+		_min[len]  = std::numeric_limits<float_t>::lowest();
 		_max[len]  = std::numeric_limits<float_t>::max();
 		_step[len] = 0.01f;
 	}
@@ -167,7 +167,7 @@ void gfx::shader::float_parameter::properties(obs_properties_t* props, obs_data_
 
 	for (size_t len = 0; len < _len; len++) {
 		auto p =
-			obs_properties_add_float(props, _key[len].c_str(), _name[len].c_str(), _min[len], _max[len], _step[len]);
+			obs_properties_add_float(grp, _key[len].c_str(), _name[len].c_str(), _min[len], _max[len], _step[len]);
 		obs_property_set_long_description(p, _desc.c_str());
 		obs_data_set_default_double(settings, _key[len].c_str(), static_cast<double_t>(defaults[len]));
 	}
