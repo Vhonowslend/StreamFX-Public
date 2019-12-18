@@ -1,0 +1,111 @@
+// Always provided by OBS
+uniform float4x4 ViewProj<
+	bool visible = false;
+	string name = "View Projection Matrix";
+>;
+
+// Provided by Stream Effects
+uniform float4 Time<
+	bool visible = false;
+	string name = "Time Array";
+	string description = "A float array of length 4, with the indexes being:\n[0] Time Visible in Seconds\n[1] Last Render Time\n[2] Current System Time (24h looping)\n[3] Random value between 0 and 1.";
+>;
+
+// Params
+uniform float PlasmaScale<
+	bool visible = true;
+	string name = "Plasma Scale";
+	float min = 100.0;
+	float max = 1000.0;
+> = 100.0;
+uniform float3 LowColor<
+	float min = 0.0;
+	float max = 100.0;
+> = {0.0, 0.0, 0.0};
+uniform float3 MiddleColor<
+	float min = 0.0;
+	float max = 100.0;
+> = {0.5, 0.5, 0.5};
+uniform float3 HighColor<
+	float min = 0.0;
+	float max = 100.0;
+> = {1.0, 1.0, 1.0};
+
+struct StageData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+StageData VSDefault(StageData data) {
+	data.pos = mul(float4(data.pos.xyz, 1.0), ViewProj);
+	return data;
+}
+
+float Plasma1(float2 uv, float t) {
+	return sin(uv.x * 10 + t);
+}
+
+float Plasma2(float2 uv, float t) {
+	return sin(10 * (uv.x*sin(t/2)+uv.y*cos(t/3))+t);
+}
+
+float Plasma3(float2 uv, float t) {
+	float cx = uv.x + .5*sin(t/5);
+	float cy = uv.y + .5*cos(t/3);
+	return sin(sqrt(100*(cx*cx+cy*cy)+1)+t);
+}
+
+float4 BasicPlasma(StageData data) : TARGET {
+	return float4(Plasma1(data.uv, Time[0]), Plasma2(data.uv, Time[0]), Plasma3(data.uv, Time[0]), 1.0);
+}
+
+technique Basic
+{
+	pass
+	{
+		vertex_shader = VSDefault(data);
+		pixel_shader  = BasicPlasma(data); 
+	}
+}
+
+float4 Plasma(StageData data) : TARGET {
+	float a = Plasma1(data.uv, Time[0]);
+	float b = Plasma2(data.uv, Time[0]);
+	float c = Plasma3(data.uv, Time[0]);
+
+	float v = abs(sin((a + b + c) * (PlasmaScale / 100.0)));
+
+	return float4(v,v,v, 1.0);
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(data);
+		pixel_shader  = Plasma(data); 
+	}
+}
+
+float4 ColoredPlasma(StageData data) : TARGET {
+	float a = Plasma1(data.uv, Time[0]);
+	float b = Plasma2(data.uv, Time[0]);
+	float c = Plasma3(data.uv, Time[0]);
+
+	float v = abs(sin((a + b + c) * (PlasmaScale / 100.0)));
+
+	float v1 = clamp(v * 2.0, 0., 1.);
+	float v2 = clamp((v - 0.5) * 2.0, 0., 1.);
+	float3 col = lerp(lerp(LowColor, MiddleColor, v1), HighColor, v2);
+
+	return float4(col, 1.0);
+}
+
+technique Colored
+{
+	pass
+	{
+		vertex_shader = VSDefault(data);
+		pixel_shader  = ColoredPlasma(data); 
+	}
+}

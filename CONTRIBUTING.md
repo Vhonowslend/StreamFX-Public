@@ -38,7 +38,7 @@ The subject line of a commit should begin with the prefix followed by a `: `, an
 ### Prefixes
 - effects: Anything modifying generic effects like blur.effect, color-conversion.effect, mask.effect, etc.
 - locale: Changes in `/data/locale`.
-- shaders: Changes in `/data/shaders` that are not directly influenced by a change to custom shaders.
+- examples: Changes in `/data/examples` that are not directly influenced by a change to one of the filters, sources or transitions.
 - project: Changes to files like README, CONTRIBUTING, AUTHORS, etc.
 - cmake: Changes to CMake build scripts.
 - ci: Changes to Continuous Integration.
