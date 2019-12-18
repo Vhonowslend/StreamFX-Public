@@ -48,6 +48,9 @@ void gfx::shader::shader::load_shader_params()
 {
 	_shader_params.clear();
 
+	if (!_shader)
+		return;
+
 	if (gs::effect_technique tech = _shader.get_technique(_shader_tech); tech != nullptr) {
 		for (size_t idx = 0; idx < tech.count_passes(); idx++) {
 			auto pass = tech.get_pass(idx);
@@ -135,7 +138,7 @@ bool gfx::shader::shader::on_shader_changed(obs_properties_t* props, obs_propert
 {
 	// Load changed shader.
 	update_shader(data);
-	
+
 	// Clear list of techniques.
 	obs_property_t* list = obs_properties_get(props, ST_SHADER_TECHNIQUE);
 	obs_property_list_clear(list);
@@ -159,7 +162,7 @@ bool gfx::shader::shader::on_shader_changed(obs_properties_t* props, obs_propert
 		if (!have_tech && (_shader.count_techniques() > 0)) {
 			obs_data_set_string(data, ST_SHADER_TECHNIQUE, _shader.get_technique(0).name().c_str());
 			//on_technique_changed(props, prop, data);
-		} else {
+		} else if (_shader.count_techniques() == 0) {
 			obs_data_set_string(data, ST_SHADER_TECHNIQUE, "");
 		}
 	}
@@ -171,11 +174,13 @@ bool gfx::shader::shader::on_technique_changed(obs_properties_t* props, obs_prop
 {
 	// Clear parameter options.
 	auto grp = obs_property_group_content(obs_properties_get(props, ST_PARAMETERS));
-	if (auto p = obs_properties_first(grp); p != nullptr) {
-		do {
-			obs_properties_remove_by_name(grp, obs_property_name(p));
-			p = obs_properties_first(grp);
-		} while (p != nullptr);
+	while (true) {
+		if (auto p = obs_properties_first(grp); p != nullptr) {
+			std::string name = obs_property_name(p) ? obs_property_name(p) : "";
+			obs_properties_remove_by_name(grp, name.c_str());
+		} else {
+			break;
+		}
 	}
 
 	// Don't go further if there is no shader.
@@ -184,10 +189,11 @@ bool gfx::shader::shader::on_technique_changed(obs_properties_t* props, obs_prop
 
 	// Load technique.
 	update_technique(data);
-	
+
 	// Rebuild new parameters.
 	for (auto kv : _shader_params) {
 		kv.second->properties(grp, data);
+		kv.second->update(data);
 	}
 
 	return true;
@@ -319,22 +325,6 @@ bool gfx::shader::shader::tick(float_t time)
 	// Update State
 	_time += time;
 
-	// Update Shader
-	if (_shader) {
-		if (gs::effect_parameter el = _shader.get_parameter("Time"); el != nullptr) {
-			if (el.get_type() == gs::effect_parameter::type::Float4) {
-				el.set_float4(
-					_time, time, 0,
-					static_cast<float_t>(static_cast<double_t>(_random())
-										 / static_cast<double_t>(std::numeric_limits<unsigned long long>::max())));
-			}
-		}
-
-		for (auto kv : _shader_params) {
-			kv.second->assign();
-		}
-	}
-
 	return false;
 }
 
@@ -345,6 +335,19 @@ void gfx::shader::shader::render()
 
 	uint32_t szw = width();
 	uint32_t szh = height();
+
+	for (auto kv : _shader_params) {
+		kv.second->assign();
+	}
+
+	if (gs::effect_parameter el = _shader.get_parameter("Time"); el != nullptr) {
+		if (el.get_type() == gs::effect_parameter::type::Float4) {
+			el.set_float4(
+				_time, 0, 0,
+				static_cast<float_t>(static_cast<double_t>(_random())
+									 / static_cast<double_t>(std::numeric_limits<unsigned long long>::max())));
+		}
+	}
 
 	while (gs_effect_loop(_shader.get_object(), _shader_tech.c_str())) {
 		gs_draw_sprite(nullptr, 0, szw, szh);
