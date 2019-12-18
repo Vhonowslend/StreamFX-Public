@@ -15,1178 +15,354 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-#include "gfx-effect-source.hpp"
-#include <cfloat>
-#include <climits>
-#include <cstdint>
-#include <fstream>
-#include <sstream>
-#include <stdexcept>
-#include <sys/stat.h>
-#include "obs/gs/gs-helper.hpp"
-#include "obs/obs-source-tracker.hpp"
-#include "strings.hpp"
+#include "gfx-shader.hpp"
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include "plugin.hpp"
 
-#define ST_FILE S_SHADER_FILE
-#define ST_TECHNIQUE S_SHADER_TECHNIQUE
+#define ST "Shader"
+#define ST_SHADER ST ".Shader"
+#define ST_SHADER_FILE ST_SHADER ".File"
+#define ST_SHADER_TECHNIQUE ST_SHADER ".Technique"
+#define ST_SHADER_SIZE ST_SHADER ".Size"
+#define ST_SHADER_SIZE_WIDTH ST_SHADER_SIZE ".Width"
+#define ST_SHADER_SIZE_HEIGHT ST_SHADER_SIZE ".Height"
+#define ST_PARAMETERS ST ".Parameters"
 
-#define ST_TEXTURE_TYPE "Shader.Texture.Type"
-#define ST_TEXTURE_FILE S_FILETYPE_IMAGE
-#define ST_TEXTURE_SOURCE S_SOURCETYPE_SOURCE
-
-#define UNIQUE_PREFIX "HelloThisIsPatrick."
-
-static std::vector<std::string> static_parameters{
-	"ViewProj",
-	"Time",
-	"Random",
-};
-
-gfx::effect_source::parameter::parameter(std::shared_ptr<gfx::effect_source::effect_source> parent,
-										 std::shared_ptr<gs::effect>                        effect,
-										 std::shared_ptr<gs::effect_parameter>              param)
-	: _parent(parent), _effect(effect), _param(param), _description(""), _formulae(""), _visible(true)
+gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
+	: _self(self), _mode(mode), _shader(), _shader_file(), _time()
 {
-	if (!effect)
-		throw std::invalid_argument("effect");
-	if (!effect)
-		throw std::invalid_argument("param");
-	if (!effect->has_parameter(param->get_name(), param->get_type()))
-		throw std::invalid_argument("param");
-	_name = UNIQUE_PREFIX + _param->get_name();
-
-	_visible_name = _name;
-	if (param->has_annotation("name", gs::effect_parameter::type::String)) {
-		param->get_annotation("name")->get_default_string(_visible_name);
-	}
-	if (param->has_annotation("description", gs::effect_parameter::type::String)) {
-		param->get_annotation("description")->get_default_string(_description);
-	}
-	if (param->has_annotation("formulae", gs::effect_parameter::type::String)) {
-		param->get_annotation("formulae")->get_default_string(_formulae);
-	}
-	if (param->has_annotation("visible", gs::effect_parameter::type::Boolean)) {
-		param->get_annotation("visible")->get_default_bool(_visible);
-	} else {
-		_visible = true;
-	}
+	_random.seed(static_cast<unsigned long long>(time(NULL)));
 }
 
-gfx::effect_source::parameter::~parameter() {}
+gfx::shader::shader::~shader() {}
 
-void gfx::effect_source::parameter::defaults(obs_properties_t* props, obs_data_t* data) {}
-
-void gfx::effect_source::parameter::properties(obs_properties_t* props) {}
-
-void gfx::effect_source::parameter::remove_properties(obs_properties_t* props) {}
-
-void gfx::effect_source::parameter::update(obs_data_t* data) {}
-
-void gfx::effect_source::parameter::tick(float_t time) {}
-
-void gfx::effect_source::parameter::prepare() {}
-
-void gfx::effect_source::parameter::assign() {}
-
-std::shared_ptr<gs::effect_parameter> gfx::effect_source::parameter::get_param()
+void gfx::shader::shader::load_shader(std::filesystem::path file)
 {
-	return _param;
+	_shader      = gs::effect(file);
+	_shader_file = file;
 }
 
-std::shared_ptr<gfx::effect_source::parameter>
-	gfx::effect_source::parameter::create(std::shared_ptr<gfx::effect_source::effect_source> parent,
-										  std::shared_ptr<gs::effect>                        effect,
-										  std::shared_ptr<gs::effect_parameter>              param)
+void gfx::shader::shader::load_shader_params()
 {
-	if (!effect)
-		throw std::invalid_argument("effect");
-	if (!effect)
-		throw std::invalid_argument("param");
-	if (!effect->has_parameter(param->get_name(), param->get_type()))
-		throw std::invalid_argument("param");
+	_shader_params.clear();
 
-	switch (param->get_type()) {
-	case gs::effect_parameter::type::Boolean:
-		return std::make_shared<gfx::effect_source::bool_parameter>(parent, effect, param);
-	case gs::effect_parameter::type::Float:
-	case gs::effect_parameter::type::Float2:
-	case gs::effect_parameter::type::Float3:
-	case gs::effect_parameter::type::Float4:
-	case gs::effect_parameter::type::Integer:
-	case gs::effect_parameter::type::Integer2:
-	case gs::effect_parameter::type::Integer3:
-	case gs::effect_parameter::type::Integer4:
-		return std::make_shared<gfx::effect_source::value_parameter>(parent, effect, param);
-	case gs::effect_parameter::type::Matrix:
-		return std::make_shared<gfx::effect_source::matrix_parameter>(parent, effect, param);
-	case gs::effect_parameter::type::Texture:
-		return std::make_shared<gfx::effect_source::texture_parameter>(parent, effect, param);
-	default:
-		return nullptr;
-	}
+	if (gs::effect_technique tech = _shader.get_technique(_shader_tech); tech != nullptr) {
+		for (size_t idx = 0; idx < tech.count_passes(); idx++) {
+			auto pass = tech.get_pass(idx);
 
-	return nullptr;
-}
+			for (size_t vidx = 0; vidx < pass.count_vertex_parameters(); vidx++) {
+				auto el = pass.get_vertex_parameter(vidx);
 
-gfx::effect_source::bool_parameter::bool_parameter(std::shared_ptr<gfx::effect_source::effect_source> parent,
-												   std::shared_ptr<gs::effect>                        effect,
-												   std::shared_ptr<gs::effect_parameter>              param)
-	: parameter(parent, effect, param)
-{
-	if (param->get_type() != gs::effect_parameter::type::Boolean)
-		throw std::bad_cast();
+				auto fnd = _shader_params.find(el.get_name());
+				if (fnd != _shader_params.end())
+					continue;
 
-	param->get_default_bool(_value);
-}
+				auto param = gfx::shader::parameter::make_parameter(el, ST_PARAMETERS);
 
-void gfx::effect_source::bool_parameter::defaults(obs_properties_t* props, obs_data_t* data)
-{
-	//obs_data_set_default_bool(data, _name.c_str(), _value);
-	//obs_data_set_bool(data, _name.c_str(), _value);
-}
-
-void gfx::effect_source::bool_parameter::properties(obs_properties_t* props)
-{
-	auto p = obs_properties_add_bool(props, _name.c_str(), _visible_name.c_str());
-	obs_property_set_long_description(p, _description.c_str());
-	obs_property_set_visible(p, _visible);
-}
-
-void gfx::effect_source::bool_parameter::remove_properties(obs_properties_t* props)
-{
-	obs_properties_remove_by_name(props, _name.c_str());
-}
-
-void gfx::effect_source::bool_parameter::update(obs_data_t* data)
-{
-	_value = obs_data_get_bool(data, _name.c_str());
-}
-
-void gfx::effect_source::bool_parameter::tick(float_t time) {}
-
-void gfx::effect_source::bool_parameter::prepare() {}
-
-void gfx::effect_source::bool_parameter::assign()
-{
-	_param->set_bool(_value);
-}
-
-gfx::effect_source::value_parameter::value_parameter(std::shared_ptr<gfx::effect_source::effect_source> parent,
-													 std::shared_ptr<gs::effect>                        effect,
-													 std::shared_ptr<gs::effect_parameter>              param)
-	: parameter(parent, effect, param)
-{
-	std::shared_ptr<gs::effect_parameter> min = param->get_annotation("minimum");
-	std::shared_ptr<gs::effect_parameter> max = param->get_annotation("maximum");
-	std::shared_ptr<gs::effect_parameter> stp = param->get_annotation("step");
-
-	bool is_int = false;
-
-	switch (param->get_type()) {
-	case gs::effect_parameter::type::Float:
-		param->get_default_float(_value.f[0]);
-		if (min)
-			min->get_default_float(_minimum.f[0]);
-		if (max)
-			max->get_default_float(_maximum.f[0]);
-		if (stp)
-			stp->get_default_float(_step.f[0]);
-		break;
-	case gs::effect_parameter::type::Float2:
-		param->get_default_float2(_value.f[0], _value.f[1]);
-		if (min)
-			min->get_default_float2(_minimum.f[0], _minimum.f[1]);
-		if (max)
-			max->get_default_float2(_maximum.f[0], _maximum.f[1]);
-		if (stp)
-			stp->get_default_float2(_step.f[0], _step.f[1]);
-		break;
-	case gs::effect_parameter::type::Float3:
-		param->get_default_float3(_value.f[0], _value.f[1], _value.f[2]);
-		if (min)
-			min->get_default_float3(_minimum.f[0], _minimum.f[1], _minimum.f[2]);
-		if (max)
-			max->get_default_float3(_maximum.f[0], _maximum.f[1], _maximum.f[2]);
-		if (stp)
-			stp->get_default_float3(_step.f[0], _step.f[1], _step.f[2]);
-		break;
-	case gs::effect_parameter::type::Float4:
-		param->get_default_float4(_value.f[0], _value.f[1], _value.f[2], _value.f[3]);
-		if (min)
-			min->get_default_float4(_minimum.f[0], _minimum.f[1], _minimum.f[2], _minimum.f[3]);
-		if (max)
-			max->get_default_float4(_maximum.f[0], _maximum.f[1], _maximum.f[2], _maximum.f[3]);
-		if (stp)
-			stp->get_default_float4(_step.f[0], _step.f[1], _step.f[2], _step.f[3]);
-		break;
-	case gs::effect_parameter::type::Integer:
-		param->get_default_int(_value.i[0]);
-		if (min)
-			min->get_default_int(_minimum.i[0]);
-		if (max)
-			max->get_default_int(_maximum.i[0]);
-		if (stp)
-			stp->get_default_int(_step.i[0]);
-		is_int = true;
-		break;
-	case gs::effect_parameter::type::Integer2:
-		param->get_default_int2(_value.i[0], _value.i[1]);
-		if (min)
-			min->get_default_int2(_minimum.i[0], _minimum.i[1]);
-		if (max)
-			max->get_default_int2(_maximum.i[0], _maximum.i[1]);
-		if (stp)
-			stp->get_default_int2(_step.i[0], _step.i[1]);
-		is_int = true;
-		break;
-	case gs::effect_parameter::type::Integer3:
-		param->get_default_int3(_value.i[0], _value.i[1], _value.i[2]);
-		if (min)
-			min->get_default_int3(_minimum.i[0], _minimum.i[1], _minimum.i[2]);
-		if (max)
-			max->get_default_int3(_maximum.i[0], _maximum.i[1], _maximum.i[2]);
-		if (stp)
-			stp->get_default_int3(_step.i[0], _step.i[1], _step.i[2]);
-		is_int = true;
-		break;
-	case gs::effect_parameter::type::Integer4:
-		param->get_default_int4(_value.i[0], _value.i[1], _value.i[2], _value.i[3]);
-		if (min)
-			min->get_default_int4(_minimum.i[0], _minimum.i[1], _minimum.i[2], _minimum.i[3]);
-		if (max)
-			max->get_default_int4(_maximum.i[0], _maximum.i[1], _maximum.i[2], _maximum.i[3]);
-		if (stp)
-			stp->get_default_int4(_step.i[0], _step.i[1], _step.i[2], _step.i[3]);
-		is_int = true;
-		break;
-	default:
-		throw std::bad_cast();
-	}
-
-	if (!min) {
-		if (is_int) {
-			_minimum.i[0] = _minimum.i[1] = _minimum.i[2] = _minimum.i[3] = std::numeric_limits<int32_t>::min();
-		} else {
-			_minimum.f[0] = _minimum.f[1] = _minimum.f[2] = _minimum.f[3] = -167772.16f;
-		}
-	}
-	if (!max) {
-		if (is_int) {
-			_maximum.i[0] = _maximum.i[1] = _maximum.i[2] = _maximum.i[3] = std::numeric_limits<int32_t>::max();
-		} else {
-			_maximum.f[0] = _maximum.f[1] = _maximum.f[2] = _maximum.f[3] = +167772.16f;
-		}
-	}
-	if (!stp) {
-		if (is_int) {
-			_step.i[0] = _step.i[1] = _step.i[2] = _step.i[3] = 1;
-		} else {
-			_step.f[0] = _step.f[1] = _step.f[2] = _step.f[3] = 0.01f;
-		}
-	}
-
-	std::shared_ptr<gs::effect_parameter> mode = param->get_annotation("mode");
-	if (mode && (mode->get_type() == gs::effect_parameter::type::String)) {
-		std::string mode_str = mode->get_default_string();
-		if (strcmp(mode_str.c_str(), "slider") == 0) {
-			_mode = value_mode::SLIDER;
-		} else {
-			_mode = value_mode::INPUT;
-		}
-	}
-
-	for (size_t idx = 0; idx < 4; idx++) {
-		std::stringstream name_sstr;
-		std::stringstream ui_sstr;
-
-		name_sstr << _name << '[' << idx << ']';
-		ui_sstr << _visible_name << '[' << idx << ']';
-
-		_cache.name[idx]         = name_sstr.str();
-		_cache.visible_name[idx] = ui_sstr.str();
-	}
-}
-
-void gfx::effect_source::value_parameter::defaults(obs_properties_t* props, obs_data_t* data)
-{
-	/*bool   is_int = false;
-	size_t limit  = 0;
-
-	switch (_param->get_type()) {
-	case gs::effect_parameter::type::Integer:
-		is_int = true;
-		limit  = 1;
-		break;
-	case gs::effect_parameter::type::Integer2:
-		is_int = true;
-		limit  = 2;
-		break;
-	case gs::effect_parameter::type::Integer3:
-		is_int = true;
-		limit  = 3;
-		break;
-	case gs::effect_parameter::type::Integer4:
-		is_int = true;
-		limit  = 4;
-		break;
-	case gs::effect_parameter::type::Float:
-		is_int = false;
-		limit  = 1;
-		break;
-	case gs::effect_parameter::type::Float2:
-		is_int = false;
-		limit  = 2;
-		break;
-	case gs::effect_parameter::type::Float3:
-		is_int = false;
-		limit  = 3;
-		break;
-	case gs::effect_parameter::type::Float4:
-		is_int = false;
-		limit  = 4;
-		break;
-	}
-
-	for (size_t idx = 0; idx < limit; idx++) {
-		if (is_int) {
-			obs_data_set_default_int(data, _cache.name[idx].c_str(), _value.i[idx]);
-			obs_data_set_int(data, _cache.name[idx].c_str(), _value.i[idx]);
-		} else {
-			obs_data_set_default_double(data, _cache.name[idx].c_str(), _value.f[idx]);
-			obs_data_set_double(data, _cache.name[idx].c_str(), _value.f[idx]);
-		}
-	}*/
-}
-
-void gfx::effect_source::value_parameter::properties(obs_properties_t* props)
-{
-	auto grp = props;
-	if (!util::are_property_groups_broken()) {
-		grp    = obs_properties_create();
-		auto p = obs_properties_add_group(props, _name.c_str(), _visible_name.c_str(), OBS_GROUP_NORMAL, grp);
-		obs_property_set_long_description(p, _description.c_str());
-		obs_property_set_visible(p, _visible);
-	}
-
-	bool   is_int = false;
-	size_t limit  = 0;
-
-	switch (_param->get_type()) {
-	case gs::effect_parameter::type::Integer:
-		is_int = true;
-		limit  = 1;
-		break;
-	case gs::effect_parameter::type::Integer2:
-		is_int = true;
-		limit  = 2;
-		break;
-	case gs::effect_parameter::type::Integer3:
-		is_int = true;
-		limit  = 3;
-		break;
-	case gs::effect_parameter::type::Integer4:
-		is_int = true;
-		limit  = 4;
-		break;
-	case gs::effect_parameter::type::Float:
-		is_int = false;
-		limit  = 1;
-		break;
-	case gs::effect_parameter::type::Float2:
-		is_int = false;
-		limit  = 2;
-		break;
-	case gs::effect_parameter::type::Float3:
-		is_int = false;
-		limit  = 3;
-		break;
-	case gs::effect_parameter::type::Float4:
-		is_int = false;
-		limit  = 4;
-		break;
-	default:
-		break;
-	}
-
-	for (size_t idx = 0; idx < limit; idx++) {
-		if (is_int) {
-			if (_mode == value_mode::INPUT) {
-				auto p = obs_properties_add_int(grp, _cache.name[idx].c_str(), _cache.visible_name[idx].c_str(),
-												_minimum.i[idx], _maximum.i[idx], _step.i[idx]);
-				obs_property_set_visible(p, _visible);
-			} else {
-				auto p = obs_properties_add_int_slider(grp, _cache.name[idx].c_str(), _cache.visible_name[idx].c_str(),
-													   _minimum.i[idx], _maximum.i[idx], _step.i[idx]);
-				obs_property_set_visible(p, _visible);
+				if (param)
+					_shader_params.insert_or_assign(el.get_name(), param);
 			}
-		} else {
-			if (_mode == value_mode::INPUT) {
-				auto p = obs_properties_add_float(grp, _cache.name[idx].c_str(), _cache.visible_name[idx].c_str(),
-												  _minimum.f[idx], _maximum.f[idx], _step.f[idx]);
-				obs_property_set_visible(p, _visible);
-			} else {
-				auto p =
-					obs_properties_add_float_slider(grp, _cache.name[idx].c_str(), _cache.visible_name[idx].c_str(),
-													_minimum.f[idx], _maximum.f[idx], _step.f[idx]);
-				obs_property_set_visible(p, _visible);
+
+			for (size_t vidx = 0; vidx < pass.count_pixel_parameters(); vidx++) {
+				auto el = pass.get_pixel_parameter(vidx);
+
+				auto fnd = _shader_params.find(el.get_name());
+				if (fnd != _shader_params.end())
+					continue;
+
+				auto param = gfx::shader::parameter::make_parameter(el, ST_PARAMETERS);
+
+				if (param)
+					_shader_params.insert_or_assign(el.get_name(), param);
 			}
 		}
 	}
 }
 
-void gfx::effect_source::value_parameter::remove_properties(obs_properties_t* props)
+void gfx::shader::shader::properties(obs_properties_t* pr)
 {
-	bool   is_int = false;
-	size_t limit  = 0;
-
-	switch (_param->get_type()) {
-	case gs::effect_parameter::type::Integer:
-		is_int = true;
-		limit  = 1;
-		break;
-	case gs::effect_parameter::type::Integer2:
-		is_int = true;
-		limit  = 2;
-		break;
-	case gs::effect_parameter::type::Integer3:
-		is_int = true;
-		limit  = 3;
-		break;
-	case gs::effect_parameter::type::Integer4:
-		is_int = true;
-		limit  = 4;
-		break;
-	case gs::effect_parameter::type::Float:
-		is_int = false;
-		limit  = 1;
-		break;
-	case gs::effect_parameter::type::Float2:
-		is_int = false;
-		limit  = 2;
-		break;
-	case gs::effect_parameter::type::Float3:
-		is_int = false;
-		limit  = 3;
-		break;
-	case gs::effect_parameter::type::Float4:
-		is_int = false;
-		limit  = 4;
-		break;
-	default:
-		break;
-	}
-
-	for (size_t idx = 0; idx < limit; idx++) {
-		obs_properties_remove_by_name(props, _cache.name[idx].c_str());
-	}
-}
-
-void gfx::effect_source::value_parameter::update(obs_data_t* data)
-{
-	bool   is_int = false;
-	size_t limit  = 0;
-
-	switch (_param->get_type()) {
-	case gs::effect_parameter::type::Integer:
-		is_int = true;
-		limit  = 1;
-		break;
-	case gs::effect_parameter::type::Integer2:
-		is_int = true;
-		limit  = 2;
-		break;
-	case gs::effect_parameter::type::Integer3:
-		is_int = true;
-		limit  = 3;
-		break;
-	case gs::effect_parameter::type::Integer4:
-		is_int = true;
-		limit  = 4;
-		break;
-	case gs::effect_parameter::type::Float:
-		is_int = false;
-		limit  = 1;
-		break;
-	case gs::effect_parameter::type::Float2:
-		is_int = false;
-		limit  = 2;
-		break;
-	case gs::effect_parameter::type::Float3:
-		is_int = false;
-		limit  = 3;
-		break;
-	case gs::effect_parameter::type::Float4:
-		is_int = false;
-		limit  = 4;
-		break;
-	default:
-		break;
-	}
-
-	for (size_t idx = 0; idx < limit; idx++) {
-		if (is_int) {
-			_value.i[idx] = obs_data_get_int(data, _cache.name[idx].c_str());
-		} else {
-			_value.f[idx] = static_cast<float_t>(obs_data_get_double(data, _cache.name[idx].c_str()));
-		}
-	}
-}
-
-void gfx::effect_source::value_parameter::tick(float_t time) {}
-
-void gfx::effect_source::value_parameter::prepare() {}
-
-void gfx::effect_source::value_parameter::assign()
-{
-	switch (_param->get_type()) {
-	case gs::effect_parameter::type::Integer:
-		_param->set_int(_value.i[0]);
-		break;
-	case gs::effect_parameter::type::Integer2:
-		_param->set_int2(_value.i[0], _value.i[1]);
-		break;
-	case gs::effect_parameter::type::Integer3:
-		_param->set_int3(_value.i[0], _value.i[1], _value.i[2]);
-		break;
-	case gs::effect_parameter::type::Integer4:
-		_param->set_int4(_value.i[0], _value.i[1], _value.i[2], _value.i[3]);
-		break;
-	case gs::effect_parameter::type::Float:
-		_param->set_float(_value.f[0]);
-		break;
-	case gs::effect_parameter::type::Float2:
-		_param->set_float2(_value.f[0], _value.f[1]);
-		break;
-	case gs::effect_parameter::type::Float3:
-		_param->set_float3(_value.f[0], _value.f[1], _value.f[2]);
-		break;
-	case gs::effect_parameter::type::Float4:
-		_param->set_float4(_value.f[0], _value.f[1], _value.f[2], _value.f[3]);
-		break;
-	default:
-		break;
-	}
-}
-
-gfx::effect_source::matrix_parameter::matrix_parameter(std::shared_ptr<gfx::effect_source::effect_source> parent,
-													   std::shared_ptr<gs::effect>                        effect,
-													   std::shared_ptr<gs::effect_parameter>              param)
-	: parameter(parent, effect, param)
-{
-	std::shared_ptr<gs::effect_parameter> min = param->get_annotation("minimum");
-	std::shared_ptr<gs::effect_parameter> max = param->get_annotation("maximum");
-	std::shared_ptr<gs::effect_parameter> stp = param->get_annotation("step");
-
-	param->get_default_matrix(_value);
-	if (min)
-		min->get_default_matrix(_minimum);
-	else
-		_minimum = matrix4{vec4{-167772.16f, -167772.16f, -167772.16f, -167772.16f},
-						   vec4{-167772.16f, -167772.16f, -167772.16f, -167772.16f},
-						   vec4{-167772.16f, -167772.16f, -167772.16f, -167772.16f},
-						   vec4{-167772.16f, -167772.16f, -167772.16f, -167772.16f}};
-
-	if (max)
-		max->get_default_matrix(_maximum);
-	else
-		_maximum = matrix4{vec4{-167772.16f, -167772.16f, -167772.16f, -167772.16f},
-						   vec4{-167772.16f, -167772.16f, -167772.16f, -167772.16f},
-						   vec4{-167772.16f, -167772.16f, -167772.16f, -167772.16f},
-						   vec4{-167772.16f, -167772.16f, -167772.16f, -167772.16f}};
-
-	if (stp)
-		stp->get_default_matrix(_step);
-	else
-		_step = matrix4{vec4{0.01f, 0.01f, 0.01f, 0.01f}, vec4{0.01f, 0.01f, 0.01f, 0.01f},
-						vec4{0.01f, 0.01f, 0.01f, 0.01f}, vec4{0.01f, 0.01f, 0.01f, 0.01f}};
-
-	std::shared_ptr<gs::effect_parameter> mode = param->get_annotation("mode");
-	if (mode && (mode->get_type() == gs::effect_parameter::type::String)) {
-		std::string mode_str = mode->get_default_string();
-		if (strcmp(mode_str.c_str(), "slider") == 0) {
-			_mode = value_mode::SLIDER;
-		} else {
-			_mode = value_mode::INPUT;
-		}
-	}
-
-	for (size_t x = 0; x < 4; x++) {
-		for (size_t y = 0; y < 4; y++) {
-			std::stringstream name_sstr;
-			std::stringstream ui_sstr;
-
-			name_sstr << _name << '[' << x << ']' << '[' << y << ']';
-			ui_sstr << _visible_name << '[' << x << ']' << '[' << y << ']';
-
-			_cache.name[x * 4 + y]         = name_sstr.str();
-			_cache.visible_name[x * 4 + y] = ui_sstr.str();
-		}
-	}
-}
-
-void gfx::effect_source::matrix_parameter::defaults(obs_properties_t* props, obs_data_t* data)
-{
-	/*for (size_t x = 0; x < 4; x++) {
-		vec4& v_ref = _value.x;
-		if (x == 0) {
-			vec4& v_ref = _value.x;
-		} else if (x == 1) {
-			vec4& v_ref = _value.y;
-		} else if (x == 2) {
-			vec4& v_ref = _value.z;
-		} else {
-			vec4& v_ref = _value.t;
-		}
-
-		for (size_t y = 0; y < 4; y++) {
-			size_t idx = x * 4 + y;
-			obs_data_set_default_double(data, _cache.name[idx].c_str(), v_ref.ptr[y]);
-		}
-	}*/
-}
-
-void gfx::effect_source::matrix_parameter::properties(obs_properties_t* props)
-{
-	auto grp = props;
-	if (!util::are_property_groups_broken()) {
-		grp    = obs_properties_create();
-		auto p = obs_properties_add_group(props, _name.c_str(), _visible_name.c_str(), OBS_GROUP_NORMAL, grp);
-		obs_property_set_long_description(p, _description.c_str());
-		obs_property_set_visible(p, _visible);
-	}
-
-	for (size_t x = 0; x < 4; x++) {
-		vec4& min_ref = _minimum.x;
-		vec4& max_ref = _maximum.x;
-		vec4& stp_ref = _step.x;
-		if (x == 0) {
-			min_ref = _minimum.x;
-			max_ref = _maximum.x;
-			stp_ref = _step.x;
-		} else if (x == 1) {
-			min_ref = _minimum.y;
-			max_ref = _maximum.y;
-			stp_ref = _step.y;
-		} else if (x == 2) {
-			min_ref = _minimum.z;
-			max_ref = _maximum.z;
-			stp_ref = _step.z;
-		} else {
-			min_ref = _minimum.t;
-			max_ref = _maximum.t;
-			stp_ref = _step.t;
-		}
-
-		for (size_t y = 0; y < 4; y++) {
-			size_t idx = x * 4 + y;
-
-			if (_mode == value_mode::INPUT) {
-				auto p = obs_properties_add_float(grp, _cache.name[idx].c_str(), _cache.visible_name[idx].c_str(),
-												  min_ref.ptr[y], max_ref.ptr[y], stp_ref.ptr[y]);
-				obs_property_set_visible(p, _visible);
-			} else {
-				auto p =
-					obs_properties_add_float_slider(grp, _cache.name[idx].c_str(), _cache.visible_name[idx].c_str(),
-													min_ref.ptr[y], max_ref.ptr[y], stp_ref.ptr[y]);
-				obs_property_set_visible(p, _visible);
-			}
-		}
-	}
-}
-
-void gfx::effect_source::matrix_parameter::remove_properties(obs_properties_t* props)
-{
-	for (size_t x = 0; x < 4; x++) {
-		for (size_t y = 0; y < 4; y++) {
-			size_t idx = x * 4 + y;
-			obs_properties_remove_by_name(props, _cache.name[idx].c_str());
-		}
-	}
-}
-
-void gfx::effect_source::matrix_parameter::update(obs_data_t* data)
-{
-	for (size_t x = 0; x < 4; x++) {
-		vec4& v_ref = _value.x;
-		if (x == 0) {
-			v_ref = _value.x;
-		} else if (x == 1) {
-			v_ref = _value.y;
-		} else if (x == 2) {
-			v_ref = _value.z;
-		} else {
-			v_ref = _value.t;
-		}
-
-		for (size_t y = 0; y < 4; y++) {
-			size_t idx   = x * 4 + y;
-			v_ref.ptr[y] = obs_data_get_double(data, _cache.name[idx].c_str());
-		}
-	}
-}
-
-void gfx::effect_source::matrix_parameter::tick(float_t time) {}
-
-void gfx::effect_source::matrix_parameter::prepare() {}
-
-void gfx::effect_source::matrix_parameter::assign()
-{
-	_param->set_matrix(_value);
-}
-
-gfx::effect_source::string_parameter::string_parameter(std::shared_ptr<gfx::effect_source::effect_source> parent,
-													   std::shared_ptr<gs::effect>                        effect,
-													   std::shared_ptr<gs::effect_parameter>              param)
-	: parameter(parent, effect, param)
-{
-	param->get_default_string(_value);
-}
-
-void gfx::effect_source::string_parameter::defaults(obs_properties_t* props, obs_data_t* data) {}
-
-void gfx::effect_source::string_parameter::properties(obs_properties_t* props) {}
-
-void gfx::effect_source::string_parameter::remove_properties(obs_properties_t* props) {}
-
-void gfx::effect_source::string_parameter::update(obs_data_t* data) {}
-
-void gfx::effect_source::string_parameter::tick(float_t time) {}
-
-void gfx::effect_source::string_parameter::prepare() {}
-
-void gfx::effect_source::string_parameter::assign() {}
-
-void gfx::effect_source::texture_parameter::load_texture(std::string file)
-{
-	_file_name = file;
-
-	struct stat st;
-	if (os_stat(_file_name.c_str(), &st) == -1) {
-		_last_size        = 0;
-		_last_modify_time = 0;
-		_last_create_time = 0;
-		throw std::system_error(std::error_code(ENOENT, std::system_category()), file.c_str());
-	} else {
-		_last_size        = st.st_size;
-		_last_modify_time = st.st_mtime;
-		_last_create_time = st.st_ctime;
-	}
-
-	_file = std::make_shared<gs::texture>(_file_name);
-}
-
-gfx::effect_source::texture_parameter::texture_parameter(std::shared_ptr<gfx::effect_source::effect_source> parent,
-														 std::shared_ptr<gs::effect>                        effect,
-														 std::shared_ptr<gs::effect_parameter>              param)
-	: parameter(parent, effect, param)
-{
-	_cache.name[0]         = _name + ".Type";
-	_cache.visible_name[0] = _visible_name + " " + D_TRANSLATE(ST_TEXTURE_TYPE);
-	_cache.name[1]         = _name + ".File";
-	_cache.visible_name[1] = _visible_name;
-	_cache.name[2]         = _name + ".Source";
-	_cache.visible_name[2] = _visible_name;
-}
-
-bool gfx::effect_source::texture_parameter::modified2(obs_properties_t* props, obs_property_t* property,
-													  obs_data_t* settings)
-{
-	_mode = static_cast<texture_mode>(obs_data_get_int(settings, _cache.name[0].c_str()));
-	if (_mode == texture_mode::FILE) {
-		obs_property_set_visible(obs_properties_get(props, _cache.name[1].c_str()), true);
-		obs_property_set_visible(obs_properties_get(props, _cache.name[2].c_str()), false);
-	} else if (_mode == texture_mode::SOURCE) {
-		obs_property_set_visible(obs_properties_get(props, _cache.name[1].c_str()), false);
-		obs_property_set_visible(obs_properties_get(props, _cache.name[2].c_str()), true);
-	}
-	return true;
-}
-
-void gfx::effect_source::texture_parameter::defaults(obs_properties_t* props, obs_data_t* data)
-{
-	obs_data_set_default_int(data, _cache.name[0].c_str(), static_cast<int64_t>(_mode));
-	obs_data_set_default_string(data, _cache.name[1].c_str(), _file_name.c_str());
-	obs_data_set_default_string(data, _cache.name[2].c_str(), _source_name.c_str());
-}
-
-bool modifiedcb(void* priv, obs_properties_t* props, obs_property_t* property, obs_data_t* settings) noexcept try {
-	return reinterpret_cast<gfx::effect_source::texture_parameter*>(priv)->modified2(props, property, settings);
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return false;
-}
-
-void gfx::effect_source::texture_parameter::properties(obs_properties_t* props)
-{
-	auto grp = props;
-	if (!util::are_property_groups_broken()) {
-		grp    = obs_properties_create();
-		auto p = obs_properties_add_group(props, _name.c_str(), _visible_name.c_str(), OBS_GROUP_NORMAL, grp);
-		obs_property_set_long_description(p, _description.c_str());
-		obs_property_set_visible(p, _visible);
-	}
-
 	{
-		auto p = obs_properties_add_list(grp, _cache.name[0].c_str(), _cache.visible_name[0].c_str(),
-										 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-		obs_property_set_modified_callback2(p, modifiedcb, this);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_TEXTURE_TYPE)));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_TEXTURE_FILE), static_cast<int64_t>(texture_mode::FILE));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_TEXTURE_SOURCE), static_cast<int64_t>(texture_mode::SOURCE));
+		auto grp = obs_properties_create();
+		obs_properties_add_group(pr, ST_SHADER, D_TRANSLATE(ST_SHADER), OBS_GROUP_NORMAL, grp);
+
+		{
+			auto p = obs_properties_add_path(grp, ST_SHADER_FILE, D_TRANSLATE(ST_SHADER_FILE), OBS_PATH_FILE, "*.*",
+											 nullptr);
+			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_FILE)));
+			obs_property_set_modified_callback2(
+				p,
+				[](void* priv, obs_properties_t* props, obs_property_t* prop, obs_data_t* data) noexcept {
+					return reinterpret_cast<gfx::shader::shader*>(priv)->on_shader_changed(props, prop, data);
+				},
+				this);
+		}
+		{
+			auto p = obs_properties_add_list(grp, ST_SHADER_TECHNIQUE, D_TRANSLATE(ST_SHADER_TECHNIQUE),
+											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_TECHNIQUE)));
+			obs_property_set_modified_callback2(
+				p,
+				[](void* priv, obs_properties_t* props, obs_property_t* prop, obs_data_t* data) noexcept {
+					return reinterpret_cast<gfx::shader::shader*>(priv)->on_technique_changed(props, prop, data);
+				},
+				this);
+		}
+		if (_mode != shader_mode::Transition) {
+			auto grp2 = obs_properties_create();
+			obs_properties_add_group(grp, ST_SHADER_SIZE, D_TRANSLATE(ST_SHADER_SIZE), OBS_GROUP_NORMAL, grp2);
+
+			{
+				auto p = obs_properties_add_text(grp2, ST_SHADER_SIZE_WIDTH, D_TRANSLATE(ST_SHADER_SIZE_WIDTH),
+												 OBS_TEXT_DEFAULT);
+				obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_SIZE_WIDTH)));
+			}
+			{
+				auto p = obs_properties_add_text(grp2, ST_SHADER_SIZE_HEIGHT, D_TRANSLATE(ST_SHADER_SIZE_HEIGHT),
+												 OBS_TEXT_DEFAULT);
+				obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_SIZE_HEIGHT)));
+			}
+		}
 	}
 	{
-		auto p = obs_properties_add_path(grp, _cache.name[1].c_str(), _cache.visible_name[1].c_str(), OBS_PATH_FILE,
-										 "Textures (" S_FILEFILTERS_TEXTURE ")", nullptr);
-		obs_property_set_long_description(p, _description.c_str());
+		auto grp = obs_properties_create();
+		obs_properties_add_group(pr, ST_PARAMETERS, D_TRANSLATE(ST_PARAMETERS), OBS_GROUP_NORMAL, grp);
 	}
+}
+
+bool gfx::shader::shader::on_shader_changed(obs_properties_t* props, obs_property_t* prop, obs_data_t* data)
+{
+	// Load changed shader.
+	update_shader(data);
+	
+	// Clear list of techniques.
+	obs_property_t* list = obs_properties_get(props, ST_SHADER_TECHNIQUE);
+	obs_property_list_clear(list);
+
+	// Don't go further if there is no shader.
+	if (!_shader)
+		return true;
+
+	// Rebuild Technique list.
 	{
-		auto p = obs_properties_add_list(grp, _cache.name[2].c_str(), _cache.visible_name[2].c_str(),
-										 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
-		obs::source_tracker::get()->enumerate(
-			[&p](std::string name, obs_source_t*) {
-				obs_property_list_add_string(p, std::string(name + " (Source)").c_str(), name.c_str());
-				return false;
-			},
-			obs::source_tracker::filter_video_sources);
-		obs::source_tracker::get()->enumerate(
-			[&p](std::string name, obs_source_t*) {
-				obs_property_list_add_string(p, std::string(name + " (Scene)").c_str(), name.c_str());
-				return false;
-			},
-			obs::source_tracker::filter_scenes);
-		obs_property_set_long_description(p, _description.c_str());
-	}
-}
-
-void gfx::effect_source::texture_parameter::remove_properties(obs_properties_t* props) {}
-
-void gfx::effect_source::texture_parameter::update(obs_data_t* data)
-{
-	try {
-		if (_mode == texture_mode::FILE) {
-			load_texture(obs_data_get_string(data, _cache.name[1].c_str()));
-		} else if (_mode == texture_mode::SOURCE) {
-			_source_name = obs_data_get_string(data, _cache.name[2].c_str());
-			if (!_source || (obs_source_get_name(_source->get()) != _source_name)) {
-				_source = std::make_shared<obs::source>(_source_name);
-				if (!_parent.expired())
-					_source_renderer = std::make_shared<gfx::source_texture>(_source, _parent.lock()->get_self());
+		const char* tech_name_c = obs_data_get_string(data, ST_SHADER_TECHNIQUE);
+		std::string tech_name   = tech_name_c ? tech_name_c : "";
+		bool        have_tech   = false;
+		for (size_t idx = 0, idx_end = _shader.count_techniques(); idx < idx_end; idx++) {
+			auto tech = _shader.get_technique(idx);
+			obs_property_list_add_string(list, tech.name().c_str(), tech.name().c_str());
+			if (tech.name() == tech_name) {
+				have_tech = true;
 			}
 		}
-	} catch (const std::exception& ex) {
-		P_LOG_ERROR("Update failed, error: %s", ex.what());
-	}
-}
-
-void gfx::effect_source::texture_parameter::tick(float_t time)
-{
-	_last_check += time;
-	if (_last_check >= 0.5f) {
-		_last_check -= 0.5f;
-		bool changed = false;
-
-		struct stat st;
-		if (os_stat(_file_name.c_str(), &st) != -1) {
-			changed =
-				(_last_size != st.st_size) || (_last_modify_time != st.st_mtime) || (_last_create_time != st.st_ctime);
+		if (!have_tech && (_shader.count_techniques() > 0)) {
+			obs_data_set_string(data, ST_SHADER_TECHNIQUE, _shader.get_technique(0).name().c_str());
+			//on_technique_changed(props, prop, data);
+		} else {
+			obs_data_set_string(data, ST_SHADER_TECHNIQUE, "");
 		}
-		if (changed) {
-			try {
-				load_texture(_file_name);
-			} catch (const std::exception& ex) {
-				P_LOG_ERROR("Loading texture \"%s\" failed, error: %s", _file_name.c_str(), ex.what());
-			}
-		}
-	}
-}
-
-void gfx::effect_source::texture_parameter::prepare()
-{
-	if (_mode == texture_mode::SOURCE) {
-		if (_source_renderer) {
-			_source_tex = _source_renderer->render(_source->width(), _source->height());
-		}
-	}
-}
-
-void gfx::effect_source::texture_parameter::assign()
-{
-	if (_mode == texture_mode::FILE) {
-		if (_file)
-			_param->set_texture(_file);
-	} else {
-		if (_source_tex)
-			_param->set_texture(_source_tex);
-	}
-}
-
-void gfx::effect_source::texture_parameter::enum_active_sources(obs_source_enum_proc_t p, void* t)
-{
-	if ((_mode == texture_mode::SOURCE) && !_parent.expired() && _source) {
-		p(_parent.lock()->get_self(), _source->get(), t);
-	}
-}
-
-bool gfx::effect_source::effect_source::modified2(obs_properties_t* props, obs_property_t* property,
-												  obs_data_t* settings)
-{
-	// Broken, gets stuck locking gs::context.
-	/*
-	auto gctx = gs::context();
-	for (auto& kv : _params) {
-		if (kv.second)
-			kv.second->remove_properties(props);
-	}
-
-	try {
-		const char* str = obs_data_get_string(settings, ST_FILE);
-		load_file(str ? str : "");
-	} catch (const std::exception& ex) {
-		P_LOG_ERROR("<gfx::effect_source> Failed to load effect \"%s\" due to error: %s", _file.c_str(), ex.what());
-	}
-
-	for (auto& kv : _params) {
-		if (kv.second)
-			kv.second->properties(props);
-	}*/
-
-	for (auto& kv : _params) {
-		if (kv.second)
-			kv.second->defaults(props, settings);
 	}
 
 	return true;
 }
 
-void gfx::effect_source::effect_source::load_file(std::string file)
+bool gfx::shader::shader::on_technique_changed(obs_properties_t* props, obs_property_t* prop, obs_data_t* data)
 {
-	auto gctx = gs::context();
-
-	_params.clear();
-	_effect.reset();
-	_file        = file;
-	_time        = 0;
-	_time_active = 0;
-
-	struct stat st;
-	if (os_stat(_file.c_str(), &st) == -1) {
-		_last_size        = 0;
-		_last_modify_time = 0;
-		_last_create_time = 0;
-		throw std::system_error(std::error_code(ENOENT, std::system_category()), file.c_str());
-	} else {
-		_last_size        = st.st_size;
-		_last_modify_time = st.st_mtime;
-		_last_create_time = st.st_ctime;
+	// Clear parameter options.
+	auto grp = obs_property_group_content(obs_properties_get(props, ST_PARAMETERS));
+	if (auto p = obs_properties_first(grp); p != nullptr) {
+		do {
+			obs_properties_remove_by_name(grp, obs_property_name(p));
+			p = obs_properties_first(grp);
+		} while (p != nullptr);
 	}
 
-	_effect   = gs::effect::create(file);
-	auto prms = _effect->get_parameters();
-	for (auto prm : prms) {
-		param_ident_t identity;
-		identity.first  = prm->get_type();
-		identity.second = prm->get_name();
+	// Don't go further if there is no shader.
+	if (!_shader)
+		return true;
 
-		bool skip = false;
-		for (auto v : static_parameters) {
-			if (prm->get_name() == v) {
-				skip = true;
-				break;
-			}
-		}
-		if (_cb_valid)
-			skip = skip || !_cb_valid(prm);
-		if (skip)
-			continue;
-
-		_params.emplace(identity, parameter::create(this->shared_from_this(), _effect, prm));
+	// Load technique.
+	update_technique(data);
+	
+	// Rebuild new parameters.
+	for (auto kv : _shader_params) {
+		kv.second->properties(grp, data);
 	}
+
+	return true;
 }
 
-gfx::effect_source::effect_source::effect_source(obs_source_t* self)
-	: _self(self), _last_check(0), _last_size(0), _last_modify_time(0), _last_create_time(0), _time(0), _time_active(0),
-	  _time_since_last_tick(0)
+void gfx::shader::shader::update_shader(obs_data_t* data)
 {
-	auto gctx = gs::context();
-
-	_tri = std::make_shared<gs::vertex_buffer>(3ul, uint8_t(1));
 	{
-		auto& vtx = _tri->at(0);
-		vec3_set(vtx.position, 0, 0, 0);
-		vec4_set(vtx.uv[0], 0, 0, 0, 0);
-	}
-	{
-		auto& vtx = _tri->at(1);
-		vec3_set(vtx.position, 2, 0, 0);
-		vec4_set(vtx.uv[0], 2, 0, 0, 0);
-	}
-	{
-		auto& vtx = _tri->at(2);
-		vec3_set(vtx.position, 0, 2, 0);
-		vec4_set(vtx.uv[0], 0, 2, 0, 0);
-	}
-}
-
-gfx::effect_source::effect_source::~effect_source() {}
-
-bool modifiedcb2(void* priv, obs_properties_t* props, obs_property_t* property, obs_data_t* settings) noexcept try {
-	return reinterpret_cast<gfx::effect_source::effect_source*>(priv)->modified2(props, property, settings);
-} catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return false;
-}
-
-void gfx::effect_source::effect_source::properties(obs_properties_t* props)
-{
-	auto p = obs_properties_add_path(props, ST_FILE, D_TRANSLATE(ST_FILE), OBS_PATH_FILE, "Effects (*.effect);;*.*",
-									 nullptr);
-	obs_property_set_modified_callback2(p, modifiedcb2, this);
-	obs_properties_add_text(props, ST_TECHNIQUE, D_TRANSLATE(ST_TECHNIQUE), OBS_TEXT_DEFAULT);
-
-	for (auto& kv : _params) {
-		if (kv.second)
-			kv.second->properties(props);
-	}
-}
-
-void gfx::effect_source::effect_source::update(obs_data_t* data)
-{
-	const char* file = obs_data_get_string(data, ST_FILE);
-	if (file != _file) {
-		try {
-			load_file(file);
-		} catch (const std::exception& ex) {
-			P_LOG_ERROR("<gfx::effect_source> Failed to load effect \"%s\" due to error: %s", _file.c_str(), ex.what());
-		}
-	}
-
-	const char* str = obs_data_get_string(data, ST_TECHNIQUE);
-	_tech           = str ? str : "Draw";
-
-	for (auto& kv : _params) {
-		if (kv.second)
-			kv.second->update(data);
-	}
-}
-
-bool gfx::effect_source::effect_source::tick(float_t time)
-{
-	_last_check += time;
-	if (_last_check >= 0.5f) {
-		_last_check -= 0.5f;
-		bool changed = false;
-
-		struct stat st;
-		if (os_stat(_file.c_str(), &st) != -1) {
-			changed =
-				(_last_size != st.st_size) || (_last_modify_time != st.st_mtime) || (_last_create_time != st.st_ctime);
-		}
-		if (changed) {
+		const char* file_c = obs_data_get_string(data, ST_SHADER_FILE);
+		std::string file   = file_c ? file_c : "";
+		if (file != "") {
 			try {
-				load_file(_file);
+				load_shader(file);
 			} catch (const std::exception& ex) {
-				P_LOG_ERROR("Loading shader \"%s\" failed, error: %s", _file.c_str(), ex.what());
+				P_LOG_ERROR("Failed to load shader: %s.", ex.what());
+				_shader.reset();
+			} catch (...) {
+				P_LOG_ERROR("Failed to load shader.");
+				_shader.reset();
 			}
-			return true;
+		} else {
+			_shader.reset();
 		}
 	}
+}
 
-	for (auto& kv : _params) {
-		if (kv.second)
-			kv.second->tick(time);
+void gfx::shader::shader::update_technique(obs_data_t* data)
+{
+	{
+		const char* shader_tech_c = obs_data_get_string(data, ST_SHADER_TECHNIQUE);
+		_shader_tech              = shader_tech_c ? shader_tech_c : "";
+		load_shader_params();
+	}
+}
+
+inline std::pair<gfx::shader::size_type, double_t> parse_text_as_size(const char* text)
+{
+	double_t v = 0;
+	if (sscanf(text, "%lf", &v) == 1) {
+		const char* prc_chr = strrchr(text, '%');
+		if (prc_chr && (*prc_chr == '%')) {
+			return {gfx::shader::size_type::Percent, v / 100.0};
+		} else {
+			return {gfx::shader::size_type::Pixel, v};
+		}
+	} else {
+		return {gfx::shader::size_type::Percent, 1.0};
+	}
+}
+
+void gfx::shader::shader::update(obs_data_t* data)
+{
+	update_shader(data);
+	update_technique(data);
+
+	{
+		auto sz_x    = parse_text_as_size(obs_data_get_string(data, ST_SHADER_SIZE_WIDTH));
+		_width_type  = sz_x.first;
+		_width_value = std::clamp(sz_x.second, 0.01, 8192.0);
+
+		auto sz_y     = parse_text_as_size(obs_data_get_string(data, ST_SHADER_SIZE_HEIGHT));
+		_height_type  = sz_y.first;
+		_height_value = std::clamp(sz_y.second, 0.01, 8192.0);
 	}
 
+	for (auto kv : _shader_params) {
+		kv.second->update(data);
+	}
+}
+
+uint32_t gfx::shader::shader::width()
+{
+	switch (_mode) {
+	case shader_mode::Transition:
+		return _base_width;
+	case shader_mode::Source:
+		switch (_width_type) {
+		case size_type::Pixel:
+			return std::clamp(static_cast<uint32_t>(_width_value), 1u, 8192u);
+		case size_type::Percent:
+			return std::clamp(static_cast<uint32_t>(_width_value * _base_width), 1u, 8192u);
+		}
+	case shader_mode::Filter:
+		switch (_width_type) {
+		case size_type::Pixel:
+			return std::clamp(static_cast<uint32_t>(_width_value), 1u, 8192u);
+		case size_type::Percent:
+			if (_input_a) {
+				return std::clamp(static_cast<uint32_t>(_width_value * _input_a->get_width()), 1u, 8192u);
+			} else {
+				return std::clamp(static_cast<uint32_t>(_width_value * _base_width), 1u, 8192u);
+			}
+		}
+	default:
+		return 0;
+	}
+}
+
+uint32_t gfx::shader::shader::height()
+{
+	switch (_mode) {
+	case shader_mode::Transition:
+		return _base_height;
+	case shader_mode::Source:
+		switch (_height_type) {
+		case size_type::Pixel:
+			return std::clamp(static_cast<uint32_t>(_height_value), 1u, 8192u);
+		case size_type::Percent:
+			return std::clamp(static_cast<uint32_t>(_height_value * _base_height), 1u, 8192u);
+		}
+	case shader_mode::Filter:
+		switch (_height_type) {
+		case size_type::Pixel:
+			return std::clamp(static_cast<uint32_t>(_height_value), 1u, 8192u);
+		case size_type::Percent:
+			if (_input_a) {
+				return std::clamp(static_cast<uint32_t>(_height_value * _input_a->get_height()), 1u, 8192u);
+			} else {
+				return std::clamp(static_cast<uint32_t>(_height_value * _base_height), 1u, 8192u);
+			}
+		}
+	default:
+		return 0;
+	}
+}
+
+bool gfx::shader::shader::tick(float_t time)
+{
+	// Update State
 	_time += time;
-	_time_since_last_tick = time;
+
+	// Update Shader
+	if (_shader) {
+		if (gs::effect_parameter el = _shader.get_parameter("Time"); el != nullptr) {
+			if (el.get_type() == gs::effect_parameter::type::Float4) {
+				el.set_float4(
+					_time, time, 0,
+					static_cast<float_t>(static_cast<double_t>(_random())
+										 / static_cast<double_t>(std::numeric_limits<unsigned long long>::max())));
+			}
+		}
+
+		for (auto kv : _shader_params) {
+			kv.second->assign();
+		}
+	}
 
 	return false;
 }
 
-void gfx::effect_source::effect_source::render(bool is_matrix_valid)
+void gfx::shader::shader::render()
 {
-	if (!_effect)
+	if (!_shader)
 		return;
 
-	for (auto& kv : _params) {
-		if (kv.second)
-			kv.second->prepare();
-	}
+	uint32_t szw = width();
+	uint32_t szh = height();
 
-	for (auto& kv : _params) {
-		if (kv.second)
-			kv.second->assign();
-	}
-
-	// Apply "special" parameters.
-	_time_active += _time_since_last_tick;
-	{
-		auto p_time = _effect->get_parameter("Time");
-		if (p_time && (p_time->get_type() == gs::effect_parameter::type::Float4)) {
-			p_time->set_float4(_time, _time_active, _time_since_last_tick, _random_dist(_random_generator));
-		}
-		auto p_random = _effect->get_parameter("Random");
-		if (p_random && (p_random->get_type() == gs::effect_parameter::type::Matrix)) {
-			matrix4 m;
-			vec4_set(&m.x, _random_dist(_random_generator), _random_dist(_random_generator),
-					 _random_dist(_random_generator), _random_dist(_random_generator));
-			vec4_set(&m.y, _random_dist(_random_generator), _random_dist(_random_generator),
-					 _random_dist(_random_generator), _random_dist(_random_generator));
-			vec4_set(&m.z, _random_dist(_random_generator), _random_dist(_random_generator),
-					 _random_dist(_random_generator), _random_dist(_random_generator));
-			vec4_set(&m.t, _random_dist(_random_generator), _random_dist(_random_generator),
-					 _random_dist(_random_generator), _random_dist(_random_generator));
-			p_random->set_matrix(m);
-		}
-	}
-
-	if (_cb_override) {
-		_cb_override(_effect);
-	}
-
-	gs_blend_state_push();
-
-	gs_reset_blend_state();
-	gs_enable_blending(false);
-	gs_enable_color(true, true, true, true);
-	gs_enable_depth_test(false);
-	gs_enable_stencil_test(false);
-	gs_enable_stencil_write(false);
-	if (!is_matrix_valid) {
-		gs_matrix_push();
-		gs_ortho(0, 1, 0, 1, -1., 1.);
-	}
-
-	while (gs_effect_loop(_effect->get_object(), _tech.c_str())) {
-		gs_load_vertexbuffer(_tri->update());
-		gs_load_indexbuffer(nullptr);
-		gs_draw(gs_draw_mode::GS_TRIS, 0, _tri->size());
-	}
-
-	if (!is_matrix_valid) {
-		gs_matrix_pop();
-	}
-	gs_blend_state_pop();
-}
-
-obs_source_t* gfx::effect_source::effect_source::get_self()
-{
-	return _self;
-}
-
-void gfx::effect_source::effect_source::enum_active_sources(obs_source_enum_proc_t p, void* t)
-{
-	for (auto& kv : _params) {
-		if (kv.second)
-			kv.second->enum_active_sources(p, t);
+	while (gs_effect_loop(_shader.get_object(), _shader_tech.c_str())) {
+		gs_draw_sprite(nullptr, 0, szw, szh);
 	}
 }
 
-void gfx::effect_source::effect_source::set_valid_property_cb(valid_property_cb_t cb)
+void gfx::shader::shader::set_size(uint32_t w, uint32_t h)
 {
-	_cb_valid = cb;
+	_base_width  = w;
+	_base_height = h;
 }
 
-void gfx::effect_source::effect_source::set_override_cb(param_override_cb_t cb)
+void gfx::shader::shader::set_input_a(std::shared_ptr<gs::texture> tex)
 {
-	_cb_override = cb;
+	_input_a = tex;
+}
+
+void gfx::shader::shader::set_input_b(std::shared_ptr<gs::texture> tex)
+{
+	_input_b = tex;
 }
