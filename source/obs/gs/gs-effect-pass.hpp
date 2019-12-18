@@ -21,6 +21,7 @@
 #include <cinttypes>
 #include <memory>
 #include <string>
+#include "gs-effect-parameter.hpp"
 
 // OBS
 extern "C" {
@@ -48,15 +49,15 @@ namespace gs {
 		//gs::shader get_vertex_shader();
 
 		size_t count_vertex_parameters();
-		//gs::parameter get_vertex_parameter(size_t idx);
-		//gs::parameter get_vertex_parameter(std::string name);
-		//bool has_vertex_parameter(std::string name);
-		//bool has_vertex_parameter(std::string name, ... type);
+		gs::effect_parameter get_vertex_parameter(size_t idx);
+		gs::effect_parameter get_vertex_parameter(std::string name);
+		bool has_vertex_parameter(std::string name);
+		bool has_vertex_parameter(std::string name, gs::effect_parameter::type type);
 
 		size_t count_pixel_parameters();
-		//gs::parameter get_vertex_parameter(size_t idx);
-		//gs::parameter get_vertex_parameter(std::string name);
-		//bool has_vertex_parameter(std::string name);
-		//bool has_vertex_parameter(std::string name, ... type);
+		gs::effect_parameter get_pixel_parameter(size_t idx);
+		gs::effect_parameter get_pixel_parameter(std::string name);
+		bool has_pixel_parameter(std::string name);
+		bool has_pixel_parameter(std::string name, gs::effect_parameter::type type);
 	};
 } // namespace gs
