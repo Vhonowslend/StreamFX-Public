@@ -16,8 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 # CMake Setup
-CMake_Minimum_Required(VERSION 3.8.0)
-Include("cmake/util.cmake")
+cmake_minimum_required(VERSION 3.8.0)
 
 # Automatic Versioning
 set(VERSION_MAJOR 0)
@@ -28,7 +27,7 @@ set(PROJECT_COMMIT "N/A")
 if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
 	set(GIT_RESULT "")
 	set(GIT_OUTPUT "")
-	EXECUTE_PROCESS(
+	execute_process(
 		COMMAND git rev-list --count --topo-order ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}..HEAD
 		WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 		RESULT_VARIABLE GIT_RESULT
@@ -38,7 +37,7 @@ if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
 	if(GIT_RESULT EQUAL 0)
 		set(VERSION_TWEAK ${GIT_OUTPUT})
 	endif()
-	EXECUTE_PROCESS(
+	execute_process(
 		COMMAND git rev-parse HEAD
 		WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 		RESULT_VARIABLE GIT_RESULT
@@ -51,7 +50,7 @@ if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
 endif()
 
 # Define Project
-PROJECT(
+project(
 	obs-stream-effects
 	VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}
 )
@@ -63,6 +62,13 @@ set(PROJECT_COPYRIGHT_YEARS "2018 - 2019")
 ################################################################################
 # Setup / Bootstrap
 ################################################################################
+
+# Search Path
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/;${CMAKE_MODULE_PATH}")
+
+# CMake Modules
+include("util")
+include("ClangToolkit")
 
 # Detect Build Type
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
@@ -79,9 +85,6 @@ if("${BITS}" STREQUAL "32")
 else()
 	set(ARCH "x64")
 endif()
-
-# Search Path
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 
 # All Warnings, Extra Warnings, Pedantic
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -199,7 +202,7 @@ endif()
 
 # CMake Modules
 if(${PropertyPrefix}OBS_DOWNLOAD)
-	include("cmake/DownloadProject.cmake")
+	include("DownloadProject")
 endif()
 
 # Load OBS Studio
@@ -264,6 +267,10 @@ set(PROJECT_LIBRARIES
 set(PROJECT_TEMPLATES
 	"${PROJECT_SOURCE_DIR}/cmake/version.hpp.in"
 	"${PROJECT_SOURCE_DIR}/cmake/module.cpp.in"
+	"${PROJECT_SOURCE_DIR}/cmake/ClangToolkit.cmake"
+	"${PROJECT_SOURCE_DIR}/cmake/DownloadProject.cmake"
+	"${PROJECT_SOURCE_DIR}/cmake/DownloadProject.CmakeLists.cmake.in"
+	"${PROJECT_SOURCE_DIR}/cmake/util.cmake"
 )
 if(WIN32)
 	list(APPEND PROJECT_TEMPLATES
@@ -410,6 +417,12 @@ source_group(TREE "${PROJECT_SOURCE_DIR}/source" PREFIX "Header Files" FILES ${_
 add_library(${PROJECT_NAME} MODULE
 	${PROJECT_PUBLIC}
 	${PROJECT_PRIVATE}
+)
+
+# Clang-Format
+clang_format(
+	TARGETS ${PROJECT_NAME}
+	DEPENDENCY
 )
 
 # Include Directories
