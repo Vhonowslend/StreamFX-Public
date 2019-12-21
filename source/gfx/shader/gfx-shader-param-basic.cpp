@@ -166,8 +166,7 @@ void gfx::shader::float_parameter::properties(obs_properties_t* props, obs_data_
 	_param.get_default_value(defaults, _len);
 
 	for (size_t len = 0; len < _len; len++) {
-		auto p =
-			obs_properties_add_float(grp, _key[len].c_str(), _name[len].c_str(), _min[len], _max[len], _step[len]);
+		auto p = obs_properties_add_float(grp, _key[len].c_str(), _name[len].c_str(), _min[len], _max[len], _step[len]);
 		obs_property_set_long_description(p, _desc.c_str());
 		obs_data_set_default_double(settings, _key[len].c_str(), static_cast<double_t>(defaults[len]));
 	}

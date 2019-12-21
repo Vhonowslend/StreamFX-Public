@@ -18,9 +18,9 @@
 */
 
 #pragma once
-#include <type_traits>
 #include <cinttypes>
 #include <limits>
+#include <type_traits>
 
 extern "C" {
 #include <obs-config.h>
@@ -48,7 +48,7 @@ typename std::enable_if<enable_bitmask_operators<Enum>::enable, Enum>::type oper
 	return static_cast<Enum>(static_cast<underlying>(lhs) & static_cast<underlying>(rhs));
 }
 
-#define P_ENABLE_BITMASK_OPERATORS(x)      \
+#define P_ENABLE_BITMASK_OPERATORS(x)    \
 	template<>                           \
 	struct enable_bitmask_operators<x> { \
 		static const bool enable = true; \
@@ -62,4 +62,4 @@ namespace util {
 	{
 		return obs_get_version() < MAKE_SEMANTIC_VERSION(24, 0, 0);
 	}
-}
+} // namespace util

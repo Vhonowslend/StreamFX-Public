@@ -58,6 +58,6 @@ std::shared_ptr<gfx::shader::parameter> gfx::shader::parameter::make_parameter(g
 		return el;
 	}
 	default:
-	return nullptr;
+		return nullptr;
 	}
 }

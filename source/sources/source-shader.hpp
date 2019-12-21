@@ -30,7 +30,7 @@ extern "C" {
 
 namespace source {
 	namespace shader {
-		class shader_instance : public obs::source_instance {			
+		class shader_instance : public obs::source_instance {
 			std::shared_ptr<gfx::shader::shader> _fx;
 
 			bool _is_main;

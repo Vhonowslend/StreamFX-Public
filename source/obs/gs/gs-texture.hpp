@@ -45,8 +45,8 @@ namespace gs {
 
 		protected:
 		gs_texture_t* _texture;
-		bool          _is_owner     = true;
-		type          _type = type::Normal;
+		bool          _is_owner = true;
+		type          _type     = type::Normal;
 
 		public:
 		~texture();

@@ -21,8 +21,8 @@
 #define STREAMEFFECTS_SOURCE_FACTORY_HPP
 
 #pragma once
-#include "plugin.hpp"
 #include <stdexcept>
+#include "plugin.hpp"
 
 #ifdef _MSC_VER
 #pragma warning(push)

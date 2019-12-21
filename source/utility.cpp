@@ -20,8 +20,8 @@
 #include "utility.hpp"
 #include <sstream>
 #include <stdexcept>
-#include "plugin.hpp"
 #include <unordered_map>
+#include "plugin.hpp"
 
 // OBS
 #ifdef _MSC_VER

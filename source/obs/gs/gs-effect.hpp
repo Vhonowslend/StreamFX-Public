@@ -41,7 +41,7 @@ extern "C" {
 namespace gs {
 	class effect : public std::shared_ptr<gs_effect_t> {
 		public:
-		effect() {};
+		effect(){};
 		effect(std::string code, std::string name);
 		effect(std::filesystem::path file);
 		~effect();

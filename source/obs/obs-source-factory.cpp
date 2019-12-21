@@ -18,4 +18,3 @@
  */
 
 #include "obs-source-factory.hpp"
-

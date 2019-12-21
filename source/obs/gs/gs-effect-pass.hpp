@@ -48,16 +48,16 @@ namespace gs {
 		//gs::shader get_pixel_shader();
 		//gs::shader get_vertex_shader();
 
-		size_t count_vertex_parameters();
+		size_t               count_vertex_parameters();
 		gs::effect_parameter get_vertex_parameter(size_t idx);
 		gs::effect_parameter get_vertex_parameter(std::string name);
-		bool has_vertex_parameter(std::string name);
-		bool has_vertex_parameter(std::string name, gs::effect_parameter::type type);
+		bool                 has_vertex_parameter(std::string name);
+		bool                 has_vertex_parameter(std::string name, gs::effect_parameter::type type);
 
-		size_t count_pixel_parameters();
+		size_t               count_pixel_parameters();
 		gs::effect_parameter get_pixel_parameter(size_t idx);
 		gs::effect_parameter get_pixel_parameter(std::string name);
-		bool has_pixel_parameter(std::string name);
-		bool has_pixel_parameter(std::string name, gs::effect_parameter::type type);
+		bool                 has_pixel_parameter(std::string name);
+		bool                 has_pixel_parameter(std::string name, gs::effect_parameter::type type);
 	};
 } // namespace gs

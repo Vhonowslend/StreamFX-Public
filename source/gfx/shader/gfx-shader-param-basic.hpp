@@ -42,7 +42,7 @@ namespace gfx {
 		};
 
 		struct float_parameter : public parameter {
-			size_t _len;
+			size_t      _len;
 			std::string _key[5];
 			std::string _name[5];
 			std::string _desc;

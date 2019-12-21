@@ -115,7 +115,7 @@ namespace util {
 		}
 
 #pragma push_macro("P_IS_POWER_OF_TWO_AS_LOOP")
-#define P_IS_POWER_OF_TWO_AS_LOOP(x)      \
+#define P_IS_POWER_OF_TWO_AS_LOOP(x)    \
 	template<>                          \
 	inline bool is_power_of_two(x v)    \
 	{                                   \

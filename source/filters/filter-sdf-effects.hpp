@@ -39,7 +39,7 @@
 
 namespace filter {
 	namespace sdf_effects {
-		class sdf_effects_instance : public obs::source_instance {			
+		class sdf_effects_instance : public obs::source_instance {
 			gs::effect _sdf_producer_effect;
 			gs::effect _sdf_consumer_effect;
 
