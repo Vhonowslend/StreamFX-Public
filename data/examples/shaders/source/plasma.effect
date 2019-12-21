@@ -12,24 +12,61 @@ uniform float4 Time<
 >;
 
 // Params
-uniform float PlasmaScale<
+uniform float PlasmaUVScale <
 	bool visible = true;
-	string name = "Plasma Scale";
-	float min = 100.0;
-	float max = 1000.0;
+	int order = 0;
+	string name = "UV Scaling";
+	string suffix = " %";
+	string type = "slider";
+	float minimum = 1.0;
+	float maximum = 10000.0;
+	float step = 0.01;
+	float scale = 0.01;
 > = 100.0;
-uniform float3 LowColor<
-	float min = 0.0;
-	float max = 100.0;
-> = {0.0, 0.0, 0.0};
-uniform float3 MiddleColor<
-	float min = 0.0;
-	float max = 100.0;
-> = {0.5, 0.5, 0.5};
-uniform float3 HighColor<
-	float min = 0.0;
-	float max = 100.0;
-> = {1.0, 1.0, 1.0};
+
+uniform float PlasmaTwists <
+	bool visible = true;
+	int order = 1;
+	string name = "Twists";
+	string type = "slider";
+	float minimum = 0.01;
+	float maximum = 100.0;
+	float step = 0.01;
+	float scale = 3.1415926535897932384626433832795;
+> = 1.0;
+
+uniform float4 PlasmaLowColor <
+	bool visible = true;
+	int order = 2;
+	string name = "Color 1";
+	string type = "slider";
+	float minimum = -1000.0;
+	float maximum = 1000.0;
+	float step = 0.01;
+	float scale = 0.01;
+> = {100.0, 0.0, 0.0, 100.0};
+
+uniform float4 PlasmaMiddleColor <
+	bool visible = true;
+	int order = 3;
+	string name = "Color 2";
+	string type = "slider";
+	float minimum = -1000.0;
+	float maximum = 1000.0;
+	float step = 0.01;
+	float scale = 0.01;
+> = {0.0, 100.0, 0.0, 100.0};
+
+uniform float4 PlasmaHighColor <
+	bool visible = true;
+	int order = 4;
+	string name = "Color 3";
+	string type = "slider";
+	float minimum = -1000.0;
+	float maximum = 1000.0;
+	float step = 0.01;
+	float scale = 0.01;
+> = {0.0, 0.0, 100.0, 100.0};;
 
 struct StageData {
 	float4 pos : POSITION;
@@ -38,6 +75,7 @@ struct StageData {
 
 StageData VSDefault(StageData data) {
 	data.pos = mul(float4(data.pos.xyz, 1.0), ViewProj);
+	data.uv *= PlasmaUVScale;
 	return data;
 }
 
@@ -73,7 +111,7 @@ float4 Plasma(StageData data) : TARGET {
 	float b = Plasma2(data.uv, Time[0]);
 	float c = Plasma3(data.uv, Time[0]);
 
-	float v = abs(sin((a + b + c) * (PlasmaScale / 100.0)));
+	float v = abs(sin((a + b + c) * (PlasmaTwists / 100.0)));
 
 	return float4(v,v,v, 1.0);
 }
@@ -92,11 +130,11 @@ float4 ColoredPlasma(StageData data) : TARGET {
 	float b = Plasma2(data.uv, Time[0]);
 	float c = Plasma3(data.uv, Time[0]);
 
-	float v = abs(sin((a + b + c) * (PlasmaScale / 100.0)));
+	float v = abs(sin((a + b + c) * (PlasmaTwists / 100.0)));
 
 	float v1 = clamp(v * 2.0, 0., 1.);
 	float v2 = clamp((v - 0.5) * 2.0, 0., 1.);
-	float3 col = lerp(lerp(LowColor, MiddleColor, v1), HighColor, v2);
+	float3 col = lerp(lerp(PlasmaLowColor, PlasmaMiddleColor, v1), PlasmaHighColor, v2);
 
 	return float4(col, 1.0);
 }
