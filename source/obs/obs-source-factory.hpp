@@ -22,6 +22,7 @@
 
 #pragma once
 #include "plugin.hpp"
+#include <stdexcept>
 
 #ifdef _MSC_VER
 #pragma warning(push)
