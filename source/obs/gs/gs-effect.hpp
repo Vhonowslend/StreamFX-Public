@@ -42,20 +42,20 @@ namespace gs {
 	class effect : public std::shared_ptr<gs_effect_t> {
 		public:
 		effect(){};
-		effect(std::string code, std::string name);
+		effect(const std::string& code, const std::string& name);
 		effect(std::filesystem::path file);
 		~effect();
 
 		size_t               count_techniques();
 		gs::effect_technique get_technique(size_t idx);
-		gs::effect_technique get_technique(std::string name);
-		bool                 has_technique(std::string name);
+		gs::effect_technique get_technique(const std::string& name);
+		bool                 has_technique(const std::string& name);
 
 		size_t               count_parameters();
 		gs::effect_parameter get_parameter(size_t idx);
-		gs::effect_parameter get_parameter(std::string name);
-		bool                 has_parameter(std::string name);
-		bool                 has_parameter(std::string name, effect_parameter::type type);
+		gs::effect_parameter get_parameter(const std::string& name);
+		bool                 has_parameter(const std::string& name);
+		bool                 has_parameter(const std::string& name, effect_parameter::type type);
 
 		public /* Legacy Support */:
 		inline gs_effect_t* get_object()
@@ -63,11 +63,12 @@ namespace gs {
 			return get();
 		}
 
-		static gs::effect create(std::string file)
+		static gs::effect create(const std::string& file)
 		{
 			return gs::effect(file);
 		};
-		static gs::effect create(std::string code, std::string name)
+
+		static gs::effect create(const std::string& code, const std::string& name)
 		{
 			return gs::effect(code, name);
 		};

@@ -54,7 +54,7 @@ static std::string load_file_as_code(std::filesystem::path file)
 	return std::string(buf.data(), buf.data() + size);
 }
 
-gs::effect::effect(std::string code, std::string name)
+gs::effect::effect(const std::string& code, const std::string& name)
 {
 	auto gctx = gs::context();
 
@@ -91,7 +91,7 @@ gs::effect_technique gs::effect::get_technique(size_t idx)
 	return gs::effect_technique(get()->techniques.array + idx, this);
 }
 
-gs::effect_technique gs::effect::get_technique(std::string name)
+gs::effect_technique gs::effect::get_technique(const std::string& name)
 {
 	for (size_t idx = 0; idx < count_techniques(); idx++) {
 		auto ptr = get()->techniques.array + idx;
@@ -103,7 +103,7 @@ gs::effect_technique gs::effect::get_technique(std::string name)
 	return nullptr;
 }
 
-bool gs::effect::has_technique(std::string name)
+bool gs::effect::has_technique(const std::string& name)
 {
 	if (get_technique(name))
 		return true;
@@ -124,7 +124,7 @@ gs::effect_parameter gs::effect::get_parameter(size_t idx)
 	return gs::effect_parameter(get()->params.array + idx, this);
 }
 
-gs::effect_parameter gs::effect::get_parameter(std::string name)
+gs::effect_parameter gs::effect::get_parameter(const std::string& name)
 {
 	for (size_t idx = 0; idx < count_parameters(); idx++) {
 		auto ptr = get()->params.array + idx;
@@ -136,14 +136,14 @@ gs::effect_parameter gs::effect::get_parameter(std::string name)
 	return nullptr;
 }
 
-bool gs::effect::has_parameter(std::string name)
+bool gs::effect::has_parameter(const std::string& name)
 {
 	if (get_parameter(name))
 		return true;
 	return false;
 }
 
-bool gs::effect::has_parameter(std::string name, effect_parameter::type type)
+bool gs::effect::has_parameter(const std::string& name, effect_parameter::type type)
 {
 	auto eprm = get_parameter(name);
 	if (eprm)
