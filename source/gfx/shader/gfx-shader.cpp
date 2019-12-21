@@ -31,21 +31,40 @@
 #define ST_PARAMETERS ST ".Parameters"
 
 gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
-	: _self(self), _mode(mode), _shader(), _shader_file(), _time()
+	: _self(self), _mode(mode), _base_width(1), _base_height(1), _input_a(), _input_b(),
+
+	  _shader(), _shader_file(), _shader_tech("Draw"), _shader_file_mt(), _shader_file_sz(), _shader_file_tick(0),
+	  _shader_params_invalid(true),
+
+	  _width_type(size_type::Percent), _width_value(1.0), _height_type(size_type::Percent), _height_value(1.0),
+
+	  _time(0), _random()
 {
 	_random.seed(static_cast<unsigned long long>(time(NULL)));
 }
 
 gfx::shader::shader::~shader() {}
 
-void gfx::shader::shader::load_shader(std::filesystem::path file)
+bool gfx::shader::shader::load_shader(std::filesystem::path file)
 {
-	_shader      = gs::effect(file);
-	_shader_file = file;
+	if (!is_shader_different(file))
+		return false;
+
+	_shader                = gs::effect(file);
+	_shader_file           = file;
+	_shader_file_mt        = std::filesystem::last_write_time(file);
+	_shader_file_sz        = std::filesystem::file_size(file);
+	_shader_file_tick      = 0;
+	_shader_params_invalid = true;
+
+	return true;
 }
 
 void gfx::shader::shader::load_shader_params()
 {
+	if (!_shader_params_invalid)
+		return;
+
 	_shader_params.clear();
 
 	if (!_shader)
@@ -82,6 +101,8 @@ void gfx::shader::shader::load_shader_params()
 			}
 		}
 	}
+
+	_shader_params_invalid = false;
 }
 
 void gfx::shader::shader::properties(obs_properties_t* pr)
@@ -132,6 +153,25 @@ void gfx::shader::shader::properties(obs_properties_t* pr)
 		auto grp = obs_properties_create();
 		obs_properties_add_group(pr, ST_PARAMETERS, D_TRANSLATE(ST_PARAMETERS), OBS_GROUP_NORMAL, grp);
 	}
+}
+
+bool gfx::shader::shader::is_shader_different(std::filesystem::path file)
+{
+	// Check if the file name differs.
+	if (file != _shader_file)
+		return true;
+
+	// Is the file write time different?
+	if (std::filesystem::last_write_time(_shader_file) != _shader_file_mt) {
+		return true;
+	}
+
+	// Is the file size different?
+	if (std::filesystem::file_size(_shader_file) != _shader_file_sz) {
+		return true;
+	}
+
+	return false;
 }
 
 bool gfx::shader::shader::on_shader_changed(obs_properties_t* props, obs_property_t* prop, obs_data_t* data)
@@ -206,7 +246,8 @@ void gfx::shader::shader::update_shader(obs_data_t* data)
 		std::string file   = file_c ? file_c : "";
 		if (file != "") {
 			try {
-				load_shader(file);
+				if (!load_shader(file))
+					return;
 			} catch (const std::exception& ex) {
 				P_LOG_ERROR("Failed to load shader: %s.", ex.what());
 				_shader.reset();
@@ -222,9 +263,12 @@ void gfx::shader::shader::update_shader(obs_data_t* data)
 
 void gfx::shader::shader::update_technique(obs_data_t* data)
 {
-	{
-		const char* shader_tech_c = obs_data_get_string(data, ST_SHADER_TECHNIQUE);
-		_shader_tech              = shader_tech_c ? shader_tech_c : "";
+	const char* shader_tech_c = obs_data_get_string(data, ST_SHADER_TECHNIQUE);
+	std::string shader_tech   = shader_tech_c ? shader_tech_c : "";
+
+	if ((_shader_params_invalid) || (_shader_tech != shader_tech)) {
+		_shader_tech           = shader_tech;
+		_shader_params_invalid = true;
 		load_shader_params();
 	}
 }

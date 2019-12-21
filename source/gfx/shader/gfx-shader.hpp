@@ -61,11 +61,13 @@ namespace gfx {
 			std::shared_ptr<gs::texture> _input_b;
 
 			// Shader
-			gs::effect            _shader;
-			std::filesystem::path _shader_file;
-			std::string           _shader_tech;
-
-			// Shader Params
+			gs::effect                                        _shader;
+			std::filesystem::path                             _shader_file;
+			std::string                                       _shader_tech;
+			std::filesystem::file_time_type                   _shader_file_mt;
+			uintmax_t                                         _shader_file_sz;
+			float_t                                           _shader_file_tick;
+			bool                                              _shader_params_invalid;
 			std::map<std::string, std::shared_ptr<parameter>> _shader_params;
 
 			// Options
@@ -75,19 +77,20 @@ namespace gfx {
 			double_t  _height_value;
 
 			// Cache
-			float_t                _time;
-			std::mt19937_64        _random;
-			std::list<std::string> _string_cache;
+			float_t         _time;
+			std::mt19937_64 _random;
 
 			public:
 			shader(obs_source_t* self, shader_mode mode);
 			~shader();
 
-			void load_shader(std::filesystem::path file);
+			bool load_shader(std::filesystem::path file);
 
 			void load_shader_params();
 
 			void properties(obs_properties_t* props);
+
+			bool is_shader_different(std::filesystem::path file);
 
 			bool on_shader_changed(obs_properties_t* props, obs_property_t* prop, obs_data_t* data);
 
