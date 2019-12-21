@@ -34,14 +34,14 @@ gs::context::~context()
 	gs_debug_marker_begin(color, _name.c_str());
 }*/
 
-gs::debug_marker::debug_marker(const float color[4], std::string format, ...)
+gs::debug_marker::debug_marker(const float color[4], const char* format, ...)
 {
 	size_t            size;
-	std::vector<char> buffer(64);
+	std::vector<char> buffer(128);
 
 	va_list vargs;
 	va_start(vargs, format);
-	size = vsnprintf(buffer.data(), buffer.size(), format.c_str(), vargs);
+	size = static_cast<size_t>(vsnprintf(buffer.data(), buffer.size(), format, vargs));
 	va_end(vargs);
 
 	_name = std::string(buffer.data(), buffer.data() + size);

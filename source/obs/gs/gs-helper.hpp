@@ -50,7 +50,7 @@ namespace gs {
 
 		public:
 		//debug_marker(const float color[4], std::string name);
-		debug_marker(const float color[4], std::string format, ...);
+		debug_marker(const float color[4], const char* format, ...);
 		~debug_marker();
 	};
 } // namespace gs
