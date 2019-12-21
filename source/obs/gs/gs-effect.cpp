@@ -49,7 +49,7 @@ static std::string load_file_as_code(std::filesystem::path file)
 	}
 
 	std::vector<char> buf(size_t(size + 1), 0);
-	ifs.read(buf.data(), size);
+	ifs.read(buf.data(), static_cast<std::streamsize>(size));
 
 	return std::string(buf.data(), buf.data() + size);
 }
