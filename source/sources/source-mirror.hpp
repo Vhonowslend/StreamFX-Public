@@ -50,8 +50,8 @@ namespace source {
 
 		class mirror_instance : public obs::source_instance {
 			// Source
-			std::shared_ptr<obs::source> _source;
-			std::string                  _source_name;
+			std::shared_ptr<obs::deprecated_source> _source;
+			std::string                             _source_name;
 
 			// Cached Data
 			std::pair<uint32_t, uint32_t> _source_size;
@@ -110,8 +110,8 @@ namespace source {
 
 			void audio_output_cb() noexcept;
 
-			void on_source_rename(obs::source* source, std::string new_name, std::string old_name);
-			void on_audio_data(obs::source* source, const audio_data* audio, bool muted);
+			void on_source_rename(obs::deprecated_source* source, std::string new_name, std::string old_name);
+			void on_audio_data(obs::deprecated_source* source, const audio_data* audio, bool muted);
 		};
 
 		class mirror_factory

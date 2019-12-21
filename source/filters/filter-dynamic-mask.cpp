@@ -76,7 +76,7 @@ void filter::dynamic_mask::dynamic_mask_instance::update(obs_data_t* settings)
 {
 	// Update source.
 	try {
-		_input         = std::make_shared<obs::source>(obs_data_get_string(settings, ST_INPUT));
+		_input         = std::make_shared<obs::deprecated_source>(obs_data_get_string(settings, ST_INPUT));
 		_input_capture = std::make_shared<gfx::source_texture>(_input, _self);
 		_input->events.rename += std::bind(&filter::dynamic_mask::dynamic_mask_instance::input_renamed, this,
 										   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
@@ -169,7 +169,7 @@ void filter::dynamic_mask::dynamic_mask_instance::save(obs_data_t* settings)
 	}
 }
 
-void filter::dynamic_mask::dynamic_mask_instance::input_renamed(obs::source*, std::string old_name,
+void filter::dynamic_mask::dynamic_mask_instance::input_renamed(obs::deprecated_source*, std::string old_name,
 																std::string new_name)
 {
 	obs_data_t* settings = obs_source_get_settings(_self);

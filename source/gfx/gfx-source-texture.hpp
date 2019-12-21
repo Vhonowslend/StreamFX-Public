@@ -16,6 +16,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #pragma once
+#include <map>
 #include <memory>
 #include <string>
 #include "obs/gs/gs-rendertarget.hpp"
@@ -34,8 +35,8 @@
 
 namespace gfx {
 	class source_texture {
-		std::shared_ptr<obs::source> _parent;
-		std::shared_ptr<obs::source> _child;
+		std::shared_ptr<obs::deprecated_source> _parent;
+		std::shared_ptr<obs::deprecated_source> _child;
 
 		std::shared_ptr<gs::rendertarget> _rt;
 
@@ -47,8 +48,8 @@ namespace gfx {
 		source_texture(const char* name, obs_source_t* parent);
 		source_texture(std::string name, obs_source_t* parent);
 
-		source_texture(std::shared_ptr<obs::source> child, std::shared_ptr<obs::source> parent);
-		source_texture(std::shared_ptr<obs::source> child, obs_source_t* parent);
+		source_texture(std::shared_ptr<obs::deprecated_source> child, std::shared_ptr<obs::deprecated_source> parent);
+		source_texture(std::shared_ptr<obs::deprecated_source> child, obs_source_t* parent);
 
 		public /*copy*/:
 		source_texture(source_texture const& other) = delete;
@@ -66,5 +67,39 @@ namespace gfx {
 
 		obs_source_t* get_object();
 		obs_source_t* get_parent();
+	};
+
+	class source_texture_factory {
+		friend class source_texture;
+
+		std::map<std::shared_ptr<obs_weak_source_t>, std::weak_ptr<source_texture>> _cache;
+
+		public:
+		source_texture_factory();
+		~source_texture_factory();
+
+		std::shared_ptr<source_texture> get_source_texture(std::shared_ptr<obs_source_t> source);
+
+		protected:
+		void free_source_texture(std::shared_ptr<obs_source_t> source);
+
+		private: // Singleton
+		static std::shared_ptr<source_texture_factory> factory_instance;
+
+		public: // Singleton
+		static void initialize()
+		{
+			factory_instance = std::make_shared<source_texture_factory>();
+		}
+
+		static void finalize()
+		{
+			factory_instance.reset();
+		}
+
+		static std::shared_ptr<source_texture_factory> get()
+		{
+			return factory_instance;
+		}
 	};
 } // namespace gfx

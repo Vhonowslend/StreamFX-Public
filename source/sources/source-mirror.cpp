@@ -94,7 +94,7 @@ void source::mirror::mirror_instance::acquire(std::string source_name)
 	}
 
 	// It seems everything has worked out, so let's update our state.
-	_source      = std::make_shared<obs::source>(source.get(), true, true);
+	_source      = std::make_shared<obs::deprecated_source>(source.get(), true, true);
 	_source_name = obs_source_get_name(source.get());
 	_source_item = std::shared_ptr<obs_sceneitem_t>(item, [](obs_sceneitem_t* ref) { obs_sceneitem_remove(ref); });
 
@@ -372,12 +372,12 @@ void source::mirror::mirror_instance::enum_all_sources(obs_source_enum_proc_t en
 	}
 }
 
-void source::mirror::mirror_instance::on_source_rename(obs::source* source, std::string, std::string)
+void source::mirror::mirror_instance::on_source_rename(obs::deprecated_source* source, std::string, std::string)
 {
 	obs_source_save(_self);
 }
 
-void source::mirror::mirror_instance::on_audio_data(obs::source*, const audio_data* audio, bool)
+void source::mirror::mirror_instance::on_audio_data(obs::deprecated_source*, const audio_data* audio, bool)
 {
 	if (!this->_audio_enabled) {
 		return;

@@ -36,7 +36,7 @@
 #endif
 
 namespace obs {
-	class source {
+	class deprecated_source {
 		obs_source_t* _self;
 		bool          _track_ownership = false;
 
@@ -69,21 +69,21 @@ namespace obs {
 		static void handle_transition_stop(void* p, calldata_t* calldata) noexcept;
 
 		public:
-		virtual ~source();
+		virtual ~deprecated_source();
 
-		source();
+		deprecated_source();
 
-		source(std::string name, bool track_ownership = true, bool add_reference = true);
+		deprecated_source(std::string name, bool track_ownership = true, bool add_reference = true);
 
-		source(obs_source_t* source, bool track_ownership = true, bool add_reference = false);
+		deprecated_source(obs_source_t* source, bool track_ownership = true, bool add_reference = false);
 
 		public /*copy*/:
-		source(source const& other);
-		source& operator=(source const& other);
+		deprecated_source(deprecated_source const& other);
+		deprecated_source& operator=(deprecated_source const& other);
 
 		public /*move*/:
-		source(source&& other);
-		source& operator=(source&& other);
+		deprecated_source(deprecated_source&& other);
+		deprecated_source& operator=(deprecated_source&& other);
 
 		public:
 		obs_source_type type();
@@ -103,49 +103,49 @@ namespace obs {
 		public: // Events
 		struct {
 			// Destroy and Remove
-			util::event<obs::source*> destroy;
-			util::event<obs::source*> remove;
+			util::event<obs::deprecated_source*> destroy;
+			util::event<obs::deprecated_source*> remove;
 
 			// Saving, Loading and Update
-			util::event<obs::source*> save;
-			util::event<obs::source*> load;
-			util::event<obs::source*> update_properties;
+			util::event<obs::deprecated_source*> save;
+			util::event<obs::deprecated_source*> load;
+			util::event<obs::deprecated_source*> update_properties;
 
 			// Activate, Deactivate
-			util::event<obs::source*> activate;
-			util::event<obs::source*> deactivate;
+			util::event<obs::deprecated_source*> activate;
+			util::event<obs::deprecated_source*> deactivate;
 
 			// Show Hide
-			util::event<obs::source*> show;
-			util::event<obs::source*> hide;
+			util::event<obs::deprecated_source*> show;
+			util::event<obs::deprecated_source*> hide;
 
 			// Other
-			util::event<obs::source*, bool>                     enable;
-			util::event<obs::source*, std::string, std::string> rename;
-			util::event<obs::source*, long long>                update_flags;
+			util::event<obs::deprecated_source*, bool>                     enable;
+			util::event<obs::deprecated_source*, std::string, std::string> rename;
+			util::event<obs::deprecated_source*, long long>                update_flags;
 
 			// Hotkeys (PtM, PtT)
-			util::event<obs::source*, bool>      push_to_mute_changed;
-			util::event<obs::source*, long long> push_to_mute_delay;
-			util::event<obs::source*, bool>      push_to_talk_changed;
-			util::event<obs::source*, long long> push_to_talk_delay;
+			util::event<obs::deprecated_source*, bool>      push_to_mute_changed;
+			util::event<obs::deprecated_source*, long long> push_to_mute_delay;
+			util::event<obs::deprecated_source*, bool>      push_to_talk_changed;
+			util::event<obs::deprecated_source*, long long> push_to_talk_delay;
 
 			// Audio
-			util::event<obs::source*, bool>                    mute;
-			util::event<obs::source*, double&>                 volume;
-			util::event<obs::source*, long long&>              audio_sync;
-			util::event<obs::source*, long long&>              audio_mixers;
-			util::event<obs::source*, const audio_data*, bool> audio_data;
+			util::event<obs::deprecated_source*, bool>                    mute;
+			util::event<obs::deprecated_source*, double&>                 volume;
+			util::event<obs::deprecated_source*, long long&>              audio_sync;
+			util::event<obs::deprecated_source*, long long&>              audio_mixers;
+			util::event<obs::deprecated_source*, const audio_data*, bool> audio_data;
 
 			// Filters
-			util::event<obs::source*, obs_source_t*> filter_add;
-			util::event<obs::source*, obs_source_t*> filter_remove;
-			util::event<obs::source*>                reorder_filters;
+			util::event<obs::deprecated_source*, obs_source_t*> filter_add;
+			util::event<obs::deprecated_source*, obs_source_t*> filter_remove;
+			util::event<obs::deprecated_source*>                reorder_filters;
 
 			// Transition
-			util::event<obs::source*> transition_start;
-			util::event<obs::source*> transition_video_stop;
-			util::event<obs::source*> transition_stop;
+			util::event<obs::deprecated_source*> transition_start;
+			util::event<obs::deprecated_source*> transition_video_stop;
+			util::event<obs::deprecated_source*> transition_stop;
 		} events;
 	};
 } // namespace obs

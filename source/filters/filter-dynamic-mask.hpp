@@ -53,10 +53,10 @@ namespace filter {
 			std::shared_ptr<gs::rendertarget> _filter_rt;
 			std::shared_ptr<gs::texture>      _filter_texture;
 
-			bool                                 _have_input_texture;
-			std::shared_ptr<obs::source>         _input;
-			std::shared_ptr<gfx::source_texture> _input_capture;
-			std::shared_ptr<gs::texture>         _input_texture;
+			bool                                    _have_input_texture;
+			std::shared_ptr<obs::deprecated_source> _input;
+			std::shared_ptr<gfx::source_texture>    _input_capture;
+			std::shared_ptr<gs::texture>            _input_texture;
 
 			bool                              _have_final_texture;
 			std::shared_ptr<gs::rendertarget> _final_rt;
@@ -83,7 +83,7 @@ namespace filter {
 			virtual void load(obs_data_t* settings) override;
 			virtual void save(obs_data_t* settings) override;
 
-			void input_renamed(obs::source* src, std::string old_name, std::string new_name);
+			void input_renamed(obs::deprecated_source* src, std::string old_name, std::string new_name);
 
 			static bool modified(void* self, obs_properties_t* properties, obs_property_t* property,
 								 obs_data_t* settings) noexcept;

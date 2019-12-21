@@ -21,8 +21,9 @@
 #include <stdexcept>
 #include "plugin.hpp"
 
-void obs::source::handle_destroy(void* p, calldata_t* calldata) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_destroy(void* p, calldata_t* calldata) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 
 	obs_source_t* source;
 	if (!calldata_get_ptr(calldata, "source", &source)) {
@@ -43,8 +44,9 @@ void obs::source::handle_destroy(void* p, calldata_t* calldata) noexcept try {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_remove(void* p, calldata_t*) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_remove(void* p, calldata_t*) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.remove) {
 		return;
 	}
@@ -55,8 +57,9 @@ void obs::source::handle_remove(void* p, calldata_t*) noexcept try {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_save(void* p, calldata_t*) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_save(void* p, calldata_t*) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.save) {
 		return;
 	}
@@ -67,8 +70,9 @@ void obs::source::handle_save(void* p, calldata_t*) noexcept try {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_load(void* p, calldata_t*) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_load(void* p, calldata_t*) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.load) {
 		return;
 	}
@@ -79,8 +83,9 @@ void obs::source::handle_load(void* p, calldata_t*) noexcept try {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_activate(void* p, calldata_t*) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_activate(void* p, calldata_t*) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.activate) {
 		return;
 	}
@@ -91,8 +96,9 @@ void obs::source::handle_activate(void* p, calldata_t*) noexcept try {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_deactivate(void* p, calldata_t*) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_deactivate(void* p, calldata_t*) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.deactivate) {
 		return;
 	}
@@ -103,8 +109,9 @@ void obs::source::handle_deactivate(void* p, calldata_t*) noexcept try {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_show(void* p, calldata_t*) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_show(void* p, calldata_t*) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.show) {
 		return;
 	}
@@ -115,8 +122,9 @@ void obs::source::handle_show(void* p, calldata_t*) noexcept try {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_hide(void* p, calldata_t*) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_hide(void* p, calldata_t*) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.hide) {
 		return;
 	}
@@ -127,8 +135,9 @@ void obs::source::handle_hide(void* p, calldata_t*) noexcept try {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_enable(void* p, calldata_t* calldata) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_enable(void* p, calldata_t* calldata) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.enable) {
 		return;
 	}
@@ -145,8 +154,9 @@ void obs::source::handle_enable(void* p, calldata_t* calldata) noexcept try {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_push_to_mute_changed(void* p, calldata_t* calldata) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_push_to_mute_changed(void* p, calldata_t* calldata) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.push_to_mute_changed) {
 		return;
 	}
@@ -163,8 +173,9 @@ void obs::source::handle_push_to_mute_changed(void* p, calldata_t* calldata) noe
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_push_to_mute_delay(void* p, calldata_t* calldata) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_push_to_mute_delay(void* p, calldata_t* calldata) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.push_to_mute_delay) {
 		return;
 	}
@@ -181,8 +192,9 @@ void obs::source::handle_push_to_mute_delay(void* p, calldata_t* calldata) noexc
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_push_to_talk_changed(void* p, calldata_t* calldata) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_push_to_talk_changed(void* p, calldata_t* calldata) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.push_to_talk_changed) {
 		return;
 	}
@@ -199,8 +211,9 @@ void obs::source::handle_push_to_talk_changed(void* p, calldata_t* calldata) noe
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_push_to_talk_delay(void* p, calldata_t* calldata) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_push_to_talk_delay(void* p, calldata_t* calldata) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.push_to_talk_delay) {
 		return;
 	}
@@ -217,8 +230,9 @@ void obs::source::handle_push_to_talk_delay(void* p, calldata_t* calldata) noexc
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_rename(void* p, calldata_t* calldata) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_rename(void* p, calldata_t* calldata) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.enable) {
 		return;
 	}
@@ -240,8 +254,9 @@ void obs::source::handle_rename(void* p, calldata_t* calldata) noexcept try {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_update_properties(void* p, calldata_t*) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_update_properties(void* p, calldata_t*) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.update_properties) {
 		return;
 	}
@@ -252,8 +267,9 @@ void obs::source::handle_update_properties(void* p, calldata_t*) noexcept try {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_update_flags(void* p, calldata_t* calldata) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_update_flags(void* p, calldata_t* calldata) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.update_flags) {
 		return;
 	}
@@ -270,8 +286,9 @@ void obs::source::handle_update_flags(void* p, calldata_t* calldata) noexcept tr
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_mute(void* p, calldata_t* calldata) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_mute(void* p, calldata_t* calldata) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.mute) {
 		return;
 	}
@@ -288,8 +305,9 @@ void obs::source::handle_mute(void* p, calldata_t* calldata) noexcept try {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_volume(void* p, calldata_t* calldata) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_volume(void* p, calldata_t* calldata) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.volume) {
 		return;
 	}
@@ -308,8 +326,9 @@ void obs::source::handle_volume(void* p, calldata_t* calldata) noexcept try {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_audio_sync(void* p, calldata_t* calldata) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_audio_sync(void* p, calldata_t* calldata) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.audio_sync) {
 		return;
 	}
@@ -328,8 +347,9 @@ void obs::source::handle_audio_sync(void* p, calldata_t* calldata) noexcept try 
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_audio_mixers(void* p, calldata_t* calldata) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_audio_mixers(void* p, calldata_t* calldata) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.audio_mixers) {
 		return;
 	}
@@ -348,8 +368,9 @@ void obs::source::handle_audio_mixers(void* p, calldata_t* calldata) noexcept tr
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_audio_data(void* p, obs_source_t*, const audio_data* audio, bool muted) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_audio_data(void* p, obs_source_t*, const audio_data* audio, bool muted) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.audio_data) {
 		return;
 	}
@@ -361,8 +382,9 @@ void obs::source::handle_audio_data(void* p, obs_source_t*, const audio_data* au
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_filter_add(void* p, calldata_t* calldata) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_filter_add(void* p, calldata_t* calldata) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.filter_add) {
 		return;
 	}
@@ -379,8 +401,9 @@ void obs::source::handle_filter_add(void* p, calldata_t* calldata) noexcept try 
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_filter_remove(void* p, calldata_t* calldata) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_filter_remove(void* p, calldata_t* calldata) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.filter_remove) {
 		return;
 	}
@@ -397,8 +420,9 @@ void obs::source::handle_filter_remove(void* p, calldata_t* calldata) noexcept t
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_reorder_filters(void* p, calldata_t*) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_reorder_filters(void* p, calldata_t*) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.reorder_filters) {
 		return;
 	}
@@ -409,8 +433,9 @@ void obs::source::handle_reorder_filters(void* p, calldata_t*) noexcept try {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_transition_start(void* p, calldata_t*) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_transition_start(void* p, calldata_t*) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.transition_start) {
 		return;
 	}
@@ -421,8 +446,9 @@ void obs::source::handle_transition_start(void* p, calldata_t*) noexcept try {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_transition_video_stop(void* p, calldata_t*) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_transition_video_stop(void* p, calldata_t*) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.transition_video_stop) {
 		return;
 	}
@@ -433,8 +459,9 @@ void obs::source::handle_transition_video_stop(void* p, calldata_t*) noexcept tr
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source::handle_transition_stop(void* p, calldata_t*) noexcept try {
-	obs::source* self = reinterpret_cast<obs::source*>(p);
+void obs::deprecated_source::handle_transition_stop(void* p, calldata_t*) noexcept
+try {
+	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
 	if (!self->events.transition_stop) {
 		return;
 	}
@@ -445,7 +472,7 @@ void obs::source::handle_transition_stop(void* p, calldata_t*) noexcept try {
 	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-obs::source::~source()
+obs::deprecated_source::~deprecated_source()
 {
 #ifdef auto_signal_d
 #undef auto_signal_d
@@ -486,29 +513,29 @@ obs::source::~source()
 	this->_self = nullptr;
 }
 
-obs::source::source()
+obs::deprecated_source::deprecated_source()
 {
 #ifdef auto_signal_c
 #undef auto_signal_c
 #endif
-#define auto_signal_c(SIGNAL)                                                                  \
-	{                                                                                          \
-		this->events.SIGNAL.set_listen_callback([this]() noexcept {                            \
-			if (!this->_self)                                                                  \
-				return;                                                                        \
-			auto sh = obs_source_get_signal_handler(this->_self);                              \
-			if (sh) {                                                                          \
-				signal_handler_connect(sh, "" #SIGNAL, obs::source::handle_##SIGNAL, this);    \
-			}                                                                                  \
-		});                                                                                    \
-		this->events.SIGNAL.set_silence_callback([this]() noexcept {                           \
-			if (!this->_self)                                                                  \
-				return;                                                                        \
-			auto sh = obs_source_get_signal_handler(this->_self);                              \
-			if (sh) {                                                                          \
-				signal_handler_disconnect(sh, "" #SIGNAL, obs::source::handle_##SIGNAL, this); \
-			}                                                                                  \
-		});                                                                                    \
+#define auto_signal_c(SIGNAL)                                                                             \
+	{                                                                                                     \
+		this->events.SIGNAL.set_listen_callback([this]() noexcept {                                       \
+			if (!this->_self)                                                                             \
+				return;                                                                                   \
+			auto sh = obs_source_get_signal_handler(this->_self);                                         \
+			if (sh) {                                                                                     \
+				signal_handler_connect(sh, "" #SIGNAL, obs::deprecated_source::handle_##SIGNAL, this);    \
+			}                                                                                             \
+		});                                                                                               \
+		this->events.SIGNAL.set_silence_callback([this]() noexcept {                                      \
+			if (!this->_self)                                                                             \
+				return;                                                                                   \
+			auto sh = obs_source_get_signal_handler(this->_self);                                         \
+			if (sh) {                                                                                     \
+				signal_handler_disconnect(sh, "" #SIGNAL, obs::deprecated_source::handle_##SIGNAL, this); \
+			}                                                                                             \
+		});                                                                                               \
 	}
 	auto_signal_c(destroy) auto_signal_c(remove) auto_signal_c(save) auto_signal_c(load) auto_signal_c(activate)
 		auto_signal_c(deactivate) auto_signal_c(show) auto_signal_c(hide) auto_signal_c(mute)
@@ -526,17 +553,18 @@ obs::source::source()
 		this->events.audio_data.set_listen_callback([this]() noexcept {
 			if (!this->_self)
 				return;
-			obs_source_add_audio_capture_callback(this->_self, obs::source::handle_audio_data, this);
+			obs_source_add_audio_capture_callback(this->_self, obs::deprecated_source::handle_audio_data, this);
 		});
 		this->events.audio_data.set_silence_callback([this]() noexcept {
 			if (!this->_self)
 				return;
-			obs_source_remove_audio_capture_callback(this->_self, obs::source::handle_audio_data, this);
+			obs_source_remove_audio_capture_callback(this->_self, obs::deprecated_source::handle_audio_data, this);
 		});
 	}
 }
 
-obs::source::source(std::string name, bool ptrack_ownership, bool add_reference) : ::obs::source::source()
+obs::deprecated_source::deprecated_source(std::string name, bool ptrack_ownership, bool add_reference)
+	: ::obs::deprecated_source::deprecated_source()
 {
 	this->_self = obs_get_source_by_name(name.c_str());
 	if (!this->_self) {
@@ -549,7 +577,8 @@ obs::source::source(std::string name, bool ptrack_ownership, bool add_reference)
 	}
 }
 
-obs::source::source(obs_source_t* source, bool ptrack_ownership, bool add_reference) : ::obs::source::source()
+obs::deprecated_source::deprecated_source(obs_source_t* source, bool ptrack_ownership, bool add_reference)
+	: ::obs::deprecated_source::deprecated_source()
 {
 	this->_self = source;
 	if (!this->_self) {
@@ -562,7 +591,7 @@ obs::source::source(obs_source_t* source, bool ptrack_ownership, bool add_refere
 	}
 }
 
-obs::source::source(source const& other)
+obs::deprecated_source::deprecated_source(deprecated_source const& other)
 {
 	this->_self            = other._self;
 	this->_track_ownership = other._track_ownership;
@@ -605,7 +634,7 @@ obs::source::source(source const& other)
 #undef auto_signal_c
 }
 
-obs::source& obs::source::operator=(source const& other)
+obs::deprecated_source& obs::deprecated_source::operator=(deprecated_source const& other)
 {
 	if (this == &other) {
 		return *this;
@@ -659,7 +688,8 @@ obs::source& obs::source::operator=(source const& other)
 	return *this;
 }
 
-obs::source::source(source&& other) : _self(std::move(other._self)), _track_ownership(std::move(other._track_ownership))
+obs::deprecated_source::deprecated_source(deprecated_source&& other)
+	: _self(std::move(other._self)), _track_ownership(std::move(other._track_ownership))
 {
 	// Clean out other source
 	other._self            = nullptr;
@@ -699,7 +729,7 @@ obs::source::source(source&& other) : _self(std::move(other._self)), _track_owne
 #undef auto_signal_c
 }
 
-obs::source& obs::source::operator=(source&& other)
+obs::deprecated_source& obs::deprecated_source::operator=(deprecated_source&& other)
 {
 	if (this != &other) {
 		return *this;
@@ -751,7 +781,7 @@ obs::source& obs::source::operator=(source&& other)
 	return *this;
 }
 
-obs_source_type obs::source::type()
+obs_source_type obs::deprecated_source::type()
 {
 	if (!_self) {
 		return (obs_source_type)-1;
@@ -759,7 +789,7 @@ obs_source_type obs::source::type()
 	return obs_source_get_type(_self);
 }
 
-void* obs::source::type_data()
+void* obs::deprecated_source::type_data()
 {
 	if (!_self) {
 		return nullptr;
@@ -767,7 +797,7 @@ void* obs::source::type_data()
 	return obs_source_get_type_data(_self);
 }
 
-uint32_t obs::source::width()
+uint32_t obs::deprecated_source::width()
 {
 	if (!_self) {
 		return 0;
@@ -775,7 +805,7 @@ uint32_t obs::source::width()
 	return obs_source_get_width(_self);
 }
 
-uint32_t obs::source::height()
+uint32_t obs::deprecated_source::height()
 {
 	if (!_self) {
 		return 0;
@@ -783,17 +813,17 @@ uint32_t obs::source::height()
 	return obs_source_get_height(_self);
 }
 
-bool obs::source::destroyed()
+bool obs::deprecated_source::destroyed()
 {
 	return _self == nullptr;
 }
 
-void obs::source::clear()
+void obs::deprecated_source::clear()
 {
 	_self = nullptr;
 }
 
-obs_source_t* obs::source::get()
+obs_source_t* obs::deprecated_source::get()
 {
 	return _self;
 }
