@@ -74,7 +74,8 @@ struct StageData {
 };
 
 StageData VSDefault(StageData data) {
-	data.pos = mul(float4(data.pos.xyz, 1.0), ViewProj);
+	data.pos = mul(float4(data.pos.xyz, 1.0), ViewProj);	
+	data.uv += 0.5;
 	data.uv *= PlasmaUVScale;
 	return data;
 }
@@ -134,9 +135,9 @@ float4 ColoredPlasma(StageData data) : TARGET {
 
 	float v1 = clamp(v * 2.0, 0., 1.);
 	float v2 = clamp((v - 0.5) * 2.0, 0., 1.);
-	float3 col = lerp(lerp(PlasmaLowColor, PlasmaMiddleColor, v1), PlasmaHighColor, v2);
+	float4 col = lerp(lerp(PlasmaLowColor, PlasmaMiddleColor, v1), PlasmaHighColor, v2);
 
-	return float4(col, 1.0);
+	return clamp(col, 0., 1.);
 }
 
 technique Colored
