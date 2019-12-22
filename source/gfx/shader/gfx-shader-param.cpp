@@ -18,6 +18,8 @@
 #include "gfx-shader-param.hpp"
 #include "gfx-shader-param-basic.hpp"
 
+void gfx::shader::parameter::defaults(obs_data_t* settings) {}
+
 void gfx::shader::parameter::properties(obs_properties_t* props, obs_data_t* settings) {}
 
 void gfx::shader::parameter::update(obs_data_t* settings) {}

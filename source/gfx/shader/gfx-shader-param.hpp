@@ -42,6 +42,8 @@ namespace gfx {
 			virtual ~parameter(){};
 
 			public:
+			virtual void defaults(obs_data_t* settings);
+
 			virtual void properties(obs_properties_t* props, obs_data_t* settings);
 
 			virtual void update(obs_data_t* settings);
