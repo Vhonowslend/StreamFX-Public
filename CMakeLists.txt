@@ -38,7 +38,7 @@ if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
 		set(VERSION_TWEAK ${GIT_OUTPUT})
 	endif()
 	execute_process(
-		COMMAND git rev-parse HEAD
+		COMMAND git rev-parse --short=8 HEAD
 		WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 		RESULT_VARIABLE GIT_RESULT
 		OUTPUT_VARIABLE GIT_OUTPUT
@@ -51,11 +51,11 @@ endif()
 
 # Define Project
 project(
-	obs-stream-effects
+	StreamFX
 	VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}
 )
-set(PROJECT_FULL_NAME "Stream Effects for OBS Studio")
-set(PROJECT_DESCRIPTION "New Sources, Filters and Transitions for OBS Studio")
+set(PROJECT_FULL_NAME "StreamFX for OBS Studio")
+set(PROJECT_DESCRIPTION "Adds new Effects, like Sources, Transitions and Filters to OBS Studio.")
 set(PROJECT_AUTHORS "Michael Fabian 'Xaymar' Dirks <info@xaymar.com>")
 set(PROJECT_COPYRIGHT_YEARS "2018 - 2019")
 
@@ -81,7 +81,7 @@ endif()
 math(EXPR BITS "8*${CMAKE_SIZEOF_VOID_P}")
 if("${BITS}" STREQUAL "32")
 	set(ARCH "x86")
-	message(STATUS "Stream Effects no longer supports 32-bit builds, you are on your own if you continue.")
+	message(STATUS "StreamFX no longer supports 32-bit builds, you are on your own if you continue.")
 else()
 	set(ARCH "x64")
 endif()
@@ -121,7 +121,28 @@ set(_CXX_STANDARD 17)
 set(_CXX_EXTENSIONS OFF)
 
 ################################################################################
-# CMake / Compiler
+# Options
+################################################################################
+set(${PropertyPrefix}OBS_NATIVE FALSE CACHE BOOL "Use native obs-studio build" FORCE)
+set(${PropertyPrefix}OBS_REFERENCE FALSE CACHE BOOL "Use referenced obs-studio build" FORCE)
+set(${PropertyPrefix}OBS_PACKAGE FALSE CACHE BOOL "Use packaged obs-studio build" FORCE)
+set(${PropertyPrefix}OBS_DOWNLOAD FALSE CACHE BOOL "Use downloaded obs-studio build" FORCE)
+mark_as_advanced(FORCE OBS_NATIVE OBS_PACKAGE OBS_REFERENCE OBS_DOWNLOAD)
+
+if(NOT TARGET libobs)
+	set(${PropertyPrefix}OBS_STUDIO_DIR "" CACHE PATH "OBS Studio Source/Package Directory")
+	set(${PropertyPrefix}OBS_DOWNLOAD_VERSION "24.0.3-ci" CACHE STRING "OBS Studio Version to download")
+endif()
+
+if(NOT ${PropertyPrefix}OBS_NATIVE)
+	set(${PropertyPrefix}OBS_DEPENDENCIES_DIR "" CACHE PATH "Path to OBS Dependencies")
+	set(CMAKE_PACKAGE_PREFIX "${CMAKE_BINARY_DIR}" CACHE PATH "Path for generated archives.")
+	set(CMAKE_PACKAGE_NAME "${PROJECT_NAME}" CACHE STRING "Name for the generated archives.")
+	set(CMAKE_PACKAGE_SUFFIX_OVERRIDE "" CACHE STRING "Override for the suffix.")
+endif()
+
+################################################################################
+# CMake / Compiler Dependencies
 ################################################################################
 
 # Configure Version Header
@@ -134,9 +155,23 @@ configure_file(
 	"${PROJECT_BINARY_DIR}/source/module.cpp"
 )
 
+# Packaging
+if("${CMAKE_PACKAGE_SUFFIX_OVERRIDE}" STREQUAL "")
+	set(_PACKAGE_SUFFIX_OVERRIDE "${PROJECT_VERSION}-${PROJECT_COMMIT}")
+else()
+	set(_PACKAGE_SUFFIX_OVERRIDE "${CMAKE_PACKAGE_SUFFIX_OVERRIDE}")
+endif()
+set(_PACKAGE_FULL_NAME "${CMAKE_PACKAGE_PREFIX}/${CMAKE_PACKAGE_NAME}-${_PACKAGE_SUFFIX_OVERRIDE}")
+
 # Windows
 if(WIN32)
 	## Installer (InnoSetup)
+	get_filename_component(ISS_FILES_DIR "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
+	file(TO_NATIVE_PATH "${ISS_FILES_DIR}" ISS_FILES_DIR)
+	get_filename_component(ISS_PACKAGE_DIR "${CMAKE_PACKAGE_PREFIX}" ABSOLUTE)
+	file(TO_NATIVE_PATH "${ISS_PACKAGE_DIR}" ISS_PACKAGE_DIR)
+	get_filename_component(ISS_SOURCE_DIR "${PROJECT_SOURCE_DIR}" ABSOLUTE)
+	file(TO_NATIVE_PATH "${ISS_SOURCE_DIR}" ISS_SOURCE_DIR)
 	configure_file(
 		"${PROJECT_SOURCE_DIR}/cmake/installer.iss.in"
 		"${PROJECT_BINARY_DIR}/installer.iss"
@@ -155,31 +190,6 @@ if(WIN32)
 		@ONLY
 	)	
 endif()
-
-################################################################################
-# Options
-################################################################################
-set(${PropertyPrefix}OBS_NATIVE FALSE CACHE BOOL "Use native obs-studio build" FORCE)
-set(${PropertyPrefix}OBS_REFERENCE FALSE CACHE BOOL "Use referenced obs-studio build" FORCE)
-set(${PropertyPrefix}OBS_PACKAGE FALSE CACHE BOOL "Use packaged obs-studio build" FORCE)
-set(${PropertyPrefix}OBS_DOWNLOAD FALSE CACHE BOOL "Use downloaded obs-studio build" FORCE)
-mark_as_advanced(FORCE OBS_NATIVE OBS_PACKAGE OBS_REFERENCE OBS_DOWNLOAD)
-
-if(NOT TARGET libobs)
-	set(${PropertyPrefix}OBS_STUDIO_DIR "" CACHE PATH "OBS Studio Source/Package Directory")
-	set(${PropertyPrefix}OBS_DOWNLOAD_VERSION "24.0.0-rc2-ci" CACHE STRING "OBS Studio Version to download")
-endif()
-
-if(NOT ${PropertyPrefix}OBS_NATIVE)
-	set(${PropertyPrefix}OBS_DEPENDENCIES_DIR "" CACHE PATH "Path to OBS Dependencies")
-	set(CMAKE_PACKAGE_PREFIX "${CMAKE_BINARY_DIR}" CACHE PATH "Path for generated archives.")
-	set(CMAKE_PACKAGE_NAME "${PROJECT_NAME}" CACHE STRING "Name for the generated archives.")
-	set(CMAKE_PACKAGE_SUFFIX_OVERRIDE "" CACHE STRING "Override for the suffix.")
-endif()
-
-################################################################################
-# Dependencies
-################################################################################
 
 # Detect OBS Studio Type
 if(TARGET libobs)
@@ -568,22 +578,16 @@ else()
 		DESTINATION "./data/obs-plugins/${PROJECT_NAME}/"
 	)
 	
-	if("${CMAKE_PACKAGE_SUFFIX_OVERRIDE}" STREQUAL "")
-		set(PackageFullName "${CMAKE_PACKAGE_PREFIX}/${CMAKE_PACKAGE_NAME}-${PROJECT_VERSION}")
-	else()
-		set(PackageFullName "${CMAKE_PACKAGE_PREFIX}/${CMAKE_PACKAGE_NAME}-${CMAKE_PACKAGE_SUFFIX_OVERRIDE}")
-	endif()
-	
 	add_custom_target(
 		PACKAGE_7Z
-		${CMAKE_COMMAND} -E tar cfv "${PackageFullName}.7z" --format=7zip --
+		${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.7z" --format=7zip --
 			"${CMAKE_INSTALL_PREFIX}/obs-plugins"
 			"${CMAKE_INSTALL_PREFIX}/data"
 		WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
 	)
 	add_custom_target(
 		PACKAGE_ZIP
-		${CMAKE_COMMAND} -E tar cfv "${PackageFullName}.zip" --format=zip --
+		${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.zip" --format=zip --
 			"${CMAKE_INSTALL_PREFIX}/obs-plugins"
 			"${CMAKE_INSTALL_PREFIX}/data"
 		WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"

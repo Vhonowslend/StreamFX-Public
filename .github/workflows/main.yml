@@ -25,17 +25,20 @@ jobs:
       with:
         node-version: 10
     - name: Configure & Compile
+      shell: bash
       env:
         CMAKE_GENERATOR_32: ${{ matrix.generator_32 }}
         CMAKE_GENERATOR_64: ${{ matrix.generator_64 }}
         CMAKE_SYSTEM_VERSION: ${{ matrix.sysversion }}
       run: node ./ci/builder.js
     - name: Package
+      shell: bash
       env:
         CMAKE_GENERATOR_32: ${{ matrix.generator_32 }}
         CMAKE_GENERATOR_64: ${{ matrix.generator_64 }}
       run: |
         mkdir build/package
+        ls build/
         node ./ci/packager.js
     - name: "Package Installer (Prereqs)"
       run: |

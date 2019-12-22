@@ -11,9 +11,9 @@ if ((process.platform == "win32") || (process.platform == "win64")) {
 	// Windows
 	let extra_conf = [
 		`-DCMAKE_SYSTEM_VERSION=${process.env.CMAKE_SYSTEM_VERSION}`,
-		`-DCMAKE_PACKAGE_NAME=obs-ffmpeg-encoder`,
-		'-DCMAKE_INSTALL_PREFIX="build/distrib/"',
-		'-DCMAKE_PACKAGE_PREFIX="build/package/"',
+		`-DCMAKE_PACKAGE_NAME=StreamFX`,
+		'-DCMAKE_INSTALL_PREFIX="build/distrib"',
+		'-DCMAKE_PACKAGE_PREFIX="build/package"',
 	];
 	let extra_build = [
 

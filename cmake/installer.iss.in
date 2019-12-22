@@ -21,9 +21,9 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={code:GetDirName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
-LicenseFile="@PROJECT_SOURCE_DIR@/LICENSE"
-OutputDir="@CMAKE_INSTALL_PREFIX@/../"
-OutputBaseFilename=obs-stream-effects-{#MyAppVersion}-@PROJECT_COMMIT@
+LicenseFile="@ISS_SOURCE_DIR@/LICENSE"
+OutputDir="@ISS_PACKAGE_DIR@"
+OutputBaseFilename=@CMAKE_PACKAGE_NAME@-@_PACKAGE_SUFFIX_OVERRIDE@
 Compression=lzma
 SolidCompression=yes
 VersionInfoVersion={#MyAppVersion}
@@ -34,7 +34,7 @@ VersionInfoDescription={#MyAppName} Setup
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "@CMAKE_INSTALL_PREFIX@/*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "@ISS_FILES_DIR@/*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
