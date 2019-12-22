@@ -63,6 +63,11 @@ gfx::shader::bool_parameter::bool_parameter(gs::effect_parameter param, std::str
 
 gfx::shader::bool_parameter::~bool_parameter() {}
 
+void gfx::shader::bool_parameter::defaults(obs_data_t* settings)
+{
+	obs_data_set_default_bool(settings, _key.c_str(), _param.get_default_bool());
+}
+
 void gfx::shader::bool_parameter::properties(obs_properties_t* props, obs_data_t* settings)
 {
 	auto p = obs_properties_add_list(props, _key.c_str(), _name.c_str(), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
@@ -70,8 +75,6 @@ void gfx::shader::bool_parameter::properties(obs_properties_t* props, obs_data_t
 		obs_property_set_long_description(p, _desc.c_str());
 	obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DISABLED), 0);
 	obs_property_list_add_int(p, D_TRANSLATE(S_STATE_ENABLED), 1);
-
-	obs_data_set_default_bool(settings, _key.c_str(), _param.get_default_bool());
 }
 
 void gfx::shader::bool_parameter::update(obs_data_t* settings)
@@ -157,18 +160,23 @@ gfx::shader::float_parameter::float_parameter(gs::effect_parameter param, std::s
 
 gfx::shader::float_parameter::~float_parameter() {}
 
+void gfx::shader::float_parameter::defaults(obs_data_t* settings)
+{
+	float_t defaults[4] = {0, 0, 0, 0};
+	_param.get_default_value(defaults, _len);
+	for (size_t len = 0; len < _len; len++) {
+		obs_data_set_default_double(settings, _key[len].c_str(), static_cast<double_t>(defaults[len]));
+	}
+}
+
 void gfx::shader::float_parameter::properties(obs_properties_t* props, obs_data_t* settings)
 {
 	auto grp = obs_properties_create();
 	obs_properties_add_group(props, _key[4].c_str(), _name[4].c_str(), OBS_GROUP_NORMAL, grp);
 
-	float_t defaults[4] = {0, 0, 0, 0};
-	_param.get_default_value(defaults, _len);
-
 	for (size_t len = 0; len < _len; len++) {
 		auto p = obs_properties_add_float(grp, _key[len].c_str(), _name[len].c_str(), _min[len], _max[len], _step[len]);
 		obs_property_set_long_description(p, _desc.c_str());
-		obs_data_set_default_double(settings, _key[len].c_str(), static_cast<double_t>(defaults[len]));
 	}
 }
 

@@ -34,6 +34,8 @@ namespace gfx {
 			virtual ~bool_parameter();
 
 			public:
+			virtual void defaults(obs_data_t* settings);
+
 			virtual void properties(obs_properties_t* props, obs_data_t* settings) override;
 
 			virtual void update(obs_data_t* settings) override;
@@ -57,6 +59,8 @@ namespace gfx {
 			virtual ~float_parameter();
 
 			public:
+			virtual void defaults(obs_data_t* settings);
+
 			virtual void properties(obs_properties_t* props, obs_data_t* settings) override;
 
 			virtual void update(obs_data_t* settings) override;
