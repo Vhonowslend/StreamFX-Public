@@ -67,7 +67,6 @@ namespace gfx {
 			std::filesystem::file_time_type                   _shader_file_mt;
 			uintmax_t                                         _shader_file_sz;
 			float_t                                           _shader_file_tick;
-			bool                                              _shader_params_invalid;
 			std::map<std::string, std::shared_ptr<parameter>> _shader_params;
 
 			// Options
@@ -79,26 +78,24 @@ namespace gfx {
 			// Cache
 			float_t         _time;
 			std::mt19937_64 _random;
+			bool            _have_current_params;
 
 			public:
 			shader(obs_source_t* self, shader_mode mode);
 			~shader();
 
-			bool load_shader(std::filesystem::path file);
+			bool is_shader_different(const std::filesystem::path& file);
 
-			void load_shader_params();
+			bool is_technique_different(const std::string& tech);
+
+			bool load_shader(const std::filesystem::path& file, const std::string& tech, bool& shader_dirty,
+							 bool& param_dirty);
 
 			void properties(obs_properties_t* props);
 
-			bool is_shader_different(std::filesystem::path file);
+			bool on_properties_modified(obs_properties_t* props, obs_property_t* prop, obs_data_t* data);
 
-			bool on_shader_changed(obs_properties_t* props, obs_property_t* prop, obs_data_t* data);
-
-			bool on_technique_changed(obs_properties_t* props, obs_property_t* prop, obs_data_t* data);
-
-			void update_shader(obs_data_t* data);
-
-			void update_technique(obs_data_t* data);
+			bool update_shader(obs_data_t* data, bool& shader_dirty, bool& param_dirty);
 
 			void update(obs_data_t* data);
 

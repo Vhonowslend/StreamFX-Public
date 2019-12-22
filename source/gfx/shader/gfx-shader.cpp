@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include "obs/obs-tools.hpp"
 #include "plugin.hpp"
 
 #define ST "Shader"
@@ -34,48 +35,90 @@ gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
 	: _self(self), _mode(mode), _base_width(1), _base_height(1), _input_a(), _input_b(),
 
 	  _shader(), _shader_file(), _shader_tech("Draw"), _shader_file_mt(), _shader_file_sz(), _shader_file_tick(0),
-	  _shader_params_invalid(true),
 
 	  _width_type(size_type::Percent), _width_value(1.0), _height_type(size_type::Percent), _height_value(1.0),
 
-	  _time(0), _random()
+	  _time(0), _random(), _have_current_params(false)
 {
 	_random.seed(static_cast<unsigned long long>(time(NULL)));
 }
 
 gfx::shader::shader::~shader() {}
 
-bool gfx::shader::shader::load_shader(std::filesystem::path file)
+bool gfx::shader::shader::is_shader_different(const std::filesystem::path& file)
 {
-	if (!is_shader_different(file))
-		return false;
+	// Check if the file name differs.
+	if (file != _shader_file)
+		return true;
 
-	_shader                = gs::effect(file);
-	_shader_file           = file;
-	_shader_file_mt        = std::filesystem::last_write_time(file);
-	_shader_file_sz        = std::filesystem::file_size(file);
-	_shader_file_tick      = 0;
-	_shader_params_invalid = true;
+	// Is the file write time different?
+	if (std::filesystem::last_write_time(_shader_file) != _shader_file_mt)
+		return true;
 
-	return true;
+	// Is the file size different?
+	if (std::filesystem::file_size(_shader_file) != _shader_file_sz)
+		return true;
+
+	return false;
 }
 
-void gfx::shader::shader::load_shader_params()
+bool gfx::shader::shader::is_technique_different(const std::string& tech)
 {
-	if (!_shader_params_invalid)
-		return;
+	// Is the technique different?
+	if (tech != _shader_tech)
+		return true;
 
-	_shader_params.clear();
+	return false;
+}
 
-	if (!_shader)
-		return;
+bool gfx::shader::shader::load_shader(const std::filesystem::path& file, const std::string& tech, bool& shader_dirty,
+									  bool& param_dirty)
+{
+	shader_dirty = is_shader_different(file);
+	param_dirty  = is_technique_different(tech) || shader_dirty;
 
-	if (gs::effect_technique tech = _shader.get_technique(_shader_tech); tech != nullptr) {
-		for (size_t idx = 0; idx < tech.count_passes(); idx++) {
-			auto pass = tech.get_pass(idx);
+	if (shader_dirty) {
+		try {
+			_shader = gs::effect(file);
+		} catch (...) {
+			return false;
+		}
+		_shader_file      = file;
+		_shader_file_mt   = std::filesystem::last_write_time(file);
+		_shader_file_sz   = std::filesystem::file_size(file);
+		_shader_file_tick = 0;
+	}
+	if (param_dirty) {
+		auto settings =
+			std::shared_ptr<obs_data_t>(obs_source_get_settings(_self), [](obs_data_t* p) { obs_data_release(p); });
+
+		bool have_valid_tech = false;
+		for (size_t idx = 0; idx < _shader.count_techniques(); idx++) {
+			if (_shader.get_technique(idx).name() == tech) {
+				have_valid_tech = true;
+				break;
+			}
+		}
+		if (have_valid_tech) {
+			_shader_tech = tech;
+		} else {
+			_shader_tech = _shader.get_technique(0).name();
+
+			// Update source data.
+			obs_data_set_string(settings.get(), ST_SHADER_TECHNIQUE, _shader_tech.c_str());
+		}
+
+		// Clear the shader parameters map and rebuild.
+		_shader_params.clear();
+		auto etech = _shader.get_technique(_shader_tech);
+		for (size_t idx = 0; idx < etech.count_passes(); idx++) {
+			auto pass = etech.get_pass(idx);
 
 			for (size_t vidx = 0; vidx < pass.count_vertex_parameters(); vidx++) {
 				auto el = pass.get_vertex_parameter(vidx);
+
+				if (!el)
+					continue;
 
 				auto fnd = _shader_params.find(el.get_name());
 				if (fnd != _shader_params.end())
@@ -83,30 +126,41 @@ void gfx::shader::shader::load_shader_params()
 
 				auto param = gfx::shader::parameter::make_parameter(el, ST_PARAMETERS);
 
-				if (param)
+				if (param) {
 					_shader_params.insert_or_assign(el.get_name(), param);
+					param->defaults(settings.get());
+					param->update(settings.get());
+				}
 			}
 
 			for (size_t vidx = 0; vidx < pass.count_pixel_parameters(); vidx++) {
 				auto el = pass.get_pixel_parameter(vidx);
 
+				if (!el)
+					continue;
+
 				auto fnd = _shader_params.find(el.get_name());
 				if (fnd != _shader_params.end())
 					continue;
 
 				auto param = gfx::shader::parameter::make_parameter(el, ST_PARAMETERS);
 
-				if (param)
+				if (param) {
 					_shader_params.insert_or_assign(el.get_name(), param);
+					param->defaults(settings.get());
+					param->update(settings.get());
+				}
 			}
 		}
 	}
 
-	_shader_params_invalid = false;
+	return true;
 }
 
 void gfx::shader::shader::properties(obs_properties_t* pr)
 {
+	_have_current_params = false;
+
 	{
 		auto grp = obs_properties_create();
 		obs_properties_add_group(pr, ST_SHADER, D_TRANSLATE(ST_SHADER), OBS_GROUP_NORMAL, grp);
@@ -118,7 +172,7 @@ void gfx::shader::shader::properties(obs_properties_t* pr)
 			obs_property_set_modified_callback2(
 				p,
 				[](void* priv, obs_properties_t* props, obs_property_t* prop, obs_data_t* data) noexcept {
-					return reinterpret_cast<gfx::shader::shader*>(priv)->on_shader_changed(props, prop, data);
+					return reinterpret_cast<gfx::shader::shader*>(priv)->on_properties_modified(props, prop, data);
 				},
 				this);
 		}
@@ -129,7 +183,7 @@ void gfx::shader::shader::properties(obs_properties_t* pr)
 			obs_property_set_modified_callback2(
 				p,
 				[](void* priv, obs_properties_t* props, obs_property_t* prop, obs_data_t* data) noexcept {
-					return reinterpret_cast<gfx::shader::shader*>(priv)->on_technique_changed(props, prop, data);
+					return reinterpret_cast<gfx::shader::shader*>(priv)->on_properties_modified(props, prop, data);
 				},
 				this);
 		}
@@ -155,122 +209,49 @@ void gfx::shader::shader::properties(obs_properties_t* pr)
 	}
 }
 
-bool gfx::shader::shader::is_shader_different(std::filesystem::path file)
+bool gfx::shader::shader::on_properties_modified(obs_properties_t* props, obs_property_t* prop, obs_data_t* data)
 {
-	// Check if the file name differs.
-	if (file != _shader_file)
-		return true;
+	bool shader_dirty = false;
+	bool param_dirty  = false;
 
-	// Is the file write time different?
-	if (std::filesystem::last_write_time(_shader_file) != _shader_file_mt) {
-		return true;
-	}
+	if (!update_shader(data, shader_dirty, param_dirty))
+		return false;
 
-	// Is the file size different?
-	if (std::filesystem::file_size(_shader_file) != _shader_file_sz) {
-		return true;
-	}
-
-	return false;
-}
-
-bool gfx::shader::shader::on_shader_changed(obs_properties_t* props, obs_property_t* prop, obs_data_t* data)
-{
-	// Load changed shader.
-	update_shader(data);
-
-	// Clear list of techniques.
-	obs_property_t* list = obs_properties_get(props, ST_SHADER_TECHNIQUE);
-	obs_property_list_clear(list);
-
-	// Don't go further if there is no shader.
-	if (!_shader)
-		return true;
-
-	// Rebuild Technique list.
-	{
-		const char* tech_name_c = obs_data_get_string(data, ST_SHADER_TECHNIQUE);
-		std::string tech_name   = tech_name_c ? tech_name_c : "";
-		bool        have_tech   = false;
-		for (size_t idx = 0, idx_end = _shader.count_techniques(); idx < idx_end; idx++) {
+	{ // Clear list of techniques and rebuild it.
+		obs_property_t* p_tech_list = obs_properties_get(props, ST_SHADER_TECHNIQUE);
+		obs_property_list_clear(p_tech_list);
+		for (size_t idx = 0; idx < _shader.count_techniques(); idx++) {
 			auto tech = _shader.get_technique(idx);
-			obs_property_list_add_string(list, tech.name().c_str(), tech.name().c_str());
-			if (tech.name() == tech_name) {
-				have_tech = true;
-			}
+			obs_property_list_add_string(p_tech_list, tech.name().c_str(), tech.name().c_str());
 		}
-		if (!have_tech && (_shader.count_techniques() > 0)) {
-			obs_data_set_string(data, ST_SHADER_TECHNIQUE, _shader.get_technique(0).name().c_str());
-			//on_technique_changed(props, prop, data);
-		} else if (_shader.count_techniques() == 0) {
-			obs_data_set_string(data, ST_SHADER_TECHNIQUE, "");
+	}
+	if (param_dirty || !_have_current_params) {
+		// Clear parameter options.
+		auto grp = obs_property_group_content(obs_properties_get(props, ST_PARAMETERS));
+		for (auto p = obs_properties_first(grp); p != nullptr; p = obs_properties_first(grp)) {
+			obs::tools::obs_properties_remove_by_name(grp, obs_property_name(p));
+		}
+
+		// Rebuild new parameters.
+		for (auto kv : _shader_params) {
+			kv.second->properties(grp, data);
+			kv.second->defaults(data);
+			kv.second->update(data);
 		}
 	}
 
-	return true;
+	_have_current_params = true;
+	return shader_dirty || param_dirty || !_have_current_params;
 }
 
-bool gfx::shader::shader::on_technique_changed(obs_properties_t* props, obs_property_t* prop, obs_data_t* data)
+bool gfx::shader::shader::update_shader(obs_data_t* data, bool& shader_dirty, bool& param_dirty)
 {
-	// Clear parameter options.
-	auto grp = obs_property_group_content(obs_properties_get(props, ST_PARAMETERS));
-	while (true) {
-		if (auto p = obs_properties_first(grp); p != nullptr) {
-			std::string name = obs_property_name(p) ? obs_property_name(p) : "";
-			obs_properties_remove_by_name(grp, name.c_str());
-		} else {
-			break;
-		}
-	}
+	const char* file_c = obs_data_get_string(data, ST_SHADER_FILE);
+	std::string file   = file_c ? file_c : "";
+	const char* tech_c = obs_data_get_string(data, ST_SHADER_TECHNIQUE);
+	std::string tech   = tech_c ? tech_c : "Draw";
 
-	// Don't go further if there is no shader.
-	if (!_shader)
-		return true;
-
-	// Load technique.
-	update_technique(data);
-
-	// Rebuild new parameters.
-	for (auto kv : _shader_params) {
-		kv.second->properties(grp, data);
-		kv.second->update(data);
-	}
-
-	return true;
-}
-
-void gfx::shader::shader::update_shader(obs_data_t* data)
-{
-	{
-		const char* file_c = obs_data_get_string(data, ST_SHADER_FILE);
-		std::string file   = file_c ? file_c : "";
-		if (file != "") {
-			try {
-				if (!load_shader(file))
-					return;
-			} catch (const std::exception& ex) {
-				P_LOG_ERROR("Failed to load shader: %s.", ex.what());
-				_shader.reset();
-			} catch (...) {
-				P_LOG_ERROR("Failed to load shader.");
-				_shader.reset();
-			}
-		} else {
-			_shader.reset();
-		}
-	}
-}
-
-void gfx::shader::shader::update_technique(obs_data_t* data)
-{
-	const char* shader_tech_c = obs_data_get_string(data, ST_SHADER_TECHNIQUE);
-	std::string shader_tech   = shader_tech_c ? shader_tech_c : "";
-
-	if ((_shader_params_invalid) || (_shader_tech != shader_tech)) {
-		_shader_tech           = shader_tech;
-		_shader_params_invalid = true;
-		load_shader_params();
-	}
+	return load_shader(file, tech, shader_dirty, param_dirty);
 }
 
 inline std::pair<gfx::shader::size_type, double_t> parse_text_as_size(const char* text)
@@ -290,8 +271,8 @@ inline std::pair<gfx::shader::size_type, double_t> parse_text_as_size(const char
 
 void gfx::shader::shader::update(obs_data_t* data)
 {
-	update_shader(data);
-	update_technique(data);
+	bool v1, v2;
+	update_shader(data, v1, v2);
 
 	{
 		auto sz_x    = parse_text_as_size(obs_data_get_string(data, ST_SHADER_SIZE_WIDTH));
@@ -366,6 +347,13 @@ uint32_t gfx::shader::shader::height()
 
 bool gfx::shader::shader::tick(float_t time)
 {
+	_shader_file_tick = static_cast<float_t>(static_cast<double_t>(_shader_file_tick) + static_cast<double_t>(time));
+	if (_shader_file_tick >= 1.0f / 3.0f) {
+		_shader_file_tick -= 1.0f / 3.0f;
+		bool v1, v2;
+		load_shader(_shader_file, _shader_tech, v1, v2);
+	}
+
 	// Update State
 	_time += time;
 
