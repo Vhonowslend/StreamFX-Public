@@ -46,19 +46,25 @@ gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
 gfx::shader::shader::~shader() {}
 
 bool gfx::shader::shader::is_shader_different(const std::filesystem::path& file)
-{
-	// Check if the file name differs.
-	if (file != _shader_file)
-		return true;
+try {
+	if (std::filesystem::exists(file)) {
+		// Check if the file name differs.
+		if (file != _shader_file)
+			return true;
+	}
 
-	// Is the file write time different?
-	if (std::filesystem::last_write_time(_shader_file) != _shader_file_mt)
-		return true;
+	if (std::filesystem::exists(_shader_file)) {
+		// Is the file write time different?
+		if (std::filesystem::last_write_time(_shader_file) != _shader_file_mt)
+			return true;
 
-	// Is the file size different?
-	if (std::filesystem::file_size(_shader_file) != _shader_file_sz)
-		return true;
+		// Is the file size different?
+		if (std::filesystem::file_size(_shader_file) != _shader_file_sz)
+			return true;
+	}
 
+	return false;
+} catch (const std::exception&) {
 	return false;
 }
 
@@ -74,19 +80,22 @@ bool gfx::shader::shader::is_technique_different(const std::string& tech)
 bool gfx::shader::shader::load_shader(const std::filesystem::path& file, const std::string& tech, bool& shader_dirty,
 									  bool& param_dirty)
 {
+	if (!std::filesystem::exists(file))
+		return false;
+
 	shader_dirty = is_shader_different(file);
 	param_dirty  = is_technique_different(tech) || shader_dirty;
 
 	if (shader_dirty) {
 		try {
-			_shader = gs::effect(file);
+			_shader           = gs::effect(file);
+			_shader_file      = file;
+			_shader_file_mt   = std::filesystem::last_write_time(file);
+			_shader_file_sz   = std::filesystem::file_size(file);
+			_shader_file_tick = 0;
 		} catch (...) {
 			return false;
 		}
-		_shader_file      = file;
-		_shader_file_mt   = std::filesystem::last_write_time(file);
-		_shader_file_sz   = std::filesystem::file_size(file);
-		_shader_file_tick = 0;
 	}
 	if (param_dirty) {
 		auto settings =
