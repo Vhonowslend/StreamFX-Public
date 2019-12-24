@@ -34,19 +34,54 @@ extern "C" {
 
 namespace gfx {
 	namespace shader {
+		enum class parameter_type {
+			// Unknown type, could be anything.
+			Unknown,
+			// Boolean, either false or true.
+			Boolean,
+			// Single Floating Point
+			Float,
+			// 32-Bit Integer
+			Integer,
+			// UTF-8 Character based String.
+			String,
+			// Texture with dimensions stored in size (1 = Texture1D, 2 = Texture2D, 3 = Texture3D, 6 = TextureCube).
+			Texture,
+			// Sampler for Textures.
+			Sampler
+		};
+
+		parameter_type get_type_from_effect_type(gs::effect_parameter::type type);
+
+		size_t get_length_from_effect_type(gs::effect_parameter::type type);
+
+		parameter_type get_type_from_string(std::string v);
+
 		class parameter {
-			protected:
+			// Parameter used for all functionality.
 			gs::effect_parameter _param;
 
-			int32_t     _order;
+			// Real type of the parameter (libobs gets it wrong often).
+			parameter_type _type;
+
+			// Real size of the parameter (libobs gets it wrong often).
+			size_t _size;
+
+			// Order of the parameter in a list/map.
+			int32_t _order;
+
+			// Key for the parameter (group) in a list/map.
 			std::string _key;
+
+			// Visibility, name and description.
+			bool        _visible;
 			std::string _name;
 			std::string _description;
 
+			protected:
 			parameter(gs::effect_parameter param, std::string key_prefix);
 			virtual ~parameter(){};
 
-			public:
 			virtual void defaults(obs_data_t* settings);
 
 			virtual void properties(obs_properties_t* props, obs_data_t* settings);
@@ -56,7 +91,19 @@ namespace gfx {
 			virtual void assign();
 
 			public:
+			gs::effect_parameter get_parameter();
+
+			parameter_type get_type();
+
+			size_t get_size();
+
 			int32_t get_order();
+
+			const std::string& get_key();
+
+			bool is_visible();
+
+			bool has_name();
 
 			const std::string& get_name();
 
