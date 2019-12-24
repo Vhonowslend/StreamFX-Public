@@ -48,18 +48,8 @@ inline bool get_annotation_float(gs::effect_parameter param, std::string anno_na
 	return false;
 }
 
-gfx::shader::bool_parameter::bool_parameter(gs::effect_parameter param, std::string prefix) : parameter(param)
-{
-	std::stringstream ss;
-	ss << prefix << "." << param.get_name();
-
-	_key  = ss.str();
-	_name = _key;
-	_desc = "";
-
-	get_annotation_string(_param, "name", _name);
-	get_annotation_string(_param, "description", _desc);
-}
+gfx::shader::bool_parameter::bool_parameter(gs::effect_parameter param, std::string prefix) : parameter(param, prefix)
+{}
 
 gfx::shader::bool_parameter::~bool_parameter() {}
 
@@ -71,8 +61,8 @@ void gfx::shader::bool_parameter::defaults(obs_data_t* settings)
 void gfx::shader::bool_parameter::properties(obs_properties_t* props, obs_data_t* settings)
 {
 	auto p = obs_properties_add_list(props, _key.c_str(), _name.c_str(), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-	if (_desc.length() > 0)
-		obs_property_set_long_description(p, _desc.c_str());
+	if (has_description())
+		obs_property_set_long_description(p, get_description().c_str());
 	obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DISABLED), 0);
 	obs_property_list_add_int(p, D_TRANSLATE(S_STATE_ENABLED), 1);
 }
@@ -87,73 +77,62 @@ void gfx::shader::bool_parameter::assign()
 	_param.set_bool(_value);
 }
 
-gfx::shader::float_parameter::float_parameter(gs::effect_parameter param, std::string prefix) : parameter(param)
+gfx::shader::float_parameter::float_parameter(gs::effect_parameter param, std::string prefix) : parameter(param, prefix)
 {
 	switch (_param.get_type()) {
 	case gs::effect_parameter::type::Float:
-		_len = 1;
+		_array_size = 1;
 		break;
 	case gs::effect_parameter::type::Float2:
-		_len = 2;
+		_array_size = 2;
 		break;
 	case gs::effect_parameter::type::Float3:
-		_len = 3;
+		_array_size = 3;
 		break;
 	case gs::effect_parameter::type::Float4:
-		_len = 4;
+		_array_size = 4;
 		break;
 	default:
-		_len = 0;
+		_array_size = 0;
 	}
 
-	// Build baseline key.
-	std::stringstream ss;
-	ss << prefix << "." << param.get_name();
-
-	// Build primary key.
-	_key[4]  = ss.str();
-	_name[4] = _key[4];
-	_desc    = "";
-	get_annotation_string(_param, "name", _name[4]);
-	get_annotation_string(_param, "description", _desc);
-
 	// Build sub-keys
-	for (size_t len = 0; len < _len; len++) {
-		char buf[5];
-		snprintf(buf, 4, "[%d]", static_cast<int32_t>(len));
-		_name[len] = std::string(buf, buf + sizeof(buf));
-		_key[len]  = _key[4] + _name[len];
+	char buffer[16]; // Fits on the stack, and in the L1 cache.
+	for (size_t idx = 0; idx < _array_size; idx++) {
+		snprintf(buffer, sizeof(buffer), "[%d]", static_cast<int32_t>(idx));
+		_names[idx] = std::string(buffer, buffer + sizeof(buffer));
+		_keys[idx]  = _key + _names[idx];
 
-		_min[len]  = std::numeric_limits<float_t>::lowest();
-		_max[len]  = std::numeric_limits<float_t>::max();
-		_step[len] = 0.01f;
+		_min[idx]  = std::numeric_limits<float_t>::lowest();
+		_max[idx]  = std::numeric_limits<float_t>::max();
+		_step[idx] = 0.01f;
 	}
 
 	if (auto anno = _param.get_annotation("minimum"); (anno != nullptr)) {
 		if (anno.get_type() == gs::effect_parameter::type::Float) {
-			for (size_t len = 0; len < _len; len++) {
+			for (size_t len = 0; len < _array_size; len++) {
 				anno.get_default_value(&_min[len], 1);
 			}
 		} else if (anno.get_type() == _param.get_type()) {
-			anno.get_default_value(_min, _len);
+			anno.get_default_value(_min, _array_size);
 		}
 	}
 	if (auto anno = _param.get_annotation("maximum"); (anno != nullptr)) {
 		if (anno.get_type() == gs::effect_parameter::type::Float) {
-			for (size_t len = 0; len < _len; len++) {
+			for (size_t len = 0; len < _array_size; len++) {
 				anno.get_default_value(&_max[len], 1);
 			}
 		} else if (anno.get_type() == _param.get_type()) {
-			anno.get_default_value(_max, _len);
+			anno.get_default_value(_max, _array_size);
 		}
 	}
 	if (auto anno = _param.get_annotation("step"); (anno != nullptr)) {
 		if (anno.get_type() == gs::effect_parameter::type::Float) {
-			for (size_t len = 0; len < _len; len++) {
+			for (size_t len = 0; len < _array_size; len++) {
 				anno.get_default_value(&_step[len], 1);
 			}
 		} else if (anno.get_type() == _param.get_type()) {
-			anno.get_default_value(_step, _len);
+			anno.get_default_value(_step, _array_size);
 		}
 	}
 }
@@ -163,36 +142,40 @@ gfx::shader::float_parameter::~float_parameter() {}
 void gfx::shader::float_parameter::defaults(obs_data_t* settings)
 {
 	float_t defaults[4] = {0, 0, 0, 0};
-	_param.get_default_value(defaults, _len);
-	for (size_t len = 0; len < _len; len++) {
-		obs_data_set_default_double(settings, _key[len].c_str(), static_cast<double_t>(defaults[len]));
+	_param.get_default_value(defaults, _array_size);
+	for (size_t idx = 0; idx < _array_size; idx++) {
+		obs_data_set_default_double(settings, _keys[idx].c_str(), static_cast<double_t>(defaults[idx]));
 	}
 }
 
 void gfx::shader::float_parameter::properties(obs_properties_t* props, obs_data_t* settings)
 {
 	auto grp = obs_properties_create();
-	obs_properties_add_group(props, _key[4].c_str(), _name[4].c_str(), OBS_GROUP_NORMAL, grp);
+	auto p   = obs_properties_add_group(props, _key.c_str(), _name.c_str(), OBS_GROUP_NORMAL, grp);
+	if (has_description())
+		obs_property_set_long_description(p, get_description().c_str());
 
-	for (size_t len = 0; len < _len; len++) {
-		auto p = obs_properties_add_float(grp, _key[len].c_str(), _name[len].c_str(), _min[len], _max[len], _step[len]);
-		obs_property_set_long_description(p, _desc.c_str());
+	for (size_t idx = 0; idx < _array_size; idx++) {
+		auto p =
+			obs_properties_add_float(grp, _keys[idx].c_str(), _names[idx].c_str(), _min[idx], _max[idx], _step[idx]);
+		if (has_description())
+			obs_property_set_long_description(p, get_description().c_str());
 	}
 }
 
 void gfx::shader::float_parameter::update(obs_data_t* settings)
 {
-	for (size_t len = 0; len < _len; len++) {
-		_value[len] = static_cast<float_t>(obs_data_get_double(settings, _key[len].c_str()));
+	for (size_t len = 0; len < _array_size; len++) {
+		_value[len] = static_cast<float_t>(obs_data_get_double(settings, _keys[len].c_str()));
 	}
 }
 
 void gfx::shader::float_parameter::assign()
 {
-	_param.set_value(_value, _len);
+	_param.set_value(_value, _array_size);
 }
 
-gfx::shader::int_parameter::int_parameter(gs::effect_parameter param, std::string prefix) : parameter(param) {}
+gfx::shader::int_parameter::int_parameter(gs::effect_parameter param, std::string prefix) : parameter(param, prefix) {}
 
 gfx::shader::int_parameter::~int_parameter() {}
 

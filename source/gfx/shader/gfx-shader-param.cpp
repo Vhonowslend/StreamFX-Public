@@ -16,7 +16,30 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "gfx-shader-param.hpp"
+#include <sstream>
 #include "gfx-shader-param-basic.hpp"
+
+gfx::shader::parameter::parameter(gs::effect_parameter param, std::string key_prefix)
+	: _param(param), _order(0), _key(_param.get_name()), _name(_key), _description()
+{
+	{
+		std::stringstream ss;
+		ss << key_prefix << "." << param.get_name();
+		_name = (_key);
+	}
+
+	if (auto anno = _param.get_annotation("order"); anno) {
+		_order = anno.get_default_int();
+	}
+	if (auto anno = _param.get_annotation("name"); anno) {
+		if (std::string v = anno.get_default_string(); v.length() > 0)
+			_name = v;
+	}
+	if (auto anno = _param.get_annotation("description"); anno) {
+		if (std::string v = anno.get_default_string(); v.length() > 0)
+			_description = v;
+	}
+}
 
 void gfx::shader::parameter::defaults(obs_data_t* settings) {}
 
@@ -25,6 +48,26 @@ void gfx::shader::parameter::properties(obs_properties_t* props, obs_data_t* set
 void gfx::shader::parameter::update(obs_data_t* settings) {}
 
 void gfx::shader::parameter::assign() {}
+
+int32_t gfx::shader::parameter::get_order()
+{
+	return _order;
+}
+
+const std::string& gfx::shader::parameter::get_name()
+{
+	return _name;
+}
+
+bool gfx::shader::parameter::has_description()
+{
+	return _description.length() > 0;
+}
+
+const std::string& gfx::shader::parameter::get_description()
+{
+	return _description;
+}
 
 std::shared_ptr<gfx::shader::parameter> gfx::shader::parameter::make_parameter(gs::effect_parameter param,
 																			   std::string          prefix)

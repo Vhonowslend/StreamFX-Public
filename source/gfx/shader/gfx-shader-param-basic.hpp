@@ -23,10 +23,6 @@
 namespace gfx {
 	namespace shader {
 		class bool_parameter : public parameter {
-			std::string _key;
-			std::string _name;
-			std::string _desc;
-
 			bool _value;
 
 			public:
@@ -44,10 +40,9 @@ namespace gfx {
 		};
 
 		struct float_parameter : public parameter {
-			size_t      _len;
-			std::string _key[5];
-			std::string _name[5];
-			std::string _desc;
+			size_t      _array_size;
+			std::string _keys[4];
+			std::string _names[4];
 
 			float_t _min[4];
 			float_t _max[4];

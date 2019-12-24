@@ -38,7 +38,12 @@ namespace gfx {
 			protected:
 			gs::effect_parameter _param;
 
-			parameter(gs::effect_parameter param) : _param(param){};
+			int32_t     _order;
+			std::string _key;
+			std::string _name;
+			std::string _description;
+
+			parameter(gs::effect_parameter param, std::string key_prefix);
 			virtual ~parameter(){};
 
 			public:
@@ -49,6 +54,15 @@ namespace gfx {
 			virtual void update(obs_data_t* settings);
 
 			virtual void assign();
+
+			public:
+			int32_t get_order();
+
+			const std::string& get_name();
+
+			bool has_description();
+
+			const std::string& get_description();
 
 			public:
 			static std::shared_ptr<parameter> make_parameter(gs::effect_parameter param, std::string prefix);
