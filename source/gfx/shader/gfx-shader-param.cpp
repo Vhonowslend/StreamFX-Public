@@ -57,6 +57,7 @@ gfx::shader::parameter_type gfx::shader::get_type_from_effect_type(gs::effect_pa
 size_t gfx::shader::get_length_from_effect_type(gs::effect_parameter::type type)
 {
 	switch (type) {
+	default:
 	case eptype::Unknown:
 	case eptype::Invalid:
 	case eptype::String:
@@ -150,7 +151,7 @@ gfx::shader::parameter::parameter(gs::effect_parameter param, std::string key_pr
 	// Read Size override.
 	_size = get_length_from_effect_type(_param.get_type());
 	if (auto anno = _param.get_annotation(ANNO_SIZE); anno) {
-		size_t ov = anno.get_default_int();
+		size_t ov = static_cast<size_t>(anno.get_default_int());
 		if (ov > 0)
 			_size = ov;
 	}
@@ -190,6 +191,11 @@ const std::string& gfx::shader::parameter::get_key()
 	return _key;
 }
 
+bool gfx::shader::parameter::is_visible()
+{
+	return true;
+}
+
 bool gfx::shader::parameter::has_name()
 {
 	return _name.length() > 0;
@@ -220,7 +226,7 @@ std::shared_ptr<gfx::shader::parameter> gfx::shader::parameter::make_parameter(g
 	parameter_type real_type = get_type_from_effect_type(param.get_type());
 	if (auto anno = param.get_annotation(ANNO_TYPE); anno) {
 		// We have a type override.
-		parameter_type real_type = get_type_from_string(param.get_default_string());
+		real_type = get_type_from_string(param.get_default_string());
 	}
 
 	switch (real_type) {

@@ -17,19 +17,74 @@
 
 #pragma once
 #include <string>
+#include <vector>
 #include "gfx-shader-param.hpp"
 #include "obs/gs/gs-effect-parameter.hpp"
 
 namespace gfx {
 	namespace shader {
-		class bool_parameter : public parameter {
-			bool _value;
+		enum class basic_field_type {
+			Input,
+			Slider,
+			Enum,
+		};
+
+		basic_field_type get_field_type_from_string(std::string v);
+
+		struct basic_data {
+			union {
+				int32_t  i32;
+				uint32_t ui32;
+				float_t  f32;
+			};
+		};
+
+		struct basic_enum_data {
+			std::string name;
+			basic_data  data;
+		};
+
+		struct basic_parameter : public parameter {
+			// Descriptor
+			basic_field_type         _field_type;
+			std::string              _suffix;
+			std::vector<std::string> _keys;
+			std::vector<std::string> _names;
+
+			protected:
+			// Limits
+			std::vector<basic_data> _min;
+			std::vector<basic_data> _max;
+			std::vector<basic_data> _step;
+			std::vector<basic_data> _scale;
+
+			// Enumeration Information
+			std::vector<basic_enum_data> _values;
+
+			public:
+			basic_parameter(gs::effect_parameter param, std::string prefix);
+			virtual ~basic_parameter();
+
+			virtual void load_parameter_data(gs::effect_parameter parameter, basic_data& data);
+
+			public:
+			basic_field_type get_field_type();
+
+			const std::string& get_suffix();
+
+			const std::string& get_keys(size_t idx);
+
+			const std::string& get_names(size_t idx);
+		};
+
+		struct bool_parameter : public basic_parameter {
+			// std::vector<bool> doesn't allow .data()
+			std::vector<uint8_t> _data;
 
 			public:
 			bool_parameter(gs::effect_parameter param, std::string prefix);
 			virtual ~bool_parameter();
 
-			public:
 			virtual void defaults(obs_data_t* settings);
 
 			virtual void properties(obs_properties_t* props, obs_data_t* settings) override;
@@ -39,21 +94,13 @@ namespace gfx {
 			virtual void assign() override;
 		};
 
-		struct float_parameter : public parameter {
-			size_t      _array_size;
-			std::string _keys[4];
-			std::string _names[4];
-
-			float_t _min[4];
-			float_t _max[4];
-			float_t _step[4];
-			float_t _value[4];
+		struct float_parameter : public basic_parameter {
+			std::vector<basic_data> _data;
 
 			public:
 			float_parameter(gs::effect_parameter param, std::string prefix);
 			virtual ~float_parameter();
 
-			public:
 			virtual void defaults(obs_data_t* settings);
 
 			virtual void properties(obs_properties_t* props, obs_data_t* settings) override;
@@ -63,12 +110,13 @@ namespace gfx {
 			virtual void assign() override;
 		};
 
-		struct int_parameter : public parameter {
+		struct int_parameter : public basic_parameter {
+			std::vector<basic_data> _data;
+
 			public:
 			int_parameter(gs::effect_parameter param, std::string prefix);
 			virtual ~int_parameter();
 
-			public:
 			virtual void properties(obs_properties_t* props, obs_data_t* settings) override;
 		};
 
