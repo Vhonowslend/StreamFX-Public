@@ -22,6 +22,7 @@
 
 #define ANNO_ORDER "order"
 #define ANNO_VISIBILITY "visible"
+#define ANNO_AUTOMATIC "automatic"
 #define ANNO_NAME "name"
 #define ANNO_DESCRIPTION "description"
 #define ANNO_TYPE "type"
@@ -119,6 +120,14 @@ gfx::shader::parameter::parameter(gs::effect_parameter param, std::string key_pr
 	}
 
 	// Read Order
+	if (auto anno = _param.get_annotation(ANNO_VISIBILITY); anno) {
+		_visible = anno.get_default_bool();
+	}
+	if (auto anno = _param.get_annotation(ANNO_AUTOMATIC); anno) {
+		_automatic = anno.get_default_bool();
+	}
+
+	// Read Order
 	if (auto anno = _param.get_annotation(ANNO_ORDER); anno) {
 		_order = anno.get_default_int();
 	}
@@ -194,6 +203,11 @@ const std::string& gfx::shader::parameter::get_key()
 bool gfx::shader::parameter::is_visible()
 {
 	return true;
+}
+
+bool gfx::shader::parameter::is_automatic()
+{
+	return _automatic;
 }
 
 bool gfx::shader::parameter::has_name()

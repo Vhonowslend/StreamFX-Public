@@ -243,8 +243,7 @@ bool gfx::shader::shader::on_properties_modified(obs_properties_t* props, obs_pr
 
 		// Rebuild new parameters.
 		for (auto kv : _shader_params) {
-			if (kv.second->is_visible())
-				kv.second->properties(grp, data);
+			kv.second->properties(grp, data);
 			kv.second->defaults(data);
 			kv.second->update(data);
 		}

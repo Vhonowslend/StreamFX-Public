@@ -190,6 +190,9 @@ void gfx::shader::bool_parameter::defaults(obs_data_t* settings)
 
 void gfx::shader::bool_parameter::properties(obs_properties_t* props, obs_data_t* settings)
 {
+	if (!is_visible())
+		return;
+
 	// TODO: Support for bool[]
 	if (get_size() == 1) {
 		auto p = obs_properties_add_list(props, get_key().c_str(), get_name().c_str(), OBS_COMBO_TYPE_LIST,
@@ -203,6 +206,9 @@ void gfx::shader::bool_parameter::properties(obs_properties_t* props, obs_data_t
 
 void gfx::shader::bool_parameter::update(obs_data_t* settings)
 {
+	if (is_automatic())
+		return;
+
 	// TODO: Support for bool[]
 	if (get_size() == 1) {
 		_data[0] = static_cast<bool>(obs_data_get_int(settings, get_key().c_str()));
@@ -286,6 +292,9 @@ static inline obs_property_t* build_float_property(gfx::shader::basic_field_type
 
 void gfx::shader::float_parameter::properties(obs_properties_t* props, obs_data_t* settings)
 {
+	if (!is_visible())
+		return;
+
 	auto grp = obs_properties_create();
 	if (get_size() == 1) {
 		auto p = build_float_property(_field_type, props, _keys[0].c_str(), _names[0].c_str(), _min[0].f32, _max[0].f32,
@@ -316,6 +325,9 @@ void gfx::shader::float_parameter::update(obs_data_t* settings)
 
 void gfx::shader::float_parameter::assign()
 {
+	if (is_automatic())
+		return;
+
 	get_parameter().set_value(_data.data(), get_size());
 }
 
