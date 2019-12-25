@@ -75,7 +75,7 @@ namespace gfx {
 
 			// Visibility, name and description.
 			bool        _visible;
-			bool _automatic;
+			bool        _automatic;
 			std::string _name;
 			std::string _description;
 

@@ -177,7 +177,7 @@ void gfx::shader::parameter::assign() {}
 
 gs::effect_parameter gfx::shader::parameter::get_parameter()
 {
-	return gs::effect_parameter();
+	return _param;
 }
 
 gfx::shader::parameter_type gfx::shader::parameter::get_type()
