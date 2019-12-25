@@ -202,7 +202,7 @@ const std::string& gfx::shader::parameter::get_key()
 
 bool gfx::shader::parameter::is_visible()
 {
-	return true;
+	return _visible && !is_automatic();
 }
 
 bool gfx::shader::parameter::is_automatic()
