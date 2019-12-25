@@ -79,24 +79,23 @@ bool gfx::shader::shader::is_technique_different(const std::string& tech)
 
 bool gfx::shader::shader::load_shader(const std::filesystem::path& file, const std::string& tech, bool& shader_dirty,
 									  bool& param_dirty)
-{
+try {
 	if (!std::filesystem::exists(file))
 		return false;
 
 	shader_dirty = is_shader_different(file);
 	param_dirty  = is_technique_different(tech) || shader_dirty;
 
+	// Update Shader
 	if (shader_dirty) {
-		try {
-			_shader           = gs::effect(file);
-			_shader_file      = file;
-			_shader_file_mt   = std::filesystem::last_write_time(file);
-			_shader_file_sz   = std::filesystem::file_size(file);
-			_shader_file_tick = 0;
-		} catch (...) {
-			return false;
-		}
+		_shader           = gs::effect(file);
+		_shader_file_mt   = std::filesystem::last_write_time(file);
+		_shader_file_sz   = std::filesystem::file_size(file);
+		_shader_file      = file;
+		_shader_file_tick = 0;
 	}
+
+	// Update Params
 	if (param_dirty) {
 		auto settings =
 			std::shared_ptr<obs_data_t>(obs_source_get_settings(_self), [](obs_data_t* p) { obs_data_release(p); });
@@ -164,6 +163,8 @@ bool gfx::shader::shader::load_shader(const std::filesystem::path& file, const s
 	}
 
 	return true;
+} catch (...) {
+	return false;
 }
 
 void gfx::shader::shader::properties(obs_properties_t* pr)

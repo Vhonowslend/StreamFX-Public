@@ -50,6 +50,8 @@ namespace gfx {
 			Transition,
 		};
 
+		typedef std::map<std::string, std::shared_ptr<parameter>> shader_param_map_t;
+
 		class shader {
 			obs_source_t* _self;
 
@@ -61,13 +63,13 @@ namespace gfx {
 			std::shared_ptr<gs::texture> _input_b;
 
 			// Shader
-			gs::effect                                        _shader;
-			std::filesystem::path                             _shader_file;
-			std::string                                       _shader_tech;
-			std::filesystem::file_time_type                   _shader_file_mt;
-			uintmax_t                                         _shader_file_sz;
-			float_t                                           _shader_file_tick;
-			std::map<std::string, std::shared_ptr<parameter>> _shader_params;
+			gs::effect                      _shader;
+			std::filesystem::path           _shader_file;
+			std::string                     _shader_tech;
+			std::filesystem::file_time_type _shader_file_mt;
+			uintmax_t                       _shader_file_sz;
+			float_t                         _shader_file_tick;
+			shader_param_map_t              _shader_params;
 
 			// Options
 			size_type _width_type;
