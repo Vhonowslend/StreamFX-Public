@@ -1,71 +1,139 @@
+// Source Shader Example
+//
+// Check back here on new plugin versions for new features.
+//
+// This example explains the necessary basics to get started with custom shaders,
+// however it does not teach you HLSL. You will have to learn that yourself, and
+// no support is given for HLSL issues - either pay an artist, or learn it your-
+// self.
+//
+// Some uniform variables are automatically provided by StreamFX, these are:
+// * float4x4 ViewProj: View Projection Matrix
+// * float4 Time:
+//   [0] is current time,
+//   [1] is frame time,
+//   [2] is 24 hour system time,
+//   [3] is a random value that changes each frame.
+// * matrix4x4 Random: 16 random values that change each frame.
+// * float4 ViewSize:
+//   [0..1] View Size (1 / VS = 1 pixel move)
+//   [2..3] Inverse View Size (1 * IVS = 1 pixel move)
+// * texture2d ImageA: (First) input image for filters and transitions.
+// * texture2D ImageB: Second input image for transitions.
+//
+// Custom Shaders make heavy use of annotations, which can be used to essentially
+// describe a complete shader with just its own file, requiring no outside input.
+// There are various annotations that StreamFX reads from, and some are situational,
+// so it is best if I show some examples.
+//
+// ---------- Basic Uniform Example ----------
+//    uniform bool UniqueParameterName<
+// This defines a parameter of type float with the unique key "UniqueParameterName",
+// which is used to access it in a script as "Shader.Parameters.UniqueParameterName".
+//
+//        bool visible = false;
+// [OPTIONAL] The boolean annotation 'visible' allows hiding a parameter from the user,
+// but still allowing scripts to change it. Limits are ignored, but scale is not.
+//
+//        bool automatic = true;
+// [OPTIONAL] Prevents parameters from being shown as well as being modified by scripts,
+// and overrides visible if set to true. For seeded or given-by-default parameters this
+// must be set to true or their state is not guaranteed and may be nonsense.
+//
+//        string name = "Hello World";
+// [OPTIONAL] Overrides the visible name of a parameter with your own better string.
+// The maximum length is 256 characters, but you really should keep it shorter than 40.
+//
+//        string description = "This is an example";
+// [OPTIONAL] Sets the description of a parameter that shows up when hovering over it.
+//
+//        string type = "float";
+// [OPTIONAL] Overrides the detected type with a specified one, which is useful for some
+// functionality trickery and even array types. Must not differ in byte-size from the
+// intended type. Best left out unless you absolutely need it. Valid types are:
+//   "bool", "float", "int", "string", "texture", "sampler"
+//
+//        int size = 1;
+// [OPTIONAL/REQUIRED] Optional on detected types, required on arrays or unknown types.
+// Overrides the detected size with your own, which may at most be 32 elements (4x8 matrix).
+//    >;
+//
+// ---------- Float/Int Uniform Example ----------
+//    uniform float UniqueParameterName<
+// In addition to the basic parameters, Floats and Ints have additional annotations that are being read.
+//
+//        string field_type = "input";
+// [OPTIONAL] Changes the visible type of the field to be something else.
+// Possible values:
+// * "input": The default input method, a simple field with limits and stepping.
+// * "slider": A slider, also with limits and stepping.
+// * "enum": Enumeration that holds only selected data.
+//
+//        string suffix = "";
+// [OPTIONAL] Suffix to attach to the value in the UI, for example " px" for
+// pixels. Does not work with enumerations.
+//
+//        float minimum = 0.0;
+// [OPTIONAL] Minimum possible value, must always be the same type as the uniform.
+//
+//        float maximum = 1.0;
+// [OPTIONAL] Maximum possible value, must always be the same type as the uniform.
+//
+//        float step = 0.01;
+// [OPTIONAL] Step value for each increase/decrease. Values lower than 0.01 may
+// not be supported.
+//
+//        float scale = 1.0;
+// [OPTIONAL] Defines the scaling used when assigning the value to the shader.
+// For example a UI value of 100.0 can be scaled to 1.0 this way.
+//
+//        int values<
+// [REQUIRED if "enum"] Contains the values for an enumeration and holds the
+// number of enumeration entries actually available.
+//
+//            string _0<
+//                float value = 1.0;
+//            > = "Entry 1";
+// Defines the first enumeration entry with the visible name "Entry 1" and the value 1.0.
+//
+//            string _1<
+//                float value = 0.0;
+//            > = "Entry 2";
+// Defines the second enumeration entry with the visible name "Entry 2" and the value 0.0.
+//
+//        > = 2;
+// [REQUIRED if "enum"] The value of this annotation must be the number of enumeration entries.
+//
+//    >;
+//
+// ---------- Float4/Int4 Uniform Example ----------
+//    uniform float4 UniqueParameterName<
+// There aren't many difference to the standard float/int parameter, but you can
+// specify limits, stepping and scale per element. Enumerations also are per
+// element so their type must be the base type (float for float#, int for int#).
+//
+//        float4 minimum = {0.0, 1.0, 0.5, -0.5};
+// Each element now has different minimum values which ...
+//
+//        float4 maximum = {1.0, 0.0, 0.6, 0.0};
+// ... also works for maximum, ...
+//
+//        float4 step = {0.01, 0.01, 0.1, 0.5};
+// ... stepping and ...
+//
+//        float4 scale = {100.0, 0.01, 3.14, 1283828.0};
+// ... scaling values. 
+//
+//    >;
+
 // Always provided by OBS
 uniform float4x4 ViewProj<
-	bool visible = false;
-	string name = "View Projection Matrix";
+	bool automatic = true;
 >;
 
-// Provided by Stream Effects
+// Provided by StreamFX
 uniform float4 Time<
-	bool visible = false;
-	string name = "Time Array";
-	string description = "A float array of length 4, with the indexes being:\n[0] Time Visible in Seconds\n[1] Last Render Time\n[2] Current System Time (24h looping)\n[3] Random value between 0 and 1.";
->;
-/*uniform float4x4 Random<
-	bool visible = false;
-	string name = "Random Matrix";
-	string description = "A float4x4 value containing random values between 0 and 1. Changes every frame.";
->;
-uniform float4x4 Seed<
-	bool visible = false;
-	string name = "Seed Matrix";
-	string description = "A float4x4 value containing random seeds values between 0 and 1. Values determined once on Source creation.";
->;*/
-
-// Parameters
-uniform bool BoolParameter<
-	bool visible = true;
-	string name = "Bool Parameter";
-	string description = "Example";
->;
-/*uniform int IntParameter<
-	bool visible = true;
-	string name = "Int Parameter";
-	string description = "Example";
->;
-uniform int2 Int2Parameter<
-	bool visible = true;
-	string name = "Int2 Parameter";
-	string description = "Example";
->;
-uniform int3 Int3Parameter<
-	bool visible = true;
-	string name = "Int3 Parameter";
-	string description = "Example";
->;
-uniform int4 Int4Parameter<
-	bool visible = true;
-	string name = "Int4 Parameter";
-	string description = "Example";
->;*/
-uniform float FloatParameter<
-	bool visible = true;
-	string name = "Float Parameter";
-	string description = "Example";
->;
-uniform float2 Float2Parameter<
-	bool visible = true;
-	string name = "Float2 Parameter";
-	string description = "Example";
->;
-uniform float3 Float3Parameter<
-	bool visible = true;
-	string name = "Float3 Parameter";
-	string description = "Example";
->;
-uniform float4 Float4Parameter<
-	bool visible = true;
-	string name = "Float4 Parameter";
-	string description = "Example";
+	bool automatic = true;
 >;
 
 // ---------- Shader Code
@@ -106,76 +174,5 @@ technique Draw
 	{
 		vertex_shader = VSDefault(v_in);
 		pixel_shader  = PSTime(v_in); 
-	}
-}
-
-float4 PSBool(FragData v_in) : TARGET {
-	if (BoolParameter)	
-		return float4(
-			cos(Time[0] * 5.) * 0.5 + 0.5,
-			cos(Time[0] * 0.) * 0.5 + 0.5,
-			cos(Time[0] * 0.) * 0.5 + 0.5,
-			1.0);
-	return float4(0, 0, 0, 1.0);
-}
-
-technique Bool
-{
-	pass
-	{
-		vertex_shader = VSDefault(v_in);
-		pixel_shader  = PSBool(v_in); 
-	}
-}
-
-float4 PSFloat(FragData v_in) : TARGET {
-	return float4(FloatParameter.xxx, 1.0);
-}
-
-technique Float
-{
-	pass
-	{
-		vertex_shader = VSDefault(v_in);
-		pixel_shader  = PSFloat(v_in); 
-	}
-}
-
-float4 PSFloat2(FragData v_in) : TARGET {
-	return Float2Parameter.xxxy;
-}
-
-technique Float2
-{
-	pass
-	{
-		vertex_shader = VSDefault(v_in);
-		pixel_shader  = PSFloat2(v_in); 
-	}
-}
-
-float4 PSFloat3(FragData v_in) : TARGET {
-	return float4(Float3Parameter, 1.0);
-}
-
-technique Float3
-{
-	pass
-	{
-		vertex_shader = VSDefault(v_in);
-		pixel_shader  = PSFloat3(v_in); 
-	}
-}
-
-float4 PSFloat4(FragData v_in) : TARGET {
-	return Float4Parameter;
-}
-
-technique Float4
-{
-	pass
-	{
-		vertex_shader = VSDefault(v_in);
-		pixel_shader  = PSFloat4(v_in); 
 	}
 }
