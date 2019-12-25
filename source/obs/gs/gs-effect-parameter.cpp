@@ -56,6 +56,54 @@ gs::effect_parameter::effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_ep
 
 gs::effect_parameter::~effect_parameter() {}
 
+gs::effect_parameter::effect_parameter(const effect_parameter& rhs)
+{
+	reset(rhs.get(), [](void*) {});
+	_effect_parent = rhs._effect_parent;
+	_pass_parent   = rhs._pass_parent;
+	_param_parent  = rhs._param_parent;
+}
+
+gs::effect_parameter& gs::effect_parameter::operator=(const effect_parameter& rhs)
+{
+	reset(rhs.get(), [](void*) {});
+	_effect_parent = rhs._effect_parent;
+	_pass_parent   = rhs._pass_parent;
+	_param_parent  = rhs._param_parent;
+	return *this;
+}
+
+gs::effect_parameter::effect_parameter(effect_parameter&& rhs) noexcept
+try {
+	reset(rhs.get(), [](gs_eparam_t*) {});
+	_effect_parent = rhs._effect_parent;
+	_pass_parent   = rhs._pass_parent;
+	_param_parent  = rhs._param_parent;
+
+	rhs.reset();
+	rhs._effect_parent = nullptr;
+	rhs._pass_parent   = nullptr;
+	rhs._param_parent  = nullptr;
+} catch (...) {
+}
+
+gs::effect_parameter& gs::effect_parameter::operator=(effect_parameter&& rhs) noexcept
+try {
+	reset(rhs.get(), [](gs_eparam_t*) {});
+	_effect_parent = rhs._effect_parent;
+	_pass_parent   = rhs._pass_parent;
+	_param_parent  = rhs._param_parent;
+
+	rhs.reset();
+	rhs._effect_parent = nullptr;
+	rhs._pass_parent   = nullptr;
+	rhs._param_parent  = nullptr;
+
+	return *this;
+} catch (...) {
+	return *this;
+}
+
 std::string gs::effect_parameter::get_name()
 {
 	const char* name_c   = get()->name;

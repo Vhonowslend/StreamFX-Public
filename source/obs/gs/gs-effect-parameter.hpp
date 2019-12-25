@@ -71,6 +71,12 @@ namespace gs {
 		effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_eparam_t>* parent);
 		~effect_parameter();
 
+		effect_parameter(const effect_parameter& rhs);
+		effect_parameter& operator=(const effect_parameter& rhs);
+
+		effect_parameter(effect_parameter&& rhs) noexcept;
+		effect_parameter& operator=(effect_parameter&& rhs) noexcept;
+
 		std::string get_name();
 
 		type get_type();
