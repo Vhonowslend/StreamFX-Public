@@ -83,13 +83,11 @@ gfx::shader::basic_parameter::basic_parameter(gs::effect_parameter param, std::s
 
 	_keys.resize(get_size());
 	_names.resize(get_size());
-	/*
+
 	_min.resize(get_size());
 	_max.resize(get_size());
 	_step.resize(get_size());
 	_scale.resize(get_size());
-	_value.resize(get_size());
-	*/
 
 	// Build sub-keys
 	if (get_size() == 1) {
