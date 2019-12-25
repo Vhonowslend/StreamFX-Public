@@ -117,7 +117,13 @@ namespace gfx {
 			int_parameter(gs::effect_parameter param, std::string prefix);
 			virtual ~int_parameter();
 
+			virtual void defaults(obs_data_t* settings);
+
 			virtual void properties(obs_properties_t* props, obs_data_t* settings) override;
+
+			virtual void update(obs_data_t* settings) override;
+
+			virtual void assign() override;
 		};
 
 	} // namespace shader

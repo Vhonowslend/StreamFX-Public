@@ -92,11 +92,16 @@ gfx::shader::basic_parameter::basic_parameter(gs::effect_parameter param, std::s
 	*/
 
 	// Build sub-keys
-	for (size_t idx = 0; idx < _keys.size(); idx++) {
-		snprintf(string_buffer, sizeof(string_buffer), "[%d]", static_cast<int32_t>(idx));
-		_names[idx] = std::string(string_buffer, string_buffer + strnlen(string_buffer, sizeof(string_buffer)));
-		snprintf(string_buffer, sizeof(string_buffer), "%s[%d]", get_key().c_str(), static_cast<int32_t>(idx));
-		_keys[idx] = std::string(string_buffer, string_buffer + strnlen(string_buffer, sizeof(string_buffer)));
+	if (get_size() == 1) {
+		_names[0] = get_name();
+		_keys[0]  = get_key();
+	} else {
+		for (size_t idx = 0; idx < get_size(); idx++) {
+			snprintf(string_buffer, sizeof(string_buffer), "[%d]", static_cast<int32_t>(idx));
+			_names[idx] = std::string(string_buffer, string_buffer + strnlen(string_buffer, sizeof(string_buffer)));
+			snprintf(string_buffer, sizeof(string_buffer), "%s[%d]", get_key().c_str(), static_cast<int32_t>(idx));
+			_keys[idx] = std::string(string_buffer, string_buffer + strnlen(string_buffer, sizeof(string_buffer)));
+		}
 	}
 
 	// Detect Field Types
@@ -295,13 +300,13 @@ void gfx::shader::float_parameter::properties(obs_properties_t* props, obs_data_
 	if (!is_visible())
 		return;
 
-	auto grp = obs_properties_create();
 	if (get_size() == 1) {
 		auto p = build_float_property(_field_type, props, _keys[0].c_str(), _names[0].c_str(), _min[0].f32, _max[0].f32,
 									  _step[0].f32, _values);
 		if (has_description())
 			obs_property_set_long_description(p, get_description().c_str());
 	} else {
+		auto grp = obs_properties_create();
 		auto p = obs_properties_add_group(props, get_key().c_str(), has_name() ? get_name().c_str() : get_key().c_str(),
 										  OBS_GROUP_NORMAL, grp);
 		if (has_description())
@@ -330,11 +335,112 @@ void gfx::shader::float_parameter::assign()
 
 	get_parameter().set_value(_data.data(), get_size());
 }
+static inline obs_property_t* build_int_property(gfx::shader::basic_field_type ft, obs_properties_t* props,
+												 const char* key, const char* name, int32_t min, int32_t max,
+												 int32_t step, std::vector<gfx::shader::basic_enum_data> edata)
+{
+	switch (ft) {
+	case gfx::shader::basic_field_type::Enum: {
+		auto p = obs_properties_add_list(props, key, name, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+		for (size_t idx = 0; idx < edata.size(); idx++) {
+			auto& el = edata.at(idx);
+			obs_property_list_add_int(p, el.name.c_str(), el.data.i32);
+		}
+		return p;
+	}
+	case gfx::shader::basic_field_type::Slider:
+		return obs_properties_add_int_slider(props, key, name, min, max, step);
+	default:
+	case gfx::shader::basic_field_type::Input:
+		return obs_properties_add_int(props, key, name, min, max, step);
+	}
+}
 
 gfx::shader::int_parameter::int_parameter(gs::effect_parameter param, std::string prefix)
 	: basic_parameter(param, prefix)
-{}
+{
+	_data.resize(get_size());
+
+	// Reset minimum, maximum, step and scale.
+	for (size_t idx = 0; idx < get_size(); idx++) {
+		_min[idx].i32   = std::numeric_limits<int32_t>::lowest();
+		_max[idx].i32   = std::numeric_limits<int32_t>::max();
+		_step[idx].i32  = 1;
+		_scale[idx].i32 = 1;
+	}
+
+	// Load Limits
+	if (auto anno = get_parameter().get_annotation(ANNO_VALUE_MINIMUM); anno) {
+		if (anno.get_type() == get_parameter().get_type()) {
+			anno.get_default_value(_min.data(), get_size());
+		}
+	}
+	if (auto anno = get_parameter().get_annotation(ANNO_VALUE_MAXIMUM); anno) {
+		if (anno.get_type() == get_parameter().get_type()) {
+			anno.get_default_value(_max.data(), get_size());
+		}
+	}
+	if (auto anno = get_parameter().get_annotation(ANNO_VALUE_STEP); anno) {
+		if (anno.get_type() == get_parameter().get_type()) {
+			anno.get_default_value(_step.data(), get_size());
+		}
+	}
+	if (auto anno = get_parameter().get_annotation(ANNO_VALUE_SCALE); anno) {
+		if (anno.get_type() == get_parameter().get_type()) {
+			anno.get_default_value(_scale.data(), get_size());
+		}
+	}
+}
 
 gfx::shader::int_parameter::~int_parameter() {}
 
-void gfx::shader::int_parameter::properties(obs_properties_t* props, obs_data_t* settings) {}
+void gfx::shader::int_parameter::defaults(obs_data_t* settings)
+{
+	std::vector<int32_t> defaults;
+	defaults.resize(get_size());
+	get_parameter().get_default_value(defaults.data(), get_size());
+	for (size_t idx = 0; idx < get_size(); idx++) {
+		obs_data_set_default_int(settings, get_keys(idx).c_str(), defaults[idx]);
+	}
+}
+
+void gfx::shader::int_parameter::properties(obs_properties_t* props, obs_data_t* settings)
+{
+	if (!is_visible())
+		return;
+
+	if (get_size() == 1) {
+		auto p = build_int_property(_field_type, props, _keys[0].c_str(), _names[0].c_str(), _min[0].i32, _max[0].i32,
+									_step[0].i32, _values);
+		if (has_description())
+			obs_property_set_long_description(p, get_description().c_str());
+	} else {
+		auto grp = obs_properties_create();
+		auto p = obs_properties_add_group(props, get_key().c_str(), has_name() ? get_name().c_str() : get_key().c_str(),
+										  OBS_GROUP_NORMAL, grp);
+		if (has_description())
+			obs_property_set_long_description(p, get_description().c_str());
+
+		for (size_t idx = 0; idx < get_size(); idx++) {
+			p = build_int_property(_field_type, grp, _keys[idx].c_str(), _names[idx].c_str(), _min[idx].i32,
+								   _max[idx].i32, _step[idx].i32, _values);
+			if (has_description())
+				obs_property_set_long_description(p, get_description().c_str());
+		}
+	}
+}
+
+void gfx::shader::int_parameter::update(obs_data_t* settings)
+{
+	for (size_t idx = 0; idx < get_size(); idx++) {
+		_data[idx].i32 = static_cast<int32_t>(obs_data_get_int(settings, _keys[idx].c_str()));
+	}
+}
+
+void gfx::shader::int_parameter::assign()
+{
+	if (is_automatic())
+		return;
+
+	get_parameter().set_value(_data.data(), get_size());
+}
