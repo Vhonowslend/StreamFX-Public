@@ -29,6 +29,7 @@
 #define ANNO_VALUE_STEP "step"
 #define ANNO_VALUE_SCALE "scale"
 #define ANNO_ENUM_VALUES "values"
+#define ANNO_ENUM_VALUE "value"
 
 inline bool get_annotation_string(gs::effect_parameter param, std::string anno_name, std::string& out)
 {
@@ -126,7 +127,9 @@ gfx::shader::basic_parameter::basic_parameter(gs::effect_parameter param, std::s
 				if (auto annoe = anno.get_annotation(key);
 					annoe && (annoe.get_type() == gs::effect_parameter::type::String)) {
 					entry.name = annoe.get_default_string();
-					load_parameter_data(annoe, entry.data);
+					if (auto annoev = annoe.get_annotation(ANNO_ENUM_VALUE); annoev) {
+						load_parameter_data(annoev, entry.data);
+					}
 				} else {
 					P_LOG_WARNING("[%s] Parameter enumeration entry '%s' is of invalid type, must be string.",
 								  get_name().c_str(), string_buffer);
@@ -143,7 +146,7 @@ gfx::shader::basic_parameter::~basic_parameter() {}
 
 void gfx::shader::basic_parameter::load_parameter_data(gs::effect_parameter parameter, basic_data& data)
 {
-	data.i32 = 0;
+	parameter.get_default_value(&data.i32, 1);
 }
 
 gfx::shader::basic_field_type gfx::shader::basic_parameter::get_field_type()
@@ -322,7 +325,7 @@ void gfx::shader::float_parameter::properties(obs_properties_t* props, obs_data_
 void gfx::shader::float_parameter::update(obs_data_t* settings)
 {
 	for (size_t idx = 0; idx < get_size(); idx++) {
-		_data[idx].f32 = static_cast<float_t>(obs_data_get_double(settings, _keys[idx].c_str()));
+		_data[idx].f32 = static_cast<float_t>(obs_data_get_double(settings, _keys[idx].c_str())) * _scale[idx].f32;
 	}
 }
 
@@ -431,7 +434,7 @@ void gfx::shader::int_parameter::properties(obs_properties_t* props, obs_data_t*
 void gfx::shader::int_parameter::update(obs_data_t* settings)
 {
 	for (size_t idx = 0; idx < get_size(); idx++) {
-		_data[idx].i32 = static_cast<int32_t>(obs_data_get_int(settings, _keys[idx].c_str()));
+		_data[idx].i32 = static_cast<int32_t>(obs_data_get_int(settings, _keys[idx].c_str()) * _scale[idx].i32);
 	}
 }
 
