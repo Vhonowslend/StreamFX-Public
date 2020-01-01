@@ -64,7 +64,8 @@ try {
 	}
 
 	return false;
-} catch (const std::exception&) {
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Loading shader '%s' failed with error: %s", file.c_str(), ex.what());
 	return false;
 }
 
@@ -163,6 +164,9 @@ try {
 	}
 
 	return true;
+} catch (const std::exception& ex) {
+	P_LOG_ERROR("Loading shader '%s' failed with error: %s", file.c_str(), ex.what());
+	return false;
 } catch (...) {
 	return false;
 }
@@ -382,12 +386,21 @@ void gfx::shader::shader::render()
 		kv.second->assign();
 	}
 
+	// Time: (Current Time), (Zero), (Zero), (Random Value)
 	if (gs::effect_parameter el = _shader.get_parameter("Time"); el != nullptr) {
 		if (el.get_type() == gs::effect_parameter::type::Float4) {
 			el.set_float4(
 				_time, 0, 0,
 				static_cast<float_t>(static_cast<double_t>(_random())
 									 / static_cast<double_t>(std::numeric_limits<unsigned long long>::max())));
+		}
+	}
+
+	// ViewSize: (Width), (Height), (1.0 / Width), (1.0 / Height)
+	if (auto el = _shader.get_parameter("ViewSize"); el != nullptr) {
+		if (el.get_type() == gs::effect_parameter::type::Float4) {
+			el.set_float4(static_cast<float_t>(width()), static_cast<float_t>(height()),
+						  1.0f / static_cast<float_t>(width()), 1.0f / static_cast<float_t>(height()));
 		}
 	}
 
