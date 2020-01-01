@@ -111,7 +111,7 @@ gfx::shader::parameter_type gfx::shader::get_type_from_string(std::string v)
 }
 
 gfx::shader::parameter::parameter(gs::effect_parameter param, std::string key_prefix)
-	: _param(param), _order(0), _key(_param.get_name()), _name(_key), _description()
+	: _param(param), _order(0), _key(_param.get_name()), _visible(true), _automatic(false), _name(_key), _description()
 {
 	{
 		std::stringstream ss;
