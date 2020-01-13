@@ -238,32 +238,35 @@ elseif(${PropertyPrefix}OBS_REFERENCE)
 	include("${OBS_STUDIO_DIR}/cmake/external/FindLibobs.cmake")
 elseif(${PropertyPrefix}OBS_DOWNLOAD)
 	include("${libobs_SOURCE_DIR}/cmake/LibObs/LibObsConfig.cmake")
-else()
-	message(CRITICAL "Impossible case reached, verify system stability.")
-	return()
 endif()
 
 # Load FFmpeg
-find_path(
-	FFmpegPath "libavcodec/avcodec.h"
-	HINTS
-		${OBS_DEPENDENCIES_DIR}
-		${obsdeps_SOURCE_DIR}
-	PATHS
-		/usr/include
-		/usr/local/include
-		/opt/local/include
-		/sw/include
-	PATH_SUFFIXES
-		win${BITS}
-		win${BITS}/bin
-		win${BITS}/include
-		win${ARCH}
-		win${ARCH}/bin
-		win${ARCH}/include
-		bin
-		include
-)
+if(NOT ${PropertyPrefix}OBS_NATIVE)
+	find_path(
+		FFmpegPath "libavcodec/avcodec.h"
+		HINTS
+			${OBS_DEPENDENCIES_DIR}
+			${obsdeps_SOURCE_DIR}
+			${DepsPath}
+			${DepsPath32}
+			${DepsPath64}
+			
+		PATHS
+			/usr/include
+			/usr/local/include
+			/opt/local/include
+			/sw/include
+		PATH_SUFFIXES
+			win${BITS}
+			win${BITS}/bin
+			win${BITS}/include
+			win${ARCH}
+			win${ARCH}/bin
+			win${ARCH}/include
+			bin
+			include
+	)
+endif()
 find_package(FFmpeg REQUIRED COMPONENTS avutil avcodec swscale)
 
 ################################################################################
