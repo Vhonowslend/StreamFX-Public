@@ -14,6 +14,7 @@ if ((process.platform == "win32") || (process.platform == "win64")) {
 		`-DCMAKE_PACKAGE_NAME=StreamFX`,
 		'-DCMAKE_INSTALL_PREFIX="build/distrib"',
 		'-DCMAKE_PACKAGE_PREFIX="build/package"',
+		'-DOBS_DOWNLOAD=true',
 	];
 	let extra_build = [
 
