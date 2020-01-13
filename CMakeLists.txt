@@ -56,16 +56,16 @@ project(
 	VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}
 )
 set(PROJECT_FULL_NAME "StreamFX for OBS Studio")
-set(PROJECT_DESCRIPTION "Adds new Effects, like Sources, Transitions and Filters to OBS Studio.")
+set(PROJECT_DESCRIPTION "Better Production Quality, for free.")
 set(PROJECT_AUTHORS "Michael Fabian 'Xaymar' Dirks <info@xaymar.com>")
-set(PROJECT_COPYRIGHT_YEARS "2018 - 2019")
+set(PROJECT_COPYRIGHT_YEARS "2018 - 2020")
 
 ################################################################################
 # Setup / Bootstrap
 ################################################################################
 
 # Search Path
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/;${CMAKE_MODULE_PATH}")
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules" "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # CMake Modules
 include("util")
@@ -127,19 +127,40 @@ set(_CXX_EXTENSIONS OFF)
 set(${PropertyPrefix}OBS_NATIVE FALSE CACHE BOOL "Use native obs-studio build" FORCE)
 set(${PropertyPrefix}OBS_REFERENCE FALSE CACHE BOOL "Use referenced obs-studio build" FORCE)
 set(${PropertyPrefix}OBS_PACKAGE FALSE CACHE BOOL "Use packaged obs-studio build" FORCE)
-set(${PropertyPrefix}OBS_DOWNLOAD FALSE CACHE BOOL "Use downloaded obs-studio build" FORCE)
+set(${PropertyPrefix}OBS_DOWNLOAD FALSE CACHE BOOL "Use downloaded obs-studio build")
 mark_as_advanced(FORCE OBS_NATIVE OBS_PACKAGE OBS_REFERENCE OBS_DOWNLOAD)
 
-if(NOT TARGET libobs)
-	set(${PropertyPrefix}OBS_STUDIO_DIR "" CACHE PATH "OBS Studio Source/Package Directory")
-	set(${PropertyPrefix}OBS_DOWNLOAD_VERSION "24.0.3-ci" CACHE STRING "OBS Studio Version to download")
-endif()
+# Solve OBS_NATIVE, OBS_REFERENCE, OBS_PACKAGE, OBS_DOWNLOAD
+if(TARGET libobs)
+	message(STATUS "${PROJECT_NAME}: Using native obs-studio.")
+	CacheSet(${PropertyPrefix}OBS_NATIVE TRUE)
+else()
+	message(STATUS "${PROJECT_NAME}: Using packaged or remote obs-studio.")
+	CacheSet(${PropertyPrefix}OBS_NATIVE FALSE)
 
-if(NOT ${PropertyPrefix}OBS_NATIVE)
-	set(${PropertyPrefix}OBS_DEPENDENCIES_DIR "" CACHE PATH "Path to OBS Dependencies")
 	set(CMAKE_PACKAGE_PREFIX "${CMAKE_BINARY_DIR}" CACHE PATH "Path for generated archives.")
 	set(CMAKE_PACKAGE_NAME "${PROJECT_NAME}" CACHE STRING "Name for the generated archives.")
 	set(CMAKE_PACKAGE_SUFFIX_OVERRIDE "" CACHE STRING "Override for the suffix.")
+
+	if(${PropertyPrefix}OBS_DOWNLOAD)
+		set(${PropertyPrefix}OBS_DOWNLOAD_VERSION "24.0.3" CACHE STRING "OBS Studio Version to download")
+		set(${PropertyPrefix}OBS_DEPENDENCIES_VERSION "24.0.0" CACHE STRING "OBS Studio Version to download")
+		set(${PropertyPrefix}OBS_DOWNLOAD_URL "https://github.com/Xaymar/obs-studio/releases/download/${OBS_DOWNLOAD_VERSION}-ci/obs-studio-${ARCH}-0.0.0.0-vs2017.7z")
+		set(${PropertyPrefix}OBS_DEPENDENCIES_URL "https://cdn.xaymar.com/obs/dependencies_${OBS_DEPENDENCIES_VERSION}.zip")
+	else()
+		set(${PropertyPrefix}OBS_STUDIO_DIR "" CACHE PATH "OBS Studio Source/Package Directory")
+		set(${PropertyPrefix}OBS_DEPENDENCIES_DIR "" CACHE PATH "OBS Studio Dependencies Directory")
+		if(EXISTS "${OBS_STUDIO_DIR}/cmake/LibObs/LibObsConfig.cmake")
+			message(STATUS "${PROJECT_NAME}: Using packaged obs-studio.")
+			CacheSet(${PropertyPrefix}OBS_PACKAGE TRUE)
+		elseif(EXISTS "${OBS_STUDIO_DIR}/libobs/obs-module.h")
+			message(STATUS "${PROJECT_NAME}: Using referenced obs-studio.")
+			CacheSet(${PropertyPrefix}OBS_REFERENCE TRUE)
+		else()
+			message(FATAL_ERROR "${PROJECT_NAME}: No OBS Studio detected. If you wish to continue, either check ${PropertyPrefix}OBS_DOWNLOAD or fix your configuration")
+			return()
+		endif()
+	endif()
 endif()
 
 ################################################################################
@@ -192,48 +213,58 @@ if(WIN32)
 	)	
 endif()
 
-# Detect OBS Studio Type
-if(TARGET libobs)
-	message(STATUS "${PROJECT_NAME}: Using native obs-studio.")
-	CacheSet(${PropertyPrefix}OBS_NATIVE TRUE)	
-else()
-	CacheSet(${PropertyPrefix}OBS_NATIVE FALSE)
-	if(EXISTS "${OBS_STUDIO_DIR}/cmake/LibObs/LibObsConfig.cmake")
-		message(STATUS "${PROJECT_NAME}: Using packaged obs-studio.")
-		CacheSet(${PropertyPrefix}OBS_PACKAGE TRUE)
-	elseif(EXISTS "${OBS_STUDIO_DIR}/libobs/obs-module.h")
-		message(STATUS "${PROJECT_NAME}: Using referenced obs-studio.")
-		CacheSet(${PropertyPrefix}OBS_REFERENCE TRUE)
-	else()
-		message(STATUS "${PROJECT_NAME}: No OBS Studio detected, using downloadable prebuilt binaries.")
-		CacheSet(${PropertyPrefix}OBS_DOWNLOAD TRUE)
-		set(${PropertyPrefix}OBS_DOWNLOAD_URL "https://github.com/Xaymar/obs-studio/releases/download/${OBS_DOWNLOAD_VERSION}/obs-studio-${ARCH}-0.0.0.0-vs2017.7z")
-	endif()
-endif()
-
-# CMake Modules
+# Download OBS Studio and OBS Dependencies
 if(${PropertyPrefix}OBS_DOWNLOAD)
 	include("DownloadProject")
-endif()
-
-# Load OBS Studio
-if(${PropertyPrefix}OBS_NATIVE)
-elseif(${PropertyPrefix}OBS_PACKAGE)
-	include("${OBS_STUDIO_DIR}/cmake/LibObs/LibObsConfig.cmake")
-elseif(${PropertyPrefix}OBS_REFERENCE)
-	set(obsPath "${OBS_STUDIO_DIR}")
-	include("${OBS_STUDIO_DIR}/cmake/external/FindLibobs.cmake")
-elseif(${PropertyPrefix}OBS_DOWNLOAD)
+	
 	download_project(
 		PROJ libobs
 		URL ${OBS_DOWNLOAD_URL}
 		UPDATE_DISCONNECTED 1
 	)
+	
+	download_project(
+		PROJ obsdeps
+		URL ${OBS_DEPENDENCIES_URL}
+		UPDATE_DISCONNECTED 1
+	)
+endif()
+
+# Load OBS Studio & Dependencies
+if(${PropertyPrefix}OBS_PACKAGE)
+	include("${OBS_STUDIO_DIR}/cmake/LibObs/LibObsConfig.cmake")
+elseif(${PropertyPrefix}OBS_REFERENCE)
+	set(obsPath "${OBS_STUDIO_DIR}")
+	include("${OBS_STUDIO_DIR}/cmake/external/FindLibobs.cmake")
+elseif(${PropertyPrefix}OBS_DOWNLOAD)
 	include("${libobs_SOURCE_DIR}/cmake/LibObs/LibObsConfig.cmake")
 else()
 	message(CRITICAL "Impossible case reached, verify system stability.")
 	return()
 endif()
+
+# Load FFmpeg
+find_path(
+	FFmpegPath "libavcodec/avcodec.h"
+	HINTS
+		${OBS_DEPENDENCIES_DIR}
+		${obsdeps_SOURCE_DIR}
+	PATHS
+		/usr/include
+		/usr/local/include
+		/opt/local/include
+		/sw/include
+	PATH_SUFFIXES
+		win${BITS}
+		win${BITS}/bin
+		win${BITS}/include
+		win${ARCH}
+		win${ARCH}/bin
+		win${ARCH}/include
+		bin
+		include
+)
+find_package(FFmpeg REQUIRED COMPONENTS avutil avcodec swscale)
 
 ################################################################################
 # Code
@@ -297,7 +328,6 @@ set(PROJECT_PRIVATE_GENERATED
 	"${PROJECT_BINARY_DIR}/source/version.hpp"
 )
 set(PROJECT_PRIVATE_SOURCE
-
 	# Plugin
 	"${PROJECT_SOURCE_DIR}/source/plugin.hpp"
 	"${PROJECT_SOURCE_DIR}/source/plugin.cpp"
@@ -399,7 +429,44 @@ set(PROJECT_PRIVATE_SOURCE
 	"${PROJECT_SOURCE_DIR}/source/filters/filter-transform.cpp"
 
 	# Transitions
+
+	# ffmpeg
+	"${PROJECT_SOURCE_DIR}/source/ffmpeg/avframe-queue.cpp"
+	"${PROJECT_SOURCE_DIR}/source/ffmpeg/avframe-queue.hpp"
+	"${PROJECT_SOURCE_DIR}/source/ffmpeg/swscale.hpp"
+	"${PROJECT_SOURCE_DIR}/source/ffmpeg/swscale.cpp"
+	"${PROJECT_SOURCE_DIR}/source/ffmpeg/tools.hpp"
+	"${PROJECT_SOURCE_DIR}/source/ffmpeg/tools.cpp"
+	"${PROJECT_SOURCE_DIR}/source/ffmpeg/hwapi/base.hpp"
+	"${PROJECT_SOURCE_DIR}/source/ffmpeg/hwapi/base.cpp"
+		"${PROJECT_SOURCE_DIR}/source/ffmpeg/hwapi/d3d11.hpp"
+		"${PROJECT_SOURCE_DIR}/source/ffmpeg/hwapi/d3d11.cpp"
+	
+	# Encoders
+	"${PROJECT_SOURCE_DIR}/source/encoders/encoder.hpp"
+	"${PROJECT_SOURCE_DIR}/source/encoders/encoder.cpp"
+	# Encoders/Codecs
+	"${PROJECT_SOURCE_DIR}/source/encoders/codecs/hevc.hpp"
+	"${PROJECT_SOURCE_DIR}/source/encoders/codecs/hevc.cpp"
+	"${PROJECT_SOURCE_DIR}/source/encoders/codecs/h264.hpp"
+	"${PROJECT_SOURCE_DIR}/source/encoders/codecs/h264.cpp"
+	"${PROJECT_SOURCE_DIR}/source/encoders/codecs/prores.hpp"
+	"${PROJECT_SOURCE_DIR}/source/encoders/codecs/prores.cpp"
+	# Encoders/Handlers
+	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/handler.hpp"
+	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/handler.cpp"
+	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/debug_handler.hpp"
+	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/debug_handler.cpp"
+	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/prores_aw_handler.hpp"
+	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/prores_aw_handler.cpp"
+	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/nvenc_shared.hpp"
+	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/nvenc_shared.cpp"
+	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/nvenc_h264_handler.hpp"
+	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/nvenc_h264_handler.cpp"
+	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/nvenc_hevc_handler.hpp"
+	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/nvenc_hevc_handler.cpp"
 )
+
 set(PROJECT_PRIVATE
 	${PROJECT_DATA}
 	${PROJECT_PRIVATE_GENERATED}
@@ -474,7 +541,8 @@ endif()
 
 # Link Libraries
 target_link_libraries(${PROJECT_NAME}
-	"${PROJECT_LIBRARIES}"
+	${PROJECT_LIBRARIES}
+	${FFMPEG_LIBRARIES}
 )
 
 # Definitions
