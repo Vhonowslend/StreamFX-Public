@@ -33,6 +33,14 @@ extern "C" {
 #pragma warning(pop)
 }
 
+/* NVENC has multiple compression modes:
+- CBR: Constant Bitrate (rc=cbr)
+- VBR: Variable Bitrate (rc=vbr)
+- CQP: Constant QP (rc=cqp)
+- VQP: Variable QP (rc=vbr b=0 minrate=0 maxrate=0 qmin=minqp qmax=maxqp cq=targetqp)
+- TQ: Target Quality (rc=vbr b=0 minrate=0 maxrate=0 qmin=qp qmax=qp cq=qp)
+*/
+
 using namespace encoder::ffmpeg;
 
 namespace encoder::ffmpeg::handler::nvenc {

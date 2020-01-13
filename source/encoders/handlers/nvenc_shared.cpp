@@ -36,45 +36,60 @@ extern "C" {
 #pragma warning(pop)
 }
 
-#define ST_PRESET "NVENC.Preset"
+#define ST_PRESET "Encoder.NVENC.Preset"
 #define ST_PRESET_(x) ST_PRESET "." D_VSTR(x)
-
-#define ST_RATECONTROL "NVENC.RateControl"
+#define ST_RATECONTROL "Encoder.NVENC.RateControl"
 #define ST_RATECONTROL_MODE ST_RATECONTROL ".Mode"
 #define ST_RATECONTROL_MODE_(x) ST_RATECONTROL_MODE "." D_VSTR(x)
 #define ST_RATECONTROL_TWOPASS ST_RATECONTROL ".TwoPass"
 #define ST_RATECONTROL_LOOKAHEAD ST_RATECONTROL ".LookAhead"
 #define ST_RATECONTROL_ADAPTIVEI ST_RATECONTROL ".AdaptiveI"
 #define ST_RATECONTROL_ADAPTIVEB ST_RATECONTROL ".AdaptiveB"
-
 #define ST_RATECONTROL_BITRATE ST_RATECONTROL ".Bitrate"
 #define ST_RATECONTROL_BITRATE_TARGET ST_RATECONTROL_BITRATE ".Target"
 #define ST_RATECONTROL_BITRATE_MAXIMUM ST_RATECONTROL_BITRATE ".Maximum"
-
 #define ST_RATECONTROL_QUALITY ST_RATECONTROL ".Quality"
 #define ST_RATECONTROL_QUALITY_MINIMUM ST_RATECONTROL_QUALITY ".Minimum"
 #define ST_RATECONTROL_QUALITY_MAXIMUM ST_RATECONTROL_QUALITY ".Maximum"
 #define ST_RATECONTROL_QUALITY_TARGET ST_RATECONTROL_QUALITY ".Target"
-
 #define ST_RATECONTROL_QP ST_RATECONTROL ".QP"
 #define ST_RATECONTROL_QP_I ST_RATECONTROL_QP ".I"
-#define ST_RATECONTROL_QP_I_INITIAL ST_RATECONTROL_QP_I ".Initial"
 #define ST_RATECONTROL_QP_P ST_RATECONTROL_QP ".P"
-#define ST_RATECONTROL_QP_P_INITIAL ST_RATECONTROL_QP_P ".Initial"
 #define ST_RATECONTROL_QP_B ST_RATECONTROL_QP ".B"
-#define ST_RATECONTROL_QP_B_INITIAL ST_RATECONTROL_QP_B ".Initial"
-
-#define ST_AQ "NVENC.AQ"
+#define ST_AQ "Encoder.NVENC.AQ"
 #define ST_AQ_SPATIAL ST_AQ ".Spatial"
 #define ST_AQ_TEMPORAL ST_AQ ".Temporal"
 #define ST_AQ_STRENGTH ST_AQ ".Strength"
-
-#define ST_OTHER "NVENC.Other"
+#define ST_OTHER "Encoder.NVENC.Other"
 #define ST_OTHER_BFRAMES ST_OTHER ".BFrames"
-#define ST_OTHER_BFRAME_REFERENCEMODE ST_OTHER ".BFrameReferenceMode"
+#define ST_OTHER_BFRAMEREFERENCEMODE ST_OTHER ".BFrameReferenceMode"
 #define ST_OTHER_ZEROLATENCY ST_OTHER ".ZeroLatency"
-#define ST_OTHER_WEIGHTED_PREDICTION ST_OTHER ".WeightedPrediction"
-#define ST_OTHER_NONREFERENCE_PFRAMES ST_OTHER ".NonReferencePFrames"
+#define ST_OTHER_WEIGHTEDPREDICTION ST_OTHER ".WeightedPrediction"
+#define ST_OTHER_NONREFERENCEPFRAMES ST_OTHER ".NonReferencePFrames"
+
+#define KEY_PRESET "Preset"
+#define KEY_RATECONTROL_MODE "RateControl.Mode"
+#define KEY_RATECONTROL_TWOPASS "RateControl.TwoPass"
+#define KEY_RATECONTROL_LOOKAHEAD "RateControl.LookAhead"
+#define KEY_RATECONTROL_ADAPTIVEI "RateControl.AdaptiveI"
+#define KEY_RATECONTROL_ADAPTIVEB "RateControl.AdaptiveB"
+#define KEY_RATECONTROL_BITRATE_TARGET "RateControl.Bitrate.Target"
+#define KEY_RATECONTROL_BITRATE_MAXIMUM "RateControl.Bitrate.Maximum"
+#define KEY_RATECONTROL_QUALITY "RateControl.Quality"
+#define KEY_RATECONTROL_QUALITY_TARGET "RateControl.Quality.Target"
+#define KEY_RATECONTROL_QUALITY_MINIMUM "RateControl.Quality.Minimum"
+#define KEY_RATECONTROL_QUALITY_MAXIMUM "RateControl.Quality.Maximum"
+#define KEY_RATECONTROL_QP_I "RateControl.QP.I"
+#define KEY_RATECONTROL_QP_P "RateControl.QP.P"
+#define KEY_RATECONTROL_QP_B "RateControl.QP.B"
+#define KEY_AQ_SPATIAL "AQ.Spatial"
+#define KEY_AQ_TEMPORAL "AQ.Temporal"
+#define KEY_AQ_STRENGTH "AQ.Strength"
+#define KEY_OTHER_BFRAMES "Other.BFrames"
+#define KEY_OTHER_BFRAMEREFERENCEMODE "Other.BFrameReferenceMode"
+#define KEY_OTHER_ZEROLATENCY "Other.ZeroLatency"
+#define KEY_OTHER_WEIGHTEDPREDICTION "Other.WeightedPrediction"
+#define KEY_OTHER_NONREFERENCEPFRAMES "Other.NonReferencePFrames"
 
 using namespace encoder::ffmpeg::handler;
 using namespace ffmpeg;
@@ -126,8 +141,8 @@ std::map<nvenc::ratecontrolmode, std::string> nvenc::ratecontrolmode_to_opt{
 
 std::map<nvenc::b_ref_mode, std::string> nvenc::b_ref_modes{
 	{nvenc::b_ref_mode::DISABLED, S_STATE_DISABLED},
-	{nvenc::b_ref_mode::EACH, ST_OTHER_BFRAME_REFERENCEMODE ".Each"},
-	{nvenc::b_ref_mode::MIDDLE, ST_OTHER_BFRAME_REFERENCEMODE ".Middle"},
+	{nvenc::b_ref_mode::EACH, ST_OTHER_BFRAMEREFERENCEMODE ".Each"},
+	{nvenc::b_ref_mode::MIDDLE, ST_OTHER_BFRAMEREFERENCEMODE ".Middle"},
 };
 
 std::map<nvenc::b_ref_mode, std::string> nvenc::b_ref_mode_to_opt{
@@ -168,38 +183,36 @@ void nvenc::override_update(ffmpeg_instance* instance, obs_data_t*)
 
 void nvenc::get_defaults(obs_data_t* settings, const AVCodec*, AVCodecContext*)
 {
-	obs_data_set_default_int(settings, ST_PRESET, static_cast<int64_t>(nvenc::preset::DEFAULT));
+	obs_data_set_default_int(settings, KEY_PRESET, static_cast<int64_t>(nvenc::preset::DEFAULT));
 
-	obs_data_set_default_int(settings, ST_RATECONTROL_MODE, static_cast<int64_t>(ratecontrolmode::CBR_HQ));
-	obs_data_set_default_int(settings, ST_RATECONTROL_TWOPASS, -1);
-	obs_data_set_default_int(settings, ST_RATECONTROL_LOOKAHEAD, 0);
-	obs_data_set_default_int(settings, ST_RATECONTROL_ADAPTIVEI, -1);
-	obs_data_set_default_int(settings, ST_RATECONTROL_ADAPTIVEB, -1);
+	obs_data_set_default_int(settings, KEY_RATECONTROL_MODE, static_cast<int64_t>(ratecontrolmode::CBR_HQ));
+	obs_data_set_default_int(settings, KEY_RATECONTROL_TWOPASS, -1);
+	obs_data_set_default_int(settings, KEY_RATECONTROL_LOOKAHEAD, 0);
+	obs_data_set_default_int(settings, KEY_RATECONTROL_ADAPTIVEI, -1);
+	obs_data_set_default_int(settings, KEY_RATECONTROL_ADAPTIVEB, -1);
 
-	obs_data_set_default_int(settings, ST_RATECONTROL_BITRATE_TARGET, 6000);
-	obs_data_set_default_int(settings, ST_RATECONTROL_BITRATE_MAXIMUM, 6000);
+	obs_data_set_default_int(settings, KEY_RATECONTROL_BITRATE_TARGET, 6000);
+	obs_data_set_default_int(settings, KEY_RATECONTROL_BITRATE_MAXIMUM, 6000);
 	obs_data_set_default_int(settings, S_RATECONTROL_BUFFERSIZE, 12000);
 
-	obs_data_set_default_int(settings, ST_RATECONTROL_QUALITY_MINIMUM, 51);
-	obs_data_set_default_int(settings, ST_RATECONTROL_QUALITY_MAXIMUM, -1);
-	obs_data_set_default_int(settings, ST_RATECONTROL_QUALITY_TARGET, 0);
+	obs_data_set_default_bool(settings, KEY_RATECONTROL_QUALITY, false);
+	obs_data_set_default_int(settings, KEY_RATECONTROL_QUALITY_MINIMUM, 51);
+	obs_data_set_default_int(settings, KEY_RATECONTROL_QUALITY_MAXIMUM, -1);
+	obs_data_set_default_int(settings, KEY_RATECONTROL_QUALITY_TARGET, 0);
 
-	obs_data_set_default_int(settings, ST_RATECONTROL_QP_I, 21);
-	obs_data_set_default_int(settings, ST_RATECONTROL_QP_I_INITIAL, -1);
-	obs_data_set_default_int(settings, ST_RATECONTROL_QP_P, 21);
-	obs_data_set_default_int(settings, ST_RATECONTROL_QP_P_INITIAL, -1);
-	obs_data_set_default_int(settings, ST_RATECONTROL_QP_B, 21);
-	obs_data_set_default_int(settings, ST_RATECONTROL_QP_B_INITIAL, -1);
+	obs_data_set_default_int(settings, KEY_RATECONTROL_QP_I, 21);
+	obs_data_set_default_int(settings, KEY_RATECONTROL_QP_P, 21);
+	obs_data_set_default_int(settings, KEY_RATECONTROL_QP_B, 21);
 
-	obs_data_set_default_int(settings, ST_AQ_SPATIAL, -1);
-	obs_data_set_default_int(settings, ST_AQ_STRENGTH, 8);
-	obs_data_set_default_int(settings, ST_AQ_TEMPORAL, -1);
+	obs_data_set_default_int(settings, KEY_AQ_SPATIAL, -1);
+	obs_data_set_default_int(settings, KEY_AQ_STRENGTH, 8);
+	obs_data_set_default_int(settings, KEY_AQ_TEMPORAL, -1);
 
-	obs_data_set_default_int(settings, ST_OTHER_BFRAMES, 2);
-	obs_data_set_default_int(settings, ST_OTHER_BFRAME_REFERENCEMODE, static_cast<int64_t>(b_ref_mode::DISABLED));
-	obs_data_set_default_int(settings, ST_OTHER_ZEROLATENCY, -1);
-	obs_data_set_default_int(settings, ST_OTHER_WEIGHTED_PREDICTION, -1);
-	obs_data_set_default_int(settings, ST_OTHER_NONREFERENCE_PFRAMES, -1);
+	obs_data_set_default_int(settings, KEY_OTHER_BFRAMES, 2);
+	obs_data_set_default_int(settings, KEY_OTHER_BFRAMEREFERENCEMODE, static_cast<int64_t>(b_ref_mode::DISABLED));
+	obs_data_set_default_int(settings, KEY_OTHER_ZEROLATENCY, -1);
+	obs_data_set_default_int(settings, KEY_OTHER_WEIGHTEDPREDICTION, -1);
+	obs_data_set_default_int(settings, KEY_OTHER_NONREFERENCEPFRAMES, -1);
 
 	// Replay Buffer
 	obs_data_set_default_int(settings, "bitrate", 0);
@@ -211,7 +224,6 @@ static bool modified_ratecontrol(obs_properties_t* props, obs_property_t*, obs_d
 	bool have_bitrate_max = false;
 	bool have_quality     = false;
 	bool have_qp          = false;
-	bool have_qp_init     = false;
 
 	nvenc::ratecontrolmode rc = static_cast<nvenc::ratecontrolmode>(obs_data_get_int(settings, ST_RATECONTROL_MODE));
 	switch (rc) {
@@ -229,27 +241,24 @@ static bool modified_ratecontrol(obs_properties_t* props, obs_property_t*, obs_d
 		have_bitrate     = true;
 		have_bitrate_max = true;
 		have_quality     = true;
-		have_qp_init     = true;
+		have_qp          = true;
 		break;
 	}
 
 	obs_property_set_visible(obs_properties_get(props, ST_RATECONTROL_BITRATE), have_bitrate || have_bitrate_max);
-	obs_property_set_visible(obs_properties_get(props, ST_RATECONTROL_BITRATE_TARGET), have_bitrate);
-	obs_property_set_visible(obs_properties_get(props, ST_RATECONTROL_BITRATE_MAXIMUM), have_bitrate_max);
+	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_BITRATE_TARGET), have_bitrate);
+	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_BITRATE_MAXIMUM), have_bitrate_max);
 	obs_property_set_visible(obs_properties_get(props, S_RATECONTROL_BUFFERSIZE), have_bitrate || have_bitrate_max);
 
-	obs_property_set_visible(obs_properties_get(props, ST_RATECONTROL_QUALITY), have_quality);
-	obs_property_set_visible(obs_properties_get(props, ST_RATECONTROL_QUALITY_MINIMUM), have_quality);
-	obs_property_set_visible(obs_properties_get(props, ST_RATECONTROL_QUALITY_MAXIMUM), have_quality);
-	obs_property_set_visible(obs_properties_get(props, ST_RATECONTROL_QUALITY_TARGET), have_quality);
+	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_QUALITY), have_quality);
+	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_QUALITY_MINIMUM), have_quality);
+	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_QUALITY_MAXIMUM), have_quality);
+	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_QUALITY_TARGET), have_quality);
 
-	obs_property_set_visible(obs_properties_get(props, ST_RATECONTROL_QP), have_qp || have_qp_init);
-	obs_property_set_visible(obs_properties_get(props, ST_RATECONTROL_QP_I), have_qp);
-	obs_property_set_visible(obs_properties_get(props, ST_RATECONTROL_QP_P), have_qp);
-	obs_property_set_visible(obs_properties_get(props, ST_RATECONTROL_QP_B), have_qp);
-	obs_property_set_visible(obs_properties_get(props, ST_RATECONTROL_QP_I_INITIAL), have_qp_init);
-	obs_property_set_visible(obs_properties_get(props, ST_RATECONTROL_QP_P_INITIAL), have_qp_init);
-	obs_property_set_visible(obs_properties_get(props, ST_RATECONTROL_QP_B_INITIAL), have_qp_init);
+	obs_property_set_visible(obs_properties_get(props, ST_RATECONTROL_QP), have_qp);
+	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_QP_I), have_qp);
+	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_QP_P), have_qp);
+	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_QP_B), have_qp);
 
 	return true;
 }
@@ -257,22 +266,22 @@ static bool modified_ratecontrol(obs_properties_t* props, obs_property_t*, obs_d
 static bool modified_quality(obs_properties_t* props, obs_property_t*, obs_data_t* settings) noexcept
 {
 	bool enabled = obs_data_get_bool(settings, ST_RATECONTROL_QUALITY);
-	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_QUALITY_MINIMUM), enabled);
-	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_QUALITY_MAXIMUM), enabled);
+	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_QUALITY_MINIMUM), enabled);
+	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_QUALITY_MAXIMUM), enabled);
 	return true;
 }
 
 static bool modified_aq(obs_properties_t* props, obs_property_t*, obs_data_t* settings) noexcept
 {
-	bool spatial_aq = obs_data_get_int(settings, ST_AQ_SPATIAL) == 1;
-	obs_property_set_visible(obs_properties_get(props, ST_AQ_STRENGTH), spatial_aq);
+	bool spatial_aq = obs_data_get_int(settings, KEY_AQ_SPATIAL) == 1;
+	obs_property_set_visible(obs_properties_get(props, KEY_AQ_STRENGTH), spatial_aq);
 	return true;
 }
 
 void nvenc::get_properties_pre(obs_properties_t* props, const AVCodec*)
 {
 	{
-		auto p = obs_properties_add_list(props, ST_PRESET, D_TRANSLATE(ST_PRESET), OBS_COMBO_TYPE_LIST,
+		auto p = obs_properties_add_list(props, KEY_PRESET, D_TRANSLATE(ST_PRESET), OBS_COMBO_TYPE_LIST,
 										 OBS_COMBO_FORMAT_INT);
 		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_PRESET)));
 		for (auto kv : presets) {
@@ -367,19 +376,19 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		}
 
 		{
-			auto p = obs_properties_add_int_slider(grp, ST_RATECONTROL_QUALITY_MINIMUM,
+			auto p = obs_properties_add_int_slider(grp, KEY_RATECONTROL_QUALITY_MINIMUM,
 												   D_TRANSLATE(ST_RATECONTROL_QUALITY_MINIMUM), 0, 51, 1);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_QUALITY_MINIMUM)));
 		}
 		{
-			auto p = obs_properties_add_int_slider(grp, ST_RATECONTROL_QUALITY_MAXIMUM,
+			auto p = obs_properties_add_int_slider(grp, KEY_RATECONTROL_QUALITY_MAXIMUM,
 												   D_TRANSLATE(ST_RATECONTROL_QUALITY_MAXIMUM), -1, 51, 1);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_QUALITY_MAXIMUM)));
 		}
 	}
 
 	{
-		auto p = obs_properties_add_float_slider(props, ST_RATECONTROL_QUALITY_TARGET,
+		auto p = obs_properties_add_float_slider(props, KEY_RATECONTROL_QUALITY_TARGET,
 												 D_TRANSLATE(ST_RATECONTROL_QUALITY_TARGET), 0, 100, 0.01);
 		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_QUALITY_TARGET)));
 	}
@@ -389,39 +398,24 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		if (!util::are_property_groups_broken()) {
 			grp    = obs_properties_create();
 			auto p = obs_properties_add_group(props, ST_RATECONTROL_QP, D_TRANSLATE(ST_RATECONTROL_QP),
-											  OBS_GROUP_CHECKABLE, grp);
+											  OBS_GROUP_NORMAL, grp);
 			obs_property_set_modified_callback(p, modified_quality);
 		}
 
 		{
 			auto p =
-				obs_properties_add_int_slider(grp, ST_RATECONTROL_QP_I, D_TRANSLATE(ST_RATECONTROL_QP_I), 0, 51, 1);
+				obs_properties_add_int_slider(grp, KEY_RATECONTROL_QP_I, D_TRANSLATE(ST_RATECONTROL_QP_I), -1, 51, 1);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_QP_I)));
 		}
 		{
-			auto p = obs_properties_add_int_slider(grp, ST_RATECONTROL_QP_I_INITIAL,
-												   D_TRANSLATE(ST_RATECONTROL_QP_I_INITIAL), -1, 51, 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_QP_I_INITIAL)));
-		}
-		{
 			auto p =
-				obs_properties_add_int_slider(grp, ST_RATECONTROL_QP_P, D_TRANSLATE(ST_RATECONTROL_QP_P), 0, 51, 1);
+				obs_properties_add_int_slider(grp, KEY_RATECONTROL_QP_P, D_TRANSLATE(ST_RATECONTROL_QP_P), -1, 51, 1);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_QP_P)));
 		}
 		{
-			auto p = obs_properties_add_int_slider(grp, ST_RATECONTROL_QP_P_INITIAL,
-												   D_TRANSLATE(ST_RATECONTROL_QP_P_INITIAL), -1, 51, 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_QP_P_INITIAL)));
-		}
-		{
 			auto p =
-				obs_properties_add_int_slider(grp, ST_RATECONTROL_QP_B, D_TRANSLATE(ST_RATECONTROL_QP_B), 0, 51, 1);
+				obs_properties_add_int_slider(grp, KEY_RATECONTROL_QP_B, D_TRANSLATE(ST_RATECONTROL_QP_B), -1, 51, 1);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_QP_B)));
-		}
-		{
-			auto p = obs_properties_add_int_slider(grp, ST_RATECONTROL_QP_B_INITIAL,
-												   D_TRANSLATE(ST_RATECONTROL_QP_B_INITIAL), -1, 51, 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_QP_B_INITIAL)));
 		}
 	}
 
@@ -433,16 +427,16 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		}
 
 		{
-			auto p = util::obs_properties_add_tristate(grp, ST_AQ_SPATIAL, D_TRANSLATE(ST_AQ_SPATIAL));
+			auto p = util::obs_properties_add_tristate(grp, KEY_AQ_SPATIAL, D_TRANSLATE(ST_AQ_SPATIAL));
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_AQ_SPATIAL)));
 			obs_property_set_modified_callback(p, modified_aq);
 		}
 		{
-			auto p = obs_properties_add_int_slider(grp, ST_AQ_STRENGTH, D_TRANSLATE(ST_AQ_STRENGTH), 1, 15, 1);
+			auto p = obs_properties_add_int_slider(grp, KEY_AQ_STRENGTH, D_TRANSLATE(ST_AQ_STRENGTH), 1, 15, 1);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_AQ_STRENGTH)));
 		}
 		{
-			auto p = util::obs_properties_add_tristate(grp, ST_AQ_TEMPORAL, D_TRANSLATE(ST_AQ_TEMPORAL));
+			auto p = util::obs_properties_add_tristate(grp, KEY_AQ_TEMPORAL, D_TRANSLATE(ST_AQ_TEMPORAL));
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_AQ_TEMPORAL)));
 		}
 	}
@@ -455,80 +449,77 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		}
 
 		{
-			auto p = obs_properties_add_int_slider(grp, ST_OTHER_BFRAMES, D_TRANSLATE(ST_OTHER_BFRAMES), 0, 4, 1);
+			auto p = obs_properties_add_int_slider(grp, KEY_OTHER_BFRAMES, D_TRANSLATE(ST_OTHER_BFRAMES), 0, 4, 1);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OTHER_BFRAMES)));
 			obs_property_int_set_suffix(p, " frames");
 		}
 
 		{
 			auto p =
-				obs_properties_add_list(grp, ST_OTHER_BFRAME_REFERENCEMODE, D_TRANSLATE(ST_OTHER_BFRAME_REFERENCEMODE),
+				obs_properties_add_list(grp, KEY_OTHER_BFRAMEREFERENCEMODE, D_TRANSLATE(ST_OTHER_BFRAMEREFERENCEMODE),
 										OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OTHER_BFRAME_REFERENCEMODE)));
+			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OTHER_BFRAMEREFERENCEMODE)));
 			for (auto kv : b_ref_modes) {
 				obs_property_list_add_int(p, D_TRANSLATE(kv.second.c_str()), static_cast<int64_t>(kv.first));
 			}
 		}
 
 		{
-			auto p = util::obs_properties_add_tristate(grp, ST_OTHER_ZEROLATENCY, D_TRANSLATE(ST_OTHER_ZEROLATENCY));
+			auto p = util::obs_properties_add_tristate(grp, KEY_OTHER_ZEROLATENCY, D_TRANSLATE(ST_OTHER_ZEROLATENCY));
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OTHER_ZEROLATENCY)));
 		}
 
 		{
-			auto p = util::obs_properties_add_tristate(grp, ST_OTHER_WEIGHTED_PREDICTION,
-													   D_TRANSLATE(ST_OTHER_WEIGHTED_PREDICTION));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OTHER_WEIGHTED_PREDICTION)));
+			auto p = util::obs_properties_add_tristate(grp, KEY_OTHER_WEIGHTEDPREDICTION,
+													   D_TRANSLATE(ST_OTHER_WEIGHTEDPREDICTION));
+			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OTHER_WEIGHTEDPREDICTION)));
 		}
 
 		{
-			auto p = util::obs_properties_add_tristate(grp, ST_OTHER_NONREFERENCE_PFRAMES,
-													   D_TRANSLATE(ST_OTHER_NONREFERENCE_PFRAMES));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OTHER_NONREFERENCE_PFRAMES)));
+			auto p = util::obs_properties_add_tristate(grp, KEY_OTHER_NONREFERENCEPFRAMES,
+													   D_TRANSLATE(ST_OTHER_NONREFERENCEPFRAMES));
+			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OTHER_NONREFERENCEPFRAMES)));
 		}
 	}
 }
 
 void nvenc::get_runtime_properties(obs_properties_t* props, const AVCodec*, AVCodecContext*)
 {
-	obs_property_set_enabled(obs_properties_get(props, ST_PRESET), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_PRESET), false);
 	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_MODE), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_TWOPASS), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_LOOKAHEAD), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_ADAPTIVEI), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_ADAPTIVEB), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_MODE), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_TWOPASS), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_LOOKAHEAD), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_ADAPTIVEI), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_ADAPTIVEB), false);
 	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_BITRATE), true);
-	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_BITRATE_TARGET), true);
-	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_BITRATE_MAXIMUM), true);
+	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_BITRATE_TARGET), true);
+	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_BITRATE_MAXIMUM), true);
 	obs_property_set_enabled(obs_properties_get(props, S_RATECONTROL_BUFFERSIZE), true);
 	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_QUALITY), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_QUALITY_MINIMUM), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_QUALITY_MAXIMUM), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_QUALITY_TARGET), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_QUALITY_MINIMUM), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_QUALITY_MAXIMUM), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_QUALITY_TARGET), false);
 	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_QP), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_QP_I), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_QP_I_INITIAL), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_QP_P), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_QP_P_INITIAL), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_QP_B), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_QP_B_INITIAL), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_QP_I), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_QP_P), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_QP_B), false);
 	obs_property_set_enabled(obs_properties_get(props, ST_AQ), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_AQ_SPATIAL), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_AQ_STRENGTH), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_AQ_TEMPORAL), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_AQ_SPATIAL), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_AQ_STRENGTH), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_AQ_TEMPORAL), false);
 	obs_property_set_enabled(obs_properties_get(props, ST_OTHER), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_OTHER_BFRAMES), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_OTHER_BFRAME_REFERENCEMODE), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_OTHER_ZEROLATENCY), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_OTHER_WEIGHTED_PREDICTION), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_OTHER_NONREFERENCE_PFRAMES), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_OTHER_BFRAMES), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_OTHER_BFRAMEREFERENCEMODE), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_OTHER_ZEROLATENCY), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_OTHER_WEIGHTEDPREDICTION), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_OTHER_NONREFERENCEPFRAMES), false);
 }
 
 void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context)
 {
 	{
-		preset c_preset = static_cast<preset>(obs_data_get_int(settings, ST_PRESET));
+		preset c_preset = static_cast<preset>(obs_data_get_int(settings, KEY_PRESET));
 		auto   found    = preset_to_opt.find(c_preset);
 		if (found != preset_to_opt.end()) {
 			av_opt_set(context->priv_data, "preset", found->second.c_str(), 0);
@@ -544,7 +535,7 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		bool have_qp          = false;
 		bool have_qp_init     = false;
 
-		ratecontrolmode rc    = static_cast<ratecontrolmode>(obs_data_get_int(settings, ST_RATECONTROL_MODE));
+		ratecontrolmode rc    = static_cast<ratecontrolmode>(obs_data_get_int(settings, KEY_RATECONTROL_MODE));
 		auto            rcopt = ratecontrolmode_to_opt.find(rc);
 		if (rcopt != ratecontrolmode_to_opt.end()) {
 			av_opt_set(context->priv_data, "rc", rcopt->second.c_str(), 0);
@@ -571,21 +562,21 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			break;
 		}
 
-		int tp = static_cast<int>(obs_data_get_int(settings, ST_RATECONTROL_TWOPASS));
+		int tp = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_TWOPASS));
 		if (tp >= 0) {
 			av_opt_set_int(context->priv_data, "2pass", tp ? 1 : 0, 0);
 		}
 
-		int la = static_cast<int>(obs_data_get_int(settings, ST_RATECONTROL_LOOKAHEAD));
+		int la = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_LOOKAHEAD));
 		av_opt_set_int(context->priv_data, "rc-lookahead", la, 0);
 		if (la > 0) {
-			int64_t adapt_i = obs_data_get_int(settings, ST_RATECONTROL_ADAPTIVEI);
+			int64_t adapt_i = obs_data_get_int(settings, KEY_RATECONTROL_ADAPTIVEI);
 			if (!util::is_tristate_default(adapt_i)) {
 				av_opt_set_int(context->priv_data, "no-scenecut", adapt_i, AV_OPT_SEARCH_CHILDREN);
 			}
 
 			if (strcmp(codec->name, "h264_nvenc")) {
-				int64_t adapt_b = obs_data_get_int(settings, ST_RATECONTROL_ADAPTIVEB);
+				int64_t adapt_b = obs_data_get_int(settings, KEY_RATECONTROL_ADAPTIVEB);
 				if (!util::is_tristate_default(adapt_b)) {
 					av_opt_set_int(context->priv_data, "b_adapt", adapt_b, AV_OPT_SEARCH_CHILDREN);
 				}
@@ -593,25 +584,25 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		}
 
 		if (have_bitrate) {
-			context->bit_rate = static_cast<int>(obs_data_get_int(settings, ST_RATECONTROL_BITRATE_TARGET) * 1000);
+			context->bit_rate = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_BITRATE_TARGET) * 1000);
 			// Support for Replay Buffer
-			obs_data_set_int(settings, "bitrate", obs_data_get_int(settings, ST_RATECONTROL_BITRATE_TARGET));
+			obs_data_set_int(settings, "bitrate", obs_data_get_int(settings, KEY_RATECONTROL_BITRATE_TARGET));
 		}
 		if (have_bitrate_max)
-			context->rc_max_rate = static_cast<int>(obs_data_get_int(settings, ST_RATECONTROL_BITRATE_MAXIMUM) * 1000);
+			context->rc_max_rate = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_BITRATE_MAXIMUM) * 1000);
 		if (have_bitrate || have_bitrate_max)
 			context->rc_buffer_size = static_cast<int>(obs_data_get_int(settings, S_RATECONTROL_BUFFERSIZE) * 1000);
 
-		if (have_quality && obs_data_get_bool(settings, ST_RATECONTROL_QUALITY)) {
-			int qmin      = static_cast<int>(obs_data_get_int(settings, ST_RATECONTROL_QUALITY_MINIMUM));
+		if (have_quality && obs_data_get_bool(settings, KEY_RATECONTROL_QUALITY)) {
+			int qmin      = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QUALITY_MINIMUM));
 			context->qmin = qmin;
 			if (qmin >= 0) {
-				context->qmax = static_cast<int>(obs_data_get_int(settings, ST_RATECONTROL_QUALITY_MAXIMUM));
+				context->qmax = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QUALITY_MAXIMUM));
 			}
 		}
 
 		{
-			double_t v = obs_data_get_double(settings, ST_RATECONTROL_QUALITY_TARGET) / 100.0 * 51.0;
+			double_t v = obs_data_get_double(settings, KEY_RATECONTROL_QUALITY_TARGET) / 100.0 * 51.0;
 			if (v > 0) {
 				av_opt_set_double(context->priv_data, "cq", v, 0);
 			}
@@ -619,22 +610,17 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 
 		if (have_qp) {
 			av_opt_set_int(context->priv_data, "init_qpI",
-						   static_cast<int>(obs_data_get_int(settings, ST_RATECONTROL_QP_I)), 0);
+						   static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QP_I)), 0);
 			av_opt_set_int(context->priv_data, "init_qpP",
-						   static_cast<int>(obs_data_get_int(settings, ST_RATECONTROL_QP_P)), 0);
+						   static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QP_P)), 0);
 			av_opt_set_int(context->priv_data, "init_qpB",
-						   static_cast<int>(obs_data_get_int(settings, ST_RATECONTROL_QP_B)), 0);
-		}
-		if (have_qp_init) {
-			av_opt_set_int(context->priv_data, "init_qpI", obs_data_get_int(settings, ST_RATECONTROL_QP_I_INITIAL), 0);
-			av_opt_set_int(context->priv_data, "init_qpP", obs_data_get_int(settings, ST_RATECONTROL_QP_P_INITIAL), 0);
-			av_opt_set_int(context->priv_data, "init_qpB", obs_data_get_int(settings, ST_RATECONTROL_QP_B_INITIAL), 0);
+						   static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QP_B)), 0);
 		}
 	}
 
 	{ // AQ
-		int64_t saq = obs_data_get_int(settings, ST_AQ_SPATIAL);
-		int64_t taq = obs_data_get_int(settings, ST_AQ_TEMPORAL);
+		int64_t saq = obs_data_get_int(settings, KEY_AQ_SPATIAL);
+		int64_t taq = obs_data_get_int(settings, KEY_AQ_TEMPORAL);
 
 		if (strcmp(codec->name, "h264_nvenc") == 0) {
 			if (!util::is_tristate_default(saq))
@@ -649,15 +635,15 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		}
 		if (util::is_tristate_enabled(saq))
 			av_opt_set_int(context->priv_data, "aq-strength",
-						   static_cast<int>(obs_data_get_int(settings, ST_AQ_STRENGTH)), 0);
+						   static_cast<int>(obs_data_get_int(settings, KEY_AQ_STRENGTH)), 0);
 	}
 
 	{ // Other
-		int64_t zl  = obs_data_get_int(settings, ST_OTHER_ZEROLATENCY);
-		int64_t wp  = obs_data_get_int(settings, ST_OTHER_WEIGHTED_PREDICTION);
-		int64_t nrp = obs_data_get_int(settings, ST_OTHER_NONREFERENCE_PFRAMES);
+		int64_t zl  = obs_data_get_int(settings, KEY_OTHER_ZEROLATENCY);
+		int64_t wp  = obs_data_get_int(settings, KEY_OTHER_WEIGHTEDPREDICTION);
+		int64_t nrp = obs_data_get_int(settings, KEY_OTHER_NONREFERENCEPFRAMES);
 
-		context->max_b_frames = static_cast<int>(obs_data_get_int(settings, ST_OTHER_BFRAMES));
+		context->max_b_frames = static_cast<int>(obs_data_get_int(settings, KEY_OTHER_BFRAMES));
 
 		if (!util::is_tristate_default(zl))
 			av_opt_set_int(context->priv_data, "zerolatency", zl, 0);
@@ -673,7 +659,7 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 
 		{
 			auto found = b_ref_mode_to_opt.find(
-				static_cast<b_ref_mode>(obs_data_get_int(settings, ST_OTHER_BFRAME_REFERENCEMODE)));
+				static_cast<b_ref_mode>(obs_data_get_int(settings, KEY_OTHER_BFRAMEREFERENCEMODE)));
 			if (found != b_ref_mode_to_opt.end()) {
 				av_opt_set(context->priv_data, "b_ref_mode", found->second.c_str(), 0);
 			}
