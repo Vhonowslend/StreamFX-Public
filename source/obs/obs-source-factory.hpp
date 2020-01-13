@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#ifndef STREAMEFFECTS_SOURCE_FACTORY_HPP
-#define STREAMEFFECTS_SOURCE_FACTORY_HPP
+#ifndef STREAMFX_SOURCE_FACTORY_HPP
+#define STREAMFX_SOURCE_FACTORY_HPP
 
 #pragma once
 #include <stdexcept>
@@ -183,10 +183,10 @@ namespace obs {
 				return reinterpret_cast<_factory*>(type_data)->get_name();
 			return nullptr;
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return nullptr;
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 			return nullptr;
 		}
 
@@ -194,10 +194,10 @@ namespace obs {
 		try {
 			return reinterpret_cast<_factory*>(obs_source_get_type_data(source))->create(settings, source);
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return nullptr;
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 			return nullptr;
 		}
 
@@ -206,9 +206,9 @@ namespace obs {
 			if (type_data)
 				reinterpret_cast<_factory*>(type_data)->get_defaults2(settings);
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static obs_properties_t* _get_properties2(void* data, void* type_data) noexcept
@@ -217,10 +217,10 @@ namespace obs {
 				return reinterpret_cast<_factory*>(type_data)->get_properties2(reinterpret_cast<_instance*>(data));
 			return nullptr;
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return nullptr;
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 			return nullptr;
 		}
 
@@ -230,9 +230,9 @@ namespace obs {
 			if (data)
 				delete reinterpret_cast<_instance*>(data);
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static uint32_t _get_width(void* data) noexcept
@@ -241,10 +241,10 @@ namespace obs {
 				return reinterpret_cast<_instance*>(data)->get_width();
 			return 0;
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return 0;
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 			return 0;
 		}
 
@@ -254,10 +254,10 @@ namespace obs {
 				return reinterpret_cast<_instance*>(data)->get_height();
 			return 0;
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return 0;
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 			return 0;
 		}
 
@@ -266,9 +266,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<_instance*>(data)->update(settings);
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static void _activate(void* data) noexcept
@@ -276,9 +276,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<_instance*>(data)->activate();
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static void _deactivate(void* data) noexcept
@@ -286,9 +286,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<_instance*>(data)->deactivate();
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static void _show(void* data) noexcept
@@ -296,9 +296,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<_instance*>(data)->show();
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static void _hide(void* data) noexcept
@@ -306,9 +306,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<_instance*>(data)->hide();
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static void _video_tick(void* data, float seconds) noexcept
@@ -316,9 +316,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<_instance*>(data)->video_tick(seconds);
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static void _video_render(void* data, gs_effect_t* effect) noexcept
@@ -326,9 +326,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<_instance*>(data)->video_render(effect);
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static struct obs_source_frame* _filter_video(void* data, struct obs_source_frame* frame) noexcept
@@ -337,10 +337,10 @@ namespace obs {
 				return reinterpret_cast<_instance*>(data)->filter_video(frame);
 			return frame;
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return frame;
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 			return frame;
 		}
 
@@ -350,10 +350,10 @@ namespace obs {
 				return reinterpret_cast<_instance*>(data)->filter_audio(frame);
 			return frame;
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return frame;
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 			return frame;
 		}
 
@@ -362,9 +362,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<_instance*>(data)->enum_active_sources(enum_callback, param);
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static void _save(void* data, obs_data_t* settings) noexcept
@@ -372,9 +372,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<_instance*>(data)->save(settings);
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static void _load(void* data, obs_data_t* settings) noexcept
@@ -382,9 +382,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<_instance*>(data)->load(settings);
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static void _mouse_click(void* data, const struct obs_mouse_event* event, int32_t type, bool mouse_up,
@@ -393,9 +393,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<_instance*>(data)->mouse_click(event, type, mouse_up, click_count);
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static void _mouse_move(void* data, const struct obs_mouse_event* event, bool mouse_leave) noexcept
@@ -403,9 +403,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<_instance*>(data)->mouse_move(event, mouse_leave);
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static void _mouse_wheel(void* data, const struct obs_mouse_event* event, int x_delta, int y_delta) noexcept
@@ -413,9 +413,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<_instance*>(data)->mouse_wheel(event, x_delta, y_delta);
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static void _focus(void* data, bool focus) noexcept
@@ -423,9 +423,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<_instance*>(data)->focus(focus);
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static void _key_click(void* data, const struct obs_key_event* event, bool key_up) noexcept
@@ -433,9 +433,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<_instance*>(data)->key_click(event, key_up);
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static void _filter_remove(void* data, obs_source_t* source) noexcept
@@ -443,9 +443,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<_instance*>(data)->filter_remove(source);
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static bool _audio_render(void* data, uint64_t* ts_out, struct obs_source_audio_mix* audio_output,
@@ -456,10 +456,10 @@ namespace obs {
 																		sample_rate);
 			return false;
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return false;
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 			return false;
 		}
 
@@ -468,9 +468,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<_instance*>(data)->enum_all_sources(enum_callback, param);
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static void _transition_start(void* data) noexcept
@@ -478,9 +478,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<_instance*>(data)->transition_start();
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static void _transition_stop(void* data) noexcept
@@ -488,9 +488,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<_instance*>(data)->transition_stop();
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static bool _audio_mix(void* data, uint64_t* ts_out, struct audio_output_data* audio_output, size_t channels,
@@ -500,10 +500,10 @@ namespace obs {
 				return reinterpret_cast<_instance*>(data)->audio_mix(ts_out, audio_output, channels, sample_rate);
 			return false;
 		} catch (const std::exception& ex) {
-			P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return false;
 		} catch (...) {
-			P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 			return false;
 		}
 

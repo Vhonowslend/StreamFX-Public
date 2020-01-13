@@ -65,10 +65,11 @@
 #define ST_SDF_SCALE "Filter.SDFEffects.SDF.Scale"
 #define ST_SDF_THRESHOLD "Filter.SDFEffects.SDF.Threshold"
 
-std::shared_ptr<filter::sdf_effects::sdf_effects_factory> filter::sdf_effects::sdf_effects_factory::factory_instance =
-	nullptr;
+using namespace filter;
 
-filter::sdf_effects::sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* self)
+std::shared_ptr<sdf_effects::sdf_effects_factory> sdf_effects::sdf_effects_factory::factory_instance = nullptr;
+
+sdf_effects::sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* self)
 	: obs::source_instance(settings, self), _source_rendered(false), _sdf_scale(1.0), _sdf_threshold(),
 	  _output_rendered(false), _inner_shadow(false), _inner_shadow_color(), _inner_shadow_range_min(),
 	  _inner_shadow_range_max(), _inner_shadow_offset_x(), _inner_shadow_offset_y(), _outer_shadow(false),
@@ -100,14 +101,14 @@ filter::sdf_effects::sdf_effects_instance::sdf_effects_instance(obs_data_t* sett
 		for (auto& kv : load_arr) {
 			char* path = obs_module_file(kv.first);
 			if (!path) {
-				P_LOG_ERROR(LOG_PREFIX "Unable to load _effect '%s' as file is missing or locked.", kv.first);
+				LOG_ERROR(LOG_PREFIX "Unable to load _effect '%s' as file is missing or locked.", kv.first);
 				continue;
 			}
 			try {
 				kv.second = gs::effect::create(path);
 			} catch (const std::exception& ex) {
-				P_LOG_ERROR(LOG_PREFIX "Failed to load _effect '%s' (located at '%s') with error(s): %s", kv.first,
-							path, ex.what());
+				LOG_ERROR(LOG_PREFIX "Failed to load _effect '%s' (located at '%s') with error(s): %s", kv.first, path,
+						  ex.what());
 			}
 			bfree(path);
 		}
@@ -116,9 +117,9 @@ filter::sdf_effects::sdf_effects_instance::sdf_effects_instance(obs_data_t* sett
 	update(settings);
 }
 
-filter::sdf_effects::sdf_effects_instance::~sdf_effects_instance() {}
+sdf_effects::sdf_effects_instance::~sdf_effects_instance() {}
 
-void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
+void sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 {
 	{
 		_outer_shadow =
@@ -253,12 +254,12 @@ void filter::sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 	_sdf_threshold = float_t(obs_data_get_double(data, ST_SDF_THRESHOLD) / 100.0);
 }
 
-void filter::sdf_effects::sdf_effects_instance::load(obs_data_t* settings)
+void sdf_effects::sdf_effects_instance::load(obs_data_t* settings)
 {
 	update(settings);
 }
 
-void filter::sdf_effects::sdf_effects_instance::video_tick(float)
+void sdf_effects::sdf_effects_instance::video_tick(float)
 {
 	uint32_t width  = 1;
 	uint32_t height = 1;
@@ -279,7 +280,7 @@ void filter::sdf_effects::sdf_effects_instance::video_tick(float)
 	_output_rendered = false;
 }
 
-void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect)
+void sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect)
 {
 	obs_source_t* parent         = obs_filter_get_parent(_self);
 	obs_source_t* target         = obs_filter_get_target(_self);
@@ -508,7 +509,7 @@ void filter::sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect
 	}
 }
 
-filter::sdf_effects::sdf_effects_factory::sdf_effects_factory()
+sdf_effects::sdf_effects_factory::sdf_effects_factory()
 {
 	_info.id           = "obs-stream-effects-filter-sdf-effects";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
@@ -518,14 +519,14 @@ filter::sdf_effects::sdf_effects_factory::sdf_effects_factory()
 	finish_setup();
 }
 
-filter::sdf_effects::sdf_effects_factory::~sdf_effects_factory() {}
+sdf_effects::sdf_effects_factory::~sdf_effects_factory() {}
 
-const char* filter::sdf_effects::sdf_effects_factory::get_name()
+const char* sdf_effects::sdf_effects_factory::get_name()
 {
 	return D_TRANSLATE(ST);
 }
 
-void filter::sdf_effects::sdf_effects_factory::get_defaults2(obs_data_t* data)
+void sdf_effects::sdf_effects_factory::get_defaults2(obs_data_t* data)
 {
 	obs_data_set_default_bool(data, ST_SHADOW_OUTER, false);
 	obs_data_set_default_int(data, ST_SHADOW_OUTER_COLOR, 0x00000000);
@@ -578,9 +579,9 @@ try {
 	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_ALPHA), v);
 	return true;
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 bool cb_modified_shadow_outside(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
@@ -594,9 +595,9 @@ try {
 	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_ALPHA), v);
 	return true;
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 bool cb_modified_glow_inside(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
@@ -608,9 +609,9 @@ try {
 	obs_property_set_visible(obs_properties_get(props, ST_GLOW_INNER_SHARPNESS), v);
 	return true;
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 bool cb_modified_glow_outside(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
@@ -622,9 +623,9 @@ try {
 	obs_property_set_visible(obs_properties_get(props, ST_GLOW_OUTER_SHARPNESS), v);
 	return true;
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 bool cb_modified_outline(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
@@ -637,9 +638,9 @@ try {
 	obs_property_set_visible(obs_properties_get(props, ST_OUTLINE_SHARPNESS), v);
 	return true;
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 bool cb_modified_advanced(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
@@ -649,13 +650,12 @@ try {
 	obs_property_set_visible(obs_properties_get(props, ST_SDF_THRESHOLD), show_advanced);
 	return true;
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-obs_properties_t*
-	filter::sdf_effects::sdf_effects_factory::get_properties2(filter::sdf_effects::sdf_effects_instance* data)
+obs_properties_t* sdf_effects::sdf_effects_factory::get_properties2(sdf_effects::sdf_effects_instance* data)
 {
 	obs_properties_t* props = obs_properties_create();
 	obs_property_t*   p     = nullptr;

@@ -23,6 +23,7 @@
 #include <map>
 #include <string>
 #include <utility>
+#include <vector>
 #include "handler.hpp"
 #include "plugin.hpp"
 #include "utility.hpp"
@@ -35,7 +36,9 @@ extern "C" {
 #pragma warning(pop)
 }
 
-void obsffmpeg::ui::debug_handler::get_defaults(obs_data_t*, const AVCodec*, AVCodecContext*, bool) {}
+using namespace encoder::ffmpeg::handler;
+
+void debug_handler::get_defaults(obs_data_t*, const AVCodec*, AVCodecContext*, bool) {}
 
 template<typename T>
 std::string to_string(T value){};
@@ -64,8 +67,7 @@ std::string to_string(double_t value)
 	return std::string(buf.data(), buf.data() + buf.size());
 }
 
-void obsffmpeg::ui::debug_handler::get_properties(obs_properties_t*, const AVCodec* codec, AVCodecContext* context,
-                                                  bool)
+void debug_handler::get_properties(obs_properties_t*, const AVCodec* codec, AVCodecContext* context, bool)
 {
 	if (context)
 		return;
@@ -76,28 +78,28 @@ void obsffmpeg::ui::debug_handler::get_properties(obs_properties_t*, const AVCod
 		return;
 	}
 
-	PLOG_INFO("Options for '%s':", codec->name);
+	LOG_INFO("Options for '%s':", codec->name);
 
 	std::pair<AVOptionType, std::string> opt_type_name[] = {
-	    {AV_OPT_TYPE_FLAGS, "Flags"},
-	    {AV_OPT_TYPE_INT, "Int"},
-	    {AV_OPT_TYPE_INT64, "Int64"},
-	    {AV_OPT_TYPE_DOUBLE, "Double"},
-	    {AV_OPT_TYPE_FLOAT, "Float"},
-	    {AV_OPT_TYPE_STRING, "String"},
-	    {AV_OPT_TYPE_RATIONAL, "Rational"},
-	    {AV_OPT_TYPE_BINARY, "Binary"},
-	    {AV_OPT_TYPE_DICT, "Dictionary"},
-	    {AV_OPT_TYPE_UINT64, "Unsigned Int64"},
-	    {AV_OPT_TYPE_CONST, "Constant"},
-	    {AV_OPT_TYPE_IMAGE_SIZE, "Image Size"},
-	    {AV_OPT_TYPE_PIXEL_FMT, "Pixel Format"},
-	    {AV_OPT_TYPE_SAMPLE_FMT, "Sample Format"},
-	    {AV_OPT_TYPE_VIDEO_RATE, "Video Rate"},
-	    {AV_OPT_TYPE_DURATION, "Duration"},
-	    {AV_OPT_TYPE_COLOR, "Color"},
-	    {AV_OPT_TYPE_CHANNEL_LAYOUT, "Layout"},
-	    {AV_OPT_TYPE_BOOL, "Bool"},
+		{AV_OPT_TYPE_FLAGS, "Flags"},
+		{AV_OPT_TYPE_INT, "Int"},
+		{AV_OPT_TYPE_INT64, "Int64"},
+		{AV_OPT_TYPE_DOUBLE, "Double"},
+		{AV_OPT_TYPE_FLOAT, "Float"},
+		{AV_OPT_TYPE_STRING, "String"},
+		{AV_OPT_TYPE_RATIONAL, "Rational"},
+		{AV_OPT_TYPE_BINARY, "Binary"},
+		{AV_OPT_TYPE_DICT, "Dictionary"},
+		{AV_OPT_TYPE_UINT64, "Unsigned Int64"},
+		{AV_OPT_TYPE_CONST, "Constant"},
+		{AV_OPT_TYPE_IMAGE_SIZE, "Image Size"},
+		{AV_OPT_TYPE_PIXEL_FMT, "Pixel Format"},
+		{AV_OPT_TYPE_SAMPLE_FMT, "Sample Format"},
+		{AV_OPT_TYPE_VIDEO_RATE, "Video Rate"},
+		{AV_OPT_TYPE_DURATION, "Duration"},
+		{AV_OPT_TYPE_COLOR, "Color"},
+		{AV_OPT_TYPE_CHANNEL_LAYOUT, "Layout"},
+		{AV_OPT_TYPE_BOOL, "Bool"},
 	};
 	std::map<std::string, AVOptionType> unit_types;
 
@@ -113,13 +115,12 @@ void obsffmpeg::ui::debug_handler::get_properties(obs_properties_t*, const AVCod
 
 		if (opt->type == AV_OPT_TYPE_CONST) {
 			if (opt->unit == nullptr) {
-				PLOG_INFO("  Constant '%s' and help text '%s' with unknown settings.", opt->name,
-				          opt->help);
+				LOG_INFO("  Constant '%s' and help text '%s' with unknown settings.", opt->name, opt->help);
 			} else {
 				auto unit_type = unit_types.find(opt->unit);
 				if (unit_type == unit_types.end()) {
-					PLOG_INFO("  [%s] Flag '%s' and help text '%s' with value '%lld'.", opt->unit,
-					          opt->name, opt->help, opt->default_val.i64);
+					LOG_INFO("  [%s] Flag '%s' and help text '%s' with value '%lld'.", opt->unit, opt->name, opt->help,
+							 opt->default_val.i64);
 				} else {
 					std::string out;
 					switch (unit_type->second) {
@@ -153,8 +154,8 @@ void obsffmpeg::ui::debug_handler::get_properties(obs_properties_t*, const AVCod
 						break;
 					}
 
-					PLOG_INFO("  [%s] Constant '%s' and help text '%s' with value '%s'.", opt->unit,
-					          opt->name, opt->help, out.c_str());
+					LOG_INFO("  [%s] Constant '%s' and help text '%s' with value '%s'.", opt->unit, opt->name,
+							 opt->help, out.c_str());
 				}
 			}
 		} else {
@@ -198,13 +199,13 @@ void obsffmpeg::ui::debug_handler::get_properties(obs_properties_t*, const AVCod
 				}
 			}
 
-			PLOG_INFO(
-			    "  Option '%s'%s%s%s with help '%s' of type '%s' with default value '%s', minimum '%s' and maximum '%s'.",
-			    opt->name, opt->unit ? " with unit (" : "", opt->unit ? opt->unit : "",
-			    opt->unit ? ")" : "", opt->help, type_name.c_str(), out.c_str(), minimum.c_str(),
-			    maximum.c_str());
+			LOG_INFO(
+				"  Option '%s'%s%s%s with help '%s' of type '%s' with default value '%s', minimum '%s' and maximum "
+				"'%s'.",
+				opt->name, opt->unit ? " with unit (" : "", opt->unit ? opt->unit : "", opt->unit ? ")" : "", opt->help,
+				type_name.c_str(), out.c_str(), minimum.c_str(), maximum.c_str());
 		}
 	}
 }
 
-void obsffmpeg::ui::debug_handler::update(obs_data_t*, const AVCodec*, AVCodecContext*) {}
+void debug_handler::update(obs_data_t*, const AVCodec*, AVCodecContext*) {}

@@ -43,7 +43,7 @@ gfx::blur::box_data::box_data()
 		_effect    = gs::effect::create(file);
 		bfree(file);
 	} catch (...) {
-		P_LOG_ERROR("<gfx::blur::box> Failed to load _effect.");
+		LOG_ERROR("<gfx::blur::box> Failed to load _effect.");
 	}
 }
 

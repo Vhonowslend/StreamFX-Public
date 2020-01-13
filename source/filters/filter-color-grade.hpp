@@ -27,88 +27,86 @@
 #include "obs/obs-source-factory.hpp"
 #include "plugin.hpp"
 
-namespace filter {
-	namespace color_grade {
-		enum class detection_mode {
-			HSV,
-			HSL,
-			YUV_SDR,
-		};
+namespace filter::color_grade {
+	enum class detection_mode {
+		HSV,
+		HSL,
+		YUV_SDR,
+	};
 
-		enum class luma_mode {
-			Linear,
-			Exp,
-			Exp2,
-			Log,
-			Log10,
-		};
+	enum class luma_mode {
+		Linear,
+		Exp,
+		Exp2,
+		Log,
+		Log10,
+	};
 
-		class color_grade_instance : public obs::source_instance {
-			gs::effect _effect;
+	class color_grade_instance : public obs::source_instance {
+		gs::effect _effect;
 
-			// Source
-			std::unique_ptr<gs::rendertarget> _rt_source;
-			std::shared_ptr<gs::texture>      _tex_source;
-			bool                              _source_updated;
+		// Source
+		std::unique_ptr<gs::rendertarget> _rt_source;
+		std::shared_ptr<gs::texture>      _tex_source;
+		bool                              _source_updated;
 
-			// Grading
-			std::unique_ptr<gs::rendertarget> _rt_grade;
-			std::shared_ptr<gs::texture>      _tex_grade;
-			bool                              _grade_updated;
+		// Grading
+		std::unique_ptr<gs::rendertarget> _rt_grade;
+		std::shared_ptr<gs::texture>      _tex_grade;
+		bool                              _grade_updated;
 
-			// Parameters
-			vec4           _lift;
-			vec4           _gamma;
-			vec4           _gain;
-			vec4           _offset;
-			detection_mode _tint_detection;
-			luma_mode      _tint_luma;
-			float_t        _tint_exponent;
-			vec3           _tint_low;
-			vec3           _tint_mid;
-			vec3           _tint_hig;
-			vec4           _correction;
+		// Parameters
+		vec4           _lift;
+		vec4           _gamma;
+		vec4           _gain;
+		vec4           _offset;
+		detection_mode _tint_detection;
+		luma_mode      _tint_luma;
+		float_t        _tint_exponent;
+		vec3           _tint_low;
+		vec3           _tint_mid;
+		vec3           _tint_hig;
+		vec4           _correction;
 
-			public:
-			color_grade_instance(obs_data_t* data, obs_source_t* self);
-			virtual ~color_grade_instance();
+		public:
+		color_grade_instance(obs_data_t* data, obs_source_t* self);
+		virtual ~color_grade_instance();
 
-			virtual void load(obs_data_t* data) override;
-			virtual void update(obs_data_t* data) override;
+		virtual void load(obs_data_t* data) override;
+		virtual void update(obs_data_t* data) override;
 
-			virtual void video_tick(float time) override;
-			virtual void video_render(gs_effect_t* effect) override;
-		};
+		virtual void video_tick(float time) override;
+		virtual void video_render(gs_effect_t* effect) override;
+	};
 
-		class color_grade_factory : public obs::source_factory<filter::color_grade::color_grade_factory,
-															   filter::color_grade::color_grade_instance> {
-			static std::shared_ptr<filter::color_grade::color_grade_factory> factory_instance;
+	class color_grade_factory : public obs::source_factory<filter::color_grade::color_grade_factory,
+														   filter::color_grade::color_grade_instance> {
+		static std::shared_ptr<filter::color_grade::color_grade_factory> factory_instance;
 
-			public: // Singleton
-			static void initialize()
-			{
-				factory_instance = std::make_shared<filter::color_grade::color_grade_factory>();
-			}
+		public: // Singleton
+		static void initialize()
+		{
+			factory_instance = std::make_shared<filter::color_grade::color_grade_factory>();
+		}
 
-			static void finalize()
-			{
-				factory_instance.reset();
-			}
+		static void finalize()
+		{
+			factory_instance.reset();
+		}
 
-			static std::shared_ptr<color_grade_factory> get()
-			{
-				return factory_instance;
-			}
+		static std::shared_ptr<color_grade_factory> get()
+		{
+			return factory_instance;
+		}
 
-			public:
-			color_grade_factory();
-			virtual ~color_grade_factory();
+		public:
+		color_grade_factory();
+		virtual ~color_grade_factory();
 
-			virtual const char* get_name() override;
+		virtual const char* get_name() override;
 
-			virtual void get_defaults2(obs_data_t* data) override;
+		virtual void get_defaults2(obs_data_t* data) override;
 
-			virtual obs_properties_t* get_properties2(color_grade_instance* data) override;
-		};
-	} // namespace color_grade
-} // namespace filter
+		virtual obs_properties_t* get_properties2(color_grade_instance* data) override;
+	};
+} // namespace filter::color_grade

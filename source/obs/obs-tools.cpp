@@ -45,7 +45,7 @@ try {
 	scs_searchdata& sd = reinterpret_cast<scs_searchdata&>(*reinterpret_cast<scs_searchdata*>(searchdata));
 	scs_contains(sd, child);
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 static bool scs_enum_items_cb(obs_scene_t*, obs_sceneitem_t* item, void* searchdata) noexcept
@@ -54,7 +54,7 @@ try {
 	obs_source_t*   source = obs_sceneitem_get_source(item);
 	return scs_contains(sd, source);
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return false;
 }
 

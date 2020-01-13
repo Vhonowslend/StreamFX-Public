@@ -19,62 +19,68 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "base.hpp"
+
+extern "C++" {
+#pragma warning(push)
+#pragma warning(disable : 4191)
+#pragma warning(disable : 4242)
+#pragma warning(disable : 4244)
+#pragma warning(disable : 4365)
+#pragma warning(disable : 4777)
+#pragma warning(disable : 4986)
+#pragma warning(disable : 5039)
 #include <atlutil.h>
 #include <d3d11.h>
 #include <d3d11_1.h>
 #include <dxgi.h>
-#include "base.hpp"
+#pragma warning(pop)
+}
 
-namespace obsffmpeg {
-	namespace hwapi {
-		class d3d11 : public ::obsffmpeg::hwapi::base {
-			typedef HRESULT(__stdcall* CreateDXGIFactory_t)(REFIID, void**);
-			typedef HRESULT(__stdcall* CreateDXGIFactory1_t)(REFIID, void**);
-			typedef HRESULT(__stdcall* D3D11CreateDevice_t)(_In_opt_ IDXGIAdapter*, D3D_DRIVER_TYPE,
-			                                                HMODULE, UINT, CONST D3D_FEATURE_LEVEL*, UINT,
-			                                                UINT, _Out_opt_ ID3D11Device**,
-			                                                _Out_opt_ D3D_FEATURE_LEVEL*,
-			                                                _Out_opt_ ID3D11DeviceContext**);
+namespace ffmpeg::hwapi {
+	class d3d11 : public ffmpeg::hwapi::base {
+		typedef HRESULT(__stdcall* CreateDXGIFactory_t)(REFIID, void**);
+		typedef HRESULT(__stdcall* CreateDXGIFactory1_t)(REFIID, void**);
+		typedef HRESULT(__stdcall* D3D11CreateDevice_t)(IDXGIAdapter*, D3D_DRIVER_TYPE, HMODULE, UINT,
+														CONST D3D_FEATURE_LEVEL*, UINT, UINT, ID3D11Device**,
+														D3D_FEATURE_LEVEL*, ID3D11DeviceContext**);
 
-			HMODULE              _dxgi_module;
-			CreateDXGIFactory_t  _CreateDXGIFactory;
-			CreateDXGIFactory1_t _CreateDXGIFactory1;
+		HMODULE              _dxgi_module;
+		CreateDXGIFactory_t  _CreateDXGIFactory;
+		CreateDXGIFactory1_t _CreateDXGIFactory1;
 
-			HMODULE             _d3d11_module;
-			D3D11CreateDevice_t _D3D11CreateDevice;
+		HMODULE             _d3d11_module;
+		D3D11CreateDevice_t _D3D11CreateDevice;
 
-			ATL::CComPtr<IDXGIFactory1> _dxgifactory;
+		ATL::CComPtr<IDXGIFactory1> _dxgifactory;
 
-			public:
-			d3d11();
-			virtual ~d3d11();
+		public:
+		d3d11();
+		virtual ~d3d11();
 
-			virtual std::list<obsffmpeg::hwapi::device> enumerate_adapters() override;
+		virtual std::list<hwapi::device> enumerate_adapters() override;
 
-			virtual std::shared_ptr<obsffmpeg::hwapi::instance>
-			    create(obsffmpeg::hwapi::device target) override;
+		virtual std::shared_ptr<hwapi::instance> create(hwapi::device target) override;
 
-			virtual std::shared_ptr<obsffmpeg::hwapi::instance> create_from_obs() override;
-		};
+		virtual std::shared_ptr<hwapi::instance> create_from_obs() override;
+	};
 
-		class d3d11_instance : public ::obsffmpeg::hwapi::instance {
-			ATL::CComPtr<ID3D11Device>        _device;
-			ATL::CComPtr<ID3D11DeviceContext> _context;
+	class d3d11_instance : public ffmpeg::hwapi::instance {
+		ATL::CComPtr<ID3D11Device>        _device;
+		ATL::CComPtr<ID3D11DeviceContext> _context;
 
-			public:
-			d3d11_instance(ATL::CComPtr<ID3D11Device> device, ATL::CComPtr<ID3D11DeviceContext> context);
-			virtual ~d3d11_instance();
+		public:
+		d3d11_instance(ATL::CComPtr<ID3D11Device> device, ATL::CComPtr<ID3D11DeviceContext> context);
+		virtual ~d3d11_instance();
 
-			virtual AVBufferRef* create_device_context() override;
+		virtual AVBufferRef* create_device_context() override;
 
-			virtual std::shared_ptr<AVFrame> allocate_frame(AVBufferRef* frames) override;
+		virtual std::shared_ptr<AVFrame> allocate_frame(AVBufferRef* frames) override;
 
-			virtual void copy_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key,
-			                           uint64_t* next_lock_key, std::shared_ptr<AVFrame> frame) override;
+		virtual void copy_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key, uint64_t* next_lock_key,
+								   std::shared_ptr<AVFrame> frame) override;
 
-			virtual std::shared_ptr<AVFrame> avframe_from_obs(AVBufferRef* frames, uint32_t handle,
-			                                                  uint64_t  lock_key,
-			                                                  uint64_t* next_lock_key) override;
-		};
-	} // namespace hwapi
-} // namespace obsffmpeg
+		virtual std::shared_ptr<AVFrame> avframe_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key,
+														  uint64_t* next_lock_key) override;
+	};
+} // namespace ffmpeg::hwapi

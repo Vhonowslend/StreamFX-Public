@@ -35,63 +35,61 @@
 #pragma warning(pop)
 #endif
 
-namespace filter {
-	namespace displacement {
-		class displacement_instance : public obs::source_instance {
-			gs::effect _effect;
+namespace filter::displacement {
+	class displacement_instance : public obs::source_instance {
+		gs::effect _effect;
 
-			// Displacement Map
-			std::shared_ptr<gs::texture> _texture;
-			std::string                  _texture_file;
-			float_t                      _scale[2];
-			float_t                      _scale_type;
+		// Displacement Map
+		std::shared_ptr<gs::texture> _texture;
+		std::string                  _texture_file;
+		float_t                      _scale[2];
+		float_t                      _scale_type;
 
-			// Cache
-			uint32_t _width;
-			uint32_t _height;
+		// Cache
+		uint32_t _width;
+		uint32_t _height;
 
-			public:
-			displacement_instance(obs_data_t*, obs_source_t*);
-			virtual ~displacement_instance();
+		public:
+		displacement_instance(obs_data_t*, obs_source_t*);
+		virtual ~displacement_instance();
 
-			virtual void load(obs_data_t* settings) override;
-			virtual void update(obs_data_t* settings) override;
+		virtual void load(obs_data_t* settings) override;
+		virtual void update(obs_data_t* settings) override;
 
-			virtual void video_tick(float_t) override;
-			virtual void video_render(gs_effect_t*) override;
+		virtual void video_tick(float_t) override;
+		virtual void video_render(gs_effect_t*) override;
 
-			std::string get_file();
-		};
+		std::string get_file();
+	};
 
-		class displacement_factory : public obs::source_factory<filter::displacement::displacement_factory,
-																filter::displacement::displacement_instance> {
-			static std::shared_ptr<filter::displacement::displacement_factory> factory_instance;
+	class displacement_factory : public obs::source_factory<filter::displacement::displacement_factory,
+															filter::displacement::displacement_instance> {
+		static std::shared_ptr<filter::displacement::displacement_factory> factory_instance;
 
-			public: // Singleton
-			static void initialize()
-			{
-				factory_instance = std::make_shared<filter::displacement::displacement_factory>();
-			}
+		public: // Singleton
+		static void initialize()
+		{
+			factory_instance = std::make_shared<filter::displacement::displacement_factory>();
+		}
 
-			static void finalize()
-			{
-				factory_instance.reset();
-			}
+		static void finalize()
+		{
+			factory_instance.reset();
+		}
 
-			static std::shared_ptr<displacement_factory> get()
-			{
-				return factory_instance;
-			}
+		static std::shared_ptr<displacement_factory> get()
+		{
+			return factory_instance;
+		}
 
-			public:
-			displacement_factory();
-			virtual ~displacement_factory();
+		public:
+		displacement_factory();
+		virtual ~displacement_factory();
 
-			virtual const char* get_name() override;
+		virtual const char* get_name() override;
 
-			virtual void get_defaults2(obs_data_t* data) override;
+		virtual void get_defaults2(obs_data_t* data) override;
 
-			virtual obs_properties_t* get_properties2(filter::displacement::displacement_instance* data) override;
-		};
-	} // namespace displacement
-} // namespace filter
+		virtual obs_properties_t* get_properties2(filter::displacement::displacement_instance* data) override;
+	};
+} // namespace filter::displacement

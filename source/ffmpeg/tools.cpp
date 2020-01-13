@@ -37,26 +37,28 @@ extern "C" {
 #pragma warning(pop)
 }
 
-std::string ffmpeg::tools::translate_encoder_capabilities(int capabilities)
+using namespace ffmpeg;
+
+std::string tools::translate_encoder_capabilities(int capabilities)
 {
 	// Sorted by relative importance.
 	std::pair<int, std::string> caps[] = {
-	    {AV_CODEC_CAP_EXPERIMENTAL, "Experimental"},
+		{AV_CODEC_CAP_EXPERIMENTAL, "Experimental"},
 
-	    // Quality
-	    {AV_CODEC_CAP_LOSSLESS, "Lossless"},
+		// Quality
+		{AV_CODEC_CAP_LOSSLESS, "Lossless"},
 
-	    // Features
-	    {AV_CODEC_CAP_PARAM_CHANGE, "Dynamic Parameter Change"},
-	    {AV_CODEC_CAP_SUBFRAMES, "Sub-Frames"},
-	    {AV_CODEC_CAP_VARIABLE_FRAME_SIZE, "Variable Frame Size"},
-	    {AV_CODEC_CAP_SMALL_LAST_FRAME, "Small Final Frame"},
+		// Features
+		{AV_CODEC_CAP_PARAM_CHANGE, "Dynamic Parameter Change"},
+		{AV_CODEC_CAP_SUBFRAMES, "Sub-Frames"},
+		{AV_CODEC_CAP_VARIABLE_FRAME_SIZE, "Variable Frame Size"},
+		{AV_CODEC_CAP_SMALL_LAST_FRAME, "Small Final Frame"},
 
-	    // Other
-	    {AV_CODEC_CAP_TRUNCATED, "Truncated"},
-	    {AV_CODEC_CAP_CHANNEL_CONF, "AV_CODEC_CAP_CHANNEL_CONF"},
-	    {AV_CODEC_CAP_DRAW_HORIZ_BAND, "AV_CODEC_CAP_DRAW_HORIZ_BAND"},
-	    {AV_CODEC_CAP_AVOID_PROBING, "AV_CODEC_CAP_AVOID_PROBING"},
+		// Other
+		{AV_CODEC_CAP_TRUNCATED, "Truncated"},
+		{AV_CODEC_CAP_CHANNEL_CONF, "AV_CODEC_CAP_CHANNEL_CONF"},
+		{AV_CODEC_CAP_DRAW_HORIZ_BAND, "AV_CODEC_CAP_DRAW_HORIZ_BAND"},
+		{AV_CODEC_CAP_AVOID_PROBING, "AV_CODEC_CAP_AVOID_PROBING"},
 	};
 
 	std::stringstream sstr;
@@ -75,12 +77,12 @@ std::string ffmpeg::tools::translate_encoder_capabilities(int capabilities)
 	return sstr.str();
 }
 
-const char* ffmpeg::tools::get_pixel_format_name(AVPixelFormat v)
+const char* tools::get_pixel_format_name(AVPixelFormat v)
 {
 	return av_get_pix_fmt_name(v);
 }
 
-const char* ffmpeg::tools::get_color_space_name(AVColorSpace v)
+const char* tools::get_color_space_name(AVColorSpace v)
 {
 	switch (v) {
 	case AVCOL_SPC_RGB:
@@ -114,7 +116,7 @@ const char* ffmpeg::tools::get_color_space_name(AVColorSpace v)
 	return "Unknown";
 }
 
-const char* ffmpeg::tools::get_error_description(int error)
+const char* tools::get_error_description(int error)
 {
 	thread_local char error_buf[AV_ERROR_MAX_STRING_SIZE + 1];
 	if (av_strerror(error, error_buf, AV_ERROR_MAX_STRING_SIZE) < 0) {
@@ -123,26 +125,26 @@ const char* ffmpeg::tools::get_error_description(int error)
 	return error_buf;
 }
 
-static std::map<video_format, AVPixelFormat> obs_to_av_format_map = {
-    {VIDEO_FORMAT_I420, AV_PIX_FMT_YUV420P},  // YUV 4:2:0
-    {VIDEO_FORMAT_NV12, AV_PIX_FMT_NV12},     // NV12 Packed YUV
-    {VIDEO_FORMAT_YVYU, AV_PIX_FMT_YVYU422},  // YVYU Packed YUV
-    {VIDEO_FORMAT_YUY2, AV_PIX_FMT_YUYV422},  // YUYV Packed YUV
-    {VIDEO_FORMAT_UYVY, AV_PIX_FMT_UYVY422},  // UYVY Packed YUV
-    {VIDEO_FORMAT_RGBA, AV_PIX_FMT_RGBA},     //
-    {VIDEO_FORMAT_BGRA, AV_PIX_FMT_BGRA},     //
-    {VIDEO_FORMAT_BGRX, AV_PIX_FMT_BGR0},     //
-    {VIDEO_FORMAT_Y800, AV_PIX_FMT_GRAY8},    //
-    {VIDEO_FORMAT_I444, AV_PIX_FMT_YUV444P},  //
-    {VIDEO_FORMAT_BGR3, AV_PIX_FMT_BGR24},    //
-    {VIDEO_FORMAT_I422, AV_PIX_FMT_YUV422P},  //
-    {VIDEO_FORMAT_I40A, AV_PIX_FMT_YUVA420P}, //
-    {VIDEO_FORMAT_I42A, AV_PIX_FMT_YUVA422P}, //
-    {VIDEO_FORMAT_YUVA, AV_PIX_FMT_YUVA444P}, //
-                                              //{VIDEO_FORMAT_AYUV, AV_PIX_FMT_AYUV444P}, //
+static std::map<video_format, AVPixelFormat> const obs_to_av_format_map = {
+	{VIDEO_FORMAT_I420, AV_PIX_FMT_YUV420P},  // YUV 4:2:0
+	{VIDEO_FORMAT_NV12, AV_PIX_FMT_NV12},     // NV12 Packed YUV
+	{VIDEO_FORMAT_YVYU, AV_PIX_FMT_YVYU422},  // YVYU Packed YUV
+	{VIDEO_FORMAT_YUY2, AV_PIX_FMT_YUYV422},  // YUYV Packed YUV
+	{VIDEO_FORMAT_UYVY, AV_PIX_FMT_UYVY422},  // UYVY Packed YUV
+	{VIDEO_FORMAT_RGBA, AV_PIX_FMT_RGBA},     //
+	{VIDEO_FORMAT_BGRA, AV_PIX_FMT_BGRA},     //
+	{VIDEO_FORMAT_BGRX, AV_PIX_FMT_BGR0},     //
+	{VIDEO_FORMAT_Y800, AV_PIX_FMT_GRAY8},    //
+	{VIDEO_FORMAT_I444, AV_PIX_FMT_YUV444P},  //
+	{VIDEO_FORMAT_BGR3, AV_PIX_FMT_BGR24},    //
+	{VIDEO_FORMAT_I422, AV_PIX_FMT_YUV422P},  //
+	{VIDEO_FORMAT_I40A, AV_PIX_FMT_YUVA420P}, //
+	{VIDEO_FORMAT_I42A, AV_PIX_FMT_YUVA422P}, //
+	{VIDEO_FORMAT_YUVA, AV_PIX_FMT_YUVA444P}, //
+											  //{VIDEO_FORMAT_AYUV, AV_PIX_FMT_AYUV444P}, //
 };
 
-AVPixelFormat ffmpeg::tools::obs_videoformat_to_avpixelformat(video_format v)
+AVPixelFormat tools::obs_videoformat_to_avpixelformat(video_format v)
 {
 	auto found = obs_to_av_format_map.find(v);
 	if (found != obs_to_av_format_map.end()) {
@@ -151,7 +153,7 @@ AVPixelFormat ffmpeg::tools::obs_videoformat_to_avpixelformat(video_format v)
 	return AV_PIX_FMT_NONE;
 }
 
-video_format ffmpeg::tools::avpixelformat_to_obs_videoformat(AVPixelFormat v)
+video_format tools::avpixelformat_to_obs_videoformat(AVPixelFormat v)
 {
 	for (const auto& kv : obs_to_av_format_map) {
 		if (kv.second == v)
@@ -160,13 +162,13 @@ video_format ffmpeg::tools::avpixelformat_to_obs_videoformat(AVPixelFormat v)
 	return VIDEO_FORMAT_NONE;
 }
 
-AVPixelFormat ffmpeg::tools::get_least_lossy_format(const AVPixelFormat* haystack, AVPixelFormat needle)
+AVPixelFormat tools::get_least_lossy_format(const AVPixelFormat* haystack, AVPixelFormat needle)
 {
 	int data_loss = 0;
 	return avcodec_find_best_pix_fmt_of_list(haystack, needle, 0, &data_loss);
 }
 
-AVColorSpace ffmpeg::tools::obs_videocolorspace_to_avcolorspace(video_colorspace v)
+AVColorSpace tools::obs_videocolorspace_to_avcolorspace(video_colorspace v)
 {
 	switch (v) {
 	case VIDEO_CS_DEFAULT:
@@ -178,7 +180,7 @@ AVColorSpace ffmpeg::tools::obs_videocolorspace_to_avcolorspace(video_colorspace
 	throw std::invalid_argument("unknown color space");
 }
 
-AVColorRange ffmpeg::tools::obs_videorangetype_to_avcolorrange(video_range_type v)
+AVColorRange tools::obs_videorangetype_to_avcolorrange(video_range_type v)
 {
 	switch (v) {
 	case VIDEO_RANGE_DEFAULT:
@@ -190,7 +192,7 @@ AVColorRange ffmpeg::tools::obs_videorangetype_to_avcolorrange(video_range_type 
 	throw std::invalid_argument("unknown range");
 }
 
-bool ffmpeg::tools::can_hardware_encode(const AVCodec* codec)
+bool tools::can_hardware_encode(const AVCodec* codec)
 {
 	AVPixelFormat hardware_formats[] = {AV_PIX_FMT_D3D11};
 
@@ -204,7 +206,7 @@ bool ffmpeg::tools::can_hardware_encode(const AVCodec* codec)
 	return false;
 }
 
-std::vector<AVPixelFormat> ffmpeg::tools::get_software_formats(const AVPixelFormat* list)
+std::vector<AVPixelFormat> tools::get_software_formats(const AVPixelFormat* list)
 {
 	AVPixelFormat hardware_formats[] = {
 #if FF_API_VAAPI
@@ -241,18 +243,18 @@ std::vector<AVPixelFormat> ffmpeg::tools::get_software_formats(const AVPixelForm
 	return std::move(fmts);
 }
 
-void ffmpeg::tools::setup_obs_color(video_colorspace colorspace, video_range_type range, AVCodecContext* context)
+void tools::setup_obs_color(video_colorspace colorspace, video_range_type range, AVCodecContext* context)
 {
-	std::map<video_colorspace, std::tuple<AVColorSpace, AVColorPrimaries, AVColorTransferCharacteristic>>
-	    colorspaces = {
-	        {VIDEO_CS_DEFAULT, {AVCOL_SPC_BT470BG, AVCOL_PRI_BT470BG, AVCOL_TRC_SMPTE170M}},
-	        {VIDEO_CS_601, {AVCOL_SPC_BT470BG, AVCOL_PRI_BT470BG, AVCOL_TRC_SMPTE170M}},
-	        {VIDEO_CS_709, {AVCOL_SPC_BT709, AVCOL_PRI_BT709, AVCOL_TRC_BT709}},
-	    };
+	std::map<video_colorspace, std::tuple<AVColorSpace, AVColorPrimaries, AVColorTransferCharacteristic>> colorspaces =
+		{
+			{VIDEO_CS_DEFAULT, {AVCOL_SPC_BT470BG, AVCOL_PRI_BT470BG, AVCOL_TRC_SMPTE170M}},
+			{VIDEO_CS_601, {AVCOL_SPC_BT470BG, AVCOL_PRI_BT470BG, AVCOL_TRC_SMPTE170M}},
+			{VIDEO_CS_709, {AVCOL_SPC_BT709, AVCOL_PRI_BT709, AVCOL_TRC_BT709}},
+		};
 	std::map<video_range_type, AVColorRange> colorranges = {
-	    {VIDEO_RANGE_DEFAULT, AVCOL_RANGE_MPEG},
-	    {VIDEO_RANGE_PARTIAL, AVCOL_RANGE_MPEG},
-	    {VIDEO_RANGE_FULL, AVCOL_RANGE_JPEG},
+		{VIDEO_RANGE_DEFAULT, AVCOL_RANGE_MPEG},
+		{VIDEO_RANGE_PARTIAL, AVCOL_RANGE_MPEG},
+		{VIDEO_RANGE_FULL, AVCOL_RANGE_JPEG},
 	};
 
 	{
@@ -274,7 +276,7 @@ void ffmpeg::tools::setup_obs_color(video_colorspace colorspace, video_range_typ
 	context->chroma_sample_location = AVCHROMA_LOC_CENTER;
 }
 
-const char* ffmpeg::tools::get_std_compliance_name(int compliance)
+const char* tools::get_std_compliance_name(int compliance)
 {
 	switch (compliance) {
 	case FF_COMPLIANCE_VERY_STRICT:
@@ -291,7 +293,7 @@ const char* ffmpeg::tools::get_std_compliance_name(int compliance)
 	return "Invalid";
 }
 
-const char* ffmpeg::tools::get_thread_type_name(int thread_type)
+const char* tools::get_thread_type_name(int thread_type)
 {
 	switch (thread_type) {
 	case FF_THREAD_FRAME | FF_THREAD_SLICE:
@@ -305,37 +307,36 @@ const char* ffmpeg::tools::get_thread_type_name(int thread_type)
 	}
 }
 
-void ffmpeg::tools::print_av_option_bool(AVCodecContext* context, const char* option, std::string text)
+void tools::print_av_option_bool(AVCodecContext* context, const char* option, std::string text)
 {
 	if (av_opt_is_set_to_default_by_name(context, option, AV_OPT_SEARCH_CHILDREN) == 0) {
 		int64_t v = 0;
 		if (av_opt_get_int(context, option, AV_OPT_SEARCH_CHILDREN, &v) == 0) {
-			PLOG_INFO("[%s] %s: %s", context->codec->name, text.c_str(), v == 0 ? "Disabled" : "Enabled");
+			LOG_INFO("[%s] %s: %s", context->codec->name, text.c_str(), v == 0 ? "Disabled" : "Enabled");
 		} else {
-			PLOG_INFO("[%s] %s: <Error>", context->codec->name, text.c_str());
+			LOG_INFO("[%s] %s: <Error>", context->codec->name, text.c_str());
 		}
 	} else {
-		PLOG_INFO("[%s] %s: <Default>", context->codec->name, text.c_str());
+		LOG_INFO("[%s] %s: <Default>", context->codec->name, text.c_str());
 	}
 }
 
-void ffmpeg::tools::print_av_option_int(AVCodecContext* context, const char* option, std::string text,
-                                        std::string suffix)
+void tools::print_av_option_int(AVCodecContext* context, const char* option, std::string text, std::string suffix)
 {
 	if (av_opt_is_set_to_default_by_name(context, option, AV_OPT_SEARCH_CHILDREN) == 0) {
 		int64_t v = 0;
 		if (av_opt_get_int(context, option, AV_OPT_SEARCH_CHILDREN, &v) == 0) {
-			PLOG_INFO("[%s] %s: %lld %s", context->codec->name, text.c_str(), v, suffix.c_str());
+			LOG_INFO("[%s] %s: %lld %s", context->codec->name, text.c_str(), v, suffix.c_str());
 		} else {
-			PLOG_INFO("[%s] %s: <Error>", context->codec->name, text.c_str());
+			LOG_INFO("[%s] %s: <Error>", context->codec->name, text.c_str());
 		}
 	} else {
-		PLOG_INFO("[%s] %s: <Default>", context->codec->name, text.c_str());
+		LOG_INFO("[%s] %s: <Default>", context->codec->name, text.c_str());
 	}
 }
 
-void ffmpeg::tools::print_av_option_string(AVCodecContext* context, const char* option, std::string text,
-                                           std::function<std::string(int64_t)> decoder)
+void tools::print_av_option_string(AVCodecContext* context, const char* option, std::string text,
+								   std::function<std::string(int64_t)> decoder)
 {
 	if (av_opt_is_set_to_default_by_name(context, option, AV_OPT_SEARCH_CHILDREN) == 0) {
 		int64_t v = 0;
@@ -343,11 +344,11 @@ void ffmpeg::tools::print_av_option_string(AVCodecContext* context, const char* 
 			std::string name = "<Unknown>";
 			if (decoder)
 				name = decoder(v);
-			PLOG_INFO("[%s] %s: %s", context->codec->name, text.c_str(), name.c_str());
+			LOG_INFO("[%s] %s: %s", context->codec->name, text.c_str(), name.c_str());
 		} else {
-			PLOG_INFO("[%s] %s: <Error>", context->codec->name, text.c_str());
+			LOG_INFO("[%s] %s: <Error>", context->codec->name, text.c_str());
 		}
 	} else {
-		PLOG_INFO("[%s] %s: <Default>", context->codec->name, text.c_str());
+		LOG_INFO("[%s] %s: <Default>", context->codec->name, text.c_str());
 	}
 }

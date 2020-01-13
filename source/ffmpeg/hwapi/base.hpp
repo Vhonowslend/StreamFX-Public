@@ -35,36 +35,31 @@ extern "C" {
 #pragma warning(pop)
 }
 
-namespace obsffmpeg {
-	namespace hwapi {
-		struct device {
-			std::pair<int64_t, int64_t> id;
-			std::string                 name;
-		};
+namespace ffmpeg::hwapi {
+	struct device {
+		std::pair<int64_t, int64_t> id;
+		std::string                 name;
+	};
 
-		class instance;
+	class instance {
+		public:
+		virtual AVBufferRef* create_device_context() = 0;
 
-		class base {
-			public:
-			virtual std::list<obsffmpeg::hwapi::device> enumerate_adapters() = 0;
+		virtual std::shared_ptr<AVFrame> allocate_frame(AVBufferRef* frames) = 0;
 
-			virtual std::shared_ptr<obsffmpeg::hwapi::instance> create(obsffmpeg::hwapi::device target) = 0;
+		virtual void copy_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key, uint64_t* next_lock_key,
+								   std::shared_ptr<AVFrame> frame) = 0;
 
-			virtual std::shared_ptr<obsffmpeg::hwapi::instance> create_from_obs() = 0;
-		};
+		virtual std::shared_ptr<AVFrame> avframe_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key,
+														  uint64_t* next_lock_key) = 0;
+	};
 
-		class instance {
-			public:
-			virtual AVBufferRef* create_device_context() = 0;
+	class base {
+		public:
+		virtual std::list<hwapi::device> enumerate_adapters() = 0;
 
-			virtual std::shared_ptr<AVFrame> allocate_frame(AVBufferRef* frames) = 0;
+		virtual std::shared_ptr<hwapi::instance> create(hwapi::device target) = 0;
 
-			virtual void copy_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key,
-			                           uint64_t* next_lock_key, std::shared_ptr<AVFrame> frame) = 0;
-
-			virtual std::shared_ptr<AVFrame> avframe_from_obs(AVBufferRef* frames, uint32_t handle,
-			                                                  uint64_t  lock_key,
-			                                                  uint64_t* next_lock_key) = 0;
-		};
-	} // namespace hwapi
-} // namespace obsffmpeg
+		virtual std::shared_ptr<hwapi::instance> create_from_obs() = 0;
+	};
+} // namespace ffmpeg::hwapi

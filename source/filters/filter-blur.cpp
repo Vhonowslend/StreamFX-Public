@@ -77,6 +77,8 @@
 #define ST_MASK_ALPHA "Filter.Blur.Mask.Alpha"
 #define ST_MASK_MULTIPLIER "Filter.Blur.Mask.Multiplier"
 
+using namespace filter;
+
 struct local_blur_type_t {
 	std::function<::gfx::blur::ifactory&()> fn;
 	const char*                             name;
@@ -100,9 +102,9 @@ static std::map<std::string, local_blur_subtype_t> list_of_subtypes = {
 	{"zoom", {::gfx::blur::type::Zoom, S_BLUR_SUBTYPE_ZOOM}},
 };
 
-std::shared_ptr<filter::blur::blur_factory> filter::blur::blur_factory::factory_instance = nullptr;
+std::shared_ptr<blur::blur_factory> blur::blur_factory::factory_instance = nullptr;
 
-filter::blur::blur_instance::blur_instance(obs_data_t* settings, obs_source_t* self)
+blur::blur_instance::blur_instance(obs_data_t* settings, obs_source_t* self)
 	: obs::source_instance(settings, self), _source_rendered(false), _output_rendered(false)
 {
 	{
@@ -118,7 +120,7 @@ filter::blur::blur_instance::blur_instance(obs_data_t* settings, obs_source_t* s
 			try {
 				_effect_mask = gs::effect::create(file);
 			} catch (std::runtime_error& ex) {
-				P_LOG_ERROR("<filter-blur> Loading _effect '%s' failed with error(s): %s", file, ex.what());
+				LOG_ERROR("<filter-blur> Loading _effect '%s' failed with error(s): %s", file, ex.what());
 			}
 
 			bfree(file);
@@ -128,10 +130,10 @@ filter::blur::blur_instance::blur_instance(obs_data_t* settings, obs_source_t* s
 	update(settings);
 }
 
-filter::blur::blur_instance::~blur_instance() {}
+blur::blur_instance::~blur_instance() {}
 
-bool filter::blur::blur_instance::apply_mask_parameters(gs::effect effect, gs_texture_t* original_texture,
-														gs_texture_t* blurred_texture)
+bool blur::blur_instance::apply_mask_parameters(gs::effect effect, gs_texture_t* original_texture,
+												gs_texture_t* blurred_texture)
 {
 	if (effect.has_parameter("image_orig")) {
 		effect.get_parameter("image_orig").set_texture(original_texture);
@@ -235,10 +237,10 @@ inline void migrate_settings(obs_data_t* settings)
 		obs_data_unset_user_value(settings, "Filter.Blur.Directional.Angle");
 	}
 
-	obs_data_set_int(settings, S_VERSION, STREAMEFFECTS_VERSION);
+	obs_data_set_int(settings, S_VERSION, STREAMFX_VERSION);
 }
 
-void filter::blur::blur_instance::update(obs_data_t* settings)
+void blur::blur_instance::update(obs_data_t* settings)
 {
 	// Ensure backwards compatibility.
 	migrate_settings(settings);
@@ -276,7 +278,7 @@ void filter::blur::blur_instance::update(obs_data_t* settings)
 	{ // Masking
 		_mask.enabled = obs_data_get_bool(settings, ST_MASK);
 		if (_mask.enabled) {
-			_mask.type = static_cast<filter::blur::mask_type>(obs_data_get_int(settings, ST_MASK_TYPE));
+			_mask.type = static_cast<blur::mask_type>(obs_data_get_int(settings, ST_MASK_TYPE));
 			switch (_mask.type) {
 			case mask_type::Region:
 				_mask.region.left    = float_t(obs_data_get_double(settings, ST_MASK_REGION_LEFT) / 100.0);
@@ -307,12 +309,12 @@ void filter::blur::blur_instance::update(obs_data_t* settings)
 	}
 }
 
-void filter::blur::blur_instance::load(obs_data_t* settings)
+void blur::blur_instance::load(obs_data_t* settings)
 {
 	update(settings);
 }
 
-void filter::blur::blur_instance::video_tick(float)
+void blur::blur_instance::video_tick(float)
 {
 	// Blur
 	if (_blur) {
@@ -340,8 +342,8 @@ void filter::blur::blur_instance::video_tick(float)
 				_mask.image.texture  = std::make_shared<gs::texture>(_mask.image.path);
 				_mask.image.path_old = _mask.image.path;
 			} catch (...) {
-				P_LOG_ERROR("<filter-blur> Instance '%s' failed to load image '%s'.", obs_source_get_name(_self),
-							_mask.image.path.c_str());
+				LOG_ERROR("<filter-blur> Instance '%s' failed to load image '%s'.", obs_source_get_name(_self),
+						  _mask.image.path.c_str());
 			}
 		}
 	} else if (_mask.type == mask_type::Source) {
@@ -351,8 +353,8 @@ void filter::blur::blur_instance::video_tick(float)
 				_mask.source.is_scene = (obs_scene_from_source(_mask.source.source_texture->get_object()) != nullptr);
 				_mask.source.name_old = _mask.source.name;
 			} catch (...) {
-				P_LOG_ERROR("<filter-blur> Instance '%s' failed to grab source '%s'.", obs_source_get_name(_self),
-							_mask.source.name.c_str());
+				LOG_ERROR("<filter-blur> Instance '%s' failed to grab source '%s'.", obs_source_get_name(_self),
+						  _mask.source.name.c_str());
 			}
 		}
 	}
@@ -361,7 +363,7 @@ void filter::blur::blur_instance::video_tick(float)
 	_output_rendered = false;
 }
 
-void filter::blur::blur_instance::video_render(gs_effect_t* effect)
+void blur::blur_instance::video_render(gs_effect_t* effect)
 {
 	obs_source_t* parent        = obs_filter_get_parent(this->_self);
 	obs_source_t* target        = obs_filter_get_target(this->_self);
@@ -529,7 +531,7 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 
 		gs_eparam_t* param = gs_effect_get_param_by_name(finalEffect, "image");
 		if (!param) {
-			P_LOG_ERROR("<filter-blur:%s> Failed to set image param.", obs_source_get_name(this->_self));
+			LOG_ERROR("<filter-blur:%s> Failed to set image param.", obs_source_get_name(this->_self));
 			obs_source_skip_video_filter(_self);
 			return;
 		} else {
@@ -541,7 +543,7 @@ void filter::blur::blur_instance::video_render(gs_effect_t* effect)
 	}
 }
 
-filter::blur::blur_factory::blur_factory()
+blur::blur_factory::blur_factory()
 {
 	_info.id           = "obs-stream-effects-filter-blur";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
@@ -551,14 +553,14 @@ filter::blur::blur_factory::blur_factory()
 	finish_setup();
 }
 
-filter::blur::blur_factory::~blur_factory() {}
+blur::blur_factory::~blur_factory() {}
 
-const char* filter::blur::blur_factory::get_name()
+const char* blur::blur_factory::get_name()
 {
 	return D_TRANSLATE(ST);
 }
 
-void filter::blur::blur_factory::get_defaults2(obs_data_t* settings)
+void blur::blur_factory::get_defaults2(obs_data_t* settings)
 {
 	// Type, Subtype
 	obs_data_set_default_string(settings, ST_TYPE, "box");
@@ -731,7 +733,7 @@ try {
 	}
 
 	{ // Masking
-		using namespace filter::blur;
+		using namespace blur;
 		bool      show_mask   = obs_data_get_bool(settings, ST_MASK);
 		mask_type mtype       = static_cast<mask_type>(obs_data_get_int(settings, ST_MASK_TYPE));
 		bool      show_region = (mtype == mask_type::Region) && show_mask;
@@ -754,11 +756,11 @@ try {
 
 	return true;
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in modified_properties callback.");
+	LOG_ERROR("Unexpected exception in modified_properties callback.");
 	return false;
 }
 
-obs_properties_t* filter::blur::blur_factory::get_properties2(filter::blur::blur_instance* data)
+obs_properties_t* blur::blur_factory::get_properties2(blur::blur_instance* data)
 {
 	obs_properties_t* pr = obs_properties_create();
 	obs_property_t*   p  = NULL;
@@ -877,7 +879,7 @@ obs_properties_t* filter::blur::blur_factory::get_properties2(filter::blur::blur
 	return pr;
 }
 
-std::string filter::blur::blur_factory::translate_string(const char* format, ...)
+std::string blur::blur_factory::translate_string(const char* format, ...)
 {
 	va_list vargs;
 	va_start(vargs, format);

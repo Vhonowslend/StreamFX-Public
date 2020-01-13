@@ -40,92 +40,90 @@
 #pragma warning(pop)
 #endif
 
-namespace filter {
-	namespace dynamic_mask {
-		enum class channel : int8_t { Invalid = -1, Red, Green, Blue, Alpha };
+namespace filter::dynamic_mask {
+	enum class channel : int8_t { Invalid = -1, Red, Green, Blue, Alpha };
 
-		class dynamic_mask_instance : public obs::source_instance {
-			std::map<std::tuple<channel, channel, std::string>, std::string> _translation_map;
+	class dynamic_mask_instance : public obs::source_instance {
+		std::map<std::tuple<channel, channel, std::string>, std::string> _translation_map;
 
-			gs::effect _effect;
+		gs::effect _effect;
 
-			bool                              _have_filter_texture;
-			std::shared_ptr<gs::rendertarget> _filter_rt;
-			std::shared_ptr<gs::texture>      _filter_texture;
+		bool                              _have_filter_texture;
+		std::shared_ptr<gs::rendertarget> _filter_rt;
+		std::shared_ptr<gs::texture>      _filter_texture;
 
-			bool                                    _have_input_texture;
-			std::shared_ptr<obs::deprecated_source> _input;
-			std::shared_ptr<gfx::source_texture>    _input_capture;
-			std::shared_ptr<gs::texture>            _input_texture;
+		bool                                    _have_input_texture;
+		std::shared_ptr<obs::deprecated_source> _input;
+		std::shared_ptr<gfx::source_texture>    _input_capture;
+		std::shared_ptr<gs::texture>            _input_texture;
 
-			bool                              _have_final_texture;
-			std::shared_ptr<gs::rendertarget> _final_rt;
-			std::shared_ptr<gs::texture>      _final_texture;
+		bool                              _have_final_texture;
+		std::shared_ptr<gs::rendertarget> _final_rt;
+		std::shared_ptr<gs::texture>      _final_texture;
 
-			struct channel_data {
-				float_t value  = 0.0;
-				float_t scale  = 1.0;
-				vec4    values = {0};
-			};
-			std::map<channel, channel_data> _channels;
-
-			struct _precalc {
-				vec4    base;
-				vec4    scale;
-				matrix4 matrix;
-			} _precalc;
-
-			public:
-			dynamic_mask_instance(obs_data_t* data, obs_source_t* self);
-			virtual ~dynamic_mask_instance();
-
-			virtual void update(obs_data_t* settings) override;
-			virtual void load(obs_data_t* settings) override;
-			virtual void save(obs_data_t* settings) override;
-
-			void input_renamed(obs::deprecated_source* src, std::string old_name, std::string new_name);
-
-			static bool modified(void* self, obs_properties_t* properties, obs_property_t* property,
-								 obs_data_t* settings) noexcept;
-
-			void video_tick(float _time);
-			void video_render(gs_effect_t* effect);
+		struct channel_data {
+			float_t value  = 0.0;
+			float_t scale  = 1.0;
+			vec4    values = {0};
 		};
+		std::map<channel, channel_data> _channels;
 
-		class dynamic_mask_factory : public obs::source_factory<filter::dynamic_mask::dynamic_mask_factory,
-																filter::dynamic_mask::dynamic_mask_instance> {
-			static std::shared_ptr<filter::dynamic_mask::dynamic_mask_factory> factory_instance;
+		struct _precalc {
+			vec4    base;
+			vec4    scale;
+			matrix4 matrix;
+		} _precalc;
 
-			public: // Singleton
-			static void initialize()
-			{
-				factory_instance = std::make_shared<filter::dynamic_mask::dynamic_mask_factory>();
-			}
+		public:
+		dynamic_mask_instance(obs_data_t* data, obs_source_t* self);
+		virtual ~dynamic_mask_instance();
 
-			static void finalize()
-			{
-				factory_instance.reset();
-			}
+		virtual void update(obs_data_t* settings) override;
+		virtual void load(obs_data_t* settings) override;
+		virtual void save(obs_data_t* settings) override;
 
-			static std::shared_ptr<dynamic_mask_factory> get()
-			{
-				return factory_instance;
-			}
+		void input_renamed(obs::deprecated_source* src, std::string old_name, std::string new_name);
 
-			private:
-			std::list<std::string> _translation_cache;
+		static bool modified(void* self, obs_properties_t* properties, obs_property_t* property,
+							 obs_data_t* settings) noexcept;
 
-			public:
-			dynamic_mask_factory();
-			virtual ~dynamic_mask_factory() override;
+		void video_tick(float _time);
+		void video_render(gs_effect_t* effect);
+	};
 
-			virtual const char* get_name() override;
+	class dynamic_mask_factory : public obs::source_factory<filter::dynamic_mask::dynamic_mask_factory,
+															filter::dynamic_mask::dynamic_mask_instance> {
+		static std::shared_ptr<filter::dynamic_mask::dynamic_mask_factory> factory_instance;
 
-			virtual void get_defaults2(obs_data_t* data) override;
+		public: // Singleton
+		static void initialize()
+		{
+			factory_instance = std::make_shared<filter::dynamic_mask::dynamic_mask_factory>();
+		}
 
-			virtual obs_properties_t* get_properties2(filter::dynamic_mask::dynamic_mask_instance* data) override;
+		static void finalize()
+		{
+			factory_instance.reset();
+		}
 
-			std::string translate_string(const char* format, ...);
-		};
-	} // namespace dynamic_mask
-} // namespace filter
+		static std::shared_ptr<dynamic_mask_factory> get()
+		{
+			return factory_instance;
+		}
+
+		private:
+		std::list<std::string> _translation_cache;
+
+		public:
+		dynamic_mask_factory();
+		virtual ~dynamic_mask_factory() override;
+
+		virtual const char* get_name() override;
+
+		virtual void get_defaults2(obs_data_t* data) override;
+
+		virtual obs_properties_t* get_properties2(filter::dynamic_mask::dynamic_mask_instance* data) override;
+
+		std::string translate_string(const char* format, ...);
+	};
+} // namespace filter::dynamic_mask

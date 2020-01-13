@@ -19,6 +19,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#ifdef WIN32
+
 #include "d3d11.hpp"
 #include <sstream>
 #include <vector>
@@ -26,14 +28,20 @@
 
 extern "C" {
 #pragma warning(push)
+#pragma warning(disable : 4191)
+#pragma warning(disable : 4242)
 #pragma warning(disable : 4244)
+#pragma warning(disable : 4365)
+#pragma warning(disable : 4986)
 #include <graphics/graphics.h>
 #include <libavutil/hwcontext_d3d11va.h>
 #include <obs.h>
 #pragma warning(pop)
 }
 
-obsffmpeg::hwapi::d3d11::d3d11() : _dxgi_module(0), _d3d11_module(0)
+using namespace ffmpeg::hwapi;
+
+d3d11::d3d11() : _dxgi_module(0), _d3d11_module(0)
 {
 	_dxgi_module = LoadLibraryW(L"dxgi.dll");
 	if (!_dxgi_module)
@@ -43,10 +51,12 @@ obsffmpeg::hwapi::d3d11::d3d11() : _dxgi_module(0), _d3d11_module(0)
 	if (!_d3d11_module)
 		throw std::runtime_error("Unable to load D3D11");
 
-	_CreateDXGIFactory = reinterpret_cast<CreateDXGIFactory_t>(GetProcAddress(_dxgi_module, "CreateDXGIFactory"));
-	_CreateDXGIFactory1 =
-	    reinterpret_cast<CreateDXGIFactory1_t>(GetProcAddress(_dxgi_module, "CreateDXGIFactory1"));
-	_D3D11CreateDevice = reinterpret_cast<D3D11CreateDevice_t>(GetProcAddress(_d3d11_module, "D3D11CreateDevice"));
+#pragma warning(push)
+#pragma warning(disable : 4191)
+	_CreateDXGIFactory  = reinterpret_cast<CreateDXGIFactory_t>(GetProcAddress(_dxgi_module, "CreateDXGIFactory"));
+	_CreateDXGIFactory1 = reinterpret_cast<CreateDXGIFactory1_t>(GetProcAddress(_dxgi_module, "CreateDXGIFactory1"));
+	_D3D11CreateDevice  = reinterpret_cast<D3D11CreateDevice_t>(GetProcAddress(_d3d11_module, "D3D11CreateDevice"));
+#pragma warning(pop)
 
 	if (!_CreateDXGIFactory && !_CreateDXGIFactory1)
 		throw std::runtime_error("DXGI not supported");
@@ -62,13 +72,13 @@ obsffmpeg::hwapi::d3d11::d3d11() : _dxgi_module(0), _d3d11_module(0)
 	}
 }
 
-obsffmpeg::hwapi::d3d11::~d3d11()
+d3d11::~d3d11()
 {
 	FreeLibrary(_dxgi_module);
 	FreeLibrary(_d3d11_module);
 }
 
-std::list<obsffmpeg::hwapi::device> obsffmpeg::hwapi::d3d11::enumerate_adapters()
+std::list<device> d3d11::enumerate_adapters()
 {
 	std::list<device> adapters;
 
@@ -79,8 +89,8 @@ std::list<obsffmpeg::hwapi::device> obsffmpeg::hwapi::d3d11::enumerate_adapters(
 		dxgi_adapter->GetDesc1(&desc);
 
 		std::vector<char> buf(1024);
-		size_t            len = snprintf(buf.data(), buf.size(), "%ls (VEN_%04x/DEV_%04x/SUB_%04x/REV_%04x)",
-                                      desc.Description, desc.VendorId, desc.DeviceId, desc.SubSysId, desc.Revision);
+		size_t len = snprintf(buf.data(), buf.size(), "%ls (VEN_%04x/DEV_%04x/SUB_%04x/REV_%04x)", desc.Description,
+							  desc.VendorId, desc.DeviceId, desc.SubSysId, desc.Revision);
 
 		device dev;
 		dev.name      = std::string(buf.data(), buf.data() + len);
@@ -93,7 +103,7 @@ std::list<obsffmpeg::hwapi::device> obsffmpeg::hwapi::d3d11::enumerate_adapters(
 	return std::move(adapters);
 }
 
-std::shared_ptr<obsffmpeg::hwapi::instance> obsffmpeg::hwapi::d3d11::create(obsffmpeg::hwapi::device target)
+std::shared_ptr<instance> d3d11::create(device target)
 {
 	std::shared_ptr<d3d11_instance>   inst;
 	ATL::CComPtr<ID3D11Device>        device;
@@ -115,27 +125,27 @@ std::shared_ptr<obsffmpeg::hwapi::instance> obsffmpeg::hwapi::d3d11::create(obsf
 	// Create a D3D11 Device
 	UINT                           device_flags   = D3D11_CREATE_DEVICE_VIDEO_SUPPORT;
 	std::vector<D3D_FEATURE_LEVEL> feature_levels = {D3D_FEATURE_LEVEL_12_1, D3D_FEATURE_LEVEL_12_0,
-	                                                 D3D_FEATURE_LEVEL_11_1};
+													 D3D_FEATURE_LEVEL_11_1};
 
 	if (FAILED(_D3D11CreateDevice(adapter, D3D_DRIVER_TYPE_HARDWARE, NULL, device_flags, feature_levels.data(),
-	                              static_cast<UINT>(feature_levels.size()), D3D11_SDK_VERSION, &device, NULL,
-	                              &context))) {
+								  static_cast<UINT>(feature_levels.size()), D3D11_SDK_VERSION, &device, NULL,
+								  &context))) {
 		throw std::runtime_error("Failed to create D3D11 device for target.");
 	}
 
 	return std::make_shared<d3d11_instance>(device, context);
 }
 
-std::shared_ptr<obsffmpeg::hwapi::instance> obsffmpeg::hwapi::d3d11::create_from_obs()
+std::shared_ptr<instance> d3d11::create_from_obs()
 {
-	auto gctx = obsffmpeg::obs_graphics();
+	auto gctx = util::obs_graphics();
 
 	if (GS_DEVICE_DIRECT3D_11 != gs_get_device_type()) {
 		throw std::runtime_error("OBS Device is not a D3D11 Device.");
 	}
 
 	ATL::CComPtr<ID3D11Device> device =
-	    ATL::CComPtr<ID3D11Device>(reinterpret_cast<ID3D11Device*>(gs_get_device_obj()));
+		ATL::CComPtr<ID3D11Device>(reinterpret_cast<ID3D11Device*>(gs_get_device_obj()));
 	ATL::CComPtr<ID3D11DeviceContext> context;
 	device->GetImmediateContext(&context);
 
@@ -146,16 +156,15 @@ struct D3D11AVFrame {
 	ATL::CComPtr<ID3D11Texture2D> handle;
 };
 
-obsffmpeg::hwapi::d3d11_instance::d3d11_instance(ATL::CComPtr<ID3D11Device>        device,
-                                                 ATL::CComPtr<ID3D11DeviceContext> context)
+d3d11_instance::d3d11_instance(ATL::CComPtr<ID3D11Device> device, ATL::CComPtr<ID3D11DeviceContext> context)
 {
 	_device  = device;
 	_context = context;
 }
 
-obsffmpeg::hwapi::d3d11_instance::~d3d11_instance() {}
+d3d11_instance::~d3d11_instance() {}
 
-AVBufferRef* obsffmpeg::hwapi::d3d11_instance::create_device_context()
+AVBufferRef* d3d11_instance::create_device_context()
 {
 	AVBufferRef* dctx_ref = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_D3D11VA);
 	if (!dctx_ref)
@@ -179,9 +188,9 @@ AVBufferRef* obsffmpeg::hwapi::d3d11_instance::create_device_context()
 	return dctx_ref;
 }
 
-std::shared_ptr<AVFrame> obsffmpeg::hwapi::d3d11_instance::allocate_frame(AVBufferRef* frames)
+std::shared_ptr<AVFrame> d3d11_instance::allocate_frame(AVBufferRef* frames)
 {
-	auto gctx = obsffmpeg::obs_graphics();
+	auto gctx = util::obs_graphics();
 
 	auto frame = std::shared_ptr<AVFrame>(av_frame_alloc(), [](AVFrame* frame) {
 		av_frame_unref(frame);
@@ -195,16 +204,16 @@ std::shared_ptr<AVFrame> obsffmpeg::hwapi::d3d11_instance::allocate_frame(AVBuff
 	return frame;
 }
 
-void obsffmpeg::hwapi::d3d11_instance::copy_from_obs(AVBufferRef*, uint32_t handle, uint64_t lock_key,
-                                                     uint64_t* next_lock_key, std::shared_ptr<AVFrame> frame)
+void d3d11_instance::copy_from_obs(AVBufferRef*, uint32_t handle, uint64_t lock_key, uint64_t* next_lock_key,
+								   std::shared_ptr<AVFrame> frame)
 {
-	auto gctx = obsffmpeg::obs_graphics();
+	auto gctx = util::obs_graphics();
 
 	ATL::CComPtr<IDXGIKeyedMutex> mutex;
 	ATL::CComPtr<ID3D11Texture2D> input;
 
 	if (FAILED(_device->OpenSharedResource(reinterpret_cast<HANDLE>(static_cast<uintptr_t>(handle)),
-	                                       __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&input)))) {
+										   __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&input)))) {
 		throw std::runtime_error("Failed to open shared texture resource.");
 	}
 
@@ -234,12 +243,14 @@ void obsffmpeg::hwapi::d3d11_instance::copy_from_obs(AVBufferRef*, uint32_t hand
 	mutex->ReleaseSync(*next_lock_key);
 }
 
-std::shared_ptr<AVFrame> obsffmpeg::hwapi::d3d11_instance::avframe_from_obs(AVBufferRef* frames, uint32_t handle,
-                                                                            uint64_t lock_key, uint64_t* next_lock_key)
+std::shared_ptr<AVFrame> d3d11_instance::avframe_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key,
+														  uint64_t* next_lock_key)
 {
-	auto gctx = obsffmpeg::obs_graphics();
+	auto gctx = util::obs_graphics();
 
 	auto frame = this->allocate_frame(frames);
 	this->copy_from_obs(frames, handle, lock_key, next_lock_key, frame);
 	return frame;
 }
+
+#endif

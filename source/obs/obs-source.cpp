@@ -39,9 +39,9 @@ try {
 	}
 	self->events.destroy(self);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_remove(void* p, calldata_t*) noexcept
@@ -52,9 +52,9 @@ try {
 	}
 	self->events.remove(self);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_save(void* p, calldata_t*) noexcept
@@ -65,9 +65,9 @@ try {
 	}
 	self->events.save(self);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_load(void* p, calldata_t*) noexcept
@@ -78,9 +78,9 @@ try {
 	}
 	self->events.load(self);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_activate(void* p, calldata_t*) noexcept
@@ -91,9 +91,9 @@ try {
 	}
 	self->events.activate(self);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_deactivate(void* p, calldata_t*) noexcept
@@ -104,9 +104,9 @@ try {
 	}
 	self->events.deactivate(self);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_show(void* p, calldata_t*) noexcept
@@ -117,9 +117,9 @@ try {
 	}
 	self->events.show(self);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_hide(void* p, calldata_t*) noexcept
@@ -130,9 +130,9 @@ try {
 	}
 	self->events.hide(self);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_enable(void* p, calldata_t* calldata) noexcept
@@ -149,9 +149,9 @@ try {
 
 	self->events.enable(self, enabled);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_push_to_mute_changed(void* p, calldata_t* calldata) noexcept
@@ -168,9 +168,9 @@ try {
 
 	self->events.push_to_mute_changed(self, enabled);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_push_to_mute_delay(void* p, calldata_t* calldata) noexcept
@@ -187,9 +187,9 @@ try {
 
 	self->events.push_to_mute_delay(self, delay);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_push_to_talk_changed(void* p, calldata_t* calldata) noexcept
@@ -206,9 +206,9 @@ try {
 
 	self->events.push_to_talk_changed(self, enabled);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_push_to_talk_delay(void* p, calldata_t* calldata) noexcept
@@ -225,9 +225,9 @@ try {
 
 	self->events.push_to_talk_delay(self, delay);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_rename(void* p, calldata_t* calldata) noexcept
@@ -249,9 +249,9 @@ try {
 
 	self->events.rename(self, std::string(new_name ? new_name : ""), std::string(prev_name ? prev_name : ""));
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_update_properties(void* p, calldata_t*) noexcept
@@ -262,9 +262,9 @@ try {
 	}
 	self->events.update_properties(self);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_update_flags(void* p, calldata_t* calldata) noexcept
@@ -281,9 +281,9 @@ try {
 
 	self->events.update_flags(self, flags);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_mute(void* p, calldata_t* calldata) noexcept
@@ -300,9 +300,9 @@ try {
 
 	self->events.mute(self, muted);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_volume(void* p, calldata_t* calldata) noexcept
@@ -321,9 +321,9 @@ try {
 
 	calldata_set_float(calldata, "volume", volume);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_audio_sync(void* p, calldata_t* calldata) noexcept
@@ -342,9 +342,9 @@ try {
 
 	calldata_set_int(calldata, "offset", mixers);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_audio_mixers(void* p, calldata_t* calldata) noexcept
@@ -363,9 +363,9 @@ try {
 
 	calldata_set_int(calldata, "mixers", mixers);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_audio_data(void* p, obs_source_t*, const audio_data* audio, bool muted) noexcept
@@ -377,9 +377,9 @@ try {
 
 	self->events.audio_data(self, audio, muted);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_filter_add(void* p, calldata_t* calldata) noexcept
@@ -396,9 +396,9 @@ try {
 
 	self->events.filter_add(self, filter);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_filter_remove(void* p, calldata_t* calldata) noexcept
@@ -415,9 +415,9 @@ try {
 
 	self->events.filter_remove(self, filter);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_reorder_filters(void* p, calldata_t*) noexcept
@@ -428,9 +428,9 @@ try {
 	}
 	self->events.reorder_filters(self);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_transition_start(void* p, calldata_t*) noexcept
@@ -441,9 +441,9 @@ try {
 	}
 	self->events.transition_start(self);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_transition_video_stop(void* p, calldata_t*) noexcept
@@ -454,9 +454,9 @@ try {
 	}
 	self->events.transition_video_stop(self);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::deprecated_source::handle_transition_stop(void* p, calldata_t*) noexcept
@@ -467,9 +467,9 @@ try {
 	}
 	self->events.transition_stop(self);
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 obs::deprecated_source::~deprecated_source()

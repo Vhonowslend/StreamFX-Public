@@ -37,6 +37,7 @@
 
 #define S_ADVANCED "Advanced"
 
+#define S_STATE_DEFAULT "State.Default"
 #define S_STATE_DISABLED "State.Disabled"
 #define S_STATE_ENABLED "State.Enabled"
 #define S_STATE_MANUAL "State.Manual"

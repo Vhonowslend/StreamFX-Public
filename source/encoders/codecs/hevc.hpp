@@ -28,42 +28,36 @@
 #define P_HEVC_TIER "Codec.HEVC.Tier"
 #define P_HEVC_LEVEL "Codec.HEVC.Level"
 
-namespace obsffmpeg {
-	namespace codecs {
-		namespace hevc {
-			enum class profile {
-				MAIN,
-				MAIN10,
-				RANGE_EXTENDED,
-				UNKNOWN = -1,
-			};
+namespace encoder::codec::hevc {
+	enum class profile {
+		MAIN,
+		MAIN10,
+		RANGE_EXTENDED,
+		UNKNOWN = -1,
+	};
 
-			enum class tier {
-				MAIN,
-				HIGH,
-				UNKNOWN = -1,
-			};
+	enum class tier {
+		MAIN,
+		HIGH,
+		UNKNOWN = -1,
+	};
 
-			enum class level {
-				L1_0    = 30,
-				L2_0    = 60,
-				L2_1    = 63,
-				L3_0    = 90,
-				L3_1    = 93,
-				L4_0    = 120,
-				L4_1    = 123,
-				L5_0    = 150,
-				L5_1    = 153,
-				L5_2    = 156,
-				L6_0    = 180,
-				L6_1    = 183,
-				L6_2    = 186,
-				UNKNOWN = -1,
-			};
+	enum class level {
+		L1_0    = 30,
+		L2_0    = 60,
+		L2_1    = 63,
+		L3_0    = 90,
+		L3_1    = 93,
+		L4_0    = 120,
+		L4_1    = 123,
+		L5_0    = 150,
+		L5_1    = 153,
+		L5_2    = 156,
+		L6_0    = 180,
+		L6_1    = 183,
+		L6_2    = 186,
+		UNKNOWN = -1,
+	};
 
-			void extract_header_sei(uint8_t* data, size_t sz_data, std::vector<uint8_t>& header,
-			                        std::vector<uint8_t>& sei);
-
-		} // namespace hevc
-	}         // namespace codecs
-} // namespace obsffmpeg
+	void extract_header_sei(uint8_t* data, size_t sz_data, std::vector<uint8_t>& header, std::vector<uint8_t>& sei);
+} // namespace encoder::codec::hevc

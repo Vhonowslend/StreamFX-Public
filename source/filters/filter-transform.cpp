@@ -64,6 +64,8 @@
 #define ST_ROTATION_ORDER_ZYX "Filter.Transform.Rotation.Order.ZYX"
 #define ST_MIPMAPPING "Filter.Transform.Mipmapping"
 
+using namespace filter;
+
 static const float farZ  = 2097152.0f; // 2 pow 21
 static const float nearZ = 1.0f / farZ;
 
@@ -78,7 +80,7 @@ enum RotationOrder : int64_t {
 	ZYX,
 };
 
-filter::transform::transform_instance::transform_instance(obs_data_t* data, obs_source_t* context)
+transform::transform_instance::transform_instance(obs_data_t* data, obs_source_t* context)
 	: obs::source_instance(data, context), _cache_rendered(), _mipmap_enabled(), _mipmap_strength(),
 	  _mipmap_generator(), _source_rendered(), _source_size(), _update_mesh(), _rotation_order(),
 	  _camera_orthographic(), _camera_fov()
@@ -99,7 +101,7 @@ filter::transform::transform_instance::transform_instance(obs_data_t* data, obs_
 	update(data);
 }
 
-filter::transform::transform_instance::~transform_instance()
+transform::transform_instance::~transform_instance()
 {
 	_shear.reset();
 	_scale.reset();
@@ -111,12 +113,12 @@ filter::transform::transform_instance::~transform_instance()
 	_mipmap_texture.reset();
 }
 
-void filter::transform::transform_instance::load(obs_data_t* settings)
+void transform::transform_instance::load(obs_data_t* settings)
 {
 	update(settings);
 }
 
-void filter::transform::transform_instance::update(obs_data_t* settings)
+void transform::transform_instance::update(obs_data_t* settings)
 {
 	// Camera
 	_camera_orthographic = obs_data_get_int(settings, ST_CAMERA) == 0;
@@ -145,7 +147,7 @@ void filter::transform::transform_instance::update(obs_data_t* settings)
 	_update_mesh = true;
 }
 
-void filter::transform::transform_instance::video_tick(float)
+void transform::transform_instance::video_tick(float)
 {
 	uint32_t width  = 0;
 	uint32_t height = 0;
@@ -263,7 +265,7 @@ void filter::transform::transform_instance::video_tick(float)
 	_source_rendered = false;
 }
 
-void filter::transform::transform_instance::video_render(gs_effect_t*)
+void transform::transform_instance::video_render(gs_effect_t*)
 {
 	obs_source_t* parent         = obs_filter_get_parent(_self);
 	obs_source_t* target         = obs_filter_get_target(_self);
@@ -397,9 +399,9 @@ void filter::transform::transform_instance::video_render(gs_effect_t*)
 	}
 }
 
-std::shared_ptr<filter::transform::transform_factory> filter::transform::transform_factory::factory_instance = nullptr;
+std::shared_ptr<transform::transform_factory> transform::transform_factory::factory_instance = nullptr;
 
-filter::transform::transform_factory::transform_factory()
+transform::transform_factory::transform_factory()
 {
 	_info.id           = "obs-stream-effects-filter-transform";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
@@ -409,14 +411,14 @@ filter::transform::transform_factory::transform_factory()
 	finish_setup();
 }
 
-filter::transform::transform_factory::~transform_factory() {}
+transform::transform_factory::~transform_factory() {}
 
-const char* filter::transform::transform_factory::get_name()
+const char* transform::transform_factory::get_name()
 {
 	return D_TRANSLATE(ST);
 }
 
-void filter::transform::transform_factory::get_defaults2(obs_data_t* settings)
+void transform::transform_factory::get_defaults2(obs_data_t* settings)
 {
 	obs_data_set_default_int(settings, ST_CAMERA, (int64_t)CameraMode::Orthographic);
 	obs_data_set_default_double(settings, ST_CAMERA_FIELDOFVIEW, 90.0);
@@ -456,12 +458,12 @@ try {
 
 	return true;
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-obs_properties_t* filter::transform::transform_factory::get_properties2(filter::transform::transform_instance* data)
+obs_properties_t* transform::transform_factory::get_properties2(transform::transform_instance* data)
 {
 	obs_properties_t* pr = obs_properties_create();
 

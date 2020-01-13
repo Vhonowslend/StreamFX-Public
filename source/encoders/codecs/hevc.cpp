@@ -22,6 +22,8 @@
 #include "hevc.hpp"
 #include "utility.hpp"
 
+using namespace encoder::codec;
+
 enum class nal_unit_type : uint8_t { // 6 bits
 	TRAIL_N        = 0,
 	TRAIL_R        = 1,
@@ -104,7 +106,7 @@ struct hevc_nal {
 
 bool is_nal(uint8_t* data, uint8_t* end)
 {
-	size_t s = end - data;
+	size_t s = static_cast<size_t>(end - data);
 	if (s < 4)
 		return false;
 
@@ -138,14 +140,14 @@ size_t get_nal_size(uint8_t* data, uint8_t* end)
 {
 	uint8_t* ptr = data + 4;
 	if (!seek_to_nal(ptr, end)) {
-		return end - data;
+		return static_cast<size_t>(end - data);
 	}
-	return ptr - data;
+	return static_cast<size_t>(ptr - data);
 }
 
 bool is_discard_marker(uint8_t* data, uint8_t* end)
 {
-	size_t s = end - data;
+	size_t s = static_cast<size_t>(end - data);
 	if (s < 4)
 		return false;
 
@@ -197,8 +199,7 @@ void progress_parse(uint8_t*& ptr, uint8_t* end, size_t& sz)
 	sz = get_nal_size(ptr, end);
 }
 
-void obsffmpeg::codecs::hevc::extract_header_sei(uint8_t* data, size_t sz_data, std::vector<uint8_t>& header,
-                                                 std::vector<uint8_t>& sei)
+void hevc::extract_header_sei(uint8_t* data, size_t sz_data, std::vector<uint8_t>& header, std::vector<uint8_t>& sei)
 {
 	uint8_t* ptr = data;
 	uint8_t* end = data + sz_data;
@@ -230,6 +231,8 @@ void obsffmpeg::codecs::hevc::extract_header_sei(uint8_t* data, size_t sz_data, 
 		case nal_unit_type::PREFIX_SEI:
 		case nal_unit_type::SUFFIX_SEI:
 			sei.insert(sei.end(), ptr, ptr + nal_sz);
+			break;
+		default:
 			break;
 		}
 	}

@@ -19,10 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef OBS_FFMPEG_FFMPEG_UTILITY
-#define OBS_FFMPEG_FFMPEG_UTILITY
 #pragma once
-
 #include <functional>
 #include <obs.h>
 #include <string>
@@ -33,45 +30,40 @@ extern "C" {
 #include <libavutil/pixfmt.h>
 }
 
-namespace ffmpeg {
-	namespace tools {
-		std::string translate_encoder_capabilities(int capabilities);
+namespace ffmpeg::tools {
+	std::string translate_encoder_capabilities(int capabilities);
 
-		const char* get_pixel_format_name(AVPixelFormat v);
+	const char* get_pixel_format_name(AVPixelFormat v);
 
-		const char* get_color_space_name(AVColorSpace v);
+	const char* get_color_space_name(AVColorSpace v);
 
-		const char* get_error_description(int error);
+	const char* get_error_description(int error);
 
-		AVPixelFormat obs_videoformat_to_avpixelformat(video_format v);
+	AVPixelFormat obs_videoformat_to_avpixelformat(video_format v);
 
-		video_format avpixelformat_to_obs_videoformat(AVPixelFormat v);
+	video_format avpixelformat_to_obs_videoformat(AVPixelFormat v);
 
-		AVPixelFormat get_least_lossy_format(const AVPixelFormat* haystack, AVPixelFormat needle);
+	AVPixelFormat get_least_lossy_format(const AVPixelFormat* haystack, AVPixelFormat needle);
 
-		AVColorSpace obs_videocolorspace_to_avcolorspace(video_colorspace v);
+	AVColorSpace obs_videocolorspace_to_avcolorspace(video_colorspace v);
 
-		AVColorRange obs_videorangetype_to_avcolorrange(video_range_type v);
+	AVColorRange obs_videorangetype_to_avcolorrange(video_range_type v);
 
-		bool can_hardware_encode(const AVCodec* codec);
+	bool can_hardware_encode(const AVCodec* codec);
 
-		std::vector<AVPixelFormat> get_software_formats(const AVPixelFormat* list);
+	std::vector<AVPixelFormat> get_software_formats(const AVPixelFormat* list);
 
-		void setup_obs_color(video_colorspace colorspace, video_range_type range, AVCodecContext* context);
+	void setup_obs_color(video_colorspace colorspace, video_range_type range, AVCodecContext* context);
 
-		const char* get_std_compliance_name(int compliance);
+	const char* get_std_compliance_name(int compliance);
 
-		const char* get_thread_type_name(int thread_type);
+	const char* get_thread_type_name(int thread_type);
 
-		void print_av_option_bool(AVCodecContext* context, const char* option, std::string text);
+	void print_av_option_bool(AVCodecContext* context, const char* option, std::string text);
 
-		void print_av_option_int(AVCodecContext* context, const char* option, std::string text,
-		                                std::string suffix);
+	void print_av_option_int(AVCodecContext* context, const char* option, std::string text, std::string suffix);
 
-		void print_av_option_string(AVCodecContext* context, const char* option, std::string text,
-		                                   std::function<std::string(int64_t)> decoder);
+	void print_av_option_string(AVCodecContext* context, const char* option, std::string text,
+								std::function<std::string(int64_t)> decoder);
 
-	} // namespace tools
-} // namespace ffmpeg
-
-#endif OBS_FFMPEG_FFMPEG_UTILITY
+} // namespace ffmpeg::tools

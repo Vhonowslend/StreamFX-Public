@@ -32,11 +32,11 @@ extern "C" {
 
 namespace ffmpeg {
 	class avframe_queue {
-		std::deque<std::shared_ptr<AVFrame>> frames;
-		std::mutex                           lock;
+		std::deque<std::shared_ptr<AVFrame>> _frames;
+		std::mutex                           _lock;
 
-		std::pair<uint32_t, uint32_t> resolution;
-		AVPixelFormat                 format = AV_PIX_FMT_NONE;
+		std::pair<uint32_t, uint32_t> _resolution;
+		AVPixelFormat                 _format = AV_PIX_FMT_NONE;
 
 		std::shared_ptr<AVFrame> create_frame();
 

@@ -24,7 +24,9 @@
 
 #define ST "Source.Shader"
 
-source::shader::shader_instance::shader_instance(obs_data_t* data, obs_source_t* self)
+using namespace source;
+
+shader::shader_instance::shader_instance(obs_data_t* data, obs_source_t* self)
 	: obs::source_instance(data, self), _is_main(false)
 {
 	_fx = std::make_shared<gfx::shader::shader>(self, gfx::shader::shader_mode::Source);
@@ -32,34 +34,34 @@ source::shader::shader_instance::shader_instance(obs_data_t* data, obs_source_t*
 	update(data);
 }
 
-source::shader::shader_instance::~shader_instance() {}
+shader::shader_instance::~shader_instance() {}
 
-uint32_t source::shader::shader_instance::get_width()
+uint32_t shader::shader_instance::get_width()
 {
 	return _fx->width();
 }
 
-uint32_t source::shader::shader_instance::get_height()
+uint32_t shader::shader_instance::get_height()
 {
 	return _fx->height();
 }
 
-void source::shader::shader_instance::properties(obs_properties_t* props)
+void shader::shader_instance::properties(obs_properties_t* props)
 {
 	_fx->properties(props);
 }
 
-void source::shader::shader_instance::load(obs_data_t* data)
+void shader::shader_instance::load(obs_data_t* data)
 {
 	_fx->update(data);
 }
 
-void source::shader::shader_instance::update(obs_data_t* data)
+void shader::shader_instance::update(obs_data_t* data)
 {
 	_fx->update(data);
 }
 
-void source::shader::shader_instance::video_tick(float_t sec_since_last)
+void shader::shader_instance::video_tick(float_t sec_since_last)
 {
 	if (_fx->tick(sec_since_last)) {
 		obs_data_t* data = obs_source_get_settings(_self);
@@ -70,7 +72,7 @@ void source::shader::shader_instance::video_tick(float_t sec_since_last)
 	_is_main = true;
 }
 
-void source::shader::shader_instance::video_render(gs_effect_t* effect)
+void shader::shader_instance::video_render(gs_effect_t* effect)
 {
 	if (!_fx) {
 		return;
@@ -86,9 +88,9 @@ void source::shader::shader_instance::video_render(gs_effect_t* effect)
 	_fx->render();
 }
 
-std::shared_ptr<source::shader::shader_factory> source::shader::shader_factory::factory_instance = nullptr;
+std::shared_ptr<shader::shader_factory> shader::shader_factory::factory_instance = nullptr;
 
-source::shader::shader_factory::shader_factory()
+shader::shader_factory::shader_factory()
 {
 	_info.id           = "obs-stream-effects-source-shader";
 	_info.type         = OBS_SOURCE_TYPE_INPUT;
@@ -97,16 +99,16 @@ source::shader::shader_factory::shader_factory()
 	finish_setup();
 }
 
-source::shader::shader_factory::~shader_factory() {}
+shader::shader_factory::~shader_factory() {}
 
-const char* source::shader::shader_factory::get_name()
+const char* shader::shader_factory::get_name()
 {
 	return D_TRANSLATE(ST);
 }
 
-void source::shader::shader_factory::get_defaults2(obs_data_t* data) {}
+void shader::shader_factory::get_defaults2(obs_data_t* data) {}
 
-obs_properties_t* source::shader::shader_factory::get_properties2(source::shader::shader_instance* data)
+obs_properties_t* shader::shader_factory::get_properties2(shader::shader_instance* data)
 {
 	auto pr = obs_properties_create();
 	obs_properties_set_param(pr, data, nullptr);

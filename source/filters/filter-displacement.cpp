@@ -27,7 +27,9 @@
 #define ST_SCALE "Filter.Displacement.Scale"
 #define ST_SCALE_TYPE "Filter.Displacement.Scale.Type"
 
-filter::displacement::displacement_instance::displacement_instance(obs_data_t* data, obs_source_t* context)
+using namespace filter;
+
+displacement::displacement_instance::displacement_instance(obs_data_t* data, obs_source_t* context)
 	: obs::source_instance(data, context)
 {
 	std::string effect = "";
@@ -42,12 +44,12 @@ filter::displacement::displacement_instance::displacement_instance(obs_data_t* d
 	update(data);
 }
 
-filter::displacement::displacement_instance::~displacement_instance()
+displacement::displacement_instance::~displacement_instance()
 {
 	_texture.reset();
 }
 
-void filter::displacement::displacement_instance::load(obs_data_t* settings)
+void displacement::displacement_instance::load(obs_data_t* settings)
 {
 	update(settings);
 }
@@ -56,20 +58,20 @@ inline void migrate_settings(obs_data_t* settings)
 {
 	uint64_t version = static_cast<uint64_t>(obs_data_get_int(settings, S_VERSION));
 
-	switch (version & STREAMEFFECTS_MASK_COMPAT) {
+	switch (version & STREAMFX_MASK_COMPAT) {
 	case 0:
 		obs_data_set_double(settings, ST_SCALE, obs_data_get_double(settings, "Filter.Displacement.Scale") * 0.5);
 		obs_data_set_double(settings, ST_SCALE_TYPE,
 							obs_data_get_double(settings, "Filter.Displacement.Ratio") * 100.0);
 		obs_data_unset_user_value(settings, "Filter.Displacement.Ratio");
-	case STREAMEFFECTS_MAKE_VERSION(0, 8, 0, 0):
+	case STREAMFX_MAKE_VERSION(0, 8, 0, 0):
 		break;
 	}
 
-	obs_data_set_int(settings, S_VERSION, STREAMEFFECTS_VERSION);
+	obs_data_set_int(settings, S_VERSION, STREAMFX_VERSION);
 }
 
-void filter::displacement::displacement_instance::update(obs_data_t* settings)
+void displacement::displacement_instance::update(obs_data_t* settings)
 {
 	migrate_settings(settings);
 
@@ -87,13 +89,13 @@ void filter::displacement::displacement_instance::update(obs_data_t* settings)
 	}
 }
 
-void filter::displacement::displacement_instance::video_tick(float_t)
+void displacement::displacement_instance::video_tick(float_t)
 {
 	_width  = obs_source_get_base_width(_self);
 	_height = obs_source_get_base_height(_self);
 }
 
-void filter::displacement::displacement_instance::video_render(gs_effect_t*)
+void displacement::displacement_instance::video_render(gs_effect_t*)
 {
 	if (!_texture) { // No displacement map, so just skip us for now.
 		obs_source_skip_video_filter(_self);
@@ -115,15 +117,14 @@ void filter::displacement::displacement_instance::video_render(gs_effect_t*)
 	obs_source_process_filter_end(_self, _effect.get_object(), _width, _height);
 }
 
-std::string filter::displacement::displacement_instance::get_file()
+std::string displacement::displacement_instance::get_file()
 {
 	return _texture_file;
 }
 
-std::shared_ptr<filter::displacement::displacement_factory>
-	filter::displacement::displacement_factory::factory_instance = nullptr;
+std::shared_ptr<displacement::displacement_factory> displacement::displacement_factory::factory_instance = nullptr;
 
-filter::displacement::displacement_factory::displacement_factory()
+displacement::displacement_factory::displacement_factory()
 {
 	_info.id           = "obs-stream-effects-filter-displacement";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
@@ -133,14 +134,14 @@ filter::displacement::displacement_factory::displacement_factory()
 	finish_setup();
 }
 
-filter::displacement::displacement_factory::~displacement_factory() {}
+displacement::displacement_factory::~displacement_factory() {}
 
-const char* filter::displacement::displacement_factory::get_name()
+const char* displacement::displacement_factory::get_name()
 {
 	return D_TRANSLATE(ST);
 }
 
-void filter::displacement::displacement_factory::get_defaults2(obs_data_t* data)
+void displacement::displacement_factory::get_defaults2(obs_data_t* data)
 {
 	{
 		char* disp = obs_module_file("examples/normal-maps/neutral.png");
@@ -152,8 +153,7 @@ void filter::displacement::displacement_factory::get_defaults2(obs_data_t* data)
 	obs_data_set_default_double(data, ST_SCALE_TYPE, 0.0);
 }
 
-obs_properties_t*
-	filter::displacement::displacement_factory::get_properties2(filter::displacement::displacement_instance* data)
+obs_properties_t* displacement::displacement_factory::get_properties2(displacement::displacement_instance* data)
 {
 	obs_properties_t* pr = obs_properties_create();
 

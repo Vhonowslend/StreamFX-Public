@@ -27,6 +27,7 @@
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4201)
+#pragma warning(disable : 5039)
 #endif
 #include <obs.h>
 #ifdef _MSC_VER
@@ -81,4 +82,13 @@ const char* obs_module_recursive_text(const char* to_translate, size_t depth)
 			throw std::runtime_error("Insert into map failed.");
 		}
 	}
+}
+
+obs_property_t* util::obs_properties_add_tristate(obs_properties_t* props, const char* name, const char* desc)
+{
+	obs_property_t* p = obs_properties_add_list(props, name, desc, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), -1);
+	obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DISABLED), 0);
+	obs_property_list_add_int(p, D_TRANSLATE(S_STATE_ENABLED), 1);
+	return p;
 }

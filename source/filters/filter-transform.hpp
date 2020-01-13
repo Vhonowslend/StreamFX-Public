@@ -27,81 +27,79 @@
 #include "obs/obs-source-factory.hpp"
 #include "plugin.hpp"
 
-namespace filter {
-	namespace transform {
-		class transform_instance : public obs::source_instance {
-			// Cache
-			bool                              _cache_rendered;
-			std::shared_ptr<gs::rendertarget> _cache_rt;
-			std::shared_ptr<gs::texture>      _cache_texture;
+namespace filter::transform {
+	class transform_instance : public obs::source_instance {
+		// Cache
+		bool                              _cache_rendered;
+		std::shared_ptr<gs::rendertarget> _cache_rt;
+		std::shared_ptr<gs::texture>      _cache_texture;
 
-			// Mip-mapping
-			bool                         _mipmap_enabled;
-			bool                         _mipmap_rendered;
-			double_t                     _mipmap_strength;
-			gs::mipmapper::generator     _mipmap_generator;
-			gs::mipmapper                _mipmapper;
-			std::shared_ptr<gs::texture> _mipmap_texture;
+		// Mip-mapping
+		bool                         _mipmap_enabled;
+		bool                         _mipmap_rendered;
+		double_t                     _mipmap_strength;
+		gs::mipmapper::generator     _mipmap_generator;
+		gs::mipmapper                _mipmapper;
+		std::shared_ptr<gs::texture> _mipmap_texture;
 
-			// Input
-			bool                              _source_rendered;
-			std::pair<uint32_t, uint32_t>     _source_size;
-			std::shared_ptr<gs::rendertarget> _source_rt;
-			std::shared_ptr<gs::texture>      _source_texture;
+		// Input
+		bool                              _source_rendered;
+		std::pair<uint32_t, uint32_t>     _source_size;
+		std::shared_ptr<gs::rendertarget> _source_rt;
+		std::shared_ptr<gs::texture>      _source_texture;
 
-			// Mesh
-			bool                               _update_mesh;
-			std::shared_ptr<gs::vertex_buffer> _vertex_buffer;
-			uint32_t                           _rotation_order;
-			std::unique_ptr<util::vec3a>       _position;
-			std::unique_ptr<util::vec3a>       _rotation;
-			std::unique_ptr<util::vec3a>       _scale;
-			std::unique_ptr<util::vec3a>       _shear;
+		// Mesh
+		bool                               _update_mesh;
+		std::shared_ptr<gs::vertex_buffer> _vertex_buffer;
+		uint32_t                           _rotation_order;
+		std::unique_ptr<util::vec3a>       _position;
+		std::unique_ptr<util::vec3a>       _rotation;
+		std::unique_ptr<util::vec3a>       _scale;
+		std::unique_ptr<util::vec3a>       _shear;
 
-			// Camera
-			bool    _camera_orthographic;
-			float_t _camera_fov;
+		// Camera
+		bool    _camera_orthographic;
+		float_t _camera_fov;
 
-			public:
-			transform_instance(obs_data_t*, obs_source_t*);
-			virtual ~transform_instance() override;
+		public:
+		transform_instance(obs_data_t*, obs_source_t*);
+		virtual ~transform_instance() override;
 
-			virtual void load(obs_data_t* settings) override;
-			virtual void update(obs_data_t*) override;
+		virtual void load(obs_data_t* settings) override;
+		virtual void update(obs_data_t*) override;
 
-			virtual void video_tick(float) override;
-			virtual void video_render(gs_effect_t*) override;
-		};
+		virtual void video_tick(float) override;
+		virtual void video_render(gs_effect_t*) override;
+	};
 
-		class transform_factory
-			: public obs::source_factory<filter::transform::transform_factory, filter::transform::transform_instance> {
-			static std::shared_ptr<filter::transform::transform_factory> factory_instance;
+	class transform_factory
+		: public obs::source_factory<filter::transform::transform_factory, filter::transform::transform_instance> {
+		static std::shared_ptr<filter::transform::transform_factory> factory_instance;
 
-			public: // Singleton
-			static void initialize()
-			{
-				factory_instance = std::make_shared<filter::transform::transform_factory>();
-			}
+		public: // Singleton
+		static void initialize()
+		{
+			factory_instance = std::make_shared<filter::transform::transform_factory>();
+		}
 
-			static void finalize()
-			{
-				factory_instance.reset();
-			}
+		static void finalize()
+		{
+			factory_instance.reset();
+		}
 
-			static std::shared_ptr<transform_factory> get()
-			{
-				return factory_instance;
-			}
+		static std::shared_ptr<transform_factory> get()
+		{
+			return factory_instance;
+		}
 
-			public:
-			transform_factory();
-			virtual ~transform_factory() override;
+		public:
+		transform_factory();
+		virtual ~transform_factory() override;
 
-			virtual const char* get_name() override;
+		virtual const char* get_name() override;
 
-			virtual void get_defaults2(obs_data_t* data) override;
+		virtual void get_defaults2(obs_data_t* data) override;
 
-			virtual obs_properties_t* get_properties2(filter::transform::transform_instance* data) override;
-		};
-	} // namespace transform
-} // namespace filter
+		virtual obs_properties_t* get_properties2(filter::transform::transform_instance* data) override;
+	};
+} // namespace filter::transform

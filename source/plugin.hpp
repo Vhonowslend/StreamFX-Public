@@ -33,16 +33,16 @@
 #endif
 
 // Logging
-#define P_LOG(level, ...) blog(level, "[" PLUGIN_NAME "] " __VA_ARGS__)
-#define P_LOG_ERROR(...) P_LOG(LOG_ERROR, __VA_ARGS__)
-#define P_LOG_WARNING(...) P_LOG(LOG_WARNING, __VA_ARGS__)
-#define P_LOG_INFO(...) P_LOG(LOG_INFO, __VA_ARGS__)
-#define P_LOG_DEBUG(...) P_LOG(LOG_DEBUG, __VA_ARGS__)
+#define LOG_(level, ...) blog(level, "[" PLUGIN_NAME "] " __VA_ARGS__)
+#define LOG_ERROR(...) LOG_(LOG_ERROR, __VA_ARGS__)
+#define LOG_WARNING(...) LOG_(LOG_WARNING, __VA_ARGS__)
+#define LOG_INFO(...) LOG_(LOG_INFO, __VA_ARGS__)
+#define LOG_DEBUG(...) LOG_(LOG_DEBUG, __VA_ARGS__)
 
 #ifndef __FUNCTION_NAME__
-#ifdef WIN32 //WINDOWS
+#ifdef WIN32 // WINDOWS
 #define __FUNCTION_NAME__ __FUNCTION__
-#else //*NIX
+#else // *NIX
 #define __FUNCTION_NAME__ __func__
 #endif
 #endif

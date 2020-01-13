@@ -397,14 +397,14 @@ set(PROJECT_PRIVATE_SOURCE
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertex.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertexbuffer.hpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertexbuffer.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/obs-tools.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/obs-tools.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/obs-source.hpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/obs-source.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/obs-source-factory.hpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/obs-source-factory.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/obs-source-tracker.hpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/obs-source-tracker.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-tools.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-tools.cpp"
 	
 	# Sources
 	"${PROJECT_SOURCE_DIR}/source/sources/source-mirror.hpp"
@@ -430,7 +430,7 @@ set(PROJECT_PRIVATE_SOURCE
 
 	# Transitions
 
-	# ffmpeg
+	# FFmpeg
 	"${PROJECT_SOURCE_DIR}/source/ffmpeg/avframe-queue.cpp"
 	"${PROJECT_SOURCE_DIR}/source/ffmpeg/avframe-queue.hpp"
 	"${PROJECT_SOURCE_DIR}/source/ffmpeg/swscale.hpp"
@@ -439,12 +439,12 @@ set(PROJECT_PRIVATE_SOURCE
 	"${PROJECT_SOURCE_DIR}/source/ffmpeg/tools.cpp"
 	"${PROJECT_SOURCE_DIR}/source/ffmpeg/hwapi/base.hpp"
 	"${PROJECT_SOURCE_DIR}/source/ffmpeg/hwapi/base.cpp"
-		"${PROJECT_SOURCE_DIR}/source/ffmpeg/hwapi/d3d11.hpp"
-		"${PROJECT_SOURCE_DIR}/source/ffmpeg/hwapi/d3d11.cpp"
+	"${PROJECT_SOURCE_DIR}/source/ffmpeg/hwapi/d3d11.hpp"
+	"${PROJECT_SOURCE_DIR}/source/ffmpeg/hwapi/d3d11.cpp"
 	
 	# Encoders
-	"${PROJECT_SOURCE_DIR}/source/encoders/encoder.hpp"
-	"${PROJECT_SOURCE_DIR}/source/encoders/encoder.cpp"
+	"${PROJECT_SOURCE_DIR}/source/encoders/ffmpeg-encoder.hpp"
+	"${PROJECT_SOURCE_DIR}/source/encoders/ffmpeg-encoder.cpp"
 	# Encoders/Codecs
 	"${PROJECT_SOURCE_DIR}/source/encoders/codecs/hevc.hpp"
 	"${PROJECT_SOURCE_DIR}/source/encoders/codecs/hevc.cpp"

@@ -28,58 +28,55 @@ extern "C" {
 #include <obs.h>
 }
 
-namespace source {
-	namespace shader {
-		class shader_instance : public obs::source_instance {
-			std::shared_ptr<gfx::shader::shader> _fx;
+namespace source::shader {
+	class shader_instance : public obs::source_instance {
+		std::shared_ptr<gfx::shader::shader> _fx;
 
-			bool _is_main;
+		bool _is_main;
 
-			public:
-			shader_instance(obs_data_t* data, obs_source_t* self);
-			virtual ~shader_instance();
+		public:
+		shader_instance(obs_data_t* data, obs_source_t* self);
+		virtual ~shader_instance();
 
-			virtual uint32_t get_width() override;
-			virtual uint32_t get_height() override;
+		virtual uint32_t get_width() override;
+		virtual uint32_t get_height() override;
 
-			void properties(obs_properties_t* props);
+		void properties(obs_properties_t* props);
 
-			virtual void load(obs_data_t* data) override;
-			virtual void update(obs_data_t* data) override;
+		virtual void load(obs_data_t* data) override;
+		virtual void update(obs_data_t* data) override;
 
-			virtual void video_tick(float_t sec_since_last) override;
-			virtual void video_render(gs_effect_t* effect) override;
-		};
+		virtual void video_tick(float_t sec_since_last) override;
+		virtual void video_render(gs_effect_t* effect) override;
+	};
 
-		class shader_factory
-			: public obs::source_factory<source::shader::shader_factory, source::shader::shader_instance> {
-			static std::shared_ptr<source::shader::shader_factory> factory_instance;
+	class shader_factory : public obs::source_factory<source::shader::shader_factory, source::shader::shader_instance> {
+		static std::shared_ptr<source::shader::shader_factory> factory_instance;
 
-			public: // Singleton
-			static void initialize()
-			{
-				factory_instance = std::make_shared<source::shader::shader_factory>();
-			}
+		public: // Singleton
+		static void initialize()
+		{
+			factory_instance = std::make_shared<source::shader::shader_factory>();
+		}
 
-			static void finalize()
-			{
-				factory_instance.reset();
-			}
+		static void finalize()
+		{
+			factory_instance.reset();
+		}
 
-			static std::shared_ptr<shader_factory> get()
-			{
-				return factory_instance;
-			}
+		static std::shared_ptr<shader_factory> get()
+		{
+			return factory_instance;
+		}
 
-			public:
-			shader_factory();
-			virtual ~shader_factory();
+		public:
+		shader_factory();
+		virtual ~shader_factory();
 
-			virtual const char* get_name() override;
+		virtual const char* get_name() override;
 
-			virtual void get_defaults2(obs_data_t* data) override;
+		virtual void get_defaults2(obs_data_t* data) override;
 
-			virtual obs_properties_t* get_properties2(source::shader::shader_instance* data) override;
-		};
-	} // namespace shader
-} // namespace source
+		virtual obs_properties_t* get_properties2(source::shader::shader_instance* data) override;
+	};
+} // namespace source::shader

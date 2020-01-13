@@ -30,27 +30,22 @@ extern "C" {
 #pragma warning(pop)
 }
 
-namespace obsffmpeg {
-	namespace ui {
-		class prores_aw_handler : public handler {
-			public:
-			virtual void override_colorformat(AVPixelFormat& target_format, obs_data_t* settings,
-			                                  const AVCodec* codec, AVCodecContext* context) override;
+namespace encoder::ffmpeg::handler {
+	class prores_aw_handler : public handler {
+		public:
+		virtual void override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec,
+										  AVCodecContext* context) override;
 
-			virtual void get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context,
-			                          bool hw_encode) override;
+		virtual void get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context,
+								  bool hw_encode) override;
 
-			virtual void get_properties(obs_properties_t* props, const AVCodec* codec,
-			                            AVCodecContext* context, bool hw_encode) override;
+		virtual void get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context,
+									bool hw_encode) override;
 
-			virtual void update(obs_data_t* settings, const AVCodec* codec,
-			                    AVCodecContext* context) override;
+		virtual void update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context) override;
 
-			virtual void log_options(obs_data_t* settings, const AVCodec* codec,
-			                         AVCodecContext* context) override;
+		virtual void log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context) override;
 
-			virtual void process_avpacket(AVPacket& packet, const AVCodec* codec,
-			                              AVCodecContext* context) override;
-		};
-	} // namespace ui
-} // namespace obsffmpeg
+		virtual void process_avpacket(AVPacket& packet, const AVCodec* codec, AVCodecContext* context) override;
+	};
+} // namespace encoder::ffmpeg::handler

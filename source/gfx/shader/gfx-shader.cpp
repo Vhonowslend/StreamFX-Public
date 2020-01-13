@@ -65,7 +65,7 @@ try {
 
 	return false;
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Loading shader '%s' failed with error: %s", file.c_str(), ex.what());
+	LOG_ERROR("Loading shader '%s' failed with error: %s", file.c_str(), ex.what());
 	return false;
 }
 
@@ -165,7 +165,7 @@ try {
 
 	return true;
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Loading shader '%s' failed with error: %s", file.c_str(), ex.what());
+	LOG_ERROR("Loading shader '%s' failed with error: %s", file.c_str(), ex.what());
 	return false;
 } catch (...) {
 	return false;

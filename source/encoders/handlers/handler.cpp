@@ -20,27 +20,29 @@
 // SOFTWARE.
 
 #include "handler.hpp"
-#include "encoder.hpp"
+#include "../ffmpeg-encoder.hpp"
 
-void obsffmpeg::ui::handler::adjust_encoder_info(obsffmpeg::encoder_factory*, obsffmpeg::encoder_info*,
-                                                 obsffmpeg::encoder_info*)
+void encoder::ffmpeg::handler::handler::adjust_encoder_info(encoder::ffmpeg::ffmpeg_factory*, ffmpeg_info*,
+															ffmpeg_info*)
 {}
 
-void obsffmpeg::ui::handler::get_defaults(obs_data_t*, const AVCodec*, AVCodecContext*, bool) {}
+void encoder::ffmpeg::handler::handler::get_defaults(obs_data_t*, const AVCodec*, AVCodecContext*, bool) {}
 
-bool obsffmpeg::ui::handler::has_keyframe_support(obsffmpeg::encoder* instance)
+bool encoder::ffmpeg::handler::handler::has_keyframe_support(ffmpeg_instance* instance)
 {
 	return (instance->get_avcodec()->capabilities & AV_CODEC_CAP_INTRA_ONLY) == 0;
 }
 
-void obsffmpeg::ui::handler::get_properties(obs_properties_t*, const AVCodec*, AVCodecContext*, bool) {}
+void encoder::ffmpeg::handler::handler::get_properties(obs_properties_t*, const AVCodec*, AVCodecContext*, bool) {}
 
-void obsffmpeg::ui::handler::update(obs_data_t*, const AVCodec*, AVCodecContext*) {}
+void encoder::ffmpeg::handler::handler::update(obs_data_t*, const AVCodec*, AVCodecContext*) {}
 
-void obsffmpeg::ui::handler::override_update(obsffmpeg::encoder*, obs_data_t*) {}
+void encoder::ffmpeg::handler::handler::override_update(ffmpeg_instance*, obs_data_t*) {}
 
-void obsffmpeg::ui::handler::log_options(obs_data_t*, const AVCodec*, AVCodecContext*) {}
+void encoder::ffmpeg::handler::handler::log_options(obs_data_t*, const AVCodec*, AVCodecContext*) {}
 
-void obsffmpeg::ui::handler::override_colorformat(AVPixelFormat&, obs_data_t*, const AVCodec*, AVCodecContext*) {}
+void encoder::ffmpeg::handler::handler::override_colorformat(AVPixelFormat&, obs_data_t*, const AVCodec*,
+															 AVCodecContext*)
+{}
 
-void obsffmpeg::ui::handler::process_avpacket(AVPacket&, const AVCodec*, AVCodecContext*) {}
+void encoder::ffmpeg::handler::handler::process_avpacket(AVPacket&, const AVCodec*, AVCodecContext*) {}

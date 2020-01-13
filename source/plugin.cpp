@@ -19,25 +19,33 @@
 
 #include "plugin.hpp"
 #include <stdexcept>
+
+#include "obs/obs-source-tracker.hpp"
+
+//#include "encoders/ffmpeg-encoder.hpp"
+
 #include "filters/filter-blur.hpp"
 #include "filters/filter-color-grade.hpp"
 #include "filters/filter-displacement.hpp"
 #include "filters/filter-dynamic-mask.hpp"
 #include "filters/filter-sdf-effects.hpp"
-//#include "filters/filter-shader.hpp"
 #include "filters/filter-transform.hpp"
-#include "obs/obs-source-tracker.hpp"
+//#include "filters/filter-shader.hpp"
+
 #include "sources/source-mirror.hpp"
 #include "sources/source-shader.hpp"
 
 MODULE_EXPORT bool obs_module_load(void)
 try {
-	P_LOG_INFO("Loading Version %s", STREAMEFFECTS_VERSION_STRING);
+	LOG_INFO("Loading Version %s", STREAMFX_VERSION_STRING);
 
 	// Initialize Source Tracker
 	obs::source_tracker::initialize();
 
-	// Initialize Filters
+	// Encoders
+	//encoder::ffmpeg::ffmpeg_manager::initialize();
+
+	// Filters
 	filter::blur::blur_factory::initialize();
 	filter::color_grade::color_grade_factory::initialize();
 	filter::displacement::displacement_factory::initialize();
@@ -46,25 +54,29 @@ try {
 	//filter::shader::shader_factory::initialize();
 	filter::transform::transform_factory::initialize();
 
-	// Initialize Sources
+	// Sources
 	source::mirror::mirror_factory::initialize();
 	source::shader::shader_factory::initialize();
 
+	// Transitions
+
 	return true;
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return false;
 }
 
 MODULE_EXPORT void obs_module_unload(void)
 try {
-	P_LOG_INFO("Unloading Version %s", STREAMEFFECTS_VERSION_STRING);
+	LOG_INFO("Unloading Version %s", STREAMFX_VERSION_STRING);
 
-	// Clean up Sources
+	// Transitions
+
+	// Sources
 	source::mirror::mirror_factory::finalize();
 	source::shader::shader_factory::finalize();
 
-	// Clean up Filters
+	// Filters
 	filter::blur::blur_factory::finalize();
 	filter::color_grade::color_grade_factory::finalize();
 	filter::displacement::displacement_factory::finalize();
@@ -73,10 +85,13 @@ try {
 	//filter::shader::shader_factory::finalize();
 	filter::transform::transform_factory::finalize();
 
-	// Clean up Source Tracker
+	// Encoders
+	//encoder::ffmpeg::ffmpeg_manager::finalize();
+
+	// Finalize Source Tracker
 	obs::source_tracker::finalize();
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 #ifdef _WIN32

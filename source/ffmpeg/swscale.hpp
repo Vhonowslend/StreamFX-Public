@@ -19,10 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef OBS_FFMPEG_FFMPEG_SWSCALE
-#define OBS_FFMPEG_FFMPEG_SWSCALE
 #pragma once
-
 #include <cinttypes>
 #include <utility>
 
@@ -82,8 +79,6 @@ namespace ffmpeg {
 		bool finalize();
 
 		int32_t convert(const uint8_t* const source_data[], const int source_stride[], int32_t source_row,
-		                int32_t source_rows, uint8_t* const target_data[], const int target_stride[]);
+						int32_t source_rows, uint8_t* const target_data[], const int target_stride[]);
 	};
 } // namespace ffmpeg
-
-#endif OBS_FFMPEG_FFMPEG_SWSCALE

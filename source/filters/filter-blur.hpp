@@ -42,119 +42,116 @@
 #pragma warning(pop)
 #endif
 
-namespace filter {
-	namespace blur {
-		enum class mask_type : int64_t {
-			Region,
-			Image,
-			Source,
-		};
+namespace filter::blur {
+	enum class mask_type : int64_t {
+		Region,
+		Image,
+		Source,
+	};
 
-		class blur_instance : public obs::source_instance {
-			// Effects
-			gs::effect _effect_mask;
+	class blur_instance : public obs::source_instance {
+		// Effects
+		gs::effect _effect_mask;
 
-			// Input
-			std::shared_ptr<gs::rendertarget> _source_rt;
-			std::shared_ptr<gs::texture>      _source_texture;
-			bool                              _source_rendered;
+		// Input
+		std::shared_ptr<gs::rendertarget> _source_rt;
+		std::shared_ptr<gs::texture>      _source_texture;
+		bool                              _source_rendered;
 
-			// Rendering
-			std::shared_ptr<gs::texture>      _output_texture;
-			std::shared_ptr<gs::rendertarget> _output_rt;
-			bool                              _output_rendered;
+		// Rendering
+		std::shared_ptr<gs::texture>      _output_texture;
+		std::shared_ptr<gs::rendertarget> _output_rt;
+		bool                              _output_rendered;
 
-			// Blur
-			std::shared_ptr<::gfx::blur::base> _blur;
-			double_t                           _blur_size;
-			double_t                           _blur_angle;
-			std::pair<double_t, double_t>      _blur_center;
-			bool                               _blur_step_scaling;
-			std::pair<double_t, double_t>      _blur_step_scale;
+		// Blur
+		std::shared_ptr<::gfx::blur::base> _blur;
+		double_t                           _blur_size;
+		double_t                           _blur_angle;
+		std::pair<double_t, double_t>      _blur_center;
+		bool                               _blur_step_scaling;
+		std::pair<double_t, double_t>      _blur_step_scale;
 
-			// Masking
+		// Masking
+		struct {
+			bool      enabled;
+			mask_type type;
 			struct {
-				bool      enabled;
-				mask_type type;
-				struct {
-					float_t left;
-					float_t top;
-					float_t right;
-					float_t bottom;
-					float_t feather;
-					float_t feather_shift;
-					bool    invert;
-				} region;
-				struct {
-					std::string                  path;
-					std::string                  path_old;
-					std::shared_ptr<gs::texture> texture;
-				} image;
-				struct {
-					std::string                          name_old;
-					std::string                          name;
-					bool                                 is_scene;
-					std::shared_ptr<gfx::source_texture> source_texture;
-					std::shared_ptr<gs::texture>         texture;
-				} source;
-				struct {
-					float_t r;
-					float_t g;
-					float_t b;
-					float_t a;
-				} color;
-				float_t multiplier;
-			} _mask;
+				float_t left;
+				float_t top;
+				float_t right;
+				float_t bottom;
+				float_t feather;
+				float_t feather_shift;
+				bool    invert;
+			} region;
+			struct {
+				std::string                  path;
+				std::string                  path_old;
+				std::shared_ptr<gs::texture> texture;
+			} image;
+			struct {
+				std::string                          name_old;
+				std::string                          name;
+				bool                                 is_scene;
+				std::shared_ptr<gfx::source_texture> source_texture;
+				std::shared_ptr<gs::texture>         texture;
+			} source;
+			struct {
+				float_t r;
+				float_t g;
+				float_t b;
+				float_t a;
+			} color;
+			float_t multiplier;
+		} _mask;
 
-			public:
-			blur_instance(obs_data_t* settings, obs_source_t* self);
-			~blur_instance();
+		public:
+		blur_instance(obs_data_t* settings, obs_source_t* self);
+		~blur_instance();
 
-			public:
-			virtual void update(obs_data_t* settings) override;
-			virtual void load(obs_data_t* settings) override;
+		public:
+		virtual void update(obs_data_t* settings) override;
+		virtual void load(obs_data_t* settings) override;
 
-			virtual void video_tick(float time) override;
-			virtual void video_render(gs_effect_t* effect) override;
+		virtual void video_tick(float time) override;
+		virtual void video_render(gs_effect_t* effect) override;
 
-			private:
-			bool apply_mask_parameters(gs::effect effect, gs_texture_t* original_texture,
-									   gs_texture_t* blurred_texture);
-		};
+		private:
+		bool apply_mask_parameters(gs::effect effect, gs_texture_t* original_texture, gs_texture_t* blurred_texture);
+	};
 
-		class blur_factory : public obs::source_factory<filter::blur::blur_factory, filter::blur::blur_instance> {
-			static std::shared_ptr<filter::blur::blur_factory> factory_instance;
+	class blur_factory : public obs::source_factory<filter::blur::blur_factory, filter::blur::blur_instance> {
+		static std::shared_ptr<filter::blur::blur_factory> factory_instance;
 
-			public: // Singleton
-			static void initialize()
-			{
-				factory_instance = std::make_shared<filter::blur::blur_factory>();
-			}
+		public: // Singleton
+		static void initialize()
+		{
+			factory_instance = std::make_shared<filter::blur::blur_factory>();
+		}
 
-			static void finalize()
-			{
-				factory_instance.reset();
-			}
+		static void finalize()
+		{
+			factory_instance.reset();
+		}
 
-			static std::shared_ptr<blur_factory> get()
-			{
-				return factory_instance;
-			}
+		static std::shared_ptr<blur_factory> get()
+		{
+			return factory_instance;
+		}
 
-			private:
-			std::vector<std::string> _translation_cache;
+		private:
+		std::vector<std::string> _translation_cache;
 
-			public:
-			blur_factory();
-			virtual ~blur_factory();
+		public:
+		blur_factory();
+		virtual ~blur_factory();
 
-			virtual const char* get_name() override;
+		virtual const char* get_name() override;
 
-			virtual void get_defaults2(obs_data_t* settings) override;
+		virtual void get_defaults2(obs_data_t* settings) override;
 
-			virtual obs_properties_t* get_properties2(filter::blur::blur_instance* data) override;
+		virtual obs_properties_t* get_properties2(filter::blur::blur_instance* data) override;
 
-			std::string translate_string(const char* format, ...);
-		};
-	} // namespace blur
-} // namespace filter
+		std::string translate_string(const char* format, ...);
+	};
+} // namespace filter::blur

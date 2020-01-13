@@ -63,7 +63,9 @@
 #define ST_SCALING_BOUNDS_FILLHEIGHT ST_SCALING ".Bounds.FillHeight"
 #define ST_SCALING_ALIGNMENT ST_SCALING ".Alignment"
 
-void source::mirror::mirror_instance::release()
+using namespace source;
+
+void mirror::mirror_instance::release()
 {
 	_source_item.reset();
 	if (_source) {
@@ -74,7 +76,7 @@ void source::mirror::mirror_instance::release()
 	_source_name.clear();
 }
 
-void source::mirror::mirror_instance::acquire(std::string source_name)
+void mirror::mirror_instance::acquire(std::string source_name)
 {
 	using namespace std::placeholders;
 
@@ -99,12 +101,12 @@ void source::mirror::mirror_instance::acquire(std::string source_name)
 	_source_item = std::shared_ptr<obs_sceneitem_t>(item, [](obs_sceneitem_t* ref) { obs_sceneitem_remove(ref); });
 
 	// And let's hook up all our events too.
-	_source->events.rename.add(std::bind(&source::mirror::mirror_instance::on_source_rename, this, _1, _2, _3));
+	_source->events.rename.add(std::bind(&mirror::mirror_instance::on_source_rename, this, _1, _2, _3));
 	if ((obs_source_get_output_flags(this->_source->get()) & OBS_SOURCE_AUDIO) != 0)
-		_source->events.audio_data.add(std::bind(&source::mirror::mirror_instance::on_audio_data, this, _1, _2, _3));
+		_source->events.audio_data.add(std::bind(&mirror::mirror_instance::on_audio_data, this, _1, _2, _3));
 }
 
-source::mirror::mirror_instance::mirror_instance(obs_data_t* settings, obs_source_t* self)
+mirror::mirror_instance::mirror_instance(obs_data_t* settings, obs_source_t* self)
 	: obs::source_instance(settings, self), _source(), _source_name(), _audio_enabled(), _audio_layout(),
 	  _audio_kill_thread(), _audio_have_output(), _rescale_enabled(), _rescale_width(), _rescale_height(),
 	  _rescale_keep_orig_size(), _rescale_type(), _rescale_bounds(), _rescale_alignment(), _cache_enabled(),
@@ -119,12 +121,12 @@ source::mirror::mirror_instance::mirror_instance(obs_data_t* settings, obs_sourc
 
 	// Spawn Audio Thread
 	/// ToDo: Use ThreadPool for this?
-	_audio_thread = std::thread(std::bind(&source::mirror::mirror_instance::audio_output_cb, this));
+	_audio_thread = std::thread(std::bind(&mirror::mirror_instance::audio_output_cb, this));
 
 	update(settings);
 }
 
-source::mirror::mirror_instance::~mirror_instance()
+mirror::mirror_instance::~mirror_instance()
 {
 	release();
 
@@ -142,12 +144,12 @@ source::mirror::mirror_instance::~mirror_instance()
 	_scene.reset();
 }
 
-uint32_t source::mirror::mirror_instance::get_width()
+uint32_t mirror::mirror_instance::get_width()
 {
 	return _source_size.first;
 }
 
-uint32_t source::mirror::mirror_instance::get_height()
+uint32_t mirror::mirror_instance::get_height()
 {
 	return _source_size.second;
 }
@@ -160,15 +162,15 @@ static void convert_config(obs_data_t* data)
 	case 0:
 		obs_data_set_int(data, ST_SOURCE_AUDIO_LAYOUT, obs_data_get_int(data, "Source.Mirror.Audio.Layout"));
 		obs_data_unset_user_value(data, "Source.Mirror.Audio.Layout");
-	case STREAMEFFECTS_VERSION:
+	case STREAMFX_VERSION:
 		break;
 	}
 
-	obs_data_set_int(data, S_VERSION, STREAMEFFECTS_VERSION);
-	obs_data_set_string(data, S_COMMIT, STREAMEFFECTS_COMMIT);
+	obs_data_set_int(data, S_VERSION, STREAMFX_VERSION);
+	obs_data_set_string(data, S_COMMIT, STREAMFX_COMMIT);
 }
 
-void source::mirror::mirror_instance::update(obs_data_t* data)
+void mirror::mirror_instance::update(obs_data_t* data)
 {
 	convert_config(data);
 
@@ -222,19 +224,19 @@ void source::mirror::mirror_instance::update(obs_data_t* data)
 	}
 }
 
-void source::mirror::mirror_instance::load(obs_data_t* data)
+void mirror::mirror_instance::load(obs_data_t* data)
 {
 	this->update(data);
 }
 
-void source::mirror::mirror_instance::save(obs_data_t* data)
+void mirror::mirror_instance::save(obs_data_t* data)
 {
 	if (_source) {
 		obs_data_set_string(data, ST_SOURCE, obs_source_get_name(_source->get()));
 	}
 }
 
-void source::mirror::mirror_instance::video_tick(float time)
+void mirror::mirror_instance::video_tick(float time)
 {
 	if (_source && ((obs_source_get_output_flags(_source->get()) & OBS_SOURCE_VIDEO) != 0)) {
 		if (_rescale_keep_orig_size || !_rescale_enabled) {
@@ -272,7 +274,7 @@ void source::mirror::mirror_instance::video_tick(float time)
 	_cache_rendered = false;
 }
 
-void source::mirror::mirror_instance::video_render(gs_effect_t* effect)
+void mirror::mirror_instance::video_render(gs_effect_t* effect)
 {
 	if (!_source || !_source_item)
 		return;
@@ -314,7 +316,7 @@ void source::mirror::mirror_instance::video_render(gs_effect_t* effect)
 	GS_DEBUG_MARKER_END();
 }
 
-void source::mirror::mirror_instance::audio_output_cb() noexcept
+void mirror::mirror_instance::audio_output_cb() noexcept
 try {
 	std::unique_lock<std::mutex> ulock(this->_audio_lock_outputter);
 
@@ -347,12 +349,12 @@ try {
 		}
 	}
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void source::mirror::mirror_instance::enum_active_sources(obs_source_enum_proc_t enum_callback, void* param)
+void mirror::mirror_instance::enum_active_sources(obs_source_enum_proc_t enum_callback, void* param)
 {
 	/*	if (_scene) {
 		enum_callback(_self, _scene.get(), param);
@@ -362,7 +364,7 @@ void source::mirror::mirror_instance::enum_active_sources(obs_source_enum_proc_t
 	}
 }
 
-void source::mirror::mirror_instance::enum_all_sources(obs_source_enum_proc_t enum_callback, void* param)
+void mirror::mirror_instance::enum_all_sources(obs_source_enum_proc_t enum_callback, void* param)
 {
 	/*	if (_scene) {
 		enum_callback(_self, _scene.get(), param);
@@ -372,12 +374,12 @@ void source::mirror::mirror_instance::enum_all_sources(obs_source_enum_proc_t en
 	}
 }
 
-void source::mirror::mirror_instance::on_source_rename(obs::deprecated_source* source, std::string, std::string)
+void mirror::mirror_instance::on_source_rename(obs::deprecated_source* source, std::string, std::string)
 {
 	obs_source_save(_self);
 }
 
-void source::mirror::mirror_instance::on_audio_data(obs::deprecated_source*, const audio_data* audio, bool)
+void mirror::mirror_instance::on_audio_data(obs::deprecated_source*, const audio_data* audio, bool)
 {
 	if (!this->_audio_enabled) {
 		return;
@@ -443,9 +445,9 @@ void source::mirror::mirror_instance::on_audio_data(obs::deprecated_source*, con
 	this->_audio_notify.notify_all();
 }
 
-std::shared_ptr<source::mirror::mirror_factory> source::mirror::mirror_factory::factory_instance;
+std::shared_ptr<mirror::mirror_factory> mirror::mirror_factory::factory_instance;
 
-source::mirror::mirror_factory::mirror_factory()
+mirror::mirror_factory::mirror_factory()
 {
 	_info.id           = "obs-stream-effects-source-mirror";
 	_info.type         = OBS_SOURCE_TYPE_INPUT;
@@ -454,14 +456,14 @@ source::mirror::mirror_factory::mirror_factory()
 	finish_setup();
 }
 
-source::mirror::mirror_factory::~mirror_factory() {}
+mirror::mirror_factory::~mirror_factory() {}
 
-const char* source::mirror::mirror_factory::get_name()
+const char* mirror::mirror_factory::get_name()
 {
 	return D_TRANSLATE(ST);
 }
 
-void source::mirror::mirror_factory::get_defaults2(obs_data_t* data)
+void mirror::mirror_factory::get_defaults2(obs_data_t* data)
 {
 	obs_data_set_default_string(data, ST_SOURCE, "");
 	obs_data_set_default_bool(data, ST_SOURCE_AUDIO, false);
@@ -532,14 +534,14 @@ try {
 
 	return false;
 } catch (const std::exception& ex) {
-	P_LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 	return false;
 } catch (...) {
-	P_LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return false;
 }
 
-obs_properties_t* source::mirror::mirror_factory::get_properties2(source::mirror::mirror_instance* data)
+obs_properties_t* mirror::mirror_factory::get_properties2(mirror::mirror_instance* data)
 {
 	obs_properties_t* pr = obs_properties_create();
 	obs_property_t*   p  = nullptr;

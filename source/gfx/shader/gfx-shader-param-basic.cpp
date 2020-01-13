@@ -131,12 +131,12 @@ gfx::shader::basic_parameter::basic_parameter(gs::effect_parameter param, std::s
 						load_parameter_data(annoev, entry.data);
 					}
 				} else {
-					P_LOG_WARNING("[%s] Parameter enumeration entry '%s' is of invalid type, must be string.",
-								  get_name().c_str(), string_buffer);
+					LOG_WARNING("[%s] Parameter enumeration entry '%s' is of invalid type, must be string.",
+								get_name().c_str(), string_buffer);
 				}
 			}
 		} else {
-			P_LOG_WARNING("[%s] Enumeration is missing entries.", get_name().c_str());
+			LOG_WARNING("[%s] Enumeration is missing entries.", get_name().c_str());
 			_field_type = basic_field_type::Input;
 		}
 	}

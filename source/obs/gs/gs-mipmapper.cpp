@@ -262,7 +262,7 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 					gs_draw(gs_draw_mode::GS_TRIS, 0, _vb->size());
 				}
 			} catch (...) {
-				P_LOG_ERROR("Failed to render mipmap layer.");
+				LOG_ERROR("Failed to render mipmap layer.");
 			}
 
 #if defined(WIN32) || defined(WIN64)

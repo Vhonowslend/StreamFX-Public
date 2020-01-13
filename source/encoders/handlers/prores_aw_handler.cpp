@@ -20,7 +20,7 @@
 // SOFTWARE.
 
 #include "prores_aw_handler.hpp"
-#include "codecs/prores.hpp"
+#include "../codecs/prores.hpp"
 #include "ffmpeg/tools.hpp"
 #include "plugin.hpp"
 #include "utility.hpp"
@@ -29,15 +29,10 @@ extern "C" {
 #include <obs-module.h>
 }
 
-INITIALIZER(prores_aw_handler_init)
-{
-	obsffmpeg::initializers.push_back([]() {
-		obsffmpeg::register_codec_handler("prores_aw", std::make_shared<obsffmpeg::ui::prores_aw_handler>());
-	});
-};
+using namespace encoder::ffmpeg::handler;
 
-void obsffmpeg::ui::prores_aw_handler::override_colorformat(AVPixelFormat& target_format, obs_data_t* settings,
-                                                            const AVCodec* codec, AVCodecContext*)
+void prores_aw_handler::override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec,
+											 AVCodecContext*)
 {
 	std::string profile = "";
 
@@ -50,7 +45,7 @@ void obsffmpeg::ui::prores_aw_handler::override_colorformat(AVPixelFormat& targe
 	}
 
 	std::unordered_map<AVPixelFormat, std::list<std::string>> valid_formats = {
-	    {AV_PIX_FMT_YUV422P10, {"apco", "apcs", "apcn", "apch"}}, {AV_PIX_FMT_YUV444P10, {"ap4h", "ap4x"}}};
+		{AV_PIX_FMT_YUV422P10, {"apco", "apcs", "apcn", "apch"}}, {AV_PIX_FMT_YUV444P10, {"ap4h", "ap4x"}}};
 
 	for (auto kv : valid_formats) {
 		for (auto name : kv.second) {
@@ -61,7 +56,7 @@ void obsffmpeg::ui::prores_aw_handler::override_colorformat(AVPixelFormat& targe
 	}
 }
 
-void obsffmpeg::ui::prores_aw_handler::get_defaults(obs_data_t* settings, const AVCodec*, AVCodecContext*, bool)
+void prores_aw_handler::get_defaults(obs_data_t* settings, const AVCodec*, AVCodecContext*, bool)
 {
 	obs_data_set_default_int(settings, P_PRORES_PROFILE, 0);
 }
@@ -70,29 +65,28 @@ inline const char* profile_to_name(const AVProfile* ptr)
 {
 	switch (ptr->profile) {
 	case 0:
-		return TRANSLATE(P_PRORES_PROFILE_APCO);
+		return D_TRANSLATE(P_PRORES_PROFILE_APCO);
 	case 1:
-		return TRANSLATE(P_PRORES_PROFILE_APCS);
+		return D_TRANSLATE(P_PRORES_PROFILE_APCS);
 	case 2:
-		return TRANSLATE(P_PRORES_PROFILE_APCN);
+		return D_TRANSLATE(P_PRORES_PROFILE_APCN);
 	case 3:
-		return TRANSLATE(P_PRORES_PROFILE_APCH);
+		return D_TRANSLATE(P_PRORES_PROFILE_APCH);
 	case 4:
-		return TRANSLATE(P_PRORES_PROFILE_AP4H);
+		return D_TRANSLATE(P_PRORES_PROFILE_AP4H);
 	case 5:
-		return TRANSLATE(P_PRORES_PROFILE_AP4X);
+		return D_TRANSLATE(P_PRORES_PROFILE_AP4X);
 	default:
 		return ptr->name;
 	}
 }
 
-void obsffmpeg::ui::prores_aw_handler::get_properties(obs_properties_t* props, const AVCodec* codec,
-                                                      AVCodecContext* context, bool)
+void prores_aw_handler::get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context, bool)
 {
 	if (!context) {
-		auto p = obs_properties_add_list(props, P_PRORES_PROFILE, TRANSLATE(P_PRORES_PROFILE),
-		                                 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-		obs_property_set_long_description(p, TRANSLATE(DESC(P_PRORES_PROFILE)));
+		auto p = obs_properties_add_list(props, P_PRORES_PROFILE, D_TRANSLATE(P_PRORES_PROFILE), OBS_COMBO_TYPE_LIST,
+										 OBS_COMBO_FORMAT_INT);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(P_PRORES_PROFILE)));
 		for (auto ptr = codec->profiles; ptr->profile != FF_PROFILE_UNKNOWN; ptr++) {
 			obs_property_list_add_int(p, profile_to_name(ptr), static_cast<int64_t>(ptr->profile));
 		}
@@ -101,15 +95,15 @@ void obsffmpeg::ui::prores_aw_handler::get_properties(obs_properties_t* props, c
 	}
 }
 
-void obsffmpeg::ui::prores_aw_handler::update(obs_data_t* settings, const AVCodec*, AVCodecContext* context)
+void prores_aw_handler::update(obs_data_t* settings, const AVCodec*, AVCodecContext* context)
 {
 	context->profile = static_cast<int>(obs_data_get_int(settings, P_PRORES_PROFILE));
 }
 
-void obsffmpeg::ui::prores_aw_handler::log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context)
+void prores_aw_handler::log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context)
 {
-	PLOG_INFO("[%s]   Apple ProRes:", codec->name);
-	ffmpeg::tools::print_av_option_string(context, "profile", "    Profile", [&codec](int64_t v) {
+	LOG_INFO("[%s]   Apple ProRes:", codec->name);
+	::ffmpeg::tools::print_av_option_string(context, "profile", "    Profile", [&codec](int64_t v) {
 		int val = static_cast<int>(v);
 		for (auto ptr = codec->profiles; (ptr->profile != FF_PROFILE_UNKNOWN) && (ptr != nullptr); ptr++) {
 			if (ptr->profile == val) {
@@ -120,7 +114,7 @@ void obsffmpeg::ui::prores_aw_handler::log_options(obs_data_t* settings, const A
 	});
 }
 
-void obsffmpeg::ui::prores_aw_handler::process_avpacket(AVPacket& packet, const AVCodec*, AVCodecContext*)
+void prores_aw_handler::process_avpacket(AVPacket& packet, const AVCodec*, AVCodecContext*)
 {
 	//FFmpeg Bug:
 	// When ProRes content is stored in Matroska, FFmpeg strips the size
