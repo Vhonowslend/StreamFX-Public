@@ -72,7 +72,6 @@ ffmpeg_manager::ffmpeg_manager() : _factories(), _handlers(), _debug_handler()
 	register_handler("hevc_nvenc", ::std::make_shared<handler::nvenc_hevc_handler>());
 
 	// Encoders
-	/*
 	void*          iterator = nullptr;
 	const AVCodec* codec    = nullptr;
 	for (codec = av_codec_iterate(&iterator); codec != nullptr; codec = av_codec_iterate(&iterator)) {
@@ -87,7 +86,6 @@ ffmpeg_manager::ffmpeg_manager() : _factories(), _handlers(), _debug_handler()
 			}
 		}
 	}
-	*/
 }
 
 ffmpeg_manager::~ffmpeg_manager()
@@ -363,7 +361,7 @@ ffmpeg_factory::ffmpeg_factory(const AVCodec* codec) : info(), info_fallback(), 
 
 #ifndef _DEBUG
 	// Is this a deprecated encoder?
-	if (!has_codec_handler(avcodec_ptr->name)) {
+	if (!ffmpeg_manager::get()->has_handler(avcodec_ptr->name)) {
 		info.oei.caps |= OBS_ENCODER_CAP_DEPRECATED;
 	}
 #endif
