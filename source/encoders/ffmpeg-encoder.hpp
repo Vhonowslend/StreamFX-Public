@@ -78,6 +78,7 @@ namespace encoder::ffmpeg {
 		static void initialize()
 		{
 			_instance = ::std::make_shared<ffmpeg_manager>();
+			_instance->register_encoders();
 		}
 
 		static void finalize()
@@ -104,6 +105,8 @@ namespace encoder::ffmpeg {
 		std::shared_ptr<handler::handler> get_handler(std::string codec);
 
 		bool has_handler(std::string codec);
+
+		void register_encoders();
 	};
 
 	struct ffmpeg_info {
