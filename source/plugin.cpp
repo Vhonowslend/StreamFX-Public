@@ -22,7 +22,7 @@
 
 #include "obs/obs-source-tracker.hpp"
 
-//#include "encoders/ffmpeg-encoder.hpp"
+#include "encoders/ffmpeg-encoder.hpp"
 
 #include "filters/filter-blur.hpp"
 #include "filters/filter-color-grade.hpp"
@@ -43,7 +43,7 @@ try {
 	obs::source_tracker::initialize();
 
 	// Encoders
-	//encoder::ffmpeg::ffmpeg_manager::initialize();
+	encoder::ffmpeg::ffmpeg_manager::initialize();
 
 	// Filters
 	filter::blur::blur_factory::initialize();
@@ -86,7 +86,7 @@ try {
 	filter::transform::transform_factory::finalize();
 
 	// Encoders
-	//encoder::ffmpeg::ffmpeg_manager::finalize();
+	encoder::ffmpeg::ffmpeg_manager::finalize();
 
 	// Finalize Source Tracker
 	obs::source_tracker::finalize();
