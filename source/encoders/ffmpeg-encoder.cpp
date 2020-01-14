@@ -312,7 +312,7 @@ try {
 	return false;
 }
 
-ffmpeg_factory::ffmpeg_factory(const AVCodec* codec) : avcodec_ptr(codec), info(), info_fallback()
+ffmpeg_factory::ffmpeg_factory(const AVCodec* codec) : info(), info_fallback(), avcodec_ptr(codec)
 {
 	// Find Codec UI handler.
 	_handler = ffmpeg_manager::get()->get_handler(avcodec_ptr->name);
@@ -466,7 +466,7 @@ void ffmpeg_factory::get_defaults(obs_data_t* settings, bool hw_encode)
 	}
 }
 
-static bool modified_keyframes(obs_properties_t* props, obs_property_t*, obs_data_t* settings)
+static bool modified_keyframes(obs_properties_t* props, obs_property_t*, obs_data_t* settings) noexcept
 try {
 	bool is_seconds = obs_data_get_int(settings, S_KEYFRAMES_INTERVALTYPE) == 0;
 	obs_property_set_visible(obs_properties_get(props, S_KEYFRAMES_INTERVAL_FRAMES), !is_seconds);
@@ -545,8 +545,9 @@ void ffmpeg_factory::get_properties(obs_properties_t* props, bool hw_encode)
 				}
 			}
 			if (avcodec_ptr->capabilities & (AV_CODEC_CAP_FRAME_THREADS | AV_CODEC_CAP_SLICE_THREADS)) {
-				auto p = obs_properties_add_int_slider(grp, ST_FFMPEG_THREADS, D_TRANSLATE(ST_FFMPEG_THREADS), 0,
-													   std::thread::hardware_concurrency() * 2, 1);
+				auto p =
+					obs_properties_add_int_slider(grp, ST_FFMPEG_THREADS, D_TRANSLATE(ST_FFMPEG_THREADS), 0,
+												  static_cast<int64_t>(std::thread::hardware_concurrency() * 2), 1);
 				obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_FFMPEG_THREADS)));
 			}
 		}
@@ -622,14 +623,14 @@ void ffmpeg_instance::initialize_sw(obs_data_t* settings)
 		_context->field_order             = AV_FIELD_PROGRESSIVE;
 		_context->ticks_per_frame         = 1;
 		_context->sample_aspect_ratio.num = _context->sample_aspect_ratio.den = 1;
-		_context->framerate.num = _context->time_base.den = voi->fps_num;
-		_context->framerate.den = _context->time_base.num = voi->fps_den;
+		_context->framerate.num = _context->time_base.den = static_cast<int>(voi->fps_num);
+		_context->framerate.den = _context->time_base.num = static_cast<int>(voi->fps_den);
 
-		_swscale.set_source_size(_context->width, _context->height);
+		_swscale.set_source_size(static_cast<uint32_t>(_context->width), static_cast<uint32_t>(_context->height));
 		_swscale.set_source_color(_context->color_range == AVCOL_RANGE_JPEG, _context->colorspace);
 		_swscale.set_source_format(_pixfmt_source);
 
-		_swscale.set_target_size(_context->width, _context->height);
+		_swscale.set_target_size(static_cast<uint32_t>(_context->width), static_cast<uint32_t>(_context->height));
 		_swscale.set_target_color(_context->color_range == AVCOL_RANGE_JPEG, _context->colorspace);
 		_swscale.set_target_format(_pixfmt_target);
 
@@ -651,13 +652,13 @@ void ffmpeg_instance::initialize_hw(obs_data_t*)
 	// Initialize Video Encoding
 	auto voi = video_output_get_info(obs_encoder_video(_self));
 
-	_context->width                   = voi->width;
-	_context->height                  = voi->height;
+	_context->width                   = static_cast<int>(voi->width);
+	_context->height                  = static_cast<int>(voi->height);
 	_context->field_order             = AV_FIELD_PROGRESSIVE;
 	_context->ticks_per_frame         = 1;
 	_context->sample_aspect_ratio.num = _context->sample_aspect_ratio.den = 1;
-	_context->framerate.num = _context->time_base.den = voi->fps_num;
-	_context->framerate.den = _context->time_base.num = voi->fps_den;
+	_context->framerate.num = _context->time_base.den = static_cast<int>(voi->fps_num);
+	_context->framerate.den = _context->time_base.num = static_cast<int>(voi->fps_den);
 	::ffmpeg::tools::setup_obs_color(voi->colorspace, voi->range, _context);
 	_context->sw_pix_fmt = ::ffmpeg::tools::obs_videoformat_to_avpixelformat(voi->format);
 
@@ -845,7 +846,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 			if (threads > 0) {
 				_context->thread_count = static_cast<int>(threads);
 			} else {
-				_context->thread_count = std::thread::hardware_concurrency();
+				_context->thread_count = static_cast<int>(std::thread::hardware_concurrency());
 			}
 		} else {
 			_context->thread_count = 1;
@@ -988,13 +989,13 @@ static inline void copy_data(encoder_frame* frame, AVFrame* vframe)
 		if (!frame->data[idx] || !vframe->data[idx])
 			continue;
 
-		size_t plane_height = vframe->height >> (idx ? v_chroma_shift : 0);
+		size_t plane_height = static_cast<size_t>(vframe->height) >> (idx ? v_chroma_shift : 0);
 
 		if (static_cast<uint32_t>(vframe->linesize[idx]) == frame->linesize[idx]) {
 			std::memcpy(vframe->data[idx], frame->data[idx], frame->linesize[idx] * plane_height);
 		} else {
-			size_t ls_in  = frame->linesize[idx];
-			size_t ls_out = vframe->linesize[idx];
+			size_t ls_in  = static_cast<size_t>(frame->linesize[idx]);
+			size_t ls_out = static_cast<size_t>(vframe->linesize[idx]);
 			size_t bytes  = ls_in < ls_out ? ls_in : ls_out;
 
 			uint8_t* to   = vframe->data[idx];
@@ -1091,8 +1092,8 @@ int ffmpeg_instance::receive_packet(bool* received_packet, struct encoder_packet
 			uint8_t* tmp_sei;
 			size_t   sz_packet, sz_header, sz_sei;
 
-			obs_extract_avc_headers(_current_packet.data, _current_packet.size, &tmp_packet, &sz_packet, &tmp_header,
-									&sz_header, &tmp_sei, &sz_sei);
+			obs_extract_avc_headers(_current_packet.data, static_cast<size_t>(_current_packet.size), &tmp_packet,
+									&sz_packet, &tmp_header, &sz_header, &tmp_sei, &sz_sei);
 
 			if (sz_header) {
 				_extra_data.resize(sz_header);
@@ -1112,11 +1113,11 @@ int ffmpeg_instance::receive_packet(bool* received_packet, struct encoder_packet
 			bfree(tmp_header);
 			bfree(tmp_sei);
 		} else if (_codec->id == AV_CODEC_ID_HEVC) {
-			::encoder::codec::hevc::extract_header_sei(_current_packet.data, _current_packet.size, _extra_data,
-													   _sei_data);
+			::encoder::codec::hevc::extract_header_sei(_current_packet.data, static_cast<size_t>(_current_packet.size),
+													   _extra_data, _sei_data);
 		} else if (_context->extradata != nullptr) {
-			_extra_data.resize(_context->extradata_size);
-			std::memcpy(_extra_data.data(), _context->extradata, _context->extradata_size);
+			_extra_data.resize(static_cast<size_t>(_context->extradata_size));
+			std::memcpy(_extra_data.data(), _context->extradata, static_cast<size_t>(_context->extradata_size));
 		}
 		_have_first_frame = true;
 	}
@@ -1129,7 +1130,7 @@ int ffmpeg_instance::receive_packet(bool* received_packet, struct encoder_packet
 	packet->pts           = _current_packet.pts;
 	packet->dts           = _current_packet.dts;
 	packet->data          = _current_packet.data;
-	packet->size          = _current_packet.size;
+	packet->size          = static_cast<size_t>(_current_packet.size);
 	packet->keyframe      = !!(_current_packet.flags & AV_PKT_FLAG_KEY);
 	packet->drop_priority = packet->keyframe ? 0 : 1;
 	*received_packet      = true;
@@ -1353,8 +1354,8 @@ void ffmpeg_instance::parse_ffmpeg_commandline(std::string text)
 		}
 
 		try {
-			std::string key   = opt.substr(1, eq_at - cstr - 1);
-			std::string value = opt.substr(eq_at - cstr + 1);
+			std::string key   = opt.substr(1, static_cast<size_t>((eq_at - cstr) - 1));
+			std::string value = opt.substr(static_cast<size_t>((eq_at - cstr) + 1));
 
 			int res = av_opt_set(_context, key.c_str(), value.c_str(), AV_OPT_SEARCH_CHILDREN);
 			if (res < 0) {
