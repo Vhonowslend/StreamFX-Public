@@ -9,24 +9,29 @@ jobs:
     - name: "Clone Repository"
       uses: actions/checkout@v1
     - name: "Configure Project"
+      shell: bash
       run: |
-        cmake -H. -B"build/temp" -G"Visual Studio 16 2019" -A"x64" -T"host=x64" -DCMAKE_SYSTEM_VERSION=10.0 -DCMAKE_PACKAGE_NAME=StreamFX -DCMAKE_INSTALL_PREFIX="build/distrib" -DCMAKE_PACKAGE_PREFIX="build/package" -DOBS_DOWNLOAD=true
+        cmake -H. -B"build/temp" -G"Visual Studio 16 2019" -A"x64" -T"host=x64" -DCMAKE_PACKAGE_NAME=StreamFX -DCMAKE_INSTALL_PREFIX="build/distrib" -DCMAKE_PACKAGE_PREFIX="build/package" -DOBS_DOWNLOAD=true
     - name: "Build Project"
+      shell: bash
       run: |
-        cmake -H. -B"build/temp" --config RelWithDebInfo
+        cmake --build "build/temp" --config RelWithDebInfo
     - name: "Package Project"
+      shell: bash
       run: |
-        cmake -H. -B"build/temp" --config RelWithDebInfo --target PACKAGE_7Z
-        cmake -H. -B"build/temp" --config RelWithDebInfo --target PACKAGE_ZIP
+        cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_7Z
+        cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_ZIP
     - name: "Package Installer (Prereqs)"
+      shell: bash
       run: |
         curl "-kL" "https://cdn.xaymar.com/ci/innosetup-6.0.3.exe" "-f" "--retry" "5" "-o" "inno.exe"
         .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
     - name: "Package Installer (Compile)"
+      shell: bash
       run: |
         & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' /Qp ".\build\64\installer.iss"
     - name: "Upload Artifacts"
       uses: actions/upload-artifact@v1
       with:
-        name: ${{ matrix.os }}
+        name: windows
         path: build/package
