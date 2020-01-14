@@ -92,3 +92,139 @@ obs_property_t* util::obs_properties_add_tristate(obs_properties_t* props, const
 	obs_property_list_add_int(p, D_TRANSLATE(S_STATE_ENABLED), 1);
 	return p;
 }
+
+void* util::vec2a::operator new(size_t count)
+{
+	return util::malloc_aligned(16, count);
+}
+
+void* util::vec2a::operator new[](size_t count)
+{
+	return util::malloc_aligned(16, count);
+}
+
+void util::vec2a::operator delete(void* p)
+{
+	util::free_aligned(p);
+}
+
+void util::vec2a::operator delete[](void* p)
+{
+	util::free_aligned(p);
+}
+
+void* util::vec3a::operator new(size_t count)
+{
+	return util::malloc_aligned(16, count);
+}
+
+void* util::vec3a::operator new[](size_t count)
+{
+	return util::malloc_aligned(16, count);
+}
+
+void util::vec3a::operator delete(void* p)
+{
+	util::free_aligned(p);
+}
+
+void util::vec3a::operator delete[](void* p)
+{
+	util::free_aligned(p);
+}
+
+void* util::vec4a::operator new(size_t count)
+{
+	return util::malloc_aligned(16, count);
+}
+
+void* util::vec4a::operator new[](size_t count)
+{
+	return util::malloc_aligned(16, count);
+}
+
+void util::vec4a::operator delete(void* p)
+{
+	util::free_aligned(p);
+}
+
+void util::vec4a::operator delete[](void* p)
+{
+	util::free_aligned(p);
+}
+
+std::pair<int64_t, int64_t> util::size_from_string(std::string text, bool allowSquare)
+{
+	int64_t width, height;
+
+	const char* begin = text.c_str();
+	const char* end   = text.c_str() + text.size() + 1;
+	char*       here  = const_cast<char*>(end);
+
+	long long res = strtoll(begin, &here, 0);
+	if (errno == ERANGE) {
+		return {0, 0};
+	}
+	width = res;
+
+	while (here != end) {
+		if (isdigit(*here) || (*here == '-') || (*here == '+')) {
+			break;
+		}
+		here++;
+	}
+	if (here == end) {
+		// Are we allowed to return a square?
+		if (allowSquare) {
+			// Yes: Return width,width.
+			return {width, width};
+		} else {
+			// No: Return width,0.
+			return {width, 0};
+		}
+	}
+
+	res = strtoll(here, nullptr, 0);
+	if (errno == ERANGE) {
+		return {width, 0};
+	}
+	height = res;
+
+	return {width, height};
+}
+
+void* util::malloc_aligned(size_t align, size_t size)
+{
+#ifdef USE_MSC_ALLOC
+	return _aligned_malloc(size, align);
+#elif defined(USE_STD_ALLOC)
+	return aligned_alloc(size, align);
+#else
+	// Ensure that we have space for the pointer and the data.
+	size_t asize = aligned_offset(align, size + (sizeof(void*) * 2));
+
+	// Allocate memory and store integer representation of pointer.
+	void* ptr = malloc(asize);
+
+	// Calculate actual aligned position
+	intptr_t ptr_off = static_cast<intptr_t>(aligned_offset(align, reinterpret_cast<size_t>(ptr) + sizeof(void*)));
+
+	// Store actual pointer at ptr_off - sizeof(void*).
+	*reinterpret_cast<intptr_t*>(ptr_off - sizeof(void*)) = reinterpret_cast<intptr_t>(ptr);
+
+	// Return aligned pointer
+	return reinterpret_cast<void*>(ptr_off);
+#endif
+}
+
+void util::free_aligned(void* mem)
+{
+#ifdef USE_MSC_ALLOC
+	_aligned_free(mem);
+#elif defined(USE_STD_ALLOC_FREE)
+	free(mem);
+#else
+	void* ptr = reinterpret_cast<void*>(*reinterpret_cast<intptr_t*>(static_cast<char*>(mem) - sizeof(void*)));
+	free(ptr);
+#endif
+}

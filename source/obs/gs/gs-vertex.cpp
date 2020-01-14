@@ -19,7 +19,7 @@
 
 #include "gs-vertex.hpp"
 #include <stdexcept>
-#include "util-memory.hpp"
+#include "utility.hpp"
 
 gs::vertex::vertex()
 	: position(nullptr), normal(nullptr), tangent(nullptr), color(nullptr), _has_store(true), _store(nullptr)

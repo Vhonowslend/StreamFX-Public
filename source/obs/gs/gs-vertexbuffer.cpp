@@ -20,7 +20,7 @@
 #include "gs-vertexbuffer.hpp"
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
-#include "util-memory.hpp"
+#include "utility.hpp"
 
 // OBS
 #ifdef _MSC_VER

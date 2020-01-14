@@ -21,8 +21,7 @@
 #include <cinttypes>
 #include "gs-limits.hpp"
 #include "gs-vertex.hpp"
-#include "util-math.hpp"
-#include "util-memory.hpp"
+#include "utility.hpp"
 
 // OBS
 #ifdef _MSC_VER
