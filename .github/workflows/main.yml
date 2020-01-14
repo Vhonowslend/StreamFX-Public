@@ -4,13 +4,7 @@ on: [push, pull_request]
 
 jobs:
   windows:
-    strategy:
-      matrix:
-        os: windows-2019
-        include:
-          - os: windows-2019
-            sysversion: "10.0.18362.0"
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-2019
     steps:
     - name: "Clone Repository"
       uses: actions/checkout@v1
