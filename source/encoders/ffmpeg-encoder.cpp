@@ -63,7 +63,7 @@ enum class keyframe_type { SECONDS, FRAMES };
 
 std::shared_ptr<ffmpeg_manager> encoder::ffmpeg::ffmpeg_manager::_instance;
 
-ffmpeg_manager::ffmpeg_manager()
+ffmpeg_manager::ffmpeg_manager() : _factories(), _handlers(), _debug_handler()
 {
 	// Handlers
 	_debug_handler = ::std::make_shared<handler::debug_handler>();
@@ -71,6 +71,8 @@ ffmpeg_manager::ffmpeg_manager()
 	register_handler("h264_nvenc", ::std::make_shared<handler::nvenc_h264_handler>());
 	register_handler("hevc_nvenc", ::std::make_shared<handler::nvenc_hevc_handler>());
 
+	// Encoders
+	/*
 	void*          iterator = nullptr;
 	const AVCodec* codec    = nullptr;
 	for (codec = av_codec_iterate(&iterator); codec != nullptr; codec = av_codec_iterate(&iterator)) {
@@ -85,6 +87,7 @@ ffmpeg_manager::ffmpeg_manager()
 			}
 		}
 	}
+	*/
 }
 
 ffmpeg_manager::~ffmpeg_manager()
@@ -92,9 +95,12 @@ ffmpeg_manager::~ffmpeg_manager()
 	_factories.clear();
 }
 
-void ffmpeg_manager::register_handler(std::string const codec, std::shared_ptr<handler::handler> const handler) {}
+void ffmpeg_manager::register_handler(std::string codec, std::shared_ptr<handler::handler> handler)
+{
+	_handlers.try_emplace(codec, handler);
+}
 
-std::shared_ptr<handler::handler> const ffmpeg_manager::get_handler(std::string const codec)
+std::shared_ptr<handler::handler> ffmpeg_manager::get_handler(std::string codec)
 {
 	auto fnd = _handlers.find(codec);
 	if (fnd != _handlers.end())
@@ -106,7 +112,7 @@ std::shared_ptr<handler::handler> const ffmpeg_manager::get_handler(std::string 
 #endif
 }
 
-bool ffmpeg_manager::has_handler(std::string const codec)
+bool ffmpeg_manager::has_handler(std::string codec)
 {
 	return (_handlers.find(codec) != _handlers.end());
 }

@@ -99,11 +99,11 @@ namespace encoder::ffmpeg {
 		ffmpeg_manager();
 		~ffmpeg_manager();
 
-		void register_handler(std::string const codec, std::shared_ptr<handler::handler> const handler);
+		void register_handler(std::string codec, std::shared_ptr<handler::handler> handler);
 
-		std::shared_ptr<handler::handler> const get_handler(std::string const codec);
+		std::shared_ptr<handler::handler> get_handler(std::string codec);
 
-		bool has_handler(std::string const codec);
+		bool has_handler(std::string codec);
 	};
 
 	struct ffmpeg_info {
