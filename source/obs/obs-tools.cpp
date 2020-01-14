@@ -141,7 +141,6 @@ bool obs::tools::obs_properties_remove_by_name(obs_properties_t* props, const ch
 	}
 
 	auto rprops = reinterpret_cast<_hack_obs_properties*>(props);
-	auto rprop  = reinterpret_cast<_hack_obs_property*>(obs_properties_get(props, name));
 
 	for (_hack_obs_property *el_prev = rprops->first_property, *el_cur = el_prev; el_cur != nullptr;
 		 el_prev = el_cur, el_cur = el_cur->next) {

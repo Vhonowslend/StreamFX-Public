@@ -143,14 +143,7 @@ void debug_handler::get_properties(obs_properties_t*, const AVCodec* codec, AVCo
 					case AV_OPT_TYPE_STRING:
 						out = opt->default_val.str;
 						break;
-					case AV_OPT_TYPE_BINARY:
-					case AV_OPT_TYPE_IMAGE_SIZE:
-					case AV_OPT_TYPE_PIXEL_FMT:
-					case AV_OPT_TYPE_SAMPLE_FMT:
-					case AV_OPT_TYPE_VIDEO_RATE:
-					case AV_OPT_TYPE_DURATION:
-					case AV_OPT_TYPE_COLOR:
-					case AV_OPT_TYPE_CHANNEL_LAYOUT:
+					default:
 						break;
 					}
 
@@ -187,14 +180,7 @@ void debug_handler::get_properties(obs_properties_t*, const AVCodec* codec, AVCo
 				case AV_OPT_TYPE_STRING:
 					out = opt->default_val.str ? opt->default_val.str : "<invalid>";
 					break;
-				case AV_OPT_TYPE_BINARY:
-				case AV_OPT_TYPE_IMAGE_SIZE:
-				case AV_OPT_TYPE_PIXEL_FMT:
-				case AV_OPT_TYPE_SAMPLE_FMT:
-				case AV_OPT_TYPE_VIDEO_RATE:
-				case AV_OPT_TYPE_DURATION:
-				case AV_OPT_TYPE_COLOR:
-				case AV_OPT_TYPE_CHANNEL_LAYOUT:
+				default:
 					break;
 				}
 			}

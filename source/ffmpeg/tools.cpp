@@ -112,8 +112,9 @@ const char* tools::get_color_space_name(AVColorSpace v)
 		return "BT.2100";
 	case AVCOL_SPC_NB:
 		return "Not Part of ABI";
+	default:
+		return "Unknown";
 	}
-	return "Unknown";
 }
 
 const char* tools::get_error_description(int error)
