@@ -96,12 +96,19 @@ void ffmpeg_manager::register_handler(std::string const codec, std::shared_ptr<h
 
 std::shared_ptr<handler::handler> const ffmpeg_manager::get_handler(std::string const codec)
 {
+	auto fnd = _handlers.find(codec);
+	if (fnd != _handlers.end())
+		return fnd->second;
+#ifdef _DEBUG
+	return _debug_handler;
+#else
 	return nullptr;
+#endif
 }
 
 bool ffmpeg_manager::has_handler(std::string const codec)
 {
-	return false;
+	return (_handlers.find(codec) != _handlers.end());
 }
 
 static void* _create(obs_data_t* settings, obs_encoder_t* encoder) noexcept
