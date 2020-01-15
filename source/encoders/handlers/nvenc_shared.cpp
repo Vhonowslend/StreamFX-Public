@@ -36,9 +36,9 @@ extern "C" {
 #pragma warning(pop)
 }
 
-#define ST_PRESET "Encoder.NVENC.Preset"
+#define ST_PRESET "FFmpegEncoder.NVENC.Preset"
 #define ST_PRESET_(x) ST_PRESET "." D_VSTR(x)
-#define ST_RATECONTROL "Encoder.NVENC.RateControl"
+#define ST_RATECONTROL "FFmpegEncoder.NVENC.RateControl"
 #define ST_RATECONTROL_MODE ST_RATECONTROL ".Mode"
 #define ST_RATECONTROL_MODE_(x) ST_RATECONTROL_MODE "." D_VSTR(x)
 #define ST_RATECONTROL_TWOPASS ST_RATECONTROL ".TwoPass"
@@ -48,6 +48,7 @@ extern "C" {
 #define ST_RATECONTROL_BITRATE ST_RATECONTROL ".Bitrate"
 #define ST_RATECONTROL_BITRATE_TARGET ST_RATECONTROL_BITRATE ".Target"
 #define ST_RATECONTROL_BITRATE_MAXIMUM ST_RATECONTROL_BITRATE ".Maximum"
+#define ST_RATECONTROL_BUFFERSIZE ST_RATECONTROL ".BufferSize"
 #define ST_RATECONTROL_QUALITY ST_RATECONTROL ".Quality"
 #define ST_RATECONTROL_QUALITY_MINIMUM ST_RATECONTROL_QUALITY ".Minimum"
 #define ST_RATECONTROL_QUALITY_MAXIMUM ST_RATECONTROL_QUALITY ".Maximum"
@@ -56,11 +57,11 @@ extern "C" {
 #define ST_RATECONTROL_QP_I ST_RATECONTROL_QP ".I"
 #define ST_RATECONTROL_QP_P ST_RATECONTROL_QP ".P"
 #define ST_RATECONTROL_QP_B ST_RATECONTROL_QP ".B"
-#define ST_AQ "Encoder.NVENC.AQ"
+#define ST_AQ "FFmpegEncoder.NVENC.AQ"
 #define ST_AQ_SPATIAL ST_AQ ".Spatial"
 #define ST_AQ_TEMPORAL ST_AQ ".Temporal"
 #define ST_AQ_STRENGTH ST_AQ ".Strength"
-#define ST_OTHER "Encoder.NVENC.Other"
+#define ST_OTHER "FFmpegEncoder.NVENC.Other"
 #define ST_OTHER_BFRAMES ST_OTHER ".BFrames"
 #define ST_OTHER_BFRAMEREFERENCEMODE ST_OTHER ".BFrameReferenceMode"
 #define ST_OTHER_ZEROLATENCY ST_OTHER ".ZeroLatency"
@@ -75,6 +76,7 @@ extern "C" {
 #define KEY_RATECONTROL_ADAPTIVEB "RateControl.AdaptiveB"
 #define KEY_RATECONTROL_BITRATE_TARGET "RateControl.Bitrate.Target"
 #define KEY_RATECONTROL_BITRATE_MAXIMUM "RateControl.Bitrate.Maximum"
+#define KEY_RATECONTROL_BUFFERSIZE "RateControl.BufferSize"
 #define KEY_RATECONTROL_QUALITY "RateControl.Quality"
 #define KEY_RATECONTROL_QUALITY_TARGET "RateControl.Quality.Target"
 #define KEY_RATECONTROL_QUALITY_MINIMUM "RateControl.Quality.Minimum"
@@ -193,7 +195,7 @@ void nvenc::get_defaults(obs_data_t* settings, const AVCodec*, AVCodecContext*)
 
 	obs_data_set_default_int(settings, KEY_RATECONTROL_BITRATE_TARGET, 6000);
 	obs_data_set_default_int(settings, KEY_RATECONTROL_BITRATE_MAXIMUM, 6000);
-	obs_data_set_default_int(settings, S_RATECONTROL_BUFFERSIZE, 12000);
+	obs_data_set_default_int(settings, KEY_RATECONTROL_BUFFERSIZE, 12000);
 
 	obs_data_set_default_bool(settings, KEY_RATECONTROL_QUALITY, false);
 	obs_data_set_default_int(settings, KEY_RATECONTROL_QUALITY_MINIMUM, 51);
@@ -248,7 +250,7 @@ static bool modified_ratecontrol(obs_properties_t* props, obs_property_t*, obs_d
 	obs_property_set_visible(obs_properties_get(props, ST_RATECONTROL_BITRATE), have_bitrate || have_bitrate_max);
 	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_BITRATE_TARGET), have_bitrate);
 	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_BITRATE_MAXIMUM), have_bitrate_max);
-	obs_property_set_visible(obs_properties_get(props, S_RATECONTROL_BUFFERSIZE), have_bitrate || have_bitrate_max);
+	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_BUFFERSIZE), have_bitrate || have_bitrate_max);
 
 	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_QUALITY), have_quality);
 	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_QUALITY_MINIMUM), have_quality);
@@ -344,7 +346,7 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		{
 			auto p =
 				obs_properties_add_int(grp, ST_RATECONTROL_BITRATE_TARGET, D_TRANSLATE(ST_RATECONTROL_BITRATE_TARGET),
-									   1, std::numeric_limits<int32_t>::max(), 1);
+									   0, std::numeric_limits<int32_t>::max(), 1);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_BITRATE_TARGET)));
 			obs_property_int_set_suffix(p, " kbit/s");
 		}
@@ -356,9 +358,9 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 			obs_property_int_set_suffix(p, " kbit/s");
 		}
 		{
-			auto p = obs_properties_add_int(grp, S_RATECONTROL_BUFFERSIZE, D_TRANSLATE(S_RATECONTROL_BUFFERSIZE), 0,
+			auto p = obs_properties_add_int(grp, KEY_RATECONTROL_BUFFERSIZE, D_TRANSLATE(ST_RATECONTROL_BUFFERSIZE), 0,
 											std::numeric_limits<int32_t>::max(), 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(S_RATECONTROL_BUFFERSIZE)));
+			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_BUFFERSIZE)));
 			obs_property_int_set_suffix(p, " kbit");
 		}
 	}
@@ -495,7 +497,7 @@ void nvenc::get_runtime_properties(obs_properties_t* props, const AVCodec*, AVCo
 	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_BITRATE), true);
 	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_BITRATE_TARGET), true);
 	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_BITRATE_MAXIMUM), true);
-	obs_property_set_enabled(obs_properties_get(props, S_RATECONTROL_BUFFERSIZE), true);
+	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_BUFFERSIZE), true);
 	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_QUALITY), false);
 	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_QUALITY_MINIMUM), false);
 	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_QUALITY_MAXIMUM), false);
@@ -591,7 +593,7 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		if (have_bitrate_max)
 			context->rc_max_rate = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_BITRATE_MAXIMUM) * 1000);
 		if (have_bitrate || have_bitrate_max)
-			context->rc_buffer_size = static_cast<int>(obs_data_get_int(settings, S_RATECONTROL_BUFFERSIZE) * 1000);
+			context->rc_buffer_size = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_BUFFERSIZE) * 1000);
 
 		if (have_quality && obs_data_get_bool(settings, KEY_RATECONTROL_QUALITY)) {
 			int qmin      = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QUALITY_MINIMUM));
@@ -694,11 +696,12 @@ void nvenc::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* conte
 
 	LOG_INFO("[%s]       Bitrate:", codec->name);
 	tools::print_av_option_int(context, "bitrate", "        Target", "bits/sec");
+	tools::print_av_option_int(context, "rc_min_rate", "        Minimum", "bits/sec");
 	tools::print_av_option_int(context, "rc_max_rate", "        Maximum", "bits/sec");
 	tools::print_av_option_int(context, "rc_buffer_size", "        Buffer", "bits");
 	LOG_INFO("[%s]       Quality:", codec->name);
-	tools::print_av_option_int(context, "qmin", "        Minimum", "");
 	tools::print_av_option_int(context, "cq", "        Target", "");
+	tools::print_av_option_int(context, "qmin", "        Minimum", "");
 	tools::print_av_option_int(context, "qmax", "        Maximum", "");
 	LOG_INFO("[%s]       Quantization Parameters:", codec->name);
 	tools::print_av_option_int(context, "init_qpI", "        I-Frame", "");

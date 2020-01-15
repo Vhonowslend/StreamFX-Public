@@ -44,30 +44,6 @@ extern "C" {
 #pragma warning(pop)
 }
 
-#define S_RATECONTROL "FFmpeg.RateControl"
-#define S_RATECONTROL_MODE "FFmpeg.RateControl.Mode"
-#define S_RATECONTROL_MODE_(x) "FFmpeg.RateControl.Mode." D_VSTR(x)
-#define S_RATECONTROL_BITRATE_TARGET "FFmpeg.RateControl.Bitrate.Target"
-#define S_RATECONTROL_BITRATE_MINIMUM "FFmpeg.RateControl.Bitrate.Minimum"
-#define S_RATECONTROL_BITRATE_MAXIMUM "FFmpeg.RateControl.Bitrate.Maximum"
-#define S_RATECONTROL_BUFFERSIZE "FFmpeg.RateControl.BufferSize"
-#define S_RATECONTROL_QUALITY_TARGET "RateControl.Quality.Target"
-#define S_RATECONTROL_QUALITY_MINIMUM "RateControl.Quality.Minimum"
-#define S_RATECONTROL_QUALITY_MAXIMUM "RateControl.Quality.Maximum"
-#define S_RATECONTROL_QP_I "RateControl.QP.I"
-#define S_RATECONTROL_QP_P "RateControl.QP.P"
-#define S_RATECONTROL_QP_B "RateControl.QP.B"
-#define S_RATECONTROL_QP_I_INITIAL "RateControl.QP.I.Initial"
-#define S_RATECONTROL_QP_P_INITIAL "RateControl.QP.P.Initial"
-#define S_RATECONTROL_QP_B_INITIAL "RateControl.QP.B.Initial"
-
-#define S_KEYFRAMES "KeyFrames"
-#define S_KEYFRAMES_INTERVALTYPE "KeyFrames.IntervalType"
-#define S_KEYFRAMES_INTERVALTYPE_(x) "KeyFrames.IntervalType." D_VSTR(x)
-#define S_KEYFRAMES_INTERVAL "KeyFrames.Interval"
-#define S_KEYFRAMES_INTERVAL_SECONDS "KeyFrames.Interval.Seconds"
-#define S_KEYFRAMES_INTERVAL_FRAMES "KeyFrames.Interval.Frames"
-
 namespace encoder::ffmpeg {
 	class ffmpeg_factory;
 
