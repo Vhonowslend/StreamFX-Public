@@ -68,6 +68,8 @@ extern "C" {
 #define ST_OTHER_ZEROLATENCY ST_OTHER ".ZeroLatency"
 #define ST_OTHER_WEIGHTEDPREDICTION ST_OTHER ".WeightedPrediction"
 #define ST_OTHER_NONREFERENCEPFRAMES ST_OTHER ".NonReferencePFrames"
+#define ST_OTHER_ACCESSUNITDELIMITER ST_OTHER ".AccessUnitDelimiter"
+#define ST_OTHER_DECODEDPICTUREBUFFERSIZE ST_OTHER ".DecodedPictureBufferSize"
 
 #define KEY_PRESET "Preset"
 #define KEY_RATECONTROL_MODE "RateControl.Mode"
@@ -94,6 +96,8 @@ extern "C" {
 #define KEY_OTHER_ZEROLATENCY "Other.ZeroLatency"
 #define KEY_OTHER_WEIGHTEDPREDICTION "Other.WeightedPrediction"
 #define KEY_OTHER_NONREFERENCEPFRAMES "Other.NonReferencePFrames"
+#define KEY_OTHER_ACCESSUNITDELIMITER "Other.AccessUnitDelimiter"
+#define KEY_OTHER_DECODEDPICTUREBUFFERSIZE "Other.DecodedPictureBufferSize"
 
 using namespace encoder::ffmpeg::handler;
 using namespace ffmpeg;
@@ -217,6 +221,8 @@ void nvenc::get_defaults(obs_data_t* settings, const AVCodec*, AVCodecContext*)
 	obs_data_set_default_int(settings, KEY_OTHER_ZEROLATENCY, -1);
 	obs_data_set_default_int(settings, KEY_OTHER_WEIGHTEDPREDICTION, -1);
 	obs_data_set_default_int(settings, KEY_OTHER_NONREFERENCEPFRAMES, -1);
+	obs_data_set_default_int(settings, KEY_OTHER_ACCESSUNITDELIMITER, -1);
+	obs_data_set_default_int(settings, KEY_OTHER_DECODEDPICTUREBUFFERSIZE, -1);
 
 	// Replay Buffer
 	obs_data_set_default_int(settings, "bitrate", 0);
@@ -497,6 +503,19 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 													   D_TRANSLATE(ST_OTHER_NONREFERENCEPFRAMES));
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OTHER_NONREFERENCEPFRAMES)));
 		}
+
+		{
+			auto p = util::obs_properties_add_tristate(grp, KEY_OTHER_ACCESSUNITDELIMITER,
+													   D_TRANSLATE(ST_OTHER_ACCESSUNITDELIMITER));
+			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OTHER_ACCESSUNITDELIMITER)));
+		}
+
+		{
+			auto p = obs_properties_add_int_slider(grp, KEY_OTHER_DECODEDPICTUREBUFFERSIZE,
+												   D_TRANSLATE(ST_OTHER_DECODEDPICTUREBUFFERSIZE), -1, 16, 1);
+			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OTHER_DECODEDPICTUREBUFFERSIZE)));
+			obs_property_int_set_suffix(p, " frames");
+		}
 	}
 }
 
@@ -531,6 +550,8 @@ void nvenc::get_runtime_properties(obs_properties_t* props, const AVCodec*, AVCo
 	obs_property_set_enabled(obs_properties_get(props, KEY_OTHER_ZEROLATENCY), false);
 	obs_property_set_enabled(obs_properties_get(props, KEY_OTHER_WEIGHTEDPREDICTION), false);
 	obs_property_set_enabled(obs_properties_get(props, KEY_OTHER_NONREFERENCEPFRAMES), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_OTHER_ACCESSUNITDELIMITER), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_OTHER_DECODEDPICTUREBUFFERSIZE), false);
 }
 
 void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context)
@@ -670,6 +691,10 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			av_opt_set_int(context->priv_data, "zerolatency", zl, AV_OPT_SEARCH_CHILDREN);
 		if (int64_t nrp = obs_data_get_int(settings, KEY_OTHER_NONREFERENCEPFRAMES); !util::is_tristate_default(nrp))
 			av_opt_set_int(context->priv_data, "nonref_p", nrp, AV_OPT_SEARCH_CHILDREN);
+		if (int64_t v = obs_data_get_int(settings, KEY_OTHER_ACCESSUNITDELIMITER); !util::is_tristate_default(v))
+			av_opt_set_int(context->priv_data, "aud", v, AV_OPT_SEARCH_CHILDREN);
+		if (int64_t v = obs_data_get_int(settings, KEY_OTHER_DECODEDPICTUREBUFFERSIZE); v > -1)
+			av_opt_set_int(context->priv_data, "dpb_size", v, AV_OPT_SEARCH_CHILDREN);
 
 		if ((context->max_b_frames != 0) && util::is_tristate_enabled(wp)) {
 			LOG_WARNING("[%s] Weighted Prediction disabled because of B-Frames being used.", codec->name);
