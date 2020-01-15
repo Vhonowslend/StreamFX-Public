@@ -47,6 +47,7 @@ extern "C" {
 #define ST_RATECONTROL_ADAPTIVEB ST_RATECONTROL ".AdaptiveB"
 #define ST_RATECONTROL_BITRATE ST_RATECONTROL ".Bitrate"
 #define ST_RATECONTROL_BITRATE_TARGET ST_RATECONTROL_BITRATE ".Target"
+#define ST_RATECONTROL_BITRATE_MINIMUM ST_RATECONTROL_BITRATE ".Minimum"
 #define ST_RATECONTROL_BITRATE_MAXIMUM ST_RATECONTROL_BITRATE ".Maximum"
 #define ST_RATECONTROL_BUFFERSIZE ST_RATECONTROL ".BufferSize"
 #define ST_RATECONTROL_QUALITY ST_RATECONTROL ".Quality"
@@ -75,6 +76,7 @@ extern "C" {
 #define KEY_RATECONTROL_ADAPTIVEI "RateControl.AdaptiveI"
 #define KEY_RATECONTROL_ADAPTIVEB "RateControl.AdaptiveB"
 #define KEY_RATECONTROL_BITRATE_TARGET "RateControl.Bitrate.Target"
+#define KEY_RATECONTROL_BITRATE_MINIMUM "RateControl.Bitrate.Minimum"
 #define KEY_RATECONTROL_BITRATE_MAXIMUM "RateControl.Bitrate.Maximum"
 #define KEY_RATECONTROL_BUFFERSIZE "RateControl.BufferSize"
 #define KEY_RATECONTROL_QUALITY "RateControl.Quality"
@@ -194,13 +196,13 @@ void nvenc::get_defaults(obs_data_t* settings, const AVCodec*, AVCodecContext*)
 	obs_data_set_default_int(settings, KEY_RATECONTROL_ADAPTIVEB, -1);
 
 	obs_data_set_default_int(settings, KEY_RATECONTROL_BITRATE_TARGET, 6000);
-	obs_data_set_default_int(settings, KEY_RATECONTROL_BITRATE_MAXIMUM, 6000);
+	obs_data_set_default_int(settings, KEY_RATECONTROL_BITRATE_MINIMUM, 0);
+	obs_data_set_default_int(settings, KEY_RATECONTROL_BITRATE_MAXIMUM, 0);
 	obs_data_set_default_int(settings, KEY_RATECONTROL_BUFFERSIZE, 12000);
 
-	obs_data_set_default_bool(settings, KEY_RATECONTROL_QUALITY, false);
-	obs_data_set_default_int(settings, KEY_RATECONTROL_QUALITY_MINIMUM, 51);
+	obs_data_set_default_double(settings, KEY_RATECONTROL_QUALITY_TARGET, 0);
+	obs_data_set_default_int(settings, KEY_RATECONTROL_QUALITY_MINIMUM, -1);
 	obs_data_set_default_int(settings, KEY_RATECONTROL_QUALITY_MAXIMUM, -1);
-	obs_data_set_default_int(settings, KEY_RATECONTROL_QUALITY_TARGET, 0);
 
 	obs_data_set_default_int(settings, KEY_RATECONTROL_QP_I, 21);
 	obs_data_set_default_int(settings, KEY_RATECONTROL_QP_P, 21);
@@ -249,6 +251,7 @@ static bool modified_ratecontrol(obs_properties_t* props, obs_property_t*, obs_d
 
 	obs_property_set_visible(obs_properties_get(props, ST_RATECONTROL_BITRATE), have_bitrate || have_bitrate_max);
 	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_BITRATE_TARGET), have_bitrate);
+	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_BITRATE_MINIMUM), have_bitrate_max);
 	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_BITRATE_MAXIMUM), have_bitrate_max);
 	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_BUFFERSIZE), have_bitrate || have_bitrate_max);
 
@@ -262,6 +265,14 @@ static bool modified_ratecontrol(obs_properties_t* props, obs_property_t*, obs_d
 	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_QP_P), have_qp);
 	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_QP_B), have_qp);
 
+	return true;
+}
+
+static bool modified_lookahead(obs_properties_t* props, obs_property_t*, obs_data_t* settings) noexcept
+{
+	int64_t v = obs_data_get_int(settings, KEY_RATECONTROL_LOOKAHEAD);
+	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_ADAPTIVEI), v > 0);
+	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_ADAPTIVEB), v > 0);
 	return true;
 }
 
@@ -322,16 +333,26 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 												   0, 32, 1);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_LOOKAHEAD)));
 			obs_property_int_set_suffix(p, " frames");
+			obs_property_set_modified_callback(p, modified_lookahead);
 		}
+
 		{
-			auto p =
-				util::obs_properties_add_tristate(grp, ST_RATECONTROL_ADAPTIVEI, D_TRANSLATE(ST_RATECONTROL_ADAPTIVEI));
+			auto p = util::obs_properties_add_tristate(grp, KEY_RATECONTROL_ADAPTIVEI,
+													   D_TRANSLATE(ST_RATECONTROL_ADAPTIVEI));
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_ADAPTIVEI)));
 		}
+
 		if (strcmp(codec->name, "h264_nvenc") == 0) {
-			auto p =
-				util::obs_properties_add_tristate(grp, ST_RATECONTROL_ADAPTIVEB, D_TRANSLATE(ST_RATECONTROL_ADAPTIVEB));
+			auto p = util::obs_properties_add_tristate(grp, KEY_RATECONTROL_ADAPTIVEB,
+													   D_TRANSLATE(ST_RATECONTROL_ADAPTIVEB));
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_ADAPTIVEB)));
+		}
+
+		{
+			auto p = obs_properties_add_int(grp, KEY_RATECONTROL_BUFFERSIZE, D_TRANSLATE(ST_RATECONTROL_BUFFERSIZE), 0,
+											std::numeric_limits<int32_t>::max(), 1);
+			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_BUFFERSIZE)));
+			obs_property_int_set_suffix(p, " kbit");
 		}
 	}
 
@@ -345,23 +366,21 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 
 		{
 			auto p =
-				obs_properties_add_int(grp, ST_RATECONTROL_BITRATE_TARGET, D_TRANSLATE(ST_RATECONTROL_BITRATE_TARGET),
+				obs_properties_add_int(grp, KEY_RATECONTROL_BITRATE_TARGET, D_TRANSLATE(ST_RATECONTROL_BITRATE_TARGET),
 									   0, std::numeric_limits<int32_t>::max(), 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_BITRATE_TARGET)));
 			obs_property_int_set_suffix(p, " kbit/s");
 		}
 		{
-			auto p =
-				obs_properties_add_int(grp, ST_RATECONTROL_BITRATE_MAXIMUM, D_TRANSLATE(ST_RATECONTROL_BITRATE_MAXIMUM),
-									   0, std::numeric_limits<int32_t>::max(), 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_BITRATE_MAXIMUM)));
-			obs_property_int_set_suffix(p, " kbit/s");
-		}
-		{
-			auto p = obs_properties_add_int(grp, KEY_RATECONTROL_BUFFERSIZE, D_TRANSLATE(ST_RATECONTROL_BUFFERSIZE), 0,
+			auto p = obs_properties_add_int(grp, KEY_RATECONTROL_BITRATE_MINIMUM,
+											D_TRANSLATE(ST_RATECONTROL_BITRATE_MINIMUM), 0,
 											std::numeric_limits<int32_t>::max(), 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_BUFFERSIZE)));
-			obs_property_int_set_suffix(p, " kbit");
+			obs_property_int_set_suffix(p, " kbit/s");
+		}
+		{
+			auto p = obs_properties_add_int(grp, KEY_RATECONTROL_BITRATE_MAXIMUM,
+											D_TRANSLATE(ST_RATECONTROL_BITRATE_MAXIMUM), 0,
+											std::numeric_limits<int32_t>::max(), 1);
+			obs_property_int_set_suffix(p, " kbit/s");
 		}
 	}
 
@@ -370,16 +389,19 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		if (!util::are_property_groups_broken()) {
 			grp    = obs_properties_create();
 			auto p = obs_properties_add_group(props, ST_RATECONTROL_QUALITY, D_TRANSLATE(ST_RATECONTROL_QUALITY),
-											  OBS_GROUP_CHECKABLE, grp);
-			obs_property_set_modified_callback(p, modified_quality);
-		} else {
-			auto p = obs_properties_add_bool(props, ST_RATECONTROL_QUALITY, D_TRANSLATE(ST_RATECONTROL_QUALITY));
+											  OBS_GROUP_NORMAL, grp);
 			obs_property_set_modified_callback(p, modified_quality);
 		}
 
 		{
+			auto p = obs_properties_add_float_slider(grp, KEY_RATECONTROL_QUALITY_TARGET,
+													 D_TRANSLATE(ST_RATECONTROL_QUALITY_TARGET), 0, 100, 0.01);
+			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_QUALITY_TARGET)));
+		}
+
+		{
 			auto p = obs_properties_add_int_slider(grp, KEY_RATECONTROL_QUALITY_MINIMUM,
-												   D_TRANSLATE(ST_RATECONTROL_QUALITY_MINIMUM), 0, 51, 1);
+												   D_TRANSLATE(ST_RATECONTROL_QUALITY_MINIMUM), -1, 51, 1);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_QUALITY_MINIMUM)));
 		}
 		{
@@ -387,12 +409,6 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 												   D_TRANSLATE(ST_RATECONTROL_QUALITY_MAXIMUM), -1, 51, 1);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_QUALITY_MAXIMUM)));
 		}
-	}
-
-	{
-		auto p = obs_properties_add_float_slider(props, KEY_RATECONTROL_QUALITY_TARGET,
-												 D_TRANSLATE(ST_RATECONTROL_QUALITY_TARGET), 0, 100, 0.01);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_QUALITY_TARGET)));
 	}
 
 	{
@@ -460,7 +476,6 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 			auto p =
 				obs_properties_add_list(grp, KEY_OTHER_BFRAMEREFERENCEMODE, D_TRANSLATE(ST_OTHER_BFRAMEREFERENCEMODE),
 										OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_OTHER_BFRAMEREFERENCEMODE)));
 			for (auto kv : b_ref_modes) {
 				obs_property_list_add_int(p, D_TRANSLATE(kv.second.c_str()), static_cast<int64_t>(kv.first));
 			}
@@ -494,10 +509,10 @@ void nvenc::get_runtime_properties(obs_properties_t* props, const AVCodec*, AVCo
 	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_LOOKAHEAD), false);
 	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_ADAPTIVEI), false);
 	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_ADAPTIVEB), false);
+	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_BUFFERSIZE), true);
 	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_BITRATE), true);
 	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_BITRATE_TARGET), true);
 	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_BITRATE_MAXIMUM), true);
-	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_BUFFERSIZE), true);
 	obs_property_set_enabled(obs_properties_get(props, ST_RATECONTROL_QUALITY), false);
 	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_QUALITY_MINIMUM), false);
 	obs_property_set_enabled(obs_properties_get(props, KEY_RATECONTROL_QUALITY_MAXIMUM), false);
@@ -540,10 +555,10 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		ratecontrolmode rc    = static_cast<ratecontrolmode>(obs_data_get_int(settings, KEY_RATECONTROL_MODE));
 		auto            rcopt = ratecontrolmode_to_opt.find(rc);
 		if (rcopt != ratecontrolmode_to_opt.end()) {
-			av_opt_set(context->priv_data, "rc", rcopt->second.c_str(), 0);
+			av_opt_set(context->priv_data, "rc", rcopt->second.c_str(), AV_OPT_SEARCH_CHILDREN);
 		}
 
-		av_opt_set_int(context->priv_data, "cbr", 0, 0);
+		av_opt_set_int(context->priv_data, "cbr", 0, AV_OPT_SEARCH_CHILDREN);
 		switch (rc) {
 		case ratecontrolmode::CQP:
 			have_qp = true;
@@ -553,7 +568,7 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		case ratecontrolmode::CBR_HQ:
 		case ratecontrolmode::CBR_LD_HQ:
 			have_bitrate = true;
-			av_opt_set_int(context->priv_data, "cbr", 1, 0);
+			av_opt_set_int(context->priv_data, "cbr", 1, AV_OPT_SEARCH_CHILDREN);
 			break;
 		case ratecontrolmode::VBR:
 		case ratecontrolmode::VBR_HQ:
@@ -564,59 +579,65 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			break;
 		}
 
-		int tp = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_TWOPASS));
-		if (tp >= 0) {
-			av_opt_set_int(context->priv_data, "2pass", tp ? 1 : 0, 0);
+		if (int tp = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_TWOPASS)); tp >= 0) {
+			av_opt_set_int(context->priv_data, "2pass", tp ? 1 : 0, AV_OPT_SEARCH_CHILDREN);
 		}
 
 		int la = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_LOOKAHEAD));
-		av_opt_set_int(context->priv_data, "rc-lookahead", la, 0);
+		av_opt_set_int(context->priv_data, "rc-lookahead", la, AV_OPT_SEARCH_CHILDREN);
 		if (la > 0) {
-			int64_t adapt_i = obs_data_get_int(settings, KEY_RATECONTROL_ADAPTIVEI);
-			if (!util::is_tristate_default(adapt_i)) {
+			if (int64_t adapt_i = obs_data_get_int(settings, KEY_RATECONTROL_ADAPTIVEI);
+				!util::is_tristate_default(adapt_i)) {
 				av_opt_set_int(context->priv_data, "no-scenecut", adapt_i, AV_OPT_SEARCH_CHILDREN);
 			}
 
 			if (strcmp(codec->name, "h264_nvenc")) {
-				int64_t adapt_b = obs_data_get_int(settings, KEY_RATECONTROL_ADAPTIVEB);
-				if (!util::is_tristate_default(adapt_b)) {
+				if (int64_t adapt_b = obs_data_get_int(settings, KEY_RATECONTROL_ADAPTIVEB);
+					!util::is_tristate_default(adapt_b)) {
 					av_opt_set_int(context->priv_data, "b_adapt", adapt_b, AV_OPT_SEARCH_CHILDREN);
 				}
 			}
 		}
 
 		if (have_bitrate) {
-			context->bit_rate = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_BITRATE_TARGET) * 1000);
-			// Support for Replay Buffer
-			obs_data_set_int(settings, "bitrate", obs_data_get_int(settings, KEY_RATECONTROL_BITRATE_TARGET));
-		}
-		if (have_bitrate_max)
-			context->rc_max_rate = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_BITRATE_MAXIMUM) * 1000);
-		if (have_bitrate || have_bitrate_max)
-			context->rc_buffer_size = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_BUFFERSIZE) * 1000);
+			int64_t v = obs_data_get_int(settings, KEY_RATECONTROL_BITRATE_TARGET);
+			if (v >= 0)
+				context->bit_rate = static_cast<int>(v * 1000);
 
-		if (have_quality && obs_data_get_bool(settings, KEY_RATECONTROL_QUALITY)) {
-			int qmin      = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QUALITY_MINIMUM));
-			context->qmin = qmin;
-			if (qmin >= 0) {
-				context->qmax = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QUALITY_MAXIMUM));
-			}
+			// Support for Replay Buffer
+			obs_data_set_int(settings, "bitrate", v);
+		}
+		if (have_bitrate_max) {
+			if (int64_t min = obs_data_get_int(settings, KEY_RATECONTROL_BITRATE_MINIMUM); min >= 0)
+				context->rc_min_rate = static_cast<int>(min * 1000);
+			if (int64_t max = obs_data_get_int(settings, KEY_RATECONTROL_BITRATE_MAXIMUM); max >= 0)
+				context->rc_max_rate = static_cast<int>(max * 1000);
+		}
+		if (have_bitrate || have_bitrate_max) {
+			if (int64_t v = obs_data_get_int(settings, KEY_RATECONTROL_BUFFERSIZE); v >= 0)
+				context->rc_buffer_size = static_cast<int>(v * 1000);
+		}
+
+		if (have_quality) {
+			if (int qmin = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QUALITY_MINIMUM)); qmin >= 0)
+				context->qmin = qmin;
+			if (int qmax = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QUALITY_MAXIMUM)); qmax >= 0)
+				context->qmax = qmax;
 		}
 
 		{
-			double_t v = obs_data_get_double(settings, KEY_RATECONTROL_QUALITY_TARGET) / 100.0 * 51.0;
-			if (v > 0) {
-				av_opt_set_double(context->priv_data, "cq", v, 0);
+			if (double_t v = obs_data_get_double(settings, KEY_RATECONTROL_QUALITY_TARGET) / 100.0 * 51.0; > 0) {
+				av_opt_set_double(context->priv_data, "cq", v, AV_OPT_SEARCH_CHILDREN);
 			}
 		}
 
 		if (have_qp) {
 			av_opt_set_int(context->priv_data, "init_qpI",
-						   static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QP_I)), 0);
+						   static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QP_I)), AV_OPT_SEARCH_CHILDREN);
 			av_opt_set_int(context->priv_data, "init_qpP",
-						   static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QP_P)), 0);
+						   static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QP_P)), AV_OPT_SEARCH_CHILDREN);
 			av_opt_set_int(context->priv_data, "init_qpB",
-						   static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QP_B)), 0);
+						   static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QP_B)), AV_OPT_SEARCH_CHILDREN);
 		}
 	}
 
@@ -626,44 +647,42 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 
 		if (strcmp(codec->name, "h264_nvenc") == 0) {
 			if (!util::is_tristate_default(saq))
-				av_opt_set_int(context->priv_data, "spatial-aq", saq, 0);
+				av_opt_set_int(context->priv_data, "spatial-aq", saq, AV_OPT_SEARCH_CHILDREN);
 			if (!util::is_tristate_default(taq))
-				av_opt_set_int(context->priv_data, "temporal-aq", taq, 0);
+				av_opt_set_int(context->priv_data, "temporal-aq", taq, AV_OPT_SEARCH_CHILDREN);
 		} else {
 			if (!util::is_tristate_default(saq))
-				av_opt_set_int(context->priv_data, "spatial_aq", saq, 0);
+				av_opt_set_int(context->priv_data, "spatial_aq", saq, AV_OPT_SEARCH_CHILDREN);
 			if (!util::is_tristate_default(taq))
-				av_opt_set_int(context->priv_data, "temporal_aq", taq, 0);
+				av_opt_set_int(context->priv_data, "temporal_aq", taq, AV_OPT_SEARCH_CHILDREN);
 		}
 		if (util::is_tristate_enabled(saq))
 			av_opt_set_int(context->priv_data, "aq-strength",
-						   static_cast<int>(obs_data_get_int(settings, KEY_AQ_STRENGTH)), 0);
+						   static_cast<int>(obs_data_get_int(settings, KEY_AQ_STRENGTH)), AV_OPT_SEARCH_CHILDREN);
 	}
 
 	{ // Other
-		int64_t zl  = obs_data_get_int(settings, KEY_OTHER_ZEROLATENCY);
-		int64_t wp  = obs_data_get_int(settings, KEY_OTHER_WEIGHTEDPREDICTION);
-		int64_t nrp = obs_data_get_int(settings, KEY_OTHER_NONREFERENCEPFRAMES);
+		int64_t wp = obs_data_get_int(settings, KEY_OTHER_WEIGHTEDPREDICTION);
 
 		context->max_b_frames = static_cast<int>(obs_data_get_int(settings, KEY_OTHER_BFRAMES));
 
-		if (!util::is_tristate_default(zl))
-			av_opt_set_int(context->priv_data, "zerolatency", zl, 0);
-		if (!util::is_tristate_default(nrp))
-			av_opt_set_int(context->priv_data, "nonref_p", nrp, 0);
+		if (int64_t zl = obs_data_get_int(settings, KEY_OTHER_ZEROLATENCY); !util::is_tristate_default(zl))
+			av_opt_set_int(context->priv_data, "zerolatency", zl, AV_OPT_SEARCH_CHILDREN);
+		if (int64_t nrp = obs_data_get_int(settings, KEY_OTHER_NONREFERENCEPFRAMES); !util::is_tristate_default(nrp))
+			av_opt_set_int(context->priv_data, "nonref_p", nrp, AV_OPT_SEARCH_CHILDREN);
 
 		if ((context->max_b_frames != 0) && util::is_tristate_enabled(wp)) {
 			LOG_WARNING("[%s] Weighted Prediction disabled because of B-Frames being used.", codec->name);
-			av_opt_set_int(context->priv_data, "weighted_pred", 0, 0);
+			av_opt_set_int(context->priv_data, "weighted_pred", 0, AV_OPT_SEARCH_CHILDREN);
 		} else if (!util::is_tristate_default(wp)) {
-			av_opt_set_int(context->priv_data, "weighted_pred", wp, 0);
+			av_opt_set_int(context->priv_data, "weighted_pred", wp, AV_OPT_SEARCH_CHILDREN);
 		}
 
 		{
 			auto found = b_ref_mode_to_opt.find(
 				static_cast<b_ref_mode>(obs_data_get_int(settings, KEY_OTHER_BFRAMEREFERENCEMODE)));
 			if (found != b_ref_mode_to_opt.end()) {
-				av_opt_set(context->priv_data, "b_ref_mode", found->second.c_str(), 0);
+				av_opt_set(context->priv_data, "b_ref_mode", found->second.c_str(), AV_OPT_SEARCH_CHILDREN);
 			}
 		}
 	}
