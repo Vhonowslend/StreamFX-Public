@@ -626,7 +626,7 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		}
 
 		{
-			if (double_t v = obs_data_get_double(settings, KEY_RATECONTROL_QUALITY_TARGET) / 100.0 * 51.0; > 0) {
+			if (double_t v = obs_data_get_double(settings, KEY_RATECONTROL_QUALITY_TARGET) / 100.0 * 51.0; v > 0) {
 				av_opt_set_double(context->priv_data, "cq", v, AV_OPT_SEARCH_CHILDREN);
 			}
 		}
