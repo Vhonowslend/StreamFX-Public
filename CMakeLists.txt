@@ -65,11 +65,11 @@ set(PROJECT_COPYRIGHT_YEARS "2018 - 2020")
 ################################################################################
 
 # Search Path
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules" "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/clang" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules" "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # CMake Modules
 include("util")
-include("ClangToolkit")
+include("Clang")
 
 # Detect Build Type
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
@@ -528,6 +528,7 @@ add_library(${PROJECT_NAME} MODULE
 clang_format(
 	TARGETS ${PROJECT_NAME}
 	DEPENDENCY
+	VERSION 9.0.0
 )
 
 # Include Directories
