@@ -69,7 +69,10 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/clang" "${CMAKE_CURRENT
 
 # CMake Modules
 include("util")
-include("Clang")
+if (EXISTS "${CMAKE_SOURCE_DIR}/cmake/Clang/Clang.cmake")
+	include("Clang")
+	set(HAVE_CLANG ON)
+endif()
 
 # Detect Build Type
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
@@ -523,11 +526,13 @@ add_library(${PROJECT_NAME} MODULE
 )
 
 # Clang-Format
-clang_format(
-	TARGETS ${PROJECT_NAME}
-	DEPENDENCY
-	VERSION 9.0.0
-)
+if(HAVE_CLANG)
+	clang_format(
+		TARGETS ${PROJECT_NAME}
+		DEPENDENCY
+		VERSION 9.0.0
+	)
+endif()
 
 # Include Directories
 target_include_directories(${PROJECT_NAME}
