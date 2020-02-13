@@ -67,5 +67,5 @@ jobs:
     - name: "Upload Artifacts"
       uses: actions/upload-artifact@v1
       with:
-        name: windows
+        name: windows-speed
         path: build/package
