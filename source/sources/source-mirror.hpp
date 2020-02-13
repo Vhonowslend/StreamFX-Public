@@ -67,21 +67,6 @@ namespace source::mirror {
 		std::queue<std::shared_ptr<mirror_audio_data>> _audio_data_queue;
 		std::queue<std::shared_ptr<mirror_audio_data>> _audio_data_free_queue;
 
-		// Scaling
-		bool            _rescale_enabled;
-		uint32_t        _rescale_width;
-		uint32_t        _rescale_height;
-		bool            _rescale_keep_orig_size;
-		obs_scale_type  _rescale_type;
-		obs_bounds_type _rescale_bounds;
-		uint32_t        _rescale_alignment;
-
-		// Caching
-		bool                                 _cache_enabled;
-		bool                                 _cache_rendered;
-		std::shared_ptr<gfx::source_texture> _cache_renderer;
-		std::shared_ptr<gs::texture>         _cache_texture;
-
 		// Scene
 		std::shared_ptr<obs_source_t>    _scene;
 		std::shared_ptr<obs_sceneitem_t> _source_item;
