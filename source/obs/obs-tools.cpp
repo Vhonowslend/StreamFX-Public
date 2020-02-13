@@ -179,3 +179,19 @@ bool obs::tools::obs_properties_remove_by_name(obs_properties_t* props, const ch
 
 	return false;
 }
+
+obs::tools::child_source::child_source(obs_source_t* parent, std::shared_ptr<obs_source_t> child)
+	: _parent(parent), _child(child)
+{
+	obs_source_add_active_child(_parent, _child.get());
+}
+
+obs::tools::child_source::~child_source()
+{
+	obs_source_remove_active_child(_parent, _child.get());
+}
+
+std::shared_ptr<obs_source_t> obs::tools::child_source::get()
+{
+	return _child;
+}
