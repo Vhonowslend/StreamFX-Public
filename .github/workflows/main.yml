@@ -28,7 +28,7 @@ jobs:
         .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
     - name: "Package Installer (Compile)"
       run: |
-        & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' /Qp ".\build\64\installer.iss"
+        & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' /Qp ".\build\temp\installer.iss"
     - name: "Upload Artifacts"
       uses: actions/upload-artifact@v1
       with:
@@ -59,7 +59,7 @@ jobs:
         .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
     - name: "Package Installer (Compile)"
       run: |
-        & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' /Qp ".\build\64\installer.iss"
+        & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' /Qp ".\build\temp\installer.iss"
     - name: "Upload Artifacts"
       uses: actions/upload-artifact@v1
       with:
