@@ -32,7 +32,7 @@ namespace util {
 		public /* functions */:
 
 		// Destructor
-		inline ~event()
+		virtual ~event()
 		{
 			this->clear();
 		}
