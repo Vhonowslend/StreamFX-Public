@@ -19,6 +19,7 @@ jobs:
     - name: "Package Project"
       shell: bash
       run: |
+        mkdir build/package
         cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_7Z
         cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_ZIP
     - name: "Package Installer (Prereqs)"
@@ -51,6 +52,7 @@ jobs:
     - name: "Package Project"
       shell: bash
       run: |
+        mkdir build/package
         cmake --build "build/temp" --config Speed --target PACKAGE_7Z
         cmake --build "build/temp" --config Speed --target PACKAGE_ZIP
     - name: "Package Installer (Prereqs)"
