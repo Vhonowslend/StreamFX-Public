@@ -11,7 +11,7 @@ jobs:
     - name: "Configure Project"
       shell: bash
       run: |
-        cmake -H. -B"build/temp" -G"Visual Studio 16 2019" -A"x64" -T"host=x64" -DCMAKE_PACKAGE_NAME=StreamFX -DCMAKE_INSTALL_PREFIX="build/distrib" -DCMAKE_PACKAGE_PREFIX="build/package" -DOBS_DOWNLOAD=true
+        cmake -H. -B"build/temp" -G"Visual Studio 16 2019" -A"x64" -T"host=x64" -DCMAKE_PACKAGE_NAME=StreamFX -DCMAKE_INSTALL_PREFIX="build/distrib" -DCMAKE_PACKAGE_PREFIX="build/package" -DOBS_DOWNLOAD=ON -DBUILD_SPEED=ON
     - name: "Build Project"
       shell: bash
       run: |
