@@ -117,11 +117,18 @@ namespace obs {
 		void set_have_child_sources(bool v)
 		{
 			if (v) {
+				_info.enum_all_sources = _enum_all_sources;
+			} else {
+				_info.enum_all_sources = nullptr;
+			}
+		}
+
+		void set_have_active_child_sources(bool v)
+		{
+			if (v) {
 				_info.enum_active_sources = _enum_active_sources;
-				_info.enum_all_sources    = _enum_all_sources;
 			} else {
 				_info.enum_active_sources = nullptr;
-				_info.enum_all_sources    = nullptr;
 			}
 		}
 
