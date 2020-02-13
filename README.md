@@ -1,5 +1,5 @@
 ![Logo](https://cdn.xaymar.com/obs/streamfx/logo.svg)
-![CI](https://github.com/Xaymar/obs-StreamFX/workflows/CI/badge.svg) [![Crowdin](https://d322cqt584bo4o.cloudfront.net/obs-stream-effects/localized.svg)](https://crowdin.com/project/obs-stream-effects)
+[![CI](https://github.com/Xaymar/obs-StreamFX/workflows/CI/badge.svg)](https://github.com/Xaymar/obs-StreamFX/actions) [![Crowdin](https://d322cqt584bo4o.cloudfront.net/obs-stream-effects/localized.svg)](https://crowdin.com/project/obs-stream-effects)
 
 # About StreamFX
 StreamFX is a plugin to libOBS (OBS Studio, OBS.live) which adds many new Sources, Filters and Transitions that enhance and extend the functionality in libOBS.
