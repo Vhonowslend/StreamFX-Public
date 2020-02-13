@@ -377,11 +377,7 @@ try {
 		return true;
 	}
 	return false;
-} catch (const std::exception& ex) {
-	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return false;
 } catch (...) {
-	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return false;
 }
 
@@ -391,65 +387,55 @@ obs_properties_t* mirror::mirror_factory::get_properties2(mirror::mirror_instanc
 	obs_property_t*   p  = nullptr;
 
 	{
-		obs_properties_t* grp = pr;
-		if (!util::are_property_groups_broken()) {
-			grp = obs_properties_create();
-			p   = obs_properties_add_group(pr, ST, D_TRANSLATE(ST_SOURCE), OBS_GROUP_NORMAL, grp);
-			//obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST)));
-		}
+		p = obs_properties_add_list(pr, ST_SOURCE, D_TRANSLATE(ST_SOURCE), OBS_COMBO_TYPE_LIST,
+									OBS_COMBO_FORMAT_STRING);
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SOURCE)));
+		obs_property_set_modified_callback(p, modified_properties);
 
-		{
-			p = obs_properties_add_list(grp, ST_SOURCE, D_TRANSLATE(ST_SOURCE), OBS_COMBO_TYPE_LIST,
-										OBS_COMBO_FORMAT_STRING);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SOURCE)));
-			obs_property_set_modified_callback(p, modified_properties);
+		obs_property_list_add_string(p, "", "");
+		obs::source_tracker::get()->enumerate(
+			[&p](std::string name, obs_source_t*) {
+				std::stringstream sstr;
+				sstr << name << " (" << D_TRANSLATE(S_SOURCETYPE_SOURCE) << ")";
+				obs_property_list_add_string(p, sstr.str().c_str(), name.c_str());
+				return false;
+			},
+			obs::source_tracker::filter_sources);
+		obs::source_tracker::get()->enumerate(
+			[&p](std::string name, obs_source_t*) {
+				std::stringstream sstr;
+				sstr << name << " (" << D_TRANSLATE(S_SOURCETYPE_SCENE) << ")";
+				obs_property_list_add_string(p, sstr.str().c_str(), name.c_str());
+				return false;
+			},
+			obs::source_tracker::filter_scenes);
+	}
 
-			obs_property_list_add_string(p, "", "");
-			obs::source_tracker::get()->enumerate(
-				[&p](std::string name, obs_source_t*) {
-					std::stringstream sstr;
-					sstr << name << " (" << D_TRANSLATE(S_SOURCETYPE_SOURCE) << ")";
-					obs_property_list_add_string(p, sstr.str().c_str(), name.c_str());
-					return false;
-				},
-				obs::source_tracker::filter_sources);
-			obs::source_tracker::get()->enumerate(
-				[&p](std::string name, obs_source_t*) {
-					std::stringstream sstr;
-					sstr << name << " (" << D_TRANSLATE(S_SOURCETYPE_SCENE) << ")";
-					obs_property_list_add_string(p, sstr.str().c_str(), name.c_str());
-					return false;
-				},
-				obs::source_tracker::filter_scenes);
-		}
+	{
+		p = obs_properties_add_bool(pr, ST_SOURCE_AUDIO, D_TRANSLATE(ST_SOURCE_AUDIO));
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SOURCE_AUDIO)));
+		obs_property_set_modified_callback(p, modified_properties);
+	}
 
-		{
-			p = obs_properties_add_bool(grp, ST_SOURCE_AUDIO, D_TRANSLATE(ST_SOURCE_AUDIO));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SOURCE_AUDIO)));
-			obs_property_set_modified_callback(p, modified_properties);
-		}
-
-		{
-			p = obs_properties_add_list(grp, ST_SOURCE_AUDIO_LAYOUT, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT),
-										OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(Unknown)),
-									  static_cast<int64_t>(SPEAKERS_UNKNOWN));
-			obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(Mono)),
-									  static_cast<int64_t>(SPEAKERS_MONO));
-			obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(Stereo)),
-									  static_cast<int64_t>(SPEAKERS_STEREO));
-			obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(StereoLFE)),
-									  static_cast<int64_t>(SPEAKERS_2POINT1));
-			obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(Quadraphonic)),
-									  static_cast<int64_t>(SPEAKERS_4POINT0));
-			obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(QuadraphonicLFE)),
-									  static_cast<int64_t>(SPEAKERS_4POINT1));
-			obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(Surround)),
-									  static_cast<int64_t>(SPEAKERS_5POINT1));
-			obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(FullSurround)),
-									  static_cast<int64_t>(SPEAKERS_7POINT1));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SOURCE_AUDIO_LAYOUT)));
-		}
+	{
+		p = obs_properties_add_list(pr, ST_SOURCE_AUDIO_LAYOUT, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT),
+									OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+		obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(Unknown)),
+								  static_cast<int64_t>(SPEAKERS_UNKNOWN));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(Mono)), static_cast<int64_t>(SPEAKERS_MONO));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(Stereo)),
+								  static_cast<int64_t>(SPEAKERS_STEREO));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(StereoLFE)),
+								  static_cast<int64_t>(SPEAKERS_2POINT1));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(Quadraphonic)),
+								  static_cast<int64_t>(SPEAKERS_4POINT0));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(QuadraphonicLFE)),
+								  static_cast<int64_t>(SPEAKERS_4POINT1));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(Surround)),
+								  static_cast<int64_t>(SPEAKERS_5POINT1));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(FullSurround)),
+								  static_cast<int64_t>(SPEAKERS_7POINT1));
+		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SOURCE_AUDIO_LAYOUT)));
 	}
 
 	return pr;
