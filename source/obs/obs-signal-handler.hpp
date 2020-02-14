@@ -47,8 +47,8 @@ namespace obs {
 
 		static void handle_signal(void* ptr, calldata* cd) noexcept
 		try {
-			auto p = reinterpret_cast<signal_handler<std::shared_ptr<obs_source_t>>&>(ptr);
-			p.event(p._keepalive, cd);
+			auto p = reinterpret_cast<signal_handler<std::shared_ptr<obs_source_t>>*>(ptr);
+			p->event(p->_keepalive, cd);
 		} catch (...) {
 		}
 
@@ -75,8 +75,8 @@ namespace obs {
 
 		static void handle_audio(void* ptr, obs_source_t*, const struct audio_data* audio_data, bool muted) noexcept
 		try {
-			auto p = reinterpret_cast<audio_signal_handler&>(ptr);
-			p.event(p._keepalive, audio_data, muted);
+			auto p = reinterpret_cast<audio_signal_handler*>(ptr);
+			p->event(p->_keepalive, audio_data, muted);
 		} catch (...) {
 		}
 
