@@ -183,7 +183,9 @@ bool obs::tools::obs_properties_remove_by_name(obs_properties_t* props, const ch
 obs::tools::child_source::child_source(obs_source_t* parent, std::shared_ptr<obs_source_t> child)
 	: _parent(parent), _child(child)
 {
-	obs_source_add_active_child(_parent, _child.get());
+	if (!obs_source_add_active_child(_parent, _child.get())) {
+		throw std::runtime_error("recursion detected");
+	}
 }
 
 obs::tools::child_source::~child_source()
