@@ -421,6 +421,8 @@ set(PROJECT_PRIVATE_SOURCE
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertex.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertexbuffer.hpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertexbuffer.cpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-signal-handler.hpp"
+	"${PROJECT_SOURCE_DIR}/source/obs/obs-signal-handler.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/obs-source.hpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/obs-source.cpp"
 	"${PROJECT_SOURCE_DIR}/source/obs/obs-source-factory.hpp"
