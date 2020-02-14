@@ -20,11 +20,13 @@
 #pragma once
 #include <functional>
 #include <list>
+#include <mutex>
 
 namespace util {
 	template<typename... _args>
 	class event {
 		std::list<std::function<void(_args...)>> listeners;
+		std::recursive_mutex                     lock;
 
 		std::function<void()> listen_cb;
 		std::function<void()> silence_cb;
@@ -34,12 +36,14 @@ namespace util {
 		// Destructor
 		virtual ~event()
 		{
+			std::lock_guard<std::recursive_mutex> lock;
 			this->clear();
 		}
 
 		// Add new listener.
 		inline void add(std::function<void(_args...)> listener)
 		{
+			std::lock_guard<std::recursive_mutex> lock;
 			if (listeners.size() == 0) {
 				if (listen_cb) {
 					listen_cb();
@@ -51,6 +55,7 @@ namespace util {
 		// Remove existing listener.
 		inline void remove(std::function<void(_args...)> listener)
 		{
+			std::lock_guard<std::recursive_mutex> lock;
 			listeners.remove(listener);
 			if (listeners.size() == 0) {
 				if (silence_cb) {
@@ -62,12 +67,14 @@ namespace util {
 		// Check if empty / no listeners.
 		inline bool empty()
 		{
+			std::lock_guard<std::recursive_mutex> lock;
 			return listeners.empty();
 		}
 
 		// Remove all listeners.
 		inline void clear()
 		{
+			std::lock_guard<std::recursive_mutex> lock;
 			listeners.clear();
 			if (silence_cb) {
 				silence_cb();
@@ -80,6 +87,7 @@ namespace util {
 		template<typename... _largs>
 		inline void operator()(_args... args)
 		{
+			std::lock_guard<std::recursive_mutex> lock;
 			for (auto& l : listeners) {
 				l(args...);
 			}
@@ -108,11 +116,13 @@ namespace util {
 		public /* events */:
 		void set_listen_callback(std::function<void()> cb)
 		{
+			std::lock_guard<std::recursive_mutex> lock;
 			this->listen_cb = cb;
 		}
 
 		void set_silence_callback(std::function<void()> cb)
 		{
+			std::lock_guard<std::recursive_mutex> lock;
 			this->silence_cb = cb;
 		}
 	};
