@@ -50,55 +50,10 @@
 
 using namespace source;
 
-void mirror::mirror_instance::release()
-{
-	_source_item.reset();
-	if (_source) {
-		_source->events.rename.clear();
-		_source->events.audio_data.clear();
-	}
-	_source.reset();
-	_source_name.clear();
-}
-
-void mirror::mirror_instance::acquire(std::string source_name)
-{
-	using namespace std::placeholders;
-
-	// Try and get source by name.
-	std::shared_ptr<obs_source_t> source = std::shared_ptr<obs_source_t>(
-		obs_get_source_by_name(source_name.c_str()), [](obs_source_t* ref) { obs_source_release(ref); });
-	if (!source) { // If we failed, just exit early.
-		return;
-	} else if (source.get() == _self) { // Otherwise, if we somehow found self, also early exit.
-		return;
-	}
-
-	// We seem to have a true link to a source, let's add it to our rendering.
-	obs_sceneitem_t* item = obs_scene_add(obs_scene_from_source(_scene.get()), source.get());
-	if (!item) { // Can't add this source to our scene, probably due to one or more issues with it.
-		return;
-	}
-
-	// It seems everything has worked out, so let's update our state.
-	_source      = std::make_shared<obs::deprecated_source>(source.get(), true, true);
-	_source_name = obs_source_get_name(source.get());
-	_source_item = std::shared_ptr<obs_sceneitem_t>(item, [](obs_sceneitem_t* ref) { obs_sceneitem_remove(ref); });
-
-	// And let's hook up all our events too.
-	_source->events.rename.add(std::bind(&mirror::mirror_instance::on_source_rename, this, _1, _2, _3));
-	if ((obs_source_get_output_flags(this->_source->get()) & OBS_SOURCE_AUDIO) != 0)
-		_source->events.audio_data.add(std::bind(&mirror::mirror_instance::on_audio_data, this, _1, _2, _3));
-}
-
 mirror::mirror_instance::mirror_instance(obs_data_t* settings, obs_source_t* self)
-	: obs::source_instance(settings, self), _source(), _source_name(), _audio_enabled(), _audio_layout(),
-	  _audio_kill_thread(), _audio_have_output()
+	: obs::source_instance(settings, self), _source(), _audio_enabled(), _audio_layout(), _audio_kill_thread(),
+	  _audio_have_output()
 {
-	// Create Internal Scene
-	_scene = std::shared_ptr<obs_source_t>(obs_scene_get_source(obs_scene_create_private("")),
-										   [](obs_source_t* ref) { obs_source_release(ref); });
-
 	// Spawn Audio Thread
 	_audio_thread = std::thread(std::bind(&mirror::mirror_instance::audio_output_cb, this));
 
@@ -115,19 +70,16 @@ mirror::mirror_instance::~mirror_instance()
 	if (_audio_thread.joinable()) {
 		_audio_thread.join();
 	}
-
-	// Delete Internal Scene
-	_scene.reset();
 }
 
 uint32_t mirror::mirror_instance::get_width()
 {
-	return _source_size.first;
+	return obs_source_get_width(_source.get());
 }
 
 uint32_t mirror::mirror_instance::get_height()
 {
-	return _source_size.second;
+	return obs_source_get_height(_source.get());
 }
 
 static void convert_config(obs_data_t* data)
@@ -150,97 +102,87 @@ void mirror::mirror_instance::update(obs_data_t* data)
 {
 	convert_config(data);
 
-	if (this->_source_name != obs_data_get_string(data, ST_SOURCE)) {
-		// Mirrored source was changed, release and reacquire.
-		release();
-
-		// Acquire the new source.
-		acquire(obs_data_get_string(data, ST_SOURCE));
-	}
+	// Acquire new source.
+	acquire(obs_data_get_string(data, ST_SOURCE));
 
 	// Audio
-	this->_audio_enabled = obs_data_get_bool(data, ST_SOURCE_AUDIO);
-	this->_audio_layout  = static_cast<speaker_layout>(obs_data_get_int(data, ST_SOURCE_AUDIO_LAYOUT));
+	_audio_enabled = obs_data_get_bool(data, ST_SOURCE_AUDIO);
+	_audio_layout  = static_cast<speaker_layout>(obs_data_get_int(data, ST_SOURCE_AUDIO_LAYOUT));
 }
 
 void mirror::mirror_instance::load(obs_data_t* data)
 {
-	this->update(data);
+	update(data);
 }
 
 void mirror::mirror_instance::save(obs_data_t* data)
 {
 	if (_source) {
-		obs_data_set_string(data, ST_SOURCE, obs_source_get_name(_source->get()));
-	}
-}
-
-void mirror::mirror_instance::video_tick(float time)
-{
-	if (_source && ((obs_source_get_output_flags(_source->get()) & OBS_SOURCE_VIDEO) != 0)) {
-		_source_size.first  = _source->width();
-		_source_size.second = _source->height();
+		obs_data_set_string(data, ST_SOURCE, obs_source_get_name(_source.get()));
 	} else {
-		_source_size.first  = 0;
-		_source_size.second = 0;
-	}
-
-	if (_source_item && ((obs_source_get_output_flags(_source->get()) & OBS_SOURCE_VIDEO) != 0)) {
-		obs_transform_info info;
-
-		/// Position, Rotation, Scale, Alignment, Bounding Box
-		vec2_set(&info.pos, 0, 0);
-		info.rot = 0;
-		vec2_set(&info.scale, 1., 1.);
-		info.alignment = OBS_ALIGN_LEFT | OBS_ALIGN_TOP;
-		vec2_set(&info.bounds, static_cast<float_t>(_source_size.first), static_cast<float_t>(_source_size.second));
-
-		info.bounds_alignment = 0;
-		info.bounds_type      = OBS_BOUNDS_STRETCH;
-
-		obs_sceneitem_set_info(_source_item.get(), &info);
-		obs_sceneitem_force_update_transform(_source_item.get());
-		obs_sceneitem_set_scale_filter(_source_item.get(), OBS_SCALE_DISABLE);
+		obs_data_unset_user_value(data, ST_SOURCE);
 	}
 }
+
+void source::mirror::mirror_instance::show()
+{
+	_visible = obs_source_showing(_self);
+}
+
+void source::mirror::mirror_instance::hide()
+{
+	_visible = obs_source_showing(_self);
+}
+
+void source::mirror::mirror_instance::activate()
+{
+	_active = obs_source_active(_self);
+}
+
+void source::mirror::mirror_instance::deactivate()
+{
+	_active = obs_source_active(_self);
+}
+
+void mirror::mirror_instance::video_tick(float time) {}
 
 void mirror::mirror_instance::video_render(gs_effect_t* effect)
 {
-	if (!_source || !_source_item)
+	if (!_source)
 		return;
-	if ((obs_source_get_output_flags(_source->get()) & OBS_SOURCE_VIDEO) == 0)
+	if ((obs_source_get_output_flags(_source.get()) & OBS_SOURCE_VIDEO) == 0)
 		return;
 
-	obs_source_video_render(_scene.get());
+	obs_source_video_render(_source.get());
 }
 
 void mirror::mirror_instance::audio_output_cb() noexcept
 try {
-	std::unique_lock<std::mutex> ulock(this->_audio_lock_outputter);
+	std::unique_lock<std::mutex> ulock(_audio_lock_outputter);
 
-	while (!this->_audio_kill_thread) {
-		this->_audio_notify.wait(ulock, [this]() { return this->_audio_have_output || this->_audio_kill_thread; });
+	while (!_audio_kill_thread) {
+		_audio_notify.wait(ulock, [this]() { return _audio_have_output || _audio_kill_thread; });
 
-		if (this->_audio_have_output) { // Get used audio element
+		if (_audio_have_output) { // Get used audio element
 			std::shared_ptr<mirror_audio_data> mad;
 			{
-				std::lock_guard<std::mutex> capture_lock(this->_audio_lock_capturer);
+				std::lock_guard<std::mutex> capture_lock(_audio_lock_capturer);
 				if (_audio_data_queue.size() > 0) {
 					mad = _audio_data_queue.front();
 					_audio_data_queue.pop();
 				}
 				if (_audio_data_queue.size() == 0) {
-					this->_audio_have_output = false;
+					_audio_have_output = false;
 				}
 			}
 
 			if (mad) {
 				ulock.unlock();
-				obs_source_output_audio(this->_self, &mad->audio);
+				obs_source_output_audio(_self, &mad->audio);
 				ulock.lock();
 
 				{
-					std::lock_guard<std::mutex> capture_lock(this->_audio_lock_capturer);
+					std::lock_guard<std::mutex> capture_lock(_audio_lock_capturer);
 					_audio_data_free_queue.push(mad);
 				}
 			}
@@ -252,34 +194,63 @@ try {
 	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void mirror::mirror_instance::enum_active_sources(obs_source_enum_proc_t enum_callback, void* param)
+void mirror::mirror_instance::enum_active_sources(obs_source_enum_proc_t cb, void* ptr)
 {
-	/*	if (_scene) {
-		enum_callback(_self, _scene.get(), param);
-	}*/
-	if (_source) {
-		enum_callback(_self, _source->get(), param);
-	}
+	if (!_source || !_active)
+		return;
+	cb(_self, _source.get(), ptr);
 }
 
-void mirror::mirror_instance::enum_all_sources(obs_source_enum_proc_t enum_callback, void* param)
+void source::mirror::mirror_instance::enum_all_sources(obs_source_enum_proc_t cb, void* ptr)
 {
-	/*	if (_scene) {
-		enum_callback(_self, _scene.get(), param);
-	}*/
-	if (_source) {
-		enum_callback(_self, _source->get(), param);
-	}
+	if (!_source)
+		return;
+
+	cb(_self, _source.get(), ptr);
 }
 
-void mirror::mirror_instance::on_source_rename(obs::deprecated_source* source, std::string, std::string)
+void mirror::mirror_instance::acquire(std::string source_name)
+try {
+	// Find source by name if possible.
+	std::shared_ptr<obs_source_t> source =
+		std::shared_ptr<obs_source_t>{obs_get_source_by_name(source_name.c_str()), obs::obs_source_deleter};
+	if ((!source) || (source.get() == _self)) { // If we failed, just exit early.
+		return;
+	}
+
+	// Everything went well, store.
+	_source_child = std::make_shared<obs::tools::child_source>(_self, source);
+	_source       = source;
+
+	// Listen to the rename event to update our own settings.
+	_signal_rename = std::make_shared<obs::source_signal_handler>("rename", _source);
+	_signal_rename->event.add(
+		std::bind(&source::mirror::mirror_instance::on_rename, this, std::placeholders::_1, std::placeholders::_2));
+
+	// Listen to any audio the source spews out.
+	_signal_audio = std::make_shared<obs::audio_signal_handler>(_source);
+	_signal_audio->event.add(std::bind(&source::mirror::mirror_instance::on_audio, this, std::placeholders::_1,
+									   std::placeholders::_2, std::placeholders::_3));
+} catch (...) {
+	release();
+}
+
+void mirror::mirror_instance::release()
+{
+	_signal_audio.reset();
+	_signal_rename.reset();
+	_source_child.reset();
+	_source.reset();
+}
+
+void source::mirror::mirror_instance::on_rename(std::shared_ptr<obs_source_t>, calldata*)
 {
 	obs_source_save(_self);
 }
 
-void mirror::mirror_instance::on_audio_data(obs::deprecated_source*, const audio_data* audio, bool)
+void source::mirror::mirror_instance::on_audio(std::shared_ptr<obs_source_t>, const audio_data* audio, bool)
 {
-	if (!this->_audio_enabled) {
+	if (!_audio_enabled) {
 		return;
 	}
 
@@ -294,7 +265,7 @@ void mirror::mirror_instance::on_audio_data(obs::deprecated_source*, const audio
 
 	std::shared_ptr<mirror_audio_data> mad;
 	{ // Get free audio data element.
-		std::lock_guard<std::mutex> capture_lock(this->_audio_lock_capturer);
+		std::lock_guard<std::mutex> capture_lock(_audio_lock_capturer);
 		if (_audio_data_free_queue.size() > 0) {
 			mad = _audio_data_free_queue.front();
 			_audio_data_free_queue.pop();
@@ -324,23 +295,23 @@ void mirror::mirror_instance::on_audio_data(obs::deprecated_source*, const audio
 		mad->audio.frames          = audio->frames;
 		mad->audio.timestamp       = audio->timestamp;
 		mad->audio.samples_per_sec = aoi->samples_per_sec;
-		if (this->_audio_layout != SPEAKERS_UNKNOWN) {
-			mad->audio.speakers = this->_audio_layout;
+		if (_audio_layout != SPEAKERS_UNKNOWN) {
+			mad->audio.speakers = _audio_layout;
 		} else {
 			mad->audio.speakers = aoi->speakers;
 		}
 	}
 
 	{ // Push used audio data element.
-		std::lock_guard<std::mutex> capture_lock(this->_audio_lock_capturer);
+		std::lock_guard<std::mutex> capture_lock(_audio_lock_capturer);
 		_audio_data_queue.push(mad);
 	}
 
 	{ // Signal other side.
-		std::lock_guard<std::mutex> output_lock(this->_audio_lock_outputter);
-		this->_audio_have_output = true;
+		std::lock_guard<std::mutex> output_lock(_audio_lock_outputter);
+		_audio_have_output = true;
 	}
-	this->_audio_notify.notify_all();
+	_audio_notify.notify_all();
 }
 
 std::shared_ptr<mirror::mirror_factory> mirror::mirror_factory::factory_instance;
@@ -349,9 +320,11 @@ mirror::mirror_factory::mirror_factory()
 {
 	_info.id           = "obs-stream-effects-source-mirror";
 	_info.type         = OBS_SOURCE_TYPE_INPUT;
-	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_AUDIO;
+	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW | OBS_SOURCE_AUDIO;
 
 	set_have_active_child_sources(true);
+	set_have_child_sources(true);
+	set_visibility_tracking_enabled(true);
 	finish_setup();
 }
 

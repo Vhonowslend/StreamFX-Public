@@ -27,8 +27,10 @@
 #include "gfx/gfx-source-texture.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-sampler.hpp"
+#include "obs/obs-signal-handler.hpp"
 #include "obs/obs-source-factory.hpp"
 #include "obs/obs-source.hpp"
+#include "obs/obs-tools.hpp"
 #include "plugin.hpp"
 
 // OBS
@@ -48,12 +50,14 @@ namespace source::mirror {
 	};
 
 	class mirror_instance : public obs::source_instance {
-		// Source
-		std::shared_ptr<obs::deprecated_source> _source;
-		std::string                             _source_name;
+		bool _visible;
+		bool _active;
 
-		// Cached Data
-		std::pair<uint32_t, uint32_t> _source_size;
+		// Source
+		std::shared_ptr<obs_source_t>               _source;
+		std::shared_ptr<obs::tools::child_source>   _source_child;
+		std::shared_ptr<obs::source_signal_handler> _signal_rename;
+		std::shared_ptr<obs::audio_signal_handler>  _signal_audio;
 
 		// Audio
 		bool                                           _audio_enabled;
@@ -67,14 +71,6 @@ namespace source::mirror {
 		std::queue<std::shared_ptr<mirror_audio_data>> _audio_data_queue;
 		std::queue<std::shared_ptr<mirror_audio_data>> _audio_data_free_queue;
 
-		// Scene
-		std::shared_ptr<obs_source_t>    _scene;
-		std::shared_ptr<obs_sceneitem_t> _source_item;
-
-		private:
-		void release();
-		void acquire(std::string source_name);
-
 		public:
 		mirror_instance(obs_data_t* settings, obs_source_t* self);
 		virtual ~mirror_instance();
@@ -86,16 +82,26 @@ namespace source::mirror {
 		virtual void load(obs_data_t*) override;
 		virtual void save(obs_data_t*) override;
 
+		virtual void show() override;
+		virtual void hide() override;
+
+		virtual void activate() override;
+		virtual void deactivate() override;
+
 		virtual void video_tick(float) override;
 		virtual void video_render(gs_effect_t*) override;
 
 		virtual void enum_active_sources(obs_source_enum_proc_t, void*) override;
 		virtual void enum_all_sources(obs_source_enum_proc_t, void*) override;
 
+		private:
+		void acquire(std::string source_name);
+		void release();
+
 		void audio_output_cb() noexcept;
 
-		void on_source_rename(obs::deprecated_source* source, std::string new_name, std::string old_name);
-		void on_audio_data(obs::deprecated_source* source, const audio_data* audio, bool muted);
+		void on_rename(std::shared_ptr<obs_source_t>, calldata*);
+		void on_audio(std::shared_ptr<obs_source_t>, const struct audio_data*, bool);
 	};
 
 	class mirror_factory : public obs::source_factory<source::mirror::mirror_factory, source::mirror::mirror_instance> {
