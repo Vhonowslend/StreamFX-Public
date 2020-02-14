@@ -78,8 +78,8 @@ namespace obs {
 		deprecated_source(obs_source_t* source, bool track_ownership = true, bool add_reference = false);
 
 		public /*copy*/:
-		deprecated_source(deprecated_source const& other);
-		deprecated_source& operator=(deprecated_source const& other);
+		deprecated_source(deprecated_source const& other) = delete;
+		deprecated_source& operator=(deprecated_source const& other) = delete;
 
 		public /*move*/:
 		deprecated_source(deprecated_source&& other);

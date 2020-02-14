@@ -590,7 +590,7 @@ obs::deprecated_source::deprecated_source(obs_source_t* source, bool ptrack_owne
 		obs_source_addref(this->_self);
 	}
 }
-
+/*
 obs::deprecated_source::deprecated_source(deprecated_source const& other)
 {
 	this->_self            = other._self;
@@ -687,6 +687,7 @@ obs::deprecated_source& obs::deprecated_source::operator=(deprecated_source cons
 
 	return *this;
 }
+*/
 
 obs::deprecated_source::deprecated_source(deprecated_source&& other)
 	: _self(std::move(other._self)), _track_ownership(std::move(other._track_ownership))
