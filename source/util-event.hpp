@@ -25,105 +25,149 @@
 namespace util {
 	template<typename... _args>
 	class event {
-		std::list<std::function<void(_args...)>> listeners;
-		std::recursive_mutex                     lock;
+		std::list<std::function<void(_args...)>> _listeners;
+		std::recursive_mutex                     _lock;
 
-		std::function<void()> listen_cb;
-		std::function<void()> silence_cb;
+		std::function<void()> _cb_fill;
+		std::function<void()> _cb_clear;
 
-		public /* functions */:
-
-		// Destructor
+		public /* constructor */:
+		event() : _listeners(), _lock(), _cb_fill(), _cb_clear() {}
 		virtual ~event()
 		{
-			std::lock_guard<std::recursive_mutex> lock;
+			std::lock_guard<std::recursive_mutex> lg(_lock);
 			this->clear();
 		}
 
-		// Add new listener.
-		inline void add(std::function<void(_args...)> listener)
-		{
-			std::lock_guard<std::recursive_mutex> lock;
-			if (listeners.size() == 0) {
-				if (listen_cb) {
-					listen_cb();
-				}
-			}
-			listeners.push_back(listener);
-		}
+		/* Copy Constructor */
+		event(const event<_args...>&) = delete;
 
-		// Remove existing listener.
-		inline void remove(std::function<void(_args...)> listener)
+		/* Move Constructor */
+		event(event<_args...>&& other) : event()
 		{
-			std::lock_guard<std::recursive_mutex> lock;
-			listeners.remove(listener);
-			if (listeners.size() == 0) {
-				if (silence_cb) {
-					silence_cb();
-				}
-			}
-		}
+			std::lock_guard<std::recursive_mutex> lg(_lock);
+			std::lock_guard<std::recursive_mutex> lg(other._lock);
 
-		// Check if empty / no listeners.
-		inline bool empty()
-		{
-			std::lock_guard<std::recursive_mutex> lock;
-			return listeners.empty();
-		}
-
-		// Remove all listeners.
-		inline void clear()
-		{
-			std::lock_guard<std::recursive_mutex> lock;
-			listeners.clear();
-			if (silence_cb) {
-				silence_cb();
-			}
+			_listeners.swap(other._listeners);
+			_cb_fill.swap(other._cb_fill);
+			_cb_clear.swap(other._cb_clear);
 		}
 
 		public /* operators */:
-		// Call Listeners with arguments.
-		/// Not valid without the extra template.
+
+		/* Copy Operator */
+		event<_args...>& operator=(const event<_args...>&) = delete;
+
+		/* Move Operator */
+		event<_args...>& operator=(event<_args...>&& other)
+		{
+			std::lock_guard<std::recursive_mutex> lg(_lock);
+			std::lock_guard<std::recursive_mutex> lgo(other._lock);
+
+			_listeners.swap(other._listeners);
+			_cb_fill.swap(other._cb_fill);
+			_cb_clear.swap(other._cb_clear);
+
+			return *this;
+		}
+
+		/** Call the event, going through all listeners in the order they were registered in.
+		*/
 		template<typename... _largs>
 		inline void operator()(_args... args)
 		{
-			std::lock_guard<std::recursive_mutex> lock;
-			for (auto& l : listeners) {
+			call<_largs...>(args...);
+		}
+		template<typename... _largs>
+		inline void call(_args... args)
+		{
+			std::lock_guard<std::recursive_mutex> lg(_lock);
+			for (auto& l : _listeners) {
 				l(args...);
 			}
 		}
 
-		// Convert to bool (true if not empty, false if empty).
-		inline operator bool()
-		{
-			return !this->empty();
-		}
+		public /* functions: listeners */:
 
-		// Add new listener.
+		/** Add a new listener to the event.
+		 * @param listener A listener bound with std::bind or a std::function.
+		 */
+		inline void add(std::function<void(_args...)> listener)
+		{
+			std::lock_guard<std::recursive_mutex> lg(_lock);
+			if (_listeners.size() == 0) {
+				if (_cb_fill) {
+					_cb_fill();
+				}
+			}
+			_listeners.push_back(listener);
+		}
 		inline event<_args...>& operator+=(std::function<void(_args...)> listener)
 		{
 			this->add(listener);
 			return *this;
 		}
 
-		// Remove existing listener.
+		/** Remove an existing listener from the event.
+		 * @param listener A listener bound with std::bind or a std::function.
+		 */
+		inline void remove(std::function<void(_args...)> listener)
+		{
+			std::lock_guard<std::recursive_mutex> lg(_lock);
+			_listeners.remove(listener);
+			if (_listeners.size() == 0) {
+				if (_cb_clear) {
+					_cb_clear();
+				}
+			}
+		}
 		inline event<_args...>& operator-=(std::function<void(_args...)> listener)
 		{
 			this->remove(listener);
 			return *this;
 		}
 
-		public /* events */:
+		/** Check if there are any listeners for the event.
+		 * @return bool `true` if there are none, otherwise `false`.
+		 */
+		inline bool empty()
+		{
+			std::lock_guard<std::recursive_mutex> lg(_lock);
+			return _listeners.empty();
+		}
+		inline operator bool()
+		{
+			return !this->empty();
+		}
+
+		/** Clear the list of listeners for the event.
+		 */
+		inline void clear()
+		{
+			std::lock_guard<std::recursive_mutex> lg(_lock);
+			_listeners.clear();
+			if (_cb_clear) {
+				_cb_clear();
+			}
+		}
+		inline event<_args...>& operator=(nullptr_t)
+		{
+			clear();
+			return *this;
+		}
+
+		public /* callbacks */:
+
 		void set_listen_callback(std::function<void()> cb)
 		{
-			std::lock_guard<std::recursive_mutex> lock;
-			this->listen_cb = cb;
+			std::lock_guard<std::recursive_mutex> lg(_lock);
+			this->_cb_fill = cb;
 		}
 
 		void set_silence_callback(std::function<void()> cb)
 		{
-			std::lock_guard<std::recursive_mutex> lock;
-			this->silence_cb = cb;
+			std::lock_guard<std::recursive_mutex> lg(_lock);
+			this->_cb_clear = cb;
 		}
 	};
 } // namespace util
