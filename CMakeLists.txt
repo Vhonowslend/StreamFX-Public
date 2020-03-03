@@ -364,6 +364,8 @@ set(PROJECT_PRIVATE_SOURCE
 	"${PROJECT_SOURCE_DIR}/source/utility.hpp"
 	"${PROJECT_SOURCE_DIR}/source/utility.cpp"
 	"${PROJECT_SOURCE_DIR}/source/util-event.hpp"
+	"${PROJECT_SOURCE_DIR}/source/util-threadpool.cpp"
+	"${PROJECT_SOURCE_DIR}/source/util-threadpool.hpp"
 	
 	# Graphics
 	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-source-texture.hpp"

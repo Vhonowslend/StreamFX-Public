@@ -35,9 +35,13 @@
 #include "sources/source-mirror.hpp"
 #include "sources/source-shader.hpp"
 
+static std::shared_ptr<util::threadpool> global_threadpool;
+
 MODULE_EXPORT bool obs_module_load(void)
 try {
 	LOG_INFO("Loading Version %s", STREAMFX_VERSION_STRING);
+
+	global_threadpool = std::make_shared<util::threadpool>();
 
 	// Initialize Source Tracker
 	obs::source_tracker::initialize();
@@ -90,6 +94,8 @@ try {
 
 	// Finalize Source Tracker
 	obs::source_tracker::finalize();
+
+	global_threadpool.reset();
 } catch (...) {
 	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -105,3 +111,8 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID)
 	return TRUE;
 }
 #endif
+
+std::shared_ptr<util::threadpool> get_global_threadpool()
+{
+	return global_threadpool;
+}

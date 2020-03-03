@@ -20,6 +20,7 @@
 #pragma once
 #include "strings.hpp"
 #include "version.hpp"
+#include "util-threadpool.hpp"
 
 // OBS
 #ifdef _MSC_VER
@@ -46,3 +47,6 @@
 #define __FUNCTION_NAME__ __func__
 #endif
 #endif
+
+// Threadpool
+std::shared_ptr<util::threadpool> get_global_threadpool();
