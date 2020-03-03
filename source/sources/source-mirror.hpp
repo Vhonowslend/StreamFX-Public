@@ -45,14 +45,13 @@
 
 namespace source::mirror {
 	struct mirror_audio_data {
-		obs_source_audio                  audio = {};
-		std::vector<std::vector<float_t>> data;
+		mirror_audio_data(const audio_data*, speaker_layout);
+
+		obs_source_audio                  osa;
+		std::vector<std::vector<uint8_t>> data;
 	};
 
 	class mirror_instance : public obs::source_instance {
-		bool _visible;
-		bool _active;
-
 		// Source
 		std::shared_ptr<obs_source_t>               _source;
 		std::shared_ptr<obs::tools::child_source>   _source_child;
@@ -60,16 +59,8 @@ namespace source::mirror {
 		std::shared_ptr<obs::audio_signal_handler>  _signal_audio;
 
 		// Audio
-		bool                                           _audio_enabled;
-		speaker_layout                                 _audio_layout;
-		std::condition_variable                        _audio_notify;
-		std::thread                                    _audio_thread;
-		bool                                           _audio_kill_thread;
-		bool                                           _audio_have_output;
-		std::mutex                                     _audio_lock_outputter;
-		std::mutex                                     _audio_lock_capturer;
-		std::queue<std::shared_ptr<mirror_audio_data>> _audio_data_queue;
-		std::queue<std::shared_ptr<mirror_audio_data>> _audio_data_free_queue;
+		bool           _audio_enabled;
+		speaker_layout _audio_layout;
 
 		public:
 		mirror_instance(obs_data_t* settings, obs_source_t* self);
@@ -82,12 +73,6 @@ namespace source::mirror {
 		virtual void load(obs_data_t*) override;
 		virtual void save(obs_data_t*) override;
 
-		virtual void show() override;
-		virtual void hide() override;
-
-		virtual void activate() override;
-		virtual void deactivate() override;
-
 		virtual void video_tick(float) override;
 		virtual void video_render(gs_effect_t*) override;
 
@@ -98,10 +83,10 @@ namespace source::mirror {
 		void acquire(std::string source_name);
 		void release();
 
-		void audio_output_cb() noexcept;
-
 		void on_rename(std::shared_ptr<obs_source_t>, calldata*);
 		void on_audio(std::shared_ptr<obs_source_t>, const struct audio_data*, bool);
+
+		void audio_output(std::shared_ptr<void> data);
 	};
 
 	class mirror_factory : public obs::source_factory<source::mirror::mirror_factory, source::mirror::mirror_instance> {

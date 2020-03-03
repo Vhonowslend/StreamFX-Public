@@ -50,26 +50,37 @@
 
 using namespace source;
 
-mirror::mirror_instance::mirror_instance(obs_data_t* settings, obs_source_t* self)
-	: obs::source_instance(settings, self), _source(), _audio_enabled(), _audio_layout(), _audio_kill_thread(),
-	  _audio_have_output()
+source::mirror::mirror_audio_data::mirror_audio_data(const audio_data* audio, speaker_layout layout)
 {
-	// Spawn Audio Thread
-	_audio_thread = std::thread(std::bind(&mirror::mirror_instance::audio_output_cb, this));
-
-	update(settings);
+	// Build a clone of a packet.
+	audio_t*                 oad = obs_get_audio();
+	const audio_output_info* aoi = audio_output_get_info(oad);
+	osa.frames          = audio->frames;
+	osa.timestamp       = audio->timestamp;
+	osa.speakers        = layout;
+	osa.format          = aoi->format;
+	osa.samples_per_sec = aoi->samples_per_sec;	
+	data.resize(MAX_AV_PLANES);
+	for (size_t idx = 0; idx < MAX_AV_PLANES; idx++) {
+		if (!audio->data[idx]) {
+			osa.data[idx] = nullptr;
+			continue;
+		}
+		
+		data[idx].resize(audio->frames * get_audio_bytes_per_channel(osa.format));
+		memcpy(data[idx].data(), audio->data[idx], data[idx].size());
+		osa.data[idx] = data[idx].data();
+	}
 }
+
+mirror::mirror_instance::mirror_instance(obs_data_t* settings, obs_source_t* self)
+	: obs::source_instance(settings, self), _source(), _source_child(), _signal_rename(), _audio_enabled(false),
+	  _audio_layout(SPEAKERS_UNKNOWN)
+{}
 
 mirror::mirror_instance::~mirror_instance()
 {
 	release();
-
-	// Kill Audio Thread
-	_audio_kill_thread = true;
-	_audio_notify.notify_all();
-	if (_audio_thread.joinable()) {
-		_audio_thread.join();
-	}
 }
 
 uint32_t mirror::mirror_instance::get_width()
@@ -124,26 +135,6 @@ void mirror::mirror_instance::save(obs_data_t* data)
 	}
 }
 
-void source::mirror::mirror_instance::show()
-{
-	_visible = obs_source_showing(_self);
-}
-
-void source::mirror::mirror_instance::hide()
-{
-	_visible = obs_source_showing(_self);
-}
-
-void source::mirror::mirror_instance::activate()
-{
-	_active = obs_source_active(_self);
-}
-
-void source::mirror::mirror_instance::deactivate()
-{
-	_active = obs_source_active(_self);
-}
-
 void mirror::mirror_instance::video_tick(float time) {}
 
 void mirror::mirror_instance::video_render(gs_effect_t* effect)
@@ -156,47 +147,9 @@ void mirror::mirror_instance::video_render(gs_effect_t* effect)
 	obs_source_video_render(_source.get());
 }
 
-void mirror::mirror_instance::audio_output_cb() noexcept
-try {
-	std::unique_lock<std::mutex> ulock(_audio_lock_outputter);
-
-	while (!_audio_kill_thread) {
-		_audio_notify.wait(ulock, [this]() { return _audio_have_output || _audio_kill_thread; });
-
-		if (_audio_have_output) { // Get used audio element
-			std::shared_ptr<mirror_audio_data> mad;
-			{
-				std::lock_guard<std::mutex> capture_lock(_audio_lock_capturer);
-				if (_audio_data_queue.size() > 0) {
-					mad = _audio_data_queue.front();
-					_audio_data_queue.pop();
-				}
-				if (_audio_data_queue.size() == 0) {
-					_audio_have_output = false;
-				}
-			}
-
-			if (mad) {
-				ulock.unlock();
-				obs_source_output_audio(_self, &mad->audio);
-				ulock.lock();
-
-				{
-					std::lock_guard<std::mutex> capture_lock(_audio_lock_capturer);
-					_audio_data_free_queue.push(mad);
-				}
-			}
-		}
-	}
-} catch (const std::exception& ex) {
-	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-}
-
 void mirror::mirror_instance::enum_active_sources(obs_source_enum_proc_t cb, void* ptr)
 {
-	if (!_source || !_active)
+	if (!_source)
 		return;
 	cb(_self, _source.get(), ptr);
 }
@@ -211,6 +164,8 @@ void source::mirror::mirror_instance::enum_all_sources(obs_source_enum_proc_t cb
 
 void mirror::mirror_instance::acquire(std::string source_name)
 try {
+	release();
+
 	// Find source by name if possible.
 	std::shared_ptr<obs_source_t> source =
 		std::shared_ptr<obs_source_t>{obs_get_source_by_name(source_name.c_str()), obs::obs_source_deleter};
@@ -228,9 +183,11 @@ try {
 		std::bind(&source::mirror::mirror_instance::on_rename, this, std::placeholders::_1, std::placeholders::_2));
 
 	// Listen to any audio the source spews out.
-	_signal_audio = std::make_shared<obs::audio_signal_handler>(_source);
-	_signal_audio->event.add(std::bind(&source::mirror::mirror_instance::on_audio, this, std::placeholders::_1,
-									   std::placeholders::_2, std::placeholders::_3));
+	if (_audio_enabled) {
+		_signal_audio = std::make_shared<obs::audio_signal_handler>(_source);
+		_signal_audio->event.add(std::bind(&source::mirror::mirror_instance::on_audio, this, std::placeholders::_1,
+										   std::placeholders::_2, std::placeholders::_3));
+	}
 } catch (...) {
 	release();
 }
@@ -250,68 +207,58 @@ void source::mirror::mirror_instance::on_rename(std::shared_ptr<obs_source_t>, c
 
 void source::mirror::mirror_instance::on_audio(std::shared_ptr<obs_source_t>, const audio_data* audio, bool)
 {
+	// Immediately quit if there isn't any actual audio to send out.
 	if (!_audio_enabled) {
 		return;
 	}
 
-	audio_t* aud = obs_get_audio();
-	if (!aud) {
-		return;
-	}
-	audio_output_info const* aoi = audio_output_get_info(aud);
-	if (!aoi) {
-		return;
-	}
-
-	std::shared_ptr<mirror_audio_data> mad;
-	{ // Get free audio data element.
-		std::lock_guard<std::mutex> capture_lock(_audio_lock_capturer);
-		if (_audio_data_free_queue.size() > 0) {
-			mad = _audio_data_free_queue.front();
-			_audio_data_free_queue.pop();
-		} else {
-			mad = std::make_shared<mirror_audio_data>();
-			mad->data.resize(MAX_AUDIO_CHANNELS);
-			for (size_t idx = 0; idx < mad->data.size(); idx++) {
-				mad->data[idx].resize(AUDIO_OUTPUT_FRAMES);
-			}
+	// Detect Audio Layout from underlying audio.
+	speaker_layout detected_layout;
+	if (_audio_layout != SPEAKERS_UNKNOWN) {
+		detected_layout = _audio_layout;
+	} else {
+		std::bitset<MAX_AV_PLANES> layout_detection;
+		for (size_t idx = 0; idx < MAX_AV_PLANES; idx++) {
+			layout_detection.set(idx, audio->data[idx] != nullptr);
+		}
+		switch (layout_detection.to_ulong()) {
+		case 0b00000001:
+			detected_layout = SPEAKERS_MONO;
+			break;
+		case 0b00000011:
+			detected_layout = SPEAKERS_STEREO;
+			break;
+		case 0b00000111:
+			detected_layout = SPEAKERS_2POINT1;
+			break;
+		case 0b00001111:
+			detected_layout = SPEAKERS_4POINT0;
+			break;
+		case 0b00011111:
+			detected_layout = SPEAKERS_4POINT1;
+			break;
+		case 0b00111111:
+			detected_layout = SPEAKERS_5POINT1;
+			break;
+		case 0b11111111:
+			detected_layout = SPEAKERS_7POINT1;
+			break;
+		default:
+			detected_layout = SPEAKERS_UNKNOWN;
+			break;
 		}
 	}
 
-	{ // Copy data
-		std::bitset<8> layout;
-		for (size_t plane = 0; plane < MAX_AV_PLANES; plane++) {
-			float* samples = reinterpret_cast<float_t*>(audio->data[plane]);
-			if (!samples) {
-				mad->audio.data[plane] = nullptr;
-				continue;
-			}
-			layout.set(plane);
+	// Create a clone of the audio data and push it to the thread pool.
+	get_global_threadpool()->push(
+		std::bind(&source::mirror::mirror_instance::audio_output, this, std::placeholders::_1),
+		std::make_shared<mirror_audio_data>(audio, detected_layout));
+}
 
-			memcpy(mad->data[plane].data(), audio->data[plane], audio->frames * sizeof(float_t));
-			mad->audio.data[plane] = reinterpret_cast<uint8_t*>(mad->data[plane].data());
-		}
-		mad->audio.format          = aoi->format;
-		mad->audio.frames          = audio->frames;
-		mad->audio.timestamp       = audio->timestamp;
-		mad->audio.samples_per_sec = aoi->samples_per_sec;
-		if (_audio_layout != SPEAKERS_UNKNOWN) {
-			mad->audio.speakers = _audio_layout;
-		} else {
-			mad->audio.speakers = aoi->speakers;
-		}
-	}
-
-	{ // Push used audio data element.
-		std::lock_guard<std::mutex> capture_lock(_audio_lock_capturer);
-		_audio_data_queue.push(mad);
-	}
-
-	{ // Signal other side.
-		std::lock_guard<std::mutex> output_lock(_audio_lock_outputter);
-		_audio_have_output = true;
-	}
-	_audio_notify.notify_all();
+void source::mirror::mirror_instance::audio_output(std::shared_ptr<void> data)
+{
+	std::shared_ptr<mirror_audio_data> mad = std::static_pointer_cast<mirror_audio_data>(data);
+	obs_source_output_audio(_self, &mad->osa);
 }
 
 std::shared_ptr<mirror::mirror_factory> mirror::mirror_factory::factory_instance;
@@ -324,7 +271,6 @@ mirror::mirror_factory::mirror_factory()
 
 	set_have_active_child_sources(true);
 	set_have_child_sources(true);
-	set_visibility_tracking_enabled(true);
 	finish_setup();
 }
 
