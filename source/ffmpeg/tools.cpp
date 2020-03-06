@@ -308,39 +308,65 @@ const char* tools::get_thread_type_name(int thread_type)
 	}
 }
 
-void tools::print_av_option_bool(AVCodecContext* context, const char* option, std::string text)
+void tools::print_av_option_bool(AVCodecContext* ctx_codec, const char* option, std::string text)
+{
+	print_av_option_bool(ctx_codec, ctx_codec, option, text);
+}
+
+void ffmpeg::tools::print_av_option_bool(AVCodecContext* ctx_codec, void* ctx_option, const char* option,
+										 std::string text)
 {
 	int64_t v = 0;
-	if (av_opt_get_int(context, option, AV_OPT_SEARCH_CHILDREN, &v) == 0) {
-		LOG_INFO("[%s] %s: %s%s", context->codec->name, text.c_str(), v == 0 ? "Disabled" : "Enabled",
-				 av_opt_is_set_to_default_by_name(context, option, AV_OPT_SEARCH_CHILDREN) == 0 ? " <Default>" : "");
+	if (int err = av_opt_get_int(ctx_option, option, AV_OPT_SEARCH_CHILDREN, &v); err != 0) {
+		LOG_INFO("[%s] %s: <Error: %s>", ctx_codec->codec->name, text.c_str(),
+				 ffmpeg::tools::get_error_description(err));
 	} else {
-		LOG_INFO("[%s] %s: <Error>", context->codec->name, text.c_str());
+		LOG_INFO("[%s] %s: %s%s", ctx_codec->codec->name, text.c_str(), v == 0 ? "Disabled" : "Enabled",
+				 av_opt_is_set_to_default_by_name(ctx_option, option, AV_OPT_SEARCH_CHILDREN) > 0 ? " <Default>" : "");
 	}
 }
 
-void tools::print_av_option_int(AVCodecContext* context, const char* option, std::string text, std::string suffix)
+void tools::print_av_option_int(AVCodecContext* ctx_codec, const char* option, std::string text, std::string suffix)
 {
-	int64_t v = 0;
-	if (av_opt_get_int(context, option, AV_OPT_SEARCH_CHILDREN, &v) == 0) {
-		LOG_INFO("[%s] %s: %lld %s%s", context->codec->name, text.c_str(), v, suffix.c_str(),
-				 av_opt_is_set_to_default_by_name(context, option, AV_OPT_SEARCH_CHILDREN) == 0 ? " <Default>" : "");
+	print_av_option_int(ctx_codec, ctx_codec, option, text, suffix);
+}
+
+void ffmpeg::tools::print_av_option_int(AVCodecContext* ctx_codec, void* ctx_option, const char* option,
+										std::string text, std::string suffix)
+{
+	int64_t v          = 0;
+	bool    is_default = av_opt_is_set_to_default_by_name(ctx_option, option, AV_OPT_SEARCH_CHILDREN) > 0;
+	if (int err = av_opt_get_int(ctx_option, option, AV_OPT_SEARCH_CHILDREN, &v); err != 0) {
+		if (is_default) {
+			LOG_INFO("[%s] %s: <Default>", ctx_codec->codec->name, text.c_str());
+		} else {
+			LOG_INFO("[%s] %s: <Error: %s>", ctx_codec->codec->name, text.c_str(),
+					 ffmpeg::tools::get_error_description(err));
+		}
 	} else {
-		LOG_INFO("[%s] %s: <Error>", context->codec->name, text.c_str());
+		LOG_INFO("[%s] %s: %lld %s%s", ctx_codec->codec->name, text.c_str(), v, suffix.c_str(),
+				 is_default ? " <Default>" : "");
 	}
 }
 
-void tools::print_av_option_string(AVCodecContext* context, const char* option, std::string text,
+void tools::print_av_option_string(AVCodecContext* ctx_codec, const char* option, std::string text,
 								   std::function<std::string(int64_t)> decoder)
 {
+	print_av_option_string(ctx_codec, ctx_codec, option, text, decoder);
+}
+
+void ffmpeg::tools::print_av_option_string(AVCodecContext* ctx_codec, void* ctx_option, const char* option,
+										   std::string text, std::function<std::string(int64_t)> decoder)
+{
 	int64_t v = 0;
-	if (av_opt_get_int(context, option, AV_OPT_SEARCH_CHILDREN, &v) == 0) {
+	if (int err = av_opt_get_int(ctx_option, option, AV_OPT_SEARCH_CHILDREN, &v); err != 0) {
+		LOG_INFO("[%s] %s: <Error: %s>", ctx_codec->codec->name, text.c_str(),
+				 ffmpeg::tools::get_error_description(err));
+	} else {
 		std::string name = "<Unknown>";
 		if (decoder)
 			name = decoder(v);
-		LOG_INFO("[%s] %s: %s%s", context->codec->name, text.c_str(), name.c_str(),
-				 av_opt_is_set_to_default_by_name(context, option, AV_OPT_SEARCH_CHILDREN) == 0 ? " <Default>" : "");
-	} else {
-		LOG_INFO("[%s] %s: <Error>", context->codec->name, text.c_str());
+		LOG_INFO("[%s] %s: %s%s", ctx_codec->codec->name, text.c_str(), name.c_str(),
+				 av_opt_is_set_to_default_by_name(ctx_option, option, AV_OPT_SEARCH_CHILDREN) > 0 ? " <Default>" : "");
 	}
 }
