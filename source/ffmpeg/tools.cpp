@@ -310,46 +310,37 @@ const char* tools::get_thread_type_name(int thread_type)
 
 void tools::print_av_option_bool(AVCodecContext* context, const char* option, std::string text)
 {
-	if (av_opt_is_set_to_default_by_name(context, option, AV_OPT_SEARCH_CHILDREN) == 0) {
-		int64_t v = 0;
-		if (av_opt_get_int(context, option, AV_OPT_SEARCH_CHILDREN, &v) == 0) {
-			LOG_INFO("[%s] %s: %s", context->codec->name, text.c_str(), v == 0 ? "Disabled" : "Enabled");
-		} else {
-			LOG_INFO("[%s] %s: <Error>", context->codec->name, text.c_str());
-		}
+	int64_t v = 0;
+	if (av_opt_get_int(context, option, AV_OPT_SEARCH_CHILDREN, &v) == 0) {
+		LOG_INFO("[%s] %s: %s%s", context->codec->name, text.c_str(), v == 0 ? "Disabled" : "Enabled",
+				 av_opt_is_set_to_default_by_name(context, option, AV_OPT_SEARCH_CHILDREN) == 0 ? " <Default>" : "");
 	} else {
-		LOG_INFO("[%s] %s: <Default>", context->codec->name, text.c_str());
+		LOG_INFO("[%s] %s: <Error>", context->codec->name, text.c_str());
 	}
 }
 
 void tools::print_av_option_int(AVCodecContext* context, const char* option, std::string text, std::string suffix)
 {
-	if (av_opt_is_set_to_default_by_name(context, option, AV_OPT_SEARCH_CHILDREN) == 0) {
-		int64_t v = 0;
-		if (av_opt_get_int(context, option, AV_OPT_SEARCH_CHILDREN, &v) == 0) {
-			LOG_INFO("[%s] %s: %lld %s", context->codec->name, text.c_str(), v, suffix.c_str());
-		} else {
-			LOG_INFO("[%s] %s: <Error>", context->codec->name, text.c_str());
-		}
+	int64_t v = 0;
+	if (av_opt_get_int(context, option, AV_OPT_SEARCH_CHILDREN, &v) == 0) {
+		LOG_INFO("[%s] %s: %lld %s%s", context->codec->name, text.c_str(), v, suffix.c_str(),
+				 av_opt_is_set_to_default_by_name(context, option, AV_OPT_SEARCH_CHILDREN) == 0 ? " <Default>" : "");
 	} else {
-		LOG_INFO("[%s] %s: <Default>", context->codec->name, text.c_str());
+		LOG_INFO("[%s] %s: <Error>", context->codec->name, text.c_str());
 	}
 }
 
 void tools::print_av_option_string(AVCodecContext* context, const char* option, std::string text,
 								   std::function<std::string(int64_t)> decoder)
 {
-	if (av_opt_is_set_to_default_by_name(context, option, AV_OPT_SEARCH_CHILDREN) == 0) {
-		int64_t v = 0;
-		if (av_opt_get_int(context, option, AV_OPT_SEARCH_CHILDREN, &v) == 0) {
-			std::string name = "<Unknown>";
-			if (decoder)
-				name = decoder(v);
-			LOG_INFO("[%s] %s: %s", context->codec->name, text.c_str(), name.c_str());
-		} else {
-			LOG_INFO("[%s] %s: <Error>", context->codec->name, text.c_str());
-		}
+	int64_t v = 0;
+	if (av_opt_get_int(context, option, AV_OPT_SEARCH_CHILDREN, &v) == 0) {
+		std::string name = "<Unknown>";
+		if (decoder)
+			name = decoder(v);
+		LOG_INFO("[%s] %s: %s%s", context->codec->name, text.c_str(), name.c_str(),
+				 av_opt_is_set_to_default_by_name(context, option, AV_OPT_SEARCH_CHILDREN) == 0 ? " <Default>" : "");
 	} else {
-		LOG_INFO("[%s] %s: <Default>", context->codec->name, text.c_str());
+		LOG_INFO("[%s] %s: <Error>", context->codec->name, text.c_str());
 	}
 }
