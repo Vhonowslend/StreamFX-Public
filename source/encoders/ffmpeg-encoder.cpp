@@ -867,7 +867,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 {
 	// FFmpeg Options
 	_context->debug                 = 0;
-	_context->strict_std_compliance = static_cast<int>(obs_data_get_int(settings, ST_FFMPEG_STANDARDCOMPLIANCE));
+	_context->strict_std_compliance = static_cast<int>(obs_data_get_int(settings, KEY_FFMPEG_STANDARDCOMPLIANCE));
 
 	/// Threading
 	if (!_hwinst) {
@@ -924,7 +924,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 		_handler->update(settings, _codec, _context);
 
 	{ // FFmpeg Custom Options
-		const char* opts     = obs_data_get_string(settings, ST_FFMPEG_CUSTOMSETTINGS);
+		const char* opts     = obs_data_get_string(settings, KEY_FFMPEG_CUSTOMSETTINGS);
 		size_t      opts_len = strnlen(opts, 65535);
 
 		parse_ffmpeg_commandline(std::string{opts, opts + opts_len});
@@ -938,7 +938,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 	if (_handler) {
 		LOG_INFO("[%s] Initializing...", _codec->name);
 		LOG_INFO("[%s]   FFmpeg:", _codec->name);
-		LOG_INFO("[%s]     Custom Settings: %s", _codec->name, obs_data_get_string(settings, ST_FFMPEG_CUSTOMSETTINGS));
+		LOG_INFO("[%s]     Custom Settings: %s", _codec->name, obs_data_get_string(settings, KEY_FFMPEG_CUSTOMSETTINGS));
 		LOG_INFO("[%s]     Standard Compliance: %s", _codec->name,
 				 ::ffmpeg::tools::get_std_compliance_name(_context->strict_std_compliance));
 		LOG_INFO("[%s]     Threading: %s (with %i threads)", _codec->name,
@@ -960,7 +960,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 					 ::ffmpeg::tools::get_color_space_name(_swscale.get_target_colorspace()),
 					 _swscale.is_target_full_range() ? "Full" : "Partial");
 			if (!_hwinst)
-				LOG_INFO("[%s]     On GPU Index: %lli", _codec->name, obs_data_get_int(settings, ST_FFMPEG_GPU));
+				LOG_INFO("[%s]     On GPU Index: %lli", _codec->name, obs_data_get_int(settings, KEY_FFMPEG_GPU));
 		}
 		LOG_INFO("[%s]     Framerate: %ld/%ld (%f FPS)", _codec->name, _context->time_base.den, _context->time_base.num,
 				 static_cast<double_t>(_context->time_base.den) / static_cast<double_t>(_context->time_base.num));
