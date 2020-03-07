@@ -265,14 +265,15 @@ void transform::transform_instance::video_tick(float)
 	_source_rendered = false;
 }
 
-void transform::transform_instance::video_render(gs_effect_t*)
+void transform::transform_instance::video_render(gs_effect_t* effect)
 {
 	obs_source_t* parent         = obs_filter_get_parent(_self);
 	obs_source_t* target         = obs_filter_get_target(_self);
 	uint32_t      base_width     = obs_source_get_base_width(target);
 	uint32_t      base_height    = obs_source_get_base_height(target);
 	gs_effect_t*  default_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
-	gs_effect_t*  effect         = default_effect;
+	if (!effect)
+		effect = default_effect;
 
 	if (!base_width || !base_height || !parent || !target) { // Skip if something is wrong.
 		obs_source_skip_video_filter(_self);
@@ -306,22 +307,26 @@ void transform::transform_instance::video_render(gs_effect_t*)
 		gs::debug_marker _marker_cache{gs::debug_color_cache, "Cache"};
 		auto             op = _cache_rt->render(cache_width, cache_height);
 
-		gs_reset_blend_state();
-		gs_blend_function(GS_BLEND_SRCALPHA, GS_BLEND_INVSRCALPHA);
-		gs_enable_depth_test(false);
-		gs_enable_stencil_test(false);
-		gs_enable_stencil_write(false);
-		gs_enable_color(true, true, true, true);
-		gs_set_cull_mode(GS_NEITHER);
-
 		gs_ortho(0, static_cast<float_t>(base_width), 0, static_cast<float_t>(base_height), -1, 1);
 
 		vec4 clear_color = {0};
 		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &clear_color, 0, 0);
 
 		/// Render original source
-		if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
-			obs_source_process_filter_end(_self, effect, base_width, base_height);
+		if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
+			gs_blend_state_push();
+			gs_reset_blend_state();
+			gs_enable_blending(false);
+			gs_blend_function_separate(GS_BLEND_ONE, GS_BLEND_ZERO, GS_BLEND_SRCALPHA, GS_BLEND_ZERO);
+			gs_enable_depth_test(false);
+			gs_enable_stencil_test(false);
+			gs_enable_stencil_write(false);
+			gs_enable_color(true, true, true, true);
+			gs_set_cull_mode(GS_NEITHER);
+
+			obs_source_process_filter_end(_self, default_effect, base_width, base_height);
+
+			gs_blend_state_pop();
 		} else {
 			obs_source_skip_video_filter(_self);
 			return;
@@ -361,7 +366,17 @@ void transform::transform_instance::video_render(gs_effect_t*)
 		gs::debug_marker _marker_draw{gs::debug_color_cache_render, "Geometry"};
 		auto             op = _source_rt->render(base_width, base_height);
 
-		gs_matrix_push();
+		gs_blend_state_push();
+		gs_reset_blend_state();
+		gs_enable_blending(false);
+		gs_blend_function_separate(GS_BLEND_ONE, GS_BLEND_ZERO, GS_BLEND_ONE, GS_BLEND_ZERO);
+
+		gs_enable_depth_test(false);
+		gs_enable_stencil_test(false);
+		gs_enable_stencil_write(false);
+		gs_enable_color(true, true, true, true);
+		gs_set_cull_mode(GS_NEITHER);
+
 		if (_camera_orthographic) {
 			gs_ortho(-1., 1., -1., 1., -farZ, farZ);
 		} else {
@@ -382,7 +397,7 @@ void transform::transform_instance::video_render(gs_effect_t*)
 		}
 		gs_load_vertexbuffer(nullptr);
 
-		gs_matrix_pop();
+		gs_blend_state_pop();
 	}
 	_source_rt->get_texture(_source_texture);
 	if (!_source_texture) {
@@ -391,9 +406,9 @@ void transform::transform_instance::video_render(gs_effect_t*)
 	}
 
 	{
-		gs::debug_marker _marker_draw{gs::debug_color_cache_render, "Geometry"};
-		gs_effect_set_texture(gs_effect_get_param_by_name(default_effect, "image"), _source_texture->get_object());
-		while (gs_effect_loop(default_effect, "Draw")) {
+		gs::debug_marker _marker_draw{gs::debug_color_cache_render, "Final"};
+		gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), _source_texture->get_object());
+		while (gs_effect_loop(effect, "Draw")) {
 			gs_draw_sprite(nullptr, 0, base_width, base_height);
 		}
 	}
