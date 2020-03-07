@@ -78,10 +78,8 @@ extern "C" {
 #define KEY_RATECONTROL_ADAPTIVEI "RateControl.AdaptiveI"
 #define KEY_RATECONTROL_ADAPTIVEB "RateControl.AdaptiveB"
 #define KEY_RATECONTROL_BITRATE_TARGET "RateControl.Bitrate.Target"
-#define KEY_RATECONTROL_BITRATE_MINIMUM "RateControl.Bitrate.Minimum"
 #define KEY_RATECONTROL_BITRATE_MAXIMUM "RateControl.Bitrate.Maximum"
 #define KEY_RATECONTROL_BUFFERSIZE "RateControl.BufferSize"
-#define KEY_RATECONTROL_QUALITY "RateControl.Quality"
 #define KEY_RATECONTROL_QUALITY_TARGET "RateControl.Quality.Target"
 #define KEY_RATECONTROL_QUALITY_MINIMUM "RateControl.Quality.Minimum"
 #define KEY_RATECONTROL_QUALITY_MAXIMUM "RateControl.Quality.Maximum"
@@ -133,7 +131,6 @@ std::map<nvenc::preset, std::string> nvenc::preset_to_opt{
 };
 
 std::map<nvenc::ratecontrolmode, std::string> nvenc::ratecontrolmodes{
-	{nvenc::ratecontrolmode::INVALID, S_STATE_DEFAULT},
 	{nvenc::ratecontrolmode::CQP, ST_RATECONTROL_MODE_(CQP)},
 	{nvenc::ratecontrolmode::VBR, ST_RATECONTROL_MODE_(VBR)},
 	{nvenc::ratecontrolmode::VBR_HQ, ST_RATECONTROL_MODE_(VBR_HQ)},
@@ -197,12 +194,11 @@ void nvenc::get_defaults(obs_data_t* settings, const AVCodec*, AVCodecContext*)
 
 	obs_data_set_default_int(settings, KEY_RATECONTROL_MODE, static_cast<int64_t>(ratecontrolmode::CBR_HQ));
 	obs_data_set_default_int(settings, KEY_RATECONTROL_TWOPASS, -1);
-	obs_data_set_default_int(settings, KEY_RATECONTROL_LOOKAHEAD, 0);
+	obs_data_set_default_int(settings, KEY_RATECONTROL_LOOKAHEAD, -1);
 	obs_data_set_default_int(settings, KEY_RATECONTROL_ADAPTIVEI, -1);
 	obs_data_set_default_int(settings, KEY_RATECONTROL_ADAPTIVEB, -1);
 
 	obs_data_set_default_int(settings, KEY_RATECONTROL_BITRATE_TARGET, 6000);
-	obs_data_set_default_int(settings, KEY_RATECONTROL_BITRATE_MINIMUM, 0);
 	obs_data_set_default_int(settings, KEY_RATECONTROL_BITRATE_MAXIMUM, 0);
 	obs_data_set_default_int(settings, KEY_RATECONTROL_BUFFERSIZE, 12000);
 
@@ -215,11 +211,11 @@ void nvenc::get_defaults(obs_data_t* settings, const AVCodec*, AVCodecContext*)
 	obs_data_set_default_int(settings, KEY_RATECONTROL_QP_B, 21);
 
 	obs_data_set_default_int(settings, KEY_AQ_SPATIAL, -1);
-	obs_data_set_default_int(settings, KEY_AQ_STRENGTH, 8);
+	obs_data_set_default_int(settings, KEY_AQ_STRENGTH, -1);
 	obs_data_set_default_int(settings, KEY_AQ_TEMPORAL, -1);
 
-	obs_data_set_default_int(settings, KEY_OTHER_BFRAMES, 2);
-	obs_data_set_default_int(settings, KEY_OTHER_BFRAMEREFERENCEMODE, static_cast<int64_t>(b_ref_mode::DISABLED));
+	obs_data_set_default_int(settings, KEY_OTHER_BFRAMES, -1);
+	obs_data_set_default_int(settings, KEY_OTHER_BFRAMEREFERENCEMODE, static_cast<int64_t>(b_ref_mode::INVALID));
 	obs_data_set_default_int(settings, KEY_OTHER_ZEROLATENCY, -1);
 	obs_data_set_default_int(settings, KEY_OTHER_WEIGHTEDPREDICTION, -1);
 	obs_data_set_default_int(settings, KEY_OTHER_NONREFERENCEPFRAMES, -1);
@@ -237,7 +233,7 @@ static bool modified_ratecontrol(obs_properties_t* props, obs_property_t*, obs_d
 	bool have_quality       = false;
 	bool have_qp            = false;
 
-	nvenc::ratecontrolmode rc = static_cast<nvenc::ratecontrolmode>(obs_data_get_int(settings, ST_RATECONTROL_MODE));
+	nvenc::ratecontrolmode rc = static_cast<nvenc::ratecontrolmode>(obs_data_get_int(settings, KEY_RATECONTROL_MODE));
 	switch (rc) {
 	case nvenc::ratecontrolmode::CQP:
 		have_qp = true;
@@ -259,11 +255,10 @@ static bool modified_ratecontrol(obs_properties_t* props, obs_property_t*, obs_d
 
 	obs_property_set_visible(obs_properties_get(props, ST_RATECONTROL_BITRATE), have_bitrate || have_bitrate_range);
 	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_BITRATE_TARGET), have_bitrate);
-	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_BITRATE_MINIMUM), have_bitrate_range);
 	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_BITRATE_MAXIMUM), have_bitrate_range);
 	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_BUFFERSIZE), have_bitrate || have_bitrate_range);
 
-	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_QUALITY), have_quality);
+	obs_property_set_visible(obs_properties_get(props, ST_RATECONTROL_QUALITY), have_quality);
 	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_QUALITY_MINIMUM), have_quality);
 	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_QUALITY_MAXIMUM), have_quality);
 	obs_property_set_visible(obs_properties_get(props, KEY_RATECONTROL_QUALITY_TARGET), have_quality);
@@ -278,20 +273,18 @@ static bool modified_ratecontrol(obs_properties_t* props, obs_property_t*, obs_d
 
 static bool modified_aq(obs_properties_t* props, obs_property_t*, obs_data_t* settings) noexcept
 {
-	bool spatial_aq = obs_data_get_int(settings, KEY_AQ_SPATIAL) == 1;
+	bool spatial_aq = util::is_tristate_enabled(obs_data_get_int(settings, KEY_AQ_SPATIAL));
 	obs_property_set_visible(obs_properties_get(props, KEY_AQ_STRENGTH), spatial_aq);
 	return true;
 }
 
 void nvenc::get_properties_pre(obs_properties_t* props, const AVCodec*)
 {
-	{
-		auto p = obs_properties_add_list(props, KEY_PRESET, D_TRANSLATE(ST_PRESET), OBS_COMBO_TYPE_LIST,
-										 OBS_COMBO_FORMAT_INT);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_PRESET)));
-		for (auto kv : presets) {
-			obs_property_list_add_int(p, D_TRANSLATE(kv.second.c_str()), static_cast<int64_t>(kv.first));
-		}
+	auto p =
+		obs_properties_add_list(props, KEY_PRESET, D_TRANSLATE(ST_PRESET), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_PRESET)));
+	for (auto kv : presets) {
+		obs_property_list_add_int(p, D_TRANSLATE(kv.second.c_str()), static_cast<int64_t>(kv.first));
 	}
 }
 
@@ -305,7 +298,7 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		}
 
 		{
-			auto p = obs_properties_add_list(grp, ST_RATECONTROL_MODE, D_TRANSLATE(ST_RATECONTROL_MODE),
+			auto p = obs_properties_add_list(grp, KEY_RATECONTROL_MODE, D_TRANSLATE(ST_RATECONTROL_MODE),
 											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_MODE)));
 			obs_property_set_modified_callback(p, modified_ratecontrol);
@@ -316,7 +309,7 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 
 		{
 			auto p =
-				util::obs_properties_add_tristate(grp, ST_RATECONTROL_TWOPASS, D_TRANSLATE(ST_RATECONTROL_TWOPASS));
+				util::obs_properties_add_tristate(grp, KEY_RATECONTROL_TWOPASS, D_TRANSLATE(ST_RATECONTROL_TWOPASS));
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_TWOPASS)));
 		}
 
@@ -359,18 +352,12 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		{
 			auto p =
 				obs_properties_add_int(grp, KEY_RATECONTROL_BITRATE_TARGET, D_TRANSLATE(ST_RATECONTROL_BITRATE_TARGET),
-									   0, std::numeric_limits<int32_t>::max(), 1);
-			obs_property_int_set_suffix(p, " kbit/s");
-		}
-		{
-			auto p = obs_properties_add_int(grp, KEY_RATECONTROL_BITRATE_MINIMUM,
-											D_TRANSLATE(ST_RATECONTROL_BITRATE_MINIMUM), 0,
-											std::numeric_limits<int32_t>::max(), 1);
+									   -1, std::numeric_limits<int32_t>::max(), 1);
 			obs_property_int_set_suffix(p, " kbit/s");
 		}
 		{
 			auto p = obs_properties_add_int(grp, KEY_RATECONTROL_BITRATE_MAXIMUM,
-											D_TRANSLATE(ST_RATECONTROL_BITRATE_MAXIMUM), 0,
+											D_TRANSLATE(ST_RATECONTROL_BITRATE_MAXIMUM), -1,
 											std::numeric_limits<int32_t>::max(), 1);
 			obs_property_int_set_suffix(p, " kbit/s");
 		}
@@ -588,12 +575,12 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			break;
 		}
 
-		if (int tp = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_TWOPASS)); tp >= 0) {
+		if (int tp = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_TWOPASS)); tp > -1) {
 			av_opt_set_int(context->priv_data, "2pass", tp ? 1 : 0, AV_OPT_SEARCH_CHILDREN);
 		}
 
 		int la = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_LOOKAHEAD));
-		if (la >= 0)
+		if (la > -1)
 			av_opt_set_int(context->priv_data, "rc-lookahead", la, AV_OPT_SEARCH_CHILDREN);
 		if (la > 0) {
 			if (int64_t adapt_i = obs_data_get_int(settings, KEY_RATECONTROL_ADAPTIVEI);
@@ -611,28 +598,36 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 
 		if (have_bitrate) {
 			int64_t v = obs_data_get_int(settings, KEY_RATECONTROL_BITRATE_TARGET);
-			if (v >= 0)
+			if (v > -1)
 				context->bit_rate = static_cast<int>(v * 1000);
 
 			// Support for Replay Buffer
 			obs_data_set_int(settings, "bitrate", v);
+		} else {
+			context->bit_rate = 0;
 		}
 		if (have_bitrate_range) {
-			if (int64_t min = obs_data_get_int(settings, KEY_RATECONTROL_BITRATE_MINIMUM); min >= 0)
-				context->rc_min_rate = static_cast<int>(min * 1000);
-			if (int64_t max = obs_data_get_int(settings, KEY_RATECONTROL_BITRATE_MAXIMUM); max >= 0)
+			if (int64_t max = obs_data_get_int(settings, KEY_RATECONTROL_BITRATE_MAXIMUM); max > -1)
 				context->rc_max_rate = static_cast<int>(max * 1000);
+		} else {
+			//context->rc_min_rate = 0;
+			context->rc_max_rate = 0;
 		}
 		if (have_bitrate || have_bitrate_range) {
-			if (int64_t v = obs_data_get_int(settings, KEY_RATECONTROL_BUFFERSIZE); v >= 0)
+			if (int64_t v = obs_data_get_int(settings, KEY_RATECONTROL_BUFFERSIZE); v > -1)
 				context->rc_buffer_size = static_cast<int>(v * 1000);
+		} else {
+			context->rc_buffer_size = 0;
 		}
 
 		if (have_quality) {
-			if (int qmin = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QUALITY_MINIMUM)); qmin >= 0)
+			if (int qmin = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QUALITY_MINIMUM)); qmin > -1)
 				context->qmin = qmin;
-			if (int qmax = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QUALITY_MAXIMUM)); qmax >= 0)
+			if (int qmax = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QUALITY_MAXIMUM)); qmax > -1)
 				context->qmax = qmax;
+		} else {
+			context->qmin = -1;
+			context->qmax = -1;
 		}
 
 		{
@@ -642,12 +637,12 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		}
 
 		if (have_qp) {
-			av_opt_set_int(context->priv_data, "init_qpI",
-						   static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QP_I)), AV_OPT_SEARCH_CHILDREN);
-			av_opt_set_int(context->priv_data, "init_qpP",
-						   static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QP_P)), AV_OPT_SEARCH_CHILDREN);
-			av_opt_set_int(context->priv_data, "init_qpB",
-						   static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QP_B)), AV_OPT_SEARCH_CHILDREN);
+			if (int64_t qp = obs_data_get_int(settings, KEY_RATECONTROL_QP_I); qp > -1)
+				av_opt_set_int(context->priv_data, "init_qpI", static_cast<int>(qp), AV_OPT_SEARCH_CHILDREN);
+			if (int64_t qp = obs_data_get_int(settings, KEY_RATECONTROL_QP_P); qp > -1)
+				av_opt_set_int(context->priv_data, "init_qpP", static_cast<int>(qp), AV_OPT_SEARCH_CHILDREN);
+			if (int64_t qp = obs_data_get_int(settings, KEY_RATECONTROL_QP_B); qp > -1)
+				av_opt_set_int(context->priv_data, "init_qpB", static_cast<int>(qp), AV_OPT_SEARCH_CHILDREN);
 		}
 	}
 
@@ -667,14 +662,12 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 				av_opt_set_int(context->priv_data, "temporal_aq", taq, AV_OPT_SEARCH_CHILDREN);
 		}
 		if (util::is_tristate_enabled(saq))
-			if (int64_t aqs = obs_data_get_int(settings, KEY_AQ_STRENGTH); aqs >= 0)
+			if (int64_t aqs = obs_data_get_int(settings, KEY_AQ_STRENGTH); aqs > -1)
 				av_opt_set_int(context->priv_data, "aq-strength", static_cast<int>(aqs), AV_OPT_SEARCH_CHILDREN);
 	}
 
 	{ // Other
-		int64_t wp = obs_data_get_int(settings, KEY_OTHER_WEIGHTEDPREDICTION);
-
-		if (int64_t bf = obs_data_get_int(settings, KEY_OTHER_BFRAMES); bf >= 0)
+		if (int64_t bf = obs_data_get_int(settings, KEY_OTHER_BFRAMES); bf > -1)
 			context->max_b_frames = static_cast<int>(bf);
 
 		if (int64_t zl = obs_data_get_int(settings, KEY_OTHER_ZEROLATENCY); !util::is_tristate_default(zl))
@@ -686,6 +679,7 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		if (int64_t v = obs_data_get_int(settings, KEY_OTHER_DECODEDPICTUREBUFFERSIZE); v > -1)
 			av_opt_set_int(context->priv_data, "dpb_size", v, AV_OPT_SEARCH_CHILDREN);
 
+		int64_t wp = obs_data_get_int(settings, KEY_OTHER_WEIGHTEDPREDICTION);
 		if ((context->max_b_frames > 0) && util::is_tristate_enabled(wp)) {
 			LOG_WARNING("[%s] Weighted Prediction disabled because of B-Frames being used.", codec->name);
 			av_opt_set_int(context->priv_data, "weighted_pred", 0, AV_OPT_SEARCH_CHILDREN);
@@ -729,10 +723,10 @@ void nvenc::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* conte
 		tools::print_av_option_bool(context, "b_adapt", "      Adaptive B-Frames");
 
 	LOG_INFO("[%s]       Bitrate:", codec->name);
-	tools::print_av_option_int(context, "bitrate", "        Target", "bits/sec");
-	tools::print_av_option_int(context, "rc_min_rate", "        Minimum", "bits/sec");
-	tools::print_av_option_int(context, "rc_max_rate", "        Maximum", "bits/sec");
-	tools::print_av_option_int(context, "rc_buffer_size", "        Buffer", "bits");
+	tools::print_av_option_int(context, "b", "        Target", "bits/sec");
+	tools::print_av_option_int(context, "minrate", "        Minimum", "bits/sec");
+	tools::print_av_option_int(context, "maxrate", "        Maximum", "bits/sec");
+	tools::print_av_option_int(context, "bufsize", "        Buffer", "bits");
 	LOG_INFO("[%s]       Quality:", codec->name);
 	tools::print_av_option_int(context, "cq", "        Target", "");
 	tools::print_av_option_int(context, "qmin", "        Minimum", "");
@@ -742,7 +736,7 @@ void nvenc::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* conte
 	tools::print_av_option_int(context, "init_qpP", "        P-Frame", "");
 	tools::print_av_option_int(context, "init_qpB", "        B-Frame", "");
 
-	tools::print_av_option_int(context, "max_b_frames", "    B-Frames", "Frames");
+	tools::print_av_option_int(context, "bf", "    B-Frames", "Frames");
 	tools::print_av_option_string(context, "b_ref_mode", "      Reference Mode", [](int64_t v) {
 		b_ref_mode  val   = static_cast<b_ref_mode>(v);
 		std::string name  = "<Default>";
