@@ -24,16 +24,36 @@
 
 #include "encoders/ffmpeg-encoder.hpp"
 
+#ifdef ENABLE_FILTER_BLUR
 #include "filters/filter-blur.hpp"
+#endif
+#ifdef ENABLE_FILTER_COLOR_GRADE
 #include "filters/filter-color-grade.hpp"
+#endif
+#ifdef ENABLE_FILTER_DISPLACEMENT
 #include "filters/filter-displacement.hpp"
+#endif
+#ifdef ENABLE_FILTER_DYNAMIC_MASK
 #include "filters/filter-dynamic-mask.hpp"
+#endif
+#ifdef ENABLE_FILTER_SDF_EFFECTS
 #include "filters/filter-sdf-effects.hpp"
-#include "filters/filter-transform.hpp"
+#endif
+#ifdef ENABLE_FILTER_SHADER
 //#include "filters/filter-shader.hpp"
-
+#endif
+#ifdef ENABLE_FILTER_TRANSFORM
+#include "filters/filter-transform.hpp"
+#endif
+#ifdef ENABLE_SOURCE_MIRROR
 #include "sources/source-mirror.hpp"
+#endif
+#ifdef ENABLE_SOURCE_SHADER
 #include "sources/source-shader.hpp"
+#endif
+#ifdef ENABLE_TRANSITION_SHADER
+//#include "transitions/source-shader.hpp"
+#endif
 
 static std::shared_ptr<util::threadpool> global_threadpool;
 
@@ -46,23 +66,46 @@ try {
 	// Initialize Source Tracker
 	obs::source_tracker::initialize();
 
-	// Encoders
+// Encoders
+#ifdef ENABLE_ENCODER_FFMPEG
 	encoder::ffmpeg::ffmpeg_manager::initialize();
+#endif
 
-	// Filters
+// Filters
+#ifdef ENABLE_FILTER_BLUR
 	filter::blur::blur_factory::initialize();
+#endif
+#ifdef ENABLE_FILTER_COLOR_GRADE
 	filter::color_grade::color_grade_factory::initialize();
+#endif
+#ifdef ENABLE_FILTER_DISPLACEMENT
 	filter::displacement::displacement_factory::initialize();
+#endif
+#ifdef ENABLE_FILTER_DYNAMIC_MASK
 	filter::dynamic_mask::dynamic_mask_factory::initialize();
+#endif
+#ifdef ENABLE_FILTER_SDF_EFFECTS
 	filter::sdf_effects::sdf_effects_factory::initialize();
-	//filter::shader::shader_factory::initialize();
+#endif
+#ifdef ENABLE_FILTER_SHADER
+//filter::shader::shader_factory::initialize();
+#endif
+#ifdef ENABLE_FILTER_TRANSFORM
 	filter::transform::transform_factory::initialize();
+#endif
 
-	// Sources
+// Sources
+#ifdef ENABLE_SOURCE_MIRROR
 	source::mirror::mirror_factory::initialize();
+#endif
+#ifdef ENABLE_SOURCE_SHADER
 	source::shader::shader_factory::initialize();
+#endif
 
-	// Transitions
+// Transitions
+#ifdef ENABLE_TRANSITION_SHADER
+//transition::shader::shader_factory::initialize();
+#endif
 
 	return true;
 } catch (...) {
@@ -75,22 +118,45 @@ try {
 	LOG_INFO("Unloading Version %s", STREAMFX_VERSION_STRING);
 
 	// Transitions
+#ifdef ENABLE_TRANSITION_SHADER
+//transition::shader::shader_factory::finalize();
+#endif
 
-	// Sources
+// Sources
+#ifdef ENABLE_SOURCE_MIRROR
 	source::mirror::mirror_factory::finalize();
+#endif
+#ifdef ENABLE_SOURCE_SHADER
 	source::shader::shader_factory::finalize();
+#endif
 
-	// Filters
+// Filters
+#ifdef ENABLE_FILTER_BLUR
 	filter::blur::blur_factory::finalize();
+#endif
+#ifdef ENABLE_FILTER_COLOR_GRADE
 	filter::color_grade::color_grade_factory::finalize();
+#endif
+#ifdef ENABLE_FILTER_DISPLACEMENT
 	filter::displacement::displacement_factory::finalize();
+#endif
+#ifdef ENABLE_FILTER_DYNAMIC_MASK
 	filter::dynamic_mask::dynamic_mask_factory::finalize();
+#endif
+#ifdef ENABLE_FILTER_SDF_EFFECTS
 	filter::sdf_effects::sdf_effects_factory::finalize();
-	//filter::shader::shader_factory::finalize();
+#endif
+#ifdef ENABLE_FILTER_SHADER
+//filter::shader::shader_factory::finalize();
+#endif
+#ifdef ENABLE_FILTER_TRANSFORM
 	filter::transform::transform_factory::finalize();
+#endif
 
-	// Encoders
+// Encoders
+#ifdef ENABLE_ENCODER_FFMPEG
 	encoder::ffmpeg::ffmpeg_manager::finalize();
+#endif
 
 	// Finalize Source Tracker
 	obs::source_tracker::finalize();

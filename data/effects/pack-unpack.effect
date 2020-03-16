@@ -1,0 +1,139 @@
+uniform float4x4 ViewProj;
+uniform texture2d image;
+uniform int size;
+
+sampler_state pixelSampler {
+	Filter		= Point;
+	AddressU	= Clamp;
+	AddressV	= Clamp;
+};
+
+struct VertData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertData vertex_program(VertData vd)
+{
+	vd.pos = mul(float4(vd.pos.xyz, 1.0), ViewProj);
+	return vd;
+}
+
+
+// -------------------------------------------------------------------------------- //
+// Helpers
+// -------------------------------------------------------------------------------- //
+uint get_selector(VertData vd, int width) {
+	return uint(vd.uv.x * size * width) % width;
+}
+
+// -------------------------------------------------------------------------------- //
+// Pack/Unpack RG/GR
+// -------------------------------------------------------------------------------- //
+float4 _PackRG(VertData vd) : TARGET {
+	if (get_selector(vd, 2) == 0) {
+		return float4(image.Sample(pixelSampler, vd.uv).r, 0., 0., 1.);
+	} else {
+		return float4(image.Sample(pixelSampler, vd.uv).g, 0., 0., 1.);
+	}
+}
+technique PackRG { pass { vertex_shader = vertex_program(vd); pixel_shader = _PackRG(vd); } }
+
+float4 _PackGR(VertData vd) : TARGET {
+	if (get_selector(vd, 2) == 0) {
+		return float4(image.Sample(pixelSampler, vd.uv).g, 0., 0., 1.);
+	} else {
+		return float4(image.Sample(pixelSampler, vd.uv).r, 0., 0., 1.);
+	}
+}
+technique PackGR { pass { vertex_shader = vertex_program(vd); pixel_shader = _PackGR(vd); } }
+
+// -------------------------------------------------------------------------------- //
+// Pack/Unpack RGB/BGR
+// -------------------------------------------------------------------------------- //
+float4 _PackRGB(VertData vd) : TARGET {
+	uint select = get_selector(vd, 3);
+	if (select == 0) {
+		return float4(image.Sample(pixelSampler, vd.uv).r, 0., 0., 1.);
+	} else if (select == 1) {
+		return float4(image.Sample(pixelSampler, vd.uv).g, 0., 0., 1.);
+	} else {
+		return float4(image.Sample(pixelSampler, vd.uv).b, 0., 0., 1.);
+	}
+}
+technique PackRGB { pass { vertex_shader = vertex_program(vd); pixel_shader = _PackRGB(vd); } }
+
+float4 _PackBGR(VertData vd) : TARGET {
+	uint select = get_selector(vd, 3);
+	if (select == 0) {
+		return float4(image.Sample(pixelSampler, vd.uv).b, 0., 0., 1.);
+	} else if (select == 1) {
+		return float4(image.Sample(pixelSampler, vd.uv).g, 0., 0., 1.);
+	} else {
+		return float4(image.Sample(pixelSampler, vd.uv).r, 0., 0., 1.);
+	}
+	return float4(0., 0., 0., 0.);
+}
+technique PackBGR { pass { vertex_shader = vertex_program(vd); pixel_shader = _PackBGR(vd); } }
+
+// -------------------------------------------------------------------------------- //
+// Pack/Unpack RGBA/ABGR
+// -------------------------------------------------------------------------------- //
+float4 _PackRGBA(VertData vd) : TARGET {
+	uint select = get_selector(vd, 4);
+	if (select == 0) {
+		return float4(image.Sample(pixelSampler, vd.uv).r, 0., 0., 1.);
+	} else if (select == 1) {
+		return float4(image.Sample(pixelSampler, vd.uv).g, 0., 0., 1.);
+	} else if (select == 2) {
+		return float4(image.Sample(pixelSampler, vd.uv).b, 0., 0., 1.);
+	} else {
+		return float4(image.Sample(pixelSampler, vd.uv).a, 0., 0., 1.);
+	}
+}
+technique PackRGBA { pass { vertex_shader = vertex_program(vd); pixel_shader = _PackRGBA(vd); } }
+
+float4 _PackABGR(VertData vd) : TARGET {
+	uint select = get_selector(vd, 4);
+	if (select == 0) {
+		return float4(image.Sample(pixelSampler, vd.uv).a, 0., 0., 1.);
+	} else if (select == 1) {
+		return float4(image.Sample(pixelSampler, vd.uv).b, 0., 0., 1.);
+	} else if (select == 1) {
+		return float4(image.Sample(pixelSampler, vd.uv).g, 0., 0., 1.);
+	} else {
+		return float4(image.Sample(pixelSampler, vd.uv).r, 0., 0., 1.);
+	}
+}
+technique PackABGR { pass { vertex_shader = vertex_program(vd); pixel_shader = _PackABGR(vd); } }
+
+// -------------------------------------------------------------------------------- //
+// Pack/Unpack ARGB/BGRA
+// -------------------------------------------------------------------------------- //
+float4 _PackARGB(VertData vd) : TARGET {
+	uint select = get_selector(vd, 4);
+	if (select == 0) {
+		return float4(image.Sample(pixelSampler, vd.uv).a, 0., 0., 1.);
+	} else if (select == 1) {
+		return float4(image.Sample(pixelSampler, vd.uv).r, 0., 0., 1.);
+	} else if (select == 2) {
+		return float4(image.Sample(pixelSampler, vd.uv).g, 0., 0., 1.);
+	} else {
+		return float4(image.Sample(pixelSampler, vd.uv).b, 0., 0., 1.);
+	}
+}
+technique PackARGB { pass { vertex_shader = vertex_program(vd); pixel_shader = _PackARGB(vd); } }
+
+float4 _PackBGRA(VertData vd) : TARGET {
+	uint select = get_selector(vd, 4);
+	if (select == 0) {
+		return float4(image.Sample(pixelSampler, vd.uv).b, 0., 0., 1.);
+	} else if (select == 1) {
+		return float4(image.Sample(pixelSampler, vd.uv).g, 0., 0., 1.);
+	} else if (select == 1) {
+		return float4(image.Sample(pixelSampler, vd.uv).r, 0., 0., 1.);
+	} else {
+		return float4(image.Sample(pixelSampler, vd.uv).a, 0., 0., 1.);
+	}
+}
+technique PackBGRA { pass { vertex_shader = vertex_program(vd); pixel_shader = _PackBGRA(vd); } }

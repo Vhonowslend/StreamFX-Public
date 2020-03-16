@@ -50,6 +50,10 @@ if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
 	endif()
 endif()
 
+# Policies
+cmake_policy(PUSH)
+cmake_policy(SET CMP0074 NEW)
+
 # Define Project
 project(
 	StreamFX
@@ -69,7 +73,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/clang" "${CMAKE_CURRENT
 
 # CMake Modules
 include("util")
-if (EXISTS "${CMAKE_SOURCE_DIR}/cmake/Clang/Clang.cmake")
+if(EXISTS "${CMAKE_SOURCE_DIR}/cmake/Clang/Clang.cmake")
 	include("Clang")
 	set(HAVE_CLANG ON)
 endif()
@@ -91,17 +95,17 @@ else()
 endif()
 
 # All Warnings, Extra Warnings, Pedantic
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	# using Clang
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-missing-braces -Wmissing-field-initializers -Wno-c++98-compat-pedantic -Wold-style-cast -Wno-documentation -Wno-documentation-unknown-command -Wno-covered-switch-default -Wno-switch-enum")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-missing-braces -Wmissing-field-initializers -Wno-c++98-compat-pedantic -Wold-style-cast -Wno-documentation -Wno-documentation-unknown-command -Wno-covered-switch-default -Wno-switch-enum")
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	# GCC: -fpermissive is required as GCC does not allow the same template to be in different namespaces.
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wpedantic -fpermissive -Wno-long-long -Wno-missing-braces -Wmissing-field-initializers")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wpedantic -fpermissive -Wno-long-long -Wno-missing-braces -Wmissing-field-initializers")
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
 	# using Intel C++
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 	set(MSVC_EXTRA_FLAGS "/wd4061 /wd4100 /wd4180 /wd4201 /wd4464 /wd4505 /wd4514 /wd4571 /wd4623 /wd4625 /wd4626 /wd4710 /wd4774 /wd4820 /wd5026 /wd5027 /wd5045")
 	# Force to always compile with W4
 	if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
@@ -190,17 +194,30 @@ else()
 	endif()
 endif()
 
+# Features
+set(${PropertyPrefix}ENABLE_ENCODER_FFMPEG TRUE CACHE BOOL "Enable FFmpeg Encoder")
+set(${PropertyPrefix}ENABLE_FILTER_BLUR TRUE CACHE BOOL "Enable Blur Filter")
+set(${PropertyPrefix}ENABLE_FILTER_COLOR_GRADE TRUE CACHE BOOL "Enable Color Grade Filter")
+set(${PropertyPrefix}ENABLE_FILTER_DISPLACEMENT TRUE CACHE BOOL "Enable Displacement Filter")
+set(${PropertyPrefix}ENABLE_FILTER_DYNAMIC_MASK TRUE CACHE BOOL "Enable Dynamic Mask Filter")
+set(${PropertyPrefix}ENABLE_FILTER_SDF_EFFECTS TRUE CACHE BOOL "Enable SDF Effects Filter")
+set(${PropertyPrefix}ENABLE_FILTER_SHADER TRUE CACHE BOOL "Enable Shader Filter")
+set(${PropertyPrefix}ENABLE_FILTER_TRANSFORM TRUE CACHE BOOL "Enable Transform Filter")
+set(${PropertyPrefix}ENABLE_SOURCE_MIRROR TRUE CACHE BOOL "Enable Mirror Source")
+set(${PropertyPrefix}ENABLE_SOURCE_SHADER TRUE CACHE BOOL "Enable Shader Source")
+set(${PropertyPrefix}ENABLE_TRANSITION_SHADER TRUE CACHE BOOL "Enable Shader Transition")
+
 ################################################################################
 # CMake / Compiler Dependencies
 ################################################################################
 
 # Configure Version Header
 configure_file(
-	"${PROJECT_SOURCE_DIR}/cmake/version.hpp.in"
+	"cmake/version.hpp.in"
 	"${PROJECT_BINARY_DIR}/source/version.hpp"
 )
 configure_file(
-	"${PROJECT_SOURCE_DIR}/cmake/module.cpp.in"
+	"cmake/module.cpp.in"
 	"${PROJECT_BINARY_DIR}/source/module.cpp"
 )
 
@@ -222,7 +239,7 @@ if(WIN32)
 	get_filename_component(ISS_SOURCE_DIR "${PROJECT_SOURCE_DIR}" ABSOLUTE)
 	file(TO_NATIVE_PATH "${ISS_SOURCE_DIR}" ISS_SOURCE_DIR)
 	configure_file(
-		"${PROJECT_SOURCE_DIR}/cmake/installer.iss.in"
+		"cmake/installer.iss.in"
 		"${PROJECT_BINARY_DIR}/installer.iss"
 	)
 
@@ -234,7 +251,7 @@ if(WIN32)
 	set(PROJECT_LEGAL_TRADEMARKS_2 "")
 	
 	configure_file(
-		"${PROJECT_SOURCE_DIR}/cmake/version.rc.in"
+		"cmake/version.rc.in"
 		"${PROJECT_BINARY_DIR}/cmake/version.rc"
 		@ONLY
 	)	
@@ -267,233 +284,371 @@ elseif(${PropertyPrefix}OBS_DOWNLOAD)
 	include("${libobs_SOURCE_DIR}/cmake/LibObs/LibObsConfig.cmake")
 endif()
 
-# Load FFmpeg
-if(NOT ${PropertyPrefix}OBS_NATIVE)
-	find_path(
-		FFmpegPath "libavcodec/avcodec.h"
-		HINTS
-			${OBS_DEPENDENCIES_DIR}
-			${obsdeps_SOURCE_DIR}
-			${DepsPath}
-			${DepsPath32}
-			${DepsPath64}
-			
-		PATHS
-			/usr/include
-			/usr/local/include
-			/opt/local/include
-			/sw/include
-		PATH_SUFFIXES
-			win${BITS}
-			win${BITS}/bin
-			win${BITS}/include
-			win${ARCH}
-			win${ARCH}/bin
-			win${ARCH}/include
-			bin
-			include
-	)
-endif()
-find_package(FFmpeg REQUIRED COMPONENTS avutil avcodec swscale)
-
 ################################################################################
 # Code
 ################################################################################
-set(PROJECT_DATA_LOCALE
-	"${PROJECT_SOURCE_DIR}/data/locale/en-US.ini"
-)
-set(PROJECT_DATA_EFFECTS
-	"${PROJECT_SOURCE_DIR}/data/effects/channel-mask.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/color-conversion.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/color-grade.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/displace.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/mask.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/mipgen.effect"
+set(PROJECT_DATA_LOCALE )
+set(PROJECT_DATA_EFFECTS )
+set(PROJECT_DATA_SHADERS )
+set(PROJECT_LIBRARIES )
+set(PROJECT_LIBRARIES_DELAYED )
+set(PROJECT_TEMPLATES )
+set(PROJECT_PUBLIC )
+set(PROJECT_PRIVATE_GENERATED )
+set(PROJECT_PRIVATE_SOURCE )
+set(PROJECT_DEFINES )
 
-	# Blur
-	"${PROJECT_SOURCE_DIR}/data/effects/blur/box.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/blur/box-linear.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/blur/dual-filtering.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/blur/gaussian.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/blur/gaussian-linear.effect"
-
-	# Signed Distance Field
-	"${PROJECT_SOURCE_DIR}/data/effects/sdf/sdf-producer.effect"
-	"${PROJECT_SOURCE_DIR}/data/effects/sdf/sdf-consumer.effect"
-)
-set(PROJECT_DATA_SHADERS
-	"${PROJECT_SOURCE_DIR}/data/examples/shaders/filter/drunk.effect"
-	"${PROJECT_SOURCE_DIR}/data/examples/shaders/filter/example.effect"
-	"${PROJECT_SOURCE_DIR}/data/examples/shaders/filter/example_displace_by_texture.effect"
-	"${PROJECT_SOURCE_DIR}/data/examples/shaders/source/example.effect"
-)
-set(PROJECT_DATA
-	${PROJECT_DATA_LOCALE}
-	${PROJECT_DATA_EFFECTS}
-	${PROJECT_DATA_SHADERS}
-)
-
-set(PROJECT_LIBRARIES
-)
-
-set(PROJECT_TEMPLATES
-	"${PROJECT_SOURCE_DIR}/cmake/version.hpp.in"
-	"${PROJECT_SOURCE_DIR}/cmake/module.cpp.in"
-	"${PROJECT_SOURCE_DIR}/cmake/DownloadProject.cmake"
-	"${PROJECT_SOURCE_DIR}/cmake/DownloadProject.CMakeLists.cmake.in"
-	"${PROJECT_SOURCE_DIR}/cmake/util.cmake"
-)
-if(WIN32)
-	list(APPEND PROJECT_TEMPLATES
-		"${PROJECT_SOURCE_DIR}/cmake/installer.iss.in"
-		"${PROJECT_SOURCE_DIR}/cmake/version.rc.in"
+## OBS Studio
+if(${PropertyPrefix}OBS_NATIVE)
+	list(APPEND PROJECT_LIBRARIES
+		libobs
+	)
+elseif(${PropertyPrefix}OBS_REFERENCE)
+	list(APPEND PROJECT_INCLUDE_DIRS
+		"${OBS_STUDIO_DIR}/libobs"
+	)
+	list(APPEND PROJECT_LIBRARIES
+		"${LIBOBS_LIB}"
+	)
+elseif(${PropertyPrefix}OBS_PACKAGE)
+	list(APPEND PROJECT_INCLUDE_DIRS
+		"${OBS_STUDIO_DIR}/include"
+	)
+	list(APPEND PROJECT_LIBRARIES
+		libobs
+	)
+elseif(${PropertyPrefix}OBS_DOWNLOAD)
+	list(APPEND PROJECT_LIBRARIES
+		libobs
 	)
 endif()
 
-set(PROJECT_PUBLIC
+## Data & Source
+list(APPEND PROJECT_DATA
+	"data/locale/en-US.ini"
+	"data/effects/mipgen.effect"
+	"data/effects/pack-unpack.effect"
 )
-set(PROJECT_PRIVATE_GENERATED
+list(APPEND PROJECT_TEMPLATES
+	"cmake/version.hpp.in"
+	"cmake/module.cpp.in"
+)
+if(WIN32)
+	list(APPEND PROJECT_TEMPLATES
+		"cmake/installer.iss.in"
+		"cmake/version.rc.in"
+	)
+endif()
+list(APPEND PROJECT_PRIVATE_SOURCE
+	# Plugin
+	"source/plugin.hpp"
+	"source/plugin.cpp"
+	"source/strings.hpp"
+	"source/utility.hpp"
+	"source/utility.cpp"
+	"source/util-event.hpp"
+	"source/util-threadpool.cpp"
+	"source/util-threadpool.hpp"
+
+	# Graphics
+	"source/gfx/gfx-source-texture.hpp"
+	"source/gfx/gfx-source-texture.cpp"
+
+	# OBS
+	"source/obs/gs/gs-helper.hpp"
+	"source/obs/gs/gs-helper.cpp"
+	"source/obs/gs/gs-effect.hpp"
+	"source/obs/gs/gs-effect.cpp"
+	"source/obs/gs/gs-effect-parameter.hpp"
+	"source/obs/gs/gs-effect-parameter.cpp"
+	"source/obs/gs/gs-effect-pass.hpp"
+	"source/obs/gs/gs-effect-pass.cpp"
+	"source/obs/gs/gs-effect-technique.hpp"
+	"source/obs/gs/gs-effect-technique.cpp"
+	"source/obs/gs/gs-indexbuffer.hpp"
+	"source/obs/gs/gs-indexbuffer.cpp"
+	"source/obs/gs/gs-limits.hpp"
+	"source/obs/gs/gs-mipmapper.hpp"
+	"source/obs/gs/gs-mipmapper.cpp"
+	"source/obs/gs/gs-rendertarget.hpp"
+	"source/obs/gs/gs-rendertarget.cpp"
+	"source/obs/gs/gs-sampler.hpp"
+	"source/obs/gs/gs-sampler.cpp"
+	"source/obs/gs/gs-texture.hpp"
+	"source/obs/gs/gs-texture.cpp"
+	"source/obs/gs/gs-vertex.hpp"
+	"source/obs/gs/gs-vertex.cpp"
+	"source/obs/gs/gs-vertexbuffer.hpp"
+	"source/obs/gs/gs-vertexbuffer.cpp"
+	"source/obs/obs-signal-handler.hpp"
+	"source/obs/obs-signal-handler.cpp"
+	"source/obs/obs-source.hpp"
+	"source/obs/obs-source.cpp"
+	"source/obs/obs-source-factory.hpp"
+	"source/obs/obs-source-factory.cpp"
+	"source/obs/obs-source-tracker.hpp"
+	"source/obs/obs-source-tracker.cpp"
+	"source/obs/obs-tools.hpp"
+	"source/obs/obs-tools.cpp"
+)
+list(APPEND PROJECT_PRIVATE_GENERATED
 	"${PROJECT_BINARY_DIR}/source/module.cpp"
 	"${PROJECT_BINARY_DIR}/source/version.hpp"
 )
-set(PROJECT_PRIVATE_SOURCE
-	# Plugin
-	"${PROJECT_SOURCE_DIR}/source/plugin.hpp"
-	"${PROJECT_SOURCE_DIR}/source/plugin.cpp"
-	"${PROJECT_SOURCE_DIR}/source/strings.hpp"
-	"${PROJECT_SOURCE_DIR}/source/utility.hpp"
-	"${PROJECT_SOURCE_DIR}/source/utility.cpp"
-	"${PROJECT_SOURCE_DIR}/source/util-event.hpp"
-	"${PROJECT_SOURCE_DIR}/source/util-threadpool.cpp"
-	"${PROJECT_SOURCE_DIR}/source/util-threadpool.hpp"
+
+## Feature - FFmpeg Encoder
+if(${PropertyPrefix}ENABLE_ENCODER_FFMPEG)
+	if(NOT ${PropertyPrefix}OBS_NATIVE)
+		find_path(
+			FFmpegPath "libavcodec/avcodec.h"
+			HINTS
+				${OBS_DEPENDENCIES_DIR}
+				${obsdeps_SOURCE_DIR}
+				${DepsPath}
+				${DepsPath32}
+				${DepsPath64}
+			
+			PATHS
+				/usr/include
+				/usr/local/include
+				/opt/local/include
+				/sw/include
+			PATH_SUFFIXES
+				win${BITS}
+				win${BITS}/bin
+				win${BITS}/include
+				win${ARCH}
+				win${ARCH}/bin
+				win${ARCH}/include
+				bin
+				include
+		)
+	endif()
+	find_package(FFmpeg REQUIRED COMPONENTS avutil avcodec swscale)
+
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		# FFmpeg
+		"source/ffmpeg/avframe-queue.cpp"
+		"source/ffmpeg/avframe-queue.hpp"
+		"source/ffmpeg/swscale.hpp"
+		"source/ffmpeg/swscale.cpp"
+		"source/ffmpeg/tools.hpp"
+		"source/ffmpeg/tools.cpp"
+		"source/ffmpeg/hwapi/base.hpp"
+		"source/ffmpeg/hwapi/base.cpp"
+		"source/ffmpeg/hwapi/d3d11.hpp"
+		"source/ffmpeg/hwapi/d3d11.cpp"
 	
-	# Graphics
-	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-source-texture.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/gfx-source-texture.cpp"
-	# Graphics/Blur
-	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-base.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-base.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-box.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-box.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-box-linear.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-box-linear.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-dual-filtering.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-dual-filtering.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-gaussian.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-gaussian.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-gaussian-linear.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/blur/gfx-blur-gaussian-linear.cpp"
-	# Graphics/Shader	
-	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param-audio.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param-audio.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param-basic.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param-basic.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param-matrix.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param-matrix.cpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param-texture.hpp"
-	"${PROJECT_SOURCE_DIR}/source/gfx/shader/gfx-shader-param-texture.cpp"
+		# Encoders
+		"source/encoders/ffmpeg-encoder.hpp"
+		"source/encoders/ffmpeg-encoder.cpp"
 
-	# OBS
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-helper.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-helper.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-effect.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-effect.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-effect-parameter.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-effect-parameter.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-effect-pass.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-effect-pass.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-effect-technique.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-effect-technique.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-indexbuffer.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-indexbuffer.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-limits.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-mipmapper.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-mipmapper.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-rendertarget.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-rendertarget.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-sampler.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-sampler.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-texture.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-texture.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertex.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertex.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertexbuffer.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/gs/gs-vertexbuffer.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/obs-signal-handler.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/obs-signal-handler.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/obs-source.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/obs-source.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/obs-source-factory.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/obs-source-factory.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/obs-source-tracker.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/obs-source-tracker.cpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/obs-tools.hpp"
-	"${PROJECT_SOURCE_DIR}/source/obs/obs-tools.cpp"
-	
-	# Sources
-	"${PROJECT_SOURCE_DIR}/source/sources/source-mirror.hpp"
-	"${PROJECT_SOURCE_DIR}/source/sources/source-mirror.cpp"
-	"${PROJECT_SOURCE_DIR}/source/sources/source-shader.hpp"
-	"${PROJECT_SOURCE_DIR}/source/sources/source-shader.cpp"
+		# Encoders/Codecs
+		"source/encoders/codecs/hevc.hpp"
+		"source/encoders/codecs/hevc.cpp"
+		"source/encoders/codecs/h264.hpp"
+		"source/encoders/codecs/h264.cpp"
+		"source/encoders/codecs/prores.hpp"
+		"source/encoders/codecs/prores.cpp"
 
-	# Filters
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-blur.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-blur.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-color-grade.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-color-grade.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-displacement.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-displacement.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-dynamic-mask.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-dynamic-mask.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-sdf-effects.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-sdf-effects.cpp"
-	#"${PROJECT_SOURCE_DIR}/source/filters/filter-shader.hpp"
-	#"${PROJECT_SOURCE_DIR}/source/filters/filter-shader.cpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-transform.hpp"
-	"${PROJECT_SOURCE_DIR}/source/filters/filter-transform.cpp"
+		# Encoders/Handlers
+		"source/encoders/handlers/handler.hpp"
+		"source/encoders/handlers/handler.cpp"
+		"source/encoders/handlers/debug_handler.hpp"
+		"source/encoders/handlers/debug_handler.cpp"
+		"source/encoders/handlers/prores_aw_handler.hpp"
+		"source/encoders/handlers/prores_aw_handler.cpp"
+		"source/encoders/handlers/nvenc_shared.hpp"
+		"source/encoders/handlers/nvenc_shared.cpp"
+		"source/encoders/handlers/nvenc_h264_handler.hpp"
+		"source/encoders/handlers/nvenc_h264_handler.cpp"
+		"source/encoders/handlers/nvenc_hevc_handler.hpp"
+		"source/encoders/handlers/nvenc_hevc_handler.cpp"
+	)
+	list(APPEND PROJECT_LIBRARIES
+		${FFMPEG_LIBRARIES}
+	)
+	list(APPEND PROJECT_INCLUDE_DIRS
+		${FFMPEG_INCLUDE_DIRS}
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_ENCODER_FFMPEG
+	)
+endif()
 
-	# Transitions
+## Feature - Blur Filter
+if(${PropertyPrefix}ENABLE_FILTER_BLUR)
+	list(APPEND PROJECT_DATA
+		"data/effects/mask.effect"
+		"data/effects/blur/box.effect"
+		"data/effects/blur/box-linear.effect"
+		"data/effects/blur/dual-filtering.effect"
+		"data/effects/blur/gaussian.effect"
+		"data/effects/blur/gaussian-linear.effect"
+	)
+	list (APPEND PROJECT_PRIVATE_SOURCE
+		"source/gfx/blur/gfx-blur-base.hpp"
+		"source/gfx/blur/gfx-blur-base.cpp"
+		"source/gfx/blur/gfx-blur-box.hpp"
+		"source/gfx/blur/gfx-blur-box.cpp"
+		"source/gfx/blur/gfx-blur-box-linear.hpp"
+		"source/gfx/blur/gfx-blur-box-linear.cpp"
+		"source/gfx/blur/gfx-blur-dual-filtering.hpp"
+		"source/gfx/blur/gfx-blur-dual-filtering.cpp"
+		"source/gfx/blur/gfx-blur-gaussian.hpp"
+		"source/gfx/blur/gfx-blur-gaussian.cpp"
+		"source/gfx/blur/gfx-blur-gaussian-linear.hpp"
+		"source/gfx/blur/gfx-blur-gaussian-linear.cpp"
+		"source/filters/filter-blur.hpp"
+		"source/filters/filter-blur.cpp"		
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_FILTER_BLUR
+	)
+endif()
 
-	# FFmpeg
-	"${PROJECT_SOURCE_DIR}/source/ffmpeg/avframe-queue.cpp"
-	"${PROJECT_SOURCE_DIR}/source/ffmpeg/avframe-queue.hpp"
-	"${PROJECT_SOURCE_DIR}/source/ffmpeg/swscale.hpp"
-	"${PROJECT_SOURCE_DIR}/source/ffmpeg/swscale.cpp"
-	"${PROJECT_SOURCE_DIR}/source/ffmpeg/tools.hpp"
-	"${PROJECT_SOURCE_DIR}/source/ffmpeg/tools.cpp"
-	"${PROJECT_SOURCE_DIR}/source/ffmpeg/hwapi/base.hpp"
-	"${PROJECT_SOURCE_DIR}/source/ffmpeg/hwapi/base.cpp"
-	"${PROJECT_SOURCE_DIR}/source/ffmpeg/hwapi/d3d11.hpp"
-	"${PROJECT_SOURCE_DIR}/source/ffmpeg/hwapi/d3d11.cpp"
-	
-	# Encoders
-	"${PROJECT_SOURCE_DIR}/source/encoders/ffmpeg-encoder.hpp"
-	"${PROJECT_SOURCE_DIR}/source/encoders/ffmpeg-encoder.cpp"
-	# Encoders/Codecs
-	"${PROJECT_SOURCE_DIR}/source/encoders/codecs/hevc.hpp"
-	"${PROJECT_SOURCE_DIR}/source/encoders/codecs/hevc.cpp"
-	"${PROJECT_SOURCE_DIR}/source/encoders/codecs/h264.hpp"
-	"${PROJECT_SOURCE_DIR}/source/encoders/codecs/h264.cpp"
-	"${PROJECT_SOURCE_DIR}/source/encoders/codecs/prores.hpp"
-	"${PROJECT_SOURCE_DIR}/source/encoders/codecs/prores.cpp"
-	# Encoders/Handlers
-	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/handler.hpp"
-	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/handler.cpp"
-	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/debug_handler.hpp"
-	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/debug_handler.cpp"
-	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/prores_aw_handler.hpp"
-	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/prores_aw_handler.cpp"
-	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/nvenc_shared.hpp"
-	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/nvenc_shared.cpp"
-	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/nvenc_h264_handler.hpp"
-	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/nvenc_h264_handler.cpp"
-	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/nvenc_hevc_handler.hpp"
-	"${PROJECT_SOURCE_DIR}/source/encoders/handlers/nvenc_hevc_handler.cpp"
-)
+## Features - Color Grade Filter
+if(${PropertyPrefix}ENABLE_FILTER_COLOR_GRADE)
+	list(APPEND PROJECT_DATA
+		"data/effects/color-grade.effect"
+	)
+	list (APPEND PROJECT_PRIVATE_SOURCE
+		"source/filters/filter-color-grade.hpp"
+		"source/filters/filter-color-grade.cpp"	
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_FILTER_COLOR_GRADE
+	)
+endif()
+
+## Features - Displacement Filter
+if(${PropertyPrefix}ENABLE_FILTER_DISPLACEMENT)
+	list(APPEND PROJECT_DATA
+		"data/effects/displace.effect"
+	)
+	list (APPEND PROJECT_PRIVATE_SOURCE
+		"source/filters/filter-displacement.hpp"
+		"source/filters/filter-displacement.cpp"
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_FILTER_DISPLACEMENT
+	)
+endif()
+
+## Features - Dynamic Mask Filter
+if(${PropertyPrefix}ENABLE_FILTER_DYNAMIC_MASK)
+	list(APPEND PROJECT_DATA
+		"data/effects/channel-mask.effect"
+	)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/filters/filter-dynamic-mask.hpp"
+		"source/filters/filter-dynamic-mask.cpp"
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_FILTER_DYNAMIC_MASK
+	)
+endif()
+
+## Features - SDF Effects Filter
+if(${PropertyPrefix}ENABLE_FILTER_SDF_EFFECTS)
+	list(APPEND PROJECT_DATA
+		"data/effects/sdf/sdf-producer.effect"
+		"data/effects/sdf/sdf-consumer.effect"
+	)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/filters/filter-sdf-effects.hpp"
+		"source/filters/filter-sdf-effects.cpp"
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_FILTER_SDF_EFFECTS
+	)
+endif()
+
+## Features - Shader Filter
+if(${PropertyPrefix}ENABLE_FILTER_SHADER)
+	set(REQUIRE_SHADER_CODE ON)
+	list(APPEND PROJECT_DATA
+		"data/examples/shaders/filter/drunk.effect"
+		"data/examples/shaders/filter/example.effect"
+		"data/examples/shaders/filter/example_displace_by_texture.effect"
+	)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+#		"source/filters/filter-shader.hpp"
+#		"source/filters/filter-shader.cpp"
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_FILTER_SHADER
+	)
+endif()
+
+## Features - Transform Filter
+if(${PropertyPrefix}ENABLE_FILTER_TRANSFORM)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/filters/filter-transform.hpp"
+		"source/filters/filter-transform.cpp"
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_FILTER_TRANSFORM
+	)
+endif()
+
+## Features - Mirror Source
+if(${PropertyPrefix}ENABLE_SOURCE_MIRROR)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/sources/source-mirror.hpp"
+		"source/sources/source-mirror.cpp"
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_SOURCE_MIRROR
+	)
+endif()
+
+## Features - Shader Source
+if(${PropertyPrefix}ENABLE_SOURCE_SHADER)
+	set(REQUIRE_SHADER_CODE ON)
+	list(APPEND PROJECT_DATA
+		"data/examples/shaders/source/example.effect"
+	)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/sources/source-shader.hpp"
+		"source/sources/source-shader.cpp"
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_SOURCE_SHADER
+	)
+endif()
+
+## Features - Shader Transition
+if(${PropertyPrefix}ENABLE_TRANSITION_SHADER)
+	set(REQUIRE_SHADER_CODE ON)
+	list(APPEND PROJECT_DATA
+	)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+#		"source/transitions/transition-shader.hpp"
+#		"source/transitions/transition-shader.cpp"
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_TRANSITION_SHADER
+	)
+endif()
+
+## Parts
+if(REQUIRE_SHADER_CODE)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/gfx/shader/gfx-shader.hpp"
+		"source/gfx/shader/gfx-shader.cpp"
+		"source/gfx/shader/gfx-shader-param.hpp"
+		"source/gfx/shader/gfx-shader-param.cpp"
+		"source/gfx/shader/gfx-shader-param-audio.hpp"
+		"source/gfx/shader/gfx-shader-param-audio.cpp"
+		"source/gfx/shader/gfx-shader-param-basic.hpp"
+		"source/gfx/shader/gfx-shader-param-basic.cpp"
+		"source/gfx/shader/gfx-shader-param-matrix.hpp"
+		"source/gfx/shader/gfx-shader-param-matrix.cpp"
+		"source/gfx/shader/gfx-shader-param-texture.hpp"
+		"source/gfx/shader/gfx-shader-param-texture.cpp"
+	)
+endif()
 
 set(PROJECT_PRIVATE
 	${PROJECT_DATA}
@@ -540,44 +695,29 @@ target_include_directories(${PROJECT_NAME}
 	PRIVATE
 		"${PROJECT_BINARY_DIR}/source"
 		"${PROJECT_SOURCE_DIR}/source"
-		${FFMPEG_INCLUDE_DIRS}
+		${PROJECT_INCLUDE_DIRS}
 )
-
-# OBS Studio
-if(${PropertyPrefix}OBS_NATIVE)
-	target_link_libraries(${PROJECT_NAME}
-		libobs
-	)
-elseif(${PropertyPrefix}OBS_REFERENCE)
-	target_include_directories(${PROJECT_NAME}
-		PRIVATE
-			"${OBS_STUDIO_DIR}/libobs"
-	)
-	target_link_libraries(${PROJECT_NAME}
-		"${LIBOBS_LIB}"
-	)
-elseif(${PropertyPrefix}OBS_PACKAGE)
-	target_include_directories(${PROJECT_NAME}
-		PRIVATE
-			"${OBS_STUDIO_DIR}/include"
-	)
-	target_link_libraries(${PROJECT_NAME}
-		libobs
-	)
-elseif(${PropertyPrefix}OBS_DOWNLOAD)
-	target_link_libraries(${PROJECT_NAME}
-		libobs
-	)
-endif()
 
 # Link Libraries
 target_link_libraries(${PROJECT_NAME}
 	${PROJECT_LIBRARIES}
-	${FFMPEG_LIBRARIES}
 )
+if(WIN32)
+	foreach(DELAYLOAD ${PROJECT_LIBRARIES_DELAYED})
+		get_target_property(_lf ${PROJECT_NAME} LINK_FLAGS)
+		if (NOT _lf)
+			set(_lf "")
+		endif()
+		set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${_lf} /DELAYLOAD:${DELAYLOAD}")
+	endforeach()
+endif()
 
 # Definitions
-if (WIN32)
+target_compile_definitions(${PROJECT_NAME}
+	PRIVATE
+		${PROJECT_DEFINITIONS}
+)
+if(WIN32)
 	target_compile_definitions(${PROJECT_NAME}
 		PRIVATE
 			_CRT_SECURE_NO_WARNINGS
@@ -674,7 +814,7 @@ else()
 	endif()
 	
 	install(
-		DIRECTORY "${PROJECT_SOURCE_DIR}/data/"
+		DIRECTORY "data/"
 		DESTINATION "./data/obs-plugins/${PROJECT_NAME}/"
 	)
 	
@@ -693,3 +833,5 @@ else()
 		WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
 	)
 endif()
+
+cmake_policy(POP)
