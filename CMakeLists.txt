@@ -340,7 +340,7 @@ set(PROJECT_TEMPLATES
 	"${PROJECT_SOURCE_DIR}/cmake/version.hpp.in"
 	"${PROJECT_SOURCE_DIR}/cmake/module.cpp.in"
 	"${PROJECT_SOURCE_DIR}/cmake/DownloadProject.cmake"
-	"${PROJECT_SOURCE_DIR}/cmake/DownloadProject.CmakeLists.cmake.in"
+	"${PROJECT_SOURCE_DIR}/cmake/DownloadProject.CMakeLists.cmake.in"
 	"${PROJECT_SOURCE_DIR}/cmake/util.cmake"
 )
 if(WIN32)
