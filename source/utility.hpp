@@ -270,6 +270,47 @@ namespace util {
 
 			return T(final);
 		}
+
+		template<typename T>
+		inline T lerp(T a, T b, double_t v)
+		{
+			return static_cast<T>((static_cast<double_t>(a) * (1.0 - v)) + (static_cast<double_t>(b) * v));
+		}
+
+		template<typename T>
+		class kalman1D {
+			T _q_process_noise_covariance;
+			T _r_measurement_noise_covariance;
+			T _x_value_of_interest;
+			T _p_estimation_error_covariance;
+			T _k_kalman_gain;
+
+			public:
+			kalman1D()
+				: _q_process_noise_covariance(0), _r_measurement_noise_covariance(0), _x_value_of_interest(0),
+				  _p_estimation_error_covariance(0), _k_kalman_gain(0.0)
+			{}
+			kalman1D(T pnc, T mnc, T eec, T value)
+				: _q_process_noise_covariance(pnc), _r_measurement_noise_covariance(mnc), _x_value_of_interest(value),
+				  _p_estimation_error_covariance(eec), _k_kalman_gain(0.0)
+			{}
+			~kalman1D() {}
+
+			T filter(T measurement)
+			{
+				_p_estimation_error_covariance += _q_process_noise_covariance;
+				_k_kalman_gain =
+					_p_estimation_error_covariance / (_p_estimation_error_covariance + _r_measurement_noise_covariance);
+				_x_value_of_interest += _k_kalman_gain * (measurement - _x_value_of_interest);
+				_p_estimation_error_covariance = (1 - _k_kalman_gain) * _p_estimation_error_covariance;
+				return _x_value_of_interest;
+			}
+
+			T get()
+			{
+				return _x_value_of_interest;
+			}
+		};
 	} // namespace math
 
 	inline size_t aligned_offset(size_t align, size_t pos)
