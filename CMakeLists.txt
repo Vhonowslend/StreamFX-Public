@@ -703,6 +703,9 @@ target_link_libraries(${PROJECT_NAME}
 	${PROJECT_LIBRARIES}
 )
 if(WIN32)
+	target_link_libraries(${PROJECT_NAME}
+		Delayimp.lib
+	)
 	foreach(DELAYLOAD ${PROJECT_LIBRARIES_DELAYED})
 		get_target_property(_lf ${PROJECT_NAME} LINK_FLAGS)
 		if (NOT _lf)
