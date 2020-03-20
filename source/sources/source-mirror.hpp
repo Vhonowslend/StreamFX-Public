@@ -59,8 +59,10 @@ namespace source::mirror {
 		std::shared_ptr<obs::audio_signal_handler>  _signal_audio;
 
 		// Audio
-		bool           _audio_enabled;
-		speaker_layout _audio_layout;
+		bool                          _audio_enabled;
+		speaker_layout                _audio_layout;
+		std::mutex                    _audio_queue_lock;
+		std::queue<mirror_audio_data> _audio_queue;
 
 		public:
 		mirror_instance(obs_data_t* settings, obs_source_t* self);

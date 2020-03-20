@@ -55,18 +55,18 @@ source::mirror::mirror_audio_data::mirror_audio_data(const audio_data* audio, sp
 	// Build a clone of a packet.
 	audio_t*                 oad = obs_get_audio();
 	const audio_output_info* aoi = audio_output_get_info(oad);
-	osa.frames          = audio->frames;
-	osa.timestamp       = audio->timestamp;
-	osa.speakers        = layout;
-	osa.format          = aoi->format;
-	osa.samples_per_sec = aoi->samples_per_sec;	
+	osa.frames                   = audio->frames;
+	osa.timestamp                = audio->timestamp;
+	osa.speakers                 = layout;
+	osa.format                   = aoi->format;
+	osa.samples_per_sec          = aoi->samples_per_sec;
 	data.resize(MAX_AV_PLANES);
 	for (size_t idx = 0; idx < MAX_AV_PLANES; idx++) {
 		if (!audio->data[idx]) {
 			osa.data[idx] = nullptr;
 			continue;
 		}
-		
+
 		data[idx].resize(audio->frames * get_audio_bytes_per_channel(osa.format));
 		memcpy(data[idx].data(), audio->data[idx], data[idx].size());
 		osa.data[idx] = data[idx].data();
@@ -249,16 +249,23 @@ void source::mirror::mirror_instance::on_audio(std::shared_ptr<obs_source_t>, co
 		}
 	}
 
+	{
+		std::unique_lock<std::mutex> ul(_audio_queue_lock);
+		_audio_queue.emplace(audio, detected_layout);
+	}
+
 	// Create a clone of the audio data and push it to the thread pool.
 	get_global_threadpool()->push(
-		std::bind(&source::mirror::mirror_instance::audio_output, this, std::placeholders::_1),
-		std::make_shared<mirror_audio_data>(audio, detected_layout));
+		std::bind(&source::mirror::mirror_instance::audio_output, this, std::placeholders::_1), nullptr);
 }
 
 void source::mirror::mirror_instance::audio_output(std::shared_ptr<void> data)
 {
-	std::shared_ptr<mirror_audio_data> mad = std::static_pointer_cast<mirror_audio_data>(data);
-	obs_source_output_audio(_self, &mad->osa);
+	std::unique_lock<std::mutex> ul(_audio_queue_lock);
+	while (_audio_queue.size() > 0) {
+		obs_source_output_audio(_self, &((_audio_queue.front()).osa));
+		_audio_queue.pop();
+	}
 }
 
 std::shared_ptr<mirror::mirror_factory> mirror::mirror_factory::factory_instance;
