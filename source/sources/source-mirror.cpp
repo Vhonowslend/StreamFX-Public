@@ -113,12 +113,12 @@ void mirror::mirror_instance::update(obs_data_t* data)
 {
 	convert_config(data);
 
-	// Acquire new source.
-	acquire(obs_data_get_string(data, ST_SOURCE));
-
 	// Audio
 	_audio_enabled = obs_data_get_bool(data, ST_SOURCE_AUDIO);
 	_audio_layout  = static_cast<speaker_layout>(obs_data_get_int(data, ST_SOURCE_AUDIO_LAYOUT));
+
+	// Acquire new source.
+	acquire(obs_data_get_string(data, ST_SOURCE));
 }
 
 void mirror::mirror_instance::load(obs_data_t* data)
