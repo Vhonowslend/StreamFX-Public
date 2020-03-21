@@ -85,12 +85,12 @@ mirror::mirror_instance::~mirror_instance()
 
 uint32_t mirror::mirror_instance::get_width()
 {
-	return obs_source_get_width(_source.get());
+	return _source_size.first;
 }
 
 uint32_t mirror::mirror_instance::get_height()
 {
-	return obs_source_get_height(_source.get());
+	return _source_size.second;
 }
 
 static void convert_config(obs_data_t* data)
@@ -135,7 +135,13 @@ void mirror::mirror_instance::save(obs_data_t* data)
 	}
 }
 
-void mirror::mirror_instance::video_tick(float time) {}
+void mirror::mirror_instance::video_tick(float time)
+{
+	if (_source) {
+		_source_size.first  = obs_source_get_width(_source.get());
+		_source_size.second = obs_source_get_height(_source.get());
+	}
+}
 
 void mirror::mirror_instance::video_render(gs_effect_t* effect)
 {

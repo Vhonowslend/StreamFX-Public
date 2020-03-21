@@ -57,6 +57,7 @@ namespace source::mirror {
 		std::shared_ptr<obs::tools::child_source>   _source_child;
 		std::shared_ptr<obs::source_signal_handler> _signal_rename;
 		std::shared_ptr<obs::audio_signal_handler>  _signal_audio;
+		std::pair<uint32_t, uint32_t>               _source_size;
 
 		// Audio
 		bool                          _audio_enabled;
