@@ -777,7 +777,7 @@ ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* encoder, b
 	if (is_texture_encode) {
 		// Abort if user specified manual override.
 		if ((static_cast<AVPixelFormat>(obs_data_get_int(settings, KEY_FFMPEG_COLORFORMAT)) != AV_PIX_FMT_NONE)
-			|| (obs_data_get_int(settings, KEY_FFMPEG_GPU) != -1)) {
+			|| (obs_data_get_int(settings, KEY_FFMPEG_GPU) != -1) || (obs_encoder_scaling_enabled(_self))) {
 			throw std::runtime_error("Unable to create accelerated encoder due to user settings.");
 		}
 
