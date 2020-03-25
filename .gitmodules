@@ -1,3 +1,6 @@
 [submodule "cmake/clang"]
 	path = cmake/clang
 	url = https://github.com/Xaymar/cmake-clang.git
+[submodule "third-party/nvidia-arsdk"]
+	path = third-party/nvidia-arsdk
+	url = https://github.com/NVIDIA/BROADCAST-AR-SDK.git
