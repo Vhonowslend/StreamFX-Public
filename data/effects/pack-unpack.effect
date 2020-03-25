@@ -23,8 +23,8 @@ VertData vertex_program(VertData vd)
 // -------------------------------------------------------------------------------- //
 // Helpers
 // -------------------------------------------------------------------------------- //
-uint get_selector(VertData vd, int width) {
-	return uint(vd.uv.x * size * width) % width;
+uint get_selector(VertData vd, int components) {
+	return uint(vd.uv.x * size * components) % components;
 }
 
 // -------------------------------------------------------------------------------- //

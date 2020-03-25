@@ -200,6 +200,7 @@ set(${PropertyPrefix}ENABLE_FILTER_BLUR TRUE CACHE BOOL "Enable Blur Filter")
 set(${PropertyPrefix}ENABLE_FILTER_COLOR_GRADE TRUE CACHE BOOL "Enable Color Grade Filter")
 set(${PropertyPrefix}ENABLE_FILTER_DISPLACEMENT TRUE CACHE BOOL "Enable Displacement Filter")
 set(${PropertyPrefix}ENABLE_FILTER_DYNAMIC_MASK TRUE CACHE BOOL "Enable Dynamic Mask Filter")
+set(${PropertyPrefix}ENABLE_FILTER_NVIDIA_FACE_TRACKING TRUE CACHE BOOL "Enable NVidia Face Tracking Filter")
 set(${PropertyPrefix}ENABLE_FILTER_SDF_EFFECTS TRUE CACHE BOOL "Enable SDF Effects Filter")
 set(${PropertyPrefix}ENABLE_FILTER_SHADER TRUE CACHE BOOL "Enable Shader Filter")
 set(${PropertyPrefix}ENABLE_FILTER_TRANSFORM TRUE CACHE BOOL "Enable Transform Filter")
@@ -551,6 +552,41 @@ if(${PropertyPrefix}ENABLE_FILTER_DYNAMIC_MASK)
 	)
 endif()
 
+## Features - Nvidia Face Tracking Filter
+if(${PropertyPrefix}ENABLE_FILTER_NVIDIA_FACE_TRACKING AND WIN32)
+	set(NVAR_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/third-party/nvidia-arsdk")
+	find_package(NVAR REQUIRED)
+
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/filters/filter-nv-face-tracking.hpp"
+		"source/filters/filter-nv-face-tracking.cpp"
+		"source/nvidia/ar/nvidia-ar.hpp"
+		"source/nvidia/ar/nvidia-ar.cpp"
+		"source/nvidia/ar/nvidia-ar-feature.hpp"
+		"source/nvidia/ar/nvidia-ar-feature.cpp"
+		"source/nvidia/cuda/nvidia-cuda.hpp"
+		"source/nvidia/cuda/nvidia-cuda.cpp"
+		"source/nvidia/cuda/nvidia-cuda-context.hpp"
+		"source/nvidia/cuda/nvidia-cuda-context.cpp"
+		"source/nvidia/cuda/nvidia-cuda-context-stack.hpp"
+		"source/nvidia/cuda/nvidia-cuda-context-stack.cpp"
+		"source/nvidia/cuda/nvidia-cuda-gs-texture.hpp"
+		"source/nvidia/cuda/nvidia-cuda-gs-texture.cpp"
+		"source/nvidia/cuda/nvidia-cuda-memory.hpp"
+		"source/nvidia/cuda/nvidia-cuda-memory.cpp"
+		"source/nvidia/cuda/nvidia-cuda-stream.hpp"
+		"source/nvidia/cuda/nvidia-cuda-stream.cpp"
+	)
+	list(APPEND PROJECT_LIBRARIES
+		nvARProxy
+	)
+	list(APPEND PROJECT_INCLUDE_DIRS
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_FILTER_NVIDIA_FACE_TRACKING
+	)
+endif()
+
 ## Features - SDF Effects Filter
 if(${PropertyPrefix}ENABLE_FILTER_SDF_EFFECTS)
 	list(APPEND PROJECT_DATA
@@ -743,7 +779,7 @@ if(WIN32)
 			NOATOM
 			NOCLIPBOARD
 			NOCOLOR
-			NOCTLMGR
+			#NOCTLMGR
 			NODRAWTEXT
 			#NOGDI
 			NOKERNEL
@@ -763,7 +799,7 @@ if(WIN32)
 			NOWINOFFSETS
 			NOCOMM
 			NOKANJI
-			NOHELP
+			#NOHELP
 			NOPROFILER
 			NODEFERWINDOWPOS
 			NOMCX

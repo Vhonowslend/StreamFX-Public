@@ -37,6 +37,9 @@
 #ifdef ENABLE_FILTER_DYNAMIC_MASK
 #include "filters/filter-dynamic-mask.hpp"
 #endif
+#ifdef ENABLE_FILTER_NVIDIA_FACE_TRACKING
+#include "filters/filter-nv-face-tracking.hpp"
+#endif
 #ifdef ENABLE_FILTER_SDF_EFFECTS
 #include "filters/filter-sdf-effects.hpp"
 #endif
@@ -86,6 +89,9 @@ try {
 #endif
 #ifdef ENABLE_FILTER_DYNAMIC_MASK
 	filter::dynamic_mask::dynamic_mask_factory::initialize();
+#endif
+#ifdef ENABLE_FILTER_NVIDIA_FACE_TRACKING
+	filter::nvidia::face_tracking_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_SDF_EFFECTS
 	filter::sdf_effects::sdf_effects_factory::initialize();
@@ -145,6 +151,9 @@ try {
 #endif
 #ifdef ENABLE_FILTER_DYNAMIC_MASK
 	filter::dynamic_mask::dynamic_mask_factory::finalize();
+#endif
+#ifdef ENABLE_FILTER_NVIDIA_FACE_TRACKING
+	filter::nvidia::face_tracking_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_SDF_EFFECTS
 	filter::sdf_effects::sdf_effects_factory::finalize();
