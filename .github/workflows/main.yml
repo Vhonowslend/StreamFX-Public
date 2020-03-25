@@ -5,9 +5,13 @@ on: [push, pull_request]
 jobs:
   windows:
     runs-on: windows-2019
+    name: "Windows"
     steps:
     - name: "Clone Repository"
       uses: actions/checkout@v1
+    - name: "Clone Submodules"
+      shell: bash
+      run: git submodule update --init --recursive
     - name: "Configure Project"
       shell: bash
       run: |
@@ -36,9 +40,13 @@ jobs:
         path: build/package
   windows-speed:
     runs-on: windows-2019
+    name: "Windows (Performance)"
     steps:
     - name: "Clone Repository"
       uses: actions/checkout@v1
+    - name: "Clone Submodules"
+      shell: bash
+      run: git submodule update --init --recursive
     - name: "Configure Project"
       shell: bash
       run: |
