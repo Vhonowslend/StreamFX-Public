@@ -347,6 +347,8 @@ list(APPEND PROJECT_PRIVATE_SOURCE
 	"source/utility.hpp"
 	"source/utility.cpp"
 	"source/util-event.hpp"
+	"source/util-profiler.cpp"
+	"source/util-profiler.hpp"
 	"source/util-threadpool.cpp"
 	"source/util-threadpool.hpp"
 
