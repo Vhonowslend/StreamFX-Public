@@ -35,9 +35,14 @@
 #endif
 
 #if defined(WIN32) || defined(WIN64)
-extern "C" {
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 5039)
+#endif
 #include <Windows.h>
-}
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 #endif
 
 // Here be dragons!
@@ -50,12 +55,12 @@ struct graphics_subsystem {
 };
 
 #if defined(WIN32) || defined(WIN64)
-#include <d3d11.h>
-#include <dxgi.h>
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4201)
+#pragma warning(disable : 4201 4365)
 #endif
+#include <d3d11.h>
+#include <dxgi.h>
 #include <util/windows/ComPtr.hpp>
 #ifdef _MSC_VER
 #pragma warning(pop)
