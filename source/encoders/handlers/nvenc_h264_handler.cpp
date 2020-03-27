@@ -29,11 +29,15 @@
 #include "utility.hpp"
 
 extern "C" {
-#include <obs-module.h>
+#ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4244)
+#pragma warning(disable : 4242 4244 4365)
+#endif
 #include <libavutil/opt.h>
+#include <obs-module.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
+#endif
 }
 
 #define KEY_PROFILE "H264.Profile"

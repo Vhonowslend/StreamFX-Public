@@ -24,11 +24,15 @@
 #include <utility>
 
 extern "C" {
+#ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4244)
+#pragma warning(disable : 4242 4244 4365)
+#endif
 #include <libavutil/pixfmt.h>
 #include <libswscale/swscale.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
+#endif
 }
 
 namespace ffmpeg {

@@ -177,6 +177,8 @@ AVColorSpace tools::obs_videocolorspace_to_avcolorspace(video_colorspace v)
 		return AVCOL_SPC_BT709;
 	case VIDEO_CS_601:
 		return AVCOL_SPC_BT470BG;
+	case VIDEO_CS_SRGB:
+		return AVCOL_SPC_RGB;
 	}
 	throw std::invalid_argument("unknown color space");
 }
@@ -251,6 +253,7 @@ void tools::setup_obs_color(video_colorspace colorspace, video_range_type range,
 			{VIDEO_CS_DEFAULT, {AVCOL_SPC_BT470BG, AVCOL_PRI_BT470BG, AVCOL_TRC_SMPTE170M}},
 			{VIDEO_CS_601, {AVCOL_SPC_BT470BG, AVCOL_PRI_BT470BG, AVCOL_TRC_SMPTE170M}},
 			{VIDEO_CS_709, {AVCOL_SPC_BT709, AVCOL_PRI_BT709, AVCOL_TRC_BT709}},
+			{VIDEO_CS_SRGB, {AVCOL_SPC_RGB, AVCOL_PRI_BT709, AVCOL_TRC_BT709}},
 		};
 	std::map<video_range_type, AVColorRange> colorranges = {
 		{VIDEO_RANGE_DEFAULT, AVCOL_RANGE_MPEG},

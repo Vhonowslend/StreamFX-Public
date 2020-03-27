@@ -26,8 +26,15 @@
 #include <vector>
 
 extern "C" {
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4242 4244 4365)
+#endif
 #include <libavcodec/avcodec.h>
 #include <libavutil/pixfmt.h>
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 }
 
 namespace ffmpeg::tools {

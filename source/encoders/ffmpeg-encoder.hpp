@@ -35,13 +35,17 @@
 #include "handlers/handler.hpp"
 
 extern "C" {
-#include <obs-properties.h>
-#include <obs.h>
+#ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4244)
+#pragma warning(disable : 4242 4244 4365)
+#endif
 #include <libavcodec/avcodec.h>
 #include <libavutil/frame.h>
+#include <obs-properties.h>
+#include <obs.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
+#endif
 }
 
 namespace encoder::ffmpeg {

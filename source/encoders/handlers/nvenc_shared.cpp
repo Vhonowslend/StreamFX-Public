@@ -366,9 +366,9 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 	{
 		obs_properties_t* grp = props;
 		if (!util::are_property_groups_broken()) {
-			grp    = obs_properties_create();
-			auto p = obs_properties_add_group(props, ST_RATECONTROL_QUALITY, D_TRANSLATE(ST_RATECONTROL_QUALITY),
-											  OBS_GROUP_NORMAL, grp);
+			grp = obs_properties_create();
+			obs_properties_add_group(props, ST_RATECONTROL_QUALITY, D_TRANSLATE(ST_RATECONTROL_QUALITY),
+									 OBS_GROUP_NORMAL, grp);
 		}
 
 		{
@@ -392,9 +392,8 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 	{
 		obs_properties_t* grp = props;
 		if (!util::are_property_groups_broken()) {
-			grp    = obs_properties_create();
-			auto p = obs_properties_add_group(props, ST_RATECONTROL_QP, D_TRANSLATE(ST_RATECONTROL_QP),
-											  OBS_GROUP_NORMAL, grp);
+			grp = obs_properties_create();
+			obs_properties_add_group(props, ST_RATECONTROL_QP, D_TRANSLATE(ST_RATECONTROL_QP), OBS_GROUP_NORMAL, grp);
 		}
 
 		{

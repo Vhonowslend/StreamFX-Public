@@ -19,10 +19,11 @@
 
 #include "plugin.hpp"
 #include <stdexcept>
-
 #include "obs/obs-source-tracker.hpp"
 
+#ifdef ENABLE_ENCODER_FFMPEG
 #include "encoders/ffmpeg-encoder.hpp"
+#endif
 
 #ifdef ENABLE_FILTER_BLUR
 #include "filters/filter-blur.hpp"
@@ -45,12 +46,14 @@
 #ifdef ENABLE_FILTER_TRANSFORM
 #include "filters/filter-transform.hpp"
 #endif
+
 #ifdef ENABLE_SOURCE_MIRROR
 #include "sources/source-mirror.hpp"
 #endif
 #ifdef ENABLE_SOURCE_SHADER
 #include "sources/source-shader.hpp"
 #endif
+
 #ifdef ENABLE_TRANSITION_SHADER
 //#include "transitions/source-shader.hpp"
 #endif
@@ -169,7 +172,7 @@ try {
 #ifdef _WIN32
 // Windows Only
 extern "C" {
-#include <windows.h>
+#include <Windows.h>
 }
 
 BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID)

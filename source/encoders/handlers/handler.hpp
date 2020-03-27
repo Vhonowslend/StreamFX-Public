@@ -31,7 +31,7 @@ extern "C" {
 #include <obs-encoder.h>
 #include <obs-properties.h>
 #pragma warning(push)
-#pragma warning(disable : 4244)
+#pragma warning(disable : 4242 4244 4365)
 #include <libavcodec/avcodec.h>
 #pragma warning(pop)
 }
