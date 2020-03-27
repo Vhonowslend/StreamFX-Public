@@ -51,8 +51,9 @@ static std::pair<dynamic_mask::channel, const char*> channel_translations[] = {
 };
 
 dynamic_mask::dynamic_mask_instance::dynamic_mask_instance(obs_data_t* settings, obs_source_t* self)
-	: obs::source_instance(settings, self), _have_filter_texture(false), _have_input_texture(false),
-	  _have_final_texture(false), _precalc(), _effect()
+	: obs::source_instance(settings, self), _translation_map(), _effect(), _have_filter_texture(false), _filter_rt(),
+	  _filter_texture(), _have_input_texture(false), _input(), _input_capture(), _input_texture(),
+	  _have_final_texture(false), _final_rt(), _final_texture(), _channels(), _precalc()
 {
 	_filter_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	_final_rt  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
