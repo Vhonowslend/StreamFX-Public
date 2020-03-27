@@ -22,7 +22,7 @@
 // Most Tasks likely wait for IO, so we can use that time for other tasks.
 #define CONCURRENCY_MULTIPLIER 2
 
-util::threadpool::threadpool() : _workers(), _tasks(), _tasks_lock(), _tasks_cv(), _worker_stop(false)
+util::threadpool::threadpool() : _workers(), _worker_stop(false), _tasks(), _tasks_lock(), _tasks_cv()
 {
 	size_t concurrency = static_cast<size_t>(std::thread::hardware_concurrency()) * CONCURRENCY_MULTIPLIER;
 	for (size_t n = 0; n < concurrency; n++) {
