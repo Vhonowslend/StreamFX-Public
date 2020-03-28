@@ -92,7 +92,7 @@ float4 HSVtoRGB(float4 HSVA) {
 float4 HSLtoRGB(float4 HSLA) {
     float3 rgb = clamp(
 		abs(
-			mod(
+			fmod(
 				HSLA.x * 6.0 + float3(0.0, 4.0, 2.0),
 				6.0
 			) - 3.0
