@@ -32,7 +32,7 @@
 #define ST_PARAMETERS ST ".Parameters"
 
 gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
-	: _self(self), _mode(mode), _base_width(1), _base_height(1), _input_a(), _input_b(),
+	: _self(self), _mode(mode), _base_width(1), _base_height(1),
 
 	  _shader(), _shader_file(), _shader_tech("Draw"), _shader_file_mt(), _shader_file_sz(), _shader_file_tick(0),
 
@@ -320,11 +320,7 @@ uint32_t gfx::shader::shader::width()
 		case size_type::Pixel:
 			return std::clamp(static_cast<uint32_t>(_width_value), 1u, 8192u);
 		case size_type::Percent:
-			if (_input_a) {
-				return std::clamp(static_cast<uint32_t>(_width_value * _input_a->get_width()), 1u, 8192u);
-			} else {
-				return std::clamp(static_cast<uint32_t>(_width_value * _base_width), 1u, 8192u);
-			}
+			return std::clamp(static_cast<uint32_t>(_width_value * _base_width), 1u, 8192u);
 		}
 	default:
 		return 0;
@@ -348,11 +344,7 @@ uint32_t gfx::shader::shader::height()
 		case size_type::Pixel:
 			return std::clamp(static_cast<uint32_t>(_height_value), 1u, 8192u);
 		case size_type::Percent:
-			if (_input_a) {
-				return std::clamp(static_cast<uint32_t>(_height_value * _input_a->get_height()), 1u, 8192u);
-			} else {
-				return std::clamp(static_cast<uint32_t>(_height_value * _base_height), 1u, 8192u);
-			}
+			return std::clamp(static_cast<uint32_t>(_height_value * _base_height), 1u, 8192u);
 		}
 	default:
 		return 0;
@@ -374,13 +366,10 @@ bool gfx::shader::shader::tick(float_t time)
 	return false;
 }
 
-void gfx::shader::shader::render()
+void gfx::shader::shader::prepare_render()
 {
 	if (!_shader)
 		return;
-
-	uint32_t szw = width();
-	uint32_t szh = height();
 
 	for (auto kv : _shader_params) {
 		kv.second->assign();
@@ -403,9 +392,15 @@ void gfx::shader::shader::render()
 						  1.0f / static_cast<float_t>(width()), 1.0f / static_cast<float_t>(height()));
 		}
 	}
+}
+
+void gfx::shader::shader::render()
+{
+	if (!_shader)
+		return;
 
 	while (gs_effect_loop(_shader.get_object(), _shader_tech.c_str())) {
-		gs_draw_sprite(nullptr, 0, szw, szh);
+		gs_draw_sprite(nullptr, 0, width(), height());
 	}
 }
 
@@ -417,10 +412,47 @@ void gfx::shader::shader::set_size(uint32_t w, uint32_t h)
 
 void gfx::shader::shader::set_input_a(std::shared_ptr<gs::texture> tex)
 {
-	_input_a = tex;
+	if (!_shader)
+		return;
+
+	if (gs::effect_parameter el = _shader.get_parameter("InputA"); el != nullptr) {
+		if (el.get_type() == gs::effect_parameter::type::Texture) {
+			el.set_texture(tex);
+		}
+	}
 }
 
 void gfx::shader::shader::set_input_b(std::shared_ptr<gs::texture> tex)
 {
-	_input_b = tex;
+	if (!_shader)
+		return;
+
+	if (gs::effect_parameter el = _shader.get_parameter("InputB"); el != nullptr) {
+		if (el.get_type() == gs::effect_parameter::type::Texture) {
+			el.set_texture(tex);
+		}
+	}
+}
+
+void gfx::shader::shader::set_transition_time(float_t t)
+{
+	if (!_shader)
+		return;
+
+	if (gs::effect_parameter el = _shader.get_parameter("TransitionTime"); el != nullptr) {
+		if (el.get_type() == gs::effect_parameter::type::Float) {
+			el.set_float(t);
+		}
+	}
+}
+
+void gfx::shader::shader::set_transition_size(uint32_t w, uint32_t h)
+{
+	if (!_shader)
+		return;
+	if (gs::effect_parameter el = _shader.get_parameter("TransitionSize"); el != nullptr) {
+		if (el.get_type() == gs::effect_parameter::type::Integer2) {
+			el.set_int2(w, h);
+		}
+	}
 }

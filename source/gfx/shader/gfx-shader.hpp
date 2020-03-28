@@ -59,8 +59,6 @@ namespace gfx {
 			shader_mode                  _mode;
 			uint32_t                     _base_width;
 			uint32_t                     _base_height;
-			std::shared_ptr<gs::texture> _input_a;
-			std::shared_ptr<gs::texture> _input_b;
 
 			// Shader
 			gs::effect                      _shader;
@@ -107,6 +105,8 @@ namespace gfx {
 
 			bool tick(float_t time);
 
+			void prepare_render();
+
 			void render();
 
 			public:
@@ -115,6 +115,10 @@ namespace gfx {
 			void set_input_a(std::shared_ptr<gs::texture> tex);
 
 			void set_input_b(std::shared_ptr<gs::texture> tex);
+
+			void set_transition_time(float_t t);
+
+			void set_transition_size(uint32_t w, uint32_t h);
 		};
 	} // namespace shader
 } // namespace gfx
