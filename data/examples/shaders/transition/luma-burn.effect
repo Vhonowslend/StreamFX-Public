@@ -1,0 +1,99 @@
+// Always provided by OBS
+uniform float4x4 ViewProj<
+	bool automatic = true;
+	string name = "View Projection Matrix";
+>;
+
+// Provided by Stream Effects
+uniform float4 Time<
+	bool automatic = true;
+	string name = "Time Array";
+	string description = "A float4 value containing the total time, rendering time and the time since the last tick. The last value is a random number between 0 and 1.";
+>;
+uniform float4x4 Random<
+	bool automatic = true;
+	string name = "Random Array";
+	string description = "A float4x4 value containing random values between 0 and 1";
+>;
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+uniform texture2d InputB<
+	bool automatic = true;
+>;
+uniform float TransitionTime<
+	bool automatic = true;
+>;
+uniform int2 TransitionSize<
+	bool automatic = true;
+>;
+
+uniform float Sharpness<
+	string field_type = "slider";
+	string suffix = " %";
+	float minimum = 8.0;
+	float maximum = 128.0;
+	float step = 0.01;
+	float scale = 1.0;
+> = 10.0;
+
+// ---------- Shader Code
+sampler_state def_sampler {
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+	Filter    = Linear;
+};
+
+struct VertData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertData VSDefault(VertData v_in) {
+	VertData vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+	return vert_out;
+}
+
+float4 RGBtoYUV(float4 rgba, float3x3 yuv) {
+	return float4(
+		rgba.r * yuv._m00 + rgba.g * yuv._m01 + rgba.b * yuv._m02,
+		rgba.r * yuv._m10 + rgba.g * yuv._m11 + rgba.b * yuv._m12,
+		rgba.r * yuv._m20 + rgba.g * yuv._m21 + rgba.b * yuv._m22,
+		rgba.a
+	) + float4(0,0.5,0.5,0);
+}
+
+float4 PSDefault(VertData v_in) : TARGET {
+	const float3x3 mYUV709n = { // Normalized
+		0.2126, 0.7152, 0.0722,
+		-0.1145721060573399, -0.3854278939426601, 0.5,
+		0.5, -0.4541529083058166, -0.0458470916941834
+	};
+
+	float4 sampleA = InputA.Sample(def_sampler, v_in.uv);
+	float4 sampleB = InputB.Sample(def_sampler, v_in.uv);
+
+	float4 sampleAYUV = RGBtoYUV(sampleA, mYUV709n);
+	float4 sampleBYUV = RGBtoYUV(sampleB, mYUV709n);
+	
+	float sharpinv = 1.0 / Sharpness;
+	float transition = sharpinv + sampleAYUV.r * (1.0 - sharpinv);
+	transition -= TransitionTime;
+	transition *= Sharpness;
+	transition += 0.5;
+	transition = clamp(transition, 0., 1.);
+
+	return sampleB * (1.0 - transition) + sampleA * (transition);
+	//return transition;
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSDefault(v_in); 
+	}
+}

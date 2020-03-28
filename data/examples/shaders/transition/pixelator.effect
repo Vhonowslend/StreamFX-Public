@@ -1,0 +1,119 @@
+// Always provided by OBS
+uniform float4x4 ViewProj<
+	bool automatic = true;
+	string name = "View Projection Matrix";
+>;
+
+// Provided by Stream Effects
+uniform float4 Time<
+	bool automatic = true;
+	string name = "Time Array";
+	string description = "A float4 value containing the total time, rendering time and the time since the last tick. The last value is a random number between 0 and 1.";
+>;
+uniform float4x4 Random<
+	bool automatic = true;
+	string name = "Random Array";
+	string description = "A float4x4 value containing random values between 0 and 1";
+>;
+uniform float4 ViewSize<
+	bool automatic = true;
+>;
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+uniform texture2d InputB<
+	bool automatic = true;
+>;
+uniform float TransitionTime<
+	bool automatic = true;
+>;
+uniform int2 TransitionSize<
+	bool automatic = true;
+>;
+
+uniform bool _0_oldStyle<
+	string name = "Retro Style";
+	
+> = false;
+uniform float2 _1_pixelateCenter<
+	string name = "Pixelation Center";
+	string field_type = "slider";
+	float2 minimum = {0., 0.};
+	float2 maximum = {100., 100.};
+	float2 scale = {0.01, 0.01};
+> = {50., 50.};
+uniform float _2_maximumBlockSize<
+	string name = "Maximum Pixelation";
+	string field_type = "slider";
+	float minimum = 1.0;
+	float maximum = 16.0;
+	float step = 1.0;
+> = 12.;
+uniform float2 _3_blockOffset<
+	string name = "Block Offset";
+	string field_type = "slider";
+	float2 minimum = {0., 0.};
+	float2 maximum = {100., 100.};
+	float2 scale = {0.01, 0.01};
+> = {50., 50.};
+
+// ---------- Shader Code
+sampler_state def_sampler {
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+	Filter    = Linear;
+};
+
+struct VertData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertData VSDefault(VertData v_in) {
+	VertData vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+	return vert_out;
+}
+
+float4 PSDefault(VertData v_in) : TARGET {
+    float animProgress = TransitionTime;
+
+	// Progress as a bounce value (0..1..0)
+    float animStuff = 1.0 - (abs(animProgress - 0.5) * 2.0);
+    // There are two ways to calculate this, one is pixel aligned the other is block aligned.
+	float animBlockSize = 0;
+    if (_0_oldStyle) {
+		// Block Size, always a multiple of 2. (Block Aligned)
+		animBlockSize = pow(2.0, floor(_2_maximumBlockSize * animStuff));
+	} else {
+		// Block Size, always a multiple of 2. (Pixel Aligned)
+		animBlockSize = floor(pow(2.0, _2_maximumBlockSize * animStuff));
+	}
+
+	// UV Calculations
+	float2 finalUV = v_in.uv;
+	finalUV -= _1_pixelateCenter;				// Offset by the pixelation center.
+	finalUV *= ViewSize.xy;					// Convert to 0..Resolution UVs for pixelation.
+	finalUV /= animBlockSize;				// Divide by current block size.
+	finalUV = floor(finalUV) + _3_blockOffset;	// Use floor() on it to get aligned pixels.
+	finalUV *= animBlockSize;				// Multiply by current block size.
+	finalUV *= ViewSize.zw;					// Convert back to 0..1 UVs for texture sampling.
+	finalUV += _1_pixelateCenter;				// Revert the offset by the pixelation center again.
+
+	float4 sampleA = InputA.Sample(def_sampler, finalUV);
+	float4 sampleB = InputB.Sample(def_sampler, finalUV);
+
+	float4 rgb = lerp(sampleA, sampleB, clamp((TransitionTime - 0.45) * (1.0 / 0.45), 0., 1.));
+
+	return rgb;
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSDefault(v_in); 
+	}
+}
