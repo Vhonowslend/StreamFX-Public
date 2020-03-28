@@ -575,8 +575,8 @@ if(${PropertyPrefix}ENABLE_FILTER_SHADER)
 		"data/examples/shaders/filter/example_displace_by_texture.effect"
 	)
 	list(APPEND PROJECT_PRIVATE_SOURCE
-#		"source/filters/filter-shader.hpp"
-#		"source/filters/filter-shader.cpp"
+		"source/filters/filter-shader.hpp"
+		"source/filters/filter-shader.cpp"
 	)
 	list(APPEND PROJECT_DEFINITIONS
 		ENABLE_FILTER_SHADER

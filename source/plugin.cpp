@@ -41,7 +41,7 @@
 #include "filters/filter-sdf-effects.hpp"
 #endif
 #ifdef ENABLE_FILTER_SHADER
-//#include "filters/filter-shader.hpp"
+#include "filters/filter-shader.hpp"
 #endif
 #ifdef ENABLE_FILTER_TRANSFORM
 #include "filters/filter-transform.hpp"
@@ -91,7 +91,7 @@ try {
 	filter::sdf_effects::sdf_effects_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_SHADER
-//filter::shader::shader_factory::initialize();
+	filter::shader::shader_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_TRANSFORM
 	filter::transform::transform_factory::initialize();
@@ -107,7 +107,7 @@ try {
 
 // Transitions
 #ifdef ENABLE_TRANSITION_SHADER
-transition::shader::shader_factory::initialize();
+	transition::shader::shader_factory::initialize();
 #endif
 
 	return true;
@@ -122,7 +122,7 @@ try {
 
 	// Transitions
 #ifdef ENABLE_TRANSITION_SHADER
-transition::shader::shader_factory::finalize();
+	transition::shader::shader_factory::finalize();
 #endif
 
 // Sources
@@ -150,7 +150,7 @@ transition::shader::shader_factory::finalize();
 	filter::sdf_effects::sdf_effects_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_SHADER
-//filter::shader::shader_factory::finalize();
+	filter::shader::shader_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_TRANSFORM
 	filter::transform::transform_factory::finalize();

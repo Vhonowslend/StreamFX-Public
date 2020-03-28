@@ -21,69 +21,64 @@
 
 #include "gfx/shader/gfx-shader.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
+#include "obs/obs-source-factory.hpp"
 #include "plugin.hpp"
 
 extern "C" {
 #include <obs.h>
 }
 
-namespace filter {
-	namespace shader {
-		class shader_factory {
-			obs_source_info _source_info;
+namespace filter::shader {
+	class shader_instance : public obs::source_instance {
+		std::shared_ptr<gfx::shader::shader> _fx;
+		std::shared_ptr<gs::rendertarget>    _rt;
 
-			public: // Singleton
-			static void                            initialize();
-			static void                            finalize();
-			static std::shared_ptr<shader_factory> get();
+		public:
+		shader_instance(obs_data_t* data, obs_source_t* self);
+		virtual ~shader_instance();
 
-			public:
-			shader_factory();
-			~shader_factory();
-		};
+		virtual uint32_t get_width() override;
+		virtual uint32_t get_height() override;
 
-		class shader_instance {
-			obs_source_t* _self;
-			bool          _active;
+		void properties(obs_properties_t* props);
 
-			uint32_t _width, _height;
+		virtual void load(obs_data_t* data) override;
+		virtual void update(obs_data_t* data) override;
 
-			bool     _scale_locked;
-			float_t  _wscale, _hscale;
-			uint32_t _swidth, _sheight;
+		virtual void video_tick(float_t sec_since_last) override;
+		virtual void video_render(gs_effect_t* effect) override;
 
-			std::shared_ptr<gs::rendertarget> _rt;
-			bool                              _rt_updated;
-			std::shared_ptr<gs::texture>      _rt_tex;
+		virtual void transition_start() override;
+		virtual void transition_stop() override;
+	};
 
-			std::shared_ptr<gs::rendertarget> _rt2;
-			bool                              _rt2_updated;
-			std::shared_ptr<gs::texture>      _rt2_tex;
+	class shader_factory : public obs::source_factory<filter::shader::shader_factory, filter::shader::shader_instance> {
+		static std::shared_ptr<filter::shader::shader_factory> factory_instance;
 
-			std::shared_ptr<gfx::effect_source::effect_source> _fx;
+		public: // Singleton
+		static void initialize()
+		{
+			factory_instance = std::make_shared<filter::shader::shader_factory>();
+		}
 
-			public:
-			shader_instance(obs_data_t* data, obs_source_t* self);
-			~shader_instance();
+		static void finalize()
+		{
+			factory_instance.reset();
+		}
 
-			uint32_t width();
-			uint32_t height();
+		static std::shared_ptr<shader_factory> get()
+		{
+			return factory_instance;
+		}
 
-			void properties(obs_properties_t* props);
+		public:
+		shader_factory();
+		virtual ~shader_factory();
 
-			void load(obs_data_t* data);
-			void update(obs_data_t* data);
+		virtual const char* get_name() override;
 
-			void activate();
-			void deactivate();
+		virtual void get_defaults2(obs_data_t* data) override;
 
-			bool valid_param(std::shared_ptr<gs::effect_parameter> param);
-			void override_param(std::shared_ptr<gs::effect> effect);
-
-			void enum_active_sources(obs_source_enum_proc_t, void*);
-
-			void video_tick(float_t sec_since_last);
-			void video_render(gs_effect_t* effect);
-		};
-	} // namespace shader
-} // namespace filter
+		virtual obs_properties_t* get_properties2(filter::shader::shader_instance* data) override;
+	};
+} // namespace filter::shader

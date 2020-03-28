@@ -22,7 +22,7 @@
 #include "strings.hpp"
 #include "utility.hpp"
 
-#define ST "Source.Shader"
+#define ST "Transition.Shader"
 
 transition::shader::shader_instance::shader_instance(obs_data_t* data, obs_source_t* self)
 	: obs::source_instance(data, self), _is_main(false)
