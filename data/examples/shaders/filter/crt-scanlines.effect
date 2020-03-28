@@ -1,0 +1,136 @@
+// Always provided by OBS
+uniform float4x4 ViewProj<
+	bool automatic = true;
+	string name = "View Projection Matrix";
+>;
+
+// Provided by Stream Effects
+uniform float4 Time<
+	bool automatic = true;
+	string name = "Time Array";
+	string description = "A float4 value containing the total time, rendering time and the time since the last tick. The last value is a random number between 0 and 1.";
+>;
+uniform float4x4 Random<
+	bool automatic = true;
+	string name = "Random Array";
+	string description = "A float4x4 value containing random values between 0 and 1";
+>;
+uniform float4 ViewSize<
+	bool automatic = true;
+>;
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+
+uniform float _0_Strength<
+	string name = "Strength";
+	string field_type = "slider";
+	float minimum = 0.;
+	float maximum = 100.;
+	float step = 0.01;
+	float scale = 0.01;
+> = 100.0;
+uniform int _1_Scanlines<
+	string name = "Scanlines";
+	string field_type = "slider";
+	int minimum = 128;
+	int maximum = 16384;
+	int step = 1;
+> = 525;
+
+uniform float2 _1_Intensity<
+	string name = "Intensity Limits";
+	string field_type = "slider";
+	float2 minimum = {0., 0.};
+	float2 maximum = {100., 100.};
+	float2 step = {0.01, 0.01};
+	float2 scale = {0.01, 0.01};
+> = {95.0, 100.0};
+uniform bool _2_EnableBleed<
+	string name = "Enable NTSC Bleeding";
+> = true;
+uniform float _3_ScanlineSize<
+	string name = "Scanline Scaling";
+	string field_type = "slider";
+	float minimum = 0.01;
+	float maximum = 100.;
+	float step = 0.01;
+	float scale = 0.01;
+> = 100.0;
+uniform float _4_Speed<
+	string name = "Timescale";
+	string field_type = "slider";
+	float minimum = 0.01;
+	float maximum = 100.;
+	float step = 0.01;
+	float scale = 0.01;
+> = 60.0;
+
+
+#define PI		3.1415926f
+#define TwoPI	6.2831853f
+#define HalfPI	1.5707963f
+
+// ---------- Shader Code
+sampler_state def_sampler {
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+	Filter    = Linear;
+};
+
+struct VertData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertData VSDefault(VertData v_in) {
+	VertData vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+	return vert_out;
+}
+
+float4 PSDefault(VertData v_in) : TARGET {
+	float2 uv = v_in.uv;
+	float time_offset = Time.y * _4_Speed;
+
+	// Scanline stuff.
+	uint scanline_index = floor(fmod((uv.y + time_offset), 1.) * _1_Scanlines);
+	uint scanline_intensity = scanline_index % 2;
+
+	// Calculate final color;
+	float4 rgb = InputA.Sample(def_sampler, uv);
+
+	// Bleeding
+	if (_2_EnableBleed) {
+		// Not true bleeding, missing some gaussian blur.
+		float offset = float(scanline_intensity) * 0.0005;
+
+		float colorShift = 0.001;
+		float r = InputA.Sample(def_sampler, uv + offset + colorShift).r;
+		float g = InputA.Sample(def_sampler, uv + offset - colorShift).g;
+		float b = rgb.b;
+
+		rgb.rgb = float3(r, g, b); // g * 0.99?
+	}
+	
+	// Intensity;
+	rgb.rgb *= clamp(float(scanline_intensity), _1_Intensity.x, _1_Intensity.y);
+
+	// rollbar
+	const float rollbar_cycle_length = 5.;
+	float rollbar_cycle = Time.y + fmod(Time.z, rollbar_cycle_length);
+	float rollbar = sin((uv.y + rollbar_cycle / rollbar_cycle_length) * TwoPI);	
+	rgb.rgb = lerp(rgb, rgb + (rollbar * 0.1), _0_Strength);
+
+	return rgb;
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSDefault(v_in); 
+	}
+}

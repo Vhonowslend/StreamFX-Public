@@ -1,0 +1,99 @@
+// Always provided by OBS
+uniform float4x4 ViewProj<
+	bool automatic = true;
+	string name = "View Projection Matrix";
+>;
+
+// Provided by Stream Effects
+uniform float4 Time<
+	bool automatic = true;
+	string name = "Time Array";
+	string description = "A float4 value containing the total time, rendering time and the time since the last tick. The last value is a random number between 0 and 1.";
+>;
+uniform float4x4 Random<
+	bool automatic = true;
+	string name = "Random Array";
+	string description = "A float4x4 value containing random values between 0 and 1";
+>;
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+
+uniform float _0_strength<
+	string name = "Strength";
+	string field_type = "slider";
+	float minimum = 0.;
+	float maximum = 100.;
+	float step = 0.01;
+	float scale = 0.01;
+> = 33.33;
+uniform float4 _1_border<
+	string name = "Border Color";
+	string field_type = "slider";
+	float4 minimum = {0., 0., 0., 0.};
+	float4 maximum = {100., 100., 100., 100.};
+	float4 step = {0.01, 0.01, 0.01, 0.01};
+	float4 scale = {0.01, 0.01, 0.01, 0.01};
+> = {0., 0., 0., 0.};
+uniform float _2_feathering<
+	string name = "Feathering";
+	string field_type = "slider";
+	float minimum = 0.01;
+	float maximum = 100.;
+	float step = 0.01;
+	float scale = 0.01;
+> = 33.33;
+
+#define PI		3.1415926f
+#define TwoPI	6.2831853f
+#define HalfPI	1.5707963f
+
+// ---------- Shader Code
+sampler_state def_sampler {
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+	Filter    = Linear;
+};
+
+struct VertData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertData VSDefault(VertData v_in) {
+	VertData vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+	return vert_out;
+}
+
+float4 PSDefault(VertData v_in) : TARGET {
+	float2 center = {0.5, 0.5};
+
+	float2 cc = v_in.uv - center;
+	float dist = dot(cc, cc) * _0_strength;
+	float2 bentUV = v_in.uv + cc * (1.0 + dist) * dist;
+
+	if ((bentUV.x <= 0. || bentUV.x >= 1.) || (bentUV.y <= 0. || bentUV.y >= 1.)) {
+		return _1_border;
+	}
+
+	// Calculate border distance from texel center by ignoring the sign bit and normalizing the distance to 0..1.
+	float2 borderDistance = (center - abs(bentUV - center)) / center;
+	float2 borderArea = center * _2_feathering;
+
+	// Now apply a modifier so that we only get the border area.
+	borderDistance = (min(borderDistance - center * _2_feathering, 0) + borderArea) / borderArea;
+	float borderFade = sin(borderDistance.x * HalfPI) * sin(borderDistance.y * HalfPI);
+
+	return lerp(_1_border, InputA.Sample(def_sampler, bentUV), borderFade);
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSDefault(v_in); 
+	}
+}
