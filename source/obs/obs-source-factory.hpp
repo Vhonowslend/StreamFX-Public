@@ -144,13 +144,9 @@ namespace obs {
 				set_resolution_enabled(false);
 				_info.transition_start = _transition_start;
 				_info.transition_stop  = _transition_stop;
-				if ((_info.output_flags & OBS_SOURCE_VIDEO) != 0) {
-					_info.video_tick   = _video_tick;
-					_info.video_render = _video_render;
-				}
-				if ((_info.output_flags & OBS_SOURCE_AUDIO) != 0) {
-					_info.audio_render = _audio_render;
-				}
+				_info.audio_render     = _audio_render;
+				_info.video_tick       = _video_tick;
+				_info.video_render     = _video_render;
 			} else if (_info.type == OBS_SOURCE_TYPE_FILTER) {
 				switch (_info.output_flags & OBS_SOURCE_ASYNC_VIDEO) {
 				case OBS_SOURCE_ASYNC_VIDEO:
