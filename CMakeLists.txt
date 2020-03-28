@@ -626,8 +626,8 @@ if(${PropertyPrefix}ENABLE_TRANSITION_SHADER)
 	list(APPEND PROJECT_DATA
 	)
 	list(APPEND PROJECT_PRIVATE_SOURCE
-#		"source/transitions/transition-shader.hpp"
-#		"source/transitions/transition-shader.cpp"
+		"source/transitions/transition-shader.hpp"
+		"source/transitions/transition-shader.cpp"
 	)
 	list(APPEND PROJECT_DEFINITIONS
 		ENABLE_TRANSITION_SHADER

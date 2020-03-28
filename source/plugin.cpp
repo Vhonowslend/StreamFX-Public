@@ -55,7 +55,7 @@
 #endif
 
 #ifdef ENABLE_TRANSITION_SHADER
-//#include "transitions/source-shader.hpp"
+#include "transitions/transition-shader.hpp"
 #endif
 
 static std::shared_ptr<util::threadpool> global_threadpool;
@@ -107,7 +107,7 @@ try {
 
 // Transitions
 #ifdef ENABLE_TRANSITION_SHADER
-//transition::shader::shader_factory::initialize();
+transition::shader::shader_factory::initialize();
 #endif
 
 	return true;
@@ -122,7 +122,7 @@ try {
 
 	// Transitions
 #ifdef ENABLE_TRANSITION_SHADER
-//transition::shader::shader_factory::finalize();
+transition::shader::shader_factory::finalize();
 #endif
 
 // Sources
