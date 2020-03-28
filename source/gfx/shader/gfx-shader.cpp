@@ -38,7 +38,7 @@ gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
 
 	  _width_type(size_type::Percent), _width_value(1.0), _height_type(size_type::Percent), _height_value(1.0),
 
-	  _time(0), _random(), _have_current_params(false)
+	  _time(0), _time_loop(0), _loops(0), _random(), _have_current_params(false)
 {
 	_random.seed(static_cast<unsigned long long>(time(NULL)));
 }
@@ -362,6 +362,15 @@ bool gfx::shader::shader::tick(float_t time)
 
 	// Update State
 	_time += time;
+	_time_loop += time;
+	if (_time_loop > 1.) {
+		_time_loop -= 1.;
+
+		// Loops
+		_loops += 1;
+		if (_loops >= 4194304)
+			_loops = -_loops;
+	}
 
 	return false;
 }
@@ -379,7 +388,7 @@ void gfx::shader::shader::prepare_render()
 	if (gs::effect_parameter el = _shader.get_parameter("Time"); el != nullptr) {
 		if (el.get_type() == gs::effect_parameter::type::Float4) {
 			el.set_float4(
-				_time, 0, 0,
+				_time, _time_loop, static_cast<float_t>(_loops),
 				static_cast<float_t>(static_cast<double_t>(_random())
 									 / static_cast<double_t>(std::numeric_limits<unsigned long long>::max())));
 		}

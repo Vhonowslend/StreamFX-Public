@@ -56,9 +56,9 @@ namespace gfx {
 			obs_source_t* _self;
 
 			// Inputs
-			shader_mode                  _mode;
-			uint32_t                     _base_width;
-			uint32_t                     _base_height;
+			shader_mode _mode;
+			uint32_t    _base_width;
+			uint32_t    _base_height;
 
 			// Shader
 			gs::effect                      _shader;
@@ -77,6 +77,8 @@ namespace gfx {
 
 			// Cache
 			float_t         _time;
+			float_t         _time_loop;
+			int32_t			_loops;
 			std::mt19937_64 _random;
 			bool            _have_current_params;
 
