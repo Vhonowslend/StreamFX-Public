@@ -1,18 +1,12 @@
-![Logo](https://cdn.xaymar.com/obs/streamfx/logo.svg)
-[![CI](https://github.com/Xaymar/obs-StreamFX/workflows/CI/badge.svg)](https://github.com/Xaymar/obs-StreamFX/actions) [![Crowdin](https://d322cqt584bo4o.cloudfront.net/obs-stream-effects/localized.svg)](https://crowdin.com/project/obs-stream-effects)
+# About StreamFX [![CI](https://github.com/Xaymar/obs-StreamFX/workflows/CI/badge.svg)](https://github.com/Xaymar/obs-StreamFX/actions) [![Crowdin](https://d322cqt584bo4o.cloudfront.net/obs-stream-effects/localized.svg)](https://crowdin.com/project/obs-stream-effects)
+StreamFX is a plugin to libOBS (OBS Studio, StreamElements OBS Live) that adds new sources, filters and transitions to give you the ability to drastically improve your stream and recording setup past what was possible in OBS Studio until now. Whether it is blurring out a region, moving something in 3D, or just writing your own shaders as a new transition, source or filter - StreamFX has it all.
 
-# About StreamFX
-StreamFX is a plugin to libOBS (OBS Studio, OBS.live) which adds many new Sources, Filters and Transitions that enhance and extend the functionality in libOBS.
+## Support the StreamFX project!
+Like any other free project, StreamFX relies on donations to be continuously developed and stay free. If StreamFX helped you, consider helping the StreamFX project by making a one time donation via [PayPal](https://www.paypal.me/xaymar), or a continuous donation via [Patreon](https://www.patreon.com/Xaymar) or [Github Sponsors](https://github.com/sponsors/Xaymar)!
 
-## Features
-* 3D Transform Filter (Ortho, Perspective, ...)
-* Blur Filter (Box, Gaussian, ...)
-* Displacement Mapping Filter
-* Shader Source, Shader Filter, Shader Transition
-* & more! Check out the [wiki](https://github.com/Xaymar/obs-StreamFX/wiki) for more information.
+## Contributing
+There's two ways you can directly contribute to the project. One is by [submitting translations into your language on Crowdin](https://crowdin.com/project/obs-stream-effects), and the other is [by contributing code to the project](https://github.com/Xaymar/obs-StreamFX/blob/master/CONTRIBUTING.md).
 
-## Helping Out
-There's always something to translate, so consider [submitting translations into your language on Crowdin](https://crowdin.com/project/obs-stream-effects)! Crowdin allows many contributors to work together on translating a project without requiring any programming knowledge. All you need is an account, and you can start translating!
-
-## Supporting the project
-The StreamFX project is funded through [Patreon](https://www.patreon.com/Xaymar), Github Sponsors and [PayPal donations](https://www.paypal.me/xaymar). Note that supporting the project does not grant you any special rights unless otherwise stated.
+## Further Links
+* [Wiki](https://github.com/Xaymar/obs-StreamFX/wiki)
+* [Installation Guide](https://github.com/xaymar/obs-streamfx/wiki/Installation)
