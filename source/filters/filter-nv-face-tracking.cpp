@@ -212,9 +212,9 @@ void filter::nvidia::face_tracking_instance::video_tick(float seconds)
 		return;
 
 	// Update Buffers
-	uint32_t width  = obs_source_get_width(_self);
-	uint32_t height = obs_source_get_height(_self);
-	if ((width != _width) || (height != _height))
+	uint32_t width  = obs_source_get_base_width(obs_filter_get_target(_self));
+	uint32_t height = obs_source_get_base_height(obs_filter_get_target(_self));
+	if (((width != _width) || (height != _height)) && width && height)
 		try {
 			// Recreate things.
 			create_image_buffer(width, height);
