@@ -28,7 +28,7 @@
 filter::shader::shader_instance::shader_instance(obs_data_t* data, obs_source_t* self)
 	: obs::source_instance(data, self)
 {
-	_fx = std::make_shared<gfx::shader::shader>(self, gfx::shader::shader_mode::Transition);
+	_fx = std::make_shared<gfx::shader::shader>(self, gfx::shader::shader_mode::Filter);
 	_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	update(data);
 }
