@@ -27,7 +27,7 @@
 using namespace source;
 
 shader::shader_instance::shader_instance(obs_data_t* data, obs_source_t* self)
-	: obs::source_instance(data, self), _is_main(false)
+	: obs::source_instance(data, self), _fx()
 {
 	_fx = std::make_shared<gfx::shader::shader>(self, gfx::shader::shader_mode::Source);
 
@@ -69,7 +69,9 @@ void shader::shader_instance::video_tick(float_t sec_since_last)
 		obs_data_release(data);
 	}
 
-	_is_main = true;
+	obs_video_info ovi;
+	obs_get_video_info(&ovi);
+	_fx->set_size(ovi.base_width, ovi.base_height);
 }
 
 void shader::shader_instance::video_render(gs_effect_t* effect)
@@ -78,13 +80,7 @@ void shader::shader_instance::video_render(gs_effect_t* effect)
 		return;
 	}
 
-	if (_is_main) { // Dirty hack to only take the value from the first render, which usually is the main view.
-		gs_rect vect;
-		gs_get_viewport(&vect);
-		_fx->set_size(static_cast<uint32_t>(vect.cx), static_cast<uint32_t>(vect.cy));
-		_is_main = false;
-	}
-
+	_fx->prepare_render();
 	_fx->render();
 }
 
