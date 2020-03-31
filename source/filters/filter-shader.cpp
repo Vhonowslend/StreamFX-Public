@@ -69,7 +69,7 @@ void filter::shader::shader_instance::video_tick(float_t sec_since_last)
 	}
 
 	if (obs_source_t* tgt = obs_filter_get_target(_self); tgt != nullptr) {
-		_fx->set_size(obs_source_get_width(tgt), obs_source_get_height(tgt));
+		_fx->set_size(obs_source_get_base_width(tgt), obs_source_get_base_height(tgt));
 	} else if (obs_source* src = obs_filter_get_parent(_self); src != nullptr) {
 		_fx->set_size(obs_source_get_base_width(src), obs_source_get_base_height(src));
 	}
@@ -139,7 +139,8 @@ const char* filter::shader::shader_factory::get_name()
 	return D_TRANSLATE(ST);
 }
 
-void filter::shader::shader_factory::get_defaults2(obs_data_t* data) {
+void filter::shader::shader_factory::get_defaults2(obs_data_t* data)
+{
 	gfx::shader::shader::defaults(data);
 }
 
