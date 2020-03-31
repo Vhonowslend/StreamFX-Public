@@ -68,8 +68,11 @@ void filter::shader::shader_instance::video_tick(float_t sec_since_last)
 		obs_data_release(data);
 	}
 
-	obs_source_t* tgt = obs_filter_get_target(_self);
-	_fx->set_size(obs_source_get_width(tgt), obs_source_get_height(tgt));
+	if (obs_source_t* tgt = obs_filter_get_target(_self); tgt != nullptr) {
+		_fx->set_size(obs_source_get_width(tgt), obs_source_get_height(tgt));
+	} else if (obs_source* src = obs_filter_get_parent(_self); src != nullptr) {
+		_fx->set_size(obs_source_get_base_width(src), obs_source_get_base_height(src));
+	}
 }
 
 void filter::shader::shader_instance::video_render(gs_effect_t* effect)
@@ -80,7 +83,7 @@ void filter::shader::shader_instance::video_render(gs_effect_t* effect)
 	}
 
 	{
-		gs::debug_marker _marker_cache{gs::debug_color_cache, "%s Cache"};
+		gs::debug_marker _marker_cache{gs::debug_color_source, "%s: Capture", obs_source_get_name(_self)};
 		auto             op = _rt->render(_fx->width(), _fx->height());
 
 		gs_ortho(0, static_cast<float_t>(_fx->width()), 0, static_cast<float_t>(_fx->height()), -1, 1);
@@ -109,14 +112,14 @@ void filter::shader::shader_instance::video_render(gs_effect_t* effect)
 		}
 	}
 
-	_fx->prepare_render();
-	_fx->set_input_a(_rt->get_texture());
-	_fx->render();
+	{
+		gs::debug_marker _marker_cache{gs::debug_color_render, "%s: Render", obs_source_get_name(_self)};
+
+		_fx->prepare_render();
+		_fx->set_input_a(_rt->get_texture());
+		_fx->render();
+	}
 }
-
-void filter::shader::shader_instance::transition_start() {}
-
-void filter::shader::shader_instance::transition_stop() {}
 
 std::shared_ptr<filter::shader::shader_factory> filter::shader::shader_factory::factory_instance = nullptr;
 

@@ -47,9 +47,6 @@ namespace filter::shader {
 
 		virtual void video_tick(float_t sec_since_last) override;
 		virtual void video_render(gs_effect_t* effect) override;
-
-		virtual void transition_start() override;
-		virtual void transition_stop() override;
 	};
 
 	class shader_factory : public obs::source_factory<filter::shader::shader_factory, filter::shader::shader_instance> {
