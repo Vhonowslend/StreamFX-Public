@@ -106,7 +106,10 @@ const char* shader::shader_factory::get_name()
 	return D_TRANSLATE(ST);
 }
 
-void shader::shader_factory::get_defaults2(obs_data_t* data) {}
+void shader::shader_factory::get_defaults2(obs_data_t* data)
+{
+	gfx::shader::shader::defaults(data);
+}
 
 obs_properties_t* shader::shader_factory::get_properties2(shader::shader_instance* data)
 {

@@ -139,7 +139,9 @@ const char* filter::shader::shader_factory::get_name()
 	return D_TRANSLATE(ST);
 }
 
-void filter::shader::shader_factory::get_defaults2(obs_data_t* data) {}
+void filter::shader::shader_factory::get_defaults2(obs_data_t* data) {
+	gfx::shader::shader::defaults(data);
+}
 
 obs_properties_t* filter::shader::shader_factory::get_properties2(shader::shader_instance* data)
 {

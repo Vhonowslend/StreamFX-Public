@@ -171,6 +171,14 @@ try {
 	return false;
 }
 
+void gfx::shader::shader::defaults(obs_data_t* data)
+{
+	obs_data_set_default_string(data, ST_SHADER_FILE, "");
+	obs_data_set_default_string(data, ST_SHADER_TECHNIQUE, "");
+	obs_data_set_default_string(data, ST_SHADER_SIZE_WIDTH, "100.0 %");
+	obs_data_set_default_string(data, ST_SHADER_SIZE_HEIGHT, "100.0 %");
+}
+
 void gfx::shader::shader::properties(obs_properties_t* pr)
 {
 	_have_current_params = false;

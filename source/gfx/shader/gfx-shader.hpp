@@ -93,6 +93,8 @@ namespace gfx {
 			bool load_shader(const std::filesystem::path& file, const std::string& tech, bool& shader_dirty,
 							 bool& param_dirty);
 
+			static void defaults(obs_data_t* data);
+
 			void properties(obs_properties_t* props);
 
 			bool on_properties_modified(obs_properties_t* props, obs_property_t* prop, obs_data_t* data);
