@@ -46,7 +46,7 @@ namespace util {
 		event(event<_args...>&& other) : event()
 		{
 			std::lock_guard<std::recursive_mutex> lg(_lock);
-			std::lock_guard<std::recursive_mutex> lg(other._lock);
+			std::lock_guard<std::recursive_mutex> lgo(other._lock);
 
 			_listeners.swap(other._listeners);
 			_cb_fill.swap(other._cb_fill);
