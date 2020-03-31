@@ -18,6 +18,7 @@
  */
 
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <map>
 #include <memory>
