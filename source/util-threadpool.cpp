@@ -18,6 +18,7 @@
 */
 
 #include "util-threadpool.hpp"
+#include <cstddef>
 
 // Most Tasks likely wait for IO, so we can use that time for other tasks.
 #define CONCURRENCY_MULTIPLIER 2
