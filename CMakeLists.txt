@@ -52,7 +52,9 @@ endif()
 
 # Policies
 cmake_policy(PUSH)
-cmake_policy(SET CMP0074 NEW)
+if (${CMAKE_VERSION} VERSION_GREATER "3.12.0")
+	cmake_policy(SET CMP0074 NEW)
+endif()
 
 # Define Project
 project(
@@ -173,12 +175,7 @@ else()
 	set(CMAKE_PACKAGE_NAME "${PROJECT_NAME}" CACHE STRING "Name for the generated archives.")
 	set(CMAKE_PACKAGE_SUFFIX_OVERRIDE "" CACHE STRING "Override for the suffix.")
 
-	if(${PropertyPrefix}OBS_DOWNLOAD)
-		set(${PropertyPrefix}OBS_DOWNLOAD_VERSION "25.0.1" CACHE STRING "OBS Studio Version to download")
-		set(${PropertyPrefix}OBS_DEPENDENCIES_VERSION "25.0.0" CACHE STRING "OBS Studio Version to download")
-		set(${PropertyPrefix}OBS_DOWNLOAD_URL "https://github.com/Xaymar/obs-studio/releases/download/${OBS_DOWNLOAD_VERSION}-ci/obs-studio-${ARCH}-0.0.0.0-vs2019.7z")
-		set(${PropertyPrefix}OBS_DEPENDENCIES_URL "https://cdn.xaymar.com/obs/dependencies_${OBS_DEPENDENCIES_VERSION}.zip")
-	else()
+	if(NOT ${PropertyPrefix}OBS_DOWNLOAD)
 		set(${PropertyPrefix}OBS_STUDIO_DIR "" CACHE PATH "OBS Studio Source/Package Directory")
 		set(${PropertyPrefix}OBS_DEPENDENCIES_DIR "" CACHE PATH "OBS Studio Dependencies Directory")
 		if(EXISTS "${OBS_STUDIO_DIR}/cmake/LibObs/LibObsConfig.cmake")
@@ -195,18 +192,45 @@ else()
 endif()
 
 # Features
-set(${PropertyPrefix}ENABLE_ENCODER_FFMPEG TRUE CACHE BOOL "Enable FFmpeg Encoder")
-set(${PropertyPrefix}ENABLE_FILTER_BLUR TRUE CACHE BOOL "Enable Blur Filter")
-set(${PropertyPrefix}ENABLE_FILTER_COLOR_GRADE TRUE CACHE BOOL "Enable Color Grade Filter")
-set(${PropertyPrefix}ENABLE_FILTER_DISPLACEMENT TRUE CACHE BOOL "Enable Displacement Filter")
-set(${PropertyPrefix}ENABLE_FILTER_DYNAMIC_MASK TRUE CACHE BOOL "Enable Dynamic Mask Filter")
-set(${PropertyPrefix}ENABLE_FILTER_NVIDIA_FACE_TRACKING TRUE CACHE BOOL "Enable NVidia Face Tracking Filter")
-set(${PropertyPrefix}ENABLE_FILTER_SDF_EFFECTS TRUE CACHE BOOL "Enable SDF Effects Filter")
-set(${PropertyPrefix}ENABLE_FILTER_SHADER TRUE CACHE BOOL "Enable Shader Filter")
-set(${PropertyPrefix}ENABLE_FILTER_TRANSFORM TRUE CACHE BOOL "Enable Transform Filter")
-set(${PropertyPrefix}ENABLE_SOURCE_MIRROR TRUE CACHE BOOL "Enable Mirror Source")
-set(${PropertyPrefix}ENABLE_SOURCE_SHADER TRUE CACHE BOOL "Enable Shader Source")
-set(${PropertyPrefix}ENABLE_TRANSITION_SHADER TRUE CACHE BOOL "Enable Shader Transition")
+if(WIN32)
+	set(ENABLE_ENCODER_FFMPEG TRUE)
+	set(ENABLE_FILTER_BLUR TRUE)
+	set(ENABLE_FILTER_COLOR_GRADE TRUE)
+	set(ENABLE_FILTER_DISPLACEMENT TRUE)
+	set(ENABLE_FILTER_DYNAMIC_MASK TRUE)
+	set(ENABLE_FILTER_NVIDIA_FACE_TRACKING TRUE)
+	set(ENABLE_FILTER_SDF_EFFECTS TRUE)
+	set(ENABLE_FILTER_SHADER TRUE)
+	set(ENABLE_FILTER_TRANSFORM TRUE)
+	set(ENABLE_SOURCE_MIRROR TRUE)
+	set(ENABLE_SOURCE_SHADER TRUE)
+	set(ENABLE_TRANSITION_SHADER TRUE)
+else()
+	set(ENABLE_ENCODER_FFMPEG FALSE)
+	set(ENABLE_FILTER_BLUR TRUE)
+	set(ENABLE_FILTER_COLOR_GRADE TRUE)
+	set(ENABLE_FILTER_DISPLACEMENT TRUE)
+	set(ENABLE_FILTER_DYNAMIC_MASK TRUE)
+	set(ENABLE_FILTER_NVIDIA_FACE_TRACKING FALSE)
+	set(ENABLE_FILTER_SDF_EFFECTS TRUE)
+	set(ENABLE_FILTER_SHADER TRUE)
+	set(ENABLE_FILTER_TRANSFORM TRUE)
+	set(ENABLE_SOURCE_MIRROR TRUE)
+	set(ENABLE_SOURCE_SHADER TRUE)
+	set(ENABLE_TRANSITION_SHADER TRUE)
+endif()
+set(${PropertyPrefix}ENABLE_ENCODER_FFMPEG ${ENABLE_ENCODER_FFMPEG} CACHE BOOL "Enable FFmpeg Encoder")
+set(${PropertyPrefix}ENABLE_FILTER_BLUR ${ENABLE_FILTER_BLUR} CACHE BOOL "Enable Blur Filter")
+set(${PropertyPrefix}ENABLE_FILTER_COLOR_GRADE ${ENABLE_FILTER_COLOR_GRADE} CACHE BOOL "Enable Color Grade Filter")
+set(${PropertyPrefix}ENABLE_FILTER_DISPLACEMENT ${ENABLE_FILTER_DISPLACEMENT} CACHE BOOL "Enable Displacement Filter")
+set(${PropertyPrefix}ENABLE_FILTER_DYNAMIC_MASK ${ENABLE_FILTER_DYNAMIC_MASK} CACHE BOOL "Enable Dynamic Mask Filter")
+set(${PropertyPrefix}ENABLE_FILTER_NVIDIA_FACE_TRACKING ${ENABLE_FILTER_NVIDIA_FACE_TRACKING} CACHE BOOL "Enable NVidia Face Tracking Filter")
+set(${PropertyPrefix}ENABLE_FILTER_SDF_EFFECTS ${ENABLE_FILTER_SDF_EFFECTS} CACHE BOOL "Enable SDF Effects Filter")
+set(${PropertyPrefix}ENABLE_FILTER_SHADER ${ENABLE_FILTER_SHADER} CACHE BOOL "Enable Shader Filter")
+set(${PropertyPrefix}ENABLE_FILTER_TRANSFORM ${ENABLE_FILTER_TRANSFORM} CACHE BOOL "Enable Transform Filter")
+set(${PropertyPrefix}ENABLE_SOURCE_MIRROR ${ENABLE_SOURCE_MIRROR} CACHE BOOL "Enable Mirror Source")
+set(${PropertyPrefix}ENABLE_SOURCE_SHADER ${ENABLE_SOURCE_SHADER} CACHE BOOL "Enable Shader Source")
+set(${PropertyPrefix}ENABLE_TRANSITION_SHADER ${ENABLE_TRANSITION_SHADER} CACHE BOOL "Enable Shader Transition")
 
 ################################################################################
 # CMake / Compiler Dependencies
@@ -262,17 +286,33 @@ endif()
 if(${PropertyPrefix}OBS_DOWNLOAD)
 	include("DownloadProject")
 	
-	download_project(
-		PROJ libobs
-		URL ${OBS_DOWNLOAD_URL}
-		UPDATE_DISCONNECTED 1
-	)
-	
-	download_project(
-		PROJ obsdeps
-		URL ${OBS_DEPENDENCIES_URL}
-		UPDATE_DISCONNECTED 1
-	)
+	set(OBS_DOWNLOAD_VERSION "25.0.3")
+	set(OBS_DEPENDENCIES_VERSION "25.0.0")
+	if(WIN32)
+		# Windows
+		download_project(
+			PROJ libobs
+			URL https://github.com/Xaymar/obs-studio/releases/download/${OBS_DOWNLOAD_VERSION}-ci/obs-studio-${ARCH}-0.0.0.0-vs2019.7z
+			UPDATE_DISCONNECTED 1
+		)
+		download_project(
+			PROJ obsdeps
+			URL https://cdn.xaymar.com/obs/dependencies_${OBS_DEPENDENCIES_VERSION}.zip
+			UPDATE_DISCONNECTED 1
+		)
+	elseif(UNIX)
+		# Unix, Linux
+		download_project(
+			PROJ libobs
+			URL https://github.com/Xaymar/obs-studio/releases/download/${OBS_DOWNLOAD_VERSION}-ci/obs-studio-${ARCH}-0.0.0.0-ubuntu1804.7z
+			UPDATE_DISCONNECTED 1
+		)
+		# Dependencies must be installed like normal OBS Studio
+		message("Linux builds require your install the necessary development packages, take a look at the obs-studio build guide for them.")
+	else()
+		# Other OS
+		message(FATAL "Unable to download libOBS as this Operating System is not yet supported.")
+	endif()
 endif()
 
 # Load OBS Studio & Dependencies
@@ -282,7 +322,12 @@ elseif(${PropertyPrefix}OBS_REFERENCE)
 	set(obsPath "${OBS_STUDIO_DIR}")
 	include("${OBS_STUDIO_DIR}/cmake/external/FindLibobs.cmake")
 elseif(${PropertyPrefix}OBS_DOWNLOAD)
-	include("${libobs_SOURCE_DIR}/cmake/LibObs/LibObsConfig.cmake")
+	if(WIN32)
+		include("${libobs_SOURCE_DIR}/cmake/LibObs/LibObsConfig.cmake")
+	elseif(UNIX)
+		include("${libobs_SOURCE_DIR}/usr/local/lib/cmake/LibObs/LibObsConfig.cmake")
+	else()
+	endif()
 endif()
 
 ################################################################################
