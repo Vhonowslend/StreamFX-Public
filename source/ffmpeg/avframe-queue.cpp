@@ -36,7 +36,7 @@ std::shared_ptr<AVFrame> avframe_queue::create_frame()
 
 	int res = av_frame_get_buffer(frame.get(), 32);
 	if (res < 0) {
-		throw std::exception(tools::get_error_description(res));
+		throw std::runtime_error(tools::get_error_description(res));
 	}
 
 	return frame;

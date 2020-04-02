@@ -639,7 +639,7 @@ void ffmpeg_instance::initialize_sw(obs_data_t* settings)
 				std::stringstream sstr;
 				sstr << "Color Format '" << ::ffmpeg::tools::get_pixel_format_name(_pixfmt_target)
 					 << "' is not supported by the encoder.";
-				throw std::exception(sstr.str().c_str());
+				throw std::runtime_error(sstr.str().c_str());
 			}
 		}
 
