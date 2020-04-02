@@ -1,11 +1,30 @@
-name: CI
+name: Build
 
 on: [push, pull_request]
 
 jobs:
   windows:
-    runs-on: windows-2019
-    name: "Windows"
+    name: "Windows 64-bit"
+    strategy:
+      matrix: 
+        runner: [ windows-2016, windows-2019 ]
+        include:
+          - runner: windows-2016
+            id: 2017
+            windows_sdk: "10.0.17763.0"
+            cmake_generator: "Visual Studio 15 2017 Win64"
+            cmake_generator_platform: ""
+          - runner: windows-2019
+            id: 2019
+            windows_sdk: "10.0.18362.0"
+            cmake_generator: "Visual Studio 16 2019"
+            cmake_generator_platform: "x64"
+    runs-on: ${{ matrix.runner }}
+    env:
+      CMAKE_GENERATOR: ${{ matrix.cmake_generator }}
+      CMAKE_GENERATOR_PLATFORM: ${{ matrix.cmake_generator_platform }}
+      CMAKE_GENERATOR_TOOLSET: "host=x64"
+      CMAKE_SYSTEM_VERSION: ${{ matrix.windows_sdk }}
     steps:
     - name: "Clone Repository"
       uses: actions/checkout@v1
@@ -15,7 +34,7 @@ jobs:
     - name: "Configure Project"
       shell: bash
       run: |
-        cmake -H. -B"build/temp" -G"Visual Studio 16 2019" -A"x64" -T"host=x64" -DCMAKE_PACKAGE_NAME=StreamFX -DCMAKE_INSTALL_PREFIX="build/distrib" -DCMAKE_PACKAGE_PREFIX="build/package" -DOBS_DOWNLOAD=ON
+        cmake -H. -B"build/temp" -DCMAKE_PACKAGE_NAME=StreamFX -DCMAKE_INSTALL_PREFIX="build/distrib" -DCMAKE_PACKAGE_PREFIX="build/package" -DOBS_DOWNLOAD=ON
     - name: "Build Project"
       shell: bash
       run: |
@@ -36,40 +55,90 @@ jobs:
     - name: "Upload Artifacts"
       uses: actions/upload-artifact@v1
       with:
-        name: windows
+        name: windows-${{ matrix.id }}
         path: build/package
-  windows-speed:
-    runs-on: windows-2019
-    name: "Windows (Performance)"
+  ubuntu:
+    name: "Linux/Ubuntu 64-bit"
+    strategy:
+      matrix: 
+        runner: [ ubuntu-18.04, ubuntu-16.04 ]
+        include:
+          - runner: ubuntu-16.04
+            id: 1604
+          - runner: ubuntu-18.04
+            id: 1804
+    runs-on: ${{ matrix.runner }}
+    env:
+      CMAKE_GENERATOR: "Ninja"
     steps:
     - name: "Clone Repository"
       uses: actions/checkout@v1
-    - name: "Clone Submodules"
+    - name: "Prerequisites: Submodules"
       shell: bash
       run: git submodule update --init --recursive
+    - name: "Prerequisites: Apt-Get"
+      shell: bash
+      run: |
+        sudo dpkg --add-architecture amd64
+        sudo apt-get -qq update
+        sudo apt-get install -y \
+        build-essential \
+        checkinstall \
+        cmake \
+        swig \
+        pkg-config \
+        gcc-8 g++-8 gcc-8-multilib \
+        python3-dev:amd64 \
+        libasound2-dev:amd64 \
+        libavcodec-dev:amd64 \
+        libavdevice-dev:amd64 \
+        libavfilter-dev:amd64 \
+        libavformat-dev:amd64 \
+        libavutil-dev:amd64 \
+        libcurl4-openssl-dev:amd64 \
+        libfdk-aac-dev:amd64 \
+        libfontconfig-dev:amd64 \
+        libfreetype6-dev:amd64 \
+        libgl1-mesa-dev:amd64 \
+        libjack-jackd2-dev:amd64 \
+        libjansson-dev:amd64 \
+        libluajit-5.1-dev:amd64 \
+        libpulse-dev:amd64 \
+        libqt5x11extras5-dev:amd64 \
+        libspeexdsp-dev:amd64 \
+        libswresample-dev:amd64 \
+        libswscale-dev:amd64 \
+        libudev-dev:amd64 \
+        libv4l-dev:amd64 \
+        libvlc-dev:amd64 \
+        libx11-dev:amd64 \
+        libx264-dev:amd64 \
+        libxcb-randr0-dev:amd64 \
+        libxcb-shm0-dev:amd64 \
+        libxcb-xinerama0-dev:amd64 \
+        libxcomposite-dev:amd64 \
+        libxinerama-dev:amd64 \
+        qtbase5-dev:amd64 \
+        libqt5svg5-dev:amd64 \
+        ninja-build
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 700 --slave /usr/bin/g++ g++ /usr/bin/g++-7
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
     - name: "Configure Project"
       shell: bash
       run: |
-        cmake -H. -B"build/temp" -G"Visual Studio 16 2019" -A"x64" -T"host=x64" -DCMAKE_PACKAGE_NAME=StreamFX -DCMAKE_INSTALL_PREFIX="build/distrib" -DCMAKE_PACKAGE_PREFIX="build/package" -DOBS_DOWNLOAD=ON
+        cmake -H. -B"build/temp" -DCMAKE_PACKAGE_NAME=StreamFX -DCMAKE_INSTALL_PREFIX="build/distrib" -DCMAKE_PACKAGE_PREFIX="build/package" -DOBS_DOWNLOAD=ON
     - name: "Build Project"
       shell: bash
       run: |
-        cmake --build "build/temp" --config Speed --target INSTALL
+        cmake --build "build/temp" --config RelWithDebInfo --target install
     - name: "Package Project"
       shell: bash
       run: |
         mkdir build/package
-        cmake --build "build/temp" --config Speed --target PACKAGE_7Z
-        cmake --build "build/temp" --config Speed --target PACKAGE_ZIP
-    - name: "Package Installer (Prereqs)"
-      run: |
-        curl "-kL" "https://cdn.xaymar.com/ci/innosetup-6.0.3.exe" "-f" "--retry" "5" "-o" "inno.exe"
-        .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
-    - name: "Package Installer (Compile)"
-      run: |
-        & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' /Qp ".\build\temp\installer.iss"
+        cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_7Z
+        cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_ZIP
     - name: "Upload Artifacts"
       uses: actions/upload-artifact@v1
       with:
-        name: windows-speed
+        name: ubuntu-${{ matrix.id }}
         path: build/package
