@@ -31,6 +31,7 @@ extern "C++" {
 #pragma warning(disable : 4777)
 #pragma warning(disable : 4986)
 #pragma warning(disable : 5039)
+#pragma warning(disable : 5204)
 #include <atlutil.h>
 #include <d3d11.h>
 #include <d3d11_1.h>

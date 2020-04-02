@@ -32,6 +32,9 @@ extern "C" {
 namespace encoder::ffmpeg::handler {
 	class prores_aw_handler : public handler {
 		public:
+		virtual ~prores_aw_handler(){};
+
+		public:
 		virtual void override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec,
 										  AVCodecContext* context) override;
 

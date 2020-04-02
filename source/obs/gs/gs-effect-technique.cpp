@@ -21,7 +21,16 @@
 #include <cstring>
 #include <stdexcept>
 
+extern "C" {
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#endif
 #include <graphics/effect.h>
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+}
 
 gs::effect_technique::effect_technique(gs_technique_t* technique, std::shared_ptr<gs_effect_t>* parent)
 	: _parent(parent)

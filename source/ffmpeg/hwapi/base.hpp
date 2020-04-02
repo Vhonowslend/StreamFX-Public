@@ -44,6 +44,8 @@ namespace ffmpeg::hwapi {
 
 	class instance {
 		public:
+		virtual ~instance(){};
+
 		virtual AVBufferRef* create_device_context() = 0;
 
 		virtual std::shared_ptr<AVFrame> allocate_frame(AVBufferRef* frames) = 0;
@@ -57,6 +59,8 @@ namespace ffmpeg::hwapi {
 
 	class base {
 		public:
+		virtual ~base(){};
+
 		virtual std::list<hwapi::device> enumerate_adapters() = 0;
 
 		virtual std::shared_ptr<hwapi::instance> create(hwapi::device target) = 0;

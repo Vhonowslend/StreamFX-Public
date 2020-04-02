@@ -24,17 +24,6 @@
 #include "obs/gs/gs-helper.hpp"
 #include "util-math.hpp"
 
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <obs.h>
-#include <util/platform.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
 static uint32_t decode_flags(gs::texture::flags texture_flags)
 {
 	uint32_t flags = 0;

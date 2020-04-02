@@ -20,6 +20,7 @@
 // SOFTWARE.
 
 #include "ffmpeg-encoder.hpp"
+#include "strings.hpp"
 #include <sstream>
 #include "codecs/hevc.hpp"
 #include "ffmpeg/tools.hpp"
@@ -27,13 +28,11 @@
 #include "handlers/nvenc_h264_handler.hpp"
 #include "handlers/nvenc_hevc_handler.hpp"
 #include "handlers/prores_aw_handler.hpp"
+#include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
-#include "strings.hpp"
 #include "utility.hpp"
 
 extern "C" {
-#include <obs-avc.h>
-#include <obs-module.h>
 #pragma warning(push)
 #pragma warning(disable : 4244)
 #include <libavcodec/avcodec.h>
@@ -41,6 +40,7 @@ extern "C" {
 #include <libavutil/frame.h>
 #include <libavutil/opt.h>
 #include <libavutil/pixdesc.h>
+#include <obs-avc.h>
 #pragma warning(pop)
 }
 
@@ -782,7 +782,7 @@ ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* encoder, b
 		}
 
 #ifdef WIN32
-		auto gctx = util::obs_graphics();
+		auto gctx = gs::context();
 		if (gs_get_device_type() == GS_DEVICE_DIRECT3D_11) {
 			_hwapi = std::make_shared<::ffmpeg::hwapi::d3d11>();
 		}
@@ -815,7 +815,7 @@ ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* encoder, b
 	update(settings);
 
 	// Initialize Encoder
-	auto gctx = util::obs_graphics();
+	auto gctx = gs::context();
 	int  res  = avcodec_open2(_context, _codec, NULL);
 	if (res < 0) {
 		std::stringstream sstr;
@@ -827,7 +827,7 @@ ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* encoder, b
 
 ffmpeg_instance::~ffmpeg_instance()
 {
-	auto gctx = util::obs_graphics();
+	auto gctx = gs::context();
 	if (_context) {
 		// Flush encoders that require it.
 		if ((_codec->capabilities & AV_CODEC_CAP_DELAY) != 0) {
@@ -938,7 +938,8 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 	if (_handler) {
 		LOG_INFO("[%s] Initializing...", _codec->name);
 		LOG_INFO("[%s]   FFmpeg:", _codec->name);
-		LOG_INFO("[%s]     Custom Settings: %s", _codec->name, obs_data_get_string(settings, KEY_FFMPEG_CUSTOMSETTINGS));
+		LOG_INFO("[%s]     Custom Settings: %s", _codec->name,
+				 obs_data_get_string(settings, KEY_FFMPEG_CUSTOMSETTINGS));
 		LOG_INFO("[%s]     Standard Compliance: %s", _codec->name,
 				 ::ffmpeg::tools::get_std_compliance_name(_context->strict_std_compliance));
 		LOG_INFO("[%s]     Threading: %s (with %i threads)", _codec->name,
@@ -1115,7 +1116,7 @@ int ffmpeg_instance::receive_packet(bool* received_packet, struct encoder_packet
 	av_packet_unref(&_current_packet);
 
 	{
-		auto gctx = util::obs_graphics();
+		auto gctx = gs::context();
 		res       = avcodec_receive_packet(_context, &_current_packet);
 	}
 	if (res != 0) {
@@ -1181,7 +1182,7 @@ int ffmpeg_instance::send_frame(std::shared_ptr<AVFrame> const frame)
 {
 	int res = 0;
 	{
-		auto gctx = util::obs_graphics();
+		auto gctx = gs::context();
 		res       = avcodec_send_frame(_context, frame.get());
 	}
 	if (res == 0) {

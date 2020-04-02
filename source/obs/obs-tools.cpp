@@ -22,16 +22,6 @@
 #include <stdexcept>
 #include "plugin.hpp"
 
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <obs-properties.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
 struct scs_searchdata {
 	obs_source_t*                 source;
 	bool                          found = false;

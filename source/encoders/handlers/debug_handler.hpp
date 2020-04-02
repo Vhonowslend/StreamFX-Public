@@ -25,6 +25,8 @@
 namespace encoder::ffmpeg::handler {
 	class debug_handler : public handler {
 		public:
+		virtual ~debug_handler(){};
+
 		virtual void get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context,
 								  bool hw_encode) override;
 

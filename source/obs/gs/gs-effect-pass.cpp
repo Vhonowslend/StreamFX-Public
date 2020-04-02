@@ -20,7 +20,16 @@
 #include "gs-effect-pass.hpp"
 #include <cstring>
 
+extern "C" {
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#endif
 #include <graphics/effect.h>
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+}
 
 gs::effect_pass::effect_pass(gs_epass_t* pass, std::shared_ptr<gs_technique_t>* parent) : _parent(parent)
 {

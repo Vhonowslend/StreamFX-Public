@@ -164,7 +164,7 @@ gfx::shader::parameter::parameter(gs::effect_parameter param, std::string key_pr
 		if (ov > 0)
 			_size = ov;
 	}
-	_size = std::clamp(_size, 1ull, 32ull);
+	_size = std::clamp<size_t>(_size, size_t{1}, size_t{32});
 }
 
 void gfx::shader::parameter::defaults(obs_data_t* settings) {}

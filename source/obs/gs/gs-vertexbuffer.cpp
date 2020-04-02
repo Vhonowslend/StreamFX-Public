@@ -22,16 +22,6 @@
 #include "obs/gs/gs-helper.hpp"
 #include "utility.hpp"
 
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <obs.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
 void gs::vertex_buffer::initialize(size_t capacity, size_t layers)
 {
 	if (capacity > MAXIMUM_VERTICES) {

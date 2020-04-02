@@ -31,6 +31,9 @@ extern "C" {
 
 namespace encoder::ffmpeg::handler {
 	class nvenc_h264_handler : public handler {
+		public:
+		virtual ~nvenc_h264_handler(){};
+
 		public /*factory*/:
 		virtual void adjust_encoder_info(ffmpeg_factory* factory, ffmpeg_info* main, ffmpeg_info* fallback);
 

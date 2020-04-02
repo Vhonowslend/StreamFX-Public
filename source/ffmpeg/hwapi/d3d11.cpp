@@ -24,6 +24,7 @@
 #include "d3d11.hpp"
 #include <sstream>
 #include <vector>
+#include "obs/gs/gs-helper.hpp"
 #include "utility.hpp"
 
 extern "C" {
@@ -33,9 +34,7 @@ extern "C" {
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4365)
 #pragma warning(disable : 4986)
-#include <graphics/graphics.h>
 #include <libavutil/hwcontext_d3d11va.h>
-#include <obs.h>
 #pragma warning(pop)
 }
 
@@ -138,7 +137,7 @@ std::shared_ptr<instance> d3d11::create(device target)
 
 std::shared_ptr<instance> d3d11::create_from_obs()
 {
-	auto gctx = util::obs_graphics();
+	auto gctx = gs::context();
 
 	if (GS_DEVICE_DIRECT3D_11 != gs_get_device_type()) {
 		throw std::runtime_error("OBS Device is not a D3D11 Device.");
@@ -190,7 +189,7 @@ AVBufferRef* d3d11_instance::create_device_context()
 
 std::shared_ptr<AVFrame> d3d11_instance::allocate_frame(AVBufferRef* frames)
 {
-	auto gctx = util::obs_graphics();
+	auto gctx = gs::context();
 
 	auto frame = std::shared_ptr<AVFrame>(av_frame_alloc(), [](AVFrame* frame) {
 		av_frame_unref(frame);
@@ -207,7 +206,7 @@ std::shared_ptr<AVFrame> d3d11_instance::allocate_frame(AVBufferRef* frames)
 void d3d11_instance::copy_from_obs(AVBufferRef*, uint32_t handle, uint64_t lock_key, uint64_t* next_lock_key,
 								   std::shared_ptr<AVFrame> frame)
 {
-	auto gctx = util::obs_graphics();
+	auto gctx = gs::context();
 
 	ATL::CComPtr<IDXGIKeyedMutex> mutex;
 	ATL::CComPtr<ID3D11Texture2D> input;
@@ -246,7 +245,7 @@ void d3d11_instance::copy_from_obs(AVBufferRef*, uint32_t handle, uint64_t lock_
 std::shared_ptr<AVFrame> d3d11_instance::avframe_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key,
 														  uint64_t* next_lock_key)
 {
-	auto gctx = util::obs_graphics();
+	auto gctx = gs::context();
 
 	auto frame = this->allocate_frame(frames);
 	this->copy_from_obs(frames, handle, lock_key, next_lock_key, frame);
