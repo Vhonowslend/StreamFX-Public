@@ -23,7 +23,7 @@
 #ifdef WIN32
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable: 4191 4365 4777 5039)
+#pragma warning(disable: 4191 4365 4777 5039 5204)
 #endif
 #include <atlutil.h>
 #ifdef _MSC_VER

@@ -37,6 +37,9 @@ namespace encoder::ffmpeg {
 
 	namespace handler {
 		class handler {
+			public:
+			virtual ~handler(){};
+
 			public /*factory*/:
 			virtual void adjust_encoder_info(ffmpeg_factory* factory, ffmpeg_info* main, ffmpeg_info* fallback);
 

@@ -21,17 +21,6 @@
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
 
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <graphics/graphics.h>
-#include <obs.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
 gs::rendertarget::~rendertarget()
 {
 	auto gctx = gs::context();

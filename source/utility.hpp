@@ -18,18 +18,20 @@
 */
 
 #pragma once
-#include "common.hpp"
+#include <cinttypes>
+#include <cstddef>
+#include <string>
+#include <type_traits>
 
 extern "C" {
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4201)
 #endif
+#include <obs.h>
 #include <graphics/vec2.h>
 #include <graphics/vec3.h>
 #include <graphics/vec4.h>
-#include <obs-config.h>
-#include <obs.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
@@ -94,17 +96,6 @@ namespace util {
 		return obs_get_version() < MAKE_SEMANTIC_VERSION(24, 0, 0);
 	}
 
-	struct obs_graphics {
-		obs_graphics()
-		{
-			obs_enter_graphics();
-		}
-		~obs_graphics()
-		{
-			obs_leave_graphics();
-		}
-	};
-
 	obs_property_t* obs_properties_add_tristate(obs_properties_t* props, const char* name, const char* desc);
 
 	inline bool is_tristate_enabled(int64_t tristate)
@@ -121,25 +112,6 @@ namespace util {
 	{
 		return tristate == -1;
 	}
-
-	typedef union {
-		uint32_t color;
-		struct {
-			uint8_t r;
-			uint8_t g;
-			uint8_t b;
-			uint8_t a;
-		};
-	} rgba32;
-	typedef union {
-		uint32_t color;
-		struct {
-			uint8_t a;
-			uint8_t r;
-			uint8_t g;
-			uint8_t b;
-		};
-	} argb32;
 
 	struct vec2a : public vec2 {
 		// 16-byte Aligned version of vec2
@@ -170,16 +142,6 @@ namespace util {
 		static void  operator delete(void* p);
 		static void  operator delete[](void* p);
 	};
-
-	inline size_t GetNearestPowerOfTwoAbove(size_t v)
-	{
-		return 1ull << size_t(ceil(log10(double(v)) / log10(2.0)));
-	}
-
-	inline size_t GetNearestPowerOfTwoBelow(size_t v)
-	{
-		return 1ull << size_t(floor(log10(double(v)) / log10(2.0)));
-	}
 
 	std::pair<int64_t, int64_t> size_from_string(std::string text, bool allowSquare = true);
 
@@ -216,14 +178,14 @@ namespace util {
 	{                                   \
 		return is_power_of_two_loop(v); \
 	}
-		P_IS_POWER_OF_TWO_AS_LOOP(int8_t);
-		P_IS_POWER_OF_TWO_AS_LOOP(uint8_t);
-		P_IS_POWER_OF_TWO_AS_LOOP(int16_t);
-		P_IS_POWER_OF_TWO_AS_LOOP(uint16_t);
-		P_IS_POWER_OF_TWO_AS_LOOP(int32_t);
-		P_IS_POWER_OF_TWO_AS_LOOP(uint32_t);
-		P_IS_POWER_OF_TWO_AS_LOOP(int64_t);
-		P_IS_POWER_OF_TWO_AS_LOOP(uint64_t);
+		P_IS_POWER_OF_TWO_AS_LOOP(int8_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(uint8_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(int16_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(uint16_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(int32_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(uint32_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(int64_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(uint64_t)
 #undef P_IS_POWER_OF_TWO_AS_LOOP
 #pragma pop_macro("P_IS_POWER_OF_TWO_AS_LOOP")
 
@@ -315,85 +277,4 @@ namespace util {
 	}
 	void* malloc_aligned(size_t align, size_t size);
 	void  free_aligned(void* mem);
-
-	template<typename T, size_t N = 16>
-	class AlignmentAllocator {
-		public:
-		typedef T      value_type;
-		typedef size_t size_type;
-#ifdef __clang__
-		typedef ptrdiff_t difference_type;
-#else
-		typedef std::ptrdiff_t difference_type;
-#endif
-
-		typedef T*       pointer;
-		typedef const T* const_pointer;
-
-		typedef T&       reference;
-		typedef const T& const_reference;
-
-		public:
-		inline AlignmentAllocator() {}
-
-		template<typename T2>
-		inline AlignmentAllocator(const AlignmentAllocator<T2, N>&)
-		{}
-
-		inline ~AlignmentAllocator() {}
-
-		inline pointer adress(reference r)
-		{
-			return &r;
-		}
-
-		inline const_pointer adress(const_reference r) const
-		{
-			return &r;
-		}
-
-		inline pointer allocate(size_type n)
-		{
-			return (pointer)malloc_aligned(n * sizeof(value_type), N);
-		}
-
-		inline void deallocate(pointer p, size_type)
-		{
-			free_aligned(p);
-		}
-
-		inline void construct(pointer p, const value_type& wert)
-		{
-			new (p) value_type(wert);
-		}
-
-		inline void destroy(pointer p)
-		{
-			p->~value_type();
-			p;
-		}
-
-		inline size_type max_size() const
-		{
-			return size_type(-1) / sizeof(value_type);
-		}
-
-		template<typename T2>
-		struct rebind {
-			typedef AlignmentAllocator<T2, N> other;
-		};
-
-		bool operator!=(const AlignmentAllocator<T, N>& other) const
-		{
-			return !(*this == other);
-		}
-
-		// Returns true if and only if storage allocated from *this
-		// can be deallocated from other, and vice versa.
-		// Always returns true for stateless allocators.
-		bool operator==(const AlignmentAllocator<T, N>&) const
-		{
-			return true;
-		}
-	};
 } // namespace util

@@ -35,9 +35,7 @@
 #pragma warning(push)
 #pragma warning(disable : 4201)
 #endif
-#include <graphics/matrix4.h>
 #include <media-io/audio-io.h>
-#include <obs-config.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif

@@ -25,6 +25,7 @@
 #ifdef WIN32
 #pragma warning(push)
 #pragma warning(disable : 4365)
+#pragma warning(disable : 5204)
 #include <d3d11.h>
 #include <dxgi.h>
 #pragma warning(pop)

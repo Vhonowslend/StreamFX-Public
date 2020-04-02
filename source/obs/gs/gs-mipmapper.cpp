@@ -22,18 +22,6 @@
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
 
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <graphics/graphics.h>
-#include <obs-module.h>
-#include <obs.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
 #if defined(WIN32) || defined(WIN64)
 #ifdef _MSC_VER
 #pragma warning(push)

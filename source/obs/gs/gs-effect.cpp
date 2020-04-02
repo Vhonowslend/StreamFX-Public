@@ -23,17 +23,6 @@
 #include <vector>
 #include "obs/gs/gs-helper.hpp"
 
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <graphics/effect.h>
-#include <obs.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
 #define MAX_EFFECT_SIZE 32 * 1024 * 1024
 
 static std::string load_file_as_code(std::filesystem::path file)

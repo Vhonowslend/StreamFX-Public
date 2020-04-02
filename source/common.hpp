@@ -41,10 +41,10 @@
 
 // Common Plugin includes
 #include "strings.hpp"
+#include "version.hpp"
 #include "util-profiler.hpp"
 #include "util-threadpool.hpp"
 #include "utility.hpp"
-#include "version.hpp"
 
 // Common OBS includes
 extern "C" {
@@ -53,15 +53,23 @@ extern "C" {
 #pragma warning(disable : 4201)
 #endif
 #include <obs.h>
+
+#include <obs-config.h>
 #include <obs-data.h>
 #include <obs-encoder.h>
 #include <obs-module.h>
 #include <obs-properties.h>
 #include <obs-source.h>
-#include <util/platform.h>
+
 #include <graphics/graphics.h>
-#include <graphics/vec3.h>
+
+#include <graphics/effect.h>
 #include <graphics/matrix4.h>
+#include <graphics/vec2.h>
+#include <graphics/vec3.h>
+#include <graphics/vec4.h>
+
+#include <util/platform.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif

@@ -22,8 +22,16 @@
 #include <stdexcept>
 #include "gs-effect-pass.hpp"
 
+extern "C" {
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4201)
+#endif
 #include <graphics/effect.h>
-#include <graphics/vec2.h>
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+}
 
 gs::effect_parameter::effect_parameter() : _effect_parent(nullptr), _pass_parent(nullptr), _param_parent(nullptr)
 {
