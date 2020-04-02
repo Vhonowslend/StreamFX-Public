@@ -175,6 +175,10 @@ else()
 	set(CMAKE_PACKAGE_NAME "${PROJECT_NAME}" CACHE STRING "Name for the generated archives.")
 	set(CMAKE_PACKAGE_SUFFIX_OVERRIDE "" CACHE STRING "Override for the suffix.")
 
+	if(UNIX)
+		set(UNIX_LOCAL_STRUCTURE TRUE CACHE BOOL "Package for a local linux install.")
+	endif()
+
 	if(NOT ${PropertyPrefix}OBS_DOWNLOAD)
 		set(${PropertyPrefix}OBS_STUDIO_DIR "" CACHE PATH "OBS Studio Source/Package Directory")
 		set(${PropertyPrefix}OBS_DEPENDENCIES_DIR "" CACHE PATH "OBS Studio Dependencies Directory")
@@ -887,38 +891,64 @@ endif()
 if(${PropertyPrefix}OBS_NATIVE)
 	install_obs_plugin_with_data(${PROJECT_NAME} data)
 else()
-	install(
-		TARGETS ${PROJECT_NAME}
-		RUNTIME DESTINATION "./obs-plugins/${BITS}bit/" COMPONENT Runtime
-		LIBRARY DESTINATION "./obs-plugins/${BITS}bit/" COMPONENT Runtime
-	)
-	if(MSVC)
+	if(UNIX_LOCAL_STRUCTURE)
 		install(
-			FILES $<TARGET_PDB_FILE:${PROJECT_NAME}>
-			DESTINATION "./obs-plugins/${BITS}bit/"
-			OPTIONAL
+			TARGETS ${PROJECT_NAME}
+			RUNTIME DESTINATION "./plugins/${PROJECT_NAME}/bin/${BITS}bit/" COMPONENT Runtime
+			LIBRARY DESTINATION "./plugins/${PROJECT_NAME}/bin/${BITS}bit/" COMPONENT Runtime		
 		)
-	endif()
+
+		install(
+			DIRECTORY "data/"
+			DESTINATION "./plugins/${PROJECT_NAME}/data/"
+		)
+		
+		add_custom_target(
+			PACKAGE_7Z
+			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.7z" --format=7zip --
+				"${CMAKE_INSTALL_PREFIX}/plugins/${PROJECT_NAME}"
+			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
+		)
+		add_custom_target(
+			PACKAGE_ZIP
+			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.zip" --format=zip --
+				"${CMAKE_INSTALL_PREFIX}/plugins/${PROJECT_NAME}"
+			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
+		)
+	else()
+		install(
+			TARGETS ${PROJECT_NAME}
+			RUNTIME DESTINATION "./obs-plugins/${BITS}bit/" COMPONENT Runtime
+			LIBRARY DESTINATION "./obs-plugins/${BITS}bit/" COMPONENT Runtime
+		)
+		if(MSVC)
+			install(
+				FILES $<TARGET_PDB_FILE:${PROJECT_NAME}>
+				DESTINATION "./obs-plugins/${BITS}bit/"
+				OPTIONAL
+			)
+		endif()
 	
-	install(
-		DIRECTORY "data/"
-		DESTINATION "./data/obs-plugins/${PROJECT_NAME}/"
-	)
-	
-	add_custom_target(
-		PACKAGE_7Z
-		${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.7z" --format=7zip --
-			"${CMAKE_INSTALL_PREFIX}/obs-plugins"
-			"${CMAKE_INSTALL_PREFIX}/data"
-		WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
-	)
-	add_custom_target(
-		PACKAGE_ZIP
-		${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.zip" --format=zip --
-			"${CMAKE_INSTALL_PREFIX}/obs-plugins"
-			"${CMAKE_INSTALL_PREFIX}/data"
-		WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
-	)
+		install(
+			DIRECTORY "data/"
+			DESTINATION "./data/obs-plugins/${PROJECT_NAME}/"
+		)
+		
+		add_custom_target(
+			PACKAGE_7Z
+			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.7z" --format=7zip --
+				"${CMAKE_INSTALL_PREFIX}/obs-plugins"
+				"${CMAKE_INSTALL_PREFIX}/data"
+			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
+		)
+		add_custom_target(
+			PACKAGE_ZIP
+			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.zip" --format=zip --
+				"${CMAKE_INSTALL_PREFIX}/obs-plugins"
+				"${CMAKE_INSTALL_PREFIX}/data"
+			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
+		)
+	endif()	
 endif()
 
 cmake_policy(POP)
