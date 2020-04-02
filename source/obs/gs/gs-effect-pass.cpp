@@ -32,7 +32,7 @@ gs::effect_pass::~effect_pass() {}
 std::string gs::effect_pass::name()
 {
 	const char* name_c   = get()->name;
-	size_t      name_len = strnlen_s(name_c, 256);
+	size_t      name_len = strnlen(name_c, 256);
 	return name_c ? std::string(name_c, name_c + name_len) : std::string();
 }
 
