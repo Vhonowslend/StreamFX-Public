@@ -10,12 +10,12 @@ jobs:
         runner: [ windows-2016, windows-2019 ]
         include:
           - runner: windows-2016
-            id: 2017
+            id: windows-vs2017
             windows_sdk: "10.0.17763.0"
             cmake_generator: "Visual Studio 15 2017 Win64"
             cmake_generator_platform: ""
           - runner: windows-2019
-            id: 2019
+            id: windows-vs2019
             windows_sdk: "10.0.18362.0"
             cmake_generator: "Visual Studio 16 2019"
             cmake_generator_platform: "x64"
@@ -34,7 +34,7 @@ jobs:
     - name: "Configure Project"
       shell: bash
       run: |
-        cmake -H. -B"build/temp" -DCMAKE_PACKAGE_NAME=StreamFX -DCMAKE_INSTALL_PREFIX="build/distrib" -DCMAKE_PACKAGE_PREFIX="build/package" -DOBS_DOWNLOAD=ON
+        cmake -H. -B"build/temp" -DCMAKE_PACKAGE_NAME="streamfx-${{ matrix.id }}" -DCMAKE_INSTALL_PREFIX="build/distrib" -DCMAKE_PACKAGE_PREFIX="build/package" -DOBS_DOWNLOAD=ON
     - name: "Build Project"
       shell: bash
       run: |
@@ -55,18 +55,27 @@ jobs:
     - name: "Upload Artifacts"
       uses: actions/upload-artifact@v1
       with:
-        name: windows-${{ matrix.id }}
+        name: ${{ matrix.id }}
         path: build/package
   ubuntu:
     name: "Linux/Ubuntu 64-bit"
     strategy:
       matrix: 
-        runner: [ ubuntu-18.04, ubuntu-16.04 ]
+        runner: [ ubuntu-16.04, ubuntu-18.04 ]
+        gcc: [ 8, 9 ]
         include:
           - runner: ubuntu-16.04
-            id: 1604
+            gcc: 8
+            id: ubuntu1604-gcc8
+          - runner: ubuntu-16.04
+            gcc: 9
+            id: ubuntu1604-gcc9
           - runner: ubuntu-18.04
-            id: 1804
+            gcc: 8
+            id: ubuntu1804-gcc8
+          - runner: ubuntu-18.04
+            gcc: 9
+            id: ubuntu1804-gcc9
     runs-on: ${{ matrix.runner }}
     env:
       CMAKE_GENERATOR: "Ninja"
@@ -79,54 +88,29 @@ jobs:
     - name: "Prerequisites: Apt-Get"
       shell: bash
       run: |
-        sudo dpkg --add-architecture amd64
         sudo apt-get -qq update
-        sudo apt-get install -y \
-        build-essential \
-        checkinstall \
-        cmake \
-        swig \
-        pkg-config \
-        gcc-8 g++-8 gcc-8-multilib \
-        python3-dev:amd64 \
-        libasound2-dev:amd64 \
-        libavcodec-dev:amd64 \
-        libavdevice-dev:amd64 \
-        libavfilter-dev:amd64 \
-        libavformat-dev:amd64 \
-        libavutil-dev:amd64 \
-        libcurl4-openssl-dev:amd64 \
-        libfdk-aac-dev:amd64 \
-        libfontconfig-dev:amd64 \
-        libfreetype6-dev:amd64 \
-        libgl1-mesa-dev:amd64 \
-        libjack-jackd2-dev:amd64 \
-        libjansson-dev:amd64 \
-        libluajit-5.1-dev:amd64 \
-        libpulse-dev:amd64 \
-        libqt5x11extras5-dev:amd64 \
-        libspeexdsp-dev:amd64 \
-        libswresample-dev:amd64 \
-        libswscale-dev:amd64 \
-        libudev-dev:amd64 \
-        libv4l-dev:amd64 \
-        libvlc-dev:amd64 \
-        libx11-dev:amd64 \
-        libx264-dev:amd64 \
-        libxcb-randr0-dev:amd64 \
-        libxcb-shm0-dev:amd64 \
-        libxcb-xinerama0-dev:amd64 \
-        libxcomposite-dev:amd64 \
-        libxinerama-dev:amd64 \
-        qtbase5-dev:amd64 \
-        libqt5svg5-dev:amd64 \
-        ninja-build
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 700 --slave /usr/bin/g++ g++ /usr/bin/g++-7
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
+        sudo apt-get install \
+          build-essential \
+          gcc-${{ matrix.gcc }} \
+          g++-${{ matrix.gcc }} \
+          checkinstall \
+          cmake \
+          ninja-build \
+          git \
+          libavcodec-dev \
+          libavdevice-dev \
+          libavfilter-dev \
+          libavformat-dev \
+          libavutil-dev \
+          libswresample-dev \
+          libswscale-dev \
+          libgl1-mesa-dev \
+          pkg-config
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${{ matrix.gcc }} 800 --slave /usr/bin/g++ g++ /usr/bin/g++-${{ matrix.gcc }}
     - name: "Configure Project"
       shell: bash
       run: |
-        cmake -H. -B"build/temp" -DCMAKE_PACKAGE_NAME=StreamFX -DCMAKE_INSTALL_PREFIX="build/distrib" -DCMAKE_PACKAGE_PREFIX="build/package" -DOBS_DOWNLOAD=ON
+        cmake -H. -B"build/temp" -DCMAKE_PACKAGE_NAME="streamfx-${{ matrix.id }}" -DCMAKE_INSTALL_PREFIX="build/distrib" -DCMAKE_PACKAGE_PREFIX="build/package" -DOBS_DOWNLOAD=ON
     - name: "Build Project"
       shell: bash
       run: |
@@ -140,5 +124,5 @@ jobs:
     - name: "Upload Artifacts"
       uses: actions/upload-artifact@v1
       with:
-        name: ubuntu-${{ matrix.id }}
+        name: ${{ matrix.id }}
         path: build/package
