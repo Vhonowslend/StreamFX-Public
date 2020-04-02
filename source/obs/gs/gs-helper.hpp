@@ -18,19 +18,9 @@
  */
 
 #pragma once
-#include <string>
+#include "common.hpp"
 #include <vector>
 #include "plugin.hpp"
-
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <graphics/graphics.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 namespace gs {
 	class context {

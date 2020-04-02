@@ -20,6 +20,7 @@
 // SOFTWARE.
 
 #pragma once
+#include "common.hpp"
 #include <deque>
 #include <mutex>
 

@@ -18,15 +18,10 @@
  */
 
 #pragma once
-
+#include "common.hpp"
 #include "gfx/shader/gfx-shader.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/obs-source-factory.hpp"
-#include "plugin.hpp"
-
-extern "C" {
-#include <obs.h>
-}
 
 namespace filter::shader {
 	class shader_instance : public obs::source_instance {

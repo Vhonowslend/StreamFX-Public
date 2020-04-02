@@ -20,13 +20,12 @@
 // SOFTWARE.
 
 #pragma once
+#include "common.hpp"
 #include <condition_variable>
 #include <map>
-#include <memory>
 #include <mutex>
 #include <queue>
 #include <stack>
-#include <string>
 #include <thread>
 #include <vector>
 #include "ffmpeg/avframe-queue.hpp"
@@ -42,7 +41,6 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavutil/frame.h>
 #include <obs-properties.h>
-#include <obs.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif

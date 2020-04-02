@@ -16,22 +16,11 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #pragma once
+#include "common.hpp"
 #include <map>
-#include <memory>
-#include <string>
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
 #include "obs/obs-source.hpp"
-
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <obs.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 namespace gfx {
 	class source_texture {

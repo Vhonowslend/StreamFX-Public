@@ -18,11 +18,7 @@
 */
 
 #pragma once
-#include <cinttypes>
-#include <limits>
-#include <string>
-#include <type_traits>
-#include <utility>
+#include "common.hpp"
 
 extern "C" {
 #ifdef _MSC_VER

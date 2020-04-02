@@ -20,10 +20,12 @@ NamespaceIndentation: All
 # Includes
 #IncludeBlocks: Regroup
 IncludeCategories:
+  - Regex: '^(<|")(common.hpp|obs.h)("|>)'
+    Priority: 0
   - Regex: '^<'
-    Priority: 1
+    Priority: 10
   - Regex: '^"'
-    Priority: 2
+    Priority: 20
 SortIncludes: true
  
 # Alignment

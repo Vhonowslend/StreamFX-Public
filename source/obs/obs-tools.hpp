@@ -17,23 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#ifndef OBS_STREAM_EFFECTS_OBS_TOOLS_HPP
-#define OBS_STREAM_EFFECTS_OBS_TOOLS_HPP
 #pragma once
-
-#include <cinttypes>
-#include <memory>
-#include <string>
-
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <obs.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
+#include "common.hpp"
 
 namespace obs {
 	namespace tools {
@@ -73,5 +58,3 @@ namespace obs {
 		obs_sceneitem_remove(v);
 	}
 } // namespace obs
-
-#endif

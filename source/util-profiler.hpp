@@ -17,11 +17,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+#pragma once
+#include "common.hpp"
 #include <chrono>
-#include <cmath>
-#include <cstddef>
 #include <map>
-#include <memory>
 #include <mutex>
 
 namespace util {

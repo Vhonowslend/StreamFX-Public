@@ -17,23 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#ifndef OBS_STREAM_EFFECTS_OBS_SOURCE_HPP
-#define OBS_STREAM_EFFECTS_OBS_SOURCE_HPP
 #pragma once
-
-#include <cinttypes>
-#include <string>
+#include "common.hpp"
 #include "util-event.hpp"
-
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <obs.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 namespace obs {
 	class deprecated_source {
@@ -149,5 +135,3 @@ namespace obs {
 		} events;
 	};
 } // namespace obs
-
-#endif

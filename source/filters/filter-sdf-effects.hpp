@@ -18,24 +18,13 @@
  */
 
 #pragma once
-#include <memory>
+#include "common.hpp"
 #include "obs/gs/gs-effect.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-sampler.hpp"
 #include "obs/gs/gs-texture.hpp"
 #include "obs/gs/gs-vertexbuffer.hpp"
 #include "obs/obs-source-factory.hpp"
-#include "plugin.hpp"
-
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <obs.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 namespace filter::sdf_effects {
 	class sdf_effects_instance : public obs::source_instance {

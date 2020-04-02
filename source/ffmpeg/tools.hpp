@@ -20,8 +20,8 @@
 // SOFTWARE.
 
 #pragma once
+#include "common.hpp"
 #include <functional>
-#include <obs.h>
 #include <string>
 #include <vector>
 

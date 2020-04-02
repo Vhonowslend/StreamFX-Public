@@ -18,11 +18,8 @@
  */
 
 #pragma once
-#include <cstdint>
-#include <string>
+#include "common.hpp"
 #include "util-event.hpp"
-
-#include <obs.h>
 
 namespace obs {
 	template<typename T>

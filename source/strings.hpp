@@ -18,7 +18,7 @@
 */
 
 #pragma once
-#include "plugin.hpp"
+#include "common.hpp"
 
 #define PLUGIN_NAME "StreamFX"
 

@@ -18,8 +18,8 @@
 */
 
 #pragma once
+#include "common.hpp"
 #include <condition_variable>
-#include <memory>
 #include <mutex>
 #include <queue>
 #include <thread>
@@ -31,17 +31,6 @@
 #include "obs/obs-source-factory.hpp"
 #include "obs/obs-source.hpp"
 #include "obs/obs-tools.hpp"
-#include "plugin.hpp"
-
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <obs-source.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 namespace source::mirror {
 	struct mirror_audio_data {

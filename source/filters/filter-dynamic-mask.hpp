@@ -18,27 +18,14 @@
 */
 
 #pragma once
+#include "common.hpp"
 #include <list>
 #include <map>
-#include <memory>
-#include <string>
 #include "gfx/gfx-source-texture.hpp"
 #include "obs/gs/gs-effect.hpp"
 #include "obs/obs-source-factory.hpp"
 #include "obs/obs-source-tracker.hpp"
 #include "obs/obs-source.hpp"
-#include "plugin.hpp"
-
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <obs-source.h>
-#include <util/platform.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 namespace filter::dynamic_mask {
 	enum class channel : int8_t { Invalid = -1, Red, Green, Blue, Alpha };

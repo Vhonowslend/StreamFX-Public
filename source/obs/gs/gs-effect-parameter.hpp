@@ -18,25 +18,9 @@
  */
 
 #pragma once
-#include <cinttypes>
-#include <memory>
-#include <string>
+#include "common.hpp"
 #include "gs-sampler.hpp"
 #include "gs-texture.hpp"
-
-// OBS
-extern "C" {
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <graphics/graphics.h>
-#include <graphics/matrix4.h>
-#include <obs.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-}
 
 namespace gs {
 	class effect_parameter : public std::shared_ptr<gs_eparam_t> {

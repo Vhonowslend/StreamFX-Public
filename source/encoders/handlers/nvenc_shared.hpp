@@ -21,7 +21,6 @@
 
 #pragma once
 #include <map>
-#include <string>
 #include "handler.hpp"
 #include "utility.hpp"
 
@@ -31,7 +30,6 @@ extern "C" {
 #pragma warning(disable : 4242 4244 4365)
 #endif
 #include <libavcodec/avcodec.h>
-#include <obs-properties.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif

@@ -16,21 +16,9 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #pragma once
-#include <list>
 #include <string>
+#include <list>
 #include "obs/gs/gs-effect-parameter.hpp"
-
-// OBS
-extern "C" {
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <obs.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-}
 
 namespace gfx {
 	namespace shader {

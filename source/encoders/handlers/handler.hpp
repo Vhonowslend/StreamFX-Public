@@ -20,16 +20,10 @@
 // SOFTWARE.
 
 #pragma once
-
-#include <string>
+#include "common.hpp"
 #include "ffmpeg/hwapi/base.hpp"
 
 extern "C" {
-#include <obs.h>
-
-#include <obs-data.h>
-#include <obs-encoder.h>
-#include <obs-properties.h>
 #pragma warning(push)
 #pragma warning(disable : 4242 4244 4365)
 #include <libavcodec/avcodec.h>

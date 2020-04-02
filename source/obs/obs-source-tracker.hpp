@@ -18,19 +18,9 @@
  */
 
 #pragma once
+#include "common.hpp"
 #include <functional>
 #include <map>
-#include <memory>
-
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <obs.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 namespace obs {
 	class source_tracker {

@@ -17,22 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#ifndef STREAMFX_SOURCE_FACTORY_HPP
-#define STREAMFX_SOURCE_FACTORY_HPP
-
 #pragma once
-#include <stdexcept>
+#include "common.hpp"
 #include "plugin.hpp"
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <obs-source.h>
-#include <obs.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 namespace obs {
 	template<class _factory, typename _instance>
@@ -610,5 +597,3 @@ namespace obs {
 	};
 
 } // namespace obs
-
-#endif

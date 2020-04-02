@@ -18,22 +18,9 @@
 */
 
 #pragma once
-#include <memory>
-#include <string>
+#include "common.hpp"
 #include "obs/gs/gs-effect.hpp"
 #include "obs/obs-source-factory.hpp"
-#include "plugin.hpp"
-
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <obs-source.h>
-#include <util/platform.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 namespace filter::displacement {
 	class displacement_instance : public obs::source_instance {

@@ -18,22 +18,8 @@
  */
 
 #pragma once
-#include <cinttypes>
-#include <memory>
-#include <string>
+#include "common.hpp"
 #include "gs-effect-parameter.hpp"
-
-// OBS
-extern "C" {
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <graphics/graphics.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-}
 
 namespace gs {
 	class effect_pass : public std::shared_ptr<gs_epass_t> {

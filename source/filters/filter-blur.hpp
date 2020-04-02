@@ -18,11 +18,11 @@
  */
 
 #pragma once
+#include "common.hpp"
 #include <chrono>
 #include <functional>
 #include <list>
 #include <map>
-#include <memory>
 #include "gfx/blur/gfx-blur-base.hpp"
 #include "gfx/gfx-source-texture.hpp"
 #include "obs/gs/gs-effect.hpp"
@@ -30,17 +30,6 @@
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
 #include "obs/obs-source-factory.hpp"
-#include "plugin.hpp"
-
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <obs.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 namespace filter::blur {
 	enum class mask_type : int64_t {

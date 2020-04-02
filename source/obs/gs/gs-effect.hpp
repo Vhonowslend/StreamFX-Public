@@ -18,25 +18,11 @@
  */
 
 #pragma once
-#include <cinttypes>
+#include "common.hpp"
 #include <filesystem>
 #include <list>
-#include <memory>
-#include <string>
 #include "gs-effect-parameter.hpp"
 #include "gs-effect-technique.hpp"
-
-// OBS
-extern "C" {
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <graphics/graphics.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-}
 
 namespace gs {
 	class effect : public std::shared_ptr<gs_effect_t> {

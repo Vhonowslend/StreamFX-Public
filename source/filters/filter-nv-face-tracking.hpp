@@ -18,15 +18,13 @@
  */
 
 #pragma once
+#include "common.hpp"
 #include <atomic>
-#include <memory>
 #include <vector>
 #include "obs/gs/gs-effect.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-vertexbuffer.hpp"
 #include "obs/obs-source-factory.hpp"
-#include "plugin.hpp"
-#include "util-profiler.hpp"
 
 // Nvidia
 #include "nvidia/ar/nvidia-ar.hpp"

@@ -18,20 +18,11 @@
  */
 
 #pragma once
+#include "common.hpp"
 #include "gs-effect.hpp"
 #include "gs-rendertarget.hpp"
 #include "gs-texture.hpp"
 #include "gs-vertexbuffer.hpp"
-
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <graphics/graphics.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 namespace gs {
 	class mipmapper {

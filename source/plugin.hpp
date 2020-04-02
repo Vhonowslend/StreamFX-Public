@@ -18,35 +18,7 @@
  */
 
 #pragma once
-#include "strings.hpp"
-#include "version.hpp"
-#include "util-threadpool.hpp"
-
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include "obs-module.h"
-#include "util/platform.h"
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
-// Logging
-#define LOG_(level, ...) blog(level, "[" PLUGIN_NAME "] " __VA_ARGS__)
-#define LOG_ERROR(...) LOG_(LOG_ERROR, __VA_ARGS__)
-#define LOG_WARNING(...) LOG_(LOG_WARNING, __VA_ARGS__)
-#define LOG_INFO(...) LOG_(LOG_INFO, __VA_ARGS__)
-#define LOG_DEBUG(...) LOG_(LOG_DEBUG, __VA_ARGS__)
-
-#ifndef __FUNCTION_NAME__
-#ifdef WIN32 // WINDOWS
-#define __FUNCTION_NAME__ __FUNCTION__
-#else // *NIX
-#define __FUNCTION_NAME__ __func__
-#endif
-#endif
+#include "common.hpp"
 
 // Threadpool
 std::shared_ptr<util::threadpool> get_global_threadpool();

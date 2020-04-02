@@ -18,18 +18,8 @@
  */
 
 #pragma once
-#include <cinttypes>
+#include "common.hpp"
 #include <vector>
-
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <graphics/graphics.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 namespace gs {
 	class index_buffer : public std::vector<uint32_t> {

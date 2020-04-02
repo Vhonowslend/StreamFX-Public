@@ -20,7 +20,7 @@
 // SOFTWARE.
 
 #pragma once
-#include <cinttypes>
+#include "common.hpp"
 #include <utility>
 
 extern "C" {

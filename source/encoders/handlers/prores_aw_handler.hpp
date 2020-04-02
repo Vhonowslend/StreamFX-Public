@@ -23,7 +23,6 @@
 #include "handler.hpp"
 
 extern "C" {
-#include <obs-properties.h>
 #pragma warning(push)
 #pragma warning(disable : 4244)
 #include <libavcodec/avcodec.h>

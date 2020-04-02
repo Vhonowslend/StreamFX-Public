@@ -18,20 +18,10 @@
  */
 
 #pragma once
-#include <cinttypes>
+#include "common.hpp"
 #include "gs-limits.hpp"
 #include "gs-vertex.hpp"
 #include "utility.hpp"
-
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <graphics/graphics.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 namespace gs {
 	class vertex_buffer {
