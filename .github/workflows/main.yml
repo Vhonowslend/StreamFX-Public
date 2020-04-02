@@ -10,12 +10,12 @@ jobs:
         runner: [ windows-2016, windows-2019 ]
         include:
           - runner: windows-2016
-            id: windows-vs2017
+            id: windows2017
             windows_sdk: "10.0.17763.0"
             cmake_generator: "Visual Studio 15 2017 Win64"
             cmake_generator_platform: ""
           - runner: windows-2019
-            id: windows-vs2019
+            id: windows2019
             windows_sdk: "10.0.18362.0"
             cmake_generator: "Visual Studio 16 2019"
             cmake_generator_platform: "x64"
@@ -61,21 +61,14 @@ jobs:
     name: "Linux/Ubuntu 64-bit"
     strategy:
       matrix: 
-        runner: [ ubuntu-16.04, ubuntu-18.04 ]
-        gcc: [ 8, 9 ]
+        runner: [ ubuntu-18.04, ubuntu-latest ]
         include:
-          - runner: ubuntu-16.04
-            gcc: 8
-            id: ubuntu1604-gcc8
-          - runner: ubuntu-16.04
-            gcc: 9
-            id: ubuntu1604-gcc9
           - runner: ubuntu-18.04
             gcc: 8
-            id: ubuntu1804-gcc8
-          - runner: ubuntu-18.04
+            id: ubuntu1804
+          - runner: ubuntu-latest
             gcc: 9
-            id: ubuntu1804-gcc9
+            id: ubuntu1910
     runs-on: ${{ matrix.runner }}
     env:
       CMAKE_GENERATOR: "Ninja"
