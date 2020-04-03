@@ -65,7 +65,7 @@ namespace gfx {
 			// Cache
 			float_t         _time;
 			float_t         _time_loop;
-			int32_t			_loops;
+			int32_t         _loops;
 			std::mt19937_64 _random;
 			bool            _have_current_params;
 
@@ -84,7 +84,9 @@ namespace gfx {
 
 			void properties(obs_properties_t* props);
 
-			bool on_properties_modified(obs_properties_t* props, obs_property_t* prop, obs_data_t* data);
+			bool on_refresh_properties(obs_properties_t* props, obs_property_t* prop);
+
+			bool on_shader_or_technique_modified(obs_properties_t* props, obs_property_t* prop, obs_data_t* data);
 
 			bool update_shader(obs_data_t* data, bool& shader_dirty, bool& param_dirty);
 

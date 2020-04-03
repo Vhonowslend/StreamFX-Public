@@ -23,6 +23,7 @@
 #include "plugin.hpp"
 
 #define ST "Shader"
+#define ST_REFRESH ST ".Refresh"
 #define ST_SHADER ST ".Shader"
 #define ST_SHADER_FILE ST_SHADER ".File"
 #define ST_SHADER_TECHNIQUE ST_SHADER ".Technique"
@@ -184,6 +185,15 @@ void gfx::shader::shader::properties(obs_properties_t* pr)
 	_have_current_params = false;
 
 	{
+		auto p = obs_properties_add_button2(
+			pr, ST_REFRESH, D_TRANSLATE(ST_REFRESH),
+			[](obs_properties_t* props, obs_property_t* prop, void* priv) {
+				return reinterpret_cast<gfx::shader::shader*>(priv)->on_refresh_properties(props, prop);
+			},
+			this);
+	}
+
+	{
 		auto grp = obs_properties_create();
 		obs_properties_add_group(pr, ST_SHADER, D_TRANSLATE(ST_SHADER), OBS_GROUP_NORMAL, grp);
 
@@ -191,24 +201,25 @@ void gfx::shader::shader::properties(obs_properties_t* pr)
 			auto p = obs_properties_add_path(grp, ST_SHADER_FILE, D_TRANSLATE(ST_SHADER_FILE), OBS_PATH_FILE, "*.*",
 											 nullptr);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_FILE)));
-			obs_property_set_modified_callback2(
+			/*obs_property_set_modified_callback2(
 				p,
 				[](void* priv, obs_properties_t* props, obs_property_t* prop, obs_data_t* data) noexcept {
-					return reinterpret_cast<gfx::shader::shader*>(priv)->on_properties_modified(props, prop, data);
+					return reinterpret_cast<gfx::shader::shader*>(priv)->on_shader_or_technique_modified(props, prop, data);
 				},
-				this);
+				this);*/
 		}
 		{
 			auto p = obs_properties_add_list(grp, ST_SHADER_TECHNIQUE, D_TRANSLATE(ST_SHADER_TECHNIQUE),
 											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_TECHNIQUE)));
-			obs_property_set_modified_callback2(
+			/*obs_property_set_modified_callback2(
 				p,
 				[](void* priv, obs_properties_t* props, obs_property_t* prop, obs_data_t* data) noexcept {
-					return reinterpret_cast<gfx::shader::shader*>(priv)->on_properties_modified(props, prop, data);
+					return reinterpret_cast<gfx::shader::shader*>(priv)->on_shader_or_technique_modified(props, prop, data);
 				},
-				this);
+				this);*/
 		}
+
 		if (_mode != shader_mode::Transition) {
 			auto grp2 = obs_properties_create();
 			obs_properties_add_group(grp, ST_SHADER_SIZE, D_TRANSLATE(ST_SHADER_SIZE), OBS_GROUP_NORMAL, grp2);
@@ -229,9 +240,42 @@ void gfx::shader::shader::properties(obs_properties_t* pr)
 		auto grp = obs_properties_create();
 		obs_properties_add_group(pr, ST_PARAMETERS, D_TRANSLATE(ST_PARAMETERS), OBS_GROUP_NORMAL, grp);
 	}
+
+	// Manually call the refresh.
+	on_refresh_properties(pr, nullptr);
 }
 
-bool gfx::shader::shader::on_properties_modified(obs_properties_t* props, obs_property_t* prop, obs_data_t* data)
+bool gfx::shader::shader::on_refresh_properties(obs_properties_t* props, obs_property_t* prop)
+{
+	if (_shader) { // Clear list of techniques and rebuild it.
+		obs_property_t* p_tech_list = obs_properties_get(props, ST_SHADER_TECHNIQUE);
+		obs_property_list_clear(p_tech_list);
+		for (size_t idx = 0; idx < _shader.count_techniques(); idx++) {
+			auto tech = _shader.get_technique(idx);
+			obs_property_list_add_string(p_tech_list, tech.name().c_str(), tech.name().c_str());
+		}
+	}
+	{ // Clear parameter options.
+		auto grp = obs_property_group_content(obs_properties_get(props, ST_PARAMETERS));
+		for (auto p = obs_properties_first(grp); p != nullptr; p = obs_properties_first(grp)) {
+			obs::tools::obs_properties_remove_by_name(grp, obs_property_name(p));
+		}
+
+		// Rebuild new parameters.
+		obs_data_t* data = obs_source_get_settings(_self);
+		for (auto kv : _shader_params) {
+			kv.second->properties(grp, data);
+			kv.second->defaults(data);
+			kv.second->update(data);
+		}
+		obs_source_update(_self, data);
+	}
+
+	return true;
+}
+
+bool gfx::shader::shader::on_shader_or_technique_modified(obs_properties_t* props, obs_property_t* prop,
+														  obs_data_t* data)
 {
 	bool shader_dirty = false;
 	bool param_dirty  = false;
