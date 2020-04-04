@@ -52,25 +52,24 @@ extern "C" {
 // FFmpeg
 #define ST_FFMPEG "FFmpegEncoder"
 #define ST_FFMPEG_CUSTOMSETTINGS "FFmpegEncoder.CustomSettings"
-#define ST_FFMPEG_THREADS "FFmpegEncoder.Threads"
-#define ST_FFMPEG_COLORFORMAT "FFmpegEncoder.ColorFormat"
-#define ST_FFMPEG_STANDARDCOMPLIANCE "FFmpegEncoder.StandardCompliance"
-#define ST_FFMPEG_GPU "FFmpegEncoder.GPU"
 #define KEY_FFMPEG_CUSTOMSETTINGS "FFmpeg.CustomSettings"
+#define ST_FFMPEG_THREADS "FFmpegEncoder.Threads"
 #define KEY_FFMPEG_THREADS "FFmpeg.Threads"
+#define ST_FFMPEG_COLORFORMAT "FFmpegEncoder.ColorFormat"
 #define KEY_FFMPEG_COLORFORMAT "FFmpeg.ColorFormat"
+#define ST_FFMPEG_STANDARDCOMPLIANCE "FFmpegEncoder.StandardCompliance"
 #define KEY_FFMPEG_STANDARDCOMPLIANCE "FFmpeg.StandardCompliance"
+#define ST_FFMPEG_GPU "FFmpegEncoder.GPU"
 #define KEY_FFMPEG_GPU "FFmpeg.GPU"
 
 #define ST_KEYFRAMES "FFmpegEncoder.KeyFrames"
 #define ST_KEYFRAMES_INTERVALTYPE "FFmpegEncoder.KeyFrames.IntervalType"
 #define ST_KEYFRAMES_INTERVALTYPE_(x) "FFmpegEncoder.KeyFrames.IntervalType." D_VSTR(x)
+#define KEY_KEYFRAMES_INTERVALTYPE "KeyFrames.IntervalType"
 #define ST_KEYFRAMES_INTERVAL "FFmpegEncoder.KeyFrames.Interval"
 #define ST_KEYFRAMES_INTERVAL_SECONDS "FFmpegEncoder.KeyFrames.Interval.Seconds"
-#define ST_KEYFRAMES_INTERVAL_FRAMES "FFmpegEncoder.KeyFrames.Interval.Frames"
-
-#define KEY_KEYFRAMES_INTERVALTYPE "KeyFrames.IntervalType"
 #define KEY_KEYFRAMES_INTERVAL_SECONDS "KeyFrames.Interval.Seconds"
+#define ST_KEYFRAMES_INTERVAL_FRAMES "FFmpegEncoder.KeyFrames.Interval.Frames"
 #define KEY_KEYFRAMES_INTERVAL_FRAMES "KeyFrames.Interval.Frames"
 
 using namespace encoder::ffmpeg;
@@ -95,7 +94,7 @@ ffmpeg_manager::~ffmpeg_manager()
 
 void ffmpeg_manager::register_handler(std::string codec, std::shared_ptr<handler::handler> handler)
 {
-	_handlers.try_emplace(codec, handler);
+	_handlers.emplace(codec, handler);
 }
 
 std::shared_ptr<handler::handler> ffmpeg_manager::get_handler(std::string codec)
@@ -619,7 +618,7 @@ void ffmpeg_instance::initialize_sw(obs_data_t* settings)
 
 		// Find a suitable Pixel Format.
 		AVPixelFormat _pixfmt_source = ::ffmpeg::tools::obs_videoformat_to_avpixelformat(voi->format);
-		AVPixelFormat _pixfmt_target = static_cast<AVPixelFormat>(obs_data_get_int(settings, ST_FFMPEG_COLORFORMAT));
+		AVPixelFormat _pixfmt_target = static_cast<AVPixelFormat>(obs_data_get_int(settings, KEY_FFMPEG_COLORFORMAT));
 		if (_pixfmt_target == AV_PIX_FMT_NONE) {
 			// Find the best conversion format.
 			_pixfmt_target = ::ffmpeg::tools::get_least_lossy_format(_codec->pix_fmts, _pixfmt_source);
