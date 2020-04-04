@@ -20,6 +20,7 @@
 // SOFTWARE.
 
 #include "prores_aw_handler.hpp"
+#include <array>
 #include "../codecs/prores.hpp"
 #include "ffmpeg/tools.hpp"
 #include "plugin.hpp"
@@ -34,24 +35,22 @@ using namespace encoder::ffmpeg::handler;
 void prores_aw_handler::override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec,
 											 AVCodecContext*)
 {
-	std::string profile = "";
+	static const std::array<std::pair<encoder::codec::prores::profile, AVPixelFormat>,
+							static_cast<size_t>(encoder::codec::prores::profile::_COUNT)>
+		profile_to_format_map{
+			std::pair{encoder::codec::prores::profile::APCO, AV_PIX_FMT_YUV422P10},
+			std::pair{encoder::codec::prores::profile::APCS, AV_PIX_FMT_YUV422P10},
+			std::pair{encoder::codec::prores::profile::APCN, AV_PIX_FMT_YUV422P10},
+			std::pair{encoder::codec::prores::profile::APCH, AV_PIX_FMT_YUV422P10},
+			std::pair{encoder::codec::prores::profile::AP4H, AV_PIX_FMT_YUV444P10},
+			std::pair{encoder::codec::prores::profile::AP4X, AV_PIX_FMT_YUV444P10},
+		};
 
-	int profile_id = static_cast<int>(obs_data_get_int(settings, P_PRORES_PROFILE));
-	for (auto ptr = codec->profiles; ptr->profile != FF_PROFILE_UNKNOWN; ptr++) {
-		if (ptr->profile == profile_id) {
-			profile = ptr->name;
+	const std::int64_t profile_id = obs_data_get_int(settings, P_PRORES_PROFILE);
+	for (auto kv : profile_to_format_map) {
+		if (kv.first == static_cast<encoder::codec::prores::profile>(profile_id)) {
+			target_format = kv.second;
 			break;
-		}
-	}
-
-	std::unordered_map<AVPixelFormat, std::list<std::string>> valid_formats = {
-		{AV_PIX_FMT_YUV422P10, {"apco", "apcs", "apcn", "apch"}}, {AV_PIX_FMT_YUV444P10, {"ap4h", "ap4x"}}};
-
-	for (auto kv : valid_formats) {
-		for (auto name : kv.second) {
-			if (profile == name) {
-				target_format = kv.first;
-			}
 		}
 	}
 }
@@ -63,18 +62,18 @@ void prores_aw_handler::get_defaults(obs_data_t* settings, const AVCodec*, AVCod
 
 inline const char* profile_to_name(const AVProfile* ptr)
 {
-	switch (ptr->profile) {
-	case 0:
+	switch (static_cast<encoder::codec::prores::profile>(ptr->profile)) {
+	case encoder::codec::prores::profile::APCO:
 		return D_TRANSLATE(P_PRORES_PROFILE_APCO);
-	case 1:
+	case encoder::codec::prores::profile::APCS:
 		return D_TRANSLATE(P_PRORES_PROFILE_APCS);
-	case 2:
+	case encoder::codec::prores::profile::APCN:
 		return D_TRANSLATE(P_PRORES_PROFILE_APCN);
-	case 3:
+	case encoder::codec::prores::profile::APCH:
 		return D_TRANSLATE(P_PRORES_PROFILE_APCH);
-	case 4:
+	case encoder::codec::prores::profile::AP4H:
 		return D_TRANSLATE(P_PRORES_PROFILE_AP4H);
-	case 5:
+	case encoder::codec::prores::profile::AP4X:
 		return D_TRANSLATE(P_PRORES_PROFILE_AP4X);
 	default:
 		return ptr->name;
