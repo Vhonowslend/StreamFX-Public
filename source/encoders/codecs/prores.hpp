@@ -20,6 +20,7 @@
 // SOFTWARE.
 
 #pragma once
+#include "common.hpp"
 
 // Codec: ProRes
 #define P_PRORES "Codec.ProRes"
@@ -30,3 +31,21 @@
 #define P_PRORES_PROFILE_APCH "Codec.ProRes.Profile.APCH"
 #define P_PRORES_PROFILE_AP4H "Codec.ProRes.Profile.AP4H"
 #define P_PRORES_PROFILE_AP4X "Codec.ProRes.Profile.AP4X"
+
+namespace encoder::codec::prores {
+	enum class profile : std::int32_t {
+		APCO = 0,
+		Y422_PROXY = APCO,
+		APCS = 1,
+		Y422_LT = APCS,
+		APCN = 2,
+		Y422 = APCN,
+		APCH = 3,
+		Y422_HQ = APCH,
+		AP4H = 4,
+		Y4444 = AP4H,
+		AP4X = 5,
+		Y4444_XQ = AP4X,
+		_COUNT,
+	};
+}
