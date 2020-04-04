@@ -768,6 +768,12 @@ add_library(${PROJECT_NAME} MODULE
 	${PROJECT_PRIVATE}
 )
 
+set_target_properties(${PROJECT_NAME}
+	PROPERTIES
+		PREFIX ""
+		IMPORT_PREFIX ""
+)
+
 # Clang-Format
 if(HAVE_CLANG)
 	clang_format(
