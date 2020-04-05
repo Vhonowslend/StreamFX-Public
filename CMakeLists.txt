@@ -492,6 +492,7 @@ if(WIN32)
 		"cmake/version.rc.in"
 	)
 	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/windll.cpp"
 	)	
 endif()
 
