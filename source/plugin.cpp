@@ -185,18 +185,6 @@ try {
 	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-#ifdef _WIN32
-// Windows Only
-extern "C" {
-#include <Windows.h>
-}
-
-BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID)
-{
-	return TRUE;
-}
-#endif
-
 std::shared_ptr<util::threadpool> get_global_threadpool()
 {
 	return global_threadpool;
