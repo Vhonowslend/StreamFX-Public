@@ -197,14 +197,16 @@ bool blur::blur_instance::apply_mask_parameters(gs::effect effect, gs_texture_t*
 	return true;
 }
 
-inline void migrate_settings(obs_data_t* settings)
+void blur::blur_instance::load(obs_data_t* settings)
 {
-	obs_data_set_default_int(settings, S_VERSION, -1);
-	int64_t version = obs_data_get_int(settings, S_VERSION);
+	update(settings);
+}
 
+void filter::blur::blur_instance::migrate(obs_data_t* settings, std::uint64_t version)
+{
 	// Now we use a fall-through switch to gradually upgrade each known version change.
 	switch (version) {
-	case -1:
+	case 0:
 		/// Blur Type
 		int64_t old_blur = obs_data_get_int(settings, "Filter.Blur.Type");
 		if (old_blur == 0) { // Box
@@ -236,15 +238,10 @@ inline void migrate_settings(obs_data_t* settings)
 		obs_data_set_double(settings, ST_ANGLE, angle);
 		obs_data_unset_user_value(settings, "Filter.Blur.Directional.Angle");
 	}
-
-	obs_data_set_int(settings, S_VERSION, STREAMFX_VERSION);
 }
 
 void blur::blur_instance::update(obs_data_t* settings)
 {
-	// Ensure backwards compatibility.
-	migrate_settings(settings);
-
 	{ // Blur Type
 		const char* blur_type      = obs_data_get_string(settings, ST_TYPE);
 		const char* blur_subtype   = obs_data_get_string(settings, ST_SUBTYPE);
@@ -307,11 +304,6 @@ void blur::blur_instance::update(obs_data_t* settings)
 			}
 		}
 	}
-}
-
-void blur::blur_instance::load(obs_data_t* settings)
-{
-	update(settings);
 }
 
 void blur::blur_instance::video_tick(float)

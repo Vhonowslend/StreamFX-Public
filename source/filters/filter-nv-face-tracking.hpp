@@ -101,6 +101,8 @@ namespace filter::nvidia {
 
 		virtual void load(obs_data_t* data) override;
 
+		virtual void migrate(obs_data_t* data, std::uint64_t version) override;
+
 		virtual void update(obs_data_t* data) override;
 
 		virtual void video_tick(float seconds) override;

@@ -74,6 +74,13 @@ dynamic_mask::dynamic_mask_instance::dynamic_mask_instance(obs_data_t* settings,
 
 dynamic_mask::dynamic_mask_instance::~dynamic_mask_instance() {}
 
+void dynamic_mask::dynamic_mask_instance::load(obs_data_t* settings)
+{
+	update(settings);
+}
+
+void filter::dynamic_mask::dynamic_mask_instance::migrate(obs_data_t* data, std::uint64_t version) {}
+
 void dynamic_mask::dynamic_mask_instance::update(obs_data_t* settings)
 {
 	// Update source.
@@ -133,11 +140,6 @@ void dynamic_mask::dynamic_mask_instance::update(obs_data_t* settings)
 			ch->ptr[static_cast<size_t>(kv2.first)] = found->second.values.ptr[static_cast<size_t>(kv2.first)];
 		}
 	}
-}
-
-void dynamic_mask::dynamic_mask_instance::load(obs_data_t* settings)
-{
-	update(settings);
 }
 
 void dynamic_mask::dynamic_mask_instance::save(obs_data_t* settings)

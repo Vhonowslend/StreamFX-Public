@@ -195,6 +195,8 @@ void filter::nvidia::face_tracking_instance::load(obs_data_t* data)
 	update(data);
 }
 
+void filter::nvidia::face_tracking_instance::migrate(obs_data_t* data, std::uint64_t version) {}
+
 void filter::nvidia::face_tracking_instance::update(obs_data_t* data)
 {
 	_cfg_roi_zoom          = obs_data_get_double(data, SK_ROI_ZOOM) / 100.0;

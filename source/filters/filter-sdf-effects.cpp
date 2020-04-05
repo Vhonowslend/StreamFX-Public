@@ -119,6 +119,13 @@ sdf_effects::sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, ob
 
 sdf_effects::sdf_effects_instance::~sdf_effects_instance() {}
 
+void sdf_effects::sdf_effects_instance::load(obs_data_t* settings)
+{
+	update(settings);
+}
+
+void filter::sdf_effects::sdf_effects_instance::migrate(obs_data_t* data, std::uint64_t version) {}
+
 void sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 {
 	{
@@ -252,11 +259,6 @@ void sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 
 	_sdf_scale     = double_t(obs_data_get_double(data, ST_SDF_SCALE) / 100.0);
 	_sdf_threshold = float_t(obs_data_get_double(data, ST_SDF_THRESHOLD) / 100.0);
-}
-
-void sdf_effects::sdf_effects_instance::load(obs_data_t* settings)
-{
-	update(settings);
 }
 
 void sdf_effects::sdf_effects_instance::video_tick(float)

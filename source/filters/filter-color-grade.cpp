@@ -128,6 +128,8 @@ void color_grade::color_grade_instance::load(obs_data_t* data)
 	update(data);
 }
 
+void filter::color_grade::color_grade_instance::migrate(obs_data_t* data, std::uint64_t version) {}
+
 void color_grade::color_grade_instance::update(obs_data_t* data)
 {
 	_lift.x         = static_cast<float_t>(obs_data_get_double(data, ST_LIFT_(RED)) / 100.0);

@@ -65,6 +65,7 @@ namespace filter::transform {
 		virtual ~transform_instance() override;
 
 		virtual void load(obs_data_t* settings) override;
+		virtual void migrate(obs_data_t* data, std::uint64_t version) override;
 		virtual void update(obs_data_t*) override;
 
 		virtual void video_tick(float) override;
