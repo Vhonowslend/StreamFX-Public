@@ -18,6 +18,7 @@
 */
 
 #include "plugin.hpp"
+#include <fstream>
 #include <stdexcept>
 #include "configuration.hpp"
 #include "obs/obs-source-tracker.hpp"
@@ -60,6 +61,10 @@
 
 #ifdef ENABLE_TRANSITION_SHADER
 #include "transitions/transition-shader.hpp"
+#endif
+
+#ifdef ENABLE_FRONTEND
+#include "ui/ui.hpp"
 #endif
 
 static std::shared_ptr<util::threadpool> _threadpool;
@@ -133,6 +138,11 @@ try {
 #endif
 	}
 
+	// Frontend
+#ifdef ENABLE_FRONTEND
+	streamfx::ui::handler::initialize();
+#endif
+
 	LOG_INFO("Loaded Version %s", STREAMFX_VERSION_STRING);
 	return true;
 } catch (...) {
@@ -143,6 +153,11 @@ try {
 MODULE_EXPORT void obs_module_unload(void)
 try {
 	LOG_INFO("Unloading Version %s", STREAMFX_VERSION_STRING);
+
+	// Frontend
+#ifdef ENABLE_FRONTEND
+	streamfx::ui::handler::finalize();
+#endif
 
 	// Transitions
 	{

@@ -1,0 +1,13 @@
+<RCC>
+  <qresource prefix="logos">
+    <file alias="streamfx_logo">logo.png</file>
+  </qresource>
+  <qresource prefix="linktype">
+    <file alias="discord">linktype_discord.png</file>
+    <file alias="facebook">linktype_facebook.png</file>
+    <file alias="generic">linktype_generic.png</file>
+    <file alias="twitch">linktype_twitch.png</file>
+    <file alias="twitter">linktype_twitter.png</file>
+    <file alias="youtube">linktype_youtube.png</file>
+  </qresource>
+</RCC>
