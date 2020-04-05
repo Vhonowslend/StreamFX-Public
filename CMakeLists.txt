@@ -167,6 +167,11 @@ mark_as_advanced(FORCE OBS_NATIVE OBS_PACKAGE OBS_REFERENCE OBS_DOWNLOAD)
 if(TARGET libobs)
 	message(STATUS "${PROJECT_NAME}: Using native obs-studio.")
 	CacheSet(${PropertyPrefix}OBS_NATIVE TRUE)
+	if (TARGET obs-frontend-api)
+		CacheSet(${PropertyPrefix}_ENABLE_UI TRUE)
+	else()
+		CacheSet(${PropertyPrefix}_ENABLE_UI FALSE)
+	endif()
 else()
 	message(STATUS "${PROJECT_NAME}: Using packaged or remote obs-studio.")
 	CacheSet(${PropertyPrefix}OBS_NATIVE FALSE)
@@ -290,27 +295,31 @@ endif()
 if(${PropertyPrefix}OBS_DOWNLOAD)
 	include("DownloadProject")
 	
-	set(OBS_DOWNLOAD_VERSION "25.0.3")
-	set(OBS_DEPENDENCIES_VERSION "25.0.0")
+	set(OBS_DOWNLOAD_VERSION "25.0.3-fe-ci")
 	if(WIN32)
 		# Windows
+		set(OBS_DEPENDENCIES_VERSION "25.0.0")
+		set(OBS_QT_VERSION "5.10.1")
+
 		download_project(
 			PROJ libobs
-			URL https://github.com/Xaymar/obs-studio/releases/download/${OBS_DOWNLOAD_VERSION}-ci/obs-studio-${ARCH}-0.0.0.0-vs2019.7z
+			URL https://github.com/Xaymar/obs-studio/releases/download/${OBS_DOWNLOAD_VERSION}/obs-studio-${ARCH}-0.0.0.0-vs2019.7z
 			UPDATE_DISCONNECTED 1
 		)
+
 		download_project(
 			PROJ obsdeps
-			URL https://cdn.xaymar.com/obs/dependencies_${OBS_DEPENDENCIES_VERSION}.zip
+			URL https://cdn.xaymar.com/obs/dependencies_${OBS_DEPENDENCIES_VERSION}.7z
 			UPDATE_DISCONNECTED 1
 		)
 	elseif(UNIX)
 		# Unix, Linux
 		download_project(
 			PROJ libobs
-			URL https://github.com/Xaymar/obs-studio/releases/download/${OBS_DOWNLOAD_VERSION}-ci/obs-studio-${ARCH}-0.0.0.0-ubuntu1804.7z
+			URL https://github.com/Xaymar/obs-studio/releases/download/${OBS_DOWNLOAD_VERSION}/obs-studio-${ARCH}-0.0.0.0-ubuntu1804.7z
 			UPDATE_DISCONNECTED 1
 		)
+
 		# Dependencies must be installed like normal OBS Studio
 		message("Linux builds require your install the necessary development packages, take a look at the obs-studio build guide for them.")
 	else()
@@ -322,16 +331,47 @@ endif()
 # Load OBS Studio & Dependencies
 if(${PropertyPrefix}OBS_PACKAGE)
 	include("${OBS_STUDIO_DIR}/cmake/LibObs/LibObsConfig.cmake")
+	if (EXISTS "${OBS_STUDIO_DIR}/cmake/obs-frontend-api/obs-frontend-apiConfig.cmake")
+		include("${OBS_STUDIO_DIR}/cmake/obs-frontend-api/obs-frontend-apiConfig.cmake")
+		set(HAVE_OBS_FRONTEND TRUE)
+	endif()
 elseif(${PropertyPrefix}OBS_REFERENCE)
 	set(obsPath "${OBS_STUDIO_DIR}")
 	include("${OBS_STUDIO_DIR}/cmake/external/FindLibobs.cmake")
 elseif(${PropertyPrefix}OBS_DOWNLOAD)
+	set(_INCLUDE_PREFIX "")
 	if(WIN32)
-		include("${libobs_SOURCE_DIR}/cmake/LibObs/LibObsConfig.cmake")
+		set(_INCLUDE_PREFIX "${libobs_SOURCE_DIR}/cmake")
 	elseif(UNIX)
-		include("${libobs_SOURCE_DIR}/usr/local/lib/cmake/LibObs/LibObsConfig.cmake")
+		set(_INCLUDE_PREFIX "${libobs_SOURCE_DIR}/usr/local/lib/cmake")
 	else()
 	endif()
+	
+	include("${_INCLUDE_PREFIX}/LibObs/LibObsConfig.cmake")
+	if (EXISTS "${_INCLUDE_PREFIX}/obs-frontend-api/obs-frontend-apiConfig.cmake")
+		include("${_INCLUDE_PREFIX}/obs-frontend-api/obs-frontend-apiConfig.cmake")
+		
+		if(WIN32)
+			download_project(
+				PROJ qt
+				URL https://cdn.xaymar.com/obs/qt_${OBS_QT_VERSION}.7z
+				UPDATE_DISCONNECTED 1
+			)
+
+			set(Qt5_DIR "${qt_SOURCE_DIR}" CACHE STRING "Path to Qt5")
+			if("${BITS}" STREQUAL "32")
+				CacheSet(Qt5_DIR "${qt_SOURCE_DIR}/msvc2017/lib/cmake/Qt5/")
+			else()
+				CacheSet(Qt5_DIR "${qt_SOURCE_DIR}/msvc2017_64/lib/cmake/Qt5/")
+			endif()
+		endif()
+		set(HAVE_OBS_FRONTEND TRUE)
+	endif()
+endif()
+
+# QT5
+if(HAVE_OBS_FRONTEND)
+	find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 endif()
 
 ################################################################################
@@ -342,10 +382,12 @@ set(PROJECT_DATA_EFFECTS )
 set(PROJECT_DATA_SHADERS )
 set(PROJECT_LIBRARIES )
 set(PROJECT_LIBRARIES_DELAYED )
+set(PROJECT_INCLUDE_DIRS )
 set(PROJECT_TEMPLATES )
 set(PROJECT_PUBLIC )
 set(PROJECT_PRIVATE_GENERATED )
 set(PROJECT_PRIVATE_SOURCE )
+set(PROJECT_UI )
 set(PROJECT_DEFINES )
 
 ## OBS Studio
@@ -448,6 +490,20 @@ list(APPEND PROJECT_PRIVATE_GENERATED
 	"${PROJECT_BINARY_DIR}/source/module.cpp"
 	"${PROJECT_BINARY_DIR}/source/version.hpp"
 )
+
+## OBS Studio - Frontend/Qt
+if(HAVE_OBS_FRONTEND)	
+	list(APPEND PROJECT_UI
+	)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+	)
+	list(APPEND PROJECT_INCLUDE_DIRS
+		"ui"
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_FRONTEND
+	)
+endif()
 
 ## Feature - FFmpeg Encoder
 if(${PropertyPrefix}ENABLE_ENCODER_FFMPEG)
@@ -738,26 +794,20 @@ if(REQUIRE_SHADER_CODE)
 	)
 endif()
 
+# Combine it all
 set(PROJECT_PRIVATE
 	${PROJECT_DATA}
 	${PROJECT_PRIVATE_GENERATED}
 	${PROJECT_PRIVATE_SOURCE}
+	${PROJECT_UI}
 	${PROJECT_TEMPLATES}
 )
 
 source_group(TREE "${PROJECT_SOURCE_DIR}/data" PREFIX "Data Files" FILES ${PROJECT_DATA})
+source_group(TREE "${PROJECT_SOURCE_DIR}/source" PREFIX "Code Files" FILES ${PROJECT_PRIVATE_SOURCE})
 source_group(TREE "${PROJECT_BINARY_DIR}/source" PREFIX "Generated Files" FILES ${PROJECT_PRIVATE_GENERATED})
 source_group(TREE "${PROJECT_SOURCE_DIR}/cmake" PREFIX "Template Files" FILES ${PROJECT_TEMPLATES})
-
-# Filter Sources
-set(_TMP_SOURCE ${PROJECT_PRIVATE_SOURCE})
-list(FILTER _TMP_SOURCE INCLUDE REGEX "\.(c|cpp)$")
-source_group(TREE "${PROJECT_SOURCE_DIR}/source" PREFIX "Source Files" FILES ${_TMP_SOURCE})
-
-# Filter Headers
-set(_TMP_HEADER ${PROJECT_PRIVATE_SOURCE})
-list(FILTER _TMP_HEADER INCLUDE REGEX "\.(h|hpp)$")
-source_group(TREE "${PROJECT_SOURCE_DIR}/source" PREFIX "Header Files" FILES ${_TMP_HEADER})
+source_group(TREE "${PROJECT_SOURCE_DIR}/ui" PREFIX "User Interface Files" FILES ${PROJECT_UI})
 
 ################################################################################
 # Target
@@ -773,15 +823,6 @@ set_target_properties(${PROJECT_NAME}
 		PREFIX ""
 		IMPORT_PREFIX ""
 )
-
-# Clang-Format
-if(HAVE_CLANG)
-	clang_format(
-		TARGETS ${PROJECT_NAME}
-		DEPENDENCY
-		VERSION 9.0.0
-	)
-endif()
 
 # Include Directories
 target_include_directories(${PROJECT_NAME}
@@ -887,6 +928,33 @@ else()
 		PROPERTIES
 		VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${PROJECT_VERSION_TWEAK}
 		SOVERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${PROJECT_VERSION_TWEAK}
+	)
+endif()
+
+# UI
+if(HAVE_OBS_FRONTEND)
+	target_link_libraries(${PROJECT_NAME}
+		obs-frontend-api
+		Qt5::Core
+		Qt5::Widgets
+	)
+	set_target_properties(
+		${PROJECT_NAME}
+		PROPERTIES
+		AUTOUIC TRUE
+		AUTOUIC_SEARCH_PATHS "${PROJECT_SOURCE_DIR};${PROJECT_SOURCE_DIR}/ui"
+		AUTOMOC TRUE
+		AUTOGEN_BUILD_DIR "${PROJECT_BINARY_DIR}/source"
+		AUTORCC TRUE
+	)
+endif()
+
+# Clang-Format
+if(HAVE_CLANG)
+	clang_format(
+		TARGETS ${PROJECT_NAME}
+		DEPENDENCY
+		VERSION 9.0.0
 	)
 endif()
 
