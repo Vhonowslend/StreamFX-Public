@@ -18,8 +18,8 @@
  */
 
 #include "filter-color-grade.hpp"
-#include <stdexcept>
 #include "strings.hpp"
+#include <stdexcept>
 #include "util-math.hpp"
 
 // OBS

@@ -26,9 +26,7 @@ nvidia::ar::feature::feature(std::shared_ptr<::nvidia::ar::ar> ar, NvAR_FeatureI
 		throw std::runtime_error("Failed to create feature.");
 	}
 
-	_feature = std::shared_ptr<nvAR_Feature>{feat, [this](NvAR_FeatureHandle v) {
-		_ar->destroy(v);
-	}};
+	_feature = std::shared_ptr<nvAR_Feature>{feat, [this](NvAR_FeatureHandle v) { _ar->destroy(v); }};
 }
 
 nvidia::ar::feature::~feature()

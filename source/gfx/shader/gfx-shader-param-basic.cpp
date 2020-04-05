@@ -16,11 +16,11 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "gfx-shader-param-basic.hpp"
+#include "strings.hpp"
 #include <algorithm>
 #include <map>
 #include <sstream>
 #include <stdexcept>
-#include "strings.hpp"
 
 #define ANNO_FIELD_TYPE "field_type"
 #define ANNO_SUFFIX "suffix"

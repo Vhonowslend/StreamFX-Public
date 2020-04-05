@@ -18,6 +18,7 @@
 */
 
 #include "source-mirror.hpp"
+#include "strings.hpp"
 #include <bitset>
 #include <cstring>
 #include <functional>
@@ -28,7 +29,6 @@
 #include "obs/gs/gs-helper.hpp"
 #include "obs/obs-source-tracker.hpp"
 #include "obs/obs-tools.hpp"
-#include "strings.hpp"
 
 // OBS
 #ifdef _MSC_VER

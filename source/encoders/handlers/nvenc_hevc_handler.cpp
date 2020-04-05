@@ -20,12 +20,12 @@
 // SOFTWARE.
 
 #include "nvenc_hevc_handler.hpp"
+#include "strings.hpp"
 #include "../codecs/hevc.hpp"
 #include "../ffmpeg-encoder.hpp"
 #include "ffmpeg/tools.hpp"
 #include "nvenc_shared.hpp"
 #include "plugin.hpp"
-#include "strings.hpp"
 #include "utility.hpp"
 
 extern "C" {

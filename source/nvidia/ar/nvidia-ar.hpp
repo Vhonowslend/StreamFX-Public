@@ -23,7 +23,6 @@
 #include <functional>
 #include <memory>
 
-
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4138)

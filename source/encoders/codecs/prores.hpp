@@ -34,18 +34,18 @@
 
 namespace encoder::codec::prores {
 	enum class profile : std::int32_t {
-		APCO = 0,
+		APCO       = 0,
 		Y422_PROXY = APCO,
-		APCS = 1,
-		Y422_LT = APCS,
-		APCN = 2,
-		Y422 = APCN,
-		APCH = 3,
-		Y422_HQ = APCH,
-		AP4H = 4,
-		Y4444 = AP4H,
-		AP4X = 5,
-		Y4444_XQ = AP4X,
+		APCS       = 1,
+		Y422_LT    = APCS,
+		APCN       = 2,
+		Y422       = APCN,
+		APCH       = 3,
+		Y422_HQ    = APCH,
+		AP4H       = 4,
+		Y4444      = AP4H,
+		AP4X       = 5,
+		Y4444_XQ   = AP4X,
 		_COUNT,
 	};
 }

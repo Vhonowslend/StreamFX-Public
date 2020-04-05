@@ -18,9 +18,9 @@
 */
 
 #include "filter-displacement.hpp"
+#include "strings.hpp"
 #include <stdexcept>
 #include <sys/stat.h>
-#include "strings.hpp"
 
 #define ST "Filter.Displacement"
 #define ST_FILE "Filter.Displacement.File"

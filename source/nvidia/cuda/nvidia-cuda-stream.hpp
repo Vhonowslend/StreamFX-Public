@@ -18,13 +18,13 @@
  */
 
 #pragma once
-#include "nvidia-cuda.hpp"
 #include <memory>
+#include "nvidia-cuda.hpp"
 
 namespace nvidia::cuda {
 	class stream {
 		std::shared_ptr<::nvidia::cuda::cuda> _cuda;
-		::nvidia::cuda::cu_stream_t _stream;
+		::nvidia::cuda::cu_stream_t           _stream;
 
 		public:
 		stream(std::shared_ptr<::nvidia::cuda::cuda> cuda);

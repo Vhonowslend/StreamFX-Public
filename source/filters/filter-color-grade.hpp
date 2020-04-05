@@ -18,13 +18,13 @@
  */
 
 #pragma once
-#include "plugin.hpp"
 #include <vector>
 #include "obs/gs/gs-mipmapper.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
 #include "obs/gs/gs-vertexbuffer.hpp"
 #include "obs/obs-source-factory.hpp"
+#include "plugin.hpp"
 
 namespace filter::color_grade {
 	enum class detection_mode {

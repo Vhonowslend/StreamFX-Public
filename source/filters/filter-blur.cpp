@@ -18,6 +18,7 @@
  */
 
 #include "filter-blur.hpp"
+#include "strings.hpp"
 #include <cfloat>
 #include <cinttypes>
 #include <cmath>
@@ -30,7 +31,6 @@
 #include "gfx/blur/gfx-blur-gaussian.hpp"
 #include "obs/gs/gs-helper.hpp"
 #include "obs/obs-source-tracker.hpp"
-#include "strings.hpp"
 #include "util-math.hpp"
 
 // OBS

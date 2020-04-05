@@ -90,20 +90,20 @@ nvidia::cuda::cuda::cuda()
 	CUDA_LOAD_SYMBOL_V2(cuMemcpyHtoAAsync);
 	CUDA_LOAD_SYMBOL_V2(cuMemcpyHtoD);
 	CUDA_LOAD_SYMBOL_V2(cuMemcpyHtoDAsync);
-	
-		// Stream Managment
+
+	// Stream Managment
 	CUDA_LOAD_SYMBOL(cuStreamCreate);
 	CUDA_LOAD_SYMBOL_V2(cuStreamDestroy);
 	CUDA_LOAD_SYMBOL(cuStreamSynchronize);
-	
-		// Graphics Interoperability
+
+	// Graphics Interoperability
 	CUDA_LOAD_SYMBOL(cuGraphicsMapResources);
 	CUDA_LOAD_SYMBOL(cuGraphicsSubResourceGetMappedArray);
 	CUDA_LOAD_SYMBOL(cuGraphicsUnmapResources);
 	CUDA_LOAD_SYMBOL(cuGraphicsUnregisterResource);
 
 #ifdef WIN32
-		// Direct3D11 Interopability
+	// Direct3D11 Interopability
 	CUDA_LOAD_SYMBOL(cuD3D11GetDevice);
 	CUDA_LOAD_SYMBOL(cuGraphicsD3D11RegisterResource);
 #endif
