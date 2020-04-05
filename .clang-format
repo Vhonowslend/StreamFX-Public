@@ -21,11 +21,17 @@ NamespaceIndentation: All
 #IncludeBlocks: Regroup
 IncludeCategories:
   - Regex: '^(<|")(common.hpp|strings.hpp|version.hpp|obs.h)("|>)'
-    Priority: 0
+    Priority: 100
+  - Regex: '^<obs-'
+    Priority: 150
   - Regex: '^<'
-    Priority: 10
+    Priority: 200
+  - Regex: '^<Q'
+    Priority: 250
   - Regex: '^"'
-    Priority: 20
+    Priority: 300
+  - Regex: '.moc"$'
+    Priority: 300
 SortIncludes: true
  
 # Alignment

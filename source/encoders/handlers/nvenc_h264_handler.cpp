@@ -33,8 +33,8 @@ extern "C" {
 #pragma warning(push)
 #pragma warning(disable : 4242 4244 4365)
 #endif
-#include <libavutil/opt.h>
 #include <obs-module.h>
+#include <libavutil/opt.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
