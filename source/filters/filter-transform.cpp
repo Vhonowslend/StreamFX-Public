@@ -113,23 +113,18 @@ transform::transform_instance::~transform_instance()
 	_mipmap_texture.reset();
 }
 
-inline void migrate_settings(obs_data_t* settings)
-{
-	uint64_t version = static_cast<uint64_t>(obs_data_get_int(settings, S_VERSION));
-
-	switch (version & STREAMFX_MASK_COMPAT) {
-	case 0:
-		obs_data_set_double(settings, ST_ROTATION_X, -obs_data_get_double(settings, ST_ROTATION_X));
-		obs_data_set_double(settings, ST_ROTATION_Y, -obs_data_get_double(settings, ST_ROTATION_Y));
-	}
-
-	obs_data_set_int(settings, S_VERSION, STREAMFX_VERSION);
-}
-
 void transform::transform_instance::load(obs_data_t* settings)
 {
-	migrate_settings(settings);
 	update(settings);
+}
+
+void filter::transform::transform_instance::migrate(obs_data_t* data, std::uint64_t version)
+{
+	switch (version & STREAMFX_MASK_COMPAT) {
+	case 0:
+		obs_data_set_double(data, ST_ROTATION_X, -obs_data_get_double(data, ST_ROTATION_X));
+		obs_data_set_double(data, ST_ROTATION_Y, -obs_data_get_double(data, ST_ROTATION_Y));
+	}
 }
 
 void transform::transform_instance::update(obs_data_t* settings)

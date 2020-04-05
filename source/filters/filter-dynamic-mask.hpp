@@ -65,8 +65,9 @@ namespace filter::dynamic_mask {
 		dynamic_mask_instance(obs_data_t* data, obs_source_t* self);
 		virtual ~dynamic_mask_instance();
 
-		virtual void update(obs_data_t* settings) override;
 		virtual void load(obs_data_t* settings) override;
+		virtual void migrate(obs_data_t* data, std::uint64_t version) override;
+		virtual void update(obs_data_t* settings) override;
 		virtual void save(obs_data_t* settings) override;
 
 		void input_renamed(obs::deprecated_source* src, std::string old_name, std::string new_name);

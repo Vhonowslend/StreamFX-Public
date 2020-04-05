@@ -38,6 +38,7 @@ namespace filter::shader {
 		void properties(obs_properties_t* props);
 
 		virtual void load(obs_data_t* data) override;
+		virtual void migrate(obs_data_t* data, std::uint64_t version) override;
 		virtual void update(obs_data_t* data) override;
 
 		virtual void video_tick(float_t sec_since_last) override;

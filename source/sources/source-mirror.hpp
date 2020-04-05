@@ -61,8 +61,9 @@ namespace source::mirror {
 		virtual uint32_t get_width() override;
 		virtual uint32_t get_height() override;
 
-		virtual void update(obs_data_t*) override;
 		virtual void load(obs_data_t*) override;
+		virtual void migrate(obs_data_t*, std::uint64_t) override;
+		virtual void update(obs_data_t*) override;
 		virtual void save(obs_data_t*) override;
 
 		virtual void video_tick(float) override;

@@ -85,8 +85,9 @@ namespace filter::sdf_effects {
 		sdf_effects_instance(obs_data_t* settings, obs_source_t* self);
 		virtual ~sdf_effects_instance();
 
-		virtual void update(obs_data_t* settings) override;
 		virtual void load(obs_data_t* settings) override;
+		virtual void migrate(obs_data_t* data, std::uint64_t version) override;
+		virtual void update(obs_data_t* settings) override;
 
 		virtual void video_tick(float) override;
 		virtual void video_render(gs_effect_t*) override;

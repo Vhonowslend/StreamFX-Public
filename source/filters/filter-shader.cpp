@@ -55,6 +55,8 @@ void filter::shader::shader_instance::load(obs_data_t* data)
 	update(data);
 }
 
+void filter::shader::shader_instance::migrate(obs_data_t* data, std::uint64_t version) {}
+
 void filter::shader::shader_instance::update(obs_data_t* data)
 {
 	_fx->update(data);

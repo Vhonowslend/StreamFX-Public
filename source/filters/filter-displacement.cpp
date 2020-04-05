@@ -54,27 +54,20 @@ void displacement::displacement_instance::load(obs_data_t* settings)
 	update(settings);
 }
 
-inline void migrate_settings(obs_data_t* settings)
+void filter::displacement::displacement_instance::migrate(obs_data_t* data, std::uint64_t version)
 {
-	uint64_t version = static_cast<uint64_t>(obs_data_get_int(settings, S_VERSION));
-
 	switch (version & STREAMFX_MASK_COMPAT) {
 	case 0:
-		obs_data_set_double(settings, ST_SCALE, obs_data_get_double(settings, "Filter.Displacement.Scale") * 0.5);
-		obs_data_set_double(settings, ST_SCALE_TYPE,
-							obs_data_get_double(settings, "Filter.Displacement.Ratio") * 100.0);
-		obs_data_unset_user_value(settings, "Filter.Displacement.Ratio");
+		obs_data_set_double(data, ST_SCALE, obs_data_get_double(data, "Filter.Displacement.Scale") * 0.5);
+		obs_data_set_double(data, ST_SCALE_TYPE, obs_data_get_double(data, "Filter.Displacement.Ratio") * 100.0);
+		obs_data_unset_user_value(data, "Filter.Displacement.Ratio");
 	case STREAMFX_MAKE_VERSION(0, 8, 0, 0):
 		break;
 	}
-
-	obs_data_set_int(settings, S_VERSION, STREAMFX_VERSION);
 }
 
 void displacement::displacement_instance::update(obs_data_t* settings)
 {
-	migrate_settings(settings);
-
 	_scale[0] = _scale[1] = static_cast<float_t>(obs_data_get_double(settings, ST_SCALE));
 	_scale_type           = static_cast<float_t>(obs_data_get_double(settings, ST_SCALE_TYPE) / 100.0);
 

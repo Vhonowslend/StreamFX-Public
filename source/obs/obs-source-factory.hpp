@@ -37,9 +37,9 @@ namespace obs {
 			_info.destroy         = _destroy;
 			_info.get_defaults2   = _get_defaults2;
 			_info.get_properties2 = _get_properties2;
+			_info.load            = _load;
 			_info.update          = _update;
 			_info.save            = _save;
-			_info.load            = _load;
 			_info.filter_remove   = _filter_remove;
 
 			set_resolution_enabled(true);
@@ -251,16 +251,6 @@ namespace obs {
 			return 0;
 		}
 
-		static void _update(void* data, obs_data_t* settings) noexcept
-		try {
-			if (data)
-				reinterpret_cast<_instance*>(data)->update(settings);
-		} catch (const std::exception& ex) {
-			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-		} catch (...) {
-			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-		}
-
 		static void _activate(void* data) noexcept
 		try {
 			if (data)
@@ -357,20 +347,39 @@ namespace obs {
 			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
-		static void _save(void* data, obs_data_t* settings) noexcept
+		static void _load(void* data, obs_data_t* settings) noexcept
 		try {
-			if (data)
-				reinterpret_cast<_instance*>(data)->save(settings);
+			auto priv = reinterpret_cast<_instance*>(data);
+			if (priv) {
+				std::uint64_t version = static_cast<std::uint64_t>(obs_data_get_int(settings, S_VERSION));
+				priv->migrate(settings, version);
+				obs_data_set_int(settings, S_VERSION, static_cast<std::int64_t>(STREAMFX_VERSION));
+				obs_data_set_string(settings, S_COMMIT, STREAMFX_COMMIT);
+				priv->load(settings);
+			}
 		} catch (const std::exception& ex) {
 			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
 			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
-		static void _load(void* data, obs_data_t* settings) noexcept
+		static void _update(void* data, obs_data_t* settings) noexcept
 		try {
 			if (data)
-				reinterpret_cast<_instance*>(data)->load(settings);
+				reinterpret_cast<_instance*>(data)->update(settings);
+		} catch (const std::exception& ex) {
+			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+		} catch (...) {
+			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+		}
+
+		static void _save(void* data, obs_data_t* settings) noexcept
+		try {
+			if (data) {
+				reinterpret_cast<_instance*>(data)->save(settings);
+				obs_data_set_int(settings, S_VERSION, static_cast<std::int64_t>(STREAMFX_VERSION));
+				obs_data_set_string(settings, S_COMMIT, STREAMFX_COMMIT);
+			}
 		} catch (const std::exception& ex) {
 			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
@@ -534,8 +543,6 @@ namespace obs {
 			return 0;
 		}
 
-		virtual void update(obs_data_t* settings) {}
-
 		virtual void activate() {}
 
 		virtual void deactivate() {}
@@ -560,9 +567,13 @@ namespace obs {
 
 		virtual void enum_active_sources(obs_source_enum_proc_t enum_callback, void* param) {}
 
-		virtual void save(obs_data_t* settings) {}
-
 		virtual void load(obs_data_t* settings) {}
+
+		virtual void migrate(obs_data_t* settings, std::uint64_t version) {}
+
+		virtual void update(obs_data_t* settings) {}
+
+		virtual void save(obs_data_t* settings) {}
 
 		virtual void mouse_click(const struct obs_mouse_event* event, int32_t type, bool mouse_up, uint32_t click_count)
 		{}

@@ -91,10 +91,13 @@ uint32_t mirror::mirror_instance::get_height()
 	return _source_size.second;
 }
 
-static void convert_config(obs_data_t* data)
+void mirror::mirror_instance::load(obs_data_t* data)
 {
-	uint64_t version = static_cast<uint64_t>(obs_data_get_int(data, S_VERSION));
+	update(data);
+}
 
+void source::mirror::mirror_instance::migrate(obs_data_t* data, std::uint64_t version)
+{
 	switch (version) {
 	case 0:
 		obs_data_set_int(data, ST_SOURCE_AUDIO_LAYOUT, obs_data_get_int(data, "Source.Mirror.Audio.Layout"));
@@ -102,26 +105,16 @@ static void convert_config(obs_data_t* data)
 	case STREAMFX_VERSION:
 		break;
 	}
-
-	obs_data_set_int(data, S_VERSION, STREAMFX_VERSION);
-	obs_data_set_string(data, S_COMMIT, STREAMFX_COMMIT);
 }
 
 void mirror::mirror_instance::update(obs_data_t* data)
 {
-	convert_config(data);
-
 	// Audio
 	_audio_enabled = obs_data_get_bool(data, ST_SOURCE_AUDIO);
 	_audio_layout  = static_cast<speaker_layout>(obs_data_get_int(data, ST_SOURCE_AUDIO_LAYOUT));
 
 	// Acquire new source.
 	acquire(obs_data_get_string(data, ST_SOURCE));
-}
-
-void mirror::mirror_instance::load(obs_data_t* data)
-{
-	update(data);
 }
 
 void mirror::mirror_instance::save(obs_data_t* data)
