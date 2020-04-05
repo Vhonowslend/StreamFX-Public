@@ -30,25 +30,22 @@ extern "C" {
 #include <obs-module.h>
 }
 
-using namespace encoder::ffmpeg::handler;
+using namespace streamfx::encoder::ffmpeg::handler;
+using namespace streamfx::encoder::codec::prores;
 
 void prores_aw_handler::override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec,
 											 AVCodecContext*)
 {
-	static const std::array<std::pair<encoder::codec::prores::profile, AVPixelFormat>,
-							static_cast<size_t>(encoder::codec::prores::profile::_COUNT)>
+	static const std::array<std::pair<profile, AVPixelFormat>, static_cast<size_t>(profile::_COUNT)>
 		profile_to_format_map{
-			std::pair{encoder::codec::prores::profile::APCO, AV_PIX_FMT_YUV422P10},
-			std::pair{encoder::codec::prores::profile::APCS, AV_PIX_FMT_YUV422P10},
-			std::pair{encoder::codec::prores::profile::APCN, AV_PIX_FMT_YUV422P10},
-			std::pair{encoder::codec::prores::profile::APCH, AV_PIX_FMT_YUV422P10},
-			std::pair{encoder::codec::prores::profile::AP4H, AV_PIX_FMT_YUV444P10},
-			std::pair{encoder::codec::prores::profile::AP4X, AV_PIX_FMT_YUV444P10},
+			std::pair{profile::APCO, AV_PIX_FMT_YUV422P10}, std::pair{profile::APCS, AV_PIX_FMT_YUV422P10},
+			std::pair{profile::APCN, AV_PIX_FMT_YUV422P10}, std::pair{profile::APCH, AV_PIX_FMT_YUV422P10},
+			std::pair{profile::AP4H, AV_PIX_FMT_YUV444P10}, std::pair{profile::AP4X, AV_PIX_FMT_YUV444P10},
 		};
 
 	const std::int64_t profile_id = obs_data_get_int(settings, P_PRORES_PROFILE);
 	for (auto kv : profile_to_format_map) {
-		if (kv.first == static_cast<encoder::codec::prores::profile>(profile_id)) {
+		if (kv.first == static_cast<profile>(profile_id)) {
 			target_format = kv.second;
 			break;
 		}
@@ -60,25 +57,25 @@ void prores_aw_handler::get_defaults(obs_data_t* settings, const AVCodec*, AVCod
 	obs_data_set_default_int(settings, P_PRORES_PROFILE, 0);
 }
 
-bool encoder::ffmpeg::handler::prores_aw_handler::has_pixel_format_support(ffmpeg_factory* instance)
+bool prores_aw_handler::has_pixel_format_support(ffmpeg_factory* instance)
 {
 	return false;
 }
 
 inline const char* profile_to_name(const AVProfile* ptr)
 {
-	switch (static_cast<encoder::codec::prores::profile>(ptr->profile)) {
-	case encoder::codec::prores::profile::APCO:
+	switch (static_cast<profile>(ptr->profile)) {
+	case profile::APCO:
 		return D_TRANSLATE(P_PRORES_PROFILE_APCO);
-	case encoder::codec::prores::profile::APCS:
+	case profile::APCS:
 		return D_TRANSLATE(P_PRORES_PROFILE_APCS);
-	case encoder::codec::prores::profile::APCN:
+	case profile::APCN:
 		return D_TRANSLATE(P_PRORES_PROFILE_APCN);
-	case encoder::codec::prores::profile::APCH:
+	case profile::APCH:
 		return D_TRANSLATE(P_PRORES_PROFILE_APCH);
-	case encoder::codec::prores::profile::AP4H:
+	case profile::AP4H:
 		return D_TRANSLATE(P_PRORES_PROFILE_AP4H);
-	case encoder::codec::prores::profile::AP4X:
+	case profile::AP4X:
 		return D_TRANSLATE(P_PRORES_PROFILE_AP4X);
 	default:
 		return ptr->name;

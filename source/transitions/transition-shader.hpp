@@ -24,7 +24,7 @@
 #include "obs/obs-source-factory.hpp"
 #include "plugin.hpp"
 
-namespace transition::shader {
+namespace streamfx::transition::shader {
 	class shader_instance : public obs::source_instance {
 		std::shared_ptr<gfx::shader::shader> _fx;
 
@@ -54,26 +54,8 @@ namespace transition::shader {
 		virtual void transition_stop() override;
 	};
 
-	class shader_factory
-		: public obs::source_factory<transition::shader::shader_factory, transition::shader::shader_instance> {
-		static std::shared_ptr<transition::shader::shader_factory> factory_instance;
-
-		public: // Singleton
-		static void initialize()
-		{
-			factory_instance = std::make_shared<transition::shader::shader_factory>();
-		}
-
-		static void finalize()
-		{
-			factory_instance.reset();
-		}
-
-		static std::shared_ptr<shader_factory> get()
-		{
-			return factory_instance;
-		}
-
+	class shader_factory : public obs::source_factory<streamfx::transition::shader::shader_factory,
+													  transition::shader::shader_instance> {
 		public:
 		shader_factory();
 		virtual ~shader_factory();
@@ -83,5 +65,12 @@ namespace transition::shader {
 		virtual void get_defaults2(obs_data_t* data) override;
 
 		virtual obs_properties_t* get_properties2(transition::shader::shader_instance* data) override;
+
+		public: // Singleton
+		static void initialize();
+
+		static void finalize();
+
+		static std::shared_ptr<shader_factory> get();
 	};
-} // namespace transition::shader
+} // namespace streamfx::transition::shader

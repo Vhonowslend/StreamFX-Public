@@ -40,8 +40,8 @@ extern "C" {
 #define KEY_TIER "H265.Tier"
 #define KEY_LEVEL "H265.Level"
 
-using namespace encoder::ffmpeg::handler;
-using namespace encoder::codec::hevc;
+using namespace streamfx::encoder::ffmpeg::handler;
+using namespace streamfx::encoder::codec::hevc;
 
 std::map<profile, std::string> profiles{
 	{profile::MAIN, "main"},
@@ -76,7 +76,22 @@ void nvenc_hevc_handler::get_defaults(obs_data_t* settings, const AVCodec* codec
 	obs_data_set_default_int(settings, KEY_LEVEL, static_cast<int64_t>(level::UNKNOWN));
 }
 
-bool nvenc_hevc_handler::has_keyframe_support(ffmpeg_instance*)
+bool nvenc_hevc_handler::has_keyframe_support(ffmpeg_factory*)
+{
+	return true;
+}
+
+bool nvenc_hevc_handler::is_hardware_encoder(ffmpeg_factory* instance)
+{
+	return true;
+}
+
+bool nvenc_hevc_handler::has_threading_support(ffmpeg_factory* instance)
+{
+	return false;
+}
+
+bool nvenc_hevc_handler::has_pixel_format_support(ffmpeg_factory* instance)
 {
 	return true;
 }

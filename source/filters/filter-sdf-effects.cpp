@@ -65,11 +65,9 @@
 #define ST_SDF_SCALE "Filter.SDFEffects.SDF.Scale"
 #define ST_SDF_THRESHOLD "Filter.SDFEffects.SDF.Threshold"
 
-using namespace filter;
+using namespace streamfx::filter::sdf_effects;
 
-std::shared_ptr<sdf_effects::sdf_effects_factory> sdf_effects::sdf_effects_factory::factory_instance = nullptr;
-
-sdf_effects::sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* self)
+sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* self)
 	: obs::source_instance(settings, self), _source_rendered(false), _sdf_scale(1.0), _sdf_threshold(),
 	  _output_rendered(false), _inner_shadow(false), _inner_shadow_color(), _inner_shadow_range_min(),
 	  _inner_shadow_range_max(), _inner_shadow_offset_x(), _inner_shadow_offset_y(), _outer_shadow(false),
@@ -117,16 +115,16 @@ sdf_effects::sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, ob
 	update(settings);
 }
 
-sdf_effects::sdf_effects_instance::~sdf_effects_instance() {}
+sdf_effects_instance::~sdf_effects_instance() {}
 
-void sdf_effects::sdf_effects_instance::load(obs_data_t* settings)
+void sdf_effects_instance::load(obs_data_t* settings)
 {
 	update(settings);
 }
 
-void filter::sdf_effects::sdf_effects_instance::migrate(obs_data_t* data, std::uint64_t version) {}
+void sdf_effects_instance::migrate(obs_data_t* data, std::uint64_t version) {}
 
-void sdf_effects::sdf_effects_instance::update(obs_data_t* data)
+void sdf_effects_instance::update(obs_data_t* data)
 {
 	{
 		_outer_shadow =
@@ -261,7 +259,7 @@ void sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 	_sdf_threshold = float_t(obs_data_get_double(data, ST_SDF_THRESHOLD) / 100.0);
 }
 
-void sdf_effects::sdf_effects_instance::video_tick(float)
+void sdf_effects_instance::video_tick(float)
 {
 	if (obs_source_t* target = obs_filter_get_target(_self); target != nullptr) {
 		_source_rendered = false;
@@ -269,7 +267,7 @@ void sdf_effects::sdf_effects_instance::video_tick(float)
 	}
 }
 
-void sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect)
+void sdf_effects_instance::video_render(gs_effect_t* effect)
 {
 	obs_source_t* parent         = obs_filter_get_parent(_self);
 	obs_source_t* target         = obs_filter_get_target(_self);
@@ -497,7 +495,7 @@ void sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect)
 	}
 }
 
-sdf_effects::sdf_effects_factory::sdf_effects_factory()
+sdf_effects_factory::sdf_effects_factory()
 {
 	_info.id           = "obs-stream-effects-filter-sdf-effects";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
@@ -507,14 +505,14 @@ sdf_effects::sdf_effects_factory::sdf_effects_factory()
 	finish_setup();
 }
 
-sdf_effects::sdf_effects_factory::~sdf_effects_factory() {}
+sdf_effects_factory::~sdf_effects_factory() {}
 
-const char* sdf_effects::sdf_effects_factory::get_name()
+const char* sdf_effects_factory::get_name()
 {
 	return D_TRANSLATE(ST);
 }
 
-void sdf_effects::sdf_effects_factory::get_defaults2(obs_data_t* data)
+void sdf_effects_factory::get_defaults2(obs_data_t* data)
 {
 	obs_data_set_default_bool(data, ST_SHADOW_OUTER, false);
 	obs_data_set_default_int(data, ST_SHADOW_OUTER_COLOR, 0x00000000);
@@ -655,7 +653,7 @@ try {
 	return true;
 }
 
-obs_properties_t* sdf_effects::sdf_effects_factory::get_properties2(sdf_effects::sdf_effects_instance* data)
+obs_properties_t* sdf_effects_factory::get_properties2(sdf_effects_instance* data)
 {
 	obs_properties_t* props = obs_properties_create();
 	obs_property_t*   p     = nullptr;
@@ -780,4 +778,22 @@ obs_properties_t* sdf_effects::sdf_effects_factory::get_properties2(sdf_effects:
 	}
 
 	return props;
+}
+
+std::shared_ptr<sdf_effects_factory> _filter_sdf_effects_factory_instance = nullptr;
+
+void streamfx::filter::sdf_effects::sdf_effects_factory::initialize()
+{
+	if (!_filter_sdf_effects_factory_instance)
+		_filter_sdf_effects_factory_instance = std::make_shared<sdf_effects_factory>();
+}
+
+void streamfx::filter::sdf_effects::sdf_effects_factory::finalize()
+{
+	_filter_sdf_effects_factory_instance.reset();
+}
+
+std::shared_ptr<sdf_effects_factory> streamfx::filter::sdf_effects::sdf_effects_factory::get()
+{
+	return _filter_sdf_effects_factory_instance;
 }

@@ -36,7 +36,7 @@ extern "C" {
 #pragma warning(pop)
 }
 
-using namespace encoder::ffmpeg::handler;
+using namespace streamfx::encoder::ffmpeg::handler;
 
 void debug_handler::get_defaults(obs_data_t*, const AVCodec*, AVCodecContext*, bool) {}
 

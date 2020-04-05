@@ -29,7 +29,7 @@ extern "C" {
 #pragma warning(pop)
 }
 
-namespace encoder::ffmpeg::handler {
+namespace streamfx::encoder::ffmpeg::handler {
 	class prores_aw_handler : public handler {
 		public:
 		virtual ~prores_aw_handler(){};
@@ -55,4 +55,4 @@ namespace encoder::ffmpeg::handler {
 
 		virtual void process_avpacket(AVPacket& packet, const AVCodec* codec, AVCodecContext* context) override;
 	};
-} // namespace encoder::ffmpeg::handler
+} // namespace streamfx::encoder::ffmpeg::handler

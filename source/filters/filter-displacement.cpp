@@ -27,9 +27,9 @@
 #define ST_SCALE "Filter.Displacement.Scale"
 #define ST_SCALE_TYPE "Filter.Displacement.Scale.Type"
 
-using namespace filter;
+using namespace streamfx::filter::displacement;
 
-displacement::displacement_instance::displacement_instance(obs_data_t* data, obs_source_t* context)
+displacement_instance::displacement_instance(obs_data_t* data, obs_source_t* context)
 	: obs::source_instance(data, context)
 {
 	std::string effect = "";
@@ -44,17 +44,17 @@ displacement::displacement_instance::displacement_instance(obs_data_t* data, obs
 	update(data);
 }
 
-displacement::displacement_instance::~displacement_instance()
+displacement_instance::~displacement_instance()
 {
 	_texture.reset();
 }
 
-void displacement::displacement_instance::load(obs_data_t* settings)
+void displacement_instance::load(obs_data_t* settings)
 {
 	update(settings);
 }
 
-void filter::displacement::displacement_instance::migrate(obs_data_t* data, std::uint64_t version)
+void displacement_instance::migrate(obs_data_t* data, std::uint64_t version)
 {
 	switch (version & STREAMFX_MASK_COMPAT) {
 	case 0:
@@ -66,7 +66,7 @@ void filter::displacement::displacement_instance::migrate(obs_data_t* data, std:
 	}
 }
 
-void displacement::displacement_instance::update(obs_data_t* settings)
+void displacement_instance::update(obs_data_t* settings)
 {
 	_scale[0] = _scale[1] = static_cast<float_t>(obs_data_get_double(settings, ST_SCALE));
 	_scale_type           = static_cast<float_t>(obs_data_get_double(settings, ST_SCALE_TYPE) / 100.0);
@@ -82,13 +82,13 @@ void displacement::displacement_instance::update(obs_data_t* settings)
 	}
 }
 
-void displacement::displacement_instance::video_tick(float_t)
+void displacement_instance::video_tick(float_t)
 {
 	_width  = obs_source_get_base_width(_self);
 	_height = obs_source_get_base_height(_self);
 }
 
-void displacement::displacement_instance::video_render(gs_effect_t*)
+void displacement_instance::video_render(gs_effect_t*)
 {
 	if (!_texture) { // No displacement map, so just skip us for now.
 		obs_source_skip_video_filter(_self);
@@ -110,14 +110,12 @@ void displacement::displacement_instance::video_render(gs_effect_t*)
 	obs_source_process_filter_end(_self, _effect.get_object(), _width, _height);
 }
 
-std::string displacement::displacement_instance::get_file()
+std::string displacement_instance::get_file()
 {
 	return _texture_file;
 }
 
-std::shared_ptr<displacement::displacement_factory> displacement::displacement_factory::factory_instance = nullptr;
-
-displacement::displacement_factory::displacement_factory()
+displacement_factory::displacement_factory()
 {
 	_info.id           = "obs-stream-effects-filter-displacement";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
@@ -127,14 +125,14 @@ displacement::displacement_factory::displacement_factory()
 	finish_setup();
 }
 
-displacement::displacement_factory::~displacement_factory() {}
+displacement_factory::~displacement_factory() {}
 
-const char* displacement::displacement_factory::get_name()
+const char* displacement_factory::get_name()
 {
 	return D_TRANSLATE(ST);
 }
 
-void displacement::displacement_factory::get_defaults2(obs_data_t* data)
+void displacement_factory::get_defaults2(obs_data_t* data)
 {
 	{
 		char* disp = obs_module_file("examples/normal-maps/neutral.png");
@@ -146,7 +144,7 @@ void displacement::displacement_factory::get_defaults2(obs_data_t* data)
 	obs_data_set_default_double(data, ST_SCALE_TYPE, 0.0);
 }
 
-obs_properties_t* displacement::displacement_factory::get_properties2(displacement::displacement_instance* data)
+obs_properties_t* displacement_factory::get_properties2(displacement_instance* data)
 {
 	obs_properties_t* pr = obs_properties_create();
 
@@ -174,4 +172,22 @@ obs_properties_t* displacement::displacement_factory::get_properties2(displaceme
 	}
 
 	return pr;
+}
+
+std::shared_ptr<displacement_factory> _filter_displacement_factory_instance = nullptr;
+
+void streamfx::filter::displacement::displacement_factory::initialize()
+{
+	if (!_filter_displacement_factory_instance)
+		_filter_displacement_factory_instance = std::make_shared<displacement_factory>();
+}
+
+void streamfx::filter::displacement::displacement_factory::finalize()
+{
+	_filter_displacement_factory_instance.reset();
+}
+
+std::shared_ptr<displacement_factory> streamfx::filter::displacement::displacement_factory::get()
+{
+	return _filter_displacement_factory_instance;
 }

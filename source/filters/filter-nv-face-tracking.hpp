@@ -34,7 +34,7 @@
 #include "nvidia/cuda/nvidia-cuda-stream.hpp"
 #include "nvidia/cuda/nvidia-cuda.hpp"
 
-namespace filter::nvidia {
+namespace streamfx::filter::nvidia {
 	class face_tracking_instance : public obs::source_instance {
 		// Filter Cache
 		bool                                    _rt_is_fresh;
@@ -121,29 +121,9 @@ namespace filter::nvidia {
 
 	class face_tracking_factory
 		: public obs::source_factory<filter::nvidia::face_tracking_factory, filter::nvidia::face_tracking_instance> {
-		static std::shared_ptr<filter::nvidia::face_tracking_factory> factory_instance;
-
 		std::shared_ptr<::nvidia::cuda::cuda>    _cuda;
 		std::shared_ptr<::nvidia::cuda::context> _cuda_ctx;
 		std::shared_ptr<::nvidia::ar::ar>        _ar;
-
-		public: // Singleton
-		static void initialize()
-		try {
-			factory_instance = std::make_shared<filter::nvidia::face_tracking_factory>();
-		} catch (const std::exception& ex) {
-			LOG_ERROR("<Nvidia Face Tracking Filter> %s", ex.what());
-		}
-
-		static void finalize()
-		{
-			factory_instance.reset();
-		}
-
-		static std::shared_ptr<face_tracking_factory> get()
-		{
-			return factory_instance;
-		}
 
 		public:
 		face_tracking_factory();
@@ -160,5 +140,12 @@ namespace filter::nvidia {
 		std::shared_ptr<::nvidia::cuda::context> get_cuda_context();
 
 		std::shared_ptr<::nvidia::ar::ar> get_ar();
+
+		public: // Singleton
+		static void initialize();
+
+		static void finalize();
+
+		static std::shared_ptr<face_tracking_factory> get();
 	};
-} // namespace filter::nvidia
+} // namespace streamfx::filter::nvidia

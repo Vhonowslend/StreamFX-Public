@@ -22,7 +22,7 @@
 #include "obs/gs/gs-effect.hpp"
 #include "obs/obs-source-factory.hpp"
 
-namespace filter::displacement {
+namespace streamfx::filter::displacement {
 	class displacement_instance : public obs::source_instance {
 		gs::effect _effect;
 
@@ -52,24 +52,6 @@ namespace filter::displacement {
 
 	class displacement_factory : public obs::source_factory<filter::displacement::displacement_factory,
 															filter::displacement::displacement_instance> {
-		static std::shared_ptr<filter::displacement::displacement_factory> factory_instance;
-
-		public: // Singleton
-		static void initialize()
-		{
-			factory_instance = std::make_shared<filter::displacement::displacement_factory>();
-		}
-
-		static void finalize()
-		{
-			factory_instance.reset();
-		}
-
-		static std::shared_ptr<displacement_factory> get()
-		{
-			return factory_instance;
-		}
-
 		public:
 		displacement_factory();
 		virtual ~displacement_factory();
@@ -79,5 +61,12 @@ namespace filter::displacement {
 		virtual void get_defaults2(obs_data_t* data) override;
 
 		virtual obs_properties_t* get_properties2(filter::displacement::displacement_instance* data) override;
+
+		public: // Singleton
+		static void initialize();
+
+		static void finalize();
+
+		static std::shared_ptr<displacement_factory> get();
 	};
-} // namespace filter::displacement
+} // namespace streamfx::filter::displacement

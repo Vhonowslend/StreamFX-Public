@@ -40,18 +40,16 @@
 #define ST_CHANNEL_MULTIPLIER "Filter.DynamicMask.Channel.Multiplier"
 #define ST_CHANNEL_INPUT "Filter.DynamicMask.Channel.Input"
 
-using namespace filter;
+using namespace streamfx::filter::dynamic_mask;
 
-std::shared_ptr<dynamic_mask::dynamic_mask_factory> dynamic_mask::dynamic_mask_factory::factory_instance = nullptr;
-
-static std::pair<dynamic_mask::channel, const char*> channel_translations[] = {
-	{dynamic_mask::channel::Red, S_CHANNEL_RED},
-	{dynamic_mask::channel::Green, S_CHANNEL_GREEN},
-	{dynamic_mask::channel::Blue, S_CHANNEL_BLUE},
-	{dynamic_mask::channel::Alpha, S_CHANNEL_ALPHA},
+static std::pair<channel, const char*> channel_translations[] = {
+	{channel::Red, S_CHANNEL_RED},
+	{channel::Green, S_CHANNEL_GREEN},
+	{channel::Blue, S_CHANNEL_BLUE},
+	{channel::Alpha, S_CHANNEL_ALPHA},
 };
 
-dynamic_mask::dynamic_mask_instance::dynamic_mask_instance(obs_data_t* settings, obs_source_t* self)
+dynamic_mask_instance::dynamic_mask_instance(obs_data_t* settings, obs_source_t* self)
 	: obs::source_instance(settings, self), _translation_map(), _effect(), _have_filter_texture(false), _filter_rt(),
 	  _filter_texture(), _have_input_texture(false), _input(), _input_capture(), _input_texture(),
 	  _have_final_texture(false), _final_rt(), _final_texture(), _channels(), _precalc()
@@ -73,23 +71,23 @@ dynamic_mask::dynamic_mask_instance::dynamic_mask_instance(obs_data_t* settings,
 	update(settings);
 }
 
-dynamic_mask::dynamic_mask_instance::~dynamic_mask_instance() {}
+dynamic_mask_instance::~dynamic_mask_instance() {}
 
-void dynamic_mask::dynamic_mask_instance::load(obs_data_t* settings)
+void dynamic_mask_instance::load(obs_data_t* settings)
 {
 	update(settings);
 }
 
-void filter::dynamic_mask::dynamic_mask_instance::migrate(obs_data_t* data, std::uint64_t version) {}
+void dynamic_mask_instance::migrate(obs_data_t* data, std::uint64_t version) {}
 
-void dynamic_mask::dynamic_mask_instance::update(obs_data_t* settings)
+void dynamic_mask_instance::update(obs_data_t* settings)
 {
 	// Update source.
 	try {
 		_input         = std::make_shared<obs::deprecated_source>(obs_data_get_string(settings, ST_INPUT));
 		_input_capture = std::make_shared<gfx::source_texture>(_input, _self);
-		_input->events.rename += std::bind(&dynamic_mask::dynamic_mask_instance::input_renamed, this,
-										   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		_input->events.rename += std::bind(&dynamic_mask_instance::input_renamed, this, std::placeholders::_1,
+										   std::placeholders::_2, std::placeholders::_3);
 	} catch (...) {
 		_input.reset();
 		_input_capture.reset();
@@ -143,7 +141,7 @@ void dynamic_mask::dynamic_mask_instance::update(obs_data_t* settings)
 	}
 }
 
-void dynamic_mask::dynamic_mask_instance::save(obs_data_t* settings)
+void dynamic_mask_instance::save(obs_data_t* settings)
 {
 	if (_input) {
 		obs_data_set_string(settings, ST_INPUT, obs_source_get_name(_input->get()));
@@ -174,16 +172,15 @@ void dynamic_mask::dynamic_mask_instance::save(obs_data_t* settings)
 	}
 }
 
-void dynamic_mask::dynamic_mask_instance::input_renamed(obs::deprecated_source*, std::string old_name,
-														std::string new_name)
+void dynamic_mask_instance::input_renamed(obs::deprecated_source*, std::string old_name, std::string new_name)
 {
 	obs_data_t* settings = obs_source_get_settings(_self);
 	obs_data_set_string(settings, ST_INPUT, new_name.c_str());
 	obs_source_update(_self, settings);
 }
 
-bool dynamic_mask::dynamic_mask_instance::modified(void*, obs_properties_t* properties, obs_property_t*,
-												   obs_data_t* settings) noexcept
+bool dynamic_mask_instance::modified(void*, obs_properties_t* properties, obs_property_t*,
+									 obs_data_t* settings) noexcept
 try {
 	channel mask = static_cast<channel>(obs_data_get_int(settings, ST_CHANNEL));
 
@@ -208,14 +205,14 @@ try {
 	return false;
 }
 
-void dynamic_mask::dynamic_mask_instance::video_tick(float)
+void dynamic_mask_instance::video_tick(float)
 {
 	_have_input_texture  = false;
 	_have_filter_texture = false;
 	_have_final_texture  = false;
 }
 
-void dynamic_mask::dynamic_mask_instance::video_render(gs_effect_t* in_effect)
+void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 {
 	obs_source_t* parent = obs_filter_get_parent(_self);
 	obs_source_t* target = obs_filter_get_target(_self);
@@ -350,7 +347,7 @@ void dynamic_mask::dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 	}
 }
 
-dynamic_mask::dynamic_mask_factory::dynamic_mask_factory()
+dynamic_mask_factory::dynamic_mask_factory()
 {
 	_info.id           = "obs-stream-effects-filter-dynamic-mask";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
@@ -360,16 +357,16 @@ dynamic_mask::dynamic_mask_factory::dynamic_mask_factory()
 	finish_setup();
 }
 
-dynamic_mask::dynamic_mask_factory::~dynamic_mask_factory() {}
+dynamic_mask_factory::~dynamic_mask_factory() {}
 
-const char* dynamic_mask::dynamic_mask_factory::get_name()
+const char* dynamic_mask_factory::get_name()
 {
 	return D_TRANSLATE(ST);
 }
 
-void dynamic_mask::dynamic_mask_factory::get_defaults2(obs_data_t* data)
+void dynamic_mask_factory::get_defaults2(obs_data_t* data)
 {
-	obs_data_set_default_int(data, ST_CHANNEL, static_cast<int64_t>(dynamic_mask::channel::Red));
+	obs_data_set_default_int(data, ST_CHANNEL, static_cast<int64_t>(channel::Red));
 	for (auto kv : channel_translations) {
 		obs_data_set_default_double(data, (std::string(ST_CHANNEL_VALUE) + "." + kv.second).c_str(), 1.0);
 		obs_data_set_default_double(data, (std::string(ST_CHANNEL_MULTIPLIER) + "." + kv.second).c_str(), 1.0);
@@ -380,7 +377,7 @@ void dynamic_mask::dynamic_mask_factory::get_defaults2(obs_data_t* data)
 	}
 }
 
-obs_properties_t* dynamic_mask::dynamic_mask_factory::get_properties2(dynamic_mask::dynamic_mask_instance* data)
+obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* data)
 {
 	obs_properties_t* props = obs_properties_create();
 	obs_property_t*   p;
@@ -450,7 +447,7 @@ obs_properties_t* dynamic_mask::dynamic_mask_factory::get_properties2(dynamic_ma
 	return props;
 }
 
-std::string dynamic_mask::dynamic_mask_factory::translate_string(const char* format, ...)
+std::string dynamic_mask_factory::translate_string(const char* format, ...)
 {
 	va_list vargs;
 	va_start(vargs, format);
@@ -458,4 +455,22 @@ std::string dynamic_mask::dynamic_mask_factory::translate_string(const char* for
 	std::size_t       len = static_cast<size_t>(vsnprintf(buffer.data(), buffer.size(), format, vargs));
 	va_end(vargs);
 	return std::string(buffer.data(), buffer.data() + len);
+}
+
+std::shared_ptr<dynamic_mask_factory> _filter_dynamic_mask_factory_instance = nullptr;
+
+void streamfx::filter::dynamic_mask::dynamic_mask_factory::initialize()
+{
+	if (!_filter_dynamic_mask_factory_instance)
+		_filter_dynamic_mask_factory_instance = std::make_shared<dynamic_mask_factory>();
+}
+
+void streamfx::filter::dynamic_mask::dynamic_mask_factory::finalize()
+{
+	_filter_dynamic_mask_factory_instance.reset();
+}
+
+std::shared_ptr<dynamic_mask_factory> streamfx::filter::dynamic_mask::dynamic_mask_factory::get()
+{
+	return _filter_dynamic_mask_factory_instance;
 }

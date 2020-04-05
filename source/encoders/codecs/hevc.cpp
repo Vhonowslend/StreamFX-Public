@@ -22,7 +22,7 @@
 #include "hevc.hpp"
 #include "utility.hpp"
 
-using namespace encoder::codec;
+using namespace streamfx::encoder::codec;
 
 enum class nal_unit_type : std::uint8_t { // 6 bits
 	TRAIL_N        = 0,
