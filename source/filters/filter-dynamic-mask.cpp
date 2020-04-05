@@ -21,6 +21,7 @@
 #include "strings.hpp"
 #include <sstream>
 #include <stdexcept>
+#include <vector>
 
 // Filter to allow dynamic masking
 // Allow any channel to affect any other channel
