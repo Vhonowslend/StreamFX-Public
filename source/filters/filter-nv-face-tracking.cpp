@@ -38,12 +38,14 @@
 #define ST_ROI_STABILITY "Filter.Nvidia.FaceTracking.ROI.Stability"
 #define SK_ROI_STABILITY "ROI.Stability"
 
+using namespace streamfx::filter::nvidia;
+
 void ar_feature_deleter(NvAR_FeatureHandle v)
 {
-	filter::nvidia::face_tracking_factory::get()->get_ar()->destroy(v);
+	face_tracking_factory::get()->get_ar()->destroy(v);
 }
 
-filter::nvidia::face_tracking_instance::face_tracking_instance(obs_data_t* settings, obs_source_t* self)
+face_tracking_instance::face_tracking_instance(obs_data_t* settings, obs_source_t* self)
 	: obs::source_instance(settings, self),
 
 	  _rt_is_fresh(false), _rt(),
@@ -93,13 +95,13 @@ filter::nvidia::face_tracking_instance::face_tracking_instance(obs_data_t* setti
 	async_initialize(nullptr);
 }
 
-filter::nvidia::face_tracking_instance::~face_tracking_instance()
+face_tracking_instance::~face_tracking_instance()
 {
 	_ar_library->image_dealloc(&_ar_image_temp);
 	_ar_library->image_dealloc(&_ar_image_bgr);
 }
 
-void filter::nvidia::face_tracking_instance::async_initialize(std::shared_ptr<void> ptr)
+void face_tracking_instance::async_initialize(std::shared_ptr<void> ptr)
 {
 	struct async_data {
 		std::shared_ptr<obs_weak_source_t> source;
@@ -118,8 +120,8 @@ void filter::nvidia::face_tracking_instance::async_initialize(std::shared_ptr<vo
 		models_path.concat("\\");
 		data->models_path = models_path.string();
 
-		get_global_threadpool()->push(
-			std::bind(&filter::nvidia::face_tracking_instance::async_initialize, this, std::placeholders::_1), data);
+		streamfx::threadpool()->push(std::bind(&face_tracking_instance::async_initialize, this, std::placeholders::_1),
+									 data);
 	} else {
 		std::shared_ptr<async_data> data = std::static_pointer_cast<async_data>(ptr);
 
@@ -192,7 +194,7 @@ void filter::nvidia::face_tracking_instance::async_initialize(std::shared_ptr<vo
 	}
 }
 
-void filter::nvidia::face_tracking_instance::refresh_geometry()
+void face_tracking_instance::refresh_geometry()
 { // Update Region of Interest Geometry.
 	std::unique_lock<std::mutex> lock(_roi_lock);
 
@@ -231,7 +233,7 @@ void filter::nvidia::face_tracking_instance::refresh_geometry()
 	_roi_geom->update();
 }
 
-void filter::nvidia::face_tracking_instance::async_track(std::shared_ptr<void> ptr)
+void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 {
 	struct async_data {
 		std::shared_ptr<obs_weak_source_t> source;
@@ -265,8 +267,8 @@ void filter::nvidia::face_tracking_instance::async_track(std::shared_ptr<void> p
 		}
 
 		// Push work
-		get_global_threadpool()->push(
-			std::bind(&filter::nvidia::face_tracking_instance::async_track, this, std::placeholders::_1), data);
+		streamfx::threadpool()->push(std::bind(&face_tracking_instance::async_track, this, std::placeholders::_1),
+									 data);
 	} else {
 		std::shared_ptr<async_data> data = std::static_pointer_cast<async_data>(ptr);
 
@@ -423,7 +425,7 @@ void filter::nvidia::face_tracking_instance::async_track(std::shared_ptr<void> p
 	}
 }
 
-void filter::nvidia::face_tracking_instance::roi_refresh()
+void face_tracking_instance::roi_refresh()
 {
 	double_t kalman_q = util::math::lerp<double_t>(1.0, 1e-6, _cfg_roi_stability);
 	double_t kalman_r = util::math::lerp<double_t>(std::numeric_limits<double_t>::epsilon(), 1e+2, _cfg_roi_stability);
@@ -434,7 +436,7 @@ void filter::nvidia::face_tracking_instance::roi_refresh()
 	_roi_filters[3] = util::math::kalman1D<double_t>{kalman_q, kalman_r, 1.0, _roi_size.second};
 }
 
-void filter::nvidia::face_tracking_instance::roi_reset()
+void face_tracking_instance::roi_reset()
 {
 	_roi_center.first  = static_cast<double_t>(_size.first / 2);
 	_roi_center.second = static_cast<double_t>(_size.second / 2);
@@ -444,14 +446,14 @@ void filter::nvidia::face_tracking_instance::roi_reset()
 	roi_refresh();
 }
 
-void filter::nvidia::face_tracking_instance::load(obs_data_t* data)
+void face_tracking_instance::load(obs_data_t* data)
 {
 	update(data);
 }
 
-void filter::nvidia::face_tracking_instance::migrate(obs_data_t* data, std::uint64_t version) {}
+void face_tracking_instance::migrate(obs_data_t* data, std::uint64_t version) {}
 
-void filter::nvidia::face_tracking_instance::update(obs_data_t* data)
+void face_tracking_instance::update(obs_data_t* data)
 {
 	_cfg_roi_zoom          = obs_data_get_double(data, SK_ROI_ZOOM) / 100.0;
 	_cfg_roi_offset.first  = obs_data_get_double(data, SK_ROI_OFFSET_X) / 100.0;
@@ -463,7 +465,7 @@ void filter::nvidia::face_tracking_instance::update(obs_data_t* data)
 	roi_refresh();
 }
 
-void filter::nvidia::face_tracking_instance::video_tick(float_t seconds)
+void face_tracking_instance::video_tick(float_t seconds)
 {
 	// If we aren't yet ready to do work, abort for now.
 	if (!_ar_loaded) {
@@ -478,7 +480,7 @@ void filter::nvidia::face_tracking_instance::video_tick(float_t seconds)
 	_rt_is_fresh = false;
 }
 
-void filter::nvidia::face_tracking_instance::video_render(gs_effect_t* effect)
+void face_tracking_instance::video_render(gs_effect_t* effect)
 {
 	gs::debug_marker gdm_main{gs::debug_color_source, "%s", obs_source_get_name(_self)};
 	obs_source_t*    filter_parent  = obs_filter_get_parent(_self);
@@ -528,7 +530,7 @@ void filter::nvidia::face_tracking_instance::video_render(gs_effect_t* effect)
 }
 
 #ifdef _DEBUG
-bool filter::nvidia::face_tracking_instance::button_profile(obs_properties_t* props, obs_property_t* property)
+bool face_tracking_instance::button_profile(obs_properties_t* props, obs_property_t* property)
 {
 	LOG_INFO("%-22s: %-10s %-10s %-10s %-10s %-10s", "Task", "Total", "Count", "Average", "99.9%ile", "95.0%ile");
 
@@ -550,10 +552,7 @@ bool filter::nvidia::face_tracking_instance::button_profile(obs_properties_t* pr
 }
 #endif
 
-std::shared_ptr<filter::nvidia::face_tracking_factory> filter::nvidia::face_tracking_factory::factory_instance =
-	nullptr;
-
-filter::nvidia::face_tracking_factory::face_tracking_factory()
+face_tracking_factory::face_tracking_factory()
 {
 	// Try and load CUDA.
 	_cuda = std::make_shared<::nvidia::cuda::cuda>();
@@ -584,14 +583,14 @@ filter::nvidia::face_tracking_factory::face_tracking_factory()
 	finish_setup();
 }
 
-filter::nvidia::face_tracking_factory::~face_tracking_factory() {}
+face_tracking_factory::~face_tracking_factory() {}
 
-const char* filter::nvidia::face_tracking_factory::get_name()
+const char* face_tracking_factory::get_name()
 {
 	return D_TRANSLATE(ST);
 }
 
-void filter::nvidia::face_tracking_factory::get_defaults2(obs_data_t* data)
+void face_tracking_factory::get_defaults2(obs_data_t* data)
 {
 	obs_data_set_default_double(data, SK_ROI_ZOOM, 50.0);
 	obs_data_set_default_double(data, SK_ROI_OFFSET_X, 0.0);
@@ -599,7 +598,7 @@ void filter::nvidia::face_tracking_factory::get_defaults2(obs_data_t* data)
 	obs_data_set_default_double(data, SK_ROI_STABILITY, 50.0);
 }
 
-obs_properties_t* filter::nvidia::face_tracking_factory::get_properties2(filter::nvidia::face_tracking_instance* data)
+obs_properties_t* face_tracking_factory::get_properties2(face_tracking_instance* data)
 {
 	obs_properties_t* pr = obs_properties_create();
 
@@ -640,7 +639,7 @@ obs_properties_t* filter::nvidia::face_tracking_factory::get_properties2(filter:
 		obs_properties_add_button2(
 			pr, "Profile", "Profile",
 			[](obs_properties_t* props, obs_property_t* property, void* data) {
-				return reinterpret_cast<filter::nvidia::face_tracking_instance*>(data)->button_profile(props, property);
+				return reinterpret_cast<face_tracking_instance*>(data)->button_profile(props, property);
 			},
 			data);
 	}
@@ -649,17 +648,38 @@ obs_properties_t* filter::nvidia::face_tracking_factory::get_properties2(filter:
 	return pr;
 }
 
-std::shared_ptr<::nvidia::cuda::cuda> filter::nvidia::face_tracking_factory::get_cuda()
+std::shared_ptr<::nvidia::cuda::cuda> face_tracking_factory::get_cuda()
 {
 	return _cuda;
 }
 
-std::shared_ptr<::nvidia::cuda::context> filter::nvidia::face_tracking_factory::get_cuda_context()
+std::shared_ptr<::nvidia::cuda::context> face_tracking_factory::get_cuda_context()
 {
 	return _cuda_ctx;
 }
 
-std::shared_ptr<::nvidia::ar::ar> filter::nvidia::face_tracking_factory::get_ar()
+std::shared_ptr<::nvidia::ar::ar> face_tracking_factory::get_ar()
 {
 	return _ar;
+}
+
+std::shared_ptr<face_tracking_factory> _filter_nvidia_face_tracking_factory_instance = nullptr;
+
+void streamfx::filter::nvidia::face_tracking_factory::initialize()
+{
+	try {
+		_filter_nvidia_face_tracking_factory_instance = std::make_shared<filter::nvidia::face_tracking_factory>();
+	} catch (const std::exception& ex) {
+		LOG_ERROR("<Nvidia Face Tracking Filter> %s", ex.what());
+	}
+}
+
+void streamfx::filter::nvidia::face_tracking_factory::finalize()
+{
+	_filter_nvidia_face_tracking_factory_instance.reset();
+}
+
+std::shared_ptr<face_tracking_factory> streamfx::filter::nvidia::face_tracking_factory::get()
+{
+	return _filter_nvidia_face_tracking_factory_instance;
 }

@@ -30,7 +30,7 @@ extern "C" {
 #pragma warning(pop)
 }
 
-namespace encoder::ffmpeg {
+namespace streamfx::encoder::ffmpeg {
 	struct ffmpeg_info;
 	class ffmpeg_factory;
 	class ffmpeg_instance;
@@ -73,4 +73,4 @@ namespace encoder::ffmpeg {
 			virtual void process_avpacket(AVPacket& packet, const AVCodec* codec, AVCodecContext* context);
 		};
 	} // namespace handler
-} // namespace encoder::ffmpeg
+} // namespace streamfx::encoder::ffmpeg

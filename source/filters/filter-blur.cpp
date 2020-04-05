@@ -77,7 +77,7 @@
 #define ST_MASK_ALPHA "Filter.Blur.Mask.Alpha"
 #define ST_MASK_MULTIPLIER "Filter.Blur.Mask.Multiplier"
 
-using namespace filter;
+using namespace streamfx::filter::blur;
 
 struct local_blur_type_t {
 	std::function<::gfx::blur::ifactory&()> fn;
@@ -102,9 +102,7 @@ static std::map<std::string, local_blur_subtype_t> list_of_subtypes = {
 	{"zoom", {::gfx::blur::type::Zoom, S_BLUR_SUBTYPE_ZOOM}},
 };
 
-std::shared_ptr<blur::blur_factory> blur::blur_factory::factory_instance = nullptr;
-
-blur::blur_instance::blur_instance(obs_data_t* settings, obs_source_t* self)
+blur_instance::blur_instance(obs_data_t* settings, obs_source_t* self)
 	: obs::source_instance(settings, self), _source_rendered(false), _output_rendered(false)
 {
 	{
@@ -130,10 +128,10 @@ blur::blur_instance::blur_instance(obs_data_t* settings, obs_source_t* self)
 	update(settings);
 }
 
-blur::blur_instance::~blur_instance() {}
+blur_instance::~blur_instance() {}
 
-bool blur::blur_instance::apply_mask_parameters(gs::effect effect, gs_texture_t* original_texture,
-												gs_texture_t* blurred_texture)
+bool blur_instance::apply_mask_parameters(gs::effect effect, gs_texture_t* original_texture,
+										  gs_texture_t* blurred_texture)
 {
 	if (effect.has_parameter("image_orig")) {
 		effect.get_parameter("image_orig").set_texture(original_texture);
@@ -197,12 +195,12 @@ bool blur::blur_instance::apply_mask_parameters(gs::effect effect, gs_texture_t*
 	return true;
 }
 
-void blur::blur_instance::load(obs_data_t* settings)
+void blur_instance::load(obs_data_t* settings)
 {
 	update(settings);
 }
 
-void filter::blur::blur_instance::migrate(obs_data_t* settings, std::uint64_t version)
+void blur_instance::migrate(obs_data_t* settings, std::uint64_t version)
 {
 	// Now we use a fall-through switch to gradually upgrade each known version change.
 	switch (version) {
@@ -240,7 +238,7 @@ void filter::blur::blur_instance::migrate(obs_data_t* settings, std::uint64_t ve
 	}
 }
 
-void blur::blur_instance::update(obs_data_t* settings)
+void blur_instance::update(obs_data_t* settings)
 {
 	{ // Blur Type
 		const char* blur_type      = obs_data_get_string(settings, ST_TYPE);
@@ -275,7 +273,7 @@ void blur::blur_instance::update(obs_data_t* settings)
 	{ // Masking
 		_mask.enabled = obs_data_get_bool(settings, ST_MASK);
 		if (_mask.enabled) {
-			_mask.type = static_cast<blur::mask_type>(obs_data_get_int(settings, ST_MASK_TYPE));
+			_mask.type = static_cast<mask_type>(obs_data_get_int(settings, ST_MASK_TYPE));
 			switch (_mask.type) {
 			case mask_type::Region:
 				_mask.region.left    = float_t(obs_data_get_double(settings, ST_MASK_REGION_LEFT) / 100.0);
@@ -306,7 +304,7 @@ void blur::blur_instance::update(obs_data_t* settings)
 	}
 }
 
-void blur::blur_instance::video_tick(float)
+void blur_instance::video_tick(float)
 {
 	// Blur
 	if (_blur) {
@@ -355,7 +353,7 @@ void blur::blur_instance::video_tick(float)
 	_output_rendered = false;
 }
 
-void blur::blur_instance::video_render(gs_effect_t* effect)
+void blur_instance::video_render(gs_effect_t* effect)
 {
 	obs_source_t* parent        = obs_filter_get_parent(this->_self);
 	obs_source_t* target        = obs_filter_get_target(this->_self);
@@ -534,7 +532,7 @@ void blur::blur_instance::video_render(gs_effect_t* effect)
 	}
 }
 
-blur::blur_factory::blur_factory()
+blur_factory::blur_factory()
 {
 	_info.id           = "obs-stream-effects-filter-blur";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
@@ -544,14 +542,14 @@ blur::blur_factory::blur_factory()
 	finish_setup();
 }
 
-blur::blur_factory::~blur_factory() {}
+blur_factory::~blur_factory() {}
 
-const char* blur::blur_factory::get_name()
+const char* blur_factory::get_name()
 {
 	return D_TRANSLATE(ST);
 }
 
-void blur::blur_factory::get_defaults2(obs_data_t* settings)
+void blur_factory::get_defaults2(obs_data_t* settings)
 {
 	// Type, Subtype
 	obs_data_set_default_string(settings, ST_TYPE, "box");
@@ -724,7 +722,7 @@ try {
 	}
 
 	{ // Masking
-		using namespace blur;
+		using namespace ::gfx::blur;
 		bool      show_mask   = obs_data_get_bool(settings, ST_MASK);
 		mask_type mtype       = static_cast<mask_type>(obs_data_get_int(settings, ST_MASK_TYPE));
 		bool      show_region = (mtype == mask_type::Region) && show_mask;
@@ -751,7 +749,7 @@ try {
 	return false;
 }
 
-obs_properties_t* blur::blur_factory::get_properties2(blur::blur_instance* data)
+obs_properties_t* blur_factory::get_properties2(blur_instance* data)
 {
 	obs_properties_t* pr = obs_properties_create();
 	obs_property_t*   p  = NULL;
@@ -870,7 +868,7 @@ obs_properties_t* blur::blur_factory::get_properties2(blur::blur_instance* data)
 	return pr;
 }
 
-std::string blur::blur_factory::translate_string(const char* format, ...)
+std::string blur_factory::translate_string(const char* format, ...)
 {
 	va_list vargs;
 	va_start(vargs, format);
@@ -878,4 +876,22 @@ std::string blur::blur_factory::translate_string(const char* format, ...)
 	std::size_t       len = static_cast<size_t>(vsnprintf(buffer.data(), buffer.size(), format, vargs));
 	va_end(vargs);
 	return std::string(buffer.data(), buffer.data() + len);
+}
+
+std::shared_ptr<blur_factory> _filter_blur_factory_instance = nullptr;
+
+void streamfx::filter::blur::blur_factory::initialize()
+{
+	if (!_filter_blur_factory_instance)
+		_filter_blur_factory_instance = std::make_shared<blur_factory>();
+}
+
+void streamfx::filter::blur::blur_factory::finalize()
+{
+	_filter_blur_factory_instance.reset();
+}
+
+std::shared_ptr<blur_factory> streamfx::filter::blur::blur_factory::get()
+{
+	return _filter_blur_factory_instance;
 }

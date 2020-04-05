@@ -72,66 +72,10 @@ extern "C" {
 #define ST_KEYFRAMES_INTERVAL_FRAMES "FFmpegEncoder.KeyFrames.Interval.Frames"
 #define KEY_KEYFRAMES_INTERVAL_FRAMES "KeyFrames.Interval.Frames"
 
-using namespace encoder::ffmpeg;
+using namespace streamfx::encoder::ffmpeg;
+using namespace streamfx::encoder::codec;
 
 enum class keyframe_type { SECONDS, FRAMES };
-
-std::shared_ptr<ffmpeg_manager> encoder::ffmpeg::ffmpeg_manager::_instance;
-
-ffmpeg_manager::ffmpeg_manager() : _factories(), _handlers(), _debug_handler()
-{
-	// Handlers
-	_debug_handler = ::std::make_shared<handler::debug_handler>();
-	register_handler("prores_aw", ::std::make_shared<handler::prores_aw_handler>());
-	register_handler("h264_nvenc", ::std::make_shared<handler::nvenc_h264_handler>());
-	register_handler("hevc_nvenc", ::std::make_shared<handler::nvenc_hevc_handler>());
-}
-
-ffmpeg_manager::~ffmpeg_manager()
-{
-	_factories.clear();
-}
-
-void ffmpeg_manager::register_handler(std::string codec, std::shared_ptr<handler::handler> handler)
-{
-	_handlers.emplace(codec, handler);
-}
-
-std::shared_ptr<handler::handler> ffmpeg_manager::get_handler(std::string codec)
-{
-	auto fnd = _handlers.find(codec);
-	if (fnd != _handlers.end())
-		return fnd->second;
-#ifdef _DEBUG
-	return _debug_handler;
-#else
-	return nullptr;
-#endif
-}
-
-bool ffmpeg_manager::has_handler(std::string codec)
-{
-	return (_handlers.find(codec) != _handlers.end());
-}
-
-void encoder::ffmpeg::ffmpeg_manager::register_encoders()
-{
-	// Encoders
-	void*          iterator = nullptr;
-	const AVCodec* codec    = nullptr;
-	for (codec = av_codec_iterate(&iterator); codec != nullptr; codec = av_codec_iterate(&iterator)) {
-		if (!av_codec_is_encoder(codec))
-			continue;
-		if ((codec->type == AVMediaType::AVMEDIA_TYPE_AUDIO) || (codec->type == AVMediaType::AVMEDIA_TYPE_VIDEO)) {
-			try {
-				auto factory = std::make_shared<ffmpeg_factory>(codec);
-				factory->register_encoder();
-				_factories.emplace(codec, factory);
-			} catch (...) {
-			}
-		}
-	}
-}
 
 static void* _create(obs_data_t* settings, obs_encoder_t* encoder) noexcept
 try {
@@ -1152,8 +1096,8 @@ int ffmpeg_instance::receive_packet(bool* received_packet, struct encoder_packet
 			bfree(tmp_header);
 			bfree(tmp_sei);
 		} else if (_codec->id == AV_CODEC_ID_HEVC) {
-			::encoder::codec::hevc::extract_header_sei(_current_packet.data, static_cast<size_t>(_current_packet.size),
-													   _extra_data, _sei_data);
+			hevc::extract_header_sei(_current_packet.data, static_cast<size_t>(_current_packet.size), _extra_data,
+									 _sei_data);
 		} else if (_context->extradata != nullptr) {
 			_extra_data.resize(static_cast<size_t>(_context->extradata_size));
 			std::memcpy(_extra_data.data(), _context->extradata, static_cast<size_t>(_context->extradata_size));
@@ -1405,4 +1349,79 @@ void ffmpeg_instance::parse_ffmpeg_commandline(std::string text)
 			LOG_ERROR("Option '%s' encountered exception: %s", opt.c_str(), ex.what());
 		}
 	}
+}
+
+ffmpeg_manager::ffmpeg_manager() : _factories(), _handlers(), _debug_handler()
+{
+	// Handlers
+	_debug_handler = ::std::make_shared<handler::debug_handler>();
+	register_handler("prores_aw", ::std::make_shared<handler::prores_aw_handler>());
+	register_handler("h264_nvenc", ::std::make_shared<handler::nvenc_h264_handler>());
+	register_handler("hevc_nvenc", ::std::make_shared<handler::nvenc_hevc_handler>());
+}
+
+ffmpeg_manager::~ffmpeg_manager()
+{
+	_factories.clear();
+}
+
+void ffmpeg_manager::register_handler(std::string codec, std::shared_ptr<handler::handler> handler)
+{
+	_handlers.emplace(codec, handler);
+}
+
+std::shared_ptr<handler::handler> ffmpeg_manager::get_handler(std::string codec)
+{
+	auto fnd = _handlers.find(codec);
+	if (fnd != _handlers.end())
+		return fnd->second;
+#ifdef _DEBUG
+	return _debug_handler;
+#else
+	return nullptr;
+#endif
+}
+
+bool ffmpeg_manager::has_handler(std::string codec)
+{
+	return (_handlers.find(codec) != _handlers.end());
+}
+
+void ffmpeg_manager::register_encoders()
+{
+	// Encoders
+	void*          iterator = nullptr;
+	const AVCodec* codec    = nullptr;
+	for (codec = av_codec_iterate(&iterator); codec != nullptr; codec = av_codec_iterate(&iterator)) {
+		if (!av_codec_is_encoder(codec))
+			continue;
+		if ((codec->type == AVMediaType::AVMEDIA_TYPE_AUDIO) || (codec->type == AVMediaType::AVMEDIA_TYPE_VIDEO)) {
+			try {
+				auto factory = std::make_shared<ffmpeg_factory>(codec);
+				factory->register_encoder();
+				_factories.emplace(codec, factory);
+			} catch (...) {
+			}
+		}
+	}
+}
+
+std::shared_ptr<ffmpeg_manager> _ffmepg_encoder_factory_instance = nullptr;
+
+void streamfx::encoder::ffmpeg::ffmpeg_manager::initialize()
+{
+	if (!_ffmepg_encoder_factory_instance) {
+		_ffmepg_encoder_factory_instance = std::make_shared<ffmpeg_manager>();
+		_ffmepg_encoder_factory_instance->register_encoders();
+	}
+}
+
+void streamfx::encoder::ffmpeg::ffmpeg_manager::finalize()
+{
+	_ffmepg_encoder_factory_instance.reset();
+}
+
+std::shared_ptr<ffmpeg_manager> streamfx::encoder::ffmpeg::ffmpeg_manager::get()
+{
+	return _ffmepg_encoder_factory_instance;
 }

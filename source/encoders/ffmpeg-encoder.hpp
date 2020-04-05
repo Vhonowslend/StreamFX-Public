@@ -46,46 +46,8 @@ extern "C" {
 #endif
 }
 
-namespace encoder::ffmpeg {
+namespace streamfx::encoder::ffmpeg {
 	class ffmpeg_factory;
-
-	class ffmpeg_manager {
-		static ::std::shared_ptr<ffmpeg_manager> _instance;
-
-		public: // Singleton
-		static void initialize()
-		{
-			_instance = ::std::make_shared<ffmpeg_manager>();
-			_instance->register_encoders();
-		}
-
-		static void finalize()
-		{
-			_instance.reset();
-		}
-
-		static std::shared_ptr<ffmpeg_manager> get()
-		{
-			return _instance;
-		}
-
-		private:
-		std::map<const AVCodec*, std::shared_ptr<ffmpeg_factory>> _factories;
-		std::map<std::string, std::shared_ptr<handler::handler>>  _handlers;
-		std::shared_ptr<handler::handler>                         _debug_handler;
-
-		public:
-		ffmpeg_manager();
-		~ffmpeg_manager();
-
-		void register_handler(std::string codec, std::shared_ptr<handler::handler> handler);
-
-		std::shared_ptr<handler::handler> get_handler(std::string codec);
-
-		bool has_handler(std::string codec);
-
-		void register_encoders();
-	};
 
 	struct ffmpeg_info {
 		std::string      uid;
@@ -199,4 +161,29 @@ namespace encoder::ffmpeg {
 
 		void parse_ffmpeg_commandline(std::string text);
 	};
-} // namespace encoder::ffmpeg
+
+	class ffmpeg_manager {
+		std::map<const AVCodec*, std::shared_ptr<ffmpeg_factory>> _factories;
+		std::map<std::string, std::shared_ptr<handler::handler>>  _handlers;
+		std::shared_ptr<handler::handler>                         _debug_handler;
+
+		public:
+		ffmpeg_manager();
+		~ffmpeg_manager();
+
+		void register_handler(std::string codec, std::shared_ptr<handler::handler> handler);
+
+		std::shared_ptr<handler::handler> get_handler(std::string codec);
+
+		bool has_handler(std::string codec);
+
+		void register_encoders();
+
+		public: // Singleton
+		static void initialize();
+
+		static void finalize();
+
+		static std::shared_ptr<ffmpeg_manager> get();
+	};
+} // namespace streamfx::encoder::ffmpeg

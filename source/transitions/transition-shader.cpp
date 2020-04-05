@@ -24,7 +24,9 @@
 
 #define ST "Transition.Shader"
 
-transition::shader::shader_instance::shader_instance(obs_data_t* data, obs_source_t* self)
+using namespace streamfx::transition::shader;
+
+shader_instance::shader_instance(obs_data_t* data, obs_source_t* self)
 	: obs::source_instance(data, self), _is_main(false)
 {
 	_fx = std::make_shared<gfx::shader::shader>(self, gfx::shader::shader_mode::Transition);
@@ -32,34 +34,34 @@ transition::shader::shader_instance::shader_instance(obs_data_t* data, obs_sourc
 	update(data);
 }
 
-transition::shader::shader_instance::~shader_instance() {}
+shader_instance::~shader_instance() {}
 
-std::uint32_t transition::shader::shader_instance::get_width()
+std::uint32_t shader_instance::get_width()
 {
 	return _fx->width();
 }
 
-std::uint32_t transition::shader::shader_instance::get_height()
+std::uint32_t shader_instance::get_height()
 {
 	return _fx->height();
 }
 
-void transition::shader::shader_instance::properties(obs_properties_t* props)
+void shader_instance::properties(obs_properties_t* props)
 {
 	_fx->properties(props);
 }
 
-void transition::shader::shader_instance::load(obs_data_t* data)
+void shader_instance::load(obs_data_t* data)
 {
 	update(data);
 }
 
-void transition::shader::shader_instance::update(obs_data_t* data)
+void shader_instance::update(obs_data_t* data)
 {
 	_fx->update(data);
 }
 
-void transition::shader::shader_instance::video_tick(float_t sec_since_last)
+void shader_instance::video_tick(float_t sec_since_last)
 {
 	if (_fx->tick(sec_since_last)) {
 		obs_data_t* data = obs_source_get_settings(_self);
@@ -73,7 +75,7 @@ void transition::shader::shader_instance::video_tick(float_t sec_since_last)
 	_fx->set_size(ovi.base_width, ovi.base_height);
 }
 
-void transition::shader::shader_instance::video_render(gs_effect_t* effect)
+void shader_instance::video_render(gs_effect_t* effect)
 {
 	if (!_fx) {
 		return;
@@ -86,8 +88,7 @@ void transition::shader::shader_instance::video_render(gs_effect_t* effect)
 		});
 }
 
-void transition::shader::shader_instance::transition_render(gs_texture_t* a, gs_texture_t* b, float_t t,
-															std::uint32_t cx, std::uint32_t cy)
+void shader_instance::transition_render(gs_texture_t* a, gs_texture_t* b, float_t t, std::uint32_t cx, std::uint32_t cy)
 {
 	_fx->set_input_a(std::make_shared<::gs::texture>(a, false));
 	_fx->set_input_b(std::make_shared<::gs::texture>(b, false));
@@ -96,22 +97,19 @@ void transition::shader::shader_instance::transition_render(gs_texture_t* a, gs_
 	_fx->render();
 }
 
-bool transition::shader::shader_instance::audio_render(uint64_t* ts_out, obs_source_audio_mix* audio_output,
-													   std::uint32_t mixers, std::size_t channels,
-													   std::size_t sample_rate)
+bool shader_instance::audio_render(uint64_t* ts_out, obs_source_audio_mix* audio_output, std::uint32_t mixers,
+								   std::size_t channels, std::size_t sample_rate)
 {
 	return obs_transition_audio_render(
 		_self, ts_out, audio_output, mixers, channels, sample_rate, [](void*, float_t t) { return 1.0f - t; },
 		[](void*, float_t t) { return t; });
 }
 
-void transition::shader::shader_instance::transition_start() {}
+void shader_instance::transition_start() {}
 
-void transition::shader::shader_instance::transition_stop() {}
+void shader_instance::transition_stop() {}
 
-std::shared_ptr<transition::shader::shader_factory> transition::shader::shader_factory::factory_instance = nullptr;
-
-transition::shader::shader_factory::shader_factory()
+shader_factory::shader_factory()
 {
 	_info.id           = "obs-stream-effects-transition-shader";
 	_info.type         = OBS_SOURCE_TYPE_TRANSITION;
@@ -120,19 +118,19 @@ transition::shader::shader_factory::shader_factory()
 	finish_setup();
 }
 
-transition::shader::shader_factory::~shader_factory() {}
+shader_factory::~shader_factory() {}
 
-const char* transition::shader::shader_factory::get_name()
+const char* shader_factory::get_name()
 {
 	return D_TRANSLATE(ST);
 }
 
-void transition::shader::shader_factory::get_defaults2(obs_data_t* data)
+void shader_factory::get_defaults2(obs_data_t* data)
 {
 	gfx::shader::shader::defaults(data);
 }
 
-obs_properties_t* transition::shader::shader_factory::get_properties2(shader::shader_instance* data)
+obs_properties_t* shader_factory::get_properties2(shader::shader_instance* data)
 {
 	auto pr = obs_properties_create();
 	obs_properties_set_param(pr, data, nullptr);
@@ -142,4 +140,22 @@ obs_properties_t* transition::shader::shader_factory::get_properties2(shader::sh
 	}
 
 	return pr;
+}
+
+std::shared_ptr<shader_factory> _transition_shader_factory_instance = nullptr;
+
+void streamfx::transition::shader::shader_factory::initialize()
+{
+	if (!_transition_shader_factory_instance)
+		_transition_shader_factory_instance = std::make_shared<shader_factory>();
+}
+
+void streamfx::transition::shader::shader_factory::finalize()
+{
+	_transition_shader_factory_instance.reset();
+}
+
+std::shared_ptr<shader_factory> streamfx::transition::shader::shader_factory::get()
+{
+	return _transition_shader_factory_instance;
 }

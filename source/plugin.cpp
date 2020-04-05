@@ -62,64 +62,78 @@
 #include "transitions/transition-shader.hpp"
 #endif
 
-static std::shared_ptr<util::threadpool> global_threadpool;
+static std::shared_ptr<util::threadpool> _threadpool;
 
 MODULE_EXPORT bool obs_module_load(void)
 try {
 	LOG_INFO("Loading Version %s", STREAMFX_VERSION_STRING);
 
-	global_threadpool = std::make_shared<util::threadpool>();
-
-	// Initialize Configuration
+	// Initialize global configuration.
 	streamfx::configuration::initialize();
+
+	// Initialize global Thread Pool.
+	_threadpool = std::make_shared<util::threadpool>();
 
 	// Initialize Source Tracker
 	obs::source_tracker::initialize();
 
-// Encoders
+	// Encoders
+	{
 #ifdef ENABLE_ENCODER_FFMPEG
-	encoder::ffmpeg::ffmpeg_manager::initialize();
+		using namespace streamfx::encoder::ffmpeg;
+		ffmpeg_manager::initialize();
 #endif
+	}
 
-// Filters
+	// Filters
+	{
+		using namespace streamfx::filter;
 #ifdef ENABLE_FILTER_BLUR
-	filter::blur::blur_factory::initialize();
+		blur::blur_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_COLOR_GRADE
-	filter::color_grade::color_grade_factory::initialize();
+		color_grade::color_grade_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_DISPLACEMENT
-	filter::displacement::displacement_factory::initialize();
+		displacement::displacement_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_DYNAMIC_MASK
-	filter::dynamic_mask::dynamic_mask_factory::initialize();
+		dynamic_mask::dynamic_mask_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_NVIDIA_FACE_TRACKING
-	filter::nvidia::face_tracking_factory::initialize();
+		streamfx::filter::nvidia::face_tracking_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_SDF_EFFECTS
-	filter::sdf_effects::sdf_effects_factory::initialize();
+		sdf_effects::sdf_effects_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_SHADER
-	filter::shader::shader_factory::initialize();
+		shader::shader_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_TRANSFORM
-	filter::transform::transform_factory::initialize();
+		transform::transform_factory::initialize();
 #endif
+	}
 
-// Sources
+	// Sources
+	{
+		using namespace streamfx::source;
 #ifdef ENABLE_SOURCE_MIRROR
-	source::mirror::mirror_factory::initialize();
+		mirror::mirror_factory::initialize();
 #endif
 #ifdef ENABLE_SOURCE_SHADER
-	source::shader::shader_factory::initialize();
+		shader::shader_factory::initialize();
 #endif
+	}
 
-// Transitions
+	// Transitions
+	{
+		using namespace streamfx::transition;
 #ifdef ENABLE_TRANSITION_SHADER
-	transition::shader::shader_factory::initialize();
+		shader::shader_factory::initialize();
 #endif
+	}
 
+	LOG_INFO("Loaded Version %s", STREAMFX_VERSION_STRING);
 	return true;
 } catch (...) {
 	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
@@ -131,61 +145,76 @@ try {
 	LOG_INFO("Unloading Version %s", STREAMFX_VERSION_STRING);
 
 	// Transitions
+	{
+		using namespace streamfx::transition;
 #ifdef ENABLE_TRANSITION_SHADER
-	transition::shader::shader_factory::finalize();
+		shader::shader_factory::finalize();
 #endif
+	}
 
-// Sources
+	// Sources
+	{
+		using namespace streamfx::source;
 #ifdef ENABLE_SOURCE_MIRROR
-	source::mirror::mirror_factory::finalize();
+		mirror::mirror_factory::finalize();
 #endif
 #ifdef ENABLE_SOURCE_SHADER
-	source::shader::shader_factory::finalize();
+		shader::shader_factory::finalize();
 #endif
+	}
 
-// Filters
+	// Filters
+	{
+		using namespace streamfx::filter;
 #ifdef ENABLE_FILTER_BLUR
-	filter::blur::blur_factory::finalize();
+		blur::blur_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_COLOR_GRADE
-	filter::color_grade::color_grade_factory::finalize();
+		color_grade::color_grade_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_DISPLACEMENT
-	filter::displacement::displacement_factory::finalize();
+		displacement::displacement_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_DYNAMIC_MASK
-	filter::dynamic_mask::dynamic_mask_factory::finalize();
+		dynamic_mask::dynamic_mask_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_NVIDIA_FACE_TRACKING
-	filter::nvidia::face_tracking_factory::finalize();
+		streamfx::filter::nvidia::face_tracking_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_SDF_EFFECTS
-	filter::sdf_effects::sdf_effects_factory::finalize();
+		sdf_effects::sdf_effects_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_SHADER
-	filter::shader::shader_factory::finalize();
+		shader::shader_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_TRANSFORM
-	filter::transform::transform_factory::finalize();
+		transform::transform_factory::finalize();
 #endif
+	}
 
-// Encoders
+	// Encoders
+	{
 #ifdef ENABLE_ENCODER_FFMPEG
-	encoder::ffmpeg::ffmpeg_manager::finalize();
+		using namespace streamfx::encoder::ffmpeg;
+		ffmpeg_manager::finalize();
 #endif
+	}
 
 	// Finalize Source Tracker
 	obs::source_tracker::finalize();
 
+	// Finalize Thread Pool
+	_threadpool.reset();
+
 	// Finalize Configuration
 	streamfx::configuration::finalize();
 
-	global_threadpool.reset();
+	LOG_INFO("Unloaded Version %s", STREAMFX_VERSION_STRING);
 } catch (...) {
 	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-std::shared_ptr<util::threadpool> get_global_threadpool()
+std::shared_ptr<util::threadpool> streamfx::threadpool()
 {
-	return global_threadpool;
+	return _threadpool;
 }

@@ -29,7 +29,7 @@ extern "C" {
 #pragma warning(pop)
 }
 
-namespace encoder::ffmpeg::handler {
+namespace streamfx::encoder::ffmpeg::handler {
 	class nvenc_h264_handler : public handler {
 		public:
 		virtual ~nvenc_h264_handler(){};
@@ -40,7 +40,7 @@ namespace encoder::ffmpeg::handler {
 		virtual void get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context, bool hw_encode);
 
 		public /*support tests*/:
-		virtual bool has_keyframe_support(ffmpeg_instance* instance);
+		virtual bool has_keyframe_support(ffmpeg_factory* instance);
 
 		virtual bool is_hardware_encoder(ffmpeg_factory* instance);
 
@@ -58,12 +58,9 @@ namespace encoder::ffmpeg::handler {
 
 		virtual void log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context);
 
-		public /*instance*/:
-		//virtual void override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec, AVCodecContext* context);
-
 		private:
 		void get_encoder_properties(obs_properties_t* props, const AVCodec* codec);
 
 		void get_runtime_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context);
 	};
-} // namespace encoder::ffmpeg::handler
+} // namespace streamfx::encoder::ffmpeg::handler

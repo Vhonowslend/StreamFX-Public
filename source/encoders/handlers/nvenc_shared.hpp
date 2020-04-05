@@ -42,9 +42,7 @@ extern "C" {
 - CQ: Constant Quality (rc=vbr b=0 maxrate=0 qmin=0 qmax=51 cq=qp), this is basically CRF in X264.
 */
 
-using namespace encoder::ffmpeg;
-
-namespace encoder::ffmpeg::handler::nvenc {
+namespace streamfx::encoder::ffmpeg::handler::nvenc {
 	enum class preset : int64_t {
 		DEFAULT,
 		SLOW,
@@ -106,4 +104,4 @@ namespace encoder::ffmpeg::handler::nvenc {
 	void update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context);
 
 	void log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context);
-} // namespace encoder::ffmpeg::handler::nvenc
+} // namespace streamfx::encoder::ffmpeg::handler::nvenc

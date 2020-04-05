@@ -28,7 +28,7 @@
 #define P_HEVC_TIER "Codec.HEVC.Tier"
 #define P_HEVC_LEVEL "Codec.HEVC.Level"
 
-namespace encoder::codec::hevc {
+namespace streamfx::encoder::codec::hevc {
 	enum class profile {
 		MAIN,
 		MAIN10,
@@ -61,4 +61,4 @@ namespace encoder::codec::hevc {
 
 	void extract_header_sei(std::uint8_t* data, std::size_t sz_data, std::vector<std::uint8_t>& header,
 							std::vector<std::uint8_t>& sei);
-} // namespace encoder::codec::hevc
+} // namespace streamfx::encoder::codec::hevc

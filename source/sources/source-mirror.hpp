@@ -32,7 +32,7 @@
 #include "obs/obs-source.hpp"
 #include "obs/obs-tools.hpp"
 
-namespace source::mirror {
+namespace streamfx::source::mirror {
 	struct mirror_audio_data {
 		mirror_audio_data(const audio_data*, speaker_layout);
 
@@ -83,24 +83,6 @@ namespace source::mirror {
 	};
 
 	class mirror_factory : public obs::source_factory<source::mirror::mirror_factory, source::mirror::mirror_instance> {
-		static std::shared_ptr<source::mirror::mirror_factory> factory_instance;
-
-		public: // Singleton
-		static void initialize()
-		{
-			factory_instance = std::make_shared<source::mirror::mirror_factory>();
-		}
-
-		static void finalize()
-		{
-			factory_instance.reset();
-		}
-
-		static std::shared_ptr<mirror_factory> get()
-		{
-			return factory_instance;
-		}
-
 		public:
 		mirror_factory();
 		virtual ~mirror_factory() override;
@@ -110,5 +92,12 @@ namespace source::mirror {
 		virtual void get_defaults2(obs_data_t* data) override;
 
 		virtual obs_properties_t* get_properties2(source::mirror::mirror_instance* data) override;
+
+		public: // Singleton
+		static void initialize();
+
+		static void finalize();
+
+		static std::shared_ptr<mirror_factory> get();
 	};
-} // namespace source::mirror
+} // namespace streamfx::source::mirror

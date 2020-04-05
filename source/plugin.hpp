@@ -20,5 +20,7 @@
 #pragma once
 #include "common.hpp"
 
-// Threadpool
-std::shared_ptr<util::threadpool> get_global_threadpool();
+namespace streamfx {
+	// Threadpool
+	std::shared_ptr<util::threadpool> threadpool();
+} // namespace streamfx

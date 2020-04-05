@@ -26,7 +26,7 @@
 #include "obs/gs/gs-vertexbuffer.hpp"
 #include "obs/obs-source-factory.hpp"
 
-namespace filter::sdf_effects {
+namespace streamfx::filter::sdf_effects {
 	class sdf_effects_instance : public obs::source_instance {
 		gs::effect _sdf_producer_effect;
 		gs::effect _sdf_consumer_effect;
@@ -95,24 +95,6 @@ namespace filter::sdf_effects {
 
 	class sdf_effects_factory : public obs::source_factory<filter::sdf_effects::sdf_effects_factory,
 														   filter::sdf_effects::sdf_effects_instance> {
-		static std::shared_ptr<filter::sdf_effects::sdf_effects_factory> factory_instance;
-
-		public: // Singleton
-		static void initialize()
-		{
-			factory_instance = std::make_shared<filter::sdf_effects::sdf_effects_factory>();
-		}
-
-		static void finalize()
-		{
-			factory_instance.reset();
-		}
-
-		static std::shared_ptr<sdf_effects_factory> get()
-		{
-			return factory_instance;
-		}
-
 		public:
 		sdf_effects_factory();
 		virtual ~sdf_effects_factory();
@@ -122,6 +104,13 @@ namespace filter::sdf_effects {
 		virtual void get_defaults2(obs_data_t* data) override;
 
 		virtual obs_properties_t* get_properties2(filter::sdf_effects::sdf_effects_instance* data) override;
+
+		public: // Singleton
+		static void initialize();
+
+		static void finalize();
+
+		static std::shared_ptr<sdf_effects_factory> get();
 	};
 
-} // namespace filter::sdf_effects
+} // namespace streamfx::filter::sdf_effects

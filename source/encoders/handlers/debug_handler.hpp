@@ -22,7 +22,7 @@
 #pragma once
 #include "handler.hpp"
 
-namespace encoder::ffmpeg::handler {
+namespace streamfx::encoder::ffmpeg::handler {
 	class debug_handler : public handler {
 		public:
 		virtual ~debug_handler(){};
@@ -35,4 +35,4 @@ namespace encoder::ffmpeg::handler {
 
 		virtual void update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context) override;
 	};
-} // namespace encoder::ffmpeg::handler
+} // namespace streamfx::encoder::ffmpeg::handler

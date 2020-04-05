@@ -64,7 +64,7 @@
 #define ST_ROTATION_ORDER_ZYX "Filter.Transform.Rotation.Order.ZYX"
 #define ST_MIPMAPPING "Filter.Transform.Mipmapping"
 
-using namespace filter;
+using namespace streamfx::filter::transform;
 
 static const float_t farZ  = 2097152.0f; // 2 pow 21
 static const float_t nearZ = 1.0f / farZ;
@@ -80,7 +80,7 @@ enum RotationOrder : int64_t {
 	ZYX,
 };
 
-transform::transform_instance::transform_instance(obs_data_t* data, obs_source_t* context)
+transform_instance::transform_instance(obs_data_t* data, obs_source_t* context)
 	: obs::source_instance(data, context), _cache_rendered(), _mipmap_enabled(), _mipmap_strength(),
 	  _mipmap_generator(), _source_rendered(), _source_size(), _update_mesh(), _rotation_order(),
 	  _camera_orthographic(), _camera_fov()
@@ -101,7 +101,7 @@ transform::transform_instance::transform_instance(obs_data_t* data, obs_source_t
 	update(data);
 }
 
-transform::transform_instance::~transform_instance()
+transform_instance::~transform_instance()
 {
 	_shear.reset();
 	_scale.reset();
@@ -113,12 +113,12 @@ transform::transform_instance::~transform_instance()
 	_mipmap_texture.reset();
 }
 
-void transform::transform_instance::load(obs_data_t* settings)
+void transform_instance::load(obs_data_t* settings)
 {
 	update(settings);
 }
 
-void filter::transform::transform_instance::migrate(obs_data_t* data, std::uint64_t version)
+void transform_instance::migrate(obs_data_t* data, std::uint64_t version)
 {
 	switch (version & STREAMFX_MASK_COMPAT) {
 	case 0:
@@ -127,7 +127,7 @@ void filter::transform::transform_instance::migrate(obs_data_t* data, std::uint6
 	}
 }
 
-void transform::transform_instance::update(obs_data_t* settings)
+void transform_instance::update(obs_data_t* settings)
 {
 	// Camera
 	_camera_orthographic = obs_data_get_int(settings, ST_CAMERA) == 0;
@@ -156,7 +156,7 @@ void transform::transform_instance::update(obs_data_t* settings)
 	_update_mesh = true;
 }
 
-void transform::transform_instance::video_tick(float)
+void transform_instance::video_tick(float)
 {
 	std::uint32_t width  = 0;
 	std::uint32_t height = 0;
@@ -274,7 +274,7 @@ void transform::transform_instance::video_tick(float)
 	_source_rendered = false;
 }
 
-void transform::transform_instance::video_render(gs_effect_t* effect)
+void transform_instance::video_render(gs_effect_t* effect)
 {
 	obs_source_t* parent         = obs_filter_get_parent(_self);
 	obs_source_t* target         = obs_filter_get_target(_self);
@@ -423,9 +423,7 @@ void transform::transform_instance::video_render(gs_effect_t* effect)
 	}
 }
 
-std::shared_ptr<transform::transform_factory> transform::transform_factory::factory_instance = nullptr;
-
-transform::transform_factory::transform_factory()
+transform_factory::transform_factory()
 {
 	_info.id           = "obs-stream-effects-filter-transform";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
@@ -435,14 +433,14 @@ transform::transform_factory::transform_factory()
 	finish_setup();
 }
 
-transform::transform_factory::~transform_factory() {}
+transform_factory::~transform_factory() {}
 
-const char* transform::transform_factory::get_name()
+const char* transform_factory::get_name()
 {
 	return D_TRANSLATE(ST);
 }
 
-void transform::transform_factory::get_defaults2(obs_data_t* settings)
+void transform_factory::get_defaults2(obs_data_t* settings)
 {
 	obs_data_set_default_int(settings, ST_CAMERA, (int64_t)CameraMode::Orthographic);
 	obs_data_set_default_double(settings, ST_CAMERA_FIELDOFVIEW, 90.0);
@@ -489,7 +487,7 @@ try {
 	return true;
 }
 
-obs_properties_t* transform::transform_factory::get_properties2(transform::transform_instance* data)
+obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 {
 	obs_properties_t* pr = obs_properties_create();
 
@@ -616,4 +614,22 @@ obs_properties_t* transform::transform_factory::get_properties2(transform::trans
 	}
 
 	return pr;
+}
+
+std::shared_ptr<transform_factory> _filter_transform_factory_instance = nullptr;
+
+void transform_factory::initialize()
+{
+	if (!_filter_transform_factory_instance)
+		_filter_transform_factory_instance = std::make_shared<transform_factory>();
+}
+
+void transform_factory::finalize()
+{
+	_filter_transform_factory_instance.reset();
+}
+
+std::shared_ptr<transform_factory> transform_factory::get()
+{
+	return _filter_transform_factory_instance;
 }

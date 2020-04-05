@@ -22,42 +22,40 @@
 #include "handler.hpp"
 #include "../ffmpeg-encoder.hpp"
 
-void encoder::ffmpeg::handler::handler::adjust_encoder_info(encoder::ffmpeg::ffmpeg_factory*, ffmpeg_info*,
-															ffmpeg_info*)
-{}
+using namespace streamfx::encoder::ffmpeg;
 
-void encoder::ffmpeg::handler::handler::get_defaults(obs_data_t*, const AVCodec*, AVCodecContext*, bool) {}
+void handler::handler::adjust_encoder_info(ffmpeg_factory*, ffmpeg_info*, ffmpeg_info*) {}
 
-bool encoder::ffmpeg::handler::handler::has_keyframe_support(ffmpeg_factory* instance)
+void handler::handler::get_defaults(obs_data_t*, const AVCodec*, AVCodecContext*, bool) {}
+
+bool handler::handler::has_keyframe_support(ffmpeg_factory* instance)
 {
 	return (instance->get_avcodec()->capabilities & AV_CODEC_CAP_INTRA_ONLY) == 0;
 }
 
-bool encoder::ffmpeg::handler::handler::is_hardware_encoder(ffmpeg_factory* instance)
+bool handler::handler::is_hardware_encoder(ffmpeg_factory* instance)
 {
 	return false;
 }
 
-bool encoder::ffmpeg::handler::handler::has_threading_support(ffmpeg_factory* instance)
+bool handler::handler::has_threading_support(ffmpeg_factory* instance)
 {
 	return (instance->get_avcodec()->capabilities & (AV_CODEC_CAP_FRAME_THREADS | AV_CODEC_CAP_SLICE_THREADS));
 }
 
-bool encoder::ffmpeg::handler::handler::has_pixel_format_support(ffmpeg_factory* instance)
+bool handler::handler::has_pixel_format_support(ffmpeg_factory* instance)
 {
 	return (instance->get_avcodec()->pix_fmts != nullptr);
 }
 
-void encoder::ffmpeg::handler::handler::get_properties(obs_properties_t*, const AVCodec*, AVCodecContext*, bool) {}
+void handler::handler::get_properties(obs_properties_t*, const AVCodec*, AVCodecContext*, bool) {}
 
-void encoder::ffmpeg::handler::handler::update(obs_data_t*, const AVCodec*, AVCodecContext*) {}
+void handler::handler::update(obs_data_t*, const AVCodec*, AVCodecContext*) {}
 
-void encoder::ffmpeg::handler::handler::override_update(ffmpeg_instance*, obs_data_t*) {}
+void handler::handler::override_update(ffmpeg_instance*, obs_data_t*) {}
 
-void encoder::ffmpeg::handler::handler::log_options(obs_data_t*, const AVCodec*, AVCodecContext*) {}
+void handler::handler::log_options(obs_data_t*, const AVCodec*, AVCodecContext*) {}
 
-void encoder::ffmpeg::handler::handler::override_colorformat(AVPixelFormat&, obs_data_t*, const AVCodec*,
-															 AVCodecContext*)
-{}
+void handler::handler::override_colorformat(AVPixelFormat&, obs_data_t*, const AVCodec*, AVCodecContext*) {}
 
-void encoder::ffmpeg::handler::handler::process_avpacket(AVPacket&, const AVCodec*, AVCodecContext*) {}
+void handler::handler::process_avpacket(AVPacket&, const AVCodec*, AVCodecContext*) {}

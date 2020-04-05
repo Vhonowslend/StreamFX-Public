@@ -74,12 +74,11 @@
 #define MODE_LOG Log
 #define MODE_LOG10 Log10
 
-using namespace filter;
+using namespace streamfx::filter::color_grade;
 
-color_grade::color_grade_instance::~color_grade_instance() {}
+color_grade_instance::~color_grade_instance() {}
 
-color_grade::color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self)
-	: obs::source_instance(data, self)
+color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self) : obs::source_instance(data, self)
 {
 	{
 		char* file = obs_module_file("effects/color-grade.effect");
@@ -123,14 +122,14 @@ float_t fix_gamma_value(double_t v)
 	}
 }
 
-void color_grade::color_grade_instance::load(obs_data_t* data)
+void color_grade_instance::load(obs_data_t* data)
 {
 	update(data);
 }
 
-void filter::color_grade::color_grade_instance::migrate(obs_data_t* data, std::uint64_t version) {}
+void color_grade_instance::migrate(obs_data_t* data, std::uint64_t version) {}
 
-void color_grade::color_grade_instance::update(obs_data_t* data)
+void color_grade_instance::update(obs_data_t* data)
 {
 	_lift.x         = static_cast<float_t>(obs_data_get_double(data, ST_LIFT_(RED)) / 100.0);
 	_lift.y         = static_cast<float_t>(obs_data_get_double(data, ST_LIFT_(GREEN)) / 100.0);
@@ -166,13 +165,13 @@ void color_grade::color_grade_instance::update(obs_data_t* data)
 	_correction.w   = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(CONTRAST)) / 100.0);
 }
 
-void color_grade::color_grade_instance::video_tick(float)
+void color_grade_instance::video_tick(float)
 {
 	_source_updated = false;
 	_grade_updated  = false;
 }
 
-void color_grade::color_grade_instance::video_render(gs_effect_t* effect)
+void color_grade_instance::video_render(gs_effect_t* effect)
 {
 	// Grab initial values.
 	obs_source_t* parent         = obs_filter_get_parent(_self);
@@ -256,9 +255,7 @@ void color_grade::color_grade_instance::video_render(gs_effect_t* effect)
 	}
 }
 
-std::shared_ptr<color_grade::color_grade_factory> color_grade::color_grade_factory::factory_instance = nullptr;
-
-color_grade::color_grade_factory::color_grade_factory()
+color_grade_factory::color_grade_factory()
 {
 	_info.id           = "obs-stream-effects-filter-color-grade";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
@@ -268,14 +265,14 @@ color_grade::color_grade_factory::color_grade_factory()
 	finish_setup();
 }
 
-color_grade::color_grade_factory::~color_grade_factory() {}
+color_grade_factory::~color_grade_factory() {}
 
-const char* color_grade::color_grade_factory::get_name()
+const char* color_grade_factory::get_name()
 {
 	return D_TRANSLATE(ST);
 }
 
-void color_grade::color_grade_factory::get_defaults2(obs_data_t* data)
+void color_grade_factory::get_defaults2(obs_data_t* data)
 {
 	obs_data_set_default_string(data, ST_TOOL, ST_CORRECTION);
 	obs_data_set_default_double(data, ST_LIFT_(RED), 0);
@@ -294,8 +291,8 @@ void color_grade::color_grade_factory::get_defaults2(obs_data_t* data)
 	obs_data_set_default_double(data, ST_OFFSET_(GREEN), 0.0);
 	obs_data_set_default_double(data, ST_OFFSET_(BLUE), 0.0);
 	obs_data_set_default_double(data, ST_OFFSET_(ALL), 0.0);
-	obs_data_set_default_int(data, ST_TINT_MODE, static_cast<int64_t>(color_grade::luma_mode::Linear));
-	obs_data_set_default_int(data, ST_TINT_DETECTION, static_cast<int64_t>(color_grade::detection_mode::YUV_SDR));
+	obs_data_set_default_int(data, ST_TINT_MODE, static_cast<int64_t>(luma_mode::Linear));
+	obs_data_set_default_int(data, ST_TINT_DETECTION, static_cast<int64_t>(detection_mode::YUV_SDR));
 	obs_data_set_default_double(data, ST_TINT_EXPONENT, 1.5);
 	obs_data_set_default_double(data, ST_TINT_(TONE_LOW, RED), 100.0);
 	obs_data_set_default_double(data, ST_TINT_(TONE_LOW, GREEN), 100.0);
@@ -312,7 +309,7 @@ void color_grade::color_grade_factory::get_defaults2(obs_data_t* data)
 	obs_data_set_default_double(data, ST_CORRECTION_(CONTRAST), 100.0);
 }
 
-obs_properties_t* color_grade::color_grade_factory::get_properties2(color_grade_instance* data)
+obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* data)
 {
 	obs_properties_t* pr = obs_properties_create();
 
@@ -402,12 +399,11 @@ obs_properties_t* color_grade::color_grade_factory::get_properties2(color_grade_
 		{
 			auto p = obs_properties_add_list(grp, ST_TINT_MODE, D_TRANSLATE(ST_TINT_MODE), OBS_COMBO_TYPE_LIST,
 											 OBS_COMBO_FORMAT_INT);
-			std::pair<const char*, color_grade::luma_mode> els[] = {
-				{ST_TINT_MODE_(MODE_LINEAR), color_grade::luma_mode::Linear},
-				{ST_TINT_MODE_(MODE_EXP), color_grade::luma_mode::Exp},
-				{ST_TINT_MODE_(MODE_EXP2), color_grade::luma_mode::Exp2},
-				{ST_TINT_MODE_(MODE_LOG), color_grade::luma_mode::Log},
-				{ST_TINT_MODE_(MODE_LOG10), color_grade::luma_mode::Log10}};
+			std::pair<const char*, luma_mode> els[] = {{ST_TINT_MODE_(MODE_LINEAR), luma_mode::Linear},
+													   {ST_TINT_MODE_(MODE_EXP), luma_mode::Exp},
+													   {ST_TINT_MODE_(MODE_EXP2), luma_mode::Exp2},
+													   {ST_TINT_MODE_(MODE_LOG), luma_mode::Log},
+													   {ST_TINT_MODE_(MODE_LOG10), luma_mode::Log10}};
 			for (auto kv : els) {
 				obs_property_list_add_int(p, D_TRANSLATE(kv.first), static_cast<int64_t>(kv.second));
 			}
@@ -416,10 +412,10 @@ obs_properties_t* color_grade::color_grade_factory::get_properties2(color_grade_
 		{
 			auto p = obs_properties_add_list(grp, ST_TINT_DETECTION, D_TRANSLATE(ST_TINT_DETECTION),
 											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			std::pair<const char*, color_grade::detection_mode> els[] = {
-				{ST_TINT_DETECTION_(DETECTION_HSV), color_grade::detection_mode::HSV},
-				{ST_TINT_DETECTION_(DETECTION_HSL), color_grade::detection_mode::HSL},
-				{ST_TINT_DETECTION_(DETECTION_YUV_SDR), color_grade::detection_mode::YUV_SDR}};
+			std::pair<const char*, detection_mode> els[] = {
+				{ST_TINT_DETECTION_(DETECTION_HSV), detection_mode::HSV},
+				{ST_TINT_DETECTION_(DETECTION_HSL), detection_mode::HSL},
+				{ST_TINT_DETECTION_(DETECTION_YUV_SDR), detection_mode::YUV_SDR}};
 			for (auto kv : els) {
 				obs_property_list_add_int(p, D_TRANSLATE(kv.first), static_cast<int64_t>(kv.second));
 			}
@@ -429,4 +425,22 @@ obs_properties_t* color_grade::color_grade_factory::get_properties2(color_grade_
 	}
 
 	return pr;
+}
+
+std::shared_ptr<color_grade_factory> _color_grade_factory_instance = nullptr;
+
+void streamfx::filter::color_grade::color_grade_factory::initialize()
+{
+	if (!_color_grade_factory_instance)
+		_color_grade_factory_instance = std::make_shared<color_grade_factory>();
+}
+
+void streamfx::filter::color_grade::color_grade_factory::finalize()
+{
+	_color_grade_factory_instance.reset();
+}
+
+std::shared_ptr<color_grade_factory> streamfx::filter::color_grade::color_grade_factory::get()
+{
+	return _color_grade_factory_instance;
 }

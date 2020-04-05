@@ -97,8 +97,7 @@ extern "C" {
 #define KEY_OTHER_ACCESSUNITDELIMITER "Other.AccessUnitDelimiter"
 #define KEY_OTHER_DECODEDPICTUREBUFFERSIZE "Other.DecodedPictureBufferSize"
 
-using namespace encoder::ffmpeg::handler;
-using namespace ffmpeg;
+using namespace streamfx::encoder::ffmpeg::handler;
 
 std::map<nvenc::preset, std::string> nvenc::presets{
 	{nvenc::preset::DEFAULT, ST_PRESET_(Default)},
@@ -713,6 +712,8 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 
 void nvenc::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* context)
 {
+	using namespace ::ffmpeg;
+
 	LOG_INFO("[%s]   Nvidia NVENC:", codec->name);
 	tools::print_av_option_string(context, "preset", "    Preset", [](int64_t v) {
 		preset      val   = static_cast<preset>(v);

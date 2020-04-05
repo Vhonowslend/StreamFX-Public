@@ -31,7 +31,7 @@
 #include "obs/gs/gs-texture.hpp"
 #include "obs/obs-source-factory.hpp"
 
-namespace filter::blur {
+namespace streamfx::filter::blur {
 	enum class mask_type : int64_t {
 		Region,
 		Image,
@@ -111,25 +111,6 @@ namespace filter::blur {
 	};
 
 	class blur_factory : public obs::source_factory<filter::blur::blur_factory, filter::blur::blur_instance> {
-		static std::shared_ptr<filter::blur::blur_factory> factory_instance;
-
-		public: // Singleton
-		static void initialize()
-		{
-			factory_instance = std::make_shared<filter::blur::blur_factory>();
-		}
-
-		static void finalize()
-		{
-			factory_instance.reset();
-		}
-
-		static std::shared_ptr<blur_factory> get()
-		{
-			return factory_instance;
-		}
-
-		private:
 		std::vector<std::string> _translation_cache;
 
 		public:
@@ -143,5 +124,12 @@ namespace filter::blur {
 		virtual obs_properties_t* get_properties2(filter::blur::blur_instance* data) override;
 
 		std::string translate_string(const char* format, ...);
+
+		public: // Singleton
+		static void initialize();
+
+		static void finalize();
+
+		static std::shared_ptr<blur_factory> get();
 	};
-} // namespace filter::blur
+} // namespace streamfx::filter::blur

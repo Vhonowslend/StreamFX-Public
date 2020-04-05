@@ -27,7 +27,7 @@
 #define P_H264_PROFILE "Codec.H264.Profile"
 #define P_H264_LEVEL "Codec.H264.Level"
 
-namespace encoder::codec::h264 {
+namespace streamfx::encoder::codec::h264 {
 	enum class profile {
 		CONSTRAINED_BASELINE,
 		BASELINE,
@@ -60,4 +60,4 @@ namespace encoder::codec::h264 {
 		L6_2,
 		UNKNOWN = -1,
 	};
-} // namespace encoder::codec::h264
+} // namespace streamfx::encoder::codec::h264

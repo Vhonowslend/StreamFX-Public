@@ -46,9 +46,9 @@
 #define ST_SOURCE_AUDIO_LAYOUT ST_SOURCE_AUDIO ".Layout"
 #define ST_SOURCE_AUDIO_LAYOUT_(x) ST_SOURCE_AUDIO_LAYOUT "." D_VSTR(x)
 
-using namespace source;
+using namespace streamfx::source::mirror;
 
-source::mirror::mirror_audio_data::mirror_audio_data(const audio_data* audio, speaker_layout layout)
+mirror_audio_data::mirror_audio_data(const audio_data* audio, speaker_layout layout)
 {
 	// Build a clone of a packet.
 	audio_t*                 oad = obs_get_audio();
@@ -71,32 +71,32 @@ source::mirror::mirror_audio_data::mirror_audio_data(const audio_data* audio, sp
 	}
 }
 
-mirror::mirror_instance::mirror_instance(obs_data_t* settings, obs_source_t* self)
+mirror_instance::mirror_instance(obs_data_t* settings, obs_source_t* self)
 	: obs::source_instance(settings, self), _source(), _source_child(), _signal_rename(), _audio_enabled(false),
 	  _audio_layout(SPEAKERS_UNKNOWN)
 {}
 
-mirror::mirror_instance::~mirror_instance()
+mirror_instance::~mirror_instance()
 {
 	release();
 }
 
-std::uint32_t mirror::mirror_instance::get_width()
+std::uint32_t mirror_instance::get_width()
 {
 	return _source_size.first;
 }
 
-std::uint32_t mirror::mirror_instance::get_height()
+std::uint32_t mirror_instance::get_height()
 {
 	return _source_size.second;
 }
 
-void mirror::mirror_instance::load(obs_data_t* data)
+void mirror_instance::load(obs_data_t* data)
 {
 	update(data);
 }
 
-void source::mirror::mirror_instance::migrate(obs_data_t* data, std::uint64_t version)
+void mirror_instance::migrate(obs_data_t* data, std::uint64_t version)
 {
 	switch (version) {
 	case 0:
@@ -107,7 +107,7 @@ void source::mirror::mirror_instance::migrate(obs_data_t* data, std::uint64_t ve
 	}
 }
 
-void mirror::mirror_instance::update(obs_data_t* data)
+void mirror_instance::update(obs_data_t* data)
 {
 	// Audio
 	_audio_enabled = obs_data_get_bool(data, ST_SOURCE_AUDIO);
@@ -117,7 +117,7 @@ void mirror::mirror_instance::update(obs_data_t* data)
 	acquire(obs_data_get_string(data, ST_SOURCE));
 }
 
-void mirror::mirror_instance::save(obs_data_t* data)
+void mirror_instance::save(obs_data_t* data)
 {
 	if (_source) {
 		obs_data_set_string(data, ST_SOURCE, obs_source_get_name(_source.get()));
@@ -126,7 +126,7 @@ void mirror::mirror_instance::save(obs_data_t* data)
 	}
 }
 
-void mirror::mirror_instance::video_tick(float_t time)
+void mirror_instance::video_tick(float_t time)
 {
 	if (_source) {
 		_source_size.first  = obs_source_get_width(_source.get());
@@ -134,7 +134,7 @@ void mirror::mirror_instance::video_tick(float_t time)
 	}
 }
 
-void mirror::mirror_instance::video_render(gs_effect_t* effect)
+void mirror_instance::video_render(gs_effect_t* effect)
 {
 	if (!_source)
 		return;
@@ -144,14 +144,14 @@ void mirror::mirror_instance::video_render(gs_effect_t* effect)
 	obs_source_video_render(_source.get());
 }
 
-void mirror::mirror_instance::enum_active_sources(obs_source_enum_proc_t cb, void* ptr)
+void mirror_instance::enum_active_sources(obs_source_enum_proc_t cb, void* ptr)
 {
 	if (!_source)
 		return;
 	cb(_self, _source.get(), ptr);
 }
 
-void source::mirror::mirror_instance::enum_all_sources(obs_source_enum_proc_t cb, void* ptr)
+void mirror_instance::enum_all_sources(obs_source_enum_proc_t cb, void* ptr)
 {
 	if (!_source)
 		return;
@@ -159,7 +159,7 @@ void source::mirror::mirror_instance::enum_all_sources(obs_source_enum_proc_t cb
 	cb(_self, _source.get(), ptr);
 }
 
-void mirror::mirror_instance::acquire(std::string source_name)
+void mirror_instance::acquire(std::string source_name)
 try {
 	release();
 
@@ -177,19 +177,19 @@ try {
 	// Listen to the rename event to update our own settings.
 	_signal_rename = std::make_shared<obs::source_signal_handler>("rename", _source);
 	_signal_rename->event.add(
-		std::bind(&source::mirror::mirror_instance::on_rename, this, std::placeholders::_1, std::placeholders::_2));
+		std::bind(&mirror_instance::on_rename, this, std::placeholders::_1, std::placeholders::_2));
 
 	// Listen to any audio the source spews out.
 	if (_audio_enabled) {
 		_signal_audio = std::make_shared<obs::audio_signal_handler>(_source);
-		_signal_audio->event.add(std::bind(&source::mirror::mirror_instance::on_audio, this, std::placeholders::_1,
+		_signal_audio->event.add(std::bind(&mirror_instance::on_audio, this, std::placeholders::_1,
 										   std::placeholders::_2, std::placeholders::_3));
 	}
 } catch (...) {
 	release();
 }
 
-void mirror::mirror_instance::release()
+void mirror_instance::release()
 {
 	_signal_audio.reset();
 	_signal_rename.reset();
@@ -197,12 +197,12 @@ void mirror::mirror_instance::release()
 	_source.reset();
 }
 
-void source::mirror::mirror_instance::on_rename(std::shared_ptr<obs_source_t>, calldata*)
+void mirror_instance::on_rename(std::shared_ptr<obs_source_t>, calldata*)
 {
 	obs_source_save(_self);
 }
 
-void source::mirror::mirror_instance::on_audio(std::shared_ptr<obs_source_t>, const audio_data* audio, bool)
+void mirror_instance::on_audio(std::shared_ptr<obs_source_t>, const audio_data* audio, bool)
 {
 	// Immediately quit if there isn't any actual audio to send out.
 	if (!_audio_enabled) {
@@ -252,11 +252,10 @@ void source::mirror::mirror_instance::on_audio(std::shared_ptr<obs_source_t>, co
 	}
 
 	// Create a clone of the audio data and push it to the thread pool.
-	get_global_threadpool()->push(
-		std::bind(&source::mirror::mirror_instance::audio_output, this, std::placeholders::_1), nullptr);
+	streamfx::threadpool()->push(std::bind(&mirror_instance::audio_output, this, std::placeholders::_1), nullptr);
 }
 
-void source::mirror::mirror_instance::audio_output(std::shared_ptr<void> data)
+void mirror_instance::audio_output(std::shared_ptr<void> data)
 {
 	std::unique_lock<std::mutex> ul(_audio_queue_lock);
 	while (_audio_queue.size() > 0) {
@@ -265,9 +264,7 @@ void source::mirror::mirror_instance::audio_output(std::shared_ptr<void> data)
 	}
 }
 
-std::shared_ptr<mirror::mirror_factory> mirror::mirror_factory::factory_instance;
-
-mirror::mirror_factory::mirror_factory()
+mirror_factory::mirror_factory()
 {
 	_info.id           = "obs-stream-effects-source-mirror";
 	_info.type         = OBS_SOURCE_TYPE_INPUT;
@@ -278,14 +275,14 @@ mirror::mirror_factory::mirror_factory()
 	finish_setup();
 }
 
-mirror::mirror_factory::~mirror_factory() {}
+mirror_factory::~mirror_factory() {}
 
-const char* mirror::mirror_factory::get_name()
+const char* mirror_factory::get_name()
 {
 	return D_TRANSLATE(ST);
 }
 
-void mirror::mirror_factory::get_defaults2(obs_data_t* data)
+void mirror_factory::get_defaults2(obs_data_t* data)
 {
 	obs_data_set_default_string(data, ST_SOURCE, "");
 	obs_data_set_default_bool(data, ST_SOURCE_AUDIO, false);
@@ -304,7 +301,7 @@ try {
 	return false;
 }
 
-obs_properties_t* mirror::mirror_factory::get_properties2(mirror::mirror_instance* data)
+obs_properties_t* mirror_factory::get_properties2(mirror_instance* data)
 {
 	obs_properties_t* pr = obs_properties_create();
 	obs_property_t*   p  = nullptr;
@@ -362,4 +359,19 @@ obs_properties_t* mirror::mirror_factory::get_properties2(mirror::mirror_instanc
 	}
 
 	return pr;
+}
+
+std::shared_ptr<mirror_factory> _source_mirror_factory_instance;
+
+void streamfx::source::mirror::mirror_factory::initialize()
+{
+	if (!_source_mirror_factory_instance)
+		_source_mirror_factory_instance = std::make_shared<mirror_factory>();
+}
+
+void streamfx::source::mirror::mirror_factory::finalize() {}
+
+std::shared_ptr<mirror_factory> streamfx::source::mirror::mirror_factory::get()
+{
+	return std::shared_ptr<mirror_factory>();
 }

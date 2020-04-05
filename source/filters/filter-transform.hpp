@@ -26,7 +26,7 @@
 #include "obs/gs/gs-vertexbuffer.hpp"
 #include "obs/obs-source-factory.hpp"
 
-namespace filter::transform {
+namespace streamfx::filter::transform {
 	class transform_instance : public obs::source_instance {
 		// Cache
 		bool                              _cache_rendered;
@@ -74,24 +74,6 @@ namespace filter::transform {
 
 	class transform_factory
 		: public obs::source_factory<filter::transform::transform_factory, filter::transform::transform_instance> {
-		static std::shared_ptr<filter::transform::transform_factory> factory_instance;
-
-		public: // Singleton
-		static void initialize()
-		{
-			factory_instance = std::make_shared<filter::transform::transform_factory>();
-		}
-
-		static void finalize()
-		{
-			factory_instance.reset();
-		}
-
-		static std::shared_ptr<transform_factory> get()
-		{
-			return factory_instance;
-		}
-
 		public:
 		transform_factory();
 		virtual ~transform_factory() override;
@@ -101,5 +83,12 @@ namespace filter::transform {
 		virtual void get_defaults2(obs_data_t* data) override;
 
 		virtual obs_properties_t* get_properties2(filter::transform::transform_instance* data) override;
+
+		public: // Singleton
+		static void initialize();
+
+		static void finalize();
+
+		static std::shared_ptr<transform_factory> get();
 	};
-} // namespace filter::transform
+} // namespace streamfx::filter::transform

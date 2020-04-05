@@ -27,7 +27,7 @@
 #include "obs/obs-source-tracker.hpp"
 #include "obs/obs-source.hpp"
 
-namespace filter::dynamic_mask {
+namespace streamfx::filter::dynamic_mask {
 	enum class channel : std::int8_t { Invalid = -1, Red, Green, Blue, Alpha };
 
 	class dynamic_mask_instance : public obs::source_instance {
@@ -75,31 +75,12 @@ namespace filter::dynamic_mask {
 		static bool modified(void* self, obs_properties_t* properties, obs_property_t* property,
 							 obs_data_t* settings) noexcept;
 
-		void video_tick(float_t _time);
-		void video_render(gs_effect_t* effect);
+		virtual void video_tick(float_t _time) override;
+		virtual void video_render(gs_effect_t* effect) override;
 	};
 
 	class dynamic_mask_factory : public obs::source_factory<filter::dynamic_mask::dynamic_mask_factory,
 															filter::dynamic_mask::dynamic_mask_instance> {
-		static std::shared_ptr<filter::dynamic_mask::dynamic_mask_factory> factory_instance;
-
-		public: // Singleton
-		static void initialize()
-		{
-			factory_instance = std::make_shared<filter::dynamic_mask::dynamic_mask_factory>();
-		}
-
-		static void finalize()
-		{
-			factory_instance.reset();
-		}
-
-		static std::shared_ptr<dynamic_mask_factory> get()
-		{
-			return factory_instance;
-		}
-
-		private:
 		std::list<std::string> _translation_cache;
 
 		public:
@@ -113,5 +94,12 @@ namespace filter::dynamic_mask {
 		virtual obs_properties_t* get_properties2(filter::dynamic_mask::dynamic_mask_instance* data) override;
 
 		std::string translate_string(const char* format, ...);
+
+		public: // Singleton
+		static void initialize();
+
+		static void finalize();
+
+		static std::shared_ptr<dynamic_mask_factory> get();
 	};
-} // namespace filter::dynamic_mask
+} // namespace streamfx::filter::dynamic_mask
