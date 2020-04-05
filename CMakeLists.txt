@@ -501,8 +501,21 @@ endif()
 ## OBS Studio - Frontend/Qt
 if(HAVE_OBS_FRONTEND)	
 	list(APPEND PROJECT_UI
+		"ui/streamfx.qrc"
+		"ui/about.ui"
+		"ui/about-entry.ui"
 	)
 	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/ui/ui-common.hpp"
+		"source/ui/ui.hpp"
+		"source/ui/ui.cpp"
+		"source/ui/ui-about.hpp"
+		"source/ui/ui-about.cpp"
+		"source/ui/ui-about-entry.hpp"
+		"source/ui/ui-about-entry.cpp"
+	)
+	list(APPEND PROJECT_DATA
+		
 	)
 	list(APPEND PROJECT_INCLUDE_DIRS
 		"source/ui"
