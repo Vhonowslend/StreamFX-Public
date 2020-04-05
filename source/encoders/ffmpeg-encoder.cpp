@@ -35,12 +35,12 @@
 extern "C" {
 #pragma warning(push)
 #pragma warning(disable : 4244)
+#include <obs-avc.h>
 #include <libavcodec/avcodec.h>
 #include <libavutil/dict.h>
 #include <libavutil/frame.h>
 #include <libavutil/opt.h>
 #include <libavutil/pixdesc.h>
-#include <obs-avc.h>
 #pragma warning(pop)
 }
 

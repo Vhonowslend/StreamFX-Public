@@ -38,9 +38,9 @@ extern "C" {
 #pragma warning(push)
 #pragma warning(disable : 4242 4244 4365)
 #endif
+#include <obs-properties.h>
 #include <libavcodec/avcodec.h>
 #include <libavutil/frame.h>
-#include <obs-properties.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
