@@ -18,9 +18,9 @@
  */
 
 #include "filter-sdf-effects.hpp"
+#include "strings.hpp"
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
-#include "strings.hpp"
 
 #define LOG_PREFIX "<filter-sdf-effects> "
 

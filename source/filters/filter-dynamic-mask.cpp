@@ -18,9 +18,9 @@
 */
 
 #include "filter-dynamic-mask.hpp"
+#include "strings.hpp"
 #include <sstream>
 #include <stdexcept>
-#include "strings.hpp"
 
 // Filter to allow dynamic masking
 // Allow any channel to affect any other channel

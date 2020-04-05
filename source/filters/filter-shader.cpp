@@ -18,9 +18,9 @@
  */
 
 #include "filter-shader.hpp"
+#include "strings.hpp"
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
-#include "strings.hpp"
 #include "utility.hpp"
 
 #define ST "Filter.Shader"

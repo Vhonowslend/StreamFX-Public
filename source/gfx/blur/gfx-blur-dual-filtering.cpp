@@ -25,8 +25,8 @@
 #pragma warning(push)
 #pragma warning(disable : 4201)
 #endif
-#include <obs-module.h>
 #include <obs.h>
+#include <obs-module.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif

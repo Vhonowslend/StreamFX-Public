@@ -18,10 +18,10 @@
  */
 
 #include "filter-transform.hpp"
+#include "strings.hpp"
 #include <algorithm>
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
-#include "strings.hpp"
 #include "util-math.hpp"
 
 // OBS

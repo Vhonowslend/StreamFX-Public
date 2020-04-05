@@ -18,16 +18,15 @@
  */
 
 #include "source-shader.hpp"
-#include <stdexcept>
 #include "strings.hpp"
+#include <stdexcept>
 #include "utility.hpp"
 
 #define ST "Source.Shader"
 
 using namespace source;
 
-shader::shader_instance::shader_instance(obs_data_t* data, obs_source_t* self)
-	: obs::source_instance(data, self), _fx()
+shader::shader_instance::shader_instance(obs_data_t* data, obs_source_t* self) : obs::source_instance(data, self), _fx()
 {
 	_fx = std::make_shared<gfx::shader::shader>(self, gfx::shader::shader_mode::Source);
 

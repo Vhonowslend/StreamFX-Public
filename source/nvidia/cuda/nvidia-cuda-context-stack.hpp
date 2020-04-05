@@ -24,7 +24,7 @@
 
 namespace nvidia::cuda {
 	class context_stack {
-		std::shared_ptr<::nvidia::cuda::cuda>      _cuda;
+		std::shared_ptr<::nvidia::cuda::cuda>    _cuda;
 		std::shared_ptr<::nvidia::cuda::context> _ctx;
 
 		public:

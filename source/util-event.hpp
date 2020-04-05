@@ -18,10 +18,10 @@
  */
 
 #pragma once
+#include "common.hpp"
 #include <functional>
 #include <list>
 #include <mutex>
-#include "common.hpp"
 
 namespace util {
 	template<typename... _args>

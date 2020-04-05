@@ -75,7 +75,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/clang" "${CMAKE_CURRENT
 
 # CMake Modules
 include("util")
-if(EXISTS "${CMAKE_SOURCE_DIR}/cmake/Clang/Clang.cmake")
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Clang/Clang.cmake")
 	include("Clang")
 	set(HAVE_CLANG ON)
 endif()
