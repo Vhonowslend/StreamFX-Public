@@ -38,7 +38,7 @@ gs::rendertarget::rendertarget(gs_color_format colorFormat, gs_zstencil_format z
 	}
 }
 
-gs::rendertarget_op gs::rendertarget::render(uint32_t width, uint32_t height)
+gs::rendertarget_op gs::rendertarget::render(std::uint32_t width, std::uint32_t height)
 {
 	return {this, width, height};
 }
@@ -80,7 +80,7 @@ gs_zstencil_format gs::rendertarget::get_zstencil_format()
 	return _zstencil_format;
 }
 
-gs::rendertarget_op::rendertarget_op(gs::rendertarget* rt, uint32_t width, uint32_t height) : parent(rt)
+gs::rendertarget_op::rendertarget_op(gs::rendertarget* rt, std::uint32_t width, std::uint32_t height) : parent(rt)
 {
 	if (parent == nullptr)
 		throw std::invalid_argument("rt");

@@ -185,7 +185,7 @@ gfx::blur::dual_filtering::dual_filtering()
 {
 	auto gctx = gs::context();
 	_rendertargets.resize(MAX_LEVELS + 1);
-	for (size_t n = 0; n <= MAX_LEVELS; n++) {
+	for (std::size_t n = 0; n <= MAX_LEVELS; n++) {
 		_rendertargets[n] = std::make_shared<gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
 	}
 }
@@ -228,7 +228,7 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 		return _input_texture;
 	}
 
-	size_t actual_iterations = _size_iterations;
+	std::size_t actual_iterations = _size_iterations;
 
 	gs_blend_state_push();
 	gs_reset_blend_state();
@@ -244,7 +244,7 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
 	// Downsample
-	for (size_t n = 1; n <= actual_iterations; n++) {
+	for (std::size_t n = 1; n <= actual_iterations; n++) {
 		// Idx 0 is a simply considered as a straight copy of the original and not rendered to.
 
 		// Select Texture
@@ -256,8 +256,8 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 		}
 
 		// Reduce Size
-		uint32_t width  = tex_cur->get_width() / 2;
-		uint32_t height = tex_cur->get_height() / 2;
+		std::uint32_t width  = tex_cur->get_width() / 2;
+		std::uint32_t height = tex_cur->get_height() / 2;
 		if ((width <= 0) || (height <= 0)) {
 			actual_iterations = n - 1;
 			break;
@@ -279,13 +279,13 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 	}
 
 	// Upsample
-	for (size_t n = actual_iterations; n > 0; n--) {
+	for (std::size_t n = actual_iterations; n > 0; n--) {
 		// Select Texture
 		std::shared_ptr<gs::texture> tex_cur = _rendertargets[n]->get_texture();
 
 		// Get Size
-		uint32_t width  = tex_cur->get_width();
-		uint32_t height = tex_cur->get_height();
+		std::uint32_t width  = tex_cur->get_width();
+		std::uint32_t height = tex_cur->get_height();
 
 		// Apply
 		effect.get_parameter("pImage").set_texture(tex_cur);

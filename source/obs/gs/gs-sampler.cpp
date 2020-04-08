@@ -78,36 +78,36 @@ gs_address_mode gs::sampler::get_address_mode_w()
 	return _sampler_info.address_w;
 }
 
-void gs::sampler::set_max_anisotropy(int v)
+void gs::sampler::set_max_anisotropy(std::int32_t v)
 {
 	_dirty                       = true;
 	_sampler_info.max_anisotropy = v;
 }
 
-int gs::sampler::get_max_anisotropy()
+std::int32_t gs::sampler::get_max_anisotropy()
 {
 	return _sampler_info.max_anisotropy;
 }
 
-void gs::sampler::set_border_color(uint32_t v)
+void gs::sampler::set_border_color(std::uint32_t v)
 {
 	_dirty                     = true;
 	_sampler_info.border_color = v;
 }
 
-void gs::sampler::set_border_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+void gs::sampler::set_border_color(std::uint8_t r, std::uint8_t g, std::uint8_t b, std::uint8_t a)
 {
 	_dirty                     = true;
-	_sampler_info.border_color = (static_cast<uint32_t>(a) << 24) | (static_cast<uint32_t>(r) << 16)
-								 | (static_cast<uint32_t>(g) << 8) | static_cast<uint32_t>(b);
+	_sampler_info.border_color = (static_cast<std::uint32_t>(a) << 24) | (static_cast<std::uint32_t>(r) << 16)
+								 | (static_cast<std::uint32_t>(g) << 8) | static_cast<std::uint32_t>(b);
 }
 
-uint32_t gs::sampler::get_border_color()
+std::uint32_t gs::sampler::get_border_color()
 {
 	return _sampler_info.border_color;
 }
 
-uint8_t gs::sampler::get_border_color(bool r, bool g, bool b, bool a)
+std::uint8_t gs::sampler::get_border_color(bool r, bool g, bool b, bool a)
 {
 	if (a)
 		return (_sampler_info.border_color >> 24) & 0xFF;

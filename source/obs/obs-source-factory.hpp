@@ -225,7 +225,7 @@ namespace obs {
 			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
-		static uint32_t _get_width(void* data) noexcept
+		static std::uint32_t _get_width(void* data) noexcept
 		try {
 			if (data)
 				return reinterpret_cast<_instance*>(data)->get_width();
@@ -238,7 +238,7 @@ namespace obs {
 			return 0;
 		}
 
-		static uint32_t _get_height(void* data) noexcept
+		static std::uint32_t _get_height(void* data) noexcept
 		try {
 			if (data)
 				return reinterpret_cast<_instance*>(data)->get_height();
@@ -387,7 +387,7 @@ namespace obs {
 		}
 
 		static void _mouse_click(void* data, const struct obs_mouse_event* event, int32_t type, bool mouse_up,
-								 uint32_t click_count) noexcept
+								 std::uint32_t click_count) noexcept
 		try {
 			if (data)
 				reinterpret_cast<_instance*>(data)->mouse_click(event, type, mouse_up, click_count);
@@ -448,7 +448,7 @@ namespace obs {
 		}
 
 		static bool _audio_render(void* data, uint64_t* ts_out, struct obs_source_audio_mix* audio_output,
-								  uint32_t mixers, size_t channels, size_t sample_rate) noexcept
+								  std::uint32_t mixers, std::size_t channels, std::size_t sample_rate) noexcept
 		try {
 			if (data)
 				return reinterpret_cast<_instance*>(data)->audio_render(ts_out, audio_output, mixers, channels,
@@ -492,8 +492,8 @@ namespace obs {
 			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
-		static bool _audio_mix(void* data, uint64_t* ts_out, struct audio_output_data* audio_output, size_t channels,
-							   size_t sample_rate) noexcept
+		static bool _audio_mix(void* data, uint64_t* ts_out, struct audio_output_data* audio_output,
+							   std::size_t channels, std::size_t sample_rate) noexcept
 		try {
 			if (data)
 				return reinterpret_cast<_instance*>(data)->audio_mix(ts_out, audio_output, channels, sample_rate);
@@ -533,12 +533,12 @@ namespace obs {
 		source_instance(obs_data_t* settings, obs_source_t* source) : _self(source) {}
 		virtual ~source_instance(){};
 
-		virtual uint32_t get_width()
+		virtual std::uint32_t get_width()
 		{
 			return 0;
 		}
 
-		virtual uint32_t get_height()
+		virtual std::uint32_t get_height()
 		{
 			return 0;
 		}
@@ -551,7 +551,7 @@ namespace obs {
 
 		virtual void hide() {}
 
-		virtual void video_tick(float seconds) {}
+		virtual void video_tick(float_t seconds) {}
 
 		virtual void video_render(gs_effect_t* effect) {}
 
@@ -575,12 +575,13 @@ namespace obs {
 
 		virtual void save(obs_data_t* settings) {}
 
-		virtual void mouse_click(const struct obs_mouse_event* event, int32_t type, bool mouse_up, uint32_t click_count)
+		virtual void mouse_click(const struct obs_mouse_event* event, std::int32_t type, bool mouse_up,
+								 std::uint32_t click_count)
 		{}
 
 		virtual void mouse_move(const struct obs_mouse_event* event, bool mouse_leave) {}
 
-		virtual void mouse_wheel(const struct obs_mouse_event* event, int x_delta, int y_delta) {}
+		virtual void mouse_wheel(const struct obs_mouse_event* event, std::int32_t x_delta, std::int32_t y_delta) {}
 
 		virtual void focus(bool focus) {}
 
@@ -588,8 +589,8 @@ namespace obs {
 
 		virtual void filter_remove(obs_source_t* source) {}
 
-		virtual bool audio_render(uint64_t* ts_out, struct obs_source_audio_mix* audio_output, uint32_t mixers,
-								  size_t channels, size_t sample_rate)
+		virtual bool audio_render(std::uint64_t* ts_out, struct obs_source_audio_mix* audio_output,
+								  std::uint32_t mixers, std::size_t channels, std::size_t sample_rate)
 		{
 			return false;
 		}
@@ -600,8 +601,8 @@ namespace obs {
 
 		virtual void transition_stop() {}
 
-		virtual bool audio_mix(uint64_t* ts_out, struct audio_output_data* audio_output, size_t channels,
-							   size_t sample_rate)
+		virtual bool audio_mix(std::uint64_t* ts_out, struct audio_output_data* audio_output, std::size_t channels,
+							   std::size_t sample_rate)
 		{
 			return false;
 		}

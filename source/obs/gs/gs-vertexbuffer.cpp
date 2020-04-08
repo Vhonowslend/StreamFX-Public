@@ -22,7 +22,7 @@
 #include "obs/gs/gs-helper.hpp"
 #include "utility.hpp"
 
-void gs::vertex_buffer::initialize(size_t capacity, size_t layers)
+void gs::vertex_buffer::initialize(std::size_t capacity, std::size_t layers)
 {
 	if (capacity > MAXIMUM_VERTICES) {
 		throw std::out_of_range("capacity too large");
@@ -41,7 +41,7 @@ void gs::vertex_buffer::initialize(size_t capacity, size_t layers)
 	_data->colors = _colors = (uint32_t*)util::malloc_aligned(16, sizeof(uint32_t) * _capacity);
 	if (_layers > 0) {
 		_data->tvarray = _layer_data = (gs_tvertarray*)util::malloc_aligned(16, sizeof(gs_tvertarray) * _layers);
-		for (size_t n = 0; n < _layers; n++) {
+		for (std::size_t n = 0; n < _layers; n++) {
 			_layer_data[n].array = _uvs[n] = (vec4*)util::malloc_aligned(16, sizeof(vec4) * _capacity);
 			_layer_data[n].width           = 4;
 			memset(_uvs[n], 0, sizeof(vec4) * _capacity);
@@ -69,7 +69,7 @@ gs::vertex_buffer::~vertex_buffer()
 		util::free_aligned(_colors);
 		_colors = nullptr;
 	}
-	for (size_t n = 0; n < _layers; n++) {
+	for (std::size_t n = 0; n < _layers; n++) {
 		if (_uvs[n]) {
 			util::free_aligned(_uvs[n]);
 			_uvs[n] = nullptr;
@@ -95,9 +95,9 @@ gs::vertex_buffer::~vertex_buffer()
 
 gs::vertex_buffer::vertex_buffer() : vertex_buffer(MAXIMUM_VERTICES, MAXIMUM_UVW_LAYERS) {}
 
-gs::vertex_buffer::vertex_buffer(uint32_t vertices) : vertex_buffer(vertices, MAXIMUM_UVW_LAYERS) {}
+gs::vertex_buffer::vertex_buffer(std::uint32_t vertices) : vertex_buffer(vertices, MAXIMUM_UVW_LAYERS) {}
 
-gs::vertex_buffer::vertex_buffer(uint32_t vertices, uint8_t uvlayers)
+gs::vertex_buffer::vertex_buffer(std::uint32_t vertices, std::uint8_t uvlayers)
 	: _size(vertices), _capacity(vertices), _layers(uvlayers), _positions(nullptr), _normals(nullptr),
 	  _tangents(nullptr), _colors(nullptr), _data(nullptr), _buffer(nullptr), _layer_data(nullptr)
 {
@@ -142,12 +142,12 @@ gs::vertex_buffer::vertex_buffer(gs_vertbuffer_t* vb)
 	if (_colors && vbd->colors)
 		memcpy(_colors, vbd->colors, vbd->num * sizeof(uint32_t));
 	if (vbd->tvarray != nullptr) {
-		for (size_t n = 0; n < vbd->num_tex; n++) {
+		for (std::size_t n = 0; n < vbd->num_tex; n++) {
 			if (vbd->tvarray[n].array != nullptr && vbd->tvarray[n].width <= 4 && vbd->tvarray[n].width > 0) {
 				if (vbd->tvarray[n].width == 4) {
 					memcpy(_uvs[n], vbd->tvarray[n].array, vbd->num * sizeof(vec4));
 				} else if (vbd->tvarray[n].width < 4) {
-					for (size_t idx = 0; idx < _capacity; idx++) {
+					for (std::size_t idx = 0; idx < _capacity; idx++) {
 						float* mem = reinterpret_cast<float*>(vbd->tvarray[n].array) + (idx * vbd->tvarray[n].width);
 						// cppcheck-suppress memsetClassFloat
 						memset(&_uvs[n][idx], 0, sizeof(vec4));
@@ -167,7 +167,7 @@ gs::vertex_buffer::vertex_buffer(vertex_buffer const& other) : vertex_buffer(oth
 	memcpy(_normals, other._normals, _capacity * sizeof(vec3));
 	memcpy(_tangents, other._tangents, _capacity * sizeof(vec3));
 	memcpy(_colors, other._colors, _capacity * sizeof(vec3));
-	for (size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
+	for (std::size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
 		memcpy(_uvs[n], other._uvs[n], _capacity * sizeof(vec3));
 	}
 }
@@ -182,7 +182,7 @@ gs::vertex_buffer::vertex_buffer(vertex_buffer const&& other) noexcept : _uvs()
 	_normals   = other._normals;
 	_tangents  = other._tangents;
 	_colors    = other._colors;
-	for (size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
+	for (std::size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
 		_uvs[n] = other._uvs[n];
 	}
 	_data       = other._data;
@@ -210,7 +210,7 @@ void gs::vertex_buffer::operator=(vertex_buffer const&& other) noexcept
 		util::free_aligned(_colors);
 		_colors = nullptr;
 	}
-	for (size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
+	for (std::size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
 		if (_uvs[n]) {
 			util::free_aligned(_uvs[n]);
 			_uvs[n] = nullptr;
@@ -240,7 +240,7 @@ void gs::vertex_buffer::operator=(vertex_buffer const&& other) noexcept
 	_positions = other._positions;
 	_normals   = other._normals;
 	_tangents  = other._tangents;
-	for (size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
+	for (std::size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
 		_uvs[n] = other._uvs[n];
 	}
 	_data       = other._data;
@@ -248,7 +248,7 @@ void gs::vertex_buffer::operator=(vertex_buffer const&& other) noexcept
 	_layer_data = other._layer_data;
 }
 
-void gs::vertex_buffer::resize(uint32_t new_size)
+void gs::vertex_buffer::resize(std::uint32_t new_size)
 {
 	if (new_size > _capacity) {
 		throw std::out_of_range("new_size out of range");
@@ -256,7 +256,7 @@ void gs::vertex_buffer::resize(uint32_t new_size)
 	_size = new_size;
 }
 
-uint32_t gs::vertex_buffer::size()
+std::uint32_t gs::vertex_buffer::size()
 {
 	return _size;
 }
@@ -266,30 +266,30 @@ bool gs::vertex_buffer::empty()
 	return _size == 0;
 }
 
-const gs::vertex gs::vertex_buffer::at(uint32_t idx)
+const gs::vertex gs::vertex_buffer::at(std::uint32_t idx)
 {
 	if (idx >= _size) {
 		throw std::out_of_range("idx out of range");
 	}
 
 	gs::vertex vtx(&_positions[idx], &_normals[idx], &_tangents[idx], &_colors[idx], nullptr);
-	for (size_t n = 0; n < _layers; n++) {
+	for (std::size_t n = 0; n < _layers; n++) {
 		vtx.uv[n] = &_uvs[n][idx];
 	}
 	return vtx;
 }
 
-const gs::vertex gs::vertex_buffer::operator[](uint32_t const pos)
+const gs::vertex gs::vertex_buffer::operator[](std::uint32_t const pos)
 {
 	return at(pos);
 }
 
-void gs::vertex_buffer::set_uv_layers(uint32_t layers)
+void gs::vertex_buffer::set_uv_layers(std::uint32_t layers)
 {
 	_layers = layers;
 }
 
-uint32_t gs::vertex_buffer::get_uv_layers()
+std::uint32_t gs::vertex_buffer::get_uv_layers()
 {
 	return _layers;
 }
@@ -314,7 +314,7 @@ uint32_t* gs::vertex_buffer::get_colors()
 	return _colors;
 }
 
-vec4* gs::vertex_buffer::get_uv_layer(size_t idx)
+vec4* gs::vertex_buffer::get_uv_layer(std::size_t idx)
 {
 	if (idx >= _layers) {
 		throw std::out_of_range("idx out of range");
@@ -341,7 +341,7 @@ gs_vertbuffer_t* gs::vertex_buffer::update(bool refreshGPU)
 	_data->colors   = _colors;
 	_data->num_tex  = _layers;
 	_data->tvarray  = _layer_data;
-	for (size_t n = 0; n < _layers; n++) {
+	for (std::size_t n = 0; n < _layers; n++) {
 		_layer_data[n].array = _uvs[n];
 		_layer_data[n].width = 4;
 	}
@@ -353,7 +353,7 @@ gs_vertbuffer_t* gs::vertex_buffer::update(bool refreshGPU)
 	memset(_data, 0, sizeof(gs_vb_data));
 	_data->num     = _capacity;
 	_data->num_tex = _layers;
-	for (uint32_t n = 0; n < _layers; n++) {
+	for (std::uint32_t n = 0; n < _layers; n++) {
 		_layer_data[n].width = 4;
 	}
 

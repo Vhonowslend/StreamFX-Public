@@ -81,7 +81,7 @@ sdf_effects::sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, ob
 {
 	{
 		auto gctx        = gs::context();
-		vec4 transparent = {0};
+		vec4 transparent = {0, 0, 0, 0};
 
 		_source_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 		_sdf_write = std::make_shared<gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
@@ -134,12 +134,12 @@ void sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 			&& (obs_data_get_double(data, ST_SHADOW_OUTER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			struct cs {
-				uint8_t r, g, b, a;
+				std::uint8_t r, g, b, a;
 			};
 			union {
-				uint32_t color;
-				uint8_t  channel[4];
-				cs       c;
+				std::uint32_t color;
+				std::uint8_t  channel[4];
+				cs            c;
 			};
 			color                 = uint32_t(obs_data_get_int(data, ST_SHADOW_OUTER_COLOR));
 			_outer_shadow_color.x = float_t(c.r / 255.0);
@@ -159,12 +159,12 @@ void sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 			&& (obs_data_get_double(data, ST_SHADOW_INNER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			struct cs {
-				uint8_t r, g, b, a;
+				std::uint8_t r, g, b, a;
 			};
 			union {
-				uint32_t color;
-				uint8_t  channel[4];
-				cs       c;
+				std::uint32_t color;
+				std::uint8_t  channel[4];
+				cs            c;
 			};
 			color                 = uint32_t(obs_data_get_int(data, ST_SHADOW_INNER_COLOR));
 			_inner_shadow_color.x = float_t(c.r / 255.0);
@@ -183,12 +183,12 @@ void sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 					  && (obs_data_get_double(data, ST_GLOW_OUTER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			struct cs {
-				uint8_t r, g, b, a;
+				std::uint8_t r, g, b, a;
 			};
 			union {
-				uint32_t color;
-				uint8_t  channel[4];
-				cs       c;
+				std::uint32_t color;
+				std::uint8_t  channel[4];
+				cs            c;
 			};
 			color               = uint32_t(obs_data_get_int(data, ST_GLOW_OUTER_COLOR));
 			_outer_glow_color.x = float_t(c.r / 255.0);
@@ -209,12 +209,12 @@ void sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 					  && (obs_data_get_double(data, ST_GLOW_INNER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			struct cs {
-				uint8_t r, g, b, a;
+				std::uint8_t r, g, b, a;
 			};
 			union {
-				uint32_t color;
-				uint8_t  channel[4];
-				cs       c;
+				std::uint32_t color;
+				std::uint8_t  channel[4];
+				cs            c;
 			};
 			color               = uint32_t(obs_data_get_int(data, ST_GLOW_INNER_COLOR));
 			_inner_glow_color.x = float_t(c.r / 255.0);
@@ -235,12 +235,12 @@ void sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 				   && (obs_data_get_double(data, ST_OUTLINE_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			struct cs {
-				uint8_t r, g, b, a;
+				std::uint8_t r, g, b, a;
 			};
 			union {
-				uint32_t color;
-				uint8_t  channel[4];
-				cs       c;
+				std::uint32_t color;
+				std::uint8_t  channel[4];
+				cs            c;
 			};
 			color            = uint32_t(obs_data_get_int(data, ST_OUTLINE_COLOR));
 			_outline_color.x = float_t(c.r / 255.0);
@@ -263,31 +263,18 @@ void sdf_effects::sdf_effects_instance::update(obs_data_t* data)
 
 void sdf_effects::sdf_effects_instance::video_tick(float)
 {
-	uint32_t width  = 1;
-	uint32_t height = 1;
-
-	// Figure out the actual source size.
-	do {
-		obs_source_t* target = obs_filter_get_target(_self);
-		if (target == nullptr) {
-			break;
-		}
-
-		// Grab width an height of the target source (child filter or source).
-		width  = obs_source_get_width(target);
-		height = obs_source_get_height(target);
-	} while (false);
-
-	_source_rendered = false;
-	_output_rendered = false;
+	if (obs_source_t* target = obs_filter_get_target(_self); target != nullptr) {
+		_source_rendered = false;
+		_output_rendered = false;
+	}
 }
 
 void sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect)
 {
 	obs_source_t* parent         = obs_filter_get_parent(_self);
 	obs_source_t* target         = obs_filter_get_target(_self);
-	uint32_t      baseW          = obs_source_get_base_width(target);
-	uint32_t      baseH          = obs_source_get_base_height(target);
+	std::uint32_t baseW          = obs_source_get_base_width(target);
+	std::uint32_t baseH          = obs_source_get_base_height(target);
 	gs_effect_t*  final_effect   = effect ? effect : obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 	gs_effect_t*  default_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 
@@ -297,8 +284,7 @@ void sdf_effects::sdf_effects_instance::video_render(gs_effect_t* effect)
 	}
 
 	auto gctx              = gs::context();
-	vec4 color_transparent = {0};
-	vec4_zero(&color_transparent);
+	vec4 color_transparent = {0, 0, 0, 0};
 
 	try {
 		gs_blend_state_push();
@@ -582,8 +568,10 @@ try {
 	return true;
 } catch (const std::exception& ex) {
 	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return true;
 } catch (...) {
 	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return true;
 }
 
 bool cb_modified_shadow_outside(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
@@ -598,8 +586,10 @@ try {
 	return true;
 } catch (const std::exception& ex) {
 	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return true;
 } catch (...) {
 	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return true;
 }
 
 bool cb_modified_glow_inside(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
@@ -612,8 +602,10 @@ try {
 	return true;
 } catch (const std::exception& ex) {
 	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return true;
 } catch (...) {
 	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return true;
 }
 
 bool cb_modified_glow_outside(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
@@ -626,8 +618,10 @@ try {
 	return true;
 } catch (const std::exception& ex) {
 	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return true;
 } catch (...) {
 	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return true;
 }
 
 bool cb_modified_outline(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
@@ -641,8 +635,10 @@ try {
 	return true;
 } catch (const std::exception& ex) {
 	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return true;
 } catch (...) {
 	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return true;
 }
 
 bool cb_modified_advanced(void*, obs_properties_t* props, obs_property*, obs_data_t* settings) noexcept
@@ -653,8 +649,10 @@ try {
 	return true;
 } catch (const std::exception& ex) {
 	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return true;
 } catch (...) {
 	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return true;
 }
 
 obs_properties_t* sdf_effects::sdf_effects_factory::get_properties2(sdf_effects::sdf_effects_instance* data)

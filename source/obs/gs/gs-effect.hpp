@@ -32,13 +32,13 @@ namespace gs {
 		effect(std::filesystem::path file);
 		~effect();
 
-		size_t               count_techniques();
-		gs::effect_technique get_technique(size_t idx);
+		std::size_t          count_techniques();
+		gs::effect_technique get_technique(std::size_t idx);
 		gs::effect_technique get_technique(const std::string& name);
 		bool                 has_technique(const std::string& name);
 
-		size_t               count_parameters();
-		gs::effect_parameter get_parameter(size_t idx);
+		std::size_t          count_parameters();
+		gs::effect_parameter get_parameter(std::size_t idx);
 		gs::effect_parameter get_parameter(const std::string& name);
 		bool                 has_parameter(const std::string& name);
 		bool                 has_parameter(const std::string& name, effect_parameter::type type);

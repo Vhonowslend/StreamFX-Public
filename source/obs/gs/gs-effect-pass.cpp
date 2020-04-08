@@ -41,16 +41,16 @@ gs::effect_pass::~effect_pass() {}
 std::string gs::effect_pass::name()
 {
 	const char* name_c   = get()->name;
-	size_t      name_len = strnlen(name_c, 256);
+	std::size_t name_len = strnlen(name_c, 256);
 	return name_c ? std::string(name_c, name_c + name_len) : std::string();
 }
 
-size_t gs::effect_pass::count_vertex_parameters()
+std::size_t gs::effect_pass::count_vertex_parameters()
 {
 	return static_cast<size_t>(get()->vertshader_params.num);
 }
 
-gs::effect_parameter gs::effect_pass::get_vertex_parameter(size_t idx)
+gs::effect_parameter gs::effect_pass::get_vertex_parameter(std::size_t idx)
 {
 	if (idx >= count_vertex_parameters())
 		return nullptr;
@@ -60,7 +60,7 @@ gs::effect_parameter gs::effect_pass::get_vertex_parameter(size_t idx)
 
 gs::effect_parameter gs::effect_pass::get_vertex_parameter(std::string name)
 {
-	for (size_t idx = 0; idx < count_vertex_parameters(); idx++) {
+	for (std::size_t idx = 0; idx < count_vertex_parameters(); idx++) {
 		auto ptr = get()->vertshader_params.array + idx;
 		if (strcmp(ptr->eparam->name, name.c_str()) == 0)
 			return gs::effect_parameter(ptr->eparam, this);
@@ -81,12 +81,12 @@ bool gs::effect_pass::has_vertex_parameter(std::string name, gs::effect_paramete
 	return false;
 }
 
-size_t gs::effect_pass::count_pixel_parameters()
+std::size_t gs::effect_pass::count_pixel_parameters()
 {
 	return static_cast<size_t>(get()->pixelshader_params.num);
 }
 
-gs::effect_parameter gs::effect_pass::get_pixel_parameter(size_t idx)
+gs::effect_parameter gs::effect_pass::get_pixel_parameter(std::size_t idx)
 {
 	if (idx >= count_pixel_parameters())
 		return nullptr;
@@ -96,7 +96,7 @@ gs::effect_parameter gs::effect_pass::get_pixel_parameter(size_t idx)
 
 gs::effect_parameter gs::effect_pass::get_pixel_parameter(std::string name)
 {
-	for (size_t idx = 0; idx < count_pixel_parameters(); idx++) {
+	for (std::size_t idx = 0; idx < count_pixel_parameters(); idx++) {
 		auto ptr = get()->pixelshader_params.array + idx;
 		if (strcmp(ptr->eparam->name, name.c_str()) == 0)
 			return gs::effect_parameter(ptr->eparam, this);

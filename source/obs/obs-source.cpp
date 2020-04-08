@@ -371,11 +371,11 @@ try {
 void obs::deprecated_source::handle_audio_data(void* p, obs_source_t*, const audio_data* audio, bool muted) noexcept
 try {
 	obs::deprecated_source* self = reinterpret_cast<obs::deprecated_source*>(p);
-	if (!self->events.audio_data) {
+	if (!self->events.audio) {
 		return;
 	}
 
-	self->events.audio_data(self, audio, muted);
+	self->events.audio(self, audio, muted);
 } catch (const std::exception& ex) {
 	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 } catch (...) {
@@ -498,7 +498,7 @@ obs::deprecated_source::~deprecated_source()
 	auto_signal_d(update_flags);
 	auto_signal_d(audio_sync);
 	auto_signal_d(audio_mixers);
-	auto_signal_d(audio_data);
+	auto_signal_d(audio);
 	auto_signal_d(filter_add);
 	auto_signal_d(filter_remove);
 	auto_signal_d(reorder_filters);
@@ -550,12 +550,12 @@ obs::deprecated_source::deprecated_source()
 	// libOBS unfortunately does not use the event system for audio data callbacks, which is kind of odd as most other
 	//  things do. So instead we'll have to manually deal with it for now.
 	{
-		this->events.audio_data.set_listen_callback([this]() noexcept {
+		this->events.audio.set_listen_callback([this]() noexcept {
 			if (!this->_self)
 				return;
 			obs_source_add_audio_capture_callback(this->_self, obs::deprecated_source::handle_audio_data, this);
 		});
-		this->events.audio_data.set_silence_callback([this]() noexcept {
+		this->events.audio.set_silence_callback([this]() noexcept {
 			if (!this->_self)
 				return;
 			obs_source_remove_audio_capture_callback(this->_self, obs::deprecated_source::handle_audio_data, this);
@@ -624,7 +624,7 @@ obs::deprecated_source::deprecated_source(deprecated_source const& other)
 	auto_signal_c(update_flags);
 	auto_signal_c(audio_sync);
 	auto_signal_c(audio_mixers);
-	auto_signal_c(audio_data);
+	auto_signal_c(audio);
 	auto_signal_c(filter_add);
 	auto_signal_c(filter_remove);
 	auto_signal_c(reorder_filters);
@@ -676,7 +676,7 @@ obs::deprecated_source& obs::deprecated_source::operator=(deprecated_source cons
 	auto_signal_c(update_flags);
 	auto_signal_c(audio_sync);
 	auto_signal_c(audio_mixers);
-	auto_signal_c(audio_data);
+	auto_signal_c(audio);
 	auto_signal_c(filter_add);
 	auto_signal_c(filter_remove);
 	auto_signal_c(reorder_filters);
@@ -720,7 +720,7 @@ obs::deprecated_source::deprecated_source(deprecated_source&& other)
 	auto_signal_c(update_flags);
 	auto_signal_c(audio_sync);
 	auto_signal_c(audio_mixers);
-	auto_signal_c(audio_data);
+	auto_signal_c(audio);
 	auto_signal_c(filter_add);
 	auto_signal_c(filter_remove);
 	auto_signal_c(reorder_filters);
@@ -770,7 +770,7 @@ obs::deprecated_source& obs::deprecated_source::operator=(deprecated_source&& ot
 	auto_signal_c(update_flags);
 	auto_signal_c(audio_sync);
 	auto_signal_c(audio_mixers);
-	auto_signal_c(audio_data);
+	auto_signal_c(audio);
 	auto_signal_c(filter_add);
 	auto_signal_c(filter_remove);
 	auto_signal_c(reorder_filters);
@@ -798,7 +798,7 @@ void* obs::deprecated_source::type_data()
 	return obs_source_get_type_data(_self);
 }
 
-uint32_t obs::deprecated_source::width()
+std::uint32_t obs::deprecated_source::width()
 {
 	if (!_self) {
 		return 0;
@@ -806,7 +806,7 @@ uint32_t obs::deprecated_source::width()
 	return obs_source_get_width(_self);
 }
 
-uint32_t obs::deprecated_source::height()
+std::uint32_t obs::deprecated_source::height()
 {
 	if (!_self) {
 		return 0;

@@ -24,7 +24,7 @@
 namespace gs {
 	class index_buffer : public std::vector<uint32_t> {
 		public:
-		index_buffer(uint32_t maximumVertices);
+		index_buffer(std::uint32_t maximumVertices);
 		index_buffer();
 		index_buffer(index_buffer& other);
 		index_buffer(std::vector<uint32_t>& other);

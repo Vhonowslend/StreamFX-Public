@@ -29,18 +29,18 @@ namespace gs {
 		~context();
 	};
 
-	static const float debug_color_source[4]       = {0.f, .5f, 5.f, 1.f};
-	static const float debug_color_cache[4]        = {1.f, .75f, 0.f, 1.f};
-	static const float debug_color_cache_render[4] = {.2f, .15f, 0.f, 1.f};
-	static const float debug_color_convert[4]      = {.5f, .5f, 0.5f, 1.f};
-	static const float debug_color_render[4]       = {0.f, 1.f, 0.0f, 1.f};
+	static const float_t debug_color_source[4]       = {0.f, .5f, 5.f, 1.f};
+	static const float_t debug_color_cache[4]        = {1.f, .75f, 0.f, 1.f};
+	static const float_t debug_color_cache_render[4] = {.2f, .15f, 0.f, 1.f};
+	static const float_t debug_color_convert[4]      = {.5f, .5f, 0.5f, 1.f};
+	static const float_t debug_color_render[4]       = {0.f, 1.f, 0.0f, 1.f};
 
 	class debug_marker {
 		std::string _name;
 
 		public:
 		//debug_marker(const float color[4], std::string name);
-		debug_marker(const float color[4], const char* format, ...);
+		debug_marker(const float_t color[4], const char* format, ...);
 		~debug_marker();
 	};
 } // namespace gs

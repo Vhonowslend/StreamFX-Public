@@ -76,8 +76,8 @@ namespace obs {
 
 		void* type_data();
 
-		uint32_t width();
-		uint32_t height();
+		std::uint32_t width();
+		std::uint32_t height();
 
 		bool destroyed();
 
@@ -121,7 +121,7 @@ namespace obs {
 			util::event<obs::deprecated_source*, double&>                 volume;
 			util::event<obs::deprecated_source*, long long&>              audio_sync;
 			util::event<obs::deprecated_source*, long long&>              audio_mixers;
-			util::event<obs::deprecated_source*, const audio_data*, bool> audio_data;
+			util::event<obs::deprecated_source*, const audio_data*, bool> audio;
 
 			// Filters
 			util::event<obs::deprecated_source*, obs_source_t*> filter_add;

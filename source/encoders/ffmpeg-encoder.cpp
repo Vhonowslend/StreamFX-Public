@@ -253,7 +253,7 @@ try {
 	return false;
 }
 
-static bool _get_sei_data(void* ptr, uint8_t** sei_data, size_t* size) noexcept
+static bool _get_sei_data(void* ptr, std::uint8_t** sei_data, size_t* size) noexcept
 try {
 	return reinterpret_cast<ffmpeg_instance*>(ptr)->get_sei_data(sei_data, size);
 } catch (const std::exception& ex) {
@@ -264,7 +264,7 @@ try {
 	return false;
 }
 
-static bool _get_extra_data(void* ptr, uint8_t** extra_data, size_t* size) noexcept
+static bool _get_extra_data(void* ptr, std::uint8_t** extra_data, size_t* size) noexcept
 try {
 	return reinterpret_cast<ffmpeg_instance*>(ptr)->get_extra_data(extra_data, size);
 } catch (const std::exception& ex) {
@@ -296,8 +296,8 @@ try {
 	return false;
 }
 
-static bool _encode_texture(void* ptr, uint32_t handle, int64_t pts, uint64_t lock_key, uint64_t* next_key,
-							struct encoder_packet* packet, bool* received_packet) noexcept
+static bool _encode_texture(void* ptr, std::uint32_t handle, std::int64_t pts, std::uint64_t lock_key,
+							std::uint64_t* next_key, struct encoder_packet* packet, bool* received_packet) noexcept
 try {
 	return reinterpret_cast<ffmpeg_instance*>(ptr)->video_encode_texture(handle, pts, lock_key, next_key, packet,
 																		 received_packet);
@@ -318,7 +318,7 @@ try {
 	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-static size_t _get_frame_size(void* ptr) noexcept
+static std::size_t _get_frame_size(void* ptr) noexcept
 try {
 	return reinterpret_cast<ffmpeg_instance*>(ptr)->get_frame_size();
 } catch (const std::exception& ex) {
@@ -530,13 +530,13 @@ void ffmpeg_factory::get_properties(obs_properties_t* props, bool hw_encode)
 		}
 		{
 			auto p = obs_properties_add_float(grp, KEY_KEYFRAMES_INTERVAL_SECONDS, D_TRANSLATE(ST_KEYFRAMES_INTERVAL),
-											  0.00, std::numeric_limits<int16_t>::max(), 0.01);
+											  0.00, std::numeric_limits<std::int16_t>::max(), 0.01);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_KEYFRAMES_INTERVAL)));
 			obs_property_float_set_suffix(p, " seconds");
 		}
 		{
 			auto p = obs_properties_add_int(grp, KEY_KEYFRAMES_INTERVAL_FRAMES, D_TRANSLATE(ST_KEYFRAMES_INTERVAL), 0,
-											std::numeric_limits<int32_t>::max(), 1);
+											std::numeric_limits<std::int32_t>::max(), 1);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_KEYFRAMES_INTERVAL)));
 			obs_property_int_set_suffix(p, " frames");
 		}
@@ -558,7 +558,7 @@ void ffmpeg_factory::get_properties(obs_properties_t* props, bool hw_encode)
 		if (!hw_encode) {
 			{
 				auto p = obs_properties_add_int(grp, KEY_FFMPEG_GPU, D_TRANSLATE(ST_FFMPEG_GPU), -1,
-												std::numeric_limits<uint8_t>::max(), 1);
+												std::numeric_limits<std::uint8_t>::max(), 1);
 				obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_FFMPEG_GPU)));
 			}
 			if (avcodec_ptr->pix_fmts) {
@@ -653,11 +653,13 @@ void ffmpeg_instance::initialize_sw(obs_data_t* settings)
 		_context->framerate.num = _context->time_base.den = static_cast<int>(voi->fps_num);
 		_context->framerate.den = _context->time_base.num = static_cast<int>(voi->fps_den);
 
-		_swscale.set_source_size(static_cast<uint32_t>(_context->width), static_cast<uint32_t>(_context->height));
+		_swscale.set_source_size(static_cast<std::uint32_t>(_context->width),
+								 static_cast<std::uint32_t>(_context->height));
 		_swscale.set_source_color(_context->color_range == AVCOL_RANGE_JPEG, _context->colorspace);
 		_swscale.set_source_format(_pixfmt_source);
 
-		_swscale.set_target_size(static_cast<uint32_t>(_context->width), static_cast<uint32_t>(_context->height));
+		_swscale.set_target_size(static_cast<std::uint32_t>(_context->width),
+								 static_cast<std::uint32_t>(_context->height));
 		_swscale.set_target_color(_context->color_range == AVCOL_RANGE_JPEG, _context->colorspace);
 		_swscale.set_target_format(_pixfmt_target);
 
@@ -924,7 +926,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 
 	{ // FFmpeg Custom Options
 		const char* opts     = obs_data_get_string(settings, KEY_FFMPEG_CUSTOMSETTINGS);
-		size_t      opts_len = strnlen(opts, 65535);
+		std::size_t opts_len = strnlen(opts, 65535);
 
 		parse_ffmpeg_commandline(std::string{opts, opts + opts_len});
 	}
@@ -980,7 +982,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 
 void ffmpeg_instance::get_audio_info(audio_convert_info*) {}
 
-size_t ffmpeg_instance::get_frame_size()
+std::size_t ffmpeg_instance::get_frame_size()
 {
 	return size_t();
 }
@@ -997,7 +999,7 @@ void ffmpeg_instance::get_video_info(video_scale_info* vsi)
 	vsi->format = ::ffmpeg::tools::avpixelformat_to_obs_videoformat(_swscale.get_source_format());
 }
 
-bool ffmpeg_instance::get_sei_data(uint8_t** data, size_t* size)
+bool ffmpeg_instance::get_sei_data(std::uint8_t** data, size_t* size)
 {
 	if (_sei_data.size() == 0)
 		return false;
@@ -1007,7 +1009,7 @@ bool ffmpeg_instance::get_sei_data(uint8_t** data, size_t* size)
 	return true;
 }
 
-bool ffmpeg_instance::get_extra_data(uint8_t** data, size_t* size)
+bool ffmpeg_instance::get_extra_data(std::uint8_t** data, size_t* size)
 {
 	if (_extra_data.size() == 0)
 		return false;
@@ -1022,23 +1024,23 @@ static inline void copy_data(encoder_frame* frame, AVFrame* vframe)
 	int h_chroma_shift, v_chroma_shift;
 	av_pix_fmt_get_chroma_sub_sample(static_cast<AVPixelFormat>(vframe->format), &h_chroma_shift, &v_chroma_shift);
 
-	for (size_t idx = 0; idx < MAX_AV_PLANES; idx++) {
+	for (std::size_t idx = 0; idx < MAX_AV_PLANES; idx++) {
 		if (!frame->data[idx] || !vframe->data[idx])
 			continue;
 
-		size_t plane_height = static_cast<size_t>(vframe->height) >> (idx ? v_chroma_shift : 0);
+		std::size_t plane_height = static_cast<size_t>(vframe->height) >> (idx ? v_chroma_shift : 0);
 
-		if (static_cast<uint32_t>(vframe->linesize[idx]) == frame->linesize[idx]) {
+		if (static_cast<std::uint32_t>(vframe->linesize[idx]) == frame->linesize[idx]) {
 			std::memcpy(vframe->data[idx], frame->data[idx], frame->linesize[idx] * plane_height);
 		} else {
-			size_t ls_in  = static_cast<size_t>(frame->linesize[idx]);
-			size_t ls_out = static_cast<size_t>(vframe->linesize[idx]);
-			size_t bytes  = ls_in < ls_out ? ls_in : ls_out;
+			std::size_t ls_in  = static_cast<size_t>(frame->linesize[idx]);
+			std::size_t ls_out = static_cast<size_t>(vframe->linesize[idx]);
+			std::size_t bytes  = ls_in < ls_out ? ls_in : ls_out;
 
-			uint8_t* to   = vframe->data[idx];
-			uint8_t* from = frame->data[idx];
+			std::uint8_t* to   = vframe->data[idx];
+			std::uint8_t* from = frame->data[idx];
 
-			for (size_t y = 0; y < plane_height; y++) {
+			for (std::size_t y = 0; y < plane_height; y++) {
 				std::memcpy(to, from, bytes);
 				to += ls_out;
 				from += ls_in;
@@ -1067,8 +1069,8 @@ bool ffmpeg_instance::video_encode(encoder_frame* frame, encoder_packet* packet,
 			copy_data(frame, vframe.get());
 		} else {
 			int res =
-				_swscale.convert(reinterpret_cast<uint8_t**>(frame->data), reinterpret_cast<int*>(frame->linesize), 0,
-								 _context->height, vframe->data, vframe->linesize);
+				_swscale.convert(reinterpret_cast<std::uint8_t**>(frame->data), reinterpret_cast<int*>(frame->linesize),
+								 0, _context->height, vframe->data, vframe->linesize);
 			if (res <= 0) {
 				LOG_ERROR("Failed to convert frame: %s (%ld).", ::ffmpeg::tools::get_error_description(res), res);
 				return false;
@@ -1082,8 +1084,8 @@ bool ffmpeg_instance::video_encode(encoder_frame* frame, encoder_packet* packet,
 	return true;
 }
 
-bool ffmpeg_instance::video_encode_texture(uint32_t handle, int64_t pts, uint64_t lock_key, uint64_t* next_lock_key,
-										   encoder_packet* packet, bool* received_packet)
+bool ffmpeg_instance::video_encode_texture(std::uint32_t handle, std::int64_t pts, std::uint64_t lock_key,
+										   std::uint64_t* next_lock_key, encoder_packet* packet, bool* received_packet)
 {
 	if (handle == GS_INVALID_HANDLE) {
 		LOG_ERROR("Received invalid handle.");
@@ -1124,10 +1126,10 @@ int ffmpeg_instance::receive_packet(bool* received_packet, struct encoder_packet
 
 	if (!_have_first_frame) {
 		if (_codec->id == AV_CODEC_ID_H264) {
-			uint8_t* tmp_packet;
-			uint8_t* tmp_header;
-			uint8_t* tmp_sei;
-			size_t   sz_packet, sz_header, sz_sei;
+			std::uint8_t* tmp_packet;
+			std::uint8_t* tmp_header;
+			std::uint8_t* tmp_sei;
+			std::size_t   sz_packet, sz_header, sz_sei;
 
 			obs_extract_avc_headers(_current_packet.data, static_cast<size_t>(_current_packet.size), &tmp_packet,
 									&sz_packet, &tmp_header, &sz_header, &tmp_sei, &sz_sei);
@@ -1294,11 +1296,11 @@ void ffmpeg_instance::parse_ffmpeg_commandline(std::string text)
 	std::list<std::string> opts;
 	std::stringstream      opt_stream{std::ios_base::in | std::ios_base::out | std::ios_base::binary};
 	std::stack<char>       quote_stack;
-	for (size_t p = 0; p <= text.size(); p++) {
+	for (std::size_t p = 0; p <= text.size(); p++) {
 		char here = p < text.size() ? text.at(p) : 0;
 
 		if (here == '\\') {
-			size_t p2 = p + 1;
+			std::size_t p2 = p + 1;
 			if (p2 < text.size()) {
 				char here2 = text.at(p2);
 				if (isdigit(here2)) { // Octal

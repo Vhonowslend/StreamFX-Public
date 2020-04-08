@@ -33,9 +33,9 @@ namespace gfx {
 
 		struct basic_data {
 			union {
-				int32_t  i32;
-				uint32_t ui32;
-				float_t  f32;
+				int32_t       i32;
+				std::uint32_t ui32;
+				float_t       f32;
 			};
 		};
 
@@ -72,14 +72,14 @@ namespace gfx {
 
 			const std::string& get_suffix();
 
-			const std::string& get_keys(size_t idx);
+			const std::string& get_keys(std::size_t idx);
 
-			const std::string& get_names(size_t idx);
+			const std::string& get_names(std::size_t idx);
 		};
 
 		struct bool_parameter : public basic_parameter {
 			// std::vector<bool> doesn't allow .data()
-			std::vector<uint8_t> _data;
+			std::vector<std::uint8_t> _data;
 
 			public:
 			bool_parameter(gs::effect_parameter param, std::string prefix);

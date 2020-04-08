@@ -59,7 +59,7 @@ source::mirror::mirror_audio_data::mirror_audio_data(const audio_data* audio, sp
 	osa.format                   = aoi->format;
 	osa.samples_per_sec          = aoi->samples_per_sec;
 	data.resize(MAX_AV_PLANES);
-	for (size_t idx = 0; idx < MAX_AV_PLANES; idx++) {
+	for (std::size_t idx = 0; idx < MAX_AV_PLANES; idx++) {
 		if (!audio->data[idx]) {
 			osa.data[idx] = nullptr;
 			continue;
@@ -81,12 +81,12 @@ mirror::mirror_instance::~mirror_instance()
 	release();
 }
 
-uint32_t mirror::mirror_instance::get_width()
+std::uint32_t mirror::mirror_instance::get_width()
 {
 	return _source_size.first;
 }
 
-uint32_t mirror::mirror_instance::get_height()
+std::uint32_t mirror::mirror_instance::get_height()
 {
 	return _source_size.second;
 }
@@ -126,7 +126,7 @@ void mirror::mirror_instance::save(obs_data_t* data)
 	}
 }
 
-void mirror::mirror_instance::video_tick(float time)
+void mirror::mirror_instance::video_tick(float_t time)
 {
 	if (_source) {
 		_source_size.first  = obs_source_get_width(_source.get());
@@ -215,7 +215,7 @@ void source::mirror::mirror_instance::on_audio(std::shared_ptr<obs_source_t>, co
 		detected_layout = _audio_layout;
 	} else {
 		std::bitset<MAX_AV_PLANES> layout_detection;
-		for (size_t idx = 0; idx < MAX_AV_PLANES; idx++) {
+		for (std::size_t idx = 0; idx < MAX_AV_PLANES; idx++) {
 			layout_detection.set(idx, audio->data[idx] != nullptr);
 		}
 		switch (layout_detection.to_ulong()) {

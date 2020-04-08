@@ -115,7 +115,7 @@ try {
 std::string gs::effect_parameter::get_name()
 {
 	const char* name_c   = get()->name;
-	size_t      name_len = strnlen(name_c, 256);
+	std::size_t name_len = strnlen(name_c, 256);
 	return name_c ? std::string(name_c, name_c + name_len) : std::string();
 }
 
@@ -152,12 +152,12 @@ gs::effect_parameter::type gs::effect_parameter::get_type()
 	}
 }
 
-inline size_t gs::effect_parameter::count_annotations()
+inline std::size_t gs::effect_parameter::count_annotations()
 {
 	return gs_param_get_num_annotations(get());
 }
 
-gs::effect_parameter gs::effect_parameter::get_annotation(size_t idx)
+gs::effect_parameter gs::effect_parameter::get_annotation(std::size_t idx)
 {
 	if (idx >= get()->annotations.num) {
 		return nullptr;
@@ -168,7 +168,7 @@ gs::effect_parameter gs::effect_parameter::get_annotation(size_t idx)
 
 gs::effect_parameter gs::effect_parameter::get_annotation(std::string name)
 {
-	for (size_t idx = 0; idx < get()->annotations.num; idx++) {
+	for (std::size_t idx = 0; idx < get()->annotations.num; idx++) {
 		auto ptr = get()->annotations.array + idx;
 		if (strcmp(ptr->name, name.c_str()) == 0) {
 			return gs::effect_parameter(ptr, this);
@@ -227,7 +227,7 @@ void gs::effect_parameter::get_default_bool(bool& v)
 	}
 }
 
-void gs::effect_parameter::set_bool_array(bool v[], size_t sz)
+void gs::effect_parameter::set_bool_array(bool v[], std::size_t sz)
 {
 	if (get_type() != type::Boolean)
 		throw std::bad_cast();
@@ -296,7 +296,7 @@ void gs::effect_parameter::get_float2(float_t& x, float_t& y)
 {
 	if (get_type() != type::Float2)
 		throw std::bad_cast();
-	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_val(get()));
+	std::uint8_t* ptr = static_cast<std::uint8_t*>(gs_effect_get_val(get()));
 	if (ptr) {
 		x = *reinterpret_cast<float_t*>(ptr);
 		y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t));
@@ -310,7 +310,7 @@ void gs::effect_parameter::get_default_float2(float_t& x, float_t& y)
 {
 	if (get_type() != type::Float2)
 		throw std::bad_cast();
-	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_default_val(get()));
+	std::uint8_t* ptr = static_cast<std::uint8_t*>(gs_effect_get_default_val(get()));
 	if (ptr) {
 		x = *reinterpret_cast<float_t*>(ptr);
 		y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t));
@@ -349,7 +349,7 @@ void gs::effect_parameter::get_float3(float_t& x, float_t& y, float_t& z)
 {
 	if (get_type() != type::Float3)
 		throw std::bad_cast();
-	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_val(get()));
+	std::uint8_t* ptr = static_cast<std::uint8_t*>(gs_effect_get_val(get()));
 	if (ptr) {
 		x = *reinterpret_cast<float_t*>(ptr);
 		y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t));
@@ -364,7 +364,7 @@ void gs::effect_parameter::get_default_float3(float_t& x, float_t& y, float_t& z
 {
 	if (get_type() != type::Float3)
 		throw std::bad_cast();
-	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_default_val(get()));
+	std::uint8_t* ptr = static_cast<std::uint8_t*>(gs_effect_get_default_val(get()));
 	if (ptr) {
 		x = *reinterpret_cast<float_t*>(ptr);
 		y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t));
@@ -404,7 +404,7 @@ void gs::effect_parameter::get_float4(float_t& x, float_t& y, float_t& z, float_
 {
 	if (get_type() != type::Float4)
 		throw std::bad_cast();
-	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_val(get()));
+	std::uint8_t* ptr = static_cast<std::uint8_t*>(gs_effect_get_val(get()));
 	if (ptr) {
 		x = *reinterpret_cast<float_t*>(ptr);
 		y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t));
@@ -420,7 +420,7 @@ void gs::effect_parameter::get_default_float4(float_t& x, float_t& y, float_t& z
 {
 	if (get_type() != type::Float4)
 		throw std::bad_cast();
-	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_default_val(get()));
+	std::uint8_t* ptr = static_cast<std::uint8_t*>(gs_effect_get_default_val(get()));
 	if (ptr) {
 		x = *reinterpret_cast<float_t*>(ptr);
 		y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t));
@@ -443,7 +443,7 @@ void gs::effect_parameter::get_int(int32_t& x)
 {
 	if ((get_type() != type::Integer) && (get_type() != type::Unknown))
 		throw std::bad_cast();
-	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_val(get()));
+	std::uint8_t* ptr = static_cast<std::uint8_t*>(gs_effect_get_val(get()));
 	if (ptr) {
 		x = *reinterpret_cast<int32_t*>(ptr);
 		bfree(ptr);
@@ -456,7 +456,7 @@ void gs::effect_parameter::get_default_int(int32_t& x)
 {
 	if ((get_type() != type::Integer) && (get_type() != type::Unknown))
 		throw std::bad_cast();
-	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_default_val(get()));
+	std::uint8_t* ptr = static_cast<std::uint8_t*>(gs_effect_get_default_val(get()));
 	if (ptr) {
 		x = *reinterpret_cast<int32_t*>(ptr);
 		bfree(ptr);
@@ -477,7 +477,7 @@ void gs::effect_parameter::get_int2(int32_t& x, int32_t& y)
 {
 	if ((get_type() != type::Integer2) && (get_type() != type::Unknown))
 		throw std::bad_cast();
-	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_val(get()));
+	std::uint8_t* ptr = static_cast<std::uint8_t*>(gs_effect_get_val(get()));
 	if (ptr) {
 		x = *reinterpret_cast<int32_t*>(ptr);
 		y = *reinterpret_cast<int32_t*>(ptr + sizeof(int32_t));
@@ -491,7 +491,7 @@ void gs::effect_parameter::get_default_int2(int32_t& x, int32_t& y)
 {
 	if ((get_type() != type::Integer2) && (get_type() != type::Unknown))
 		throw std::bad_cast();
-	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_default_val(get()));
+	std::uint8_t* ptr = static_cast<std::uint8_t*>(gs_effect_get_default_val(get()));
 	if (ptr) {
 		x = *reinterpret_cast<int32_t*>(ptr);
 		y = *reinterpret_cast<int32_t*>(ptr + sizeof(int32_t));
@@ -513,7 +513,7 @@ void gs::effect_parameter::get_int3(int32_t& x, int32_t& y, int32_t& z)
 {
 	if ((get_type() != type::Integer3) && (get_type() != type::Unknown))
 		throw std::bad_cast();
-	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_val(get()));
+	std::uint8_t* ptr = static_cast<std::uint8_t*>(gs_effect_get_val(get()));
 	if (ptr) {
 		x = *reinterpret_cast<int32_t*>(ptr);
 		y = *reinterpret_cast<int32_t*>(ptr + sizeof(int32_t));
@@ -528,7 +528,7 @@ void gs::effect_parameter::get_default_int3(int32_t& x, int32_t& y, int32_t& z)
 {
 	if ((get_type() != type::Integer3) && (get_type() != type::Unknown))
 		throw std::bad_cast();
-	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_default_val(get()));
+	std::uint8_t* ptr = static_cast<std::uint8_t*>(gs_effect_get_default_val(get()));
 	if (ptr) {
 		x = *reinterpret_cast<int32_t*>(ptr);
 		y = *reinterpret_cast<int32_t*>(ptr + sizeof(int32_t));
@@ -551,7 +551,7 @@ void gs::effect_parameter::get_int4(int32_t& x, int32_t& y, int32_t& z, int32_t&
 {
 	if ((get_type() != type::Integer4) && (get_type() != type::Unknown))
 		throw std::bad_cast();
-	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_val(get()));
+	std::uint8_t* ptr = static_cast<std::uint8_t*>(gs_effect_get_val(get()));
 	if (ptr) {
 		x = *reinterpret_cast<int32_t*>(ptr);
 		y = *reinterpret_cast<int32_t*>(ptr + sizeof(int32_t));
@@ -567,7 +567,7 @@ void gs::effect_parameter::get_default_int4(int32_t& x, int32_t& y, int32_t& z, 
 {
 	if ((get_type() != type::Integer4) && (get_type() != type::Unknown))
 		throw std::bad_cast();
-	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_default_val(get()));
+	std::uint8_t* ptr = static_cast<std::uint8_t*>(gs_effect_get_default_val(get()));
 	if (ptr) {
 		x = *reinterpret_cast<int32_t*>(ptr);
 		y = *reinterpret_cast<int32_t*>(ptr + sizeof(int32_t));
@@ -590,7 +590,7 @@ void gs::effect_parameter::get_matrix(matrix4& v)
 {
 	if (get_type() != type::Matrix)
 		throw std::bad_cast();
-	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_val(get()));
+	std::uint8_t* ptr = static_cast<std::uint8_t*>(gs_effect_get_val(get()));
 	if (ptr) {
 		v.x.x = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 0);
 		v.x.y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 1);
@@ -621,7 +621,7 @@ void gs::effect_parameter::get_default_matrix(matrix4& v)
 {
 	if (get_type() != type::Matrix)
 		throw std::bad_cast();
-	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_default_val(get()));
+	std::uint8_t* ptr = static_cast<std::uint8_t*>(gs_effect_get_default_val(get()));
 	if (ptr) {
 		v.x.x = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 0);
 		v.x.y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 1);
@@ -687,10 +687,10 @@ void gs::effect_parameter::get_string(std::string& v)
 {
 	if (get_type() != type::String)
 		throw std::bad_cast();
-	size_t   ptr_len = gs_effect_get_val_size(get());
-	uint8_t* ptr     = static_cast<uint8_t*>(gs_effect_get_val(get()));
+	std::size_t   ptr_len = gs_effect_get_val_size(get());
+	std::uint8_t* ptr     = static_cast<std::uint8_t*>(gs_effect_get_val(get()));
 	if (ptr) {
-		v = std::string(ptr, ptr + ptr_len - 1);
+		v = std::string(reinterpret_cast<std::int8_t*>(ptr), reinterpret_cast<std::int8_t*>(ptr) + ptr_len - 1);
 		bfree(ptr);
 	} else {
 		v = "";
@@ -701,10 +701,10 @@ void gs::effect_parameter::get_default_string(std::string& v)
 {
 	if (get_type() != type::String)
 		throw std::bad_cast();
-	size_t   ptr_len = gs_effect_get_default_val_size(get());
-	uint8_t* ptr     = static_cast<uint8_t*>(gs_effect_get_default_val(get()));
+	std::size_t   ptr_len = gs_effect_get_default_val_size(get());
+	std::uint8_t* ptr     = static_cast<std::uint8_t*>(gs_effect_get_default_val(get()));
 	if (ptr) {
-		v = std::string(ptr, ptr + ptr_len - 1);
+		v = std::string(reinterpret_cast<std::int8_t*>(ptr), reinterpret_cast<std::int8_t*>(ptr) + ptr_len - 1);
 		bfree(ptr);
 	} else {
 		v = "";

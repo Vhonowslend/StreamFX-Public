@@ -66,12 +66,12 @@ gs::effect::~effect()
 	reset();
 }
 
-size_t gs::effect::count_techniques()
+std::size_t gs::effect::count_techniques()
 {
 	return static_cast<size_t>(get()->techniques.num);
 }
 
-gs::effect_technique gs::effect::get_technique(size_t idx)
+gs::effect_technique gs::effect::get_technique(std::size_t idx)
 {
 	if (idx >= count_techniques()) {
 		return nullptr;
@@ -82,7 +82,7 @@ gs::effect_technique gs::effect::get_technique(size_t idx)
 
 gs::effect_technique gs::effect::get_technique(const std::string& name)
 {
-	for (size_t idx = 0; idx < count_techniques(); idx++) {
+	for (std::size_t idx = 0; idx < count_techniques(); idx++) {
 		auto ptr = get()->techniques.array + idx;
 		if (strcmp(ptr->name, name.c_str()) == 0) {
 			return gs::effect_technique(ptr, this);
@@ -99,12 +99,12 @@ bool gs::effect::has_technique(const std::string& name)
 	return false;
 }
 
-size_t gs::effect::count_parameters()
+std::size_t gs::effect::count_parameters()
 {
 	return get()->params.num;
 }
 
-gs::effect_parameter gs::effect::get_parameter(size_t idx)
+gs::effect_parameter gs::effect::get_parameter(std::size_t idx)
 {
 	if (idx >= count_parameters()) {
 		throw std::out_of_range("Index is out of range.");
@@ -115,7 +115,7 @@ gs::effect_parameter gs::effect::get_parameter(size_t idx)
 
 gs::effect_parameter gs::effect::get_parameter(const std::string& name)
 {
-	for (size_t idx = 0; idx < count_parameters(); idx++) {
+	for (std::size_t idx = 0; idx < count_parameters(); idx++) {
 		auto ptr = get()->params.array + idx;
 		if (strcmp(ptr->name, name.c_str()) == 0) {
 			return gs::effect_parameter(ptr, this);

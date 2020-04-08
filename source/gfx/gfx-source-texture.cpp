@@ -105,7 +105,7 @@ void gfx::source_texture::clear()
 	_child.reset();
 }
 
-std::shared_ptr<gs::texture> gfx::source_texture::render(size_t width, size_t height)
+std::shared_ptr<gs::texture> gfx::source_texture::render(std::size_t width, std::size_t height)
 {
 	if ((width == 0) || (width >= 16384)) {
 		throw std::runtime_error("Width too large or too small.");

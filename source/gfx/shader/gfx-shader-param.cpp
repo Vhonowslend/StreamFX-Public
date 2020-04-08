@@ -55,7 +55,7 @@ gfx::shader::parameter_type gfx::shader::get_type_from_effect_type(gs::effect_pa
 	}
 }
 
-size_t gfx::shader::get_length_from_effect_type(gs::effect_parameter::type type)
+std::size_t gfx::shader::get_length_from_effect_type(gs::effect_parameter::type type)
 {
 	switch (type) {
 	default:
@@ -160,7 +160,7 @@ gfx::shader::parameter::parameter(gs::effect_parameter param, std::string key_pr
 	// Read Size override.
 	_size = get_length_from_effect_type(_param.get_type());
 	if (auto anno = _param.get_annotation(ANNO_SIZE); anno) {
-		size_t ov = static_cast<size_t>(anno.get_default_int());
+		std::size_t ov = static_cast<size_t>(anno.get_default_int());
 		if (ov > 0)
 			_size = ov;
 	}
@@ -185,7 +185,7 @@ gfx::shader::parameter_type gfx::shader::parameter::get_type()
 	return _type;
 }
 
-size_t gfx::shader::parameter::get_size()
+std::size_t gfx::shader::parameter::get_size()
 {
 	return _size;
 }

@@ -31,8 +31,8 @@ namespace gs {
 
 		std::string name();
 
-		size_t          count_passes();
-		gs::effect_pass get_pass(size_t idx);
+		std::size_t     count_passes();
+		gs::effect_pass get_pass(std::size_t idx);
 		gs::effect_pass get_pass(std::string name);
 		bool            has_pass(std::string name);
 	};

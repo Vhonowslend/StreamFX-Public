@@ -52,7 +52,7 @@ gfx::blur::gaussian_linear_data::gaussian_linear_data()
 	}
 
 	// Precalculate Kernels
-	for (size_t kernel_size = 1; kernel_size <= MAX_BLUR_SIZE; kernel_size++) {
+	for (std::size_t kernel_size = 1; kernel_size <= MAX_BLUR_SIZE; kernel_size++) {
 		std::vector<double_t> kernel_math(MAX_KERNEL_SIZE);
 		std::vector<float_t>  kernel_data(MAX_KERNEL_SIZE);
 		double_t              actual_width = 1.;
@@ -67,14 +67,14 @@ gfx::blur::gaussian_linear_data::gaussian_linear_data()
 
 		// Calculate and normalize
 		double_t sum = 0;
-		for (size_t p = 0; p <= kernel_size; p++) {
+		for (std::size_t p = 0; p <= kernel_size; p++) {
 			kernel_math[p] = util::math::gaussian<double_t>(double_t(p), actual_width);
 			sum += kernel_math[p] * (p > 0 ? 2 : 1);
 		}
 
 		// Normalize to fill the entire 0..1 range over the width.
 		double_t inverse_sum = 1.0 / sum;
-		for (size_t p = 0; p <= kernel_size; p++) {
+		for (std::size_t p = 0; p <= kernel_size; p++) {
 			kernel_data.at(p) = float_t(kernel_math[p] * inverse_sum);
 		}
 
@@ -92,7 +92,7 @@ gs::effect gfx::blur::gaussian_linear_data::get_effect()
 	return _effect;
 }
 
-std::vector<float_t> const& gfx::blur::gaussian_linear_data::get_kernel(size_t width)
+std::vector<float_t> const& gfx::blur::gaussian_linear_data::get_kernel(std::size_t width)
 {
 	if (width < 1)
 		width = 1;

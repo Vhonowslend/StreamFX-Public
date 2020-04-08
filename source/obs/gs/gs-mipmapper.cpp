@@ -73,7 +73,7 @@ gs::mipmapper::~mipmapper()
 
 gs::mipmapper::mipmapper()
 {
-	_vb            = std::make_unique<gs::vertex_buffer>(uint32_t(6u), uint8_t(1u));
+	_vb            = std::make_unique<gs::vertex_buffer>(uint32_t(6u), std::uint8_t(1u));
 	auto v0        = _vb->at(0);
 	v0.position->x = 0;
 	v0.position->y = 0;
@@ -153,13 +153,11 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 	}
 
 	// Render
-	graphics_t* ctx = gs_get_context();
 #if defined(WIN32) || defined(WIN64)
+	graphics_t*      ctx = gs_get_context();
 	gs_d3d11_device* dev = reinterpret_cast<gs_d3d11_device*>(ctx->device);
 #endif
 	int         device_type = gs_get_device_type();
-	void*       sobj        = gs_texture_get_obj(source->get_object());
-	void*       tobj        = gs_texture_get_obj(target->get_object());
 	std::string technique   = "Draw";
 
 	switch (generator) {
@@ -187,11 +185,11 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 	gs_load_indexbuffer(nullptr);
 
 	if (source->get_type() == gs::texture::type::Normal) {
-		size_t  texture_width  = source->get_width();
-		size_t  texture_height = source->get_height();
-		float_t texel_width    = 1.0f / texture_width;
-		float_t texel_height   = 1.0f / texture_height;
-		size_t  mip_levels     = 1;
+		std::size_t texture_width  = source->get_width();
+		std::size_t texture_height = source->get_height();
+		float_t     texel_width    = 1.0f / texture_width;
+		float_t     texel_height   = 1.0f / texture_height;
+		std::size_t mip_levels     = 1;
 
 #if defined(WIN32) || defined(WIN64)
 		ID3D11Texture2D* target_t2 = nullptr;
@@ -199,8 +197,8 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 		if (device_type == GS_DEVICE_DIRECT3D_11) {
 			// We definitely have a Direct3D11 resource.
 			D3D11_TEXTURE2D_DESC target_t2desc;
-			target_t2 = reinterpret_cast<ID3D11Texture2D*>(tobj);
-			source_t2 = reinterpret_cast<ID3D11Texture2D*>(sobj);
+			target_t2 = reinterpret_cast<ID3D11Texture2D*>(gs_texture_get_obj(target->get_object()));
+			source_t2 = reinterpret_cast<ID3D11Texture2D*>(gs_texture_get_obj(source->get_object()));
 			target_t2->GetDesc(&target_t2desc);
 			dev->context->CopySubresourceRegion(target_t2, 0, 0, 0, 0, source_t2, 0, nullptr);
 			mip_levels = target_t2desc.MipLevels;
@@ -215,7 +213,7 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 			return;
 		}
 
-		for (size_t mip = 1; mip < mip_levels; mip++) {
+		for (std::size_t mip = 1; mip < mip_levels; mip++) {
 			texture_width /= 2;
 			texture_height /= 2;
 			if (texture_width == 0) {
@@ -262,7 +260,7 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 			if (device_type == GS_DEVICE_DIRECT3D_11) {
 				// Copy
 				ID3D11Texture2D* rt    = reinterpret_cast<ID3D11Texture2D*>(gs_texture_get_obj(_rt->get_object()));
-				uint32_t         level = uint32_t(D3D11CalcSubresource(UINT(mip), 0, UINT(mip_levels)));
+				std::uint32_t    level = uint32_t(D3D11CalcSubresource(UINT(mip), 0, UINT(mip_levels)));
 				dev->context->CopySubresourceRegion(target_t2, level, 0, 0, 0, rt, 0, NULL);
 			}
 #endif

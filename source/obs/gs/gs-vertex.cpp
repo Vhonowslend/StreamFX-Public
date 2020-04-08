@@ -26,7 +26,7 @@ gs::vertex::vertex()
 {
 	_store = util::malloc_aligned(16, sizeof(vec3) * 3 + sizeof(uint32_t) + sizeof(vec4) * MAXIMUM_UVW_LAYERS);
 
-	size_t offset = 0;
+	std::size_t offset = 0;
 
 	position = reinterpret_cast<vec3*>(reinterpret_cast<char*>(_store) + offset);
 	offset += sizeof(vec3);
@@ -40,7 +40,7 @@ gs::vertex::vertex()
 	color = reinterpret_cast<uint32_t*>(reinterpret_cast<char*>(_store) + offset);
 	offset += sizeof(uint32_t);
 
-	for (size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
+	for (std::size_t n = 0; n < MAXIMUM_UVW_LAYERS; n++) {
 		uv[n] = reinterpret_cast<vec4*>(reinterpret_cast<char*>(_store) + offset);
 		offset += sizeof(vec4);
 	}
@@ -57,7 +57,7 @@ gs::vertex::vertex(vec3* p, vec3* n, vec3* t, uint32_t* col, vec4* uvs[MAXIMUM_U
 	: position(p), normal(n), tangent(t), color(col), _has_store(false)
 {
 	if (uvs != nullptr) {
-		for (size_t idx = 0; idx < MAXIMUM_UVW_LAYERS; idx++) {
+		for (std::size_t idx = 0; idx < MAXIMUM_UVW_LAYERS; idx++) {
 			this->uv[idx] = uvs[idx];
 		}
 	}

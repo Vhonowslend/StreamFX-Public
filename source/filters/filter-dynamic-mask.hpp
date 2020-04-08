@@ -28,7 +28,7 @@
 #include "obs/obs-source.hpp"
 
 namespace filter::dynamic_mask {
-	enum class channel : int8_t { Invalid = -1, Red, Green, Blue, Alpha };
+	enum class channel : std::int8_t { Invalid = -1, Red, Green, Blue, Alpha };
 
 	class dynamic_mask_instance : public obs::source_instance {
 		std::map<std::tuple<channel, channel, std::string>, std::string> _translation_map;
@@ -51,7 +51,7 @@ namespace filter::dynamic_mask {
 		struct channel_data {
 			float_t value  = 0.0;
 			float_t scale  = 1.0;
-			vec4    values = {0};
+			vec4    values = {0, 0, 0, 0};
 		};
 		std::map<channel, channel_data> _channels;
 
@@ -75,7 +75,7 @@ namespace filter::dynamic_mask {
 		static bool modified(void* self, obs_properties_t* properties, obs_property_t* property,
 							 obs_data_t* settings) noexcept;
 
-		void video_tick(float _time);
+		void video_tick(float_t _time);
 		void video_render(gs_effect_t* effect);
 	};
 

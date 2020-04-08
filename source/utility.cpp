@@ -34,7 +34,7 @@
 #pragma warning(pop)
 #endif
 
-const char* obs_module_recursive_text(const char* to_translate, size_t depth)
+const char* obs_module_recursive_text(const char* to_translate, std::size_t depth)
 {
 	static std::unordered_map<std::string, std::string> translate_map;
 
@@ -51,10 +51,10 @@ const char* obs_module_recursive_text(const char* to_translate, size_t depth)
 		std::stringstream out;
 
 		{
-			size_t seq_start = 0, seq_end = 0;
-			bool   seq_got = false;
+			std::size_t seq_start = 0, seq_end = 0;
+			bool        seq_got = false;
 
-			for (size_t pos = 0; pos <= orig.length(); pos++) {
+			for (std::size_t pos = 0; pos <= orig.length(); pos++) {
 				std::string chr = orig.substr(pos, 2);
 				if (chr == "\\@") {
 					if (seq_got) {
@@ -93,12 +93,12 @@ obs_property_t* util::obs_properties_add_tristate(obs_properties_t* props, const
 	return p;
 }
 
-void* util::vec2a::operator new(size_t count)
+void* util::vec2a::operator new(std::size_t count)
 {
 	return util::malloc_aligned(16, count);
 }
 
-void* util::vec2a::operator new[](size_t count)
+void* util::vec2a::operator new[](std::size_t count)
 {
 	return util::malloc_aligned(16, count);
 }
@@ -113,12 +113,12 @@ void util::vec2a::operator delete[](void* p)
 	util::free_aligned(p);
 }
 
-void* util::vec3a::operator new(size_t count)
+void* util::vec3a::operator new(std::size_t count)
 {
 	return util::malloc_aligned(16, count);
 }
 
-void* util::vec3a::operator new[](size_t count)
+void* util::vec3a::operator new[](std::size_t count)
 {
 	return util::malloc_aligned(16, count);
 }
@@ -133,12 +133,12 @@ void util::vec3a::operator delete[](void* p)
 	util::free_aligned(p);
 }
 
-void* util::vec4a::operator new(size_t count)
+void* util::vec4a::operator new(std::size_t count)
 {
 	return util::malloc_aligned(16, count);
 }
 
-void* util::vec4a::operator new[](size_t count)
+void* util::vec4a::operator new[](std::size_t count)
 {
 	return util::malloc_aligned(16, count);
 }
@@ -193,7 +193,7 @@ std::pair<int64_t, int64_t> util::size_from_string(std::string text, bool allowS
 	return {width, height};
 }
 
-void* util::malloc_aligned(size_t align, size_t size)
+void* util::malloc_aligned(std::size_t align, std::size_t size)
 {
 #ifdef USE_MSC_ALLOC
 	return _aligned_malloc(size, align);
@@ -201,7 +201,7 @@ void* util::malloc_aligned(size_t align, size_t size)
 	return aligned_alloc(size, align);
 #else
 	// Ensure that we have space for the pointer and the data.
-	size_t asize = aligned_offset(align, size + (sizeof(void*) * 2));
+	std::size_t asize = aligned_offset(align, size + (sizeof(void*) * 2));
 
 	// Allocate memory and store integer representation of pointer.
 	void* ptr = malloc(asize);

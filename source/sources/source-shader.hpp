@@ -32,8 +32,8 @@ namespace source::shader {
 		shader_instance(obs_data_t* data, obs_source_t* self);
 		virtual ~shader_instance();
 
-		virtual uint32_t get_width() override;
-		virtual uint32_t get_height() override;
+		virtual std::uint32_t get_width() override;
+		virtual std::uint32_t get_height() override;
 
 		void properties(obs_properties_t* props);
 
