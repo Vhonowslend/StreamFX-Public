@@ -95,7 +95,7 @@ gfx::shader::basic_parameter::basic_parameter(gs::effect_parameter param, std::s
 		_names[0] = get_name();
 		_keys[0]  = get_key();
 	} else {
-		for (size_t idx = 0; idx < get_size(); idx++) {
+		for (std::size_t idx = 0; idx < get_size(); idx++) {
 			snprintf(string_buffer, sizeof(string_buffer), "[%d]", static_cast<int32_t>(idx));
 			_names[idx] = std::string(string_buffer, string_buffer + strnlen(string_buffer, sizeof(string_buffer)));
 			snprintf(string_buffer, sizeof(string_buffer), "%s[%d]", get_key().c_str(), static_cast<int32_t>(idx));
@@ -119,7 +119,7 @@ gfx::shader::basic_parameter::basic_parameter(gs::effect_parameter param, std::s
 		if (auto anno = get_parameter().get_annotation(ANNO_ENUM_VALUES);
 			anno && (anno.get_type() == gs::effect_parameter::type::Integer)) {
 			_values.resize(static_cast<size_t>(std::max(anno.get_default_int(), 0)));
-			for (size_t idx = 0; idx < _values.size(); idx++) {
+			for (std::size_t idx = 0; idx < _values.size(); idx++) {
 				auto& entry = _values[idx];
 				snprintf(string_buffer, sizeof(string_buffer), "_%zu", idx);
 				std::string key =
@@ -159,14 +159,14 @@ const std::string& gfx::shader::basic_parameter::get_suffix()
 	return _suffix;
 }
 
-const std::string& gfx::shader::basic_parameter::get_keys(size_t idx)
+const std::string& gfx::shader::basic_parameter::get_keys(std::size_t idx)
 {
 	if (idx >= get_size())
 		throw std::out_of_range("Index out of range.");
 	return _keys[idx];
 }
 
-const std::string& gfx::shader::basic_parameter::get_names(size_t idx)
+const std::string& gfx::shader::basic_parameter::get_names(std::size_t idx)
 {
 	if (idx >= get_size())
 		throw std::out_of_range("Index out of range.");
@@ -223,7 +223,7 @@ void gfx::shader::bool_parameter::update(obs_data_t* settings)
 
 void gfx::shader::bool_parameter::assign()
 {
-	get_parameter().set_value(_data.data(), sizeof(uint8_t));
+	get_parameter().set_value(_data.data(), sizeof(std::uint8_t));
 }
 
 gfx::shader::float_parameter::float_parameter(gs::effect_parameter param, std::string prefix)
@@ -232,7 +232,7 @@ gfx::shader::float_parameter::float_parameter(gs::effect_parameter param, std::s
 	_data.resize(get_size());
 
 	// Reset minimum, maximum, step and scale.
-	for (size_t idx = 0; idx < get_size(); idx++) {
+	for (std::size_t idx = 0; idx < get_size(); idx++) {
 		_min[idx].f32   = std::numeric_limits<float_t>::lowest();
 		_max[idx].f32   = std::numeric_limits<float_t>::max();
 		_step[idx].f32  = 0.01f;
@@ -270,7 +270,7 @@ void gfx::shader::float_parameter::defaults(obs_data_t* settings)
 	defaults.resize(get_size());
 	get_parameter().get_default_value(defaults.data(), get_size());
 
-	for (size_t idx = 0; idx < get_size(); idx++) {
+	for (std::size_t idx = 0; idx < get_size(); idx++) {
 		obs_data_set_default_double(settings, get_keys(idx).c_str(), static_cast<double_t>(defaults[idx]));
 	}
 }
@@ -282,7 +282,7 @@ static inline obs_property_t* build_float_property(gfx::shader::basic_field_type
 	switch (ft) {
 	case gfx::shader::basic_field_type::Enum: {
 		auto p = obs_properties_add_list(props, key, name, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_FLOAT);
-		for (size_t idx = 0; idx < edata.size(); idx++) {
+		for (std::size_t idx = 0; idx < edata.size(); idx++) {
 			auto& el = edata.at(idx);
 			obs_property_list_add_float(p, el.name.c_str(), el.data.f32);
 		}
@@ -313,7 +313,7 @@ void gfx::shader::float_parameter::properties(obs_properties_t* props, obs_data_
 		if (has_description())
 			obs_property_set_long_description(p, get_description().c_str());
 
-		for (size_t idx = 0; idx < get_size(); idx++) {
+		for (std::size_t idx = 0; idx < get_size(); idx++) {
 			p = build_float_property(_field_type, grp, _keys[idx].c_str(), _names[idx].c_str(), _min[idx].f32,
 									 _max[idx].f32, _step[idx].f32, _values);
 			if (has_description())
@@ -324,7 +324,7 @@ void gfx::shader::float_parameter::properties(obs_properties_t* props, obs_data_
 
 void gfx::shader::float_parameter::update(obs_data_t* settings)
 {
-	for (size_t idx = 0; idx < get_size(); idx++) {
+	for (std::size_t idx = 0; idx < get_size(); idx++) {
 		_data[idx].f32 = static_cast<float_t>(obs_data_get_double(settings, _keys[idx].c_str())) * _scale[idx].f32;
 	}
 }
@@ -343,7 +343,7 @@ static inline obs_property_t* build_int_property(gfx::shader::basic_field_type f
 	switch (ft) {
 	case gfx::shader::basic_field_type::Enum: {
 		auto p = obs_properties_add_list(props, key, name, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-		for (size_t idx = 0; idx < edata.size(); idx++) {
+		for (std::size_t idx = 0; idx < edata.size(); idx++) {
 			auto& el = edata.at(idx);
 			obs_property_list_add_int(p, el.name.c_str(), el.data.i32);
 		}
@@ -363,7 +363,7 @@ gfx::shader::int_parameter::int_parameter(gs::effect_parameter param, std::strin
 	_data.resize(get_size());
 
 	// Reset minimum, maximum, step and scale.
-	for (size_t idx = 0; idx < get_size(); idx++) {
+	for (std::size_t idx = 0; idx < get_size(); idx++) {
 		_min[idx].i32   = std::numeric_limits<int32_t>::lowest();
 		_max[idx].i32   = std::numeric_limits<int32_t>::max();
 		_step[idx].i32  = 1;
@@ -400,7 +400,7 @@ void gfx::shader::int_parameter::defaults(obs_data_t* settings)
 	std::vector<int32_t> defaults;
 	defaults.resize(get_size());
 	get_parameter().get_default_value(defaults.data(), get_size());
-	for (size_t idx = 0; idx < get_size(); idx++) {
+	for (std::size_t idx = 0; idx < get_size(); idx++) {
 		obs_data_set_default_int(settings, get_keys(idx).c_str(), defaults[idx]);
 	}
 }
@@ -422,7 +422,7 @@ void gfx::shader::int_parameter::properties(obs_properties_t* props, obs_data_t*
 		if (has_description())
 			obs_property_set_long_description(p, get_description().c_str());
 
-		for (size_t idx = 0; idx < get_size(); idx++) {
+		for (std::size_t idx = 0; idx < get_size(); idx++) {
 			p = build_int_property(_field_type, grp, _keys[idx].c_str(), _names[idx].c_str(), _min[idx].i32,
 								   _max[idx].i32, _step[idx].i32, _values);
 			if (has_description())
@@ -433,7 +433,7 @@ void gfx::shader::int_parameter::properties(obs_properties_t* props, obs_data_t*
 
 void gfx::shader::int_parameter::update(obs_data_t* settings)
 {
-	for (size_t idx = 0; idx < get_size(); idx++) {
+	for (std::size_t idx = 0; idx < get_size(); idx++) {
 		_data[idx].i32 = static_cast<int32_t>(obs_data_get_int(settings, _keys[idx].c_str()) * _scale[idx].i32);
 	}
 }

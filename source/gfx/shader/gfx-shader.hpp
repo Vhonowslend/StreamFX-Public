@@ -43,9 +43,9 @@ namespace gfx {
 			obs_source_t* _self;
 
 			// Inputs
-			shader_mode _mode;
-			uint32_t    _base_width;
-			uint32_t    _base_height;
+			shader_mode   _mode;
+			std::uint32_t _base_width;
+			std::uint32_t _base_height;
 
 			// Shader
 			gs::effect                      _shader;
@@ -92,9 +92,9 @@ namespace gfx {
 
 			void update(obs_data_t* data);
 
-			uint32_t width();
+			std::uint32_t width();
 
-			uint32_t height();
+			std::uint32_t height();
 
 			bool tick(float_t time);
 
@@ -103,7 +103,7 @@ namespace gfx {
 			void render();
 
 			public:
-			void set_size(uint32_t w, uint32_t h);
+			void set_size(std::uint32_t w, std::uint32_t h);
 
 			void set_input_a(std::shared_ptr<gs::texture> tex);
 
@@ -111,7 +111,7 @@ namespace gfx {
 
 			void set_transition_time(float_t t);
 
-			void set_transition_size(uint32_t w, uint32_t h);
+			void set_transition_size(std::uint32_t w, std::uint32_t h);
 		};
 	} // namespace shader
 } // namespace gfx

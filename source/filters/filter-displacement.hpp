@@ -33,8 +33,8 @@ namespace filter::displacement {
 		float_t                      _scale_type;
 
 		// Cache
-		uint32_t _width;
-		uint32_t _height;
+		std::uint32_t _width;
+		std::uint32_t _height;
 
 		public:
 		displacement_instance(obs_data_t*, obs_source_t*);

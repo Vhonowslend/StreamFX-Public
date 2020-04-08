@@ -41,7 +41,7 @@ namespace gfx {
 
 		parameter_type get_type_from_effect_type(gs::effect_parameter::type type);
 
-		size_t get_length_from_effect_type(gs::effect_parameter::type type);
+		std::size_t get_length_from_effect_type(gs::effect_parameter::type type);
 
 		parameter_type get_type_from_string(std::string v);
 
@@ -53,7 +53,7 @@ namespace gfx {
 			parameter_type _type;
 
 			// Real size of the parameter (libobs gets it wrong often).
-			size_t _size;
+			std::size_t _size;
 
 			// Order of the parameter in a list/map.
 			int32_t _order;
@@ -85,7 +85,7 @@ namespace gfx {
 
 			parameter_type get_type();
 
-			size_t get_size();
+			std::size_t get_size();
 
 			int32_t get_order();
 

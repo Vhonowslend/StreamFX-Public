@@ -66,8 +66,8 @@
 
 using namespace filter;
 
-static const float farZ  = 2097152.0f; // 2 pow 21
-static const float nearZ = 1.0f / farZ;
+static const float_t farZ  = 2097152.0f; // 2 pow 21
+static const float_t nearZ = 1.0f / farZ;
 
 enum class CameraMode : int64_t { Orthographic, Perspective };
 
@@ -87,7 +87,7 @@ transform::transform_instance::transform_instance(obs_data_t* data, obs_source_t
 {
 	_cache_rt      = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	_source_rt     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	_vertex_buffer = std::make_shared<gs::vertex_buffer>(uint32_t(4u), uint8_t(1u));
+	_vertex_buffer = std::make_shared<gs::vertex_buffer>(uint32_t(4u), std::uint8_t(1u));
 
 	_position = std::make_unique<util::vec3a>();
 	_rotation = std::make_unique<util::vec3a>();
@@ -158,8 +158,8 @@ void transform::transform_instance::update(obs_data_t* settings)
 
 void transform::transform_instance::video_tick(float)
 {
-	uint32_t width  = 0;
-	uint32_t height = 0;
+	std::uint32_t width  = 0;
+	std::uint32_t height = 0;
 
 	// Grab parent and target.
 	obs_source_t* target = obs_filter_get_target(_self);
@@ -278,8 +278,8 @@ void transform::transform_instance::video_render(gs_effect_t* effect)
 {
 	obs_source_t* parent         = obs_filter_get_parent(_self);
 	obs_source_t* target         = obs_filter_get_target(_self);
-	uint32_t      base_width     = obs_source_get_base_width(target);
-	uint32_t      base_height    = obs_source_get_base_height(target);
+	std::uint32_t base_width     = obs_source_get_base_width(target);
+	std::uint32_t base_height    = obs_source_get_base_height(target);
 	gs_effect_t*  default_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
 	if (!effect)
 		effect = default_effect;
@@ -291,8 +291,8 @@ void transform::transform_instance::video_render(gs_effect_t* effect)
 
 	gs::debug_marker marker{gs::debug_color_source, "3D Transform: %s", obs_source_get_name(_self)};
 
-	uint32_t cache_width  = base_width;
-	uint32_t cache_height = base_height;
+	std::uint32_t cache_width  = base_width;
+	std::uint32_t cache_height = base_height;
 
 	if (_mipmap_enabled) {
 		double_t aspect  = double_t(base_width) / double_t(base_height);
@@ -318,7 +318,7 @@ void transform::transform_instance::video_render(gs_effect_t* effect)
 
 		gs_ortho(0, static_cast<float_t>(base_width), 0, static_cast<float_t>(base_height), -1, 1);
 
-		vec4 clear_color = {0};
+		vec4 clear_color = {0, 0, 0, 0};
 		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &clear_color, 0, 0);
 
 		/// Render original source
@@ -354,8 +354,8 @@ void transform::transform_instance::video_render(gs_effect_t* effect)
 
 		if (!_mipmap_texture || (_mipmap_texture->get_width() != cache_width)
 			|| (_mipmap_texture->get_height() != cache_height)) {
-			size_t mip_levels = std::max(util::math::get_power_of_two_exponent_ceil(cache_width),
-										 util::math::get_power_of_two_exponent_ceil(cache_height));
+			std::size_t mip_levels = std::max(util::math::get_power_of_two_exponent_ceil(cache_width),
+											  util::math::get_power_of_two_exponent_ceil(cache_height));
 
 			_mipmap_texture = std::make_shared<gs::texture>(cache_width, cache_height, GS_RGBA, mip_levels, nullptr,
 															gs::texture::flags::None);
@@ -394,7 +394,7 @@ void transform::transform_instance::video_render(gs_effect_t* effect)
 			gs_matrix_translate3f(0., 0., -1.0);
 		}
 
-		vec4 clear_color = {0};
+		vec4 clear_color = {0, 0, 0, 0};
 		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &clear_color, 0, 0);
 
 		gs_load_vertexbuffer(_vertex_buffer->update(false));
@@ -483,8 +483,10 @@ try {
 	return true;
 } catch (const std::exception& ex) {
 	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return true;
 } catch (...) {
 	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return true;
 }
 
 obs_properties_t* transform::transform_factory::get_properties2(transform::transform_instance* data)

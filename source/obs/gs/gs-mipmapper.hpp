@@ -31,7 +31,7 @@ namespace gs {
 		gs::effect                         _effect;
 
 		public:
-		enum class generator : uint8_t {
+		enum class generator : std::uint8_t {
 			Point,
 			Linear,
 			Sharpen,

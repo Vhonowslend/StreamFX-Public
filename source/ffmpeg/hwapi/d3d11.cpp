@@ -88,8 +88,8 @@ std::list<device> d3d11::enumerate_adapters()
 		dxgi_adapter->GetDesc1(&desc);
 
 		std::vector<char> buf(1024);
-		size_t len = snprintf(buf.data(), buf.size(), "%ls (VEN_%04x/DEV_%04x/SUB_%04x/REV_%04x)", desc.Description,
-							  desc.VendorId, desc.DeviceId, desc.SubSysId, desc.Revision);
+		std::size_t       len = snprintf(buf.data(), buf.size(), "%ls (VEN_%04x/DEV_%04x/SUB_%04x/REV_%04x)",
+                                   desc.Description, desc.VendorId, desc.DeviceId, desc.SubSysId, desc.Revision);
 
 		device dev;
 		dev.name      = std::string(buf.data(), buf.data() + len);
@@ -203,7 +203,7 @@ std::shared_ptr<AVFrame> d3d11_instance::allocate_frame(AVBufferRef* frames)
 	return frame;
 }
 
-void d3d11_instance::copy_from_obs(AVBufferRef*, uint32_t handle, uint64_t lock_key, uint64_t* next_lock_key,
+void d3d11_instance::copy_from_obs(AVBufferRef*, std::uint32_t handle, uint64_t lock_key, uint64_t* next_lock_key,
 								   std::shared_ptr<AVFrame> frame)
 {
 	auto gctx = gs::context();
@@ -242,7 +242,7 @@ void d3d11_instance::copy_from_obs(AVBufferRef*, uint32_t handle, uint64_t lock_
 	mutex->ReleaseSync(*next_lock_key);
 }
 
-std::shared_ptr<AVFrame> d3d11_instance::avframe_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key,
+std::shared_ptr<AVFrame> d3d11_instance::avframe_from_obs(AVBufferRef* frames, std::uint32_t handle, uint64_t lock_key,
 														  uint64_t* next_lock_key)
 {
 	auto gctx = gs::context();

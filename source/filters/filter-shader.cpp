@@ -35,12 +35,12 @@ filter::shader::shader_instance::shader_instance(obs_data_t* data, obs_source_t*
 
 filter::shader::shader_instance::~shader_instance() {}
 
-uint32_t filter::shader::shader_instance::get_width()
+std::uint32_t filter::shader::shader_instance::get_width()
 {
 	return _fx->width();
 }
 
-uint32_t filter::shader::shader_instance::get_height()
+std::uint32_t filter::shader::shader_instance::get_height()
 {
 	return _fx->height();
 }
@@ -90,7 +90,7 @@ void filter::shader::shader_instance::video_render(gs_effect_t* effect)
 
 		gs_ortho(0, static_cast<float_t>(_fx->width()), 0, static_cast<float_t>(_fx->height()), -1, 1);
 
-		vec4 clear_color = {0};
+		vec4 clear_color = {0, 0, 0, 0};
 		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &clear_color, 0, 0);
 
 		/// Render original source

@@ -82,8 +82,8 @@ namespace nvidia::cuda {
 	typedef void*         cu_stream_t;
 
 	struct cu_memcpy2d_t {
-		size_t src_x_in_bytes;
-		size_t src_y;
+		std::size_t src_x_in_bytes;
+		std::size_t src_y;
 
 		cu_memory_type  src_memory_type;
 		const void*     src_host;
@@ -91,8 +91,8 @@ namespace nvidia::cuda {
 		cu_array_t      src_array;
 		std::size_t     src_pitch;
 
-		size_t dst_x_in_bytes;
-		size_t dst_y;
+		std::size_t dst_x_in_bytes;
+		std::size_t dst_y;
 
 		cu_memory_type  dst_memory_type;
 		const void*     dst_host;

@@ -219,8 +219,8 @@ void dynamic_mask::dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 {
 	obs_source_t* parent = obs_filter_get_parent(_self);
 	obs_source_t* target = obs_filter_get_target(_self);
-	uint32_t      width  = obs_source_get_base_width(target);
-	uint32_t      height = obs_source_get_base_height(target);
+	std::uint32_t width  = obs_source_get_base_width(target);
+	std::uint32_t height = obs_source_get_base_height(target);
 
 	if (!_self || !parent || !target || !width || !height || !_input || !_input_capture || !_effect) {
 		obs_source_skip_video_filter(_self);
@@ -455,7 +455,7 @@ std::string dynamic_mask::dynamic_mask_factory::translate_string(const char* for
 	va_list vargs;
 	va_start(vargs, format);
 	std::vector<char> buffer(2048);
-	size_t            len = static_cast<size_t>(vsnprintf(buffer.data(), buffer.size(), format, vargs));
+	std::size_t       len = static_cast<size_t>(vsnprintf(buffer.data(), buffer.size(), format, vargs));
 	va_end(vargs);
 	return std::string(buffer.data(), buffer.data() + len);
 }

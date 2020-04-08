@@ -295,12 +295,12 @@ void blur::blur_instance::update(obs_data_t* settings)
 				break;
 			}
 			if ((_mask.type == mask_type::Image) || (_mask.type == mask_type::Source)) {
-				uint32_t color   = static_cast<uint32_t>(obs_data_get_int(settings, ST_MASK_COLOR));
-				_mask.color.r    = ((color >> 0) & 0xFF) / 255.0f;
-				_mask.color.g    = ((color >> 8) & 0xFF) / 255.0f;
-				_mask.color.b    = ((color >> 16) & 0xFF) / 255.0f;
-				_mask.color.a    = static_cast<float_t>(obs_data_get_double(settings, ST_MASK_ALPHA));
-				_mask.multiplier = float_t(obs_data_get_double(settings, ST_MASK_MULTIPLIER));
+				std::uint32_t color = static_cast<uint32_t>(obs_data_get_int(settings, ST_MASK_COLOR));
+				_mask.color.r       = ((color >> 0) & 0xFF) / 255.0f;
+				_mask.color.g       = ((color >> 8) & 0xFF) / 255.0f;
+				_mask.color.b       = ((color >> 16) & 0xFF) / 255.0f;
+				_mask.color.a       = static_cast<float_t>(obs_data_get_double(settings, ST_MASK_ALPHA));
+				_mask.multiplier    = float_t(obs_data_get_double(settings, ST_MASK_MULTIPLIER));
 			}
 		}
 	}
@@ -360,9 +360,8 @@ void blur::blur_instance::video_render(gs_effect_t* effect)
 	obs_source_t* parent        = obs_filter_get_parent(this->_self);
 	obs_source_t* target        = obs_filter_get_target(this->_self);
 	gs_effect_t*  defaultEffect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
-	uint32_t      baseW         = obs_source_get_base_width(target);
-	uint32_t      baseH         = obs_source_get_base_height(target);
-	vec4          black         = {};
+	std::uint32_t baseW         = obs_source_get_base_width(target);
+	std::uint32_t baseH         = obs_source_get_base_height(target);
 
 	// Verify that we can actually run first.
 	if (!target || !parent || !this->_self || !this->_blur || (baseW == 0) || (baseH == 0)) {
@@ -460,8 +459,8 @@ void blur::blur_instance::video_render(gs_effect_t* effect)
 			}
 
 			if (_mask.source.source_texture) {
-				uint32_t source_width  = obs_source_get_width(this->_mask.source.source_texture->get_object());
-				uint32_t source_height = obs_source_get_height(this->_mask.source.source_texture->get_object());
+				std::uint32_t source_width  = obs_source_get_width(this->_mask.source.source_texture->get_object());
+				std::uint32_t source_height = obs_source_get_height(this->_mask.source.source_texture->get_object());
 
 				if (source_width == 0) {
 					source_width = baseW;
@@ -611,8 +610,8 @@ try {
 		obs_property_t* prop_subtype = obs_properties_get(props, ST_SUBTYPE);
 
 		/// Disable unsupported items.
-		size_t subvalue_idx = 0;
-		for (size_t idx = 0, edx = obs_property_list_item_count(prop_subtype); idx < edx; idx++) {
+		std::size_t subvalue_idx = 0;
+		for (std::size_t idx = 0, edx = obs_property_list_item_count(prop_subtype); idx < edx; idx++) {
 			const char* subtype  = obs_property_list_item_string(prop_subtype, idx);
 			bool        disabled = false;
 
@@ -631,7 +630,7 @@ try {
 
 		/// Ensure that there is a valid item selected.
 		if (obs_property_list_item_disabled(prop_subtype, subvalue_idx)) {
-			for (size_t idx = 0, edx = obs_property_list_item_count(prop_subtype); idx < edx; idx++) {
+			for (std::size_t idx = 0, edx = obs_property_list_item_count(prop_subtype); idx < edx; idx++) {
 				if (!obs_property_list_item_disabled(prop_subtype, idx)) {
 					obs_data_set_string(settings, ST_SUBTYPE, obs_property_list_item_string(prop_subtype, idx));
 
@@ -876,7 +875,7 @@ std::string blur::blur_factory::translate_string(const char* format, ...)
 	va_list vargs;
 	va_start(vargs, format);
 	std::vector<char> buffer(2048);
-	size_t            len = static_cast<size_t>(vsnprintf(buffer.data(), buffer.size(), format, vargs));
+	std::size_t       len = static_cast<size_t>(vsnprintf(buffer.data(), buffer.size(), format, vargs));
 	va_end(vargs);
 	return std::string(buffer.data(), buffer.data() + len);
 }

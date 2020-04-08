@@ -21,6 +21,6 @@
 #include "common.hpp"
 
 namespace gs {
-	static const uint32_t MAXIMUM_VERTICES   = 0xFFFFFFu;
-	static const uint32_t MAXIMUM_UVW_LAYERS = 8u;
+	static const std::uint32_t MAXIMUM_VERTICES   = 0xFFFFFFu;
+	static const std::uint32_t MAXIMUM_UVW_LAYERS = 8u;
 } // namespace gs

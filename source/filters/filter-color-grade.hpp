@@ -75,7 +75,7 @@ namespace filter::color_grade {
 		virtual void migrate(obs_data_t* data, std::uint64_t version) override;
 		virtual void update(obs_data_t* data) override;
 
-		virtual void video_tick(float time) override;
+		virtual void video_tick(float_t time) override;
 		virtual void video_render(gs_effect_t* effect) override;
 	};
 

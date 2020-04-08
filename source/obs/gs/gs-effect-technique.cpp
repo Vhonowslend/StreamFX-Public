@@ -43,16 +43,16 @@ gs::effect_technique::~effect_technique() {}
 std::string gs::effect_technique::name()
 {
 	const char* name_c   = get()->name;
-	size_t      name_len = strnlen(name_c, 256);
+	std::size_t name_len = strnlen(name_c, 256);
 	return name_c ? std::string(name_c, name_c + name_len) : std::string();
 }
 
-size_t gs::effect_technique::count_passes()
+std::size_t gs::effect_technique::count_passes()
 {
 	return static_cast<size_t>(get()->passes.num);
 }
 
-gs::effect_pass gs::effect_technique::get_pass(size_t idx)
+gs::effect_pass gs::effect_technique::get_pass(std::size_t idx)
 {
 	if (idx >= get()->passes.num) {
 		return nullptr;
@@ -63,7 +63,7 @@ gs::effect_pass gs::effect_technique::get_pass(size_t idx)
 
 gs::effect_pass gs::effect_technique::get_pass(std::string name)
 {
-	for (size_t idx = 0; idx < get()->passes.num; idx++) {
+	for (std::size_t idx = 0; idx < get()->passes.num; idx++) {
 		auto ptr = get()->passes.array + idx;
 		if (strcmp(ptr->name, name.c_str()) == 0)
 			return gs::effect_pass(ptr, this);

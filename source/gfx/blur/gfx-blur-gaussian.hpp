@@ -36,7 +36,7 @@ namespace gfx {
 
 			gs::effect get_effect();
 
-			std::vector<float_t> const& get_kernel(size_t width);
+			std::vector<float_t> const& get_kernel(std::size_t width);
 		};
 
 		class gaussian_factory : public ::gfx::blur::ifactory {

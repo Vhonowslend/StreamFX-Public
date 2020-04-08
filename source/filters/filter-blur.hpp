@@ -103,7 +103,7 @@ namespace filter::blur {
 		virtual void migrate(obs_data_t* settings, std::uint64_t version) override;
 		virtual void update(obs_data_t* settings) override;
 
-		virtual void video_tick(float time) override;
+		virtual void video_tick(float_t time) override;
 		virtual void video_render(gs_effect_t* effect) override;
 
 		private:

@@ -46,7 +46,7 @@ extern "C" {
 #define D_DEG_TO_RAD(x) (x * S_DEG)
 #define D_RAD_TO_DEG(x) (x * S_RAD)
 
-const char* obs_module_recursive_text(const char* to_translate, size_t depth = std::numeric_limits<size_t>::max());
+const char* obs_module_recursive_text(const char* to_translate, std::size_t depth = std::numeric_limits<size_t>::max());
 
 template<typename Enum>
 struct enable_bitmask_operators {
@@ -98,25 +98,25 @@ namespace util {
 
 	obs_property_t* obs_properties_add_tristate(obs_properties_t* props, const char* name, const char* desc);
 
-	inline bool is_tristate_enabled(int64_t tristate)
+	inline bool is_tristate_enabled(std::int64_t tristate)
 	{
 		return tristate == 1;
 	}
 
-	inline bool is_tristate_disabled(int64_t tristate)
+	inline bool is_tristate_disabled(std::int64_t tristate)
 	{
 		return tristate == 0;
 	}
 
-	inline bool is_tristate_default(int64_t tristate)
+	inline bool is_tristate_default(std::int64_t tristate)
 	{
 		return tristate == -1;
 	}
 
 	struct vec2a : public vec2 {
 		// 16-byte Aligned version of vec2
-		static void* operator new(size_t count);
-		static void* operator new[](size_t count);
+		static void* operator new(std::size_t count);
+		static void* operator new[](std::size_t count);
 		static void  operator delete(void* p);
 		static void  operator delete[](void* p);
 	};
@@ -126,8 +126,8 @@ namespace util {
 #endif
 		struct vec3a : public vec3 {
 		// 16-byte Aligned version of vec3
-		static void* operator new(size_t count);
-		static void* operator new[](size_t count);
+		static void* operator new(std::size_t count);
+		static void* operator new[](std::size_t count);
 		static void  operator delete(void* p);
 		static void  operator delete[](void* p);
 	};
@@ -137,8 +137,8 @@ namespace util {
 #endif
 		struct vec4a : public vec4 {
 		// 16-byte Aligned version of vec4
-		static void* operator new(size_t count);
-		static void* operator new[](size_t count);
+		static void* operator new(std::size_t count);
+		static void* operator new[](std::size_t count);
 		static void  operator delete(void* p);
 		static void  operator delete[](void* p);
 	};
@@ -154,13 +154,13 @@ namespace util {
 		inline bool is_power_of_two(T v)
 		{
 			return T(1ull << uint64_t(floor(log10(T(v)) / log10(2.0)))) == v;
-		};
+		}
 
 		template<typename T>
 		inline bool is_power_of_two_loop(T v)
 		{
 			bool have_bit = false;
-			for (size_t index = 0; index < (sizeof(T) * 8); index++) {
+			for (std::size_t index = 0; index < (sizeof(T) * 8); index++) {
 				bool cur = (v & (static_cast<T>(1ull) << index)) != 0;
 				if (cur) {
 					if (have_bit)
@@ -178,27 +178,27 @@ namespace util {
 	{                                   \
 		return is_power_of_two_loop(v); \
 	}
-		P_IS_POWER_OF_TWO_AS_LOOP(int8_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(uint8_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(int16_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(uint16_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(int32_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(uint32_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(int64_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(uint64_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(std::int8_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(std::uint8_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(std::int16_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(std::uint16_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(std::int32_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(std::uint32_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(std::int64_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(std::uint64_t)
 #undef P_IS_POWER_OF_TWO_AS_LOOP
 #pragma pop_macro("P_IS_POWER_OF_TWO_AS_LOOP")
 
 		template<typename T>
-		inline uint64_t get_power_of_two_exponent_floor(T v)
+		inline std::uint64_t get_power_of_two_exponent_floor(T v)
 		{
-			return uint64_t(floor(log10(T(v)) / log10(2.0)));
+			return std::uint64_t(floor(log10(T(v)) / log10(2.0)));
 		}
 
 		template<typename T>
-		inline uint64_t get_power_of_two_exponent_ceil(T v)
+		inline std::uint64_t get_power_of_two_exponent_ceil(T v)
 		{
-			return uint64_t(ceil(log10(T(v)) / log10(2.0)));
+			return std::uint64_t(ceil(log10(T(v)) / log10(2.0)));
 		}
 
 		template<typename T, typename C>
@@ -212,8 +212,8 @@ namespace util {
 		inline T gaussian(T x, T o /*, T u = 0*/)
 		{
 			// u/µ can be simulated by subtracting that value from x.
-			static const double_t pi            = 3.1415926535897932384626433832795;
-			static const double_t two_pi        = pi * 2.;
+			//static const double_t pi            = 3.1415926535897932384626433832795;
+			//static const double_t two_pi        = pi * 2.;
 			static const double_t two_pi_sqroot = 2.506628274631000502415765284811; //sqrt(two_pi);
 
 			if (is_equal<double_t>(0, o)) {
@@ -271,10 +271,10 @@ namespace util {
 		};
 	} // namespace math
 
-	inline size_t aligned_offset(size_t align, size_t pos)
+	inline std::size_t aligned_offset(std::size_t align, std::size_t pos)
 	{
 		return ((pos / align) + 1) * align;
 	}
-	void* malloc_aligned(size_t align, size_t size);
+	void* malloc_aligned(std::size_t align, std::size_t size);
 	void  free_aligned(void* mem);
 } // namespace util

@@ -38,22 +38,22 @@ namespace obs {
 		};
 	} // namespace tools
 
-	static void obs_source_deleter(obs_source_t* v)
+	inline void obs_source_deleter(obs_source_t* v)
 	{
 		obs_source_release(v);
 	}
 
-	static void obs_scene_deleter(obs_scene_t* v)
+	inline void obs_scene_deleter(obs_scene_t* v)
 	{
 		obs_scene_release(v);
 	}
 
-	static void obs_sceneitem_releaser(obs_scene_item* v)
+	inline void obs_sceneitem_releaser(obs_scene_item* v)
 	{
 		obs_sceneitem_release(v);
 	}
 
-	static void obs_sceneitem_remover(obs_scene_item* v)
+	inline void obs_sceneitem_remover(obs_scene_item* v)
 	{
 		obs_sceneitem_remove(v);
 	}

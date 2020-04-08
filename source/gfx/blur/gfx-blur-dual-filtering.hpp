@@ -83,8 +83,8 @@ namespace gfx {
 		class dual_filtering : public ::gfx::blur::base {
 			std::shared_ptr<::gfx::blur::dual_filtering_data> _data;
 
-			double_t _size;
-			size_t   _size_iterations;
+			double_t    _size;
+			std::size_t _size_iterations;
 
 			std::shared_ptr<gs::texture> _input_texture;
 
@@ -110,6 +110,5 @@ namespace gfx {
 
 			virtual std::shared_ptr<::gs::texture> get() override;
 		};
-	}; // namespace blur
-
-}; // namespace gfx
+	} // namespace blur
+} // namespace gfx

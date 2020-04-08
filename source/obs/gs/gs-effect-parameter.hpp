@@ -65,33 +65,33 @@ namespace gs {
 
 		type get_type();
 
-		size_t           count_annotations();
-		effect_parameter get_annotation(size_t idx);
+		std::size_t      count_annotations();
+		effect_parameter get_annotation(std::size_t idx);
 		effect_parameter get_annotation(std::string name);
 		bool             has_annotation(std::string name);
 		bool             has_annotation(std::string name, effect_parameter::type type);
 
 		public /* Memory API */:
-		size_t get_default_value_size_in_bytes()
+		std::size_t get_default_value_size_in_bytes()
 		{
 			return gs_effect_get_default_val_size(get());
 		}
 
 		template<typename T>
-		size_t get_default_value_size()
+		std::size_t get_default_value_size()
 		{
 			return gs_effect_get_default_val_size(get()) / sizeof(T);
 		}
 
 		template<typename T>
-		bool get_default_value(T v[], size_t len)
+		bool get_default_value(T v[], std::size_t len)
 		{
 			if (len != get_default_value_size<T>()) {
 				return false;
 			}
 
 			if (T* ptr = reinterpret_cast<T*>(gs_effect_get_default_val(get())); ptr != nullptr) {
-				for (size_t idx = 0; idx < len; idx++) {
+				for (std::size_t idx = 0; idx < len; idx++) {
 					v[idx] = *(ptr + idx);
 				}
 
@@ -101,26 +101,26 @@ namespace gs {
 			return false;
 		}
 
-		size_t get_value_size_in_bytes()
+		std::size_t get_value_size_in_bytes()
 		{
 			return gs_effect_get_val_size(get());
 		}
 
 		template<typename T>
-		size_t get_value_size()
+		std::size_t get_value_size()
 		{
 			return gs_effect_get_val_size(get()) / sizeof(T);
 		}
 
 		template<typename T>
-		bool get_value(T v[], size_t len)
+		bool get_value(T v[], std::size_t len)
 		{
 			if (len != get_value_size<T>()) {
 				return false;
 			}
 
 			if (T* ptr = reinterpret_cast<T*>(gs_effect_get_val(get())); ptr != nullptr) {
-				for (size_t idx = 0; idx < len; idx++) {
+				for (std::size_t idx = 0; idx < len; idx++) {
 					v[idx] = *(ptr + idx);
 				}
 
@@ -131,7 +131,7 @@ namespace gs {
 		}
 
 		template<typename T>
-		bool set_value(T v[], size_t len)
+		bool set_value(T v[], std::size_t len)
 		{
 			gs_effect_set_val(get(), v, sizeof(T) * len);
 			return true;
@@ -142,7 +142,7 @@ namespace gs {
 		void get_bool(bool& v);
 		void get_default_bool(bool& v);
 
-		void set_bool_array(bool v[], size_t sz);
+		void set_bool_array(bool v[], std::size_t sz);
 
 		void set_float(float_t x);
 		void get_float(float_t& x);

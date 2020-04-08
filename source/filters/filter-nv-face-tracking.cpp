@@ -153,8 +153,8 @@ void filter::nvidia::face_tracking_instance::create_image_buffer(std::size_t wid
 	auto cctx = std::make_shared<::nvidia::cuda::context_stack>(_cuda, _cuda_ctx);
 
 	// Create CUDA and AR interop.
-	size_t pitch = width * 4;
-	_cuda_mem    = std::make_shared<::nvidia::cuda::memory>(_cuda, pitch * height);
+	std::size_t pitch = width * 4;
+	_cuda_mem         = std::make_shared<::nvidia::cuda::memory>(_cuda, pitch * height);
 	_ar->image_init(&_ar_image, static_cast<unsigned int>(width), static_cast<unsigned int>(height),
 					static_cast<int>(pitch), reinterpret_cast<void*>(_cuda_mem->get()), NVCV_RGBA, NVCV_U8,
 					NVCV_INTERLEAVED, NVCV_CUDA);
@@ -208,14 +208,14 @@ void filter::nvidia::face_tracking_instance::update(obs_data_t* data)
 	roi_refresh();
 }
 
-void filter::nvidia::face_tracking_instance::video_tick(float seconds)
+void filter::nvidia::face_tracking_instance::video_tick(float_t seconds)
 {
 	if (!_ar_ready)
 		return;
 
 	// Update Buffers
-	uint32_t width  = obs_source_get_base_width(obs_filter_get_target(_self));
-	uint32_t height = obs_source_get_base_height(obs_filter_get_target(_self));
+	std::uint32_t width  = obs_source_get_base_width(obs_filter_get_target(_self));
+	std::uint32_t height = obs_source_get_base_height(obs_filter_get_target(_self));
 	if (((width != _width) || (height != _height)) && width && height)
 		try {
 			// Recreate things.
@@ -550,7 +550,7 @@ obs_properties_t* filter::nvidia::face_tracking_factory::get_properties2(filter:
 	}
 #ifdef _DEBUG
 	{
-		auto p = obs_properties_add_button2(
+		obs_properties_add_button2(
 			pr, "Profile", "Profile",
 			[](obs_properties_t* props, obs_property_t* property, void* data) {
 				return reinterpret_cast<filter::nvidia::face_tracking_instance*>(data)->button_profile(props, property);

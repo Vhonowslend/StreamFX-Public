@@ -36,8 +36,8 @@ namespace source::mirror {
 	struct mirror_audio_data {
 		mirror_audio_data(const audio_data*, speaker_layout);
 
-		obs_source_audio                  osa;
-		std::vector<std::vector<uint8_t>> data;
+		obs_source_audio                       osa;
+		std::vector<std::vector<std::uint8_t>> data;
 	};
 
 	class mirror_instance : public obs::source_instance {
@@ -58,8 +58,8 @@ namespace source::mirror {
 		mirror_instance(obs_data_t* settings, obs_source_t* self);
 		virtual ~mirror_instance();
 
-		virtual uint32_t get_width() override;
-		virtual uint32_t get_height() override;
+		virtual std::uint32_t get_width() override;
+		virtual std::uint32_t get_height() override;
 
 		virtual void load(obs_data_t*) override;
 		virtual void migrate(obs_data_t*, std::uint64_t) override;

@@ -25,9 +25,9 @@
 
 namespace gs {
 	class vertex_buffer {
-		uint32_t _size;
-		uint32_t _capacity;
-		uint32_t _layers;
+		std::uint32_t _size;
+		std::uint32_t _capacity;
+		std::uint32_t _layers;
 
 		// Memory Storage
 		vec3*     _positions;
@@ -41,7 +41,7 @@ namespace gs {
 		gs_vertbuffer_t* _buffer;
 		gs_tvertarray*   _layer_data;
 
-		void initialize(size_t capacity, size_t layers);
+		void initialize(std::size_t capacity, std::size_t layers);
 
 		public:
 		virtual ~vertex_buffer();
@@ -56,7 +56,7 @@ namespace gs {
 		*
 		* \param vertices Number of vertices to store.
 		*/
-		vertex_buffer(uint32_t vertices);
+		vertex_buffer(std::uint32_t vertices);
 
 		/*!
 		* \brief Create a Vertex Buffer with a specific number of Vertices and uv layers.
@@ -64,7 +64,7 @@ namespace gs {
 		* \param vertices Number of vertices to store.
 		* \param layers Number of uv layers to store.
 		*/
-		vertex_buffer(uint32_t vertices, uint8_t layers);
+		vertex_buffer(std::uint32_t vertices, std::uint8_t layers);
 
 		/*!
 		* \brief Create a copy of a Vertex Buffer
@@ -110,19 +110,19 @@ namespace gs {
 		*/
 		void operator=(vertex_buffer const&& other) noexcept;
 
-		void resize(uint32_t new_size);
+		void resize(std::uint32_t new_size);
 
-		uint32_t size();
+		std::uint32_t size();
 
 		bool empty();
 
-		const gs::vertex at(uint32_t idx);
+		const gs::vertex at(std::uint32_t idx);
 
-		const gs::vertex operator[](uint32_t const pos);
+		const gs::vertex operator[](std::uint32_t const pos);
 
-		void set_uv_layers(uint32_t layers);
+		void set_uv_layers(std::uint32_t layers);
 
-		uint32_t get_uv_layers();
+		std::uint32_t get_uv_layers();
 
 		/*!
 		* \brief Directly access the positions buffer
@@ -162,7 +162,7 @@ namespace gs {
 		*
 		* \return A <vec4*> that points at the first vertex's uv.
 		*/
-		vec4* get_uv_layer(size_t idx);
+		vec4* get_uv_layer(std::size_t idx);
 
 		gs_vertbuffer_t* update();
 

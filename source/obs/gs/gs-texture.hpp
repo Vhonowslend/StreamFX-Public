@@ -24,9 +24,9 @@
 namespace gs {
 	class texture {
 		public:
-		enum class type : uint8_t { Normal, Volume, Cube };
+		enum class type : std::uint8_t { Normal, Volume, Cube };
 
-		enum class flags : uint8_t {
+		enum class flags : std::uint8_t {
 			None,
 			Dynamic,
 			BuildMipMaps,
@@ -50,8 +50,8 @@ namespace gs {
 		 * \param mip_data Texture data including mipmaps
 		 * \param texture_flags Texture Flags
 		 */
-		texture(uint32_t width, uint32_t height, gs_color_format format, uint32_t mip_levels, const uint8_t** mip_data,
-				gs::texture::flags texture_flags);
+		texture(std::uint32_t width, std::uint32_t height, gs_color_format format, std::uint32_t mip_levels,
+				const std::uint8_t** mip_data, gs::texture::flags texture_flags);
 
 		/*!
 		 * \brief Create a 3D Texture
@@ -64,8 +64,8 @@ namespace gs {
 		 * \param mip_data Texture data including mipmaps
 		 * \param texture_flags Texture Flags
 		 */
-		texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_format format, uint32_t mip_levels,
-				const uint8_t** mip_data, gs::texture::flags texture_flags);
+		texture(std::uint32_t width, std::uint32_t height, std::uint32_t depth, gs_color_format format,
+				std::uint32_t mip_levels, const std::uint8_t** mip_data, gs::texture::flags texture_flags);
 
 		/*!
 		 * \brief Create a Cube Texture
@@ -76,7 +76,7 @@ namespace gs {
 		 * \param mip_data Texture data including mipmaps
 		 * \param texture_flags Texture Flags
 		 */
-		texture(uint32_t size, gs_color_format format, uint32_t mip_levels, const uint8_t** mip_data,
+		texture(std::uint32_t size, gs_color_format format, std::uint32_t mip_levels, const std::uint8_t** mip_data,
 				gs::texture::flags texture_flags);
 
 		/*!
@@ -96,15 +96,15 @@ namespace gs {
 		*/
 		texture(gs_texture_t* tex, bool takeOwnership = false) : _texture(tex), _is_owner(takeOwnership) {}
 
-		void load(int unit);
+		void load(std::int32_t unit);
 
 		gs_texture_t* get_object();
 
-		uint32_t get_width();
+		std::uint32_t get_width();
 
-		uint32_t get_height();
+		std::uint32_t get_height();
 
-		uint32_t get_depth();
+		std::uint32_t get_depth();
 
 		gs::texture::type get_type();
 

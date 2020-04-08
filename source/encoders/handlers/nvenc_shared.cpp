@@ -335,7 +335,7 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 
 		{
 			auto p = obs_properties_add_int(grp, KEY_RATECONTROL_BUFFERSIZE, D_TRANSLATE(ST_RATECONTROL_BUFFERSIZE), 0,
-											std::numeric_limits<int32_t>::max(), 1);
+											std::numeric_limits<std::int32_t>::max(), 1);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_BUFFERSIZE)));
 			obs_property_int_set_suffix(p, " kbit");
 		}
@@ -352,13 +352,13 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		{
 			auto p =
 				obs_properties_add_int(grp, KEY_RATECONTROL_BITRATE_TARGET, D_TRANSLATE(ST_RATECONTROL_BITRATE_TARGET),
-									   -1, std::numeric_limits<int32_t>::max(), 1);
+									   -1, std::numeric_limits<std::int32_t>::max(), 1);
 			obs_property_int_set_suffix(p, " kbit/s");
 		}
 		{
 			auto p = obs_properties_add_int(grp, KEY_RATECONTROL_BITRATE_MAXIMUM,
 											D_TRANSLATE(ST_RATECONTROL_BITRATE_MAXIMUM), -1,
-											std::numeric_limits<int32_t>::max(), 1);
+											std::numeric_limits<std::int32_t>::max(), 1);
 			obs_property_int_set_suffix(p, " kbit/s");
 		}
 	}
@@ -453,7 +453,7 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 				obs_properties_add_list(grp, KEY_OTHER_BFRAMEREFERENCEMODE, D_TRANSLATE(ST_OTHER_BFRAMEREFERENCEMODE),
 										OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			for (auto kv : b_ref_modes) {
-				obs_property_list_add_int(p, D_TRANSLATE(kv.second.c_str()), static_cast<int64_t>(kv.first));
+				obs_property_list_add_int(p, D_TRANSLATE(kv.second.c_str()), static_cast<std::int64_t>(kv.first));
 			}
 		}
 

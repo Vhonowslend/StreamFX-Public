@@ -177,8 +177,8 @@ void color_grade::color_grade_instance::video_render(gs_effect_t* effect)
 	// Grab initial values.
 	obs_source_t* parent         = obs_filter_get_parent(_self);
 	obs_source_t* target         = obs_filter_get_target(_self);
-	uint32_t      width          = obs_source_get_base_width(target);
-	uint32_t      height         = obs_source_get_base_height(target);
+	std::uint32_t width          = obs_source_get_base_width(target);
+	std::uint32_t height         = obs_source_get_base_height(target);
 	gs_effect_t*  effect_default = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 
 	// Skip filter if anything is wrong.

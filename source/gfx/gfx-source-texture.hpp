@@ -49,7 +49,7 @@ namespace gfx {
 		source_texture& operator=(source_texture&& other) = delete;
 
 		public:
-		std::shared_ptr<gs::texture> render(size_t width, size_t height);
+		std::shared_ptr<gs::texture> render(std::size_t width, std::size_t height);
 
 		public: // Unsafe Methods
 		void clear();

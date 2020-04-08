@@ -50,7 +50,7 @@ namespace filter::transform {
 		// Mesh
 		bool                               _update_mesh;
 		std::shared_ptr<gs::vertex_buffer> _vertex_buffer;
-		uint32_t                           _rotation_order;
+		std::uint32_t                      _rotation_order;
 		std::unique_ptr<util::vec3a>       _position;
 		std::unique_ptr<util::vec3a>       _rotation;
 		std::unique_ptr<util::vec3a>       _scale;

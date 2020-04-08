@@ -105,7 +105,7 @@ namespace filter::nvidia {
 
 		virtual void update(obs_data_t* data) override;
 
-		virtual void video_tick(float seconds) override;
+		virtual void video_tick(float_t seconds) override;
 
 		virtual void video_render(gs_effect_t* effect) override;
 

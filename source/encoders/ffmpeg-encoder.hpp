@@ -133,13 +133,13 @@ namespace encoder::ffmpeg {
 		::ffmpeg::swscale _swscale;
 		AVPacket          _current_packet;
 
-		size_t _lag_in_frames;
-		size_t _count_send_frames;
+		std::size_t _lag_in_frames;
+		std::size_t _count_send_frames;
 
 		// Extra Data
-		bool                 _have_first_frame;
-		std::vector<uint8_t> _extra_data;
-		std::vector<uint8_t> _sei_data;
+		bool                      _have_first_frame;
+		std::vector<std::uint8_t> _extra_data;
+		std::vector<std::uint8_t> _sei_data;
 
 		// Frame Stack and Queue
 		std::stack<std::shared_ptr<AVFrame>>           _free_frames;
@@ -168,21 +168,21 @@ namespace encoder::ffmpeg {
 		// Audio only
 		void get_audio_info(struct audio_convert_info* info);
 
-		size_t get_frame_size();
+		std::size_t get_frame_size();
 
 		bool audio_encode(struct encoder_frame* frame, struct encoder_packet* packet, bool* received_packet);
 
 		// Video only
 		void get_video_info(struct video_scale_info* info);
 
-		bool get_sei_data(uint8_t** sei_data, size_t* size);
+		bool get_sei_data(std::uint8_t** sei_data, size_t* size);
 
-		bool get_extra_data(uint8_t** extra_data, size_t* size);
+		bool get_extra_data(std::uint8_t** extra_data, size_t* size);
 
 		bool video_encode(struct encoder_frame* frame, struct encoder_packet* packet, bool* received_packet);
 
-		bool video_encode_texture(uint32_t handle, int64_t pts, uint64_t lock_key, uint64_t* next_key,
-								  struct encoder_packet* packet, bool* received_packet);
+		bool video_encode_texture(std::uint32_t handle, std::int64_t pts, std::uint64_t lock_key,
+								  std::uint64_t* next_key, struct encoder_packet* packet, bool* received_packet);
 
 		int receive_packet(bool* received_packet, struct encoder_packet* packet);
 

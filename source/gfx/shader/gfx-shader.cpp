@@ -103,7 +103,7 @@ try {
 			std::shared_ptr<obs_data_t>(obs_source_get_settings(_self), [](obs_data_t* p) { obs_data_release(p); });
 
 		bool have_valid_tech = false;
-		for (size_t idx = 0; idx < _shader.count_techniques(); idx++) {
+		for (std::size_t idx = 0; idx < _shader.count_techniques(); idx++) {
 			if (_shader.get_technique(idx).name() == tech) {
 				have_valid_tech = true;
 				break;
@@ -121,10 +121,10 @@ try {
 		// Clear the shader parameters map and rebuild.
 		_shader_params.clear();
 		auto etech = _shader.get_technique(_shader_tech);
-		for (size_t idx = 0; idx < etech.count_passes(); idx++) {
+		for (std::size_t idx = 0; idx < etech.count_passes(); idx++) {
 			auto pass = etech.get_pass(idx);
 
-			for (size_t vidx = 0; vidx < pass.count_vertex_parameters(); vidx++) {
+			for (std::size_t vidx = 0; vidx < pass.count_vertex_parameters(); vidx++) {
 				auto el = pass.get_vertex_parameter(vidx);
 
 				if (!el)
@@ -143,7 +143,7 @@ try {
 				}
 			}
 
-			for (size_t vidx = 0; vidx < pass.count_pixel_parameters(); vidx++) {
+			for (std::size_t vidx = 0; vidx < pass.count_pixel_parameters(); vidx++) {
 				auto el = pass.get_pixel_parameter(vidx);
 
 				if (!el)
@@ -185,7 +185,7 @@ void gfx::shader::shader::properties(obs_properties_t* pr)
 	_have_current_params = false;
 
 	{
-		auto p = obs_properties_add_button2(
+		obs_properties_add_button2(
 			pr, ST_REFRESH, D_TRANSLATE(ST_REFRESH),
 			[](obs_properties_t* props, obs_property_t* prop, void* priv) {
 				return reinterpret_cast<gfx::shader::shader*>(priv)->on_refresh_properties(props, prop);
@@ -250,7 +250,7 @@ bool gfx::shader::shader::on_refresh_properties(obs_properties_t* props, obs_pro
 	if (_shader) { // Clear list of techniques and rebuild it.
 		obs_property_t* p_tech_list = obs_properties_get(props, ST_SHADER_TECHNIQUE);
 		obs_property_list_clear(p_tech_list);
-		for (size_t idx = 0; idx < _shader.count_techniques(); idx++) {
+		for (std::size_t idx = 0; idx < _shader.count_techniques(); idx++) {
 			auto tech = _shader.get_technique(idx);
 			obs_property_list_add_string(p_tech_list, tech.name().c_str(), tech.name().c_str());
 		}
@@ -286,7 +286,7 @@ bool gfx::shader::shader::on_shader_or_technique_modified(obs_properties_t* prop
 	{ // Clear list of techniques and rebuild it.
 		obs_property_t* p_tech_list = obs_properties_get(props, ST_SHADER_TECHNIQUE);
 		obs_property_list_clear(p_tech_list);
-		for (size_t idx = 0; idx < _shader.count_techniques(); idx++) {
+		for (std::size_t idx = 0; idx < _shader.count_techniques(); idx++) {
 			auto tech = _shader.get_technique(idx);
 			obs_property_list_add_string(p_tech_list, tech.name().c_str(), tech.name().c_str());
 		}
@@ -355,7 +355,7 @@ void gfx::shader::shader::update(obs_data_t* data)
 	}
 }
 
-uint32_t gfx::shader::shader::width()
+std::uint32_t gfx::shader::shader::width()
 {
 	switch (_mode) {
 	case shader_mode::Transition:
@@ -379,7 +379,7 @@ uint32_t gfx::shader::shader::width()
 	}
 }
 
-uint32_t gfx::shader::shader::height()
+std::uint32_t gfx::shader::shader::height()
 {
 	switch (_mode) {
 	case shader_mode::Transition:
@@ -465,7 +465,7 @@ void gfx::shader::shader::render()
 	}
 }
 
-void gfx::shader::shader::set_size(uint32_t w, uint32_t h)
+void gfx::shader::shader::set_size(std::uint32_t w, std::uint32_t h)
 {
 	_base_width  = w;
 	_base_height = h;
@@ -507,13 +507,13 @@ void gfx::shader::shader::set_transition_time(float_t t)
 	}
 }
 
-void gfx::shader::shader::set_transition_size(uint32_t w, uint32_t h)
+void gfx::shader::shader::set_transition_size(std::uint32_t w, std::uint32_t h)
 {
 	if (!_shader)
 		return;
 	if (gs::effect_parameter el = _shader.get_parameter("TransitionSize"); el != nullptr) {
 		if (el.get_type() == gs::effect_parameter::type::Integer2) {
-			el.set_int2(w, h);
+			el.set_int2(static_cast<int32_t>(w), static_cast<int32_t>(h));
 		}
 	}
 }
