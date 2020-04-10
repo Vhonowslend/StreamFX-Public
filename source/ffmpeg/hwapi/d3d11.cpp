@@ -191,14 +191,19 @@ std::shared_ptr<AVFrame> d3d11_instance::allocate_frame(AVBufferRef* frames)
 {
 	auto gctx = gs::context();
 
+	// Allocate a frame.
 	auto frame = std::shared_ptr<AVFrame>(av_frame_alloc(), [](AVFrame* frame) {
 		av_frame_unref(frame);
 		av_frame_free(&frame);
 	});
 
+	// Create the necessary buffers.
 	if (av_hwframe_get_buffer(frames, frame.get(), 0) < 0) {
 		throw std::runtime_error("Failed to create AVFrame.");
 	}
+
+	// Try to prevent this resource from ever leaving the GPU unless absolutely necessary.
+	reinterpret_cast<ID3D11Texture2D*>(frame->data[0])->SetEvictionPriority(DXGI_RESOURCE_PRIORITY_MAXIMUM);
 
 	return frame;
 }
@@ -208,18 +213,20 @@ void d3d11_instance::copy_from_obs(AVBufferRef*, std::uint32_t handle, uint64_t 
 {
 	auto gctx = gs::context();
 
-	ATL::CComPtr<IDXGIKeyedMutex> mutex;
+	// Attempt to acquire shared texture.
 	ATL::CComPtr<ID3D11Texture2D> input;
-
 	if (FAILED(_device->OpenSharedResource(reinterpret_cast<HANDLE>(static_cast<uintptr_t>(handle)),
 										   __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&input)))) {
 		throw std::runtime_error("Failed to open shared texture resource.");
 	}
 
+	// Attempt to acquire texture mutex.
+	ATL::CComPtr<IDXGIKeyedMutex> mutex;
 	if (FAILED(input->QueryInterface(__uuidof(IDXGIKeyedMutex), reinterpret_cast<void**>(&mutex)))) {
 		throw std::runtime_error("Failed to retrieve mutex for texture resource.");
 	}
 
+	// Attempt to acquire texture lock.
 	if (FAILED(mutex->AcquireSync(lock_key, 1000))) {
 		throw std::runtime_error("Failed to acquire lock on input texture.");
 	}
@@ -234,10 +241,12 @@ void d3d11_instance::copy_from_obs(AVBufferRef*, std::uint32_t handle, uint64_t 
 	// Restore original parameters on input.
 	input->SetEvictionPriority(evict);
 
+	// Release the acquired lock.
 	if (FAILED(mutex->ReleaseSync(lock_key))) {
 		throw std::runtime_error("Failed to release lock on input texture.");
 	}
 
+	// Release the lock on the next texture.
 	// TODO: Determine if this is necessary.
 	mutex->ReleaseSync(*next_lock_key);
 }
