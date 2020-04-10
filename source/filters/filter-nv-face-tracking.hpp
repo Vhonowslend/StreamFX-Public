@@ -37,10 +37,9 @@
 namespace filter::nvidia {
 	class face_tracking_instance : public obs::source_instance {
 		// Filter Cache
-		std::uint32_t                     _width;
-		std::uint32_t                     _height;
-		bool                              _up_to_date;
-		std::shared_ptr<gs::rendertarget> _rt;
+		bool                                    _rt_is_fresh;
+		std::shared_ptr<gs::rendertarget>       _rt;
+		std::pair<std::uint32_t, std::uint32_t> _size;
 
 		// Settings
 		double_t                      _cfg_roi_zoom;
@@ -48,52 +47,58 @@ namespace filter::nvidia {
 		double_t                      _cfg_roi_stability;
 
 		// Region of Interest
-		util::math::kalman1D<double_t> _roi_filters[4];
-		std::pair<double_t, double_t>  _roi_center;
-		std::pair<double_t, double_t>  _roi_size;
-		gs::vertex_buffer              _roi_geom;
+		util::math::kalman1D<double_t>     _roi_filters[4];
+		std::mutex                         _roi_lock;
+		std::pair<double_t, double_t>      _roi_center;
+		std::pair<double_t, double_t>      _roi_size;
+		std::shared_ptr<gs::vertex_buffer> _roi_geom;
 
 		// Nvidia CUDA interop
-		std::shared_ptr<::nvidia::cuda::cuda>      _cuda;
-		std::shared_ptr<::nvidia::cuda::context>   _cuda_ctx;
-		std::shared_ptr<::nvidia::cuda::stream>    _cuda_stream;
-		std::shared_ptr<::nvidia::cuda::memory>    _cuda_mem;
-		bool                                       _cuda_flush_cache;
-		std::shared_ptr<::nvidia::cuda::gstexture> _cuda_rt_cache;
+		std::shared_ptr<::nvidia::cuda::cuda>    _cuda;
+		std::shared_ptr<::nvidia::cuda::context> _cuda_ctx;
+		std::shared_ptr<::nvidia::cuda::stream>  _cuda_stream;
 
 		// Nvidia AR interop
-		std::shared_ptr<::nvidia::ar::ar> _ar;
-		std::string                       _ar_models_path;
-		std::shared_ptr<nvAR_Feature>     _ar_tracker;
-		std::atomic_bool                  _ar_ready;
-		std::atomic_bool                  _ar_fail;
-		std::vector<NvAR_Rect>            _ar_bboxes_data;
-		NvAR_BBoxes                       _ar_bboxes;
-		std::vector<float_t>              _ar_bboxes_confidence;
-		NvCVImage                         _ar_image;
-		NvCVImage                         _ar_image_bgr;
-		NvCVImage                         _ar_image_temp;
+		std::shared_ptr<::nvidia::ar::ar>          _ar_library;
+		std::atomic_bool                           _ar_loaded;
+		std::shared_ptr<nvAR_Feature>              _ar_feature;
+		std::atomic_bool                           _ar_tracked;
+		std::vector<float_t>                       _ar_bboxes_confidence;
+		std::vector<NvAR_Rect>                     _ar_bboxes_data;
+		NvAR_BBoxes                                _ar_bboxes;
+		std::shared_ptr<gs::texture>               _ar_texture;
+		bool                                       _ar_texture_cuda_fresh;
+		std::shared_ptr<::nvidia::cuda::gstexture> _ar_texture_cuda;
+		std::shared_ptr<::nvidia::cuda::memory>    _ar_texture_cuda_mem;
+		NvCVImage                                  _ar_image;
+		NvCVImage                                  _ar_image_bgr;
+		NvCVImage                                  _ar_image_temp;
 
 #ifdef _DEBUG
 		// Profiling
 		std::shared_ptr<util::profiler> _profile_capture;
-		std::shared_ptr<util::profiler> _profile_cuda_register;
-		std::shared_ptr<util::profiler> _profile_cuda_copy;
+		std::shared_ptr<util::profiler> _profile_capture_realloc;
+		std::shared_ptr<util::profiler> _profile_capture_copy;
+		std::shared_ptr<util::profiler> _profile_ar_realloc;
+		std::shared_ptr<util::profiler> _profile_ar_copy;
 		std::shared_ptr<util::profiler> _profile_ar_transfer;
 		std::shared_ptr<util::profiler> _profile_ar_run;
+		std::shared_ptr<util::profiler> _profile_ar_calc;
 #endif
 
 		public:
 		face_tracking_instance(obs_data_t*, obs_source_t*);
 		virtual ~face_tracking_instance() override;
 
-		// Initialize face detection.
-		void face_detection_initialize();
+		// Tasks
+		void async_initialize(std::shared_ptr<void>);
 
-		void face_detection_initialize_thread(std::shared_ptr<void> param);
+		void refresh_geometry();
+
+		void async_track(std::shared_ptr<void>);
 
 		// Create image buffer.
-		void create_image_buffer(std::size_t width, std::size_t height);
+		//void create_image_buffer(std::size_t width, std::size_t height);
 
 		void roi_refresh();
 
