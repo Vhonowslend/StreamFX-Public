@@ -43,6 +43,11 @@ namespace obs {
 		obs_source_release(v);
 	}
 
+	inline void obs_weak_source_deleter(obs_weak_source_t* v)
+	{
+		obs_weak_source_release(v);
+	}
+
 	inline void obs_scene_deleter(obs_scene_t* v)
 	{
 		obs_scene_release(v);
