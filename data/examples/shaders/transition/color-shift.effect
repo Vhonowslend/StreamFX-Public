@@ -56,59 +56,29 @@ VertData VSDefault(VertData v_in) {
 	return vert_out;
 }
 
-float4 HSLtoRGB(float4 HSLA) {
-    float3 rgb = clamp(
-		abs(
-			fmod(
-				HSLA.x * 6.0 + float3(0.0, 4.0, 2.0),
-				6.0
-			) - 3.0
-		) - 1.0,
-		0.0,
-		1.0
-	);
-    return float4(HSLA.z + HSLA.y * (rgb - 0.5) * (1.0 - abs(2.0 * HSLA.z - 1.0)), HSLA.a);
+float4 RGBtoHSV(float4 RGBA) {
+	const float4 K = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+	const float e = 1.0e-10;
+	float4 p = lerp(float4(RGBA.bg, K.wz), float4(RGBA.gb, K.xy), step(RGBA.b, RGBA.g));
+	float4 q = lerp(float4(p.xyw, RGBA.r), float4(RGBA.r, p.yzx), step(p.x, RGBA.r));
+	float d = q.x - min(q.w, q.y);
+	return float4(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x, RGBA.a);
 }
 
-float4 RGBtoHSL(float4 RGBA) {
-	float h = 0.0;
-	float s = 0.0;
-	float l = 0.0;
-	float r = RGBA.r;
-	float g = RGBA.g;
-	float b = RGBA.b;
-	float cMin = min( r, min( g, b ) );
-	float cMax = max( r, max( g, b ) );
-
-	l = ( cMax + cMin ) / 2.0;
-	if ( cMax > cMin ) {
-		float cDelta = cMax - cMin;
-        
-		//s = l < .05 ? cDelta / ( cMax + cMin ) : cDelta / ( 2.0 - ( cMax + cMin ) ); Original
-		s = l < .0 ? cDelta / ( cMax + cMin ) : cDelta / ( 2.0 - ( cMax + cMin ) );
-        
-		if ( r == cMax ) {
-			h = ( g - b ) / cDelta;
-		} else if ( g == cMax ) {
-			h = 2.0 + ( b - r ) / cDelta;
-		} else {
-			h = 4.0 + ( r - g ) / cDelta;
-		}
-
-		if ( h < 0.0) {
-			h += 6.0;
-		}
-		h = h / 6.0;
-	}
-	return float4( h, s, l, RGBA.a );
+float4 HSVtoRGB(float4 HSVA) {
+	const float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+	float4 v = float4(0,0,0,0);
+	v.rgb = HSVA.z * lerp(K.xxx, clamp(abs(frac(HSVA.xxx + K.xyz) * 6.0 - K.www) - K.xxx, 0.0, 1.0), HSVA.y);
+	v.a = HSVA.a;
+	return v;
 }
 
 float4 PSDefault(VertData v_in) : TARGET {
 	float4 sampleA = InputA.Sample(def_sampler, v_in.uv);
 	float4 sampleB = InputB.Sample(def_sampler, v_in.uv);
 
-	float4 hslA = RGBtoHSL(sampleA);
-	float4 hslB = RGBtoHSL(sampleB);
+	float4 hslA = RGBtoHSV(sampleA);
+	float4 hslB = RGBtoHSV(sampleB);
 	float4 hslT = hslB - hslA;
 	if (hslT.r > 0.5) {
 		hslB.r = 1.0 + (-1.0 + hslB.r);
@@ -120,7 +90,7 @@ float4 PSDefault(VertData v_in) : TARGET {
 		hslB.b = 1.0 + (-1.0 + hslB.b);
 	}
 
-	float4 rgb = HSLtoRGB(lerp(hslA, hslB, TransitionTime));
+	float4 rgb = HSVtoRGB(lerp(hslA, hslB, TransitionTime));
 	
 	return rgb;
 }

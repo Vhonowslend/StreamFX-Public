@@ -1,0 +1,175 @@
+// Always provided by OBS
+uniform float4x4 ViewProj<
+	bool automatic = true;
+	string name = "View Projection Matrix";
+>;
+
+// Provided by Stream Effects
+uniform float4 Time<
+	bool automatic = true;
+	string name = "Time Array";
+	string description = "A float4 value containing the total time, rendering time and the time since the last tick. The last value is a random number between 0 and 1.";
+>;
+uniform float4x4 Random<
+	bool automatic = true;
+	string name = "Random Array";
+	string description = "A float4x4 value containing random values between 0 and 1";
+>;
+uniform float4 ViewSize<
+	bool automatic = true;
+>;
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+uniform texture2d InputB<
+	bool automatic = true;
+>;
+uniform float TransitionTime<
+	bool automatic = true;
+>;
+uniform int2 TransitionSize<
+	bool automatic = true;
+>;
+
+uniform bool _49_FadeToColor<
+	string name = "Fade To Color?";
+> = true;
+
+uniform float4 _50_Color<
+	string name = "Color";
+	string field_type = "slider";
+	float4 minimum = {0.,0.,0.,0.};
+	float4 maximum = {100.,100.,100.,100.};
+	float4 scale = {.01,.01,.01,.01};
+	float4 step = {.01,.01,.01,.01};
+> = {0., 0., 0., 100.};
+
+uniform float _100_Rotation<
+	string name = "Rotation";
+	string field_type = "slider";
+	float minimum = -90.;
+	float maximum = 90.;
+	float scale = 1.;
+	float step = .01;
+> = 30.;
+
+uniform float _200_Bars<
+	string name = "Number of Bars";
+	string field_type = "slider";
+	float minimum = 1.;
+	float maximum = 100.;
+	float scale = 1.;
+	float step = .5;
+> = 20.;
+
+// ---------- Shader Code
+sampler_state def_sampler {
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+	Filter    = Linear;
+};
+
+struct VertData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+#define PI 3.1415926535897932384626433832795
+#define TO_RAD(x) (x * (PI/180.))
+#define TO_DEG(x) (x * (180./PI))
+
+VertData VSDefault(VertData vtx) {
+	vtx.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
+	return vtx;
+}
+
+float2 rotate2D(float2 xy, float angle) {
+	float s = sin(angle);
+	float c = cos(angle);
+	return float2(xy.x * c + xy.y * s, xy.x * -s + xy.y * c);
+}
+
+// https://www.shadertoy.com/view/4dXBRH
+float hash( in float2 p )  // replace this by something better
+{
+	p  = 50.0*frac( p*0.3183099 + float2(0.71,0.113));
+	return -1.0+2.0*frac( p.x*p.y*(p.x+p.y) );
+}
+
+// return value noise (in x) and its derivatives (in yz)
+float3 noised( in float2 p )
+{
+	float2 i = floor( p );
+	float2 f = frac( p );
+
+	// quintic interpolation
+	float2 u = f*f*f*(f*(f*6.0-15.0)+10.0);
+	float2 du = 30.0*f*f*(f*(f-2.0)+1.0);
+
+	float va = hash( i + float2(0.0,0.0) );
+	float vb = hash( i + float2(1.0,0.0) );
+	float vc = hash( i + float2(0.0,1.0) );
+	float vd = hash( i + float2(1.0,1.0) );
+
+	float k0 = va;
+	float k1 = vb - va;
+	float k2 = vc - va;
+	float k4 = va - vb - vc + vd;
+
+	return float3( va+(vb-va)*u.x+(vc-va)*u.y+(va-vb-vc+vd)*u.x*u.y, // value
+			du*(u.yx*(va-vb-vc+vd) + float2(vb,vc) - va) );     // derivative                
+}
+
+bool compare_a_b(float time, float x, float dir) {
+	if (dir < .5) {
+		return time > x;
+	} else {
+		return (1. - time) < x;
+	}
+}
+
+float4 PSDefault(VertData vtx) : TARGET {
+	float2 ruv = (rotate2D(vtx.uv - .5, TO_RAD(_100_Rotation)) + .5);
+
+	float bar_offset_max = .2;
+	float bar_id = floor(ruv.y * _200_Bars);
+	float bar_offset = 0.;
+	float bar_direction = 0.;
+	if (TransitionTime < .5 || !_49_FadeToColor) {
+		bar_offset = noised(float2(bar_id, 0.)).x * bar_offset_max;
+		bar_direction = step(noised(float2(bar_id, 1.)).x, .5);
+	} else {
+		bar_offset = noised(float2(bar_id, 1.)).x * bar_offset_max;
+		bar_direction = step(noised(float2(bar_id, 0.)).x, .5);
+	}
+
+	if (_49_FadeToColor) {
+		float bar_time_a = (TransitionTime * 3.) + bar_offset;
+		float bar_time_b = (TransitionTime * 3. - 2.) - bar_offset;
+		if (compare_a_b(bar_time_a, vtx.uv.x, bar_direction)) {
+			if (compare_a_b(bar_time_b, vtx.uv.x, bar_direction)) {
+				return InputB.Sample(def_sampler, vtx.uv);
+			} else {
+				return _50_Color;
+			}
+		} else {
+			return InputA.Sample(def_sampler, vtx.uv);
+		}
+	} else {
+		float bar_time_a = clamp((TransitionTime + bar_offset) / (1. - bar_offset_max), 0., 1.);
+		if (compare_a_b(bar_time_a, vtx.uv.x, bar_direction)) {
+			return InputB.Sample(def_sampler, vtx.uv);
+		} else {
+			return InputA.Sample(def_sampler, vtx.uv);
+		}
+	}
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSDefault(vtx); 
+	}
+}

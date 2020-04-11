@@ -15,22 +15,17 @@ uniform float4x4 Random<
 	string name = "Random Array";
 	string description = "A float4x4 value containing random values between 0 and 1";
 >;
-uniform texture2d ImageSource<
-	bool visible = false;
-	string name = "Source Texture (Filter, Transition)";
+uniform float4 ViewSize<
+	bool automatic = true;
 >;
-uniform float2 ImageSource_Size<
-	bool visible = false;
-	string name = "Source Texture Size (Filter, Transition)";
->;
-uniform float2 ImageSource_Texel<
-	bool visible = false;
-	string name = "Source Texture Texel Size (Filter, Transition)";
+uniform texture2d InputA<
+	bool automatic = true;
 >;
 
 // Shader Parameters
 uniform float p_drunk_strength<
 	bool visible = true;
+	string field_type = "slider";
 	string name = "Strength";
 	float minimum = 0.;
 	float maximum = 100.;
@@ -38,6 +33,7 @@ uniform float p_drunk_strength<
 > = 25.0;
 uniform float p_drunk_speed<
 	bool visible = true;
+	string field_type = "slider";
 	string name = "Speed";
 	float minimum = 0.;
 	float maximum = 100.;
@@ -56,19 +52,11 @@ struct VertData {
 	float2 uv  : TEXCOORD0;
 };
 
-struct FragData {
-	float4 pos : POSITION;
-	float2 uv  : TEXCOORD0;
-};
-
-FragData VSDefault(VertData v_in) {
-	FragData vert_out;
-	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
-	vert_out.uv  = v_in.uv;
-	return vert_out;
+VertData VSDefault(VertData vtx) {
+	vtx.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
+	return vtx;
 }
 
-// ---------- Fixed Color 
 #define MAX_PTS 5
 #define MAX_LINE 5.
 
@@ -96,30 +84,30 @@ float2 mult_at(int x, int y) {
 	return mult;
 }
 
-float4 PS_Drunk(FragData v_in) : TARGET {
-	float2 uvs[MAX_PTS + 1][MAX_PTS + 1];	
+float4 PSDrunkStage1(VertData vtx) : TARGET {
+	float2 uvs[MAX_PTS + 1][MAX_PTS + 1];
 	for (int x = 0; x <= MAX_PTS; x++) {
 		for (int y = 0; y <= MAX_PTS; y++) {
 			float2 off = float2(0, 0);
 			if ((x > 0) && (x < MAX_PTS)) {
-				off.x = cos(Time.y * p_drunk_speed + random_time_at(x, y)) * ImageSource_Texel.x;
+				off.x = cos(Time.x * p_drunk_speed + random_time_at(x, y)) * ViewSize.z;
 			}
 			if ((y > 0) && (y < MAX_PTS)) {
-				off.y = sin(Time.y * p_drunk_speed + random_time_at(x, y)) * ImageSource_Texel.y;
+				off.y = sin(Time.x * p_drunk_speed + random_time_at(x, y)) * ViewSize.w;
 			}
-			off *= (p_drunk_strength / 100.0) * ImageSource_Size * 0.5 * mult_at(x, y);
+			off *= (p_drunk_strength / 100.0) * ViewSize.xy * 0.5 * mult_at(x, y);
 				
 			uvs[x][y] = float2(x / MAX_LINE + off.x, y / MAX_LINE + off.y);
 		}
 	}
 	
-	float2 fade = frac(v_in.uv * MAX_LINE);
+	float2 fade = frac(vtx.uv * MAX_LINE);
 	fade = (sin((fade - 0.5) * 3.141) + 1.0) * 0.5;
 	
-	int2 _low = int2(floor(v_in.uv * MAX_LINE));
-	int2 _hig = int2(ceil(v_in.uv * MAX_LINE));
+	int2 _low = int2(floor(vtx.uv * MAX_LINE));
+	int2 _hig = int2(ceil(vtx.uv * MAX_LINE));
 	
-	float2 uv = v_in.uv;
+	float2 uv = vtx.uv;
 	float2 uv_tl = uvs[_low.x][_low.y];
 	float2 uv_tr = uvs[_hig.x][_low.y];
 	float2 uv_bl = uvs[_low.x][_hig.y];
@@ -129,14 +117,14 @@ float4 PS_Drunk(FragData v_in) : TARGET {
 	float2 uv_b = lerp(uv_bl, uv_br, fade.x);
 	uv = lerp(uv_t, uv_b, fade.y);
 	
-	return ImageSource.Sample(def_sampler, uv);
+	return InputA.Sample(def_sampler, uv);
 }
 
 technique Draw
 {
 	pass
 	{
-		vertex_shader = VSDefault(v_in);
-		pixel_shader  = PS_Drunk(v_in); 
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSDrunkStage1(vtx); 
 	}
 }
