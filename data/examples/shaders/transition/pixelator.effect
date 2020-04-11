@@ -56,6 +56,14 @@ uniform float2 _3_blockOffset<
 	float2 maximum = {100., 100.};
 	float2 scale = {0.01, 0.01};
 > = {50., 50.};
+uniform float _4_transitionRange<
+	string name = "Transition Range";
+	string field_type = "slider";
+	float minimum = 0.;
+	float maximum = 100.;
+	float scale = .005;
+	float step = .01;
+> = 25.0;
 
 // ---------- Shader Code
 sampler_state def_sampler {
@@ -104,7 +112,13 @@ float4 PSDefault(VertData v_in) : TARGET {
 	float4 sampleA = InputA.Sample(def_sampler, finalUV);
 	float4 sampleB = InputB.Sample(def_sampler, finalUV);
 
-	float4 rgb = lerp(sampleA, sampleB, clamp((TransitionTime - 0.45) * (1.0 / 0.45), 0., 1.));
+	float transition = clamp(
+		((TransitionTime - 0.5) / _4_transitionRange) * .5 + .5,
+		0.,
+		1.
+	);
+
+	float4 rgb = lerp(sampleA, sampleB, transition);
 
 	return rgb;
 }
