@@ -70,6 +70,9 @@ nvidia::cuda::context::context(std::shared_ptr<::nvidia::cuda::cuda> cuda, ID3D1
 	if (cu_result res = _cuda->cuDevicePrimaryCtxRetain(&_ctx, _device); res != cu_result::SUCCESS) {
 		throw std::runtime_error("Failed to acquire primary device context.");
 	}
+
+	_cuda->cuDevicePrimaryCtxSetFlags(_device, cu_context_flags::SCHEDULER_YIELD);
+
 	_has_device = true;
 }
 #endif

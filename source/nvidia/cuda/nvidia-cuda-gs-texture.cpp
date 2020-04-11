@@ -28,8 +28,8 @@ nvidia::cuda::gstexture::gstexture(std::shared_ptr<nvidia::cuda::cuda> cuda, std
 	if (!cuda)
 		throw std::invalid_argument("cuda");
 
-	auto gtc      = gs::context{};
-	int  dev_type = gs_get_device_type();
+	gs::context gctx;
+	int         dev_type = gs_get_device_type();
 
 	if (dev_type == GS_DEVICE_OPENGL) {
 		// ToDo
