@@ -51,15 +51,15 @@ void util::threadpool::push(threadpool_function_t fn, std::shared_ptr<void> data
 
 void util::threadpool::work()
 {
-	std::pair<threadpool_function_t, std::shared_ptr<void>> work;
-
 	while (!_worker_stop) {
+		std::pair<threadpool_function_t, std::shared_ptr<void>> work;
+
 		// Wait for more work, or immediately continue if there is still work to do.
 		{
 			std::unique_lock<std::mutex> lock(_tasks_lock);
 			if (_tasks.size() == 0)
 				_tasks_cv.wait(lock, [this]() { return _worker_stop || _tasks.size() > 0; });
-			if (_tasks.size() == 0)
+			if (_worker_stop || (_tasks.size() == 0))
 				continue;
 			work = _tasks.front();
 			_tasks.pop_front();
