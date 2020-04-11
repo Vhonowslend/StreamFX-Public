@@ -21,6 +21,7 @@
 #include <cstddef>
 #include <functional>
 #include <memory>
+#include "utility.hpp"
 
 #ifdef WIN32
 #pragma warning(push)
@@ -75,11 +76,26 @@ namespace nvidia::cuda {
 		FLOAT          = 0b00100000,
 	};
 
+	enum class cu_context_flags : std::uint32_t {
+		SCHEDULER_AUTO                 = 0x0,
+		SCHEDULER_SPIN                 = 0x1,
+		SCHEDULER_YIELD                = 0x2,
+		SCHEDULER_BLOCKING_SYNC        = 0x4,
+		MAP_HOST                       = 0x8,
+		LOCAL_MEMORY_RESIZE_TO_MAXIMUM = 0x10,
+	};
+
+	enum class cu_stream_flags : std::uint32_t {
+		DEFAULT      = 0x0,
+		NON_BLOCKING = 0x1,
+	};
+
 	typedef void*         cu_array_t;
 	typedef void*         cu_context_t;
 	typedef std::uint64_t cu_device_ptr_t;
 	typedef void*         cu_graphics_resource_t;
 	typedef void*         cu_stream_t;
+	typedef std::int32_t  cu_device_t;
 
 	struct cu_memcpy2d_t {
 		std::size_t src_x_in_bytes;
@@ -138,10 +154,10 @@ namespace nvidia::cuda {
 
 		// Primary Context Management
 		// cuDevicePrimaryCtxGetState
-		CUDA_DEFINE_FUNCTION(cuDevicePrimaryCtxRelease, std::int32_t device);
+		CUDA_DEFINE_FUNCTION(cuDevicePrimaryCtxRelease, cu_device_t device);
 		// cuDevicePrimaryCtxReset_v2
-		CUDA_DEFINE_FUNCTION(cuDevicePrimaryCtxRetain, cu_context_t* ctx, std::int32_t device);
-		// cuDevicePrimaryCtxSetFlags_v2
+		CUDA_DEFINE_FUNCTION(cuDevicePrimaryCtxRetain, cu_context_t* ctx, cu_device_t device);
+		CUDA_DEFINE_FUNCTION(cuDevicePrimaryCtxSetFlags, cu_device_t device, cu_context_flags flags);
 
 		// Context Management
 		// cuCtxCreate_v2
@@ -153,7 +169,7 @@ namespace nvidia::cuda {
 		// cuCtxGetFlags
 		// cuCtxGetLimit
 		// cuCtxGetSharedMemConfig
-		// cuCtxGetStreamPriorityRange
+		CUDA_DEFINE_FUNCTION(cuCtxGetStreamPriorityRange, std::int32_t* lowestPriority, std::int32_t* highestPriority);
 		CUDA_DEFINE_FUNCTION(cuCtxPopCurrent, cu_context_t* ctx);
 		CUDA_DEFINE_FUNCTION(cuCtxPushCurrent, cu_context_t ctx);
 		// cuCtxSetCacheConfig
@@ -278,8 +294,9 @@ namespace nvidia::cuda {
 		// cuStreamAddCallback
 		// cuStreamAttachMemAsync
 		// cuStreamBeginCapture_v2
-		CUDA_DEFINE_FUNCTION(cuStreamCreate, cu_stream_t* stream, std::uint32_t flags);
-		// cuStreamCreateWithPriority
+		CUDA_DEFINE_FUNCTION(cuStreamCreate, cu_stream_t* stream, cu_stream_flags flags);
+		CUDA_DEFINE_FUNCTION(cuStreamCreateWithPriority, cu_stream_t* stream, cu_stream_flags flags,
+							 std::int32_t priority);
 		CUDA_DEFINE_FUNCTION(cuStreamDestroy, cu_stream_t stream);
 		// cuStreamEndCapture
 		// cuStreamGetCaptureInfo
@@ -385,3 +402,6 @@ namespace nvidia::cuda {
 #endif
 	};
 } // namespace nvidia::cuda
+
+P_ENABLE_BITMASK_OPERATORS(::nvidia::cuda::cu_context_flags)
+P_ENABLE_BITMASK_OPERATORS(::nvidia::cuda::cu_stream_flags)

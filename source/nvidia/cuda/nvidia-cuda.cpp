@@ -61,10 +61,12 @@ nvidia::cuda::cuda::cuda()
 	// Primary Context Management
 	CUDA_LOAD_SYMBOL(cuDevicePrimaryCtxRetain);
 	CUDA_LOAD_SYMBOL_V2(cuDevicePrimaryCtxRelease);
+	CUDA_LOAD_SYMBOL_V2(cuDevicePrimaryCtxSetFlags);
 
 	// Context Management
 	CUDA_LOAD_SYMBOL_V2(cuCtxDestroy);
 	CUDA_LOAD_SYMBOL(cuCtxGetCurrent);
+	CUDA_LOAD_SYMBOL(cuCtxGetStreamPriorityRange);
 	CUDA_LOAD_SYMBOL_V2(cuCtxPopCurrent);
 	CUDA_LOAD_SYMBOL_V2(cuCtxPushCurrent);
 	CUDA_LOAD_SYMBOL(cuCtxSetCurrent);
@@ -93,6 +95,7 @@ nvidia::cuda::cuda::cuda()
 
 	// Stream Managment
 	CUDA_LOAD_SYMBOL(cuStreamCreate);
+	CUDA_LOAD_SYMBOL(cuStreamCreateWithPriority);
 	CUDA_LOAD_SYMBOL_V2(cuStreamDestroy);
 	CUDA_LOAD_SYMBOL(cuStreamSynchronize);
 
