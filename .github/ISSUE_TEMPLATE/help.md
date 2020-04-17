@@ -1,15 +1,15 @@
 ---
-name: Report a Bug, Crash or Freeze
-about: Encountered a problem, a bug or a crash?
+name: Request Help and Support
+about: Stuck using something? Why not ask for help?
 
 ---
 
-<!-- Hi, thank you for taking the time to report a bug/crash/freeze. -->
+<!-- Hi, thank you for taking the time to ask for help. -->
 <!-- Please make sure that you fill this out in it's entirety. -->
 <!-- Unfortunately I will have to close issues if it has not been filled out. -->
 
 ### Description
-<!-- Please describe the bug/crash/freeze in its entirety, including how you made this happen. -->
+<!-- Please describe the problem in its entirety. -->
 <!-- If you have screenshots of the broken behavior, please attach them. -->
 <!-- Additionally, if you have log files, please ATTACH them. Do not paste them into this -->
 
