@@ -314,8 +314,8 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		}
 
 		{
-			auto p = obs_properties_add_int_slider(grp, ST_RATECONTROL_LOOKAHEAD, D_TRANSLATE(ST_RATECONTROL_LOOKAHEAD),
-												   -1, 32, 1);
+			auto p = obs_properties_add_int_slider(grp, KEY_RATECONTROL_LOOKAHEAD,
+												   D_TRANSLATE(ST_RATECONTROL_LOOKAHEAD), -1, 32, 1);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_LOOKAHEAD)));
 			obs_property_int_set_suffix(p, " frames");
 			//obs_property_set_modified_callback(p, modified_lookahead);
@@ -592,6 +592,12 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 					!util::is_tristate_default(adapt_b)) {
 					av_opt_set_int(context->priv_data, "b_adapt", adapt_b, AV_OPT_SEARCH_CHILDREN);
 				}
+			}
+		} else {
+			// These two do not work if lookahead is set to 0 frames (disabled).
+			av_opt_set_int(context->priv_data, "no-scenecut", 0, AV_OPT_SEARCH_CHILDREN);
+			if (strcmp(codec->name, "h264_nvenc")) {
+				av_opt_set_int(context->priv_data, "b_adapt", 0, AV_OPT_SEARCH_CHILDREN);
 			}
 		}
 
