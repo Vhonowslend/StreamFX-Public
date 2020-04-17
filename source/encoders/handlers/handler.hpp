@@ -46,9 +46,16 @@ namespace encoder::ffmpeg {
 			virtual void get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context,
 									  bool hw_encode);
 
-			public /*settings*/:
-			virtual bool has_keyframe_support(ffmpeg_instance* instance);
+			public /*support tests*/:
+			virtual bool has_keyframe_support(ffmpeg_factory* instance);
 
+			virtual bool is_hardware_encoder(ffmpeg_factory* instance);
+
+			virtual bool has_threading_support(ffmpeg_factory* instance);
+
+			virtual bool has_pixel_format_support(ffmpeg_factory* instance);
+
+			public /*settings*/:
 			virtual void get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context,
 										bool hw_encode);
 

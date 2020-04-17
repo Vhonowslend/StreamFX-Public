@@ -60,6 +60,11 @@ void prores_aw_handler::get_defaults(obs_data_t* settings, const AVCodec*, AVCod
 	obs_data_set_default_int(settings, P_PRORES_PROFILE, 0);
 }
 
+bool encoder::ffmpeg::handler::prores_aw_handler::has_pixel_format_support(ffmpeg_factory* instance)
+{
+	return false;
+}
+
 inline const char* profile_to_name(const AVProfile* ptr)
 {
 	switch (static_cast<encoder::codec::prores::profile>(ptr->profile)) {

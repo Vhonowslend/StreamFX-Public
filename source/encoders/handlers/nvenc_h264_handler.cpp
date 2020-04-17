@@ -75,6 +75,21 @@ void nvenc_h264_handler::get_defaults(obs_data_t* settings, const AVCodec* codec
 	obs_data_set_default_int(settings, KEY_LEVEL, static_cast<int64_t>(level::UNKNOWN));
 }
 
+bool encoder::ffmpeg::handler::nvenc_h264_handler::is_hardware_encoder(ffmpeg_factory* instance)
+{
+	return true;
+}
+
+bool encoder::ffmpeg::handler::nvenc_h264_handler::has_threading_support(ffmpeg_factory* instance)
+{
+	return false;
+}
+
+bool encoder::ffmpeg::handler::nvenc_h264_handler::has_pixel_format_support(ffmpeg_factory* instance)
+{
+	return true;
+}
+
 bool nvenc_h264_handler::has_keyframe_support(ffmpeg_instance*)
 {
 	return true;
