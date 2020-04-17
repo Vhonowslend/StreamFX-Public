@@ -28,9 +28,24 @@ void encoder::ffmpeg::handler::handler::adjust_encoder_info(encoder::ffmpeg::ffm
 
 void encoder::ffmpeg::handler::handler::get_defaults(obs_data_t*, const AVCodec*, AVCodecContext*, bool) {}
 
-bool encoder::ffmpeg::handler::handler::has_keyframe_support(ffmpeg_instance* instance)
+bool encoder::ffmpeg::handler::handler::has_keyframe_support(ffmpeg_factory* instance)
 {
 	return (instance->get_avcodec()->capabilities & AV_CODEC_CAP_INTRA_ONLY) == 0;
+}
+
+bool encoder::ffmpeg::handler::handler::is_hardware_encoder(ffmpeg_factory* instance)
+{
+	return false;
+}
+
+bool encoder::ffmpeg::handler::handler::has_threading_support(ffmpeg_factory* instance)
+{
+	return (instance->get_avcodec()->capabilities & (AV_CODEC_CAP_FRAME_THREADS | AV_CODEC_CAP_SLICE_THREADS));
+}
+
+bool encoder::ffmpeg::handler::handler::has_pixel_format_support(ffmpeg_factory* instance)
+{
+	return (instance->get_avcodec()->pix_fmts != nullptr);
 }
 
 void encoder::ffmpeg::handler::handler::get_properties(obs_properties_t*, const AVCodec*, AVCodecContext*, bool) {}

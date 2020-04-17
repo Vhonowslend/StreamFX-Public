@@ -512,7 +512,7 @@ void ffmpeg_factory::get_properties(obs_properties_t* props, bool hw_encode)
 	if (_handler)
 		_handler->get_properties(props, avcodec_ptr, nullptr, hw_encode);
 
-	if ((avcodec_ptr->capabilities & AV_CODEC_CAP_INTRA_ONLY) == 0) {
+	if (_handler && _handler->has_keyframe_support(this)) {
 		// Key-Frame Options
 		obs_properties_t* grp = props;
 		if (!util::are_property_groups_broken()) {
@@ -520,7 +520,7 @@ void ffmpeg_factory::get_properties(obs_properties_t* props, bool hw_encode)
 			obs_properties_add_group(props, ST_KEYFRAMES, D_TRANSLATE(ST_KEYFRAMES), OBS_GROUP_NORMAL, grp);
 		}
 
-		{
+		{ // Key-Frame Interval Type
 			auto p = obs_properties_add_list(grp, KEY_KEYFRAMES_INTERVALTYPE, D_TRANSLATE(ST_KEYFRAMES_INTERVALTYPE),
 											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_KEYFRAMES_INTERVALTYPE)));
@@ -528,13 +528,13 @@ void ffmpeg_factory::get_properties(obs_properties_t* props, bool hw_encode)
 			obs_property_list_add_int(p, D_TRANSLATE(ST_KEYFRAMES_INTERVALTYPE_(Seconds)), 0);
 			obs_property_list_add_int(p, D_TRANSLATE(ST_KEYFRAMES_INTERVALTYPE_(Frames)), 1);
 		}
-		{
+		{ // Key-Frame Interval Seconds
 			auto p = obs_properties_add_float(grp, KEY_KEYFRAMES_INTERVAL_SECONDS, D_TRANSLATE(ST_KEYFRAMES_INTERVAL),
 											  0.00, std::numeric_limits<std::int16_t>::max(), 0.01);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_KEYFRAMES_INTERVAL)));
 			obs_property_float_set_suffix(p, " seconds");
 		}
-		{
+		{ // Key-Frame Interval Frames
 			auto p = obs_properties_add_int(grp, KEY_KEYFRAMES_INTERVAL_FRAMES, D_TRANSLATE(ST_KEYFRAMES_INTERVAL), 0,
 											std::numeric_limits<std::int32_t>::max(), 1);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_KEYFRAMES_INTERVAL)));
@@ -550,34 +550,34 @@ void ffmpeg_factory::get_properties(obs_properties_t* props, bool hw_encode)
 			grp = prs;
 		}
 
-		{
+		{ // Custom Settings
 			auto p = obs_properties_add_text(grp, KEY_FFMPEG_CUSTOMSETTINGS, D_TRANSLATE(ST_FFMPEG_CUSTOMSETTINGS),
 											 obs_text_type::OBS_TEXT_DEFAULT);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_FFMPEG_CUSTOMSETTINGS)));
 		}
-		if (!hw_encode) {
-			{
-				auto p = obs_properties_add_int(grp, KEY_FFMPEG_GPU, D_TRANSLATE(ST_FFMPEG_GPU), -1,
-												std::numeric_limits<std::uint8_t>::max(), 1);
-				obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_FFMPEG_GPU)));
-			}
-			if (avcodec_ptr->pix_fmts) {
-				auto p = obs_properties_add_list(grp, KEY_FFMPEG_COLORFORMAT, D_TRANSLATE(ST_FFMPEG_COLORFORMAT),
-												 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-				obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_FFMPEG_COLORFORMAT)));
-				obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), static_cast<int64_t>(AV_PIX_FMT_NONE));
-				for (auto ptr = avcodec_ptr->pix_fmts; *ptr != AV_PIX_FMT_NONE; ptr++) {
-					obs_property_list_add_int(p, ::ffmpeg::tools::get_pixel_format_name(*ptr),
-											  static_cast<int64_t>(*ptr));
-				}
-			}
-			if (avcodec_ptr->capabilities & (AV_CODEC_CAP_FRAME_THREADS | AV_CODEC_CAP_SLICE_THREADS)) {
-				auto p =
-					obs_properties_add_int_slider(grp, KEY_FFMPEG_THREADS, D_TRANSLATE(ST_FFMPEG_THREADS), 0,
-												  static_cast<int64_t>(std::thread::hardware_concurrency() * 2), 1);
-				obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_FFMPEG_THREADS)));
+
+		if (_handler && _handler->is_hardware_encoder(this)) {
+			auto p = obs_properties_add_int(grp, KEY_FFMPEG_GPU, D_TRANSLATE(ST_FFMPEG_GPU), -1,
+											std::numeric_limits<std::uint8_t>::max(), 1);
+			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_FFMPEG_GPU)));
+		}
+
+		if (_handler && _handler->has_threading_support(this)) {
+			auto p = obs_properties_add_int_slider(grp, KEY_FFMPEG_THREADS, D_TRANSLATE(ST_FFMPEG_THREADS), 0,
+												   static_cast<int64_t>(std::thread::hardware_concurrency() * 2), 1);
+			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_FFMPEG_THREADS)));
+		}
+
+		if (_handler && _handler->has_pixel_format_support(this)) {
+			auto p = obs_properties_add_list(grp, KEY_FFMPEG_COLORFORMAT, D_TRANSLATE(ST_FFMPEG_COLORFORMAT),
+											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_FFMPEG_COLORFORMAT)));
+			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), static_cast<int64_t>(AV_PIX_FMT_NONE));
+			for (auto ptr = avcodec_ptr->pix_fmts; *ptr != AV_PIX_FMT_NONE; ptr++) {
+				obs_property_list_add_int(p, ::ffmpeg::tools::get_pixel_format_name(*ptr), static_cast<int64_t>(*ptr));
 			}
 		}
+
 		{
 			auto p =
 				obs_properties_add_list(grp, KEY_FFMPEG_STANDARDCOMPLIANCE, D_TRANSLATE(ST_FFMPEG_STANDARDCOMPLIANCE),
@@ -699,7 +699,7 @@ void ffmpeg_instance::initialize_hw(obs_data_t*)
 
 	_context->hw_frames_ctx = av_hwframe_ctx_alloc(_context->hw_device_ctx);
 	if (!_context->hw_frames_ctx)
-		throw std::runtime_error("Failed to allocate AVHWFramesContext.");
+		throw std::runtime_error("Allocating hardware context failed, chosen pixel format is likely not supported.");
 
 	AVHWFramesContext* ctx = reinterpret_cast<AVHWFramesContext*>(_context->hw_frames_ctx->data);
 	ctx->width             = _context->width;
@@ -708,7 +708,7 @@ void ffmpeg_instance::initialize_hw(obs_data_t*)
 	ctx->sw_format         = _context->sw_pix_fmt;
 
 	if (av_hwframe_ctx_init(_context->hw_frames_ctx) < 0)
-		throw std::runtime_error("Failed to initialize AVHWFramesContext.");
+		throw std::runtime_error("Initializing hardware context failed, chosen pixel format is likely not supported.");
 }
 
 void ffmpeg_instance::push_free_frame(std::shared_ptr<AVFrame> frame)
@@ -901,7 +901,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 	}
 
 	// Keyframes
-	if (_handler && _handler->has_keyframe_support(this)) {
+	if (_handler && _handler->has_keyframe_support(_factory)) {
 		// Key-Frame Options
 		obs_video_info ovi;
 		if (!obs_get_video_info(&ovi)) {

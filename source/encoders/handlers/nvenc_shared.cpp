@@ -574,19 +574,25 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			break;
 		}
 
+		// Two Pass
 		if (int tp = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_TWOPASS)); tp > -1) {
 			av_opt_set_int(context->priv_data, "2pass", tp ? 1 : 0, AV_OPT_SEARCH_CHILDREN);
 		}
 
+		// Look Ahead # of Frames
 		int la = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_LOOKAHEAD));
-		if (la > -1)
+		if (!util::is_tristate_default(la)) {
 			av_opt_set_int(context->priv_data, "rc-lookahead", la, AV_OPT_SEARCH_CHILDREN);
+		}
+
 		if (la > 0) {
+			// Adaptive I-Frames
 			if (int64_t adapt_i = obs_data_get_int(settings, KEY_RATECONTROL_ADAPTIVEI);
 				!util::is_tristate_default(adapt_i)) {
 				av_opt_set_int(context->priv_data, "no-scenecut", adapt_i, AV_OPT_SEARCH_CHILDREN);
 			}
 
+			// Adaptive B-Frames
 			if (strcmp(codec->name, "h264_nvenc")) {
 				if (int64_t adapt_b = obs_data_get_int(settings, KEY_RATECONTROL_ADAPTIVEB);
 					!util::is_tristate_default(adapt_b)) {
@@ -618,6 +624,8 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			//context->rc_min_rate = 0;
 			context->rc_max_rate = 0;
 		}
+
+		// Buffer Size
 		if (have_bitrate || have_bitrate_range) {
 			if (int64_t v = obs_data_get_int(settings, KEY_RATECONTROL_BUFFERSIZE); v > -1)
 				context->rc_buffer_size = static_cast<int>(v * 1000);
@@ -625,6 +633,7 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			context->rc_buffer_size = 0;
 		}
 
+		// Quality Limits
 		if (have_quality) {
 			if (int qmin = static_cast<int>(obs_data_get_int(settings, KEY_RATECONTROL_QUALITY_MINIMUM)); qmin > -1)
 				context->qmin = qmin;
@@ -635,12 +644,12 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			context->qmax = -1;
 		}
 
-		{
-			if (double_t v = obs_data_get_double(settings, KEY_RATECONTROL_QUALITY_TARGET) / 100.0 * 51.0; v > 0) {
-				av_opt_set_double(context->priv_data, "cq", v, AV_OPT_SEARCH_CHILDREN);
-			}
+		// Quality Target
+		if (double_t v = obs_data_get_double(settings, KEY_RATECONTROL_QUALITY_TARGET) / 100.0 * 51.0; v > 0) {
+			av_opt_set_double(context->priv_data, "cq", v, AV_OPT_SEARCH_CHILDREN);
 		}
 
+		// QP Settings
 		if (have_qp) {
 			if (int64_t qp = obs_data_get_int(settings, KEY_RATECONTROL_QP_I); qp > -1)
 				av_opt_set_int(context->priv_data, "init_qpI", static_cast<int>(qp), AV_OPT_SEARCH_CHILDREN);

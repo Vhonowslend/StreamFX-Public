@@ -34,19 +34,24 @@ namespace encoder::ffmpeg::handler {
 		public:
 		virtual ~prores_aw_handler(){};
 
-		public:
-		virtual void override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec,
-										  AVCodecContext* context) override;
-
+		public /*factory*/:
 		virtual void get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context,
 								  bool hw_encode) override;
 
+		public /*support tests*/:
+		virtual bool has_pixel_format_support(ffmpeg_factory* instance);
+
+		public /*settings*/:
 		virtual void get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context,
 									bool hw_encode) override;
 
 		virtual void update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context) override;
 
 		virtual void log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context) override;
+
+		public /*instance*/:
+		virtual void override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec,
+										  AVCodecContext* context) override;
 
 		virtual void process_avpacket(AVPacket& packet, const AVCodec* codec, AVCodecContext* context) override;
 	};
