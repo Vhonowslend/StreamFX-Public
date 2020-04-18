@@ -120,7 +120,7 @@ std::chrono::nanoseconds util::profiler::percentile(double_t percentile, bool by
 
 		for (auto kv : copy_timings) {
 			double_t kv_pct = double_t((kv.first - smallest).count()) / double_t(variance.count());
-			if (is_equal(kv_pct, percentile, edge) || (kv_pct > percentile)) {
+			if (is_equal<double_t>(kv_pct, percentile, edge) || (kv_pct > percentile)) {
 				return std::chrono::nanoseconds(kv.first);
 			}
 		}
@@ -137,7 +137,7 @@ std::chrono::nanoseconds util::profiler::percentile(double_t percentile, bool by
 			double_t percentile_last = double_t(accu_calls_last) / double_t(calls);
 			double_t percentile_now  = double_t(accu_calls_now) / double_t(calls);
 
-			if (is_equal(percentile, percentile_now, edge)
+			if (is_equal<double_t>(percentile, percentile_now, edge)
 				|| ((percentile_last < percentile) && (percentile_now > percentile))) {
 				return std::chrono::nanoseconds(kv.first);
 			}
