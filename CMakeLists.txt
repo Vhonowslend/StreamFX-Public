@@ -909,6 +909,7 @@ set_target_properties(
 	${PROJECT_NAME}
 	PROPERTIES
 		CXX_STANDARD ${_CXX_STANDARD}
+		CXX_STANDARD_REQUIRED ON
 		CXX_EXTENSIONS ${_CXX_EXTENSIONS}
 )
 
@@ -947,8 +948,15 @@ if(HAVE_OBS_FRONTEND)
 	)
 endif()
 
-# Clang-Format
+# Clang Tools
 if(HAVE_CLANG)
+	generate_compile_commands_json(
+		TARGETS ${PROJECT_NAME}
+	)
+	clang_tidy(
+		TARGETS ${PROJECT_NAME}		
+		VERSION 9.0.0
+	)
 	clang_format(
 		TARGETS ${PROJECT_NAME}
 		DEPENDENCY
