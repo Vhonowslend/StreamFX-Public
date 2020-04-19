@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="618.36224"
+   height="99.821999"
+   viewBox="0 0 154.59056 24.9555"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+   sodipodi:docname="logo_raw.svg"
+   inkscape:export-filename="D:\Projects\Xaymar\obs-studio\UI\frontend-plugins\streamfx\media\logo.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
+  <defs
+     id="defs2">
+    <filter
+       style="color-interpolation-filters:sRGB"
+       id="filter819"
+       inkscape:label="shadowthingy"
+       x="-0.050000001"
+       y="-0.25"
+       width="1.1"
+       height="1.5">
+      <feGaussianBlur
+         in="SourceAlpha"
+         stdDeviation="0.5"
+         result="mainBlur"
+         id="feGaussianBlur5" />
+      <!-- Build outer lightmap -->
+      <feOffset
+         in="mainBlur"
+         dx="0"
+         dy="-0.5"
+         result="offsetShadow"
+         id="feOffset7" />
+      <feOffset
+         in="mainBlur"
+         dx="0"
+         dy="1.0"
+         result="offsetLight"
+         id="feOffset9" />
+      <feComposite
+         in="offsetShadow"
+         in2="SourceAlpha"
+         operator="out"
+         result="shadow"
+         id="feComposite11" />
+      <!-- Combining In with Out creates a destination-out -->
+      <feFlood
+         flood-color="rgb(255,255,255)"
+         result="light"
+         id="feFlood13" />
+      <feComposite
+         in="light"
+         in2="offsetLight"
+         result="light"
+         operator="in"
+         id="feComposite15" />
+      <feComposite
+         in="light"
+         in2="SourceAlpha"
+         result="light"
+         operator="out"
+         id="feComposite17" />
+      <!-- Blend Light and Shadow into one -->
+      <feBlend
+         in2="shadow"
+         in="light"
+         mode="lighten"
+         result="outerShadowLight"
+         id="feBlend19" />
+      <!-- Build inner drop shadow -->
+      <feOffset
+         in="mainBlur"
+         dx="0"
+         dy="1.5"
+         result="innerDropShadow"
+         id="feOffset21" />
+      <feComposite
+         in="SourceAlpha"
+         in2="innerDropShadow"
+         operator="out"
+         result="innerDropShadow"
+         id="feComposite23" />
+      <feGaussianBlur
+         in="innerDropShadow"
+         stdDeviation="0.5"
+         result="innerDropShadow"
+         id="feGaussianBlur25" />
+      <feComposite
+         in="SourceAlpha"
+         in2="innerDropShadow"
+         operator="in"
+         result="innerDropShadow"
+         id="feComposite27" />
+      <!-- Combine all Light maps -->
+      <feBlend
+         in="innerDropShadow"
+         in2="outerShadowLight"
+         mode="normal"
+         result="lightmap"
+         id="feBlend29" />
+      <!-- Generate a thin smooth border -->
+      <feMorphology
+         in="SourceAlpha"
+         operator="erode"
+         radius="0.1"
+         result="border"
+         id="feMorphology31" />
+      <feComposite
+         in="SourceAlpha"
+         in2="border"
+         operator="out"
+         result="border"
+         id="feComposite33" />
+      <!-- Blend everything with the original fill now -->
+      <feBlend
+         in="SourceGraphic"
+         in2="border"
+         mode="multiply"
+         result="final"
+         id="feBlend35" />
+      <feBlend
+         in="final"
+         in2="lightmap"
+         mode="multiply"
+         result="final"
+         id="feBlend37" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB"
+       id="filter840"
+       inkscape:label="awesome_glow"
+       y="-0.25"
+       height="1.5"
+       x="-0.10000000000000001">
+      <feGaussianBlur
+         stdDeviation="2"
+         id="feGaussianBlur842"
+         result="result5" />
+      <feGaussianBlur
+         stdDeviation="1"
+         id="feGaussianBlur844"
+         in="SourceGraphic"
+         result="result3" />
+      <feGaussianBlur
+         stdDeviation="0.5"
+         id="feGaussianBlur846"
+         in="SourceGraphic"
+         result="result1" />
+      <feBlend
+         mode="color-dodge"
+         in2="result3"
+         id="feBlend848"
+         in="result5"
+         result="result2" />
+      <feBlend
+         mode="color-dodge"
+         in2="result1"
+         id="feBlend850"
+         in="result2"
+         result="result4" />
+      <feBlend
+         mode="color-dodge"
+         in2="SourceGraphic"
+         id="feBlend852"
+         result="result6" />
+    </filter>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="3.1729219"
+     inkscape:cx="291.20207"
+     inkscape:cy="48.32665"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:pagecheckerboard="true"
+     inkscape:measure-start="0,0"
+     inkscape:measure-end="0,0"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:window-width="2560"
+     inkscape:window-height="1417"
+     inkscape:window-x="2552"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     showborder="true"
+     units="px" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-27.940267,-136.18735)">
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:24.0000001px;line-height:1.25;font-family:'Defcon Zero';-inkscape-font-specification:'Defcon Zero, Normal';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#6d59ff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;writing-mode:lr;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;filter:url(#filter840);"
+       x="104.99405"
+       y="156.9836"
+       id="text817"><tspan
+         sodipodi:role="line"
+         id="tspan815"
+         x="104.99405"
+         y="156.9836"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:24.0000001px;font-family:'Defcon Zero';-inkscape-font-specification:'Defcon Zero, Normal';text-align:center;text-anchor:middle;fill:#6d59ff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;writing-mode:lr;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;">S<tspan
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20.00000008px;font-family:'Defcon Zero';-inkscape-font-specification:'Defcon Zero, Normal';fill:#6d59ff;text-anchor:middle;text-align:center;writing-mode:lr;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;fill-opacity:1"
+   id="tspan853">tream</tspan>FX</tspan></text>
+  </g>
+</svg>
