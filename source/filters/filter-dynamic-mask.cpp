@@ -179,32 +179,6 @@ void dynamic_mask_instance::input_renamed(obs::deprecated_source*, std::string o
 	obs_source_update(_self, settings);
 }
 
-bool dynamic_mask_instance::modified(void*, obs_properties_t* properties, obs_property_t*,
-									 obs_data_t* settings) noexcept
-try {
-	channel mask = static_cast<channel>(obs_data_get_int(settings, ST_CHANNEL));
-
-	for (auto kv1 : channel_translations) {
-		std::string chv_key = std::string(ST_CHANNEL_VALUE) + "." + kv1.second;
-		obs_property_set_visible(obs_properties_get(properties, chv_key.c_str()), (mask == kv1.first));
-		std::string chm_key = std::string(ST_CHANNEL_MULTIPLIER) + "." + kv1.second;
-		obs_property_set_visible(obs_properties_get(properties, chm_key.c_str()), (mask == kv1.first));
-
-		for (auto kv2 : channel_translations) {
-			std::string io_key = std::string(ST_CHANNEL_INPUT) + "." + kv1.second + "." + kv2.second;
-			obs_property_set_visible(obs_properties_get(properties, io_key.c_str()), (mask == kv1.first));
-		}
-	}
-
-	return true;
-} catch (const std::exception& ex) {
-	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return false;
-} catch (...) {
-	LOG_ERROR("Unexpected exception in modified_properties callback.");
-	return false;
-}
-
 void dynamic_mask_instance::video_tick(float)
 {
 	_have_input_texture  = false;
@@ -416,7 +390,11 @@ obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* d
 			std::string buf = std::string(ST_CHANNEL_VALUE) + "." + pri_ch;
 			p = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0,
 												0.01);
-			obs_property_set_long_description(p, D_TRANSLATE(ST_CHANNEL_VALUE));
+			_translation_cache.push_back(translate_string(D_TRANSLATE(D_DESC(ST_CHANNEL_VALUE)), D_TRANSLATE(pri_ch),
+														  D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch),
+														  D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch),
+														  D_TRANSLATE(pri_ch)));
+			obs_property_set_long_description(p, _translation_cache.back().c_str());
 		}
 
 		const char* sec_chs[] = {S_CHANNEL_RED, S_CHANNEL_GREEN, S_CHANNEL_BLUE, S_CHANNEL_ALPHA};
@@ -425,7 +403,11 @@ obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* d
 			std::string buf = std::string(ST_CHANNEL_INPUT) + "." + pri_ch + "." + sec_ch;
 			p = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0,
 												0.01);
-			obs_property_set_long_description(p, D_TRANSLATE(ST_CHANNEL_INPUT));
+			_translation_cache.push_back(translate_string(D_TRANSLATE(D_DESC(ST_CHANNEL_INPUT)), D_TRANSLATE(sec_ch),
+														  D_TRANSLATE(pri_ch), D_TRANSLATE(sec_ch), D_TRANSLATE(pri_ch),
+														  D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch),
+														  D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch)));
+			obs_property_set_long_description(p, _translation_cache.back().c_str());
 		}
 
 		{
@@ -433,7 +415,11 @@ obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* d
 			std::string buf = std::string(ST_CHANNEL_MULTIPLIER) + "." + pri_ch;
 			p = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0,
 												0.01);
-			obs_property_set_long_description(p, D_TRANSLATE(ST_CHANNEL_MULTIPLIER));
+			_translation_cache.push_back(translate_string(D_TRANSLATE(D_DESC(ST_CHANNEL_MULTIPLIER)),
+														  D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch),
+														  D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch),
+														  D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch)));
+			obs_property_set_long_description(p, _translation_cache.back().c_str());
 		}
 
 		{

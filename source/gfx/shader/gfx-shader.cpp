@@ -227,12 +227,12 @@ void gfx::shader::shader::properties(obs_properties_t* pr)
 			{
 				auto p = obs_properties_add_text(grp2, ST_SHADER_SIZE_WIDTH, D_TRANSLATE(ST_SHADER_SIZE_WIDTH),
 												 OBS_TEXT_DEFAULT);
-				obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_SIZE_WIDTH)));
+				obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_SIZE)));
 			}
 			{
 				auto p = obs_properties_add_text(grp2, ST_SHADER_SIZE_HEIGHT, D_TRANSLATE(ST_SHADER_SIZE_HEIGHT),
 												 OBS_TEXT_DEFAULT);
-				obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_SIZE_HEIGHT)));
+				obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_SIZE)));
 			}
 		}
 	}
