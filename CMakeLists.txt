@@ -429,6 +429,8 @@ list(APPEND PROJECT_TEMPLATES
 )
 list(APPEND PROJECT_PRIVATE_SOURCE
 	# Plugin
+	"source/configuration.hpp"
+	"source/configuration.cpp"
 	"source/common.hpp"
 	"source/strings.hpp"
 	"source/plugin.hpp"
