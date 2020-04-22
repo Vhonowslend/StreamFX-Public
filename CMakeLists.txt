@@ -495,7 +495,17 @@ if(WIN32)
 	)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/windll.cpp"
-	)	
+	)
+endif()
+if((CMAKE_C_COMPILER_ID STREQUAL "GNU")
+	OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+	OR (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+	OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+	if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+		list(APPEND PROJECT_LIBRARIES
+			"stdc++fs"
+		)
+	endif()
 endif()
 
 ## OBS Studio - Frontend/Qt
