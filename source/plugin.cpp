@@ -19,6 +19,7 @@
 
 #include "plugin.hpp"
 #include <stdexcept>
+#include "configuration.hpp"
 #include "obs/obs-source-tracker.hpp"
 
 #ifdef ENABLE_ENCODER_FFMPEG
@@ -68,6 +69,9 @@ try {
 	LOG_INFO("Loading Version %s", STREAMFX_VERSION_STRING);
 
 	global_threadpool = std::make_shared<util::threadpool>();
+
+	// Initialize Configuration
+	streamfx::configuration::initialize();
 
 	// Initialize Source Tracker
 	obs::source_tracker::initialize();
@@ -172,6 +176,9 @@ try {
 
 	// Finalize Source Tracker
 	obs::source_tracker::finalize();
+
+	// Finalize Configuration
+	streamfx::configuration::finalize();
 
 	global_threadpool.reset();
 } catch (...) {

@@ -431,6 +431,8 @@ if(WIN32)
 endif()
 list(APPEND PROJECT_PRIVATE_SOURCE
 	# Plugin
+	"source/configuration.hpp"
+	"source/configuration.cpp"
 	"source/common.hpp"
 	"source/plugin.hpp"
 	"source/plugin.cpp"
