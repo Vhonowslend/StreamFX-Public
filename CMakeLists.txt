@@ -24,7 +24,6 @@ set(VERSION_MINOR 8)
 set(VERSION_PATCH 0)
 set(VERSION_TWEAK 0)
 set(VERSION_SUFFIX "b1")
-set(PROJECT_COMMIT "N/A")
 if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
 	set(GIT_RESULT "")
 	set(GIT_OUTPUT "")
@@ -48,6 +47,11 @@ if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
 	if(GIT_RESULT EQUAL 0)
 		set(PROJECT_COMMIT ${GIT_OUTPUT})
 	endif()
+endif()
+if(PROJECT_COMMIT)
+	set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}${VERSION_SUFFIX}-${PROJECT_COMMIT}")
+else()
+	set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}${VERSION_SUFFIX}")
 endif()
 
 # Policies
@@ -255,7 +259,7 @@ configure_file(
 
 # Packaging
 if("${CMAKE_PACKAGE_SUFFIX_OVERRIDE}" STREQUAL "")
-	set(_PACKAGE_SUFFIX_OVERRIDE "${PROJECT_VERSION}${VERSION_SUFFIX}-${PROJECT_COMMIT}")
+	set(_PACKAGE_SUFFIX_OVERRIDE "${VERSION_STRING}")
 else()
 	set(_PACKAGE_SUFFIX_OVERRIDE "${CMAKE_PACKAGE_SUFFIX_OVERRIDE}")
 endif()
@@ -423,18 +427,12 @@ list(APPEND PROJECT_TEMPLATES
 	"cmake/version.hpp.in"
 	"cmake/module.cpp.in"
 )
-if(WIN32)
-	list(APPEND PROJECT_TEMPLATES
-		"cmake/installer.iss.in"
-		"cmake/version.rc.in"
-	)
-endif()
 list(APPEND PROJECT_PRIVATE_SOURCE
 	# Plugin
 	"source/common.hpp"
+	"source/strings.hpp"
 	"source/plugin.hpp"
 	"source/plugin.cpp"
-	"source/strings.hpp"
 	"source/utility.hpp"
 	"source/utility.cpp"
 	"source/util-event.hpp"
@@ -488,6 +486,14 @@ list(APPEND PROJECT_PRIVATE_GENERATED
 	"${PROJECT_BINARY_DIR}/source/module.cpp"
 	"${PROJECT_BINARY_DIR}/source/version.hpp"
 )
+if(WIN32)
+	list(APPEND PROJECT_TEMPLATES
+		"cmake/installer.iss.in"
+		"cmake/version.rc.in"
+	)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+	)	
+endif()
 
 ## OBS Studio - Frontend/Qt
 if(HAVE_OBS_FRONTEND)	
@@ -496,7 +502,7 @@ if(HAVE_OBS_FRONTEND)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 	)
 	list(APPEND PROJECT_INCLUDE_DIRS
-		"ui"
+		"source/ui"
 	)
 	list(APPEND PROJECT_DEFINITIONS
 		ENABLE_FRONTEND
@@ -943,8 +949,9 @@ if(HAVE_OBS_FRONTEND)
 		AUTOUIC TRUE
 		AUTOUIC_SEARCH_PATHS "${PROJECT_SOURCE_DIR};${PROJECT_SOURCE_DIR}/ui"
 		AUTOMOC TRUE
-		AUTOGEN_BUILD_DIR "${PROJECT_BINARY_DIR}/source"
 		AUTORCC TRUE
+		AUTOGEN_BUILD_DIR "${PROJECT_BINARY_DIR}/source"
+		AUTOGEN_SOURCE_GROUP "Qt Files"
 	)
 endif()
 
