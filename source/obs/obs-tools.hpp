@@ -62,4 +62,9 @@ namespace obs {
 	{
 		obs_sceneitem_remove(v);
 	}
+
+	inline void obs_data_deleter(obs_data_t* v)
+	{
+		obs_data_release(v);
+	}
 } // namespace obs
