@@ -7,13 +7,8 @@ jobs:
     name: "Windows 64-bit"
     strategy:
       matrix: 
-        runner: [ windows-2016, windows-2019 ]
+        runner: [ windows-2019 ]
         include:
-          - runner: windows-2016
-            id: windows2017
-            windows_sdk: "10.0.17763.0"
-            cmake_generator: "Visual Studio 15 2017 Win64"
-            cmake_generator_platform: ""
           - runner: windows-2019
             id: windows2019
             windows_sdk: "10.0.18362.0"
