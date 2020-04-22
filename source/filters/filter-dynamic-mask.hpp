@@ -72,9 +72,6 @@ namespace streamfx::filter::dynamic_mask {
 
 		void input_renamed(obs::deprecated_source* src, std::string old_name, std::string new_name);
 
-		static bool modified(void* self, obs_properties_t* properties, obs_property_t* property,
-							 obs_data_t* settings) noexcept;
-
 		virtual void video_tick(float_t _time) override;
 		virtual void video_render(gs_effect_t* effect) override;
 	};
