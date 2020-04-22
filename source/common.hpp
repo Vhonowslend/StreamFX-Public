@@ -70,6 +70,10 @@ extern "C" {
 #include <graphics/vec4.h>
 
 #include <util/platform.h>
+
+// Fix libOBS's global defines
+#undef strtoll
+
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
