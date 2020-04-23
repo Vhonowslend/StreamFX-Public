@@ -1,0 +1,91 @@
+// Always provided by OBS
+uniform float4x4 ViewProj<
+	bool automatic = true;
+>;
+
+// Provided by Stream Effects
+uniform float4 Time<
+	bool automatic = true;
+>;
+uniform float4 ViewSize<
+	bool automatic = true;
+>;
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+
+uniform float _pVerticalEdge<
+	string name = "Vertical Edge %";
+	string field_type = "slider";
+	float scale = 0.01;
+	float minimum = 0.0;
+	float maximum = 100.0;
+> = 50.0;
+
+uniform float _pSize<
+	string name = "Step Size (px)";
+	string field_type = "slider";
+	float scale = 1.0;
+	float minimum = 0.5;
+	float maximum = 128.0;
+	float step = 0.5;
+> = 16.0;
+
+uniform float _pBarSize<
+	string name = "Bar Size (px)";
+	string field_type = "slider";
+	float scale = 1.0;
+	float minimum = 0.5;
+	float maximum = 128.0;
+	float step = 0.5;
+> = 1.0;
+
+// ---------- Shader Code
+sampler_state def_sampler {
+	AddressU  = Wrap;
+	AddressV  = Wrap;
+	Filter    = Linear;
+};
+
+struct VertFragData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertFragData VSDefault(VertFragData vtx) {
+	vtx.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
+	return vtx;
+}
+
+float4 PSDefault(VertFragData vtx) : TARGET {
+	float4 smp = InputA.Sample(def_sampler, vtx.uv);
+
+	// Increases in steps of .5 pixels.
+	if (vtx.uv.y <= _pVerticalEdge) {
+		// Y Position and Y Percent
+		float iy = _pVerticalEdge - vtx.uv.y;
+		float iyp = 1.0 - (vtx.uv.y / _pVerticalEdge);
+
+		float yc = iy * ViewSize.y;
+		float step = floor(yc / _pSize);
+
+		float yi = 1.0 - (((step + .5) * _pSize * ViewSize.w) + (1.0 - _pVerticalEdge));
+
+		float bar_size = step * _pBarSize * ViewSize.w;
+		float yd = (vtx.uv.y - yi);
+		if (abs(yd) < bar_size) {
+			return float4(0., 0., 0., 0.);
+		}
+	}
+	
+	return smp;
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSDefault(vtx); 
+	}
+}
