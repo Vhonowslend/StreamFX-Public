@@ -1,0 +1,199 @@
+// https://www.shadertoy.com/view/MslGRn
+#define vec2 float2
+#define vec3 float3
+#define vec4 float4
+#define ivec2 int2
+#define ivec3 int3
+#define ivec4 int4
+#define mat2 float2x2
+#define mat3 float3x3
+#define mat4 float4x4
+#define fract frac
+#define mix lerp
+#define iTime Time.x
+#define iResolution ViewSize
+
+uniform float2 mouse<
+	string name = "Virtual Mouse Coordinates";
+	string field_type = "slider";
+	float2 minimum = {0, 0};
+	float2 maximum = {100., 100.};
+	float2 scale = {.01, .01};
+	float2 step = {.01, .01};
+> = {0., 0.};
+
+uniform float4x4 ViewProj<
+	bool automatic = true;
+>;
+
+uniform float4 Time<
+	bool automatic = true;
+>;
+
+uniform float4 ViewSize<
+	bool automatic = true;
+>;
+
+int2 iMouse() {
+	return int2(mouse.x * ViewSize.x, mouse.y * ViewSize.y);
+}
+
+#define TAU 6.2831853
+struct M {
+	float d;
+	vec3 c;
+};
+void mmin(float d, vec3 c, inout M m){if (d<m.d){m.d=d;m.c=c;}}
+
+mat2 rz2(float a){
+	float c=cos(a),s=sin(a);
+	return mat2(c,-s,s,c);
+}
+
+float amod(float a,float m) {
+	return mod(a,m)-m*.5;
+}
+
+float random(float x) {
+	return fract(sin(x*13.+4375.));
+}
+
+float height(vec2 iuv) {
+	return sin(sin(iuv.x+iTime*.1)*sin(iuv.y+iTime*.1)*5.)*(pow(abs(iuv.x),2.)*.02+0.1);
+}
+
+void map(vec3 p, inout M m){
+   	m.d=max(max(p.y,.0),max(p.z-6.,0.));
+	vec2 uv=p.xz*2.;
+	uv.y+=iTime;
+	vec2 f=fract(uv)-.5;
+	float fft=mouse.x;
+	float l=fft/(abs(f.x)*abs(f.y));
+	l+=.1*fft/(abs(p.z-6.));
+	m.c=mix(vec3(0.196, 0.003, 0.149),vec3(1, 0.019, 0.384),l);
+	
+	uv=p.xz-.5;
+	vec2 iuv=floor(uv);
+	vec2 fuv=fract(uv);
+	float h=mix(
+		mix(height(iuv+vec2(0.,0.)), height(iuv+vec2(1.,0.)), fuv.x),
+		mix(height(iuv+vec2(0.,1.)), height(iuv+vec2(1.,1.)), fuv.x),
+		fuv.y)-1.;
+	float d=p.y-h;
+	d=max(d,abs(p.z-10.)-4.);
+	vec2 vuv=fuv*(1.-fuv);
+	float v=vuv.x*vuv.y;
+	l=.01*fft/v;
+	mmin(d, vec3(0.,0.,1.)*l, m);
+}
+
+float hash( float n )
+{
+	return fract(sin(n)*43758.5453123);
+}
+
+float _noise( in vec3 x )
+{
+	vec3 p = floor(x);
+	vec3 f = fract(x);
+	f = f*f*(3.0-2.0*f);
+	float n = p.x + p.y*57.0 + 113.0*p.z;
+	float res = mix(mix(mix( hash(n+  0.0), hash(n+  1.0),f.x), mix( hash(n+ 57.0), hash(n+ 58.0),f.x),f.y), mix(mix( hash(n+113.0), hash(n+114.0),f.x), mix( hash(n+170.0), hash(n+171.0),f.x),f.y),f.z);
+	return res;
+}
+
+vec3 noise(vec2 uv) {
+	uv *= 100.;
+	return vec3(_noise(vec3(uv.x, uv.y, 0.)), _noise(vec3(uv.x, uv.y, 2832)), _noise(vec3(uv.y, uv.x, -2371.)));
+	//return texture(iChannel1,uv*.1).rgb;
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+	M m;
+	m.d = 0.;
+	m.c = vec3(0, 0, 0);
+
+	vec2 uv = fragCoord.xy / iResolution.xy;
+	vec2 v=uv*(1.-uv);
+	uv-=.5;
+	uv.x*=iResolution.x/iResolution.y;
+	
+	vec2 uvn=uv*2.5;
+	vec2 iuvn=floor(uvn)+vec2(2.,0.);
+	vec2 fuvn=fract(uvn);
+	vec3 nb=mix(
+		mix(noise(iuvn+vec2(0.,0.)), noise(iuvn+vec2(1.,0.)), fuvn.x),
+		mix(noise(iuvn+vec2(0.,1.)), noise(iuvn+vec2(1.,1.)), fuvn.x),
+		fuvn.y)*.1;
+	vec3 c=(vec3(0.168, 0, 0.2)*.5+nb*3.);
+
+// Sky
+	vec2 suv=uv;
+	suv=mul(suv, rz2(iTime*.02));
+	//c*=vec3(1./(1.-smoothstep(0.9,1.,texture(iChannel1,suv).r)));
+	{
+		float ct = 1./(1.-smoothstep(0.9,1.,noise(suv).r));
+		c*=vec3(ct, ct, ct);
+	}
+
+// Sun
+	vec2 uvc=uv-vec2(.4,.2);
+	float circle=1.-smoothstep(.25,.252,length(uvc));
+	float raytime=uv.y*100.+iTime*2.;
+	float thr=-uvc.y*5.-1.;
+	float rays= step(thr,sin(raytime));
+	circle=min(circle,rays);
+	vec3 csun=mix(vec3(0.968, 0.137, 0.094),vec3(1, 0.819, 0.019),uvc.y*3.+.5);
+	c=mix(c,csun,circle);
+	
+	// Ground
+	vec3 ro=vec3(0.,2.,0.),rd=vec3(uv,1),mp=ro;
+	rd.yz=mul(rd.yz, rz2(-.2));
+	int i;
+	for(i=0; i<50; ++i){
+		map(mp, m);
+		if(m.d<.001){
+			break;
+		}
+		mp+=rd*.5*m.d;
+	}
+	if(mp.z < 14.) {
+		c=m.c;
+	}
+	
+	// Scanline thingy
+	c=max(c,0.);
+	float cren=fract(uv.y*200.+iTime*.5);
+	c+=(smoothstep(.2,.3,cren)-smoothstep(.7,.8,cren))*0.01;
+	c=pow(c,vec3(1./2.2, 1./2.2, 1./2.2));
+	c *= pow(v.x*v.y * 25.0, 0.25);
+	fragColor.rgb = c;
+	fragColor.a = 1.;
+}
+
+struct VertFragData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertFragData VSDefault(VertFragData vtx) {
+	vtx.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
+	return vtx;
+}
+
+float4 PSDefault(VertFragData vtx) : TARGET {
+	float4 col = float4(1., 1., 1., 1.);
+	float2 uvx = float2(vtx.uv.x, 1.0 - vtx.uv.y) * ViewSize.xy;
+	mainImage(col, uvx);
+	return col;
+}
+
+technique Draw 
+{
+	pass
+	{
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSDefault(vtx); 
+	}
+}
