@@ -57,16 +57,36 @@ jobs:
     strategy:
       matrix: 
         runner: [ ubuntu-18.04, ubuntu-latest ]
+        compiler: [ gcc, clang ]
         include:
           - runner: ubuntu-18.04
-            gcc: 8
-            id: ubuntu1804
+            compiler: gcc
+            compiler-cxx: g++
+            compiler-version: 8
+            packages: gcc-8 g++8
+            extra_command: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
+            id: ubuntu1804-gcc8
           - runner: ubuntu-latest
-            gcc: 9
-            id: ubuntu1910
+            compiler: gcc
+            compiler-cxx: g++
+            compiler-version: 9
+            extra_command: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 800 --slave /usr/bin/g++ g++ /usr/bin/g++-9
+            id: ubuntu1910-gcc9
+          - runner: ubuntu-latest
+            compiler: clang
+            compiler-cxx: clang++
+            compiler-version: 9
+            packages: clang-9
+            extra_command: ""
+            id: ubuntu1910-clang9
+        exclude:
+          - runner: ubuntu-18.04
+            compiler: clang
     runs-on: ${{ matrix.runner }}
     env:
       CMAKE_GENERATOR: "Ninja"
+      CC: ${{ matrix.compiler }}
+      CXX: ${{ matrix.compiler-cxx }}
     steps:
     - name: "Clone Repository"
       uses: actions/checkout@v1
@@ -79,8 +99,7 @@ jobs:
         sudo apt-get -qq update
         sudo apt-get install \
           build-essential \
-          gcc-${{ matrix.gcc }} \
-          g++-${{ matrix.gcc }} \
+          ${{ matrix.packages }} \
           checkinstall \
           cmake \
           ninja-build \
@@ -97,7 +116,7 @@ jobs:
           libqt5svg5-dev \
           libgl1-mesa-dev \
           pkg-config
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${{ matrix.gcc }} 800 --slave /usr/bin/g++ g++ /usr/bin/g++-${{ matrix.gcc }}
+        ${{ matrix.extra_command }}
     - name: "Configure Project"
       shell: bash
       run: |
