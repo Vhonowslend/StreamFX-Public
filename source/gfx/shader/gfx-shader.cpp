@@ -39,7 +39,9 @@ gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
 
 	  _width_type(size_type::Percent), _width_value(1.0), _height_type(size_type::Percent), _height_value(1.0),
 
-	  _time(0), _time_loop(0), _loops(0), _random(), _have_current_params(false)
+	  _time(0), _time_loop(0), _loops(0), _random(), _have_current_params(false),
+
+	  _rt_up_to_date(false), _rt(std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE))
 {
 	_random.seed(static_cast<unsigned long long>(time(NULL)));
 }
@@ -453,6 +455,8 @@ void gfx::shader::shader::prepare_render()
 						  1.0f / static_cast<float_t>(width()), 1.0f / static_cast<float_t>(height()));
 		}
 	}
+
+	_rt_up_to_date = false;
 }
 
 void gfx::shader::shader::render()
@@ -460,7 +464,22 @@ void gfx::shader::shader::render()
 	if (!_shader)
 		return;
 
-	while (gs_effect_loop(_shader.get_object(), _shader_tech.c_str())) {
+	if (!_rt_up_to_date) {
+		auto op   = _rt->render(width(), height());
+		vec4 zero = {0, 0, 0, 0};
+		gs_ortho(0, width(), 0, height(), 0, 1);
+		gs_clear(GS_CLEAR_COLOR, &zero, 0, 0);
+		gs_enable_blending(true);
+		gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
+		gs_enable_color(true, true, true, true);
+		while (gs_effect_loop(_shader.get_object(), _shader_tech.c_str())) {
+			gs_draw_sprite(nullptr, 0, width(), height());
+		}
+	}
+
+	gs_effect_set_texture(gs_effect_get_param_by_name(obs_get_base_effect(OBS_EFFECT_DEFAULT), "image"),
+						  _rt->get_texture()->get_object());
+	while (gs_effect_loop(obs_get_base_effect(OBS_EFFECT_DEFAULT), "Draw")) {
 		gs_draw_sprite(nullptr, 0, width(), height());
 	}
 }
