@@ -151,7 +151,7 @@ namespace util {
 				_cb_clear();
 			}
 		}
-		inline event<_args...>& operator=(nullptr_t)
+		inline event<_args...>& operator=(std::nullptr_t)
 		{
 			clear();
 			return *this;
