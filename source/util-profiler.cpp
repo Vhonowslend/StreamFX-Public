@@ -167,5 +167,5 @@ void util::profiler::instance::cancel()
 
 void util::profiler::instance::reparent(std::shared_ptr<util::profiler> parent)
 {
-	parent = parent;
+	_parent = parent;
 }
