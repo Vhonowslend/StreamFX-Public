@@ -200,8 +200,16 @@ void gfx::shader::shader::properties(obs_properties_t* pr)
 		obs_properties_add_group(pr, ST_SHADER, D_TRANSLATE(ST_SHADER), OBS_GROUP_NORMAL, grp);
 
 		{
+			std::string path = "";
+			if (_shader_file.has_parent_path()) {
+				path = _shader_file.parent_path().string();
+			} else {
+				char* vp = obs_module_file("examples");
+				path = vp;
+				bfree(vp);
+			}
 			auto p = obs_properties_add_path(grp, ST_SHADER_FILE, D_TRANSLATE(ST_SHADER_FILE), OBS_PATH_FILE, "*.*",
-											 nullptr);
+											 path.c_str());
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_FILE)));
 			/*obs_property_set_modified_callback2(
 				p,
