@@ -23,6 +23,7 @@
 #include <random>
 #include "gfx/shader/gfx-shader-param.hpp"
 #include "obs/gs/gs-effect.hpp"
+#include "obs/gs/gs-rendertarget.hpp"
 
 namespace gfx {
 	namespace shader {
@@ -68,6 +69,10 @@ namespace gfx {
 			int32_t         _loops;
 			std::mt19937_64 _random;
 			bool            _have_current_params;
+
+			// Rendering
+			bool                              _rt_up_to_date;
+			std::shared_ptr<gs::rendertarget> _rt;
 
 			public:
 			shader(obs_source_t* self, shader_mode mode);
