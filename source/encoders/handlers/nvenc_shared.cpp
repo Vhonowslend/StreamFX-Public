@@ -584,25 +584,18 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			av_opt_set_int(context->priv_data, "rc-lookahead", la, AV_OPT_SEARCH_CHILDREN);
 		}
 
-		if (la > 0) {
-			// Adaptive I-Frames
-			if (int64_t adapt_i = obs_data_get_int(settings, KEY_RATECONTROL_ADAPTIVEI);
-				!util::is_tristate_default(adapt_i)) {
-				av_opt_set_int(context->priv_data, "no-scenecut", adapt_i, AV_OPT_SEARCH_CHILDREN);
-			}
+		// Adaptive I-Frames
+		if (int64_t adapt_i = obs_data_get_int(settings, KEY_RATECONTROL_ADAPTIVEI);
+			!util::is_tristate_default(adapt_i) && (la != 0)) {
+			av_opt_set_int(context->priv_data, "no-scenecut", adapt_i, AV_OPT_SEARCH_CHILDREN);
+		}
 
-			// Adaptive B-Frames
-			if (strcmp(codec->name, "h264_nvenc")) {
-				if (int64_t adapt_b = obs_data_get_int(settings, KEY_RATECONTROL_ADAPTIVEB);
-					!util::is_tristate_default(adapt_b)) {
-					av_opt_set_int(context->priv_data, "b_adapt", adapt_b, AV_OPT_SEARCH_CHILDREN);
-				}
-			}
-		} else {
-			// These two do not work if lookahead is set to 0 frames (disabled).
-			av_opt_set_int(context->priv_data, "no-scenecut", 0, AV_OPT_SEARCH_CHILDREN);
-			if (strcmp(codec->name, "h264_nvenc")) {
-				av_opt_set_int(context->priv_data, "b_adapt", 0, AV_OPT_SEARCH_CHILDREN);
+		// Adaptive B-Frames
+		constexpr std::string_view h264_encoder_name = "h264_nvenc";
+		if (h264_encoder_name == codec->name) {
+			if (int64_t adapt_b = obs_data_get_int(settings, KEY_RATECONTROL_ADAPTIVEB);
+				!util::is_tristate_default(adapt_b) && (la != 0)) {
+				av_opt_set_int(context->priv_data, "b_adapt", adapt_b, AV_OPT_SEARCH_CHILDREN);
 			}
 		}
 
