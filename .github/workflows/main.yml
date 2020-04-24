@@ -2,14 +2,19 @@ name: Build
 
 on:
   push:
+    tags:
+      - '[0-9].[0-9].[0-9]'
+      - '[0-9].[1-9][0-9].[1-9][0-9]'
+      - '[0-9].[1-9][0-9].[0-9]'
+      - '[1-9][0-9].[1-9][0-9].[1-9][0-9]'
+      - '[1-9][0-9].[1-9][0-9].[0-9]'
+      - '[1-9][0-9].[0-9].[1-9][0-9]'
+      - '[1-9][0-9].[0-9].[0-9]'
     branches-ignore:
       - 'l10n_master'
   pull_request:
     branches:
       - '*'
-  create:
-    tags:
-      - 'v*'
 
 jobs:
   windows:
@@ -104,7 +109,7 @@ jobs:
             compiler: clang
             compiler-version: 10
             compiler-cxx: clang++
-            runner: ubuntu-18.04
+            runner: ubuntu-latest
             packages: clang-10
             extra_command: ""
             id: ubuntu1910-clang10
