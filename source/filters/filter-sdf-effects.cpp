@@ -259,7 +259,7 @@ void sdf_effects_instance::update(obs_data_t* data)
 	_sdf_threshold = float_t(obs_data_get_double(data, ST_SDF_THRESHOLD) / 100.0);
 }
 
-void sdf_effects_instance::video_tick(float)
+void sdf_effects_instance::video_tick(float_t)
 {
 	if (obs_source_t* target = obs_filter_get_target(_self); target != nullptr) {
 		_source_rendered = false;

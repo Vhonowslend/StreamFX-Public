@@ -156,7 +156,7 @@ void transform_instance::update(obs_data_t* settings)
 	_update_mesh = true;
 }
 
-void transform_instance::video_tick(float)
+void transform_instance::video_tick(float_t)
 {
 	std::uint32_t width  = 0;
 	std::uint32_t height = 0;
