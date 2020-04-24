@@ -32,6 +32,36 @@ jobs:
     - name: "Clone Submodules"
       shell: bash
       run: git submodule update --init --recursive
+    - name: "Cache: OBS"
+      uses: actions/cache@v1
+      env:
+        cache-name: cache-libobs
+      with:
+        path: build/temp/libobs-src
+        key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ env.cache-name }}-
+          ${{ runner.os }}-${{ env.cache-name }}
+    - name: "Cache: OBS Dependencies"
+      uses: actions/cache@v1
+      env:
+        cache-name: cache-libobs-deps
+      with:
+        path: build/temp/obsdeps-src
+        key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ env.cache-name }}-
+          ${{ runner.os }}-${{ env.cache-name }}
+    - name: "Cache: Qt"
+      uses: actions/cache@v1
+      env:
+        cache-name: cache-qt
+      with:
+        path: build/temp/qt-src
+        key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ env.cache-name }}-
+          ${{ runner.os }}-${{ env.cache-name }}
     - name: "Configure Project"
       shell: bash
       run: |
@@ -123,6 +153,16 @@ jobs:
           libgl1-mesa-dev \
           pkg-config
         ${{ matrix.extra_command }}
+    - name: "Cache: OBS"
+      uses: actions/cache@v1
+      env:
+        cache-name: cache-libobs
+      with:
+        path: build/temp/libobs-src
+        key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ env.cache-name }}-
+          ${{ runner.os }}-${{ env.cache-name }}
     - name: "Configure Project"
       shell: bash
       run: |
