@@ -1,0 +1,44 @@
+// This file is used to test features.
+
+uniform float4x4 ViewProj<
+	bool automatic = true;
+>;
+uniform float4 Time<
+	bool automatic = true;
+>;
+
+struct VertexData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertexData VSDefault(VertexData vtx) {
+	vtx.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
+	return vtx;
+}
+
+float4 PSSolid(VertexData vtx) : TARGET {
+	return float4(cos(Time.y * 3.141 * 2.) * .5 + .5, cos(sin(Time.y * 3.141 * 2.) * 3.141), sin(Time.y * 3.141 * 2.) * .5 + .5, 1.);
+}
+
+technique Solid
+{
+	pass
+	{
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSSolid(vtx); 
+	}
+}
+
+float4 PSTranslucent(VertexData vtx) : TARGET {
+	return float4(1., 1., 1., sin(Time.y * 3.141 * 2.) * .5 + .5);
+}
+
+technique Translucent
+{
+	pass
+	{
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSTranslucent(vtx); 
+	}
+}

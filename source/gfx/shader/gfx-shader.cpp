@@ -205,7 +205,7 @@ void gfx::shader::shader::properties(obs_properties_t* pr)
 				path = _shader_file.parent_path().string();
 			} else {
 				char* vp = obs_module_file("examples");
-				path = vp;
+				path     = vp;
 				bfree(vp);
 			}
 			auto p = obs_properties_add_path(grp, ST_SHADER_FILE, D_TRANSLATE(ST_SHADER_FILE), OBS_PATH_FILE, "*.*",
@@ -477,12 +477,18 @@ void gfx::shader::shader::render()
 		vec4 zero = {0, 0, 0, 0};
 		gs_ortho(0, width(), 0, height(), 0, 1);
 		gs_clear(GS_CLEAR_COLOR, &zero, 0, 0);
+
+		gs_blend_state_push();
+		gs_reset_blend_state();
+
 		gs_enable_blending(true);
-		gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
+		gs_blend_function_separate(GS_BLEND_SRCCOLOR, GS_BLEND_ZERO, GS_BLEND_SRCALPHA, GS_BLEND_ZERO);
 		gs_enable_color(true, true, true, true);
 		while (gs_effect_loop(_shader.get_object(), _shader_tech.c_str())) {
 			gs_draw_sprite(nullptr, 0, width(), height());
 		}
+
+		gs_blend_state_pop();
 	}
 
 	gs_effect_set_texture(gs_effect_get_param_by_name(obs_get_base_effect(OBS_EFFECT_DEFAULT), "image"),
