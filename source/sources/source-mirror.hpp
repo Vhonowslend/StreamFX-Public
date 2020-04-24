@@ -66,7 +66,7 @@ namespace streamfx::source::mirror {
 		virtual void update(obs_data_t*) override;
 		virtual void save(obs_data_t*) override;
 
-		virtual void video_tick(float) override;
+		virtual void video_tick(float_t) override;
 		virtual void video_render(gs_effect_t*) override;
 
 		virtual void enum_active_sources(obs_source_enum_proc_t, void*) override;
