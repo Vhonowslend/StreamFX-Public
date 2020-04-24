@@ -47,6 +47,16 @@ constexpr std::string_view _url_website      = "https://streamfx.xaymar.com";
 constexpr std::string_view _url_discord      = "https://discordapp.com/invite/DaeJg7M";
 constexpr std::string_view _url_github       = "https://github.com/Xaymar/obs-StreamFX";
 
+inline void qt_init_resource()
+{
+	Q_INIT_RESOURCE(streamfx);
+}
+
+inline void qt_cleanup_resource()
+{
+	Q_CLEANUP_RESOURCE(streamfx);
+}
+
 bool streamfx::ui::handler::have_shown_about_streamfx(bool shown)
 {
 	if (shown) {
@@ -69,7 +79,7 @@ streamfx::ui::handler::handler()
 	  _about_action(), _about_dialog()
 {
 	// Qt Resources and Translators
-	Q_INIT_RESOURCE(streamfx);
+	qt_init_resource();
 	QCoreApplication::installTranslator(new streamfx::ui::translator(this));
 
 	// Handle all frontend events.
@@ -116,7 +126,7 @@ streamfx::ui::handler::~handler()
 	obs_frontend_remove_event_callback(frontend_event_handler, this);
 
 	// Qt Resources and Translators
-	Q_CLEANUP_RESOURCE(streamfx);
+	qt_cleanup_resource();
 }
 
 void streamfx::ui::handler::frontend_event_handler(obs_frontend_event event, void* private_data)
