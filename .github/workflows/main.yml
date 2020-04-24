@@ -32,36 +32,6 @@ jobs:
     - name: "Clone Submodules"
       shell: bash
       run: git submodule update --init --recursive
-    - name: "Cache: OBS"
-      uses: actions/cache@v1
-      env:
-        cache-name: cache-libobs
-      with:
-        path: build/temp/libobs-src
-        key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('CMakeLists.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ env.cache-name }}-
-          ${{ runner.os }}-${{ env.cache-name }}
-    - name: "Cache: OBS Dependencies"
-      uses: actions/cache@v1
-      env:
-        cache-name: cache-libobs-deps
-      with:
-        path: build/temp/obsdeps-src
-        key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('CMakeLists.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ env.cache-name }}-
-          ${{ runner.os }}-${{ env.cache-name }}
-    - name: "Cache: Qt"
-      uses: actions/cache@v1
-      env:
-        cache-name: cache-qt
-      with:
-        path: build/temp/qt-src
-        key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('CMakeLists.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ env.cache-name }}-
-          ${{ runner.os }}-${{ env.cache-name }}
     - name: "Configure Project"
       shell: bash
       run: |
@@ -89,35 +59,52 @@ jobs:
         name: ${{ matrix.id }}
         path: build/package
   ubuntu:
-    name: "Linux/Ubuntu 64-bit"
+    name: "Ubuntu 64-bit"
     strategy:
-      matrix: 
-        runner: [ ubuntu-18.04, ubuntu-latest ]
+      matrix:
+        ubuntu: [ bionic ]
         compiler: [ gcc, clang ]
-        include:
-          - runner: ubuntu-18.04
+        compiler-version: [ 8, 9, 10 ]
+        exclude:
+          - ubuntu: bionic
             compiler: gcc
-            compiler-cxx: g++
+            compiler-version: 10
+          - ubuntu: bionic
+            compiler: clang
             compiler-version: 8
+        include:
+          - ubuntu: bionic
+            compiler: gcc
+            compiler-version: 8
+            compiler-cxx: g++
+            runner: ubuntu-18.04
             packages: gcc-8 g++8
             extra_command: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
             id: ubuntu1804-gcc8
-          - runner: ubuntu-latest
+          - ubuntu: bionic
             compiler: gcc
+            compiler-version: 9
             compiler-cxx: g++
-            compiler-version: 9
+            runner: ubuntu-latest
+            packages: gcc-9 g++9
             extra_command: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 800 --slave /usr/bin/g++ g++ /usr/bin/g++-9
-            id: ubuntu1910-gcc9
-          - runner: ubuntu-latest
+            id: ubuntu1804-gcc9
+          - ubuntu: bionic
             compiler: clang
-            compiler-cxx: clang++
             compiler-version: 9
+            compiler-cxx: clang++
+            runner: ubuntu-18.04
             packages: clang-9
             extra_command: ""
-            id: ubuntu1910-clang9
-        exclude:
-          - runner: ubuntu-18.04
+            id: ubuntu1804-clang9
+          - ubuntu: bionic
             compiler: clang
+            compiler-version: 10
+            compiler-cxx: clang++
+            runner: ubuntu-18.04
+            packages: clang-10
+            extra_command: ""
+            id: ubuntu1804-clang10
     runs-on: ${{ matrix.runner }}
     env:
       CMAKE_GENERATOR: "Ninja"
@@ -132,37 +119,22 @@ jobs:
     - name: "Prerequisites: Apt-Get"
       shell: bash
       run: |
+        if [ "${{ matrix.compiler }}" == "clang" ]; then
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo add-apt-repository "deb http://apt.llvm.org/${{ matrix.ubuntu }}/ llvm-toolchain-${{ matrix.ubuntu }}-${{ matrix.compiler-version }} main"
+        fi
         sudo apt-get -qq update
+        sudo apt-get purge libjpeg9-dev:amd64 libjpeg8-dev:amd64 libjpeg-turbo8-dev:amd64
         sudo apt-get install \
-          build-essential \
           ${{ matrix.packages }} \
+          build-essential \
           checkinstall \
+          pkg-config \
           cmake \
           ninja-build \
           git \
-          libavcodec-dev \
-          libavdevice-dev \
-          libavfilter-dev \
-          libavformat-dev \
-          libavutil-dev \
-          libswresample-dev \
-          libswscale-dev \
-          qtbase5-dev \
-          libqt5x11extras5-dev \
-          libqt5svg5-dev \
-          libgl1-mesa-dev \
-          pkg-config
+          qt5-default libqwt-qt5-dev libqt5svg5-dev
         ${{ matrix.extra_command }}
-    - name: "Cache: OBS"
-      uses: actions/cache@v1
-      env:
-        cache-name: cache-libobs
-      with:
-        path: build/temp/libobs-src
-        key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('CMakeLists.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ env.cache-name }}-
-          ${{ runner.os }}-${{ env.cache-name }}
     - name: "Configure Project"
       shell: bash
       run: |
