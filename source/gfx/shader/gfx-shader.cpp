@@ -482,7 +482,7 @@ void gfx::shader::shader::render()
 		gs_reset_blend_state();
 
 		gs_enable_blending(true);
-		gs_blend_function_separate(GS_BLEND_SRCCOLOR, GS_BLEND_ZERO, GS_BLEND_SRCALPHA, GS_BLEND_ZERO);
+		gs_blend_function_separate(GS_BLEND_ONE, GS_BLEND_ZERO, GS_BLEND_ONE, GS_BLEND_ZERO);
 		gs_enable_color(true, true, true, true);
 		while (gs_effect_loop(_shader.get_object(), _shader_tech.c_str())) {
 			gs_draw_sprite(nullptr, 0, width(), height());
