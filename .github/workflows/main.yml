@@ -91,7 +91,7 @@ jobs:
             runner: ubuntu-latest
             packages: gcc-9 g++9
             extra_command: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 800 --slave /usr/bin/g++ g++ /usr/bin/g++-9
-            id: ubuntu1804-gcc9
+            id: ubuntu1910-gcc9
           - ubuntu: bionic
             compiler: clang
             compiler-version: 9
@@ -107,7 +107,7 @@ jobs:
             runner: ubuntu-18.04
             packages: clang-10
             extra_command: ""
-            id: ubuntu1804-clang10
+            id: ubuntu1910-clang10
     runs-on: ${{ matrix.runner }}
     env:
       CMAKE_GENERATOR: "Ninja"
