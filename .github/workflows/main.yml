@@ -5,8 +5,11 @@ on:
     branches-ignore:
       - 'l10n_master'
   pull_request:
-    branches-ignore:
-      - 'l10n_master'
+    branches:
+      - '*'
+  create:
+    tags:
+      - 'v*'
 
 jobs:
   windows:
