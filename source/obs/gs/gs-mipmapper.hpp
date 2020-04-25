@@ -24,6 +24,18 @@
 #include "gs-texture.hpp"
 #include "gs-vertexbuffer.hpp"
 
+/* gs::mipmapper is an attempt at adding dynamic mip-map generation to a software
+ *  which only supports static mip-maps. It is effectively an incredibly bad hack
+ *  instead of a proper solution - can break any time and likely already has.
+ *
+ * Needless to say, dynamic mip-map generation costs a lot of GPU time, especially
+ *  when things need to be synchronized. In the ideal case we would just render 
+ *  straight to the mip level, but this is not possible in DirectX 11 and OpenGL.
+ * 
+ * So instead we render to a render target and copy from there to the actual
+ *  resource. Super wasteful, but what else can we actually do?
+ */
+
 namespace gs {
 	class mipmapper {
 		std::unique_ptr<gs::vertex_buffer> _vb;
@@ -31,20 +43,9 @@ namespace gs {
 		gs::effect                         _effect;
 
 		public:
-		enum class generator : std::uint8_t {
-			Point,
-			Linear,
-			Sharpen,
-			Smoothen,
-			Bicubic,
-			Lanczos,
-		};
-
-		public:
 		~mipmapper();
 		mipmapper();
 
-		void rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr<gs::texture> target,
-					 gs::mipmapper::generator generator, float_t strength);
+		void rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr<gs::texture> target);
 	};
 } // namespace gs
