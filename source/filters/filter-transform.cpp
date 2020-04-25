@@ -81,9 +81,8 @@ enum RotationOrder : int64_t {
 };
 
 transform_instance::transform_instance(obs_data_t* data, obs_source_t* context)
-	: obs::source_instance(data, context), _cache_rendered(), _mipmap_enabled(), _mipmap_strength(),
-	  _mipmap_generator(), _source_rendered(), _source_size(), _update_mesh(), _rotation_order(),
-	  _camera_orthographic(), _camera_fov()
+	: obs::source_instance(data, context), _cache_rendered(), _mipmap_enabled(), _source_rendered(), _source_size(),
+	  _update_mesh(), _rotation_order(), _camera_orthographic(), _camera_fov()
 {
 	_cache_rt      = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	_source_rt     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
@@ -149,9 +148,7 @@ void transform_instance::update(obs_data_t* settings)
 	_shear->z       = 0.0f;
 
 	// Mipmapping
-	_mipmap_enabled   = obs_data_get_bool(settings, ST_MIPMAPPING);
-	_mipmap_strength  = obs_data_get_double(settings, S_MIPGENERATOR_INTENSITY);
-	_mipmap_generator = static_cast<gs::mipmapper::generator>(obs_data_get_int(settings, S_MIPGENERATOR));
+	_mipmap_enabled = obs_data_get_bool(settings, ST_MIPMAPPING);
 
 	_update_mesh = true;
 }
@@ -360,15 +357,13 @@ void transform_instance::video_render(gs_effect_t* effect)
 			_mipmap_texture = std::make_shared<gs::texture>(cache_width, cache_height, GS_RGBA, mip_levels, nullptr,
 															gs::texture::flags::None);
 		}
-		_mipmapper.rebuild(_cache_texture, _mipmap_texture, _mipmap_generator, float_t(_mipmap_strength));
+		_mipmapper.rebuild(_cache_texture, _mipmap_texture);
 
 		_mipmap_rendered = true;
-	} else {
-		_mipmap_texture = _cache_texture;
-	}
-	if (!_mipmap_texture) {
-		obs_source_skip_video_filter(_self);
-		return;
+		if (!_mipmap_texture) {
+			obs_source_skip_video_filter(_self);
+			return;
+		}
 	}
 
 	{
@@ -400,7 +395,9 @@ void transform_instance::video_render(gs_effect_t* effect)
 		gs_load_vertexbuffer(_vertex_buffer->update(false));
 		gs_load_indexbuffer(nullptr);
 		gs_effect_set_texture(gs_effect_get_param_by_name(default_effect, "image"),
-							  _mipmap_enabled ? _mipmap_texture->get_object() : _cache_texture->get_object());
+							  _mipmap_enabled
+								  ? (_mipmap_texture ? _mipmap_texture->get_object() : _cache_texture->get_object())
+								  : _cache_texture->get_object());
 		while (gs_effect_loop(default_effect, "Draw")) {
 			gs_draw(GS_TRISTRIP, 0, 4);
 		}
@@ -455,10 +452,7 @@ void transform_factory::get_defaults2(obs_data_t* settings)
 	obs_data_set_default_double(settings, ST_SCALE_Y, 100);
 	obs_data_set_default_double(settings, ST_SHEAR_X, 0);
 	obs_data_set_default_double(settings, ST_SHEAR_Y, 0);
-	obs_data_set_default_bool(settings, S_ADVANCED, false);
 	obs_data_set_default_bool(settings, ST_MIPMAPPING, false);
-	obs_data_set_default_int(settings, S_MIPGENERATOR, static_cast<int64_t>(gs::mipmapper::generator::Linear));
-	obs_data_set_default_double(settings, S_MIPGENERATOR_INTENSITY, 100.0);
 }
 
 static bool modified_properties(obs_properties_t* pr, obs_property_t*, obs_data_t* d) noexcept
@@ -473,10 +467,6 @@ try {
 		obs_property_set_visible(obs_properties_get(pr, ST_POSITION_Z), true);
 		break;
 	}
-
-	bool advancedVisible = obs_data_get_bool(d, S_ADVANCED);
-	obs_property_set_visible(obs_properties_get(pr, ST_ROTATION_ORDER), advancedVisible);
-	obs_property_set_visible(obs_properties_get(pr, ST_MIPMAPPING), advancedVisible);
 
 	return true;
 } catch (const std::exception& ex) {
@@ -537,18 +527,6 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 			}
 		}
 
-		{ // Order
-			auto p = obs_properties_add_list(grp, ST_ROTATION_ORDER, D_TRANSLATE(ST_ROTATION_ORDER),
-											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_ROTATION_ORDER)));
-			obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_XYZ), RotationOrder::XYZ);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_XZY), RotationOrder::XZY);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_YXZ), RotationOrder::YXZ);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_YZX), RotationOrder::YZX);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_ZXY), RotationOrder::ZXY);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_ZYX), RotationOrder::ZYX);
-		}
-
 		obs_properties_add_group(pr, ST_ROTATION, D_TRANSLATE(ST_ROTATION), OBS_GROUP_NORMAL, grp);
 	}
 	{ // Scale
@@ -577,39 +555,24 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 	}
 
 	{
-		auto p = obs_properties_add_bool(pr, S_ADVANCED, D_TRANSLATE(S_ADVANCED));
-		obs_property_set_modified_callback(p, modified_properties);
-	}
-
-	{
 		auto grp = obs_properties_create();
+		obs_properties_add_group(pr, S_ADVANCED, D_TRANSLATE(S_ADVANCED), OBS_GROUP_NORMAL, grp);
 
-		{
-			auto p = obs_properties_add_list(grp, S_MIPGENERATOR, D_TRANSLATE(S_MIPGENERATOR), OBS_COMBO_TYPE_LIST,
-											 OBS_COMBO_FORMAT_INT);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(S_MIPGENERATOR)));
-			obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_POINT), (long long)gs::mipmapper::generator::Point);
-			obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_LINEAR),
-									  (long long)gs::mipmapper::generator::Linear);
-			obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_SHARPEN),
-									  (long long)gs::mipmapper::generator::Sharpen);
-			obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_SMOOTHEN),
-									  (long long)gs::mipmapper::generator::Smoothen);
-			obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_BICUBIC),
-									  (long long)gs::mipmapper::generator::Bicubic);
-			obs_property_list_add_int(p, D_TRANSLATE(S_MIPGENERATOR_LANCZOS),
-									  (long long)gs::mipmapper::generator::Lanczos);
-		}
-		{
-			auto p = obs_properties_add_float_slider(grp, S_MIPGENERATOR_INTENSITY,
-													 D_TRANSLATE(S_MIPGENERATOR_INTENSITY), 0.0, 1000.0, 0.01);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(S_MIPGENERATOR_INTENSITY)));
-			obs_property_float_set_suffix(p, "%");
-		}
-
-		{
-			auto p = obs_properties_add_group(pr, ST_MIPMAPPING, D_TRANSLATE(ST_MIPMAPPING), OBS_GROUP_CHECKABLE, grp);
+		{ // Mipmapping
+			auto p = obs_properties_add_bool(grp, ST_MIPMAPPING, D_TRANSLATE(ST_MIPMAPPING));
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_MIPMAPPING)));
+		}
+
+		{ // Order
+			auto p = obs_properties_add_list(grp, ST_ROTATION_ORDER, D_TRANSLATE(ST_ROTATION_ORDER),
+											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_ROTATION_ORDER)));
+			obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_XYZ), RotationOrder::XYZ);
+			obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_XZY), RotationOrder::XZY);
+			obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_YXZ), RotationOrder::YXZ);
+			obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_YZX), RotationOrder::YZX);
+			obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_ZXY), RotationOrder::ZXY);
+			obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_ZYX), RotationOrder::ZYX);
 		}
 	}
 
