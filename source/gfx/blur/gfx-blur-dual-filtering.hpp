@@ -88,7 +88,7 @@ namespace gfx {
 
 			std::shared_ptr<gs::texture> _input_texture;
 
-			std::vector<std::shared_ptr<gs::rendertarget>> _rendertargets;
+			std::vector<std::shared_ptr<gs::rendertarget>> _rts;
 
 			public:
 			dual_filtering();
