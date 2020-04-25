@@ -17,6 +17,7 @@
 
 #include "gfx-source-texture.hpp"
 #include <stdexcept>
+#include "obs/gs/gs-helper.hpp"
 
 gfx::source_texture::~source_texture()
 {
@@ -117,17 +118,17 @@ std::shared_ptr<gs::texture> gfx::source_texture::render(std::size_t width, std:
 		return nullptr;
 	}
 
-	{
-		GS_DEBUG_MARKER_BEGIN(GS_DEBUG_COLOR_ITEM, "gfx::source_texture");
+	if (_child) {
+#ifdef ENABLE_PROFILING
+		auto cctr =
+			gs::debug_marker(gs::debug_color_capture, "gfx::source_texture '%s'", obs_source_get_name(_child->get()));
+#endif
 		auto op = _rt->render((uint32_t)width, (uint32_t)height);
 		vec4 black;
 		vec4_zero(&black);
 		gs_ortho(0, (float_t)width, 0, (float_t)height, 0, 1);
 		gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
-		if (_child) {
-			obs_source_video_render(_child->get());
-		}
-		GS_DEBUG_MARKER_END();
+		obs_source_video_render(_child->get());
 	}
 
 	std::shared_ptr<gs::texture> tex;

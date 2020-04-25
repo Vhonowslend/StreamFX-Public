@@ -137,7 +137,10 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 			size_t   max_mip_level = 1;
 
 			{
+#ifdef ENABLE_PROFILING
 				auto cctr = gs::debug_marker(gs::debug_color_azure_radiance, "Mip Level %lld", 0);
+#endif
+
 #ifdef _WIN32
 				if (gs_get_device_type() == GS_DEVICE_DIRECT3D_11) {
 					{ // Retrieve maximum mip map level.
@@ -161,7 +164,9 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 
 			// Render each mip map level.
 			for (size_t mip = 1; mip < max_mip_level; mip++) {
+#ifdef ENABLE_PROFILING
 				auto cctr = gs::debug_marker(gs::debug_color_azure_radiance, "Mip Level %lld", mip);
+#endif
 
 				uint32_t cwidth  = std::max<uint32_t>(width >> mip, 1);
 				uint32_t cheight = std::max<uint32_t>(height >> mip, 1);

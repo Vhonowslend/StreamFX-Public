@@ -281,6 +281,11 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 		return;
 	}
 
+#ifdef ENABLE_PROFILING
+	gs::debug_marker gdmp{gs::debug_color_source, "SDF Effects '%s' on '%s'", obs_source_get_name(_self),
+						  obs_source_get_name(obs_filter_get_parent(_self))};
+#endif
+
 	auto gctx              = gs::context();
 	vec4 color_transparent = {0, 0, 0, 0};
 
@@ -302,6 +307,10 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 		if (!_source_rendered) {
 			// Store input texture.
 			{
+#ifdef ENABLE_PROFILING
+				gs::debug_marker gdm{gs::debug_color_cache, "Cache"};
+#endif
+
 				auto op = _source_rt->render(baseW, baseH);
 				gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
 				gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &color_transparent, 0, 0);
@@ -340,6 +349,10 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 				}
 
 				{
+#ifdef ENABLE_PROFILING
+					gs::debug_marker gdm{gs::debug_color_convert, "Update Distance Field"};
+#endif
+
 					auto op = _sdf_write->render(uint32_t(sdfW), uint32_t(sdfH));
 					gs_ortho(0, (float)sdfW, 0, (float)sdfH, -1, 1);
 					gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &color_transparent, 0, 0);
@@ -394,6 +407,10 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 
 		// Optimized Render path.
 		try {
+#ifdef ENABLE_PROFILING
+			gs::debug_marker gdm{gs::debug_color_convert, "Calculate"};
+#endif
+
 			auto op = _output_rt->render(baseW, baseH);
 			gs_ortho(0, 1, 0, 1, 0, 1);
 
@@ -486,12 +503,18 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 		return;
 	}
 
-	gs_eparam_t* ep = gs_effect_get_param_by_name(final_effect, "image");
-	if (ep) {
-		gs_effect_set_texture(ep, _output_texture->get_object());
-	}
-	while (gs_effect_loop(final_effect, "Draw")) {
-		gs_draw_sprite(0, 0, baseW, baseH);
+	{
+#ifdef ENABLE_PROFILING
+		gs::debug_marker gdm{gs::debug_color_render, "Render"};
+#endif
+
+		gs_eparam_t* ep = gs_effect_get_param_by_name(final_effect, "image");
+		if (ep) {
+			gs_effect_set_texture(ep, _output_texture->get_object());
+		}
+		while (gs_effect_loop(final_effect, "Draw")) {
+			gs_draw_sprite(0, 0, baseW, baseH);
+		}
 	}
 }
 

@@ -367,13 +367,17 @@ void blur_instance::video_render(gs_effect_t* effect)
 		return;
 	}
 
-	auto gdm =
-		gs::debug_marker(gs::debug_color_azure_radiance, "%s '%s'", __FUNCTION_SIG__, obs_source_get_name(_self));
+#ifdef ENABLE_PROFILING
+	gs::debug_marker gdmp{gs::debug_color_source, "Blur '%s'", obs_source_get_name(_self)};
+#endif
 
 	if (!_source_rendered) {
 		// Source To Texture
 		{
-			auto gdm = gs::debug_marker(gs::debug_color_cache, "Cache");
+#ifdef ENABLE_PROFILING
+			gs::debug_marker gdm{gs::debug_color_cache, "Cache"};
+#endif
+
 			if (obs_source_process_filter_begin(this->_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
 				{
 					auto op = this->_source_rt->render(baseW, baseH);
@@ -419,12 +423,21 @@ void blur_instance::video_render(gs_effect_t* effect)
 	}
 
 	if (!_output_rendered) {
-		_blur->set_input(_source_texture);
-		_output_texture = _blur->render();
+		{
+#ifdef ENABLE_PROFILING
+			gs::debug_marker gdm{gs::debug_color_convert, "Blur"};
+#endif
+
+			_blur->set_input(_source_texture);
+			_output_texture = _blur->render();
+		}
 
 		// Mask
 		if (_mask.enabled) {
-			auto gdm = gs::debug_marker(gs::debug_color_convert, "Mask");
+#ifdef ENABLE_PROFILING
+			gs::debug_marker gdm{gs::debug_color_convert, "Mask"};
+#endif
+
 			gs_blend_state_push();
 			gs_reset_blend_state();
 			gs_enable_color(true, true, true, true);
@@ -479,6 +492,11 @@ void blur_instance::video_render(gs_effect_t* effect)
 					}
 				}
 
+#ifdef ENABLE_PROFILING
+				gs::debug_marker gdm{gs::debug_color_capture, "Capture '%s'",
+									 obs_source_get_name(_mask.source.source_texture->get_object())};
+#endif
+
 				this->_mask.source.texture = this->_mask.source.source_texture->render(source_width, source_height);
 			}
 
@@ -510,7 +528,10 @@ void blur_instance::video_render(gs_effect_t* effect)
 
 	// Draw source
 	{
-		auto gdm = gs::debug_marker(gs::debug_color_render, "Render");
+#ifdef ENABLE_PROFILING
+		gs::debug_marker gdm{gs::debug_color_render, "Render"};
+#endif
+
 		// It is important that we do not modify the blend state here, as it is set correctly by OBS
 		gs_set_cull_mode(GS_NEITHER);
 		gs_enable_color(true, true, true, true);

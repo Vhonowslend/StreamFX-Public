@@ -141,6 +141,11 @@ void mirror_instance::video_render(gs_effect_t* effect)
 	if ((obs_source_get_output_flags(_source.get()) & OBS_SOURCE_VIDEO) == 0)
 		return;
 
+#ifdef ENABLE_PROFILING
+	gs::debug_marker gdmp{gs::debug_color_source, "Source Mirror '%s' for '%s'", obs_source_get_name(_self),
+						  obs_source_get_name(_source.get())};
+#endif
+
 	obs_source_video_render(_source.get());
 }
 

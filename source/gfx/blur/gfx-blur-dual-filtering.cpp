@@ -229,7 +229,10 @@ void gfx::blur::dual_filtering::get_step_scale(double_t&, double_t&) {}
 std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 {
 	auto gctx = gs::context();
+
+#ifdef ENABLE_PROFILING
 	auto gdmp = gs::debug_marker(gs::debug_color_azure_radiance, "Dual-Filtering Blur");
+#endif
 
 	auto effect = _data->get_effect();
 	if (!effect) {
@@ -256,14 +259,15 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 
 	// Downsample
 	for (std::size_t n = 1; n <= actual_iterations; n++) {
-		// Idx 0 is a simply considered as a straight copy of the original and not rendered to.
+#ifdef ENABLE_PROFILING
 		auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Down %lld", n);
+#endif
 
 		// Select Texture
 		std::shared_ptr<gs::texture> tex_cur;
 		if (n > 1) {
 			tex_cur = _rts[n - 1]->get_texture();
-		} else {
+		} else { // Idx 0 is a simply considered as a straight copy of the original and not rendered to.
 			tex_cur = _input_texture;
 		}
 
@@ -292,8 +296,9 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 
 	// Upsample
 	for (std::size_t n = actual_iterations; n > 0; n--) {
-		// Idx max is a simply considered as a straight copy of the downscale and not rendered to.
+#ifdef ENABLE_PROFILING
 		auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Up %lld", n);
+#endif
 
 		// Select Texture
 		std::shared_ptr<gs::texture> tex_in = _rts[n]->get_texture();

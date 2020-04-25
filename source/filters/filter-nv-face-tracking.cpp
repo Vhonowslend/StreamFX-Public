@@ -79,7 +79,7 @@ face_tracking_instance::face_tracking_instance(obs_data_t* settings, obs_source_
 																minPrio + ((maxPrio - minPrio) / 2));
 	}
 
-#ifdef _DEBUG
+#ifdef ENABLE_PROFILING
 	// Profiling
 	_profile_capture         = util::profiler::create();
 	_profile_capture_realloc = util::profiler::create();
@@ -247,10 +247,10 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 
 		// Check if things exist as planned.
 		if (!_ar_texture || (_ar_texture->get_width() != _size.first) || (_ar_texture->get_height() != _size.second)) {
-#ifdef _DEBUG
-			auto prof = _profile_capture_realloc->track();
-#endif
+#ifdef ENABLE_PROFILING
+			auto             prof = _profile_capture_realloc->track();
 			gs::debug_marker marker{gs::debug_color_allocate, "Reallocate GPU Buffer"};
+#endif
 
 			_ar_texture =
 				std::make_shared<gs::texture>(_size.first, _size.second, GS_RGBA, 1, nullptr, gs::texture::flags::None);
@@ -258,10 +258,10 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 		}
 
 		{ // Copy texture
-#ifdef _DEBUG
-			auto prof = _profile_capture_copy->track();
-#endif
+#ifdef ENABLE_PROFILING
+			auto             prof = _profile_capture_copy->track();
 			gs::debug_marker marker{gs::debug_color_copy, "Copy Capture", obs_source_get_name(_self)};
+#endif
 
 			gs_copy_texture(_ar_texture->get_object(), _rt->get_texture()->get_object());
 		}
@@ -279,17 +279,19 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 			return;
 		}
 
+		// Acquire GS context.
+		gs::context gctx;
+
 		// Update the current CUDA context for working.
 		auto cctx = std::make_shared<::nvidia::cuda::context_stack>(_cuda, _cuda_ctx);
 
 		// Refresh any now broken buffers.
 		if (!_ar_texture_cuda_fresh) {
-#ifdef _DEBUG
-			auto prof = _profile_ar_realloc->track();
-#endif
-			gs::context      gctx;
+#ifdef ENABLE_PROFILING
+			auto             prof = _profile_ar_realloc->track();
 			gs::debug_marker marker{gs::debug_color_allocate, "%s: Reallocate CUDA Buffers",
 									obs_source_get_name(_self)};
+#endif
 
 			// Assign new texture and allocate new memory.
 			std::size_t pitch    = _size.first * 4ul;
@@ -320,10 +322,9 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 		}
 
 		{ // Copy from CUDA array to CUDA device memory.
-#ifdef _DEBUG
+#ifdef ENABLE_PROFILING
 			auto prof = _profile_ar_copy->track();
 #endif
-			gs::context gctx;
 
 			::nvidia::cuda::cu_memcpy2d_t mc;
 			mc.src_x_in_bytes  = 0;
@@ -350,10 +351,10 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 		}
 
 		{ // Convert from RGBA 32-bit to BGR 24-bit.
-#ifdef _DEBUG
+#ifdef ENABLE_PROFILING
 			auto prof = _profile_ar_transfer->track();
 #endif
-			gs::context gctx;
+
 			if (NvCV_Status res =
 					_ar_library->image_transfer(&_ar_image, &_ar_image_bgr, 1.0,
 												reinterpret_cast<CUstream_st*>(_cuda_stream->get()), &_ar_image_temp);
@@ -364,10 +365,10 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 		}
 
 		{ // Track any faces.
-#ifdef _DEBUG
+#ifdef ENABLE_PROFILING
 			auto prof = _profile_ar_run->track();
 #endif
-			gs::context gctx;
+
 			if (NvCV_Status res = _ar_library->run(_ar_feature.get()); res != NVCV_SUCCESS) {
 				LOG_ERROR("<%s> Failed to run tracking.", obs_source_get_name(_self));
 				return;
@@ -377,9 +378,10 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 		if ((_ar_bboxes.num_boxes == 0) || (_ar_bboxes_confidence.at(0) < 0.5)) {
 			// Not confident enough or not tracking anything, return to full frame after a bit.
 		} else {
-#ifdef _DEBUG
+#ifdef ENABLE_PROFILING
 			auto prof = _profile_ar_calc->track();
 #endif
+
 			double_t aspect = double_t(_size.first) / double_t(_size.second);
 
 			// Store values and center.
@@ -482,35 +484,49 @@ void face_tracking_instance::video_tick(float_t seconds)
 
 void face_tracking_instance::video_render(gs_effect_t* effect)
 {
-	gs::debug_marker gdm_main{gs::debug_color_source, "%s", obs_source_get_name(_self)};
-	obs_source_t*    filter_parent  = obs_filter_get_parent(_self);
-	obs_source_t*    filter_target  = obs_filter_get_target(_self);
-	gs_effect_t*     default_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
+	obs_source_t* filter_parent  = obs_filter_get_parent(_self);
+	obs_source_t* filter_target  = obs_filter_get_target(_self);
+	gs_effect_t*  default_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
 
 	if (!filter_parent || !filter_target || !_size.first || !_size.second || !_ar_loaded) {
 		obs_source_skip_video_filter(_self);
 		return;
 	}
 
+#ifdef ENABLE_PROFILING
+	gs::debug_marker gdmp{gs::debug_color_source, "Nvidia Face Tracking '%s' on '%s'", obs_source_get_name(_self),
+						  obs_source_get_name(obs_filter_get_parent(_self))};
+#endif
+
 	if (!_rt_is_fresh) { // Capture the filter stack "below" us.
-#ifdef _DEBUG
+#ifdef ENABLE_PROFILING
 		auto prof = _profile_capture->track();
 #endif
-		gs::debug_marker marker{gs::debug_color_capture, "Capture"};
-		if (obs_source_process_filter_begin(_self, _rt->get_color_format(), OBS_ALLOW_DIRECT_RENDERING)) {
-			auto op  = _rt->render(_size.first, _size.second);
-			vec4 clr = {0., 0., 0., 0.};
 
-			gs_ortho(0., static_cast<float_t>(_size.first), 0., static_cast<float_t>(_size.second), 0., 1.);
-			gs_clear(GS_CLEAR_COLOR, &clr, 0., 0.);
+		{
+#ifdef ENABLE_PROFILING
+			gs::debug_marker gdm{gs::debug_color_cache, "Cache"};
+#endif
 
-			obs_source_process_filter_tech_end(_self, default_effect, _size.first, _size.second, "Draw");
-		} else {
-			obs_source_skip_video_filter(_self);
-			return;
+			if (obs_source_process_filter_begin(_self, _rt->get_color_format(), OBS_ALLOW_DIRECT_RENDERING)) {
+				auto op  = _rt->render(_size.first, _size.second);
+				vec4 clr = {0., 0., 0., 0.};
+
+				gs_ortho(0., static_cast<float_t>(_size.first), 0., static_cast<float_t>(_size.second), 0., 1.);
+				gs_clear(GS_CLEAR_COLOR, &clr, 0., 0.);
+
+				obs_source_process_filter_tech_end(_self, default_effect, _size.first, _size.second, "Draw");
+			} else {
+				obs_source_skip_video_filter(_self);
+				return;
+			}
 		}
 
 		if (_ar_tracked) {
+#ifdef ENABLE_PROFILING
+			gs::debug_marker gdm{gs::debug_color_convert, "Trigger Async Tracking Task"};
+#endif
+
 			async_track(nullptr);
 			refresh_geometry();
 		}
@@ -518,18 +534,22 @@ void face_tracking_instance::video_render(gs_effect_t* effect)
 		_rt_is_fresh = true;
 	}
 
-	// Draw Texture
-	gs::debug_marker marker{gs::debug_color_render, "Render"};
-	gs_effect_set_texture(gs_effect_get_param_by_name(effect ? effect : default_effect, "image"),
-						  _rt->get_texture()->get_object());
-	gs_load_vertexbuffer(_roi_geom->update());
-	while (gs_effect_loop(effect ? effect : default_effect, "Draw")) {
-		gs_draw(gs_draw_mode::GS_TRISTRIP, 0, _roi_geom->size());
+	{ // Draw Texture
+#ifdef ENABLE_PROFILING
+		gs::debug_marker gdm{gs::debug_color_render, "Render"};
+#endif
+
+		gs_effect_set_texture(gs_effect_get_param_by_name(effect ? effect : default_effect, "image"),
+							  _rt->get_texture()->get_object());
+		gs_load_vertexbuffer(_roi_geom->update());
+		while (gs_effect_loop(effect ? effect : default_effect, "Draw")) {
+			gs_draw(gs_draw_mode::GS_TRISTRIP, 0, _roi_geom->size());
+		}
+		gs_load_vertexbuffer(nullptr);
 	}
-	gs_load_vertexbuffer(nullptr);
 }
 
-#ifdef _DEBUG
+#ifdef ENABLE_PROFILING
 bool face_tracking_instance::button_profile(obs_properties_t* props, obs_property_t* property)
 {
 	LOG_INFO("%-22s: %-10s %-10s %-10s %-10s %-10s", "Task", "Total", "Count", "Average", "99.9%ile", "95.0%ile");
@@ -634,7 +654,7 @@ obs_properties_t* face_tracking_factory::get_properties2(face_tracking_instance*
 			}
 		}
 	}
-#ifdef _DEBUG
+#ifdef ENABLE_PROFILING
 	{
 		obs_properties_add_button2(
 			pr, "Profile", "Profile",
