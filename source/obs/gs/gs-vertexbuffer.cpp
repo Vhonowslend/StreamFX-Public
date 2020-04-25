@@ -36,9 +36,13 @@ void gs::vertex_buffer::initialize(std::size_t capacity, std::size_t layers)
 	_data->num     = _capacity;
 	_data->num_tex = _layers;
 	_data->points = _positions = (vec3*)util::malloc_aligned(16, sizeof(vec3) * _capacity);
+	memset(_positions, 0, sizeof(vec3) * _capacity);
 	_data->normals = _normals = (vec3*)util::malloc_aligned(16, sizeof(vec3) * _capacity);
+	memset(_normals, 0, sizeof(vec3) * _capacity);
 	_data->tangents = _tangents = (vec3*)util::malloc_aligned(16, sizeof(vec3) * _capacity);
+	memset(_tangents, 0, sizeof(vec3) * _capacity);
 	_data->colors = _colors = (uint32_t*)util::malloc_aligned(16, sizeof(uint32_t) * _capacity);
+	memset(_colors, 0, sizeof(uint32_t) * _capacity);
 	if (_layers > 0) {
 		_data->tvarray = _layer_data = (gs_tvertarray*)util::malloc_aligned(16, sizeof(gs_tvertarray) * _layers);
 		for (std::size_t n = 0; n < _layers; n++) {
@@ -112,7 +116,7 @@ gs::vertex_buffer::vertex_buffer(std::uint32_t vertices, std::uint8_t uvlayers)
 
 	// Allocate GPU
 	auto gctx = gs::context();
-	_buffer   = gs_vertexbuffer_create(_data, GS_DYNAMIC);
+	_buffer   = gs_vertexbuffer_create(_data, GS_DYNAMIC | GS_DUP_BUFFER);
 	memset(_data, 0, sizeof(gs_vb_data));
 	_data->num     = _capacity;
 	_data->num_tex = _layers;
