@@ -587,7 +587,8 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		// Adaptive I-Frames
 		if (int64_t adapt_i = obs_data_get_int(settings, KEY_RATECONTROL_ADAPTIVEI);
 			!util::is_tristate_default(adapt_i) && (la != 0)) {
-			av_opt_set_int(context->priv_data, "no-scenecut", adapt_i, AV_OPT_SEARCH_CHILDREN);
+			// no-scenecut is inverted compared to our UI.
+			av_opt_set_int(context->priv_data, "no-scenecut", 1 - adapt_i, AV_OPT_SEARCH_CHILDREN);
 		}
 
 		// Adaptive B-Frames
@@ -726,7 +727,7 @@ void nvenc::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* conte
 	});
 	tools::print_av_option_bool(context, "2pass", "      Two Pass");
 	tools::print_av_option_int(context, "rc-lookahead", "      Look-Ahead", "Frames");
-	tools::print_av_option_bool(context, "no-scenecut", "      Adaptive I-Frames");
+	tools::print_av_option_bool(context, "no-scenecut", "      Adaptive I-Frames", true);
 	if (strcmp(codec->name, "h264_nvenc") == 0)
 		tools::print_av_option_bool(context, "b_adapt", "      Adaptive B-Frames");
 
