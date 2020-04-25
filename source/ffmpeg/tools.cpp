@@ -311,20 +311,21 @@ const char* tools::get_thread_type_name(int thread_type)
 	}
 }
 
-void tools::print_av_option_bool(AVCodecContext* ctx_codec, const char* option, std::string text)
+void tools::print_av_option_bool(AVCodecContext* ctx_codec, const char* option, std::string text, bool inverse)
 {
-	print_av_option_bool(ctx_codec, ctx_codec, option, text);
+	print_av_option_bool(ctx_codec, ctx_codec, option, text, inverse);
 }
 
 void ffmpeg::tools::print_av_option_bool(AVCodecContext* ctx_codec, void* ctx_option, const char* option,
-										 std::string text)
+										 std::string text, bool inverse)
 {
 	int64_t v = 0;
 	if (int err = av_opt_get_int(ctx_option, option, AV_OPT_SEARCH_CHILDREN, &v); err != 0) {
 		LOG_INFO("[%s] %s: <Error: %s>", ctx_codec->codec->name, text.c_str(),
 				 ffmpeg::tools::get_error_description(err));
 	} else {
-		LOG_INFO("[%s] %s: %s%s", ctx_codec->codec->name, text.c_str(), v == 0 ? "Disabled" : "Enabled",
+		LOG_INFO("[%s] %s: %s%s", ctx_codec->codec->name, text.c_str(),
+				 (inverse ? v != 0 : v == 0) ? "Disabled" : "Enabled",
 				 av_opt_is_set_to_default_by_name(ctx_option, option, AV_OPT_SEARCH_CHILDREN) > 0 ? " <Default>" : "");
 	}
 }
