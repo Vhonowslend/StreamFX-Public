@@ -36,8 +36,6 @@ namespace streamfx::filter::transform {
 		// Mip-mapping
 		bool                         _mipmap_enabled;
 		bool                         _mipmap_rendered;
-		double_t                     _mipmap_strength;
-		gs::mipmapper::generator     _mipmap_generator;
 		gs::mipmapper                _mipmapper;
 		std::shared_ptr<gs::texture> _mipmap_texture;
 

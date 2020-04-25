@@ -72,15 +72,6 @@
 #define S_BLUR_SUBTYPE_ROTATIONAL "Blur.Subtype.Rotational"
 #define S_BLUR_SUBTYPE_ZOOM "Blur.Subtype.Zoom"
 
-#define S_MIPGENERATOR "MipGenerator"
-#define S_MIPGENERATOR_POINT "MipGenerator.Point"
-#define S_MIPGENERATOR_LINEAR "MipGenerator.Linear"
-#define S_MIPGENERATOR_SHARPEN "MipGenerator.Sharpen"
-#define S_MIPGENERATOR_SMOOTHEN "MipGenerator.Smoothen"
-#define S_MIPGENERATOR_BICUBIC "MipGenerator.Bicubic"
-#define S_MIPGENERATOR_LANCZOS "MipGenerator.Lanczos"
-#define S_MIPGENERATOR_INTENSITY "MipGenerator.Intensity"
-
 #define S_CHANNEL_RED "Channel.Red"
 #define S_CHANNEL_GREEN "Channel.Green"
 #define S_CHANNEL_BLUE "Channel.Blue"
