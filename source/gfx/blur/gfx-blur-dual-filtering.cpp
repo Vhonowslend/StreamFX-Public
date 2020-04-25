@@ -222,7 +222,9 @@ void gfx::blur::dual_filtering::get_step_scale(double_t&, double_t&) {}
 
 std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 {
-	auto gctx   = gs::context();
+	auto gctx = gs::context();
+	auto gdmp = gs::debug_marker(gs::debug_color_azure_radiance, "Dual-Filtering Blur");
+
 	auto effect = _data->get_effect();
 	if (!effect) {
 		return _input_texture;

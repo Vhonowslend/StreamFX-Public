@@ -298,6 +298,7 @@ double_t gfx::blur::gaussian::get_step_scale_y()
 std::shared_ptr<::gs::texture> gfx::blur::gaussian::render()
 {
 	auto gctx = gs::context();
+	auto gdmp = gs::debug_marker(gs::debug_color_azure_radiance, "Gaussian Blur");
 
 	gs::effect effect = _data->get_effect();
 	auto       kernel = _data->get_kernel(size_t(_size));
@@ -333,7 +334,8 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian::render()
 		effect.get_parameter("pImageTexel").set_float2(float_t(1.f / width), 0.f);
 
 		{
-			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
+			auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Horizontal");
+			auto op  = _rendertarget2->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect.get_object(), "Draw")) {
 				gs_draw_sprite(nullptr, 0, 1, 1);
@@ -349,7 +351,8 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian::render()
 		effect.get_parameter("pImageTexel").set_float2(0.f, float_t(1.f / height));
 
 		{
-			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
+			auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Vertical");
+			auto op  = _rendertarget2->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect.get_object(), "Draw")) {
 				gs_draw_sprite(nullptr, 0, 1, 1);
@@ -391,6 +394,7 @@ void gfx::blur::gaussian_directional::set_angle(double_t angle)
 std::shared_ptr<::gs::texture> gfx::blur::gaussian_directional::render()
 {
 	auto gctx = gs::context();
+	auto gdmp = gs::debug_marker(gs::debug_color_azure_radiance, "Gaussian Directional Blur");
 
 	gs::effect effect = _data->get_effect();
 	auto       kernel = _data->get_kernel(size_t(_size));
@@ -445,6 +449,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_directional::render()
 std::shared_ptr<::gs::texture> gfx::blur::gaussian_rotational::render()
 {
 	auto gctx = gs::context();
+	auto gdmp = gs::debug_marker(gs::debug_color_azure_radiance, "Gaussian Rotational Blur");
 
 	gs::effect effect = _data->get_effect();
 	auto       kernel = _data->get_kernel(size_t(_size));
@@ -522,6 +527,7 @@ void gfx::blur::gaussian_rotational::set_angle(double_t angle)
 std::shared_ptr<::gs::texture> gfx::blur::gaussian_zoom::render()
 {
 	auto gctx = gs::context();
+	auto gdmp = gs::debug_marker(gs::debug_color_azure_radiance, "Gaussian Zoom Blur");
 
 	gs::effect effect = _data->get_effect();
 	auto       kernel = _data->get_kernel(size_t(_size));
