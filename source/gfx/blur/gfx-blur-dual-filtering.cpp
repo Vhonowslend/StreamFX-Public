@@ -184,9 +184,15 @@ gfx::blur::dual_filtering::dual_filtering()
 	: _data(::gfx::blur::dual_filtering_factory::get().data()), _size(0), _size_iterations(0)
 {
 	auto gctx = gs::context();
-	_rendertargets.resize(MAX_LEVELS + 1);
+	_rts.resize(MAX_LEVELS + 1);
 	for (std::size_t n = 0; n <= MAX_LEVELS; n++) {
-		_rendertargets[n] = std::make_shared<gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
+		gs_color_format cf = GS_RGBA;
+#if 0
+		cf = GS_RGBA16F;
+#elif 0
+		cf = GS_RGBA32F;
+#endif
+		_rts[n] = std::make_shared<gs::rendertarget>(cf, GS_ZS_NONE);
 	}
 }
 
@@ -245,34 +251,38 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 	gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
+	uint32_t width  = _input_texture->get_width();
+	uint32_t height = _input_texture->get_height();
+
 	// Downsample
 	for (std::size_t n = 1; n <= actual_iterations; n++) {
 		// Idx 0 is a simply considered as a straight copy of the original and not rendered to.
+		auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Down %lld", n);
 
 		// Select Texture
 		std::shared_ptr<gs::texture> tex_cur;
 		if (n > 1) {
-			tex_cur = _rendertargets[n - 1]->get_texture();
+			tex_cur = _rts[n - 1]->get_texture();
 		} else {
 			tex_cur = _input_texture;
 		}
 
 		// Reduce Size
-		std::uint32_t width  = tex_cur->get_width() / 2;
-		std::uint32_t height = tex_cur->get_height() / 2;
-		if ((width <= 0) || (height <= 0)) {
+		std::uint32_t owidth  = width >> n;
+		std::uint32_t oheight = height >> n;
+		if ((owidth <= 0) || (oheight <= 0)) {
 			actual_iterations = n - 1;
 			break;
 		}
 
 		// Apply
 		effect.get_parameter("pImage").set_texture(tex_cur);
-		effect.get_parameter("pImageSize").set_float2(float_t(width), float_t(height));
-		effect.get_parameter("pImageTexel").set_float2(1.0f / width, 1.0f / height);
-		effect.get_parameter("pImageHalfTexel").set_float2(0.5f / width, 0.5f / height);
+		effect.get_parameter("pImageSize").set_float2(float_t(owidth), float_t(oheight));
+		effect.get_parameter("pImageTexel").set_float2(1.0f / owidth, 1.0f / oheight);
+		effect.get_parameter("pImageHalfTexel").set_float2(0.5f / owidth, 0.5f / oheight);
 
 		{
-			auto op = _rendertargets[n]->render(width, height);
+			auto op = _rts[n]->render(owidth, oheight);
 			gs_ortho(0., 1., 0., 1., 0., 1.);
 			while (gs_effect_loop(effect.get_object(), "Down")) {
 				gs_draw_sprite(tex_cur->get_object(), 0, 1, 1);
@@ -282,38 +292,39 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 
 	// Upsample
 	for (std::size_t n = actual_iterations; n > 0; n--) {
+		// Idx max is a simply considered as a straight copy of the downscale and not rendered to.
+		auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Up %lld", n);
+
 		// Select Texture
-		std::shared_ptr<gs::texture> tex_cur = _rendertargets[n]->get_texture();
+		std::shared_ptr<gs::texture> tex_in = _rts[n]->get_texture();
 
 		// Get Size
-		std::uint32_t width  = tex_cur->get_width();
-		std::uint32_t height = tex_cur->get_height();
+		std::uint32_t iwidth  = width >> n;
+		std::uint32_t iheight = height >> n;
+		std::uint32_t owidth  = width >> (n - 1);
+		std::uint32_t oheight = height >> (n - 1);
 
 		// Apply
-		effect.get_parameter("pImage").set_texture(tex_cur);
-		effect.get_parameter("pImageSize").set_float2(float_t(width), float_t(height));
-		effect.get_parameter("pImageTexel").set_float2(1.0f / width, 1.0f / height);
-		effect.get_parameter("pImageHalfTexel").set_float2(0.5f / width, 0.5f / height);
-
-		// Increase Size
-		width *= 2;
-		height *= 2;
+		effect.get_parameter("pImage").set_texture(tex_in);
+		effect.get_parameter("pImageSize").set_float2(float_t(iwidth), float_t(iheight));
+		effect.get_parameter("pImageTexel").set_float2(1.0f / iwidth, 1.0f / iheight);
+		effect.get_parameter("pImageHalfTexel").set_float2(0.5f / iwidth, 0.5f / iheight);
 
 		{
-			auto op = _rendertargets[n - 1]->render(width, height);
+			auto op = _rts[n - 1]->render(owidth, oheight);
 			gs_ortho(0., 1., 0., 1., 0., 1.);
 			while (gs_effect_loop(effect.get_object(), "Up")) {
-				gs_draw_sprite(tex_cur->get_object(), 0, 1, 1);
+				gs_draw_sprite(tex_in->get_object(), 0, 1, 1);
 			}
 		}
 	}
 
 	gs_blend_state_pop();
 
-	return _rendertargets[0]->get_texture();
+	return _rts[0]->get_texture();
 }
 
 std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::get()
 {
-	return _rendertargets[0]->get_texture();
+	return _rts[0]->get_texture();
 }
