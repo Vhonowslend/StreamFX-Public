@@ -245,7 +245,9 @@ double_t gfx::blur::box_linear::get_step_scale_y()
 
 std::shared_ptr<::gs::texture> gfx::blur::box_linear::render()
 {
-	auto    gctx   = gs::context();
+	auto gctx = gs::context();
+	auto gdmp = gs::debug_marker(gs::debug_color_azure_radiance, "Box Linear Blur");
+
 	float_t width  = float_t(_input_texture->get_width());
 	float_t height = float_t(_input_texture->get_height());
 
@@ -273,7 +275,8 @@ std::shared_ptr<::gs::texture> gfx::blur::box_linear::render()
 		effect.get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(_size) * 2.0f + 1.0f)));
 
 		{
-			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
+			auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Horizontal");
+			auto op  = _rendertarget2->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect.get_object(), "Draw")) {
 				gs_draw_sprite(nullptr, 0, 1, 1);
@@ -285,7 +288,8 @@ std::shared_ptr<::gs::texture> gfx::blur::box_linear::render()
 		effect.get_parameter("pImageTexel").set_float2(0., float_t(1.f / height));
 
 		{
-			auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
+			auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Vertical");
+			auto op  = _rendertarget->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect.get_object(), "Draw")) {
 				gs_draw_sprite(nullptr, 0, 1, 1);
@@ -322,7 +326,9 @@ void gfx::blur::box_linear_directional::set_angle(double_t angle)
 
 std::shared_ptr<::gs::texture> gfx::blur::box_linear_directional::render()
 {
-	auto    gctx   = gs::context();
+	auto gctx = gs::context();
+	auto gdmp = gs::debug_marker(gs::debug_color_azure_radiance, "Box Linear Directional Blur");
+
 	float_t width  = float_t(_input_texture->get_width());
 	float_t height = float_t(_input_texture->get_height());
 
