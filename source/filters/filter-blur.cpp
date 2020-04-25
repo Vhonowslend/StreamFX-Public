@@ -367,9 +367,13 @@ void blur_instance::video_render(gs_effect_t* effect)
 		return;
 	}
 
+	auto gdm =
+		gs::debug_marker(gs::debug_color_azure_radiance, "%s '%s'", __FUNCTION_SIG__, obs_source_get_name(_self));
+
 	if (!_source_rendered) {
 		// Source To Texture
 		{
+			auto gdm = gs::debug_marker(gs::debug_color_cache, "Cache");
 			if (obs_source_process_filter_begin(this->_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
 				{
 					auto op = this->_source_rt->render(baseW, baseH);
@@ -420,6 +424,7 @@ void blur_instance::video_render(gs_effect_t* effect)
 
 		// Mask
 		if (_mask.enabled) {
+			auto gdm = gs::debug_marker(gs::debug_color_convert, "Mask");
 			gs_blend_state_push();
 			gs_reset_blend_state();
 			gs_enable_color(true, true, true, true);
@@ -505,6 +510,7 @@ void blur_instance::video_render(gs_effect_t* effect)
 
 	// Draw source
 	{
+		auto gdm = gs::debug_marker(gs::debug_color_render, "Render");
 		// It is important that we do not modify the blend state here, as it is set correctly by OBS
 		gs_set_cull_mode(GS_NEITHER);
 		gs_enable_color(true, true, true, true);
