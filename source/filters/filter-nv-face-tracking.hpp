@@ -74,7 +74,7 @@ namespace streamfx::filter::nvidia {
 		NvCVImage                                  _ar_image_bgr;
 		NvCVImage                                  _ar_image_temp;
 
-#ifdef _DEBUG
+#ifdef ENABLE_PROFILING
 		// Profiling
 		std::shared_ptr<util::profiler> _profile_capture;
 		std::shared_ptr<util::profiler> _profile_capture_realloc;
@@ -114,7 +114,7 @@ namespace streamfx::filter::nvidia {
 
 		virtual void video_render(gs_effect_t* effect) override;
 
-#ifdef _DEBUG
+#ifdef ENABLE_PROFILING
 		bool button_profile(obs_properties_t* props, obs_property_t* property);
 #endif
 	};
