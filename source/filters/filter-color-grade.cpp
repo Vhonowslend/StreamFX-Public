@@ -20,6 +20,7 @@
 #include "filter-color-grade.hpp"
 #include "strings.hpp"
 #include <stdexcept>
+#include "obs/gs/gs-helper.hpp"
 #include "util-math.hpp"
 
 // OBS
@@ -186,7 +187,15 @@ void color_grade_instance::video_render(gs_effect_t* effect)
 		return;
 	}
 
+#ifdef ENABLE_PROFILING
+	gs::debug_marker gdmp{gs::debug_color_source, "Color Grading '%s'", obs_source_get_name(_self)};
+#endif
+
 	if (!_source_updated) {
+#ifdef ENABLE_PROFILING
+		gs::debug_marker gdm{gs::debug_color_cache, "Cache"};
+#endif
+
 		if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
 			auto op = _rt_source->render(width, height);
 			gs_blend_state_push();
@@ -207,6 +216,10 @@ void color_grade_instance::video_render(gs_effect_t* effect)
 	}
 
 	if (!_grade_updated) {
+#ifdef ENABLE_PROFILING
+		gs::debug_marker gdm{gs::debug_color_convert, "Calculate"};
+#endif
+
 		{
 			auto op = _rt_grade->render(width, height);
 			gs_blend_state_push();
@@ -245,6 +258,10 @@ void color_grade_instance::video_render(gs_effect_t* effect)
 
 	// Render final result.
 	{
+#ifdef ENABLE_PROFILING
+		gs::debug_marker gdm{gs::debug_color_render, "Render"};
+#endif
+
 		auto shader = obs_get_base_effect(OBS_EFFECT_DEFAULT);
 		gs_enable_depth_test(false);
 		while (gs_effect_loop(shader, "Draw")) {

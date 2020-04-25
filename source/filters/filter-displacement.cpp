@@ -21,6 +21,7 @@
 #include "strings.hpp"
 #include <stdexcept>
 #include <sys/stat.h>
+#include "obs/gs/gs-helper.hpp"
 
 #define ST "Filter.Displacement"
 #define ST_FILE "Filter.Displacement.File"
@@ -94,6 +95,11 @@ void displacement_instance::video_render(gs_effect_t*)
 		obs_source_skip_video_filter(_self);
 		return;
 	}
+
+#ifdef ENABLE_PROFILING
+	gs::debug_marker gdmp{gs::debug_color_source, "Displacement Mapping '%s' on '%s'", obs_source_get_name(_self),
+						  obs_source_get_name(obs_filter_get_parent(_self))};
+#endif
 
 	if (!obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
 		obs_source_skip_video_filter(_self);

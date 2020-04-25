@@ -230,7 +230,9 @@ else()
 	set(ENABLE_SOURCE_SHADER TRUE)
 	set(ENABLE_TRANSITION_SHADER TRUE)
 endif()
+## Encoders
 set(${PropertyPrefix}ENABLE_ENCODER_FFMPEG ${ENABLE_ENCODER_FFMPEG} CACHE BOOL "Enable FFmpeg Encoder")
+## Filters
 set(${PropertyPrefix}ENABLE_FILTER_BLUR ${ENABLE_FILTER_BLUR} CACHE BOOL "Enable Blur Filter")
 set(${PropertyPrefix}ENABLE_FILTER_COLOR_GRADE ${ENABLE_FILTER_COLOR_GRADE} CACHE BOOL "Enable Color Grade Filter")
 set(${PropertyPrefix}ENABLE_FILTER_DISPLACEMENT ${ENABLE_FILTER_DISPLACEMENT} CACHE BOOL "Enable Displacement Filter")
@@ -239,9 +241,13 @@ set(${PropertyPrefix}ENABLE_FILTER_NVIDIA_FACE_TRACKING ${ENABLE_FILTER_NVIDIA_F
 set(${PropertyPrefix}ENABLE_FILTER_SDF_EFFECTS ${ENABLE_FILTER_SDF_EFFECTS} CACHE BOOL "Enable SDF Effects Filter")
 set(${PropertyPrefix}ENABLE_FILTER_SHADER ${ENABLE_FILTER_SHADER} CACHE BOOL "Enable Shader Filter")
 set(${PropertyPrefix}ENABLE_FILTER_TRANSFORM ${ENABLE_FILTER_TRANSFORM} CACHE BOOL "Enable Transform Filter")
+## Sources
 set(${PropertyPrefix}ENABLE_SOURCE_MIRROR ${ENABLE_SOURCE_MIRROR} CACHE BOOL "Enable Mirror Source")
 set(${PropertyPrefix}ENABLE_SOURCE_SHADER ${ENABLE_SOURCE_SHADER} CACHE BOOL "Enable Shader Source")
+## Transitions
 set(${PropertyPrefix}ENABLE_TRANSITION_SHADER ${ENABLE_TRANSITION_SHADER} CACHE BOOL "Enable Shader Transition")
+## Debugging
+set(${PropertyPrefix}ENABLE_PROFILING FALSE CACHE BOOL "Enable CPU and GPU performance tracking, which has a non-zero overhead at all times. Do not enable this for release builds.")
 
 ################################################################################
 # CMake / Compiler Dependencies
@@ -803,6 +809,13 @@ if(${PropertyPrefix}ENABLE_TRANSITION_SHADER)
 	)
 	list(APPEND PROJECT_DEFINITIONS
 		ENABLE_TRANSITION_SHADER
+	)
+endif()
+
+## Features - Performance Profiling
+if(${PropertyPrefix}ENABLE_PROFILING)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_PROFILING
 	)
 endif()
 

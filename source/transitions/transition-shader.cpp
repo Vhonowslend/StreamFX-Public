@@ -20,6 +20,7 @@
 #include "transition-shader.hpp"
 #include "strings.hpp"
 #include <stdexcept>
+#include "obs/gs/gs-helper.hpp"
 #include "utility.hpp"
 
 #define ST "Transition.Shader"
@@ -80,6 +81,10 @@ void shader_instance::video_render(gs_effect_t* effect)
 	if (!_fx) {
 		return;
 	}
+
+#ifdef ENABLE_PROFILING
+	gs::debug_marker gdmp{gs::debug_color_source, "Shader Transition '%s'", obs_source_get_name(_self)};
+#endif
 
 	_fx->prepare_render();
 	obs_transition_video_render(

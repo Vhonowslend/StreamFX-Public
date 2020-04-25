@@ -292,7 +292,10 @@ double_t gfx::blur::gaussian_linear::get_step_scale_y()
 std::shared_ptr<::gs::texture> gfx::blur::gaussian_linear::render()
 {
 	auto gctx = gs::context();
+
+#ifdef ENABLE_PROFILING
 	auto gdmp = gs::debug_marker(gs::debug_color_azure_radiance, "Gaussian Linear Blur");
+#endif
 
 	gs::effect effect = _data->get_effect();
 	auto       kernel = _data->get_kernel(size_t(_size));
@@ -328,8 +331,11 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_linear::render()
 		effect.get_parameter("pImageTexel").set_float2(float_t(1.f / width), 0.f);
 
 		{
+#ifdef ENABLE_PROFILING
 			auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Horizontal");
-			auto op  = _rendertarget2->render(uint32_t(width), uint32_t(height));
+#endif
+
+			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect.get_object(), "Draw")) {
 				gs_draw_sprite(nullptr, 0, 1, 1);
@@ -345,8 +351,11 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_linear::render()
 		effect.get_parameter("pImageTexel").set_float2(0.f, float_t(1.f / height));
 
 		{
+#ifdef ENABLE_PROFILING
 			auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Vertical");
-			auto op  = _rendertarget2->render(uint32_t(width), uint32_t(height));
+#endif
+
+			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect.get_object(), "Draw")) {
 				gs_draw_sprite(nullptr, 0, 1, 1);
@@ -388,7 +397,10 @@ void gfx::blur::gaussian_linear_directional::set_angle(double_t angle)
 std::shared_ptr<::gs::texture> gfx::blur::gaussian_linear_directional::render()
 {
 	auto gctx = gs::context();
+
+#ifdef ENABLE_PROFILING
 	auto gdmp = gs::debug_marker(gs::debug_color_azure_radiance, "Gaussian Linear Directional Blur");
+#endif
 
 	gs::effect effect = _data->get_effect();
 	auto       kernel = _data->get_kernel(size_t(_size));

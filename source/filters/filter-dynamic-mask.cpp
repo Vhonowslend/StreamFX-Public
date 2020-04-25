@@ -22,6 +22,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <vector>
+#include "obs/gs/gs-helper.hpp"
 
 // Filter to allow dynamic masking
 // Allow any channel to affect any other channel
@@ -201,10 +202,19 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 		return;
 	}
 
+#ifdef ENABLE_PROFILING
+	gs::debug_marker gdmp{gs::debug_color_source, "Dynamic Mask '%s' on '%s'", obs_source_get_name(_self),
+						  obs_source_get_name(obs_filter_get_parent(_self))};
+#endif
+
 	gs_effect_t* default_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 
 	try { // Capture filter and input
 		if (!_have_filter_texture) {
+#ifdef ENABLE_PROFILING
+			gs::debug_marker gdm{gs::debug_color_cache, "Cache"};
+#endif
+
 			if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
 				auto op = _filter_rt->render(width, height);
 
@@ -237,12 +247,21 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 		}
 
 		if (!_have_input_texture) {
+#ifdef ENABLE_PROFILING
+			gs::debug_marker gdm{gs::debug_color_capture, "Capture '%s'",
+								 obs_source_get_name(_input_capture->get_object())};
+#endif
+
 			_input_texture      = _input_capture->render(_input->width(), _input->height());
 			_have_input_texture = true;
 		}
 
 		// Draw source
 		if (!_have_final_texture) {
+#ifdef ENABLE_PROFILING
+			gs::debug_marker gdm{gs::debug_color_convert, "Masking"};
+#endif
+
 			{
 				auto op = _final_rt->render(width, height);
 
@@ -296,6 +315,10 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 
 	// Draw source
 	{
+#ifdef ENABLE_PROFILING
+		gs::debug_marker gdm{gs::debug_color_render, "Render"};
+#endif
+
 		// It is important that we do not modify the blend state here, as it is set correctly by OBS
 		gs_set_cull_mode(GS_NEITHER);
 		gs_enable_color(true, true, true, true);

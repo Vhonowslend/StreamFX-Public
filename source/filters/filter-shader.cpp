@@ -85,9 +85,17 @@ void shader_instance::video_render(gs_effect_t* effect)
 		return;
 	}
 
+#ifdef ENABLE_PROFILING
+	gs::debug_marker gdmp{gs::debug_color_source, "Shader Filter '%s' on '%s'", obs_source_get_name(_self),
+						  obs_source_get_name(obs_filter_get_parent(_self))};
+#endif
+
 	{
-		gs::debug_marker _marker_cache{gs::debug_color_source, "%s: Capture", obs_source_get_name(_self)};
-		auto             op = _rt->render(_fx->width(), _fx->height());
+#ifdef ENABLE_PROFILING
+		gs::debug_marker gdm{gs::debug_color_source, "Cache"};
+#endif
+
+		auto op = _rt->render(_fx->width(), _fx->height());
 
 		gs_ortho(0, static_cast<float_t>(_fx->width()), 0, static_cast<float_t>(_fx->height()), -1, 1);
 
@@ -116,7 +124,9 @@ void shader_instance::video_render(gs_effect_t* effect)
 	}
 
 	{
-		gs::debug_marker _marker_cache{gs::debug_color_render, "%s: Render", obs_source_get_name(_self)};
+#ifdef ENABLE_PROFILING
+		gs::debug_marker gdm{gs::debug_color_render, "Render"};
+#endif
 
 		_fx->prepare_render();
 		_fx->set_input_a(_rt->get_texture());

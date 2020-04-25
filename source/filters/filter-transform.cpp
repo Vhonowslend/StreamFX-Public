@@ -286,7 +286,10 @@ void transform_instance::video_render(gs_effect_t* effect)
 		return;
 	}
 
-	gs::debug_marker marker{gs::debug_color_source, "3D Transform: %s", obs_source_get_name(_self)};
+#ifdef ENABLE_PROFILING
+	gs::debug_marker gdmp{gs::debug_color_source, "3D Transform '%s' on '%s'", obs_source_get_name(_self),
+						  obs_source_get_name(obs_filter_get_parent(_self))};
+#endif
 
 	std::uint32_t cache_width  = base_width;
 	std::uint32_t cache_height = base_height;
@@ -310,8 +313,11 @@ void transform_instance::video_render(gs_effect_t* effect)
 	}
 
 	if (!_cache_rendered) {
-		gs::debug_marker _marker_cache{gs::debug_color_cache, "Cache"};
-		auto             op = _cache_rt->render(cache_width, cache_height);
+#ifdef ENABLE_PROFILING
+		gs::debug_marker gdm{gs::debug_color_cache, "Cache"};
+#endif
+
+		auto op = _cache_rt->render(cache_width, cache_height);
 
 		gs_ortho(0, static_cast<float_t>(base_width), 0, static_cast<float_t>(base_height), -1, 1);
 
@@ -347,13 +353,18 @@ void transform_instance::video_render(gs_effect_t* effect)
 	}
 
 	if (_mipmap_enabled) {
-		gs::debug_marker _marker_mipmap{gs::debug_color_convert, "Mipmap"};
+#ifdef ENABLE_PROFILING
+		gs::debug_marker gdm{gs::debug_color_convert, "Mipmap"};
+#endif
 
 		if (!_mipmap_texture || (_mipmap_texture->get_width() != cache_width)
 			|| (_mipmap_texture->get_height() != cache_height)) {
+#ifdef ENABLE_PROFILING
+			gs::debug_marker gdr{gs::debug_color_allocate, "Allocate Mipmapped Texture"};
+#endif
+
 			std::size_t mip_levels = std::max(util::math::get_power_of_two_exponent_ceil(cache_width),
 											  util::math::get_power_of_two_exponent_ceil(cache_height));
-
 			_mipmap_texture = std::make_shared<gs::texture>(cache_width, cache_height, GS_RGBA, mip_levels, nullptr,
 															gs::texture::flags::None);
 		}
@@ -367,8 +378,11 @@ void transform_instance::video_render(gs_effect_t* effect)
 	}
 
 	{
-		gs::debug_marker _marker_draw{gs::debug_color_cache_render, "Geometry"};
-		auto             op = _source_rt->render(base_width, base_height);
+#ifdef ENABLE_PROFILING
+		gs::debug_marker gdm{gs::debug_color_convert, "Transform"};
+#endif
+
+		auto op = _source_rt->render(base_width, base_height);
 
 		gs_blend_state_push();
 		gs_reset_blend_state();
@@ -412,7 +426,10 @@ void transform_instance::video_render(gs_effect_t* effect)
 	}
 
 	{
-		gs::debug_marker _marker_draw{gs::debug_color_cache_render, "Final"};
+#ifdef ENABLE_PROFILING
+		gs::debug_marker gdm{gs::debug_color_render, "Render"};
+#endif
+
 		gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), _source_texture->get_object());
 		while (gs_effect_loop(effect, "Draw")) {
 			gs_draw_sprite(nullptr, 0, base_width, base_height);
