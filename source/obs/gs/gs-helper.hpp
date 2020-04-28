@@ -29,21 +29,22 @@ namespace gs {
 		~context();
 	};
 
-	static const float_t debug_color_white[4]           = {1.f, 1.f, 1.f, 1.f};
-	static const float_t debug_color_gray[4]            = {.5f, .5f, .5f, 1.f};
-	static const float_t debug_color_black[4]           = {0.f, 0.f, 0.f, 1.f};
-	static const float_t debug_color_red[4]             = {1.f, 0.f, 0.f, 1.f};
-	static const float_t debug_color_flush_orange[4]    = {1.f, .5f, 0.f, 1.f};
-	static const float_t debug_color_yellow[4]          = {1.f, 1.f, 0.f, 1.f};
-	static const float_t debug_color_chartreuse[4]      = {.5f, 1.f, 0.f, 1.f};
-	static const float_t debug_color_green[4]           = {0.f, 1.f, 0.f, 1.f};
-	static const float_t debug_color_spring_green[4]    = {0.f, 1.f, .5f, 1.f};
-	static const float_t debug_color_teal[4]            = {0.f, 1.f, 1.f, 1.f};
-	static const float_t debug_color_azure_radiance[4]  = {0.f, .5f, 1.f, 1.f};
-	static const float_t debug_color_blue[4]            = {0.f, 0.f, 1.f, 1.f};
-	static const float_t debug_color_electric_violet[4] = {.5f, 0.f, 1.f, 1.f};
-	static const float_t debug_color_magenta[4]         = {1.f, 0.f, 1.f, 1.f};
-	static const float_t debug_color_rose[4]            = {1.f, 0.f, .5f, 1.f};
+#ifdef ENABLE_PROFILING
+	static constexpr float_t debug_color_white[4]           = {1.f, 1.f, 1.f, 1.f};
+	static constexpr float_t debug_color_gray[4]            = {.5f, .5f, .5f, 1.f};
+	static constexpr float_t debug_color_black[4]           = {0.f, 0.f, 0.f, 1.f};
+	static constexpr float_t debug_color_red[4]             = {1.f, 0.f, 0.f, 1.f};
+	static constexpr float_t debug_color_flush_orange[4]    = {1.f, .5f, 0.f, 1.f};
+	static constexpr float_t debug_color_yellow[4]          = {1.f, 1.f, 0.f, 1.f};
+	static constexpr float_t debug_color_chartreuse[4]      = {.5f, 1.f, 0.f, 1.f};
+	static constexpr float_t debug_color_green[4]           = {0.f, 1.f, 0.f, 1.f};
+	static constexpr float_t debug_color_spring_green[4]    = {0.f, 1.f, .5f, 1.f};
+	static constexpr float_t debug_color_teal[4]            = {0.f, 1.f, 1.f, 1.f};
+	static constexpr float_t debug_color_azure_radiance[4]  = {0.f, .5f, 1.f, 1.f};
+	static constexpr float_t debug_color_blue[4]            = {0.f, 0.f, 1.f, 1.f};
+	static constexpr float_t debug_color_electric_violet[4] = {.5f, 0.f, 1.f, 1.f};
+	static constexpr float_t debug_color_magenta[4]         = {1.f, 0.f, 1.f, 1.f};
+	static constexpr float_t debug_color_rose[4]            = {1.f, 0.f, .5f, 1.f};
 
 	static const float_t* debug_color_source       = debug_color_white;
 	static const float_t* debug_color_capture      = debug_color_flush_orange;
@@ -62,4 +63,5 @@ namespace gs {
 		debug_marker(const float_t color[4], const char* format, ...);
 		~debug_marker();
 	};
+#endif
 } // namespace gs

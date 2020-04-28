@@ -29,7 +29,8 @@ gs::context::~context()
 	obs_leave_graphics();
 }
 
-gs::debug_marker::debug_marker(const float_t color[4], const char* format, ...)
+#ifdef ENABLE_PROFILING
+gs::debug_marker::debug_marker(const float color[4], const char* format, ...)
 {
 	std::size_t       size;
 	std::vector<char> buffer(128);
@@ -47,3 +48,4 @@ gs::debug_marker::~debug_marker()
 {
 	gs_debug_marker_end();
 }
+#endif
