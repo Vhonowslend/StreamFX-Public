@@ -33,7 +33,7 @@ gs::context::~context()
 gs::debug_marker::debug_marker(const float color[4], const char* format, ...)
 {
 	std::size_t       size;
-	std::vector<char> buffer(128);
+	std::vector<char> buffer(64);
 
 	va_list vargs;
 	va_start(vargs, format);

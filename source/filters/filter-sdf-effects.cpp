@@ -354,7 +354,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 #endif
 
 					auto op = _sdf_write->render(uint32_t(sdfW), uint32_t(sdfH));
-					gs_ortho(0, (float)sdfW, 0, (float)sdfH, -1, 1);
+					gs_ortho(0, 1, 0, 1, -1, 1);
 					gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &color_transparent, 0, 0);
 
 					_sdf_producer_effect.get_parameter("_image").set_texture(_source_texture);
@@ -363,7 +363,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 					_sdf_producer_effect.get_parameter("_threshold").set_float(_sdf_threshold);
 
 					while (gs_effect_loop(_sdf_producer_effect.get_object(), "Draw")) {
-						gs_draw_sprite(_sdf_texture->get_object(), 0, uint32_t(sdfW), uint32_t(sdfH));
+						streamfx::gs_draw_fullscreen_tri();
 					}
 				}
 				std::swap(_sdf_read, _sdf_write);
@@ -421,7 +421,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 				gs_effect_set_texture(param, _output_texture->get_object());
 			}
 			while (gs_effect_loop(default_effect, "Draw")) {
-				gs_draw_sprite(0, 0, 1, 1);
+				streamfx::gs_draw_fullscreen_tri();
 			}
 
 			gs_enable_blending(true);
@@ -436,7 +436,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 				_sdf_consumer_effect.get_parameter("pShadowOffset")
 					.set_float2(_outer_shadow_offset_x / float_t(baseW), _outer_shadow_offset_y / float_t(baseH));
 				while (gs_effect_loop(_sdf_consumer_effect.get_object(), "ShadowOuter")) {
-					gs_draw_sprite(0, 0, 1, 1);
+					streamfx::gs_draw_fullscreen_tri();
 				}
 			}
 			if (_inner_shadow) {
@@ -449,7 +449,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 				_sdf_consumer_effect.get_parameter("pShadowOffset")
 					.set_float2(_inner_shadow_offset_x / float_t(baseW), _inner_shadow_offset_y / float_t(baseH));
 				while (gs_effect_loop(_sdf_consumer_effect.get_object(), "ShadowInner")) {
-					gs_draw_sprite(0, 0, 1, 1);
+					streamfx::gs_draw_fullscreen_tri();
 				}
 			}
 			if (_outer_glow) {
@@ -461,7 +461,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 				_sdf_consumer_effect.get_parameter("pGlowSharpness").set_float(_outer_glow_sharpness);
 				_sdf_consumer_effect.get_parameter("pGlowSharpnessInverse").set_float(_outer_glow_sharpness_inv);
 				while (gs_effect_loop(_sdf_consumer_effect.get_object(), "GlowOuter")) {
-					gs_draw_sprite(0, 0, 1, 1);
+					streamfx::gs_draw_fullscreen_tri();
 				}
 			}
 			if (_inner_glow) {
@@ -473,7 +473,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 				_sdf_consumer_effect.get_parameter("pGlowSharpness").set_float(_inner_glow_sharpness);
 				_sdf_consumer_effect.get_parameter("pGlowSharpnessInverse").set_float(_inner_glow_sharpness_inv);
 				while (gs_effect_loop(_sdf_consumer_effect.get_object(), "GlowInner")) {
-					gs_draw_sprite(0, 0, 1, 1);
+					streamfx::gs_draw_fullscreen_tri();
 				}
 			}
 			if (_outline) {
@@ -486,7 +486,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 				_sdf_consumer_effect.get_parameter("pOutlineSharpness").set_float(_outline_sharpness);
 				_sdf_consumer_effect.get_parameter("pOutlineSharpnessInverse").set_float(_outline_sharpness_inv);
 				while (gs_effect_loop(_sdf_consumer_effect.get_object(), "Outline")) {
-					gs_draw_sprite(0, 0, 1, 1);
+					streamfx::gs_draw_fullscreen_tri();
 				}
 			}
 		} catch (...) {
