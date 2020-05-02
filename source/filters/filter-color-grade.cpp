@@ -230,7 +230,7 @@ void color_grade_instance::video_render(gs_effect_t* effect)
 			gs_enable_depth_test(false);
 			gs_enable_stencil_test(false);
 			gs_enable_stencil_write(false);
-			gs_ortho(0, static_cast<float_t>(width), 0, static_cast<float_t>(height), -1., 1.);
+			gs_ortho(0, 1, 0, 1, -1., 1.);
 
 			_effect.get_parameter("image").set_texture(_tex_source);
 			_effect.get_parameter("pLift").set_float4(_lift);
@@ -246,7 +246,7 @@ void color_grade_instance::video_render(gs_effect_t* effect)
 			_effect.get_parameter("pCorrection").set_float4(_correction);
 
 			while (gs_effect_loop(_effect.get_object(), "Draw")) {
-				gs_draw_sprite(nullptr, 0, width, height);
+				streamfx::gs_draw_fullscreen_tri();
 			}
 
 			gs_blend_state_pop();
