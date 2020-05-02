@@ -293,7 +293,7 @@ std::shared_ptr<::gs::texture> gfx::blur::box::render()
 			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect.get_object(), "Draw")) {
-				gs_draw_sprite(nullptr, 0, 1, 1);
+				streamfx::gs_draw_fullscreen_tri();
 			}
 		}
 
@@ -309,7 +309,7 @@ std::shared_ptr<::gs::texture> gfx::blur::box::render()
 			auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect.get_object(), "Draw")) {
-				gs_draw_sprite(nullptr, 0, 1, 1);
+				streamfx::gs_draw_fullscreen_tri();
 			}
 		}
 	}
@@ -379,7 +379,7 @@ std::shared_ptr<::gs::texture> gfx::blur::box_directional::render()
 			auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect.get_object(), "Draw")) {
-				gs_draw_sprite(nullptr, 0, 1, 1);
+				streamfx::gs_draw_fullscreen_tri();
 			}
 		}
 	}
@@ -455,7 +455,7 @@ std::shared_ptr<::gs::texture> gfx::blur::box_rotational::render()
 			auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect.get_object(), "Rotate")) {
-				gs_draw_sprite(nullptr, 0, 1, 1);
+				streamfx::gs_draw_fullscreen_tri();
 			}
 		}
 	}
@@ -520,7 +520,7 @@ std::shared_ptr<::gs::texture> gfx::blur::box_zoom::render()
 			auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect.get_object(), "Zoom")) {
-				gs_draw_sprite(nullptr, 0, 1, 1);
+				streamfx::gs_draw_fullscreen_tri();
 			}
 		}
 	}

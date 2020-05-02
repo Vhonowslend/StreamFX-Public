@@ -504,11 +504,11 @@ void blur_instance::video_render(gs_effect_t* effect)
 
 			try {
 				auto op = this->_output_rt->render(baseW, baseH);
-				gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
+				gs_ortho(0, 1, 0, 1, -1, 1);
 
 				// Render
 				while (gs_effect_loop(_effect_mask.get_object(), technique.c_str())) {
-					gs_draw_sprite(_output_texture->get_object(), 0, baseW, baseH);
+					streamfx::gs_draw_fullscreen_tri();
 				}
 			} catch (const std::exception&) {
 				gs_blend_state_pop();

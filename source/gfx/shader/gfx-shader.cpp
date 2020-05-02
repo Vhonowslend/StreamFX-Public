@@ -475,7 +475,7 @@ void gfx::shader::shader::render()
 	if (!_rt_up_to_date) {
 		auto op   = _rt->render(width(), height());
 		vec4 zero = {0, 0, 0, 0};
-		gs_ortho(0, width(), 0, height(), 0, 1);
+		gs_ortho(0, 1, 0, 1, 0, 1);
 		gs_clear(GS_CLEAR_COLOR, &zero, 0, 0);
 
 		gs_blend_state_push();
@@ -485,7 +485,7 @@ void gfx::shader::shader::render()
 		gs_blend_function_separate(GS_BLEND_ONE, GS_BLEND_ZERO, GS_BLEND_ONE, GS_BLEND_ZERO);
 		gs_enable_color(true, true, true, true);
 		while (gs_effect_loop(_shader.get_object(), _shader_tech.c_str())) {
-			gs_draw_sprite(nullptr, 0, width(), height());
+			streamfx::gs_draw_fullscreen_tri();
 		}
 
 		gs_blend_state_pop();

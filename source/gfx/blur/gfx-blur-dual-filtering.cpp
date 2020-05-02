@@ -289,7 +289,7 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 			auto op = _rts[n]->render(owidth, oheight);
 			gs_ortho(0., 1., 0., 1., 0., 1.);
 			while (gs_effect_loop(effect.get_object(), "Down")) {
-				gs_draw_sprite(tex_cur->get_object(), 0, 1, 1);
+				streamfx::gs_draw_fullscreen_tri();
 			}
 		}
 	}
@@ -319,7 +319,7 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 			auto op = _rts[n - 1]->render(owidth, oheight);
 			gs_ortho(0., 1., 0., 1., 0., 1.);
 			while (gs_effect_loop(effect.get_object(), "Up")) {
-				gs_draw_sprite(tex_in->get_object(), 0, 1, 1);
+				streamfx::gs_draw_fullscreen_tri();
 			}
 		}
 	}

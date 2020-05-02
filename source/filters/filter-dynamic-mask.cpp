@@ -280,7 +280,7 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 				gs_enable_stencil_write(false);
 				gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
 				gs_stencil_op(GS_STENCIL_BOTH, GS_KEEP, GS_KEEP, GS_KEEP);
-				gs_ortho(0, (float)width, 0, (float)height, -1., 1.);
+				gs_ortho(0, 1, 0, 1, -1., 1.);
 
 				_effect.get_parameter("pMaskInputA").set_texture(_filter_texture);
 				_effect.get_parameter("pMaskInputB").set_texture(_input_texture);
@@ -290,7 +290,7 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 				_effect.get_parameter("pMaskMultiplier").set_float4(_precalc.scale);
 
 				while (gs_effect_loop(_effect.get(), "Mask")) {
-					gs_draw_sprite(0, 0, width, height);
+					streamfx::gs_draw_fullscreen_tri();
 				}
 
 				gs_blend_state_pop();

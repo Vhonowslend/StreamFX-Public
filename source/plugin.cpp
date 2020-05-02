@@ -67,7 +67,8 @@
 #include "ui/ui.hpp"
 #endif
 
-static std::shared_ptr<util::threadpool> _threadpool;
+static std::shared_ptr<util::threadpool>  _threadpool;
+static std::shared_ptr<gs::vertex_buffer> _gs_fstri_vb;
 
 MODULE_EXPORT bool obs_module_load(void)
 try {
@@ -81,6 +82,27 @@ try {
 
 	// Initialize Source Tracker
 	obs::source_tracker::initialize();
+
+	// GS Stuff
+	{
+		_gs_fstri_vb = std::make_shared<gs::vertex_buffer>(3, 1);
+		{
+			auto vtx = _gs_fstri_vb->at(0);
+			vec3_set(vtx.position, 0, 0, 0);
+			vec4_set(vtx.uv[0], 0, 0, 0, 0);
+		}
+		{
+			auto vtx = _gs_fstri_vb->at(1);
+			vec3_set(vtx.position, 2, 0, 0);
+			vec4_set(vtx.uv[0], 2, 0, 0, 0);
+		}
+		{
+			auto vtx = _gs_fstri_vb->at(2);
+			vec3_set(vtx.position, 0, 2, 0);
+			vec4_set(vtx.uv[0], 0, 2, 0, 0);
+		}
+		_gs_fstri_vb->update();
+	}
 
 	// Encoders
 	{
@@ -138,7 +160,7 @@ try {
 #endif
 	}
 
-	// Frontend
+// Frontend
 #ifdef ENABLE_FRONTEND
 	streamfx::ui::handler::initialize();
 #endif
@@ -215,6 +237,11 @@ try {
 #endif
 	}
 
+	// GS Stuff
+	{
+		_gs_fstri_vb.reset();
+	}
+
 	// Finalize Source Tracker
 	obs::source_tracker::finalize();
 
@@ -232,4 +259,10 @@ try {
 std::shared_ptr<util::threadpool> streamfx::threadpool()
 {
 	return _threadpool;
+}
+
+void streamfx::gs_draw_fullscreen_tri()
+{
+	gs_load_vertexbuffer(_gs_fstri_vb->update(false));
+	gs_draw(GS_TRIS, 0, 3); //_gs_fstri_vb->size());
 }
