@@ -426,6 +426,7 @@ endif()
 ## Data & Source
 list(APPEND PROJECT_DATA
 	"data/locale/en-US.ini"
+	"data/effects/color-conversion.effect"
 	"data/effects/mipgen.effect"
 	"data/effects/pack-unpack.effect"
 )
@@ -748,9 +749,11 @@ endif()
 if(${PropertyPrefix}ENABLE_FILTER_SHADER)
 	set(REQUIRE_SHADER_CODE ON)
 	list(APPEND PROJECT_DATA
+		"data/examples/shaders/filter/crt-curvature.effect"
+		"data/examples/shaders/filter/crt-scanlines.effect"
 		"data/examples/shaders/filter/drunk.effect"
-		"data/examples/shaders/filter/example.effect"
-		"data/examples/shaders/filter/example_displace_by_texture.effect"
+		"data/examples/shaders/filter/hexagonize.effect"
+		"data/examples/shaders/filter/semiline.effect"
 	)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/filters/filter-shader.hpp"
@@ -787,7 +790,10 @@ endif()
 if(${PropertyPrefix}ENABLE_SOURCE_SHADER)
 	set(REQUIRE_SHADER_CODE ON)
 	list(APPEND PROJECT_DATA
-		"data/examples/shaders/source/example.effect"
+		"data/examples/shaders/source/shadertoy-3l23Rh.effect"
+		"data/examples/shaders/source/shadertoy-3tlXWS.effect"
+		"data/examples/shaders/source/shadertoy-MslfRn.effect"
+		"data/examples/shaders/source/shadertoy-MslGRn.effect"
 	)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/sources/source-shader.hpp"
@@ -802,6 +808,10 @@ endif()
 if(${PropertyPrefix}ENABLE_TRANSITION_SHADER)
 	set(REQUIRE_SHADER_CODE ON)
 	list(APPEND PROJECT_DATA
+		"data/examples/shaders/transition/color-shift.effect"
+		"data/examples/shaders/transition/luma-burn.effect"
+		"data/examples/shaders/transition/pixelator.effect"
+		"data/examples/shaders/transition/sliding-bars.effect"
 	)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/transitions/transition-shader.hpp"
