@@ -50,35 +50,17 @@ face_tracking_instance::face_tracking_instance(obs_data_t* settings, obs_source_
 
 	  _rt_is_fresh(false), _rt(),
 
-	  _cfg_roi_zoom(1.0), _cfg_roi_offset({0., 0.}), _cfg_roi_stability(1.0),
+	  _cfg_zoom(1.0), _cfg_offset({0., 0.}), _cfg_stability(1.0),
 
-	  _roi_center(), _roi_size(), _roi_geom(),
+	  _geometry(), _filters(), _values(),
 
 	  _cuda(face_tracking_factory::get()->get_cuda()), _cuda_ctx(face_tracking_factory::get()->get_cuda_context()),
 	  _cuda_stream(),
 
-	  _ar_library(face_tracking_factory::get()->get_ar()), _ar_loaded(false), _ar_feature(), _ar_tracked(true),
-	  _ar_bboxes_data(), _ar_bboxes(), _ar_bboxes_confidence(),
-
-	  _ar_texture(), _ar_texture_cuda_fresh(false), _ar_texture_cuda(), _ar_texture_cuda_mem(), _ar_image(),
-	  _ar_image_bgr(), _ar_image_temp()
+	  _ar_library(face_tracking_factory::get()->get_ar()), _ar_loaded(false), _ar_feature(), _ar_is_tracking(false),
+	  _ar_bboxes_confidence(), _ar_bboxes_data(), _ar_bboxes(), _ar_texture(), _ar_texture_cuda_fresh(false),
+	  _ar_texture_cuda(), _ar_texture_cuda_mem(), _ar_image(), _ar_image_bgr(), _ar_image_temp()
 {
-	// Create Graphics resources for everything.
-	{
-		auto gctx = gs::context{};
-		_rt       = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-		_roi_geom = std::make_shared<gs::vertex_buffer>(4, 1);
-	}
-
-	// Initialize everything.
-	{
-		auto         cctx = std::make_shared<::nvidia::cuda::context_stack>(_cuda, _cuda_ctx);
-		std::int32_t minPrio, maxPrio;
-		_cuda->cuCtxGetStreamPriorityRange(&minPrio, &maxPrio);
-		_cuda_stream = std::make_shared<::nvidia::cuda::stream>(_cuda, ::nvidia::cuda::cu_stream_flags::NON_BLOCKING,
-																minPrio + ((maxPrio - minPrio) / 2));
-	}
-
 #ifdef ENABLE_PROFILING
 	// Profiling
 	_profile_capture         = util::profiler::create();
@@ -91,12 +73,34 @@ face_tracking_instance::face_tracking_instance(obs_data_t* settings, obs_source_
 	_profile_ar_calc         = util::profiler::create();
 #endif
 
-	// Asynchronously load Face Tracking.
-	async_initialize(nullptr);
+	{ // Create render target, vertex buffer, and CUDA stream.
+		auto gctx = gs::context{};
+		_rt       = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+		_geometry = std::make_shared<gs::vertex_buffer>(4, 1);
+		auto cctx = std::make_shared<::nvidia::cuda::context_stack>(_cuda, _cuda_ctx);
+		_cuda_stream =
+			std::make_shared<::nvidia::cuda::stream>(_cuda, ::nvidia::cuda::cu_stream_flags::NON_BLOCKING, 0);
+	}
+
+	{ // Asynchronously load Face Tracking.
+		async_initialize();
+	}
+
+	{ // Set up initial tracking data.
+		_values.center[0] = _values.center[1] = .5;
+		_values.size[0] = _values.size[1] = 1.;
+		refresh_region_of_interest();
+	}
 }
 
 face_tracking_instance::~face_tracking_instance()
 {
+	// Kill pending tasks.
+	streamfx::threadpool()->pop(_async_initialize);
+	streamfx::threadpool()->pop(_async_track);
+
+	_ar_loaded.store(false);
+	std::unique_lock<std::mutex> alk{_ar_lock};
 	_ar_library->image_dealloc(&_ar_image_temp);
 	_ar_library->image_dealloc(&_ar_image_bgr);
 }
@@ -114,21 +118,23 @@ void face_tracking_instance::async_initialize(std::shared_ptr<void> ptr)
 		data->source =
 			std::shared_ptr<obs_weak_source_t>(obs_source_get_weak_source(_self), obs::obs_weak_source_deleter);
 
-		std::filesystem::path models_path = _ar_library->get_ar_sdk_path();
-		models_path                       = models_path.append("models");
-		models_path                       = std::filesystem::absolute(models_path);
-		models_path.concat("\\");
-		data->models_path = models_path.string();
+		{
+			std::filesystem::path models_path = _ar_library->get_ar_sdk_path();
+			models_path                       = models_path.append("models");
+			models_path                       = std::filesystem::absolute(models_path);
+			models_path.concat("\\");
+			data->models_path = models_path.string();
+		}
 
-		streamfx::threadpool()->push(std::bind(&face_tracking_instance::async_initialize, this, std::placeholders::_1),
-									 data);
+		_async_initialize = streamfx::threadpool()->push(
+			std::bind(&face_tracking_instance::async_initialize, this, std::placeholders::_1), data);
 	} else {
 		std::shared_ptr<async_data> data = std::static_pointer_cast<async_data>(ptr);
 
 		// Try and acquire a strong source reference.
-		std::shared_ptr<obs_source_t> ref =
+		std::shared_ptr<obs_source_t> remote_work =
 			std::shared_ptr<obs_source_t>(obs_weak_source_get_source(data->source.get()), obs::obs_source_deleter);
-		if (!ref) { // If that failed, the source we are working for was deleted - abort now.
+		if (!remote_work) { // If that failed, the source we are working for was deleted - abort now.
 			return;
 		}
 
@@ -162,7 +168,7 @@ void face_tracking_instance::async_initialize(std::shared_ptr<void> ptr)
 		// Finally enable Temporal tracking if possible.
 		if (NvCV_Status res = _ar_library->set_uint32(_ar_feature.get(), NvAR_Parameter_Config(Temporal), 1);
 			res != NVCV_SUCCESS) {
-			LOG_WARNING("<%s> Unable to enable Temporal tracking mode.", obs_source_get_name(ref.get()));
+			LOG_WARNING("<%s> Unable to enable Temporal tracking mode.", obs_source_get_name(remote_work.get()));
 		}
 
 		// Create Bounding Boxes Data
@@ -191,46 +197,9 @@ void face_tracking_instance::async_initialize(std::shared_ptr<void> ptr)
 		} else {
 			_ar_loaded = true;
 		}
+
+		_async_initialize.reset();
 	}
-}
-
-void face_tracking_instance::refresh_geometry()
-{ // Update Region of Interest Geometry.
-	std::unique_lock<std::mutex> lock(_roi_lock);
-
-	auto v0 = _roi_geom->at(0);
-	auto v1 = _roi_geom->at(1);
-	auto v2 = _roi_geom->at(2);
-	auto v3 = _roi_geom->at(3);
-
-	*v0.color = 0xFFFFFFFF;
-	*v1.color = 0xFFFFFFFF;
-	*v2.color = 0xFFFFFFFF;
-	*v3.color = 0xFFFFFFFF;
-
-	vec3_set(v3.position, static_cast<float_t>(_size.first), static_cast<float_t>(_size.second), 0.);
-	vec3_set(v2.position, v3.position->x, 0., 0.);
-	vec3_set(v1.position, 0., v3.position->y, 0.);
-	vec3_set(v0.position, 0., 0., 0.);
-
-	vec4_set(v0.uv[0],
-			 static_cast<float_t>((_roi_center.first - _roi_size.first / 2.) / static_cast<double_t>(_size.first)),
-			 static_cast<float_t>((_roi_center.second - _roi_size.second / 2.) / static_cast<double_t>(_size.second)),
-			 0., 0.);
-	vec4_set(v1.uv[0],
-			 static_cast<float_t>((_roi_center.first - _roi_size.first / 2.) / static_cast<double_t>(_size.first)),
-			 static_cast<float_t>((_roi_center.second + _roi_size.second / 2.) / static_cast<double_t>(_size.second)),
-			 0., 0.);
-	vec4_set(v2.uv[0],
-			 static_cast<float_t>((_roi_center.first + _roi_size.first / 2.) / static_cast<double_t>(_size.first)),
-			 static_cast<float_t>((_roi_center.second - _roi_size.second / 2.) / static_cast<double_t>(_size.second)),
-			 0., 0.);
-	vec4_set(v3.uv[0],
-			 static_cast<float_t>((_roi_center.first + _roi_size.first / 2.) / static_cast<double_t>(_size.first)),
-			 static_cast<float_t>((_roi_center.second + _roi_size.second / 2.) / static_cast<double_t>(_size.second)),
-			 0., 0.);
-
-	_roi_geom->update();
 }
 
 void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
@@ -239,7 +208,21 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 		std::shared_ptr<obs_weak_source_t> source;
 	};
 
+	if (!_ar_loaded)
+		return;
+
 	if (!ptr) {
+		// Check if we can track.
+		if (_ar_is_tracking)
+			return; // Can't track a new frame right now.
+
+#ifdef ENABLE_PROFILING
+		gs::debug_marker gdm{gs::debug_color_convert, "Start Asynchronous Tracking"};
+#endif
+
+		// Don't push additional tracking frames while processing one.
+		_ar_is_tracking = true;
+
 		// Spawn the work for the threadpool.
 		std::shared_ptr<async_data> data = std::make_shared<async_data>();
 		data->source =
@@ -251,7 +234,6 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 			auto             prof = _profile_capture_realloc->track();
 			gs::debug_marker marker{gs::debug_color_allocate, "Reallocate GPU Buffer"};
 #endif
-
 			_ar_texture =
 				std::make_shared<gs::texture>(_size.first, _size.second, GS_RGBA, 1, nullptr, gs::texture::flags::None);
 			_ar_texture_cuda_fresh = false;
@@ -262,25 +244,28 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 			auto             prof = _profile_capture_copy->track();
 			gs::debug_marker marker{gs::debug_color_copy, "Copy Capture", obs_source_get_name(_self)};
 #endif
-
 			gs_copy_texture(_ar_texture->get_object(), _rt->get_texture()->get_object());
 		}
 
 		// Push work
-		streamfx::threadpool()->push(std::bind(&face_tracking_instance::async_track, this, std::placeholders::_1),
-									 data);
+		_async_track = streamfx::threadpool()->push(
+			std::bind(&face_tracking_instance::async_track, this, std::placeholders::_1), data);
 	} else {
-		std::shared_ptr<async_data> data = std::static_pointer_cast<async_data>(ptr);
+		// Prevent conflicts.
+		std::unique_lock<std::mutex> alk{_ar_lock};
+		if (!_ar_loaded)
+			return;
 
 		// Try and acquire a strong source reference.
-		std::shared_ptr<obs_source_t> ref =
+		std::shared_ptr<async_data>   data = std::static_pointer_cast<async_data>(ptr);
+		std::shared_ptr<obs_source_t> remote_work =
 			std::shared_ptr<obs_source_t>(obs_weak_source_get_source(data->source.get()), obs::obs_source_deleter);
-		if (!ref) { // If that failed, the source we are working for was deleted - abort now.
+		if (!remote_work) { // If that failed, the source we are working for was deleted - abort now.
 			return;
 		}
 
 		// Acquire GS context.
-		gs::context gctx;
+		gs::context gctx{};
 
 		// Update the current CUDA context for working.
 		auto cctx = std::make_shared<::nvidia::cuda::context_stack>(_cuda, _cuda_ctx);
@@ -292,22 +277,23 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 			gs::debug_marker marker{gs::debug_color_allocate, "%s: Reallocate CUDA Buffers",
 									obs_source_get_name(_self)};
 #endif
-
 			// Assign new texture and allocate new memory.
-			std::size_t pitch    = _size.first * 4ul;
+			std::size_t pitch    = _ar_texture->get_width() * 4ul;
 			_ar_texture_cuda     = std::make_shared<::nvidia::cuda::gstexture>(_cuda, _ar_texture);
-			_ar_texture_cuda_mem = std::make_shared<::nvidia::cuda::memory>(_cuda, pitch * _size.second);
-			_ar_library->image_init(&_ar_image, static_cast<unsigned int>(_size.first),
-									static_cast<unsigned int>(_size.second), static_cast<int>(pitch),
+			_ar_texture_cuda_mem = std::make_shared<::nvidia::cuda::memory>(_cuda, pitch * _ar_texture->get_height());
+			_ar_library->image_init(&_ar_image, static_cast<unsigned int>(_ar_texture->get_width()),
+									static_cast<unsigned int>(_ar_texture->get_height()), static_cast<int>(pitch),
 									reinterpret_cast<void*>(_ar_texture_cuda_mem->get()), NVCV_RGBA, NVCV_U8,
 									NVCV_INTERLEAVED, NVCV_CUDA);
 
 			// Reallocate transposed buffer.
-			_ar_library->image_dealloc(&_ar_image_bgr);
-			_ar_library->image_alloc(&_ar_image_bgr, static_cast<unsigned int>(_size.first),
-									 static_cast<unsigned int>(_size.second), NVCV_BGR, NVCV_U8, NVCV_INTERLEAVED,
-									 NVCV_CUDA, 0);
 			_ar_library->image_dealloc(&_ar_image_temp);
+			_ar_library->image_dealloc(&_ar_image_bgr);
+			_ar_library->image_alloc(&_ar_image_bgr, _ar_image.width, _ar_image.height, NVCV_BGR, NVCV_U8,
+									 NVCV_INTERLEAVED, NVCV_CUDA, 0);
+
+			// Synchronize Streams.
+			_cuda->cuStreamSynchronize(_cuda_stream->get());
 
 			// Finally set the input object.
 			if (NvCV_Status res = _ar_library->set_object(_ar_feature.get(), NvAR_Parameter_Input(Image),
@@ -325,7 +311,6 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 #ifdef ENABLE_PROFILING
 			auto prof = _profile_ar_copy->track();
 #endif
-
 			::nvidia::cuda::cu_memcpy2d_t mc;
 			mc.src_x_in_bytes  = 0;
 			mc.src_y           = 0;
@@ -344,7 +329,8 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 			mc.width_in_bytes  = static_cast<size_t>(_ar_image.pitch);
 			mc.height          = _ar_image.height;
 
-			if (::nvidia::cuda::cu_result res = _cuda->cuMemcpy2D(&mc); res != ::nvidia::cuda::cu_result::SUCCESS) {
+			if (::nvidia::cuda::cu_result res = _cuda->cuMemcpy2DAsync(&mc, _cuda_stream->get());
+				res != ::nvidia::cuda::cu_result::SUCCESS) {
 				LOG_ERROR("<%s> Failed to prepare buffers for tracking.", obs_source_get_name(_self));
 				return;
 			}
@@ -354,7 +340,6 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 #ifdef ENABLE_PROFILING
 			auto prof = _profile_ar_transfer->track();
 #endif
-
 			if (NvCV_Status res =
 					_ar_library->image_transfer(&_ar_image, &_ar_image_bgr, 1.0,
 												reinterpret_cast<CUstream_st*>(_cuda_stream->get()), &_ar_image_temp);
@@ -362,90 +347,128 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 				LOG_ERROR("<%s> Failed to convert from RGBX 32-bit to BGR 24-bit.", obs_source_get_name(_self));
 				return;
 			}
+
+			// Synchronize Streams.
+			_cuda->cuStreamSynchronize(_cuda_stream->get());
+			_cuda->cuCtxSynchronize();
 		}
 
 		{ // Track any faces.
 #ifdef ENABLE_PROFILING
 			auto prof = _profile_ar_run->track();
 #endif
-
 			if (NvCV_Status res = _ar_library->run(_ar_feature.get()); res != NVCV_SUCCESS) {
 				LOG_ERROR("<%s> Failed to run tracking.", obs_source_get_name(_self));
 				return;
 			}
 		}
 
-		if ((_ar_bboxes.num_boxes == 0) || (_ar_bboxes_confidence.at(0) < 0.5)) {
-			// Not confident enough or not tracking anything, return to full frame after a bit.
+		// Are we tracking anything, and confident enough in the tracking?
+		if ((_ar_bboxes.num_boxes == 0) || (_ar_bboxes_confidence.at(0) < 0.3333)) {
+			// If not, just return to full frame.
+			std::unique_lock<std::mutex> tlk{_values.lock};
+			_values.center[0]   = .5;
+			_values.center[1]   = .5;
+			_values.size[0]     = 1.;
+			_values.size[1]     = 1.;
+			_values.velocity[0] = 0;
+			_values.velocity[1] = 0;
 		} else {
+			// If yes, begin tracking.
 #ifdef ENABLE_PROFILING
 			auto prof = _profile_ar_calc->track();
 #endif
 
-			double_t aspect = double_t(_size.first) / double_t(_size.second);
+			double_t sx     = static_cast<double_t>(_ar_image_bgr.width);
+			double_t sy     = static_cast<double_t>(_ar_image_bgr.height);
+			double_t aspect = double_t(sx) / double_t(sy);
+			double_t fps    = 0.;
+
+			{
+				obs_video_info ovi;
+				obs_get_video_info(&ovi);
+				fps = static_cast<double_t>(ovi.fps_num) / static_cast<double_t>(ovi.fps_den);
+			}
 
 			// Store values and center.
-			double_t bbox_w  = _ar_bboxes.boxes[0].width;
-			double_t bbox_h  = _ar_bboxes.boxes[0].height;
-			double_t bbox_cx = _ar_bboxes.boxes[0].x + bbox_w / 2.0;
-			double_t bbox_cy = _ar_bboxes.boxes[0].y + bbox_h / 2.0;
+			double_t bsx = _ar_bboxes.boxes[0].width;
+			double_t bsy = _ar_bboxes.boxes[0].height;
+			double_t bcx = _ar_bboxes.boxes[0].x + bsx / 2.0;
+			double_t bcy = _ar_bboxes.boxes[0].y + bsy / 2.0;
 
 			// Zoom, Aspect Ratio, Offset
-			bbox_h = util::math::lerp<double_t>(_size.second, bbox_h, _cfg_roi_zoom);
-			bbox_h = std::clamp(bbox_h, 10 * aspect, static_cast<double_t>(_size.second));
-			bbox_w = bbox_h * aspect;
-			bbox_cx += _ar_bboxes.boxes[0].width * _cfg_roi_offset.first;
-			bbox_cy += _ar_bboxes.boxes[0].height * _cfg_roi_offset.second;
+			bsy = util::math::lerp<double_t>(sy, bsy, _cfg_zoom);
+			bsy = std::clamp(bsy, 10 * aspect, static_cast<double_t>(_size.second));
+			bsx = bsy * aspect;
+			bcx += _ar_bboxes.boxes[0].width * _cfg_offset.first;
+			bcy += _ar_bboxes.boxes[0].height * _cfg_offset.second;
 
 			// Fit back into the frame
 			// - Above code guarantees that height is never bigger than the height of the frame.
 			// - Which also guarantees that width is never bigger than the width of the frame.
 			// Only cx and cy need to be adjusted now to always be in the frame.
-			bbox_cx = std::clamp(bbox_cx, (bbox_w / 2.), static_cast<double_t>(_size.first) - (bbox_w / 2.));
-			bbox_cy = std::clamp(bbox_cy, (bbox_h / 2.), static_cast<double_t>(_size.second) - (bbox_h / 2.));
+			bcx = std::clamp(bcx, (bsx / 2.), sx - (bsx / 2.));
+			bcy = std::clamp(bcy, (bsy / 2.), sy - (bsy / 2.));
 
-			// Filter values
-			auto size_w   = _roi_filters[2].filter(bbox_w);
-			auto size_h   = _roi_filters[3].filter(bbox_h);
-			auto center_x = _roi_filters[0].filter(bbox_cx);
-			auto center_y = _roi_filters[1].filter(bbox_cy);
-
-			// Fix NaN/Infinity
-			if (std::isfinite(size_w) && std::isfinite(size_h) && std::isfinite(center_x) && std::isfinite(center_y)) {
-				std::unique_lock<std::mutex> lock(_roi_lock);
-				_roi_center.first  = center_x;
-				_roi_center.second = center_y;
-				_roi_size.first    = size_w;
-				_roi_size.second   = size_h;
-			} else {
-				std::unique_lock<std::mutex> lock(_roi_lock);
-				roi_refresh();
+			{ // Update target values.
+				std::unique_lock<std::mutex> tlk{_values.lock};
+				_values.velocity[0] = -_values.center[0];
+				_values.velocity[1] = -_values.center[1];
+				_values.center[0]   = bcx / sx;
+				_values.center[1]   = bcy / sy;
+				_values.velocity[0] += _values.center[0];
+				_values.velocity[1] += _values.center[1];
+				_values.velocity[0] *= fps;
+				_values.velocity[1] *= fps;
+				_values.size[0] = bsx / sx;
+				_values.size[1] = bsy / sy;
 			}
 		}
 
-		_ar_tracked = true;
+		_async_track.reset();
+
+		// Allow new frames to be queued again.
+		_ar_is_tracking = false;
 	}
 }
 
-void face_tracking_instance::roi_refresh()
-{
-	double_t kalman_q = util::math::lerp<double_t>(1.0, 1e-6, _cfg_roi_stability);
-	double_t kalman_r = util::math::lerp<double_t>(std::numeric_limits<double_t>::epsilon(), 1e+2, _cfg_roi_stability);
+void face_tracking_instance::refresh_geometry()
+{ // Update Region of Interest Geometry.
+	auto v0 = _geometry->at(0);
+	auto v1 = _geometry->at(1);
+	auto v2 = _geometry->at(2);
+	auto v3 = _geometry->at(3);
 
-	_roi_filters[0] = util::math::kalman1D<double_t>{kalman_q, kalman_r, 1.0, _roi_center.first};
-	_roi_filters[1] = util::math::kalman1D<double_t>{kalman_q, kalman_r, 1.0, _roi_center.second};
-	_roi_filters[2] = util::math::kalman1D<double_t>{kalman_q, kalman_r, 1.0, _roi_size.first};
-	_roi_filters[3] = util::math::kalman1D<double_t>{kalman_q, kalman_r, 1.0, _roi_size.second};
+	vec3_set(v3.position, static_cast<float_t>(_size.first), static_cast<float_t>(_size.second), 0.);
+	vec3_set(v2.position, v3.position->x, 0., 0.);
+	vec3_set(v1.position, 0., v3.position->y, 0.);
+	vec3_set(v0.position, 0., 0., 0.);
+
+	float_t hsx = static_cast<float_t>(_filters.size[0].get() / 2.);
+	float_t hsy = static_cast<float_t>(_filters.size[1].get() / 2.);
+	vec4_set(v0.uv[0], static_cast<float_t>(_filters.center[0].get() - hsx),
+			 static_cast<float_t>(_filters.center[1].get() - hsy), 0., 0.);
+	vec4_set(v1.uv[0], static_cast<float_t>(_filters.center[0].get() - hsx),
+			 static_cast<float_t>(_filters.center[1].get() + hsy), 0., 0.);
+	vec4_set(v2.uv[0], static_cast<float_t>(_filters.center[0].get() + hsx),
+			 static_cast<float_t>(_filters.center[1].get() - hsy), 0., 0.);
+	vec4_set(v3.uv[0], static_cast<float_t>(_filters.center[0].get() + hsx),
+			 static_cast<float_t>(_filters.center[1].get() + hsy), 0., 0.);
+
+	_geometry->update(true);
 }
 
-void face_tracking_instance::roi_reset()
+void face_tracking_instance::refresh_region_of_interest()
 {
-	_roi_center.first  = static_cast<double_t>(_size.first / 2);
-	_roi_center.second = static_cast<double_t>(_size.second / 2);
-	_roi_size.first    = static_cast<double_t>(_size.first);
-	_roi_size.second   = static_cast<double_t>(_size.second);
+	std::unique_lock<std::mutex> tlk(_values.lock);
 
-	roi_refresh();
+	double_t kalman_q = util::math::lerp<double_t>(1.0, 1e-6, _cfg_stability);
+	double_t kalman_r = util::math::lerp<double_t>(std::numeric_limits<double_t>::epsilon(), 1e+2, _cfg_stability);
+
+	_filters.center[0] = util::math::kalman1D<double_t>{kalman_q, kalman_r, 1., _values.center[0]};
+	_filters.center[1] = util::math::kalman1D<double_t>{kalman_q, kalman_r, 1., _values.center[1]};
+	_filters.size[0]   = util::math::kalman1D<double_t>{kalman_q, kalman_r, 1., _values.size[0]};
+	_filters.size[1]   = util::math::kalman1D<double_t>{kalman_q, kalman_r, 1., _values.size[1]};
 }
 
 void face_tracking_instance::load(obs_data_t* data)
@@ -457,14 +480,13 @@ void face_tracking_instance::migrate(obs_data_t* data, std::uint64_t version) {}
 
 void face_tracking_instance::update(obs_data_t* data)
 {
-	_cfg_roi_zoom          = obs_data_get_double(data, SK_ROI_ZOOM) / 100.0;
-	_cfg_roi_offset.first  = obs_data_get_double(data, SK_ROI_OFFSET_X) / 100.0;
-	_cfg_roi_offset.second = obs_data_get_double(data, SK_ROI_OFFSET_Y) / 100.0;
-	_cfg_roi_stability     = obs_data_get_double(data, SK_ROI_STABILITY) / 100.0;
+	_cfg_zoom          = obs_data_get_double(data, SK_ROI_ZOOM) / 100.0;
+	_cfg_offset.first  = obs_data_get_double(data, SK_ROI_OFFSET_X) / 100.0;
+	_cfg_offset.second = obs_data_get_double(data, SK_ROI_OFFSET_Y) / 100.0;
+	_cfg_stability     = obs_data_get_double(data, SK_ROI_STABILITY) / 100.0;
 
 	// Refresh the Region Of Interest
-	std::unique_lock<std::mutex> lock(_roi_lock);
-	roi_refresh();
+	refresh_region_of_interest();
 }
 
 void face_tracking_instance::video_tick(float_t seconds)
@@ -474,10 +496,23 @@ void face_tracking_instance::video_tick(float_t seconds)
 		return;
 	}
 
-	if (obs_source_t* target = obs_filter_get_target(_self); target != nullptr) {
-		_size.first  = obs_source_get_width(target);
-		_size.second = obs_source_get_height(target);
+	// Update the input size.
+	if (obs_source_t* src = obs_filter_get_target(_self); src != nullptr) {
+		_size.first  = obs_source_get_base_width(src);
+		_size.second = obs_source_get_base_height(src);
 	}
+
+	// Update filters and geometry
+	{
+		std::unique_lock<std::mutex> tlk(_values.lock);
+		_filters.center[0].filter(_values.center[0]);
+		_filters.center[1].filter(_values.center[1]);
+		_filters.size[0].filter(_values.size[0]);
+		_filters.size[1].filter(_values.size[1]);
+		_values.center[0] += _values.velocity[0] * seconds;
+		_values.center[1] += _values.velocity[1] * seconds;
+	}
+	refresh_geometry();
 
 	_rt_is_fresh = false;
 }
@@ -494,8 +529,8 @@ void face_tracking_instance::video_render(gs_effect_t* effect)
 	}
 
 #ifdef ENABLE_PROFILING
-	gs::debug_marker gdmp{gs::debug_color_source, "Nvidia Face Tracking '%s' on '%s'", obs_source_get_name(_self),
-						  obs_source_get_name(obs_filter_get_parent(_self))};
+	gs::debug_marker gdmp{gs::debug_color_source, "NVIDIA Face Tracking '%s'...", obs_source_get_name(_self)};
+	gs::debug_marker gdmp2{gs::debug_color_source, "... on '%s'", obs_source_get_name(obs_filter_get_parent(_self))};
 #endif
 
 	if (!_rt_is_fresh) { // Capture the filter stack "below" us.
@@ -512,24 +547,20 @@ void face_tracking_instance::video_render(gs_effect_t* effect)
 				auto op  = _rt->render(_size.first, _size.second);
 				vec4 clr = {0., 0., 0., 0.};
 
-				gs_ortho(0., static_cast<float_t>(_size.first), 0., static_cast<float_t>(_size.second), 0., 1.);
-				gs_clear(GS_CLEAR_COLOR, &clr, 0., 0.);
+				gs_ortho(0., 1., 0., 1., -1., 1.);
+				gs_clear(GS_CLEAR_COLOR, &clr, 0., 0);
+				gs_enable_color(true, true, true, true);
+				gs_enable_blending(false);
 
-				obs_source_process_filter_tech_end(_self, default_effect, _size.first, _size.second, "Draw");
+				obs_source_process_filter_tech_end(_self, default_effect, 1, 1, "Draw");
 			} else {
 				obs_source_skip_video_filter(_self);
 				return;
 			}
 		}
 
-		if (_ar_tracked) {
-#ifdef ENABLE_PROFILING
-			gs::debug_marker gdm{gs::debug_color_convert, "Trigger Async Tracking Task"};
-#endif
-
-			async_track(nullptr);
-			refresh_geometry();
-		}
+		// Probably spawn new work.
+		async_track(nullptr);
 
 		_rt_is_fresh = true;
 	}
@@ -541,9 +572,9 @@ void face_tracking_instance::video_render(gs_effect_t* effect)
 
 		gs_effect_set_texture(gs_effect_get_param_by_name(effect ? effect : default_effect, "image"),
 							  _rt->get_texture()->get_object());
-		gs_load_vertexbuffer(_roi_geom->update());
+		gs_load_vertexbuffer(_geometry->update(false));
 		while (gs_effect_loop(effect ? effect : default_effect, "Draw")) {
-			gs_draw(gs_draw_mode::GS_TRISTRIP, 0, _roi_geom->size());
+			gs_draw(gs_draw_mode::GS_TRISTRIP, 0, 0);
 		}
 		gs_load_vertexbuffer(nullptr);
 	}
@@ -690,7 +721,7 @@ void streamfx::filter::nvidia::face_tracking_factory::initialize()
 	try {
 		_filter_nvidia_face_tracking_factory_instance = std::make_shared<filter::nvidia::face_tracking_factory>();
 	} catch (const std::exception& ex) {
-		LOG_ERROR("<Nvidia Face Tracking Filter> %s", ex.what());
+		LOG_ERROR("<NVIDIA Face Tracking Filter> %s", ex.what());
 	}
 }
 
