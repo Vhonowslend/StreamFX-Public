@@ -37,21 +37,29 @@
 namespace streamfx::filter::nvidia {
 	class face_tracking_instance : public obs::source_instance {
 		// Filter Cache
+		std::pair<std::uint32_t, std::uint32_t> _size;
 		bool                                    _rt_is_fresh;
 		std::shared_ptr<gs::rendertarget>       _rt;
-		std::pair<std::uint32_t, std::uint32_t> _size;
+
+		std::mutex _delete_protection;
 
 		// Settings
-		double_t                      _cfg_roi_zoom;
-		std::pair<double_t, double_t> _cfg_roi_offset;
-		double_t                      _cfg_roi_stability;
+		double_t                      _cfg_zoom;
+		std::pair<double_t, double_t> _cfg_offset;
+		double_t                      _cfg_stability;
 
-		// Region of Interest
-		util::math::kalman1D<double_t>     _roi_filters[4];
-		std::mutex                         _roi_lock;
-		std::pair<double_t, double_t>      _roi_center;
-		std::pair<double_t, double_t>      _roi_size;
-		std::shared_ptr<gs::vertex_buffer> _roi_geom;
+		// Operational Data
+		std::shared_ptr<gs::vertex_buffer> _geometry;
+		struct {
+			util::math::kalman1D<double_t> center[2];
+			util::math::kalman1D<double_t> size[2];
+		} _filters;
+		struct {
+			std::mutex lock;
+			double_t   center[2];
+			double_t   size[2];
+			double_t   velocity[2];
+		} _values;
 
 		// Nvidia CUDA interop
 		std::shared_ptr<::nvidia::cuda::cuda>    _cuda;
@@ -62,7 +70,8 @@ namespace streamfx::filter::nvidia {
 		std::shared_ptr<::nvidia::ar::ar>          _ar_library;
 		std::atomic_bool                           _ar_loaded;
 		std::shared_ptr<nvAR_Feature>              _ar_feature;
-		std::atomic_bool                           _ar_tracked;
+		std::atomic_bool                           _ar_is_tracking;
+		std::mutex                                 _ar_lock;
 		std::vector<float_t>                       _ar_bboxes_confidence;
 		std::vector<NvAR_Rect>                     _ar_bboxes_data;
 		NvAR_BBoxes                                _ar_bboxes;
@@ -73,6 +82,10 @@ namespace streamfx::filter::nvidia {
 		NvCVImage                                  _ar_image;
 		NvCVImage                                  _ar_image_bgr;
 		NvCVImage                                  _ar_image_temp;
+
+		// Tasks
+		std::shared_ptr<::util::threadpool::task> _async_initialize;
+		std::shared_ptr<::util::threadpool::task> _async_track;
 
 #ifdef ENABLE_PROFILING
 		// Profiling
@@ -91,18 +104,13 @@ namespace streamfx::filter::nvidia {
 		virtual ~face_tracking_instance() override;
 
 		// Tasks
-		void async_initialize(std::shared_ptr<void>);
+		void async_initialize(std::shared_ptr<void> = nullptr);
+
+		void async_track(std::shared_ptr<void> = nullptr);
 
 		void refresh_geometry();
 
-		void async_track(std::shared_ptr<void>);
-
-		// Create image buffer.
-		//void create_image_buffer(std::size_t width, std::size_t height);
-
-		void roi_refresh();
-
-		void roi_reset();
+		void refresh_region_of_interest();
 
 		virtual void load(obs_data_t* data) override;
 
