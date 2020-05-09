@@ -18,34 +18,3 @@
  */
 
 #include "gs-helper.hpp"
-
-gs::context::context()
-{
-	obs_enter_graphics();
-}
-
-gs::context::~context()
-{
-	obs_leave_graphics();
-}
-
-#ifdef ENABLE_PROFILING
-gs::debug_marker::debug_marker(const float color[4], const char* format, ...)
-{
-	std::size_t       size;
-	std::vector<char> buffer(64);
-
-	va_list vargs;
-	va_start(vargs, format);
-	size = static_cast<size_t>(vsnprintf(buffer.data(), buffer.size(), format, vargs));
-	va_end(vargs);
-
-	_name = std::string(buffer.data(), buffer.data() + size);
-	gs_debug_marker_begin(color, _name.c_str());
-}
-
-gs::debug_marker::~debug_marker()
-{
-	gs_debug_marker_end();
-}
-#endif
