@@ -1,6 +1,6 @@
 /*
  * Modern effects for a modern Streamer
- * Copyright (C) 2017 Michael Fabian Dirks
+ * Copyright (C) 2020 Michael Fabian Dirks
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +25,14 @@
 namespace gs {
 	class context {
 		public:
-		context();
-		~context();
+		inline context()
+		{
+			obs_enter_graphics();
+		}
+		~context()
+		{
+			obs_leave_graphics();
+		}
 	};
 
 #ifdef ENABLE_PROFILING
@@ -59,9 +65,24 @@ namespace gs {
 		std::string _name;
 
 		public:
-		//debug_marker(const float color[4], std::string name);
-		debug_marker(const float_t color[4], const char* format, ...);
-		~debug_marker();
+		inline debug_marker(const float_t color[4], const char* format, ...)
+		{
+			std::size_t       size;
+			std::vector<char> buffer(64);
+
+			va_list vargs;
+			va_start(vargs, format);
+			size = static_cast<size_t>(vsnprintf(buffer.data(), buffer.size(), format, vargs));
+			va_end(vargs);
+
+			_name = std::string(buffer.data(), buffer.data() + size);
+			gs_debug_marker_begin(color, _name.c_str());
+		}
+
+		inline ~debug_marker()
+		{
+			gs_debug_marker_end();
+		}
 	};
 #endif
 } // namespace gs
