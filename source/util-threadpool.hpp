@@ -28,20 +28,38 @@
 #include <thread>
 
 namespace util {
-	typedef std::function<void(std::shared_ptr<void>)> threadpool_function_t;
+	typedef std::shared_ptr<void>                  threadpool_data_t;
+	typedef std::function<void(threadpool_data_t)> threadpool_callback_t;
 
 	class threadpool {
-		std::list<std::thread>                                             _workers;
-		std::atomic_bool                                                   _worker_stop;
-		std::list<std::pair<threadpool_function_t, std::shared_ptr<void>>> _tasks;
-		std::mutex                                                         _tasks_lock;
-		std::condition_variable                                            _tasks_cv;
+		public:
+		class task {
+			protected:
+			std::atomic_bool      _is_dead;
+			threadpool_callback_t _callback;
+			threadpool_data_t     _data;
+
+			public:
+			task();
+			task(threadpool_callback_t callback_function, threadpool_data_t data);
+
+			friend class util::threadpool;
+		};
+
+		private:
+		std::list<std::thread>                               _workers;
+		std::atomic_bool                                     _worker_stop;
+		std::list<std::shared_ptr<::util::threadpool::task>> _tasks;
+		std::mutex                                           _tasks_lock;
+		std::condition_variable                              _tasks_cv;
 
 		public:
 		threadpool();
 		~threadpool();
 
-		void push(threadpool_function_t fn, std::shared_ptr<void> data);
+		std::shared_ptr<::util::threadpool::task> push(threadpool_callback_t callback_function, threadpool_data_t data);
+
+		void pop(std::shared_ptr<::util::threadpool::task> work);
 
 		private:
 		void work();
