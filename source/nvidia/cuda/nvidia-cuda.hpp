@@ -160,7 +160,7 @@ namespace nvidia::cuda {
 		CUDA_DEFINE_FUNCTION(cuDevicePrimaryCtxSetFlags, cu_device_t device, cu_context_flags flags);
 
 		// Context Management
-		// cuCtxCreate_v2
+		CUDA_DEFINE_FUNCTION(cuCtxCreate, cu_context_t* ctx, cu_context_flags flags, cu_device_t device);
 		CUDA_DEFINE_FUNCTION(cuCtxDestroy, cu_context_t ctx);
 		// cuCtxGetApiVersion
 		// cuCtxGetCacheConfig
@@ -177,6 +177,7 @@ namespace nvidia::cuda {
 		// cuCtxSetLimit
 		// cuCtxSetSharedMemConfig
 		// cuCtxSynchronize
+		CUDA_DEFINE_FUNCTION(cuCtxSynchronize);
 		// UNDOCUMENTED? cuCtxResetPersistingL2Cache
 
 		// Module Management
@@ -395,7 +396,7 @@ namespace nvidia::cuda {
 		// cuGraphicsD3D10RegisterResource
 
 		// Direct3D11 Interopability
-		CUDA_DEFINE_FUNCTION(cuD3D11GetDevice, std::int32_t* device, IDXGIAdapter* adapter);
+		CUDA_DEFINE_FUNCTION(cuD3D11GetDevice, cu_device_t* device, IDXGIAdapter* adapter);
 		// cuD3D11GetDevices
 		CUDA_DEFINE_FUNCTION(cuGraphicsD3D11RegisterResource, cu_graphics_resource_t* resource,
 							 ID3D11Resource* d3dresource, std::uint32_t flags);
