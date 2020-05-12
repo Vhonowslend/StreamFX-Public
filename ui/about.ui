@@ -128,7 +128,7 @@ QWidget[objectName=&quot;PaddleMeDaddy&quot;] {
         <x>0</x>
         <y>0</y>
         <width>492</width>
-        <height>282</height>
+        <height>280</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout">
@@ -152,17 +152,47 @@ QWidget[objectName=&quot;PaddleMeDaddy&quot;] {
     </widget>
    </item>
    <item>
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="spacing">
+      <number>10</number>
      </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Ok</set>
+     <property name="topMargin">
+      <number>0</number>
      </property>
-     <property name="centerButtons">
-      <bool>false</bool>
-     </property>
-    </widget>
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="styleSheet">
+        <string notr="true">color: hsl(0, 0%, 50%);</string>
+       </property>
+       <property name="text">
+        <string>StreamFX::UI.About.Version</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="version">
+       <property name="styleSheet">
+        <string notr="true">color: hsl(0, 0%, 50%);</string>
+       </property>
+       <property name="text">
+        <string>0.0.0.0-DEADBEEF</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Ok</set>
+       </property>
+       <property name="centerButtons">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>
