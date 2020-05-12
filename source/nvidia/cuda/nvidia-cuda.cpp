@@ -64,12 +64,14 @@ nvidia::cuda::cuda::cuda()
 	CUDA_LOAD_SYMBOL_V2(cuDevicePrimaryCtxSetFlags);
 
 	// Context Management
+	CUDA_LOAD_SYMBOL_V2(cuCtxCreate);
 	CUDA_LOAD_SYMBOL_V2(cuCtxDestroy);
 	CUDA_LOAD_SYMBOL(cuCtxGetCurrent);
 	CUDA_LOAD_SYMBOL(cuCtxGetStreamPriorityRange);
 	CUDA_LOAD_SYMBOL_V2(cuCtxPopCurrent);
 	CUDA_LOAD_SYMBOL_V2(cuCtxPushCurrent);
 	CUDA_LOAD_SYMBOL(cuCtxSetCurrent);
+	CUDA_LOAD_SYMBOL(cuCtxSynchronize);
 
 	// Memory Management
 	CUDA_LOAD_SYMBOL_V2(cuArrayGetDescriptor);
