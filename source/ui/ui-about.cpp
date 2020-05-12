@@ -192,6 +192,9 @@ streamfx::ui::about::about() : QDialog(reinterpret_cast<QWidget*>(obs_frontend_g
 	content_layout->setColumnStretch(1, 1);
 	content->setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Maximum);
 
+	// Update the Version information.
+	version->setText(STREAMFX_VERSION_STRING);
+
 	// Make the OK button do things.
 	connect(buttonBox, &QDialogButtonBox::accepted, this, &streamfx::ui::about::on_ok);
 }
