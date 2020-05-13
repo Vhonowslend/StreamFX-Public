@@ -112,11 +112,9 @@ try {
 	return *this;
 }
 
-std::string gs::effect_parameter::get_name()
+std::string_view gs::effect_parameter::get_name()
 {
-	const char* name_c   = get()->name;
-	std::size_t name_len = strnlen(name_c, 256);
-	return name_c ? std::string(name_c, name_c + name_len) : std::string();
+	return std::string_view{get()->name};
 }
 
 gs::effect_parameter::type gs::effect_parameter::get_type()
@@ -166,11 +164,11 @@ gs::effect_parameter gs::effect_parameter::get_annotation(std::size_t idx)
 	return effect_parameter(get()->annotations.array + idx, this);
 }
 
-gs::effect_parameter gs::effect_parameter::get_annotation(std::string name)
+gs::effect_parameter gs::effect_parameter::get_annotation(const std::string_view name)
 {
 	for (std::size_t idx = 0; idx < get()->annotations.num; idx++) {
 		auto ptr = get()->annotations.array + idx;
-		if (strcmp(ptr->name, name.c_str()) == 0) {
+		if (name == std::string_view{ptr->name}) {
 			return gs::effect_parameter(ptr, this);
 		}
 	}
@@ -178,7 +176,7 @@ gs::effect_parameter gs::effect_parameter::get_annotation(std::string name)
 	return nullptr;
 }
 
-bool gs::effect_parameter::has_annotation(std::string name)
+bool gs::effect_parameter::has_annotation(const std::string_view name)
 {
 	auto eprm = get_annotation(name);
 	if (eprm)
@@ -186,7 +184,7 @@ bool gs::effect_parameter::has_annotation(std::string name)
 	return false;
 }
 
-bool gs::effect_parameter::has_annotation(std::string name, effect_parameter::type type)
+bool gs::effect_parameter::has_annotation(const std::string_view name, effect_parameter::type type)
 {
 	auto eprm = get_annotation(name);
 	if (eprm)
