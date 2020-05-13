@@ -81,27 +81,60 @@ namespace gfx {
 			virtual void assign();
 
 			public:
-			gs::effect_parameter get_parameter();
+			inline gs::effect_parameter get_parameter()
+			{
+				return _param;
+			}
 
-			parameter_type get_type();
+			inline parameter_type get_type()
+			{
+				return _type;
+			}
 
-			std::size_t get_size();
+			inline std::size_t get_size()
+			{
+				return _size;
+			}
 
-			int32_t get_order();
+			inline int32_t get_order()
+			{
+				return _order;
+			}
 
-			const std::string& get_key();
+			inline std::string_view get_key()
+			{
+				return _key;
+			}
 
-			bool is_visible();
+			inline bool is_visible()
+			{
+				return _visible && !_automatic;
+			}
 
-			bool is_automatic();
+			inline bool is_automatic()
+			{
+				return _automatic;
+			}
 
-			bool has_name();
+			inline bool has_name()
+			{
+				return _name.length() > 0;
+			}
 
-			const std::string& get_name();
+			inline std::string_view get_name()
+			{
+				return _name;
+			}
 
-			bool has_description();
+			inline bool has_description()
+			{
+				return _description.length() > 0;
+			}
 
-			const std::string& get_description();
+			inline std::string_view get_description()
+			{
+				return _description;
+			}
 
 			public:
 			static std::shared_ptr<parameter> make_parameter(gs::effect_parameter param, std::string prefix);

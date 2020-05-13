@@ -175,61 +175,6 @@ void gfx::shader::parameter::update(obs_data_t* settings) {}
 
 void gfx::shader::parameter::assign() {}
 
-gs::effect_parameter gfx::shader::parameter::get_parameter()
-{
-	return _param;
-}
-
-gfx::shader::parameter_type gfx::shader::parameter::get_type()
-{
-	return _type;
-}
-
-std::size_t gfx::shader::parameter::get_size()
-{
-	return _size;
-}
-
-int32_t gfx::shader::parameter::get_order()
-{
-	return _order;
-}
-
-const std::string& gfx::shader::parameter::get_key()
-{
-	return _key;
-}
-
-bool gfx::shader::parameter::is_visible()
-{
-	return _visible && !is_automatic();
-}
-
-bool gfx::shader::parameter::is_automatic()
-{
-	return _automatic;
-}
-
-bool gfx::shader::parameter::has_name()
-{
-	return _name.length() > 0;
-}
-
-const std::string& gfx::shader::parameter::get_name()
-{
-	return _name;
-}
-
-bool gfx::shader::parameter::has_description()
-{
-	return _description.length() > 0;
-}
-
-const std::string& gfx::shader::parameter::get_description()
-{
-	return _description;
-}
-
 std::shared_ptr<gfx::shader::parameter> gfx::shader::parameter::make_parameter(gs::effect_parameter param,
 																			   std::string          prefix)
 {
