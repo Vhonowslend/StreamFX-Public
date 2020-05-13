@@ -845,6 +845,9 @@ if(REQUIRE_SHADER_CODE)
 		"source/gfx/shader/gfx-shader-param-texture.hpp"
 		"source/gfx/shader/gfx-shader-param-texture.cpp"
 	)
+	list(APPEND PROJECT_DATA
+		"data/examples/shaders/feature-test.effect"
+	)
 endif()
 
 # Combine it all
