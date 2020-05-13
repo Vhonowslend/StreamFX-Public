@@ -61,15 +61,15 @@ namespace gs {
 		effect_parameter(effect_parameter&& rhs) noexcept;
 		effect_parameter& operator=(effect_parameter&& rhs) noexcept;
 
-		std::string get_name();
+		std::string_view get_name();
 
 		type get_type();
 
 		std::size_t      count_annotations();
 		effect_parameter get_annotation(std::size_t idx);
-		effect_parameter get_annotation(std::string name);
-		bool             has_annotation(std::string name);
-		bool             has_annotation(std::string name, effect_parameter::type type);
+		effect_parameter get_annotation(const std::string_view name);
+		bool             has_annotation(const std::string_view name);
+		bool             has_annotation(const std::string_view name, effect_parameter::type type);
 
 		public /* Memory API */:
 		std::size_t get_default_value_size_in_bytes()
