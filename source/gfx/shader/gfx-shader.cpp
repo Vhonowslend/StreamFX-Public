@@ -509,9 +509,17 @@ void gfx::shader::shader::set_input_a(std::shared_ptr<gs::texture> tex)
 	if (!_shader)
 		return;
 
-	if (gs::effect_parameter el = _shader.get_parameter("InputA"); el != nullptr) {
-		if (el.get_type() == gs::effect_parameter::type::Texture) {
-			el.set_texture(tex);
+	std::string_view params[] = {
+		"InputA",
+		"image",
+		"tex_a",
+	};
+	for (auto& name : params) {
+		if (gs::effect_parameter el = _shader.get_parameter(name.data()); el != nullptr) {
+			if (el.get_type() == gs::effect_parameter::type::Texture) {
+				el.set_texture(tex);
+				break;
+			}
 		}
 	}
 }
@@ -521,9 +529,17 @@ void gfx::shader::shader::set_input_b(std::shared_ptr<gs::texture> tex)
 	if (!_shader)
 		return;
 
-	if (gs::effect_parameter el = _shader.get_parameter("InputB"); el != nullptr) {
-		if (el.get_type() == gs::effect_parameter::type::Texture) {
-			el.set_texture(tex);
+	std::string_view params[] = {
+		"InputB",
+		"image2",
+		"tex_b",
+	};
+	for (auto& name : params) {
+		if (gs::effect_parameter el = _shader.get_parameter(name.data()); el != nullptr) {
+			if (el.get_type() == gs::effect_parameter::type::Texture) {
+				el.set_texture(tex);
+				break;
+			}
 		}
 	}
 }

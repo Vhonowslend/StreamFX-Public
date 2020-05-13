@@ -1,0 +1,113 @@
+// --------------------------------------------------------------------------------
+// Uniforms set by libobs
+uniform float4x4 ViewProj<
+	bool automatic = true;
+>;
+
+// --------------------------------------------------------------------------------
+// Uniforms set by StreamFX
+uniform float4 Time<
+	bool automatic = true;
+>;
+uniform float4 ViewSize<
+	bool automatic = true;
+>;
+
+// Filters, Transitions
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+
+// Transitions
+uniform texture2d InputB<
+	bool automatic = true;
+>;
+uniform float TransitionTime<
+	bool automatic = true;
+>;
+
+// --------------------------------------------------------------------------------
+// Parameters
+uniform bool BoolParameter = false;
+uniform float FloatParameter<
+	string name = "Float Parameter";
+	string description = "This is a 32-bit floating point value.";
+	string field_type = "input";
+	string suffix = " %";
+	float minimum = -100.;
+	float maximum = 100.;
+	float step = .5;
+	float scale = .01;
+> = 0.;
+uniform float2 Float2Parameter<
+	string name = "Float2 Parameter";
+	string description = "This is a 32-bit floating point value.";
+	string field_type = "input";
+	string suffix = " %";
+	float2 minimum = {-100., -100.};
+	float2 maximum = {100., 100.};
+	float2 step = {.5, .5};
+	float2 scale = {.01, .01};
+> = {0., 0.};
+uniform float3 Float3Parameter = {0., 0., 0.};
+uniform float4 Float4Parameter = {0., 0., 0., 0.};
+uniform int IntParameter<
+	string name = "Enum Parameter";
+	string description = "This parameter is an enumeration";
+	string field_type = "enum";
+	// Enumeration
+	int enum = 4;
+	int enum_0 = 0;
+	string enum_0_name = "Null";
+	int enum_1 = 1;
+	string enum_1_name = "One";
+	int enum_2 = 2;
+	string enum_2_name = "Two"; 
+	int enum_3 = 4;
+	string enum_3_name = "Four";
+> = 0;
+uniform int2 Int2Parameter = {0, 0};
+uniform int3 Int3Parameter = {0, 0, 0};
+uniform int4 Int4Parameter = {0, 0, 0, 0};
+
+// --------------------------------------------------------------------------------
+// Vertex Processing
+struct VertexData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertexData VSDefault(VertexData vtx) {
+	vtx.pos = mul(float4(vtx.pos.xyz, 1.), ViewProj);
+	return vtx;
+};
+
+// --------------------------------------------------------------------------------
+// Default Technique
+float4 PSDefault(VertexData vtx) : TARGET {
+	if (BoolParameter)
+		vtx.uv += 1.;
+	vtx.uv += FloatParameter;
+	vtx.uv += Float2Parameter;
+	vtx.uv += Float3Parameter.xy * Float3Parameter.zz;
+	vtx.uv += Float4Parameter.xy * Float4Parameter.zz;
+	
+	if (IntParameter == 1) {
+		return float4(1., 0., 0., 1.);
+	} else if (IntParameter == 2)  {
+		return float4(0., 1., 0., 1.);
+	} else if (IntParameter == 4)  {
+		return float4(0., 0., 1., 1.);
+	}
+
+	return float4(0., 0., 0., 1.);
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSDefault(vtx); 
+	}
+}

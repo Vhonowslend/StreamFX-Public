@@ -38,7 +38,7 @@ namespace gfx {
 			Transition,
 		};
 
-		typedef std::map<std::string, std::shared_ptr<parameter>> shader_param_map_t;
+		typedef std::map<std::string_view, std::shared_ptr<parameter>> shader_param_map_t;
 
 		class shader {
 			obs_source_t* _self;
