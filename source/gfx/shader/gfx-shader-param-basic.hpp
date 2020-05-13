@@ -44,7 +44,7 @@ namespace gfx {
 			basic_data  data;
 		};
 
-		struct basic_parameter : public parameter {
+		class basic_parameter : public parameter {
 			// Descriptor
 			basic_field_type         _field_type;
 			std::string              _suffix;
@@ -59,7 +59,7 @@ namespace gfx {
 			std::vector<basic_data> _scale;
 
 			// Enumeration Information
-			std::vector<basic_enum_data> _values;
+			std::list<basic_enum_data> _values;
 
 			public:
 			basic_parameter(gs::effect_parameter param, std::string prefix);
@@ -68,18 +68,34 @@ namespace gfx {
 			virtual void load_parameter_data(gs::effect_parameter parameter, basic_data& data);
 
 			public:
-			basic_field_type get_field_type();
+			inline basic_field_type field_type()
+			{
+				return _field_type;
+			}
 
-			const std::string& get_suffix();
+			inline std::string_view suffix()
+			{
+				return _suffix;
+			}
 
-			const std::string& get_keys(std::size_t idx);
+			inline std::string_view key_at(std::size_t idx)
+			{
+				if (idx >= get_size())
+					throw std::out_of_range("Index out of range.");
+				return _keys[idx];
+			}
 
-			const std::string& get_names(std::size_t idx);
+			inline std::string_view name_at(std::size_t idx)
+			{
+				if (idx >= get_size())
+					throw std::out_of_range("Index out of range.");
+				return _names[idx];
+			}
 		};
 
 		struct bool_parameter : public basic_parameter {
 			// std::vector<bool> doesn't allow .data()
-			std::vector<std::uint8_t> _data;
+			std::vector<std::int32_t> _data;
 
 			public:
 			bool_parameter(gs::effect_parameter param, std::string prefix);
