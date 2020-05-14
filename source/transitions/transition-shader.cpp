@@ -86,7 +86,6 @@ void shader_instance::video_render(gs_effect_t* effect)
 	gs::debug_marker gdmp{gs::debug_color_source, "Shader Transition '%s'", obs_source_get_name(_self)};
 #endif
 
-	_fx->prepare_render();
 	obs_transition_video_render(
 		_self, [](void* data, gs_texture_t* a, gs_texture_t* b, float t, std::uint32_t cx, std::uint32_t cy) {
 			reinterpret_cast<shader_instance*>(data)->transition_render(a, b, t, cx, cy);
@@ -99,6 +98,7 @@ void shader_instance::transition_render(gs_texture_t* a, gs_texture_t* b, float_
 	_fx->set_input_b(std::make_shared<::gs::texture>(b, false));
 	_fx->set_transition_time(t);
 	_fx->set_transition_size(cx, cy);
+	_fx->prepare_render();
 	_fx->render();
 }
 
