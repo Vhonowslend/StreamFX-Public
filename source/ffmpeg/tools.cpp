@@ -250,16 +250,21 @@ void tools::setup_obs_color(video_colorspace colorspace, video_range_type range,
 {
 	std::map<video_colorspace, std::tuple<AVColorSpace, AVColorPrimaries, AVColorTransferCharacteristic>> colorspaces =
 		{
-			{VIDEO_CS_DEFAULT, {AVCOL_SPC_BT470BG, AVCOL_PRI_BT470BG, AVCOL_TRC_SMPTE170M}},
 			{VIDEO_CS_601, {AVCOL_SPC_BT470BG, AVCOL_PRI_BT470BG, AVCOL_TRC_SMPTE170M}},
 			{VIDEO_CS_709, {AVCOL_SPC_BT709, AVCOL_PRI_BT709, AVCOL_TRC_BT709}},
-			{VIDEO_CS_SRGB, {AVCOL_SPC_RGB, AVCOL_PRI_BT709, AVCOL_TRC_BT709}},
+			{VIDEO_CS_SRGB, {AVCOL_SPC_RGB, AVCOL_PRI_BT709, AVCOL_TRC_IEC61966_2_1}},
 		};
 	std::map<video_range_type, AVColorRange> colorranges = {
-		{VIDEO_RANGE_DEFAULT, AVCOL_RANGE_MPEG},
 		{VIDEO_RANGE_PARTIAL, AVCOL_RANGE_MPEG},
 		{VIDEO_RANGE_FULL, AVCOL_RANGE_JPEG},
 	};
+
+	{
+		if (colorspace == VIDEO_CS_DEFAULT)
+			colorspace = VIDEO_CS_601;
+		if (range == VIDEO_RANGE_DEFAULT)
+			range = VIDEO_RANGE_PARTIAL;
+	}
 
 	{
 		auto found = colorspaces.find(colorspace);
