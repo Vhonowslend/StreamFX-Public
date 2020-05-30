@@ -33,8 +33,7 @@ streamfx::configuration::~configuration()
 		if (_config_path.has_parent_path()) {
 			std::filesystem::create_directories(_config_path.parent_path());
 		}
-		if (!obs_data_save_json_safe(_data.get(), _config_path.string().c_str(), ".tmp",
-									 _config_backup_path.string().c_str())) {
+		if (!obs_data_save_json_safe(_data.get(), _config_path.string().c_str(), ".tmp", path_backup_ext.data())) {
 			throw std::exception();
 		}
 	} catch (...) {
@@ -42,20 +41,18 @@ streamfx::configuration::~configuration()
 	}
 }
 
-streamfx::configuration::configuration() : _data(), _config_path(), _config_backup_path()
+streamfx::configuration::configuration() : _data(), _config_path()
 {
 	{ // Retrieve global configuration path.
 		const char* path    = obs_module_config_path("config.json");
 		_config_path        = path;
-		_config_backup_path = std::filesystem::path(_config_path).concat(path_backup_ext);
 	}
 
 	try {
 		if (!std::filesystem::exists(_config_path) || !std::filesystem::is_regular_file(_config_path)) {
 			throw std::exception();
 		} else {
-			obs_data_t* data = obs_data_create_from_json_file_safe(_config_path.string().c_str(),
-																   _config_backup_path.string().c_str());
+			obs_data_t* data = obs_data_create_from_json_file_safe(_config_path.string().c_str(), path_backup_ext.data());
 			if (!data) {
 				throw std::exception();
 			} else {
