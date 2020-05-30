@@ -27,7 +27,9 @@
 #include <QAction>
 #include <QDesktopServices>
 #include <QDialog>
+#include <QMainWindow>
 #include <QMenu>
+#include <QMenuBar>
 #include <QObject>
 #include <QString>
 #include <QTranslator>
