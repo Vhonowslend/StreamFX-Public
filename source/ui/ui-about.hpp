@@ -37,6 +37,8 @@ namespace streamfx::ui {
 		public:
 		enum class role_type : std::int32_t {
 			NONE,
+			SPACER,
+			THANKYOU,
 			CONTRIBUTOR,
 			TRANSLATOR,
 			FAMILY,
@@ -45,6 +47,7 @@ namespace streamfx::ui {
 			GITHUB_SUPPORTER,
 			TWITCH_SUPPORTER,
 			CREATOR,
+
 		};
 		enum class link_type : std::int32_t {
 			NONE,

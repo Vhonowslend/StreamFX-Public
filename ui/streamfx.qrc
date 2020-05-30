@@ -2,6 +2,11 @@
   <qresource prefix="logos">
     <file alias="streamfx_logo">logo.png</file>
   </qresource>
+  <qresource prefix="thankyou">
+    <file alias="thankyou_cat">thankyou_cat.png</file>
+    <file alias="thankyou_fox">thankyou_fox.png</file>
+    <file alias="thankyou_otter">thankyou_otter.png</file>
+  </qresource>
   <qresource prefix="linktype">
     <file alias="discord">linktype_discord.png</file>
     <file alias="facebook">linktype_facebook.png</file>
