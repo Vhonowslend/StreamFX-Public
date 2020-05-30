@@ -20,6 +20,7 @@
 #include "ui-about.hpp"
 #include <obs-frontend-api.h>
 #include <map>
+#include <random>
 #include "ui-about-entry.hpp"
 
 #ifdef _MSC_VER
@@ -36,6 +37,12 @@ constexpr std::string_view text_social_facebook = "Facebook";
 constexpr std::string_view text_social_twitch   = "Twitch";
 constexpr std::string_view text_social_twitter  = "Twitter";
 constexpr std::string_view text_social_youtube  = "YouTube";
+
+static const std::vector<std::string_view> _thankyous = {
+	":/thankyou/thankyou_cat",
+	":/thankyou/thankyou_otter",
+	":/thankyou/thankyou_fox",
+};
 
 static const std::list<streamfx::ui::about::entry> _entries = {
 	// Contributers
@@ -63,7 +70,7 @@ static const std::list<streamfx::ui::about::entry> _entries = {
 							   "https://facebook.com/nanitotv", text_social_facebook.data()},
 
 	// Separator
-	streamfx::ui::about::entry{"", streamfx::ui::about::role_type::NONE, "", streamfx::ui::about::link_type::NONE, "",
+	streamfx::ui::about::entry{"", streamfx::ui::about::role_type::THANKYOU, "", streamfx::ui::about::link_type::NONE, "",
 							   "", streamfx::ui::about::link_type::NONE, "", ""},
 
 	// Supporters
@@ -86,8 +93,8 @@ static const std::list<streamfx::ui::about::entry> _entries = {
 							   "https://www.twitch.tv/thenordern", text_social_twitch.data()},
 
 	// Separator
-	streamfx::ui::about::entry{"", streamfx::ui::about::role_type::NONE, "", streamfx::ui::about::link_type::NONE, "",
-							   "", streamfx::ui::about::link_type::NONE, "", ""},
+	streamfx::ui::about::entry{"", streamfx::ui::about::role_type::THANKYOU, "", streamfx::ui::about::link_type::NONE,
+							   "", "", streamfx::ui::about::link_type::NONE, "", ""},
 
 	// Family
 	streamfx::ui::about::entry{"Andrea Stenschke", streamfx::ui::about::role_type::FAMILY, "Xaymar",
@@ -110,21 +117,25 @@ static const std::list<streamfx::ui::about::entry> _entries = {
 							   text_social_twitch.data(), streamfx::ui::about::link_type::GENERIC,
 							   "https://worldofdex.de", "Website"},
 
+	// Separator
+	streamfx::ui::about::entry{"", streamfx::ui::about::role_type::SPACER, "", streamfx::ui::about::link_type::NONE, "",
+							   "", streamfx::ui::about::link_type::NONE, "", ""},
+
 	// Friends
 	streamfx::ui::about::entry{"Axelle", streamfx::ui::about::role_type::FRIEND, "Xaymar",
 							   streamfx::ui::about::link_type::SOCIAL_TWITCH, "https://www.twitch.tv/axelle123",
 							   text_social_twitch.data(), streamfx::ui::about::link_type::SOCIAL_TWITTER,
 							   "https://twitter.com/AxellesNobody", text_social_twitter.data()},
 
-	// Separator
-	streamfx::ui::about::entry{"", streamfx::ui::about::role_type::NONE, "", streamfx::ui::about::link_type::NONE, "",
-							   "", streamfx::ui::about::link_type::NONE, "", ""},
-
 	// Creators
 	streamfx::ui::about::entry{"EposVox", streamfx::ui::about::role_type::CREATOR, "",
 							   streamfx::ui::about::link_type::SOCIAL_TWITCH, "https://www.twitch.tv/EposVox",
 							   text_social_twitch.data(), streamfx::ui::about::link_type::SOCIAL_YOUTUBE,
 							   "https://youtube.com/c/EposVox", text_social_youtube.data()},
+
+	// Separator
+	streamfx::ui::about::entry{"", streamfx::ui::about::role_type::THANKYOU, "", streamfx::ui::about::link_type::NONE,
+							   "", "", streamfx::ui::about::link_type::NONE, "", ""},
 
 };
 
@@ -135,12 +146,16 @@ streamfx::ui::about::about() : QDialog(reinterpret_cast<QWidget*>(obs_frontend_g
 	// Remove some extra styling.
 	setWindowFlag(Qt::WindowContextHelpButtonHint, false); // Remove the unimplemented help button.
 
+	// Random thing
+	auto            rnd = std::uniform_int_distribution(size_t(0), _thankyous.size() - 1);
+	std::mt19937_64 rnde;
+
 	// Thank every single helper.
 	bool         column_selector = false;
 	size_t       row_selector    = 0;
 	QGridLayout* content_layout  = dynamic_cast<QGridLayout*>(content->layout());
 	for (auto entry : _entries) {
-		if (entry.name.size() == 0) {
+		if (entry.role == role_type::SPACER) {
 			row_selector += 2;
 			column_selector = 0;
 
@@ -158,6 +173,21 @@ streamfx::ui::about::about() : QDialog(reinterpret_cast<QWidget*>(obs_frontend_g
 			separator->setFixedHeight(1);
 			separator->setLineWidth(1);
 			content_layout->addWidget(separator, static_cast<int>(row_selector - 1), 0, 1, 2);
+			content_layout->setRowStretch(static_cast<int>(row_selector - 1), 0);
+		} else if (entry.role == role_type::THANKYOU) {
+			row_selector += 2;
+			column_selector = 0;
+
+			auto element = new QLabel(content);
+
+			auto elrnd = rnd(rnde);
+			element->setPixmap(QPixmap(_thankyous.at(elrnd).data()));
+
+			element->setScaledContents(true);
+			element->setFixedSize(384, 384);
+
+			content_layout->addWidget(element, static_cast<int>(row_selector - 1), 0, 1, 2,
+									  Qt::AlignTop | Qt::AlignHCenter);
 			content_layout->setRowStretch(static_cast<int>(row_selector - 1), 0);
 		} else {
 			streamfx::ui::about_entry* v = new streamfx::ui::about_entry(content, entry);
