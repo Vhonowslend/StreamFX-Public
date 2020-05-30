@@ -27,7 +27,6 @@ namespace streamfx {
 		std::shared_ptr<obs_data_t> _data;
 
 		std::filesystem::path _config_path;
-		std::filesystem::path _config_backup_path;
 
 		public:
 		~configuration();
