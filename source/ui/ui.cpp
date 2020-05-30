@@ -111,11 +111,6 @@ streamfx::ui::handler::handler()
 			_menu->addSeparator();
 			_about_action = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_about.data())));
 			connect(_about_action, &QAction::triggered, this, &streamfx::ui::handler::on_action_about);
-			if (!have_shown_about_streamfx()) {
-				// Automatically show it if it has not yet been shown.
-				_about_dialog->show();
-				have_shown_about_streamfx(true);
-			}
 		}
 	}
 }
@@ -143,9 +138,19 @@ void streamfx::ui::handler::frontend_event_handler(obs_frontend_event event, voi
 
 void streamfx::ui::handler::on_obs_loaded()
 {
-	// Add StreamFX menu.
-	_menu_action = reinterpret_cast<QAction*>(obs_frontend_add_tools_menu_qaction(D_TRANSLATE(_i18n_menu.data())));
+	// Add an actual Menu entry.
+	QMainWindow* main_widget = reinterpret_cast<QMainWindow*>(obs_frontend_get_main_window());
+	_menu_action             = new QAction(main_widget);
 	_menu_action->setMenu(_menu);
+	_menu_action->setText(QString::fromUtf8(D_TRANSLATE(_i18n_menu.data())));
+	main_widget->menuBar()->addAction(_menu_action);
+
+	// Show the 'About StreamFX' dialog if that has not happened yet.
+	if (!have_shown_about_streamfx()) {
+		// Automatically show it if it has not yet been shown.
+		_about_dialog->show();
+		have_shown_about_streamfx(true);
+	}
 }
 
 void streamfx::ui::handler::on_action_report_issue(bool)
