@@ -70,8 +70,8 @@ static const std::list<streamfx::ui::about::entry> _entries = {
 							   "https://facebook.com/nanitotv", text_social_facebook.data()},
 
 	// Separator
-	streamfx::ui::about::entry{"", streamfx::ui::about::role_type::THANKYOU, "", streamfx::ui::about::link_type::NONE, "",
-							   "", streamfx::ui::about::link_type::NONE, "", ""},
+	streamfx::ui::about::entry{"", streamfx::ui::about::role_type::THANKYOU, "", streamfx::ui::about::link_type::NONE,
+							   "", "", streamfx::ui::about::link_type::NONE, "", ""},
 
 	// Supporters
 	streamfx::ui::about::entry{"GranDroidTonight", streamfx::ui::about::role_type::PATREON_SUPPORTER, "",
