@@ -126,13 +126,7 @@ void mirror_instance::save(obs_data_t* data)
 	}
 }
 
-void mirror_instance::video_tick(float_t time)
-{
-	if (_source) {
-		_source_size.first  = obs_source_get_width(_source.get());
-		_source_size.second = obs_source_get_height(_source.get());
-	}
-}
+void mirror_instance::video_tick(float_t time) {}
 
 void mirror_instance::video_render(gs_effect_t* effect)
 {
@@ -145,6 +139,9 @@ void mirror_instance::video_render(gs_effect_t* effect)
 	gs::debug_marker gdmp{gs::debug_color_source, "Source Mirror '%s' for '%s'", obs_source_get_name(_self),
 						  obs_source_get_name(_source.get())};
 #endif
+
+	_source_size.first  = obs_source_get_width(_source.get());
+	_source_size.second = obs_source_get_height(_source.get());
 
 	obs_source_video_render(_source.get());
 }
