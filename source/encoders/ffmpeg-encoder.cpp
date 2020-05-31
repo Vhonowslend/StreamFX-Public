@@ -565,7 +565,11 @@ void ffmpeg_instance::initialize_sw(obs_data_t* settings)
 		AVPixelFormat _pixfmt_target = static_cast<AVPixelFormat>(obs_data_get_int(settings, KEY_FFMPEG_COLORFORMAT));
 		if (_pixfmt_target == AV_PIX_FMT_NONE) {
 			// Find the best conversion format.
-			_pixfmt_target = ::ffmpeg::tools::get_least_lossy_format(_codec->pix_fmts, _pixfmt_source);
+			if (_codec->pix_fmts) {
+				_pixfmt_target = ::ffmpeg::tools::get_least_lossy_format(_codec->pix_fmts, _pixfmt_source);
+			} else { // If there are no supported formats, just pass in the current one.
+				_pixfmt_target = _pixfmt_source;
+			}
 
 			if (_handler) // Allow Handler to override the automatic color format for sanity reasons.
 				_handler->override_colorformat(_pixfmt_target, settings, _codec, _context);
