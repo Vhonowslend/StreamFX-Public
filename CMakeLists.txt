@@ -79,7 +79,8 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/clang" "${CMAKE_CURRENT
 
 # CMake Modules
 include("util")
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Clang/Clang.cmake")
+## Clang Integration
+if(${PropertyPrefix}ENABLE_CLANG AND (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Clang/Clang.cmake"))
 	include("Clang")
 	set(HAVE_CLANG ON)
 endif()
@@ -246,8 +247,9 @@ set(${PropertyPrefix}ENABLE_SOURCE_MIRROR ${ENABLE_SOURCE_MIRROR} CACHE BOOL "En
 set(${PropertyPrefix}ENABLE_SOURCE_SHADER ${ENABLE_SOURCE_SHADER} CACHE BOOL "Enable Shader Source")
 ## Transitions
 set(${PropertyPrefix}ENABLE_TRANSITION_SHADER ${ENABLE_TRANSITION_SHADER} CACHE BOOL "Enable Shader Transition")
-## Debugging
+## Code Related
 set(${PropertyPrefix}ENABLE_PROFILING FALSE CACHE BOOL "Enable CPU and GPU performance tracking, which has a non-zero overhead at all times. Do not enable this for release builds.")
+set(${PropertyPrefix}ENABLE_CLANG TRUE CACHE BOOL "Enable Clang integration for supported compilers.")
 
 ################################################################################
 # CMake / Compiler Dependencies
@@ -1008,7 +1010,7 @@ if(HAVE_OBS_FRONTEND)
 endif()
 
 # Clang Tools
-if(HAVE_CLANG)
+if(${PropertyPrefix}ENABLE_CLANG AND HAVE_CLANG)
 	generate_compile_commands_json(
 		TARGETS ${PROJECT_NAME}
 	)
