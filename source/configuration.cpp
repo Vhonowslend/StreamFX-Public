@@ -44,15 +44,16 @@ streamfx::configuration::~configuration()
 streamfx::configuration::configuration() : _data(), _config_path()
 {
 	{ // Retrieve global configuration path.
-		const char* path    = obs_module_config_path("config.json");
-		_config_path        = path;
+		const char* path = obs_module_config_path("config.json");
+		_config_path     = path;
 	}
 
 	try {
 		if (!std::filesystem::exists(_config_path) || !std::filesystem::is_regular_file(_config_path)) {
 			throw std::exception();
 		} else {
-			obs_data_t* data = obs_data_create_from_json_file_safe(_config_path.string().c_str(), path_backup_ext.data());
+			obs_data_t* data =
+				obs_data_create_from_json_file_safe(_config_path.string().c_str(), path_backup_ext.data());
 			if (!data) {
 				throw std::exception();
 			} else {
