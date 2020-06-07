@@ -25,7 +25,9 @@ namespace obs {
 	template<class _factory, typename _instance>
 	class source_factory {
 		protected:
-		obs_source_info _info = {};
+		obs_source_info                                         _info = {};
+		std::map<std::string, std::shared_ptr<obs_source_info>> _proxies;
+		std::set<std::string>                                   _proxy_names;
 
 		public:
 		source_factory()
@@ -164,6 +166,20 @@ namespace obs {
 			}
 
 			obs_register_source(&_info);
+		}
+
+		void register_proxy(std::string_view name)
+		{
+			auto iter = _proxy_names.emplace(name);
+
+			// Create proxy.
+			std::shared_ptr<obs_source_info> proxy = std::make_shared<obs_source_info>();
+			memcpy(proxy.get(), &_info, sizeof(obs_source_info));
+			proxy->id = iter.first->c_str();
+			proxy->output_flags |= OBS_SOURCE_DEPRECATED;
+			obs_register_source(proxy.get());
+
+			_proxies.emplace(name, proxy);
 		}
 
 		private /* Factory */:
@@ -509,7 +525,7 @@ namespace obs {
 		public:
 		virtual const char* get_name()
 		{
-			return "Not Implemented Yet";
+			return "Not Yet Implemented";
 		}
 
 		virtual void* create(obs_data_t* settings, obs_source_t* source)
