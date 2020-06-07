@@ -33,12 +33,15 @@
 // Common C++ includes
 #include <algorithm>
 #include <limits>
+#include <map>
 #include <memory>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 // Common Plugin includes
 #include "strings.hpp"
