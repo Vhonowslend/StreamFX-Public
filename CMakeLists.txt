@@ -258,11 +258,11 @@ set(${PropertyPrefix}ENABLE_CLANG TRUE CACHE BOOL "Enable Clang integration for 
 # Configure Version Header
 configure_file(
 	"cmake/version.hpp.in"
-	"${PROJECT_BINARY_DIR}/source/version.hpp"
+	"${PROJECT_BINARY_DIR}/generated/version.hpp"
 )
 configure_file(
 	"cmake/module.cpp.in"
-	"${PROJECT_BINARY_DIR}/source/module.cpp"
+	"${PROJECT_BINARY_DIR}/generated/module.cpp"
 )
 
 # Packaging
@@ -296,9 +296,9 @@ if(WIN32)
 	
 	configure_file(
 		"cmake/version.rc.in"
-		"${PROJECT_BINARY_DIR}/cmake/version.rc"
+		"${PROJECT_BINARY_DIR}/generated/version.rc"
 		@ONLY
-	)	
+	)
 endif()
 
 # Download OBS Studio and OBS Dependencies
@@ -494,8 +494,8 @@ list(APPEND PROJECT_PRIVATE_SOURCE
 	"source/obs/obs-tools.cpp"
 )
 list(APPEND PROJECT_PRIVATE_GENERATED
-	"${PROJECT_BINARY_DIR}/source/module.cpp"
-	"${PROJECT_BINARY_DIR}/source/version.hpp"
+	"${PROJECT_BINARY_DIR}/generated/module.cpp"
+	"${PROJECT_BINARY_DIR}/generated/version.hpp"
 )
 if(WIN32)
 	list(APPEND PROJECT_TEMPLATES
@@ -504,6 +504,9 @@ if(WIN32)
 	)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/windll.cpp"
+	)
+	list(APPEND PROJECT_PRIVATE_GENERATED
+		"${PROJECT_BINARY_DIR}/generated/version.rc"
 	)
 endif()
 if((CMAKE_C_COMPILER_ID STREQUAL "GNU")
@@ -863,7 +866,7 @@ set(PROJECT_PRIVATE
 
 source_group(TREE "${PROJECT_SOURCE_DIR}/data" PREFIX "Data Files" FILES ${PROJECT_DATA})
 source_group(TREE "${PROJECT_SOURCE_DIR}/source" PREFIX "Code Files" FILES ${PROJECT_PRIVATE_SOURCE})
-source_group(TREE "${PROJECT_BINARY_DIR}/source" PREFIX "Generated Files" FILES ${PROJECT_PRIVATE_GENERATED})
+source_group(TREE "${PROJECT_BINARY_DIR}/generated" PREFIX "Generated Files" FILES ${PROJECT_PRIVATE_GENERATED})
 source_group(TREE "${PROJECT_SOURCE_DIR}/cmake" PREFIX "Template Files" FILES ${PROJECT_TEMPLATES})
 source_group(TREE "${PROJECT_SOURCE_DIR}/ui" PREFIX "User Interface Files" FILES ${PROJECT_UI})
 
@@ -886,7 +889,7 @@ set_target_properties(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
 	PUBLIC
 	PRIVATE
-		"${PROJECT_BINARY_DIR}/source"
+		"${PROJECT_BINARY_DIR}/generated"
 		"${PROJECT_SOURCE_DIR}/source"
 		${PROJECT_INCLUDE_DIRS}
 )
@@ -1004,7 +1007,7 @@ if(HAVE_OBS_FRONTEND)
 		AUTOUIC_SEARCH_PATHS "${PROJECT_SOURCE_DIR};${PROJECT_SOURCE_DIR}/ui"
 		AUTOMOC TRUE
 		AUTORCC TRUE
-		AUTOGEN_BUILD_DIR "${PROJECT_BINARY_DIR}/source"
+		AUTOGEN_BUILD_DIR "${PROJECT_BINARY_DIR}/generated"
 		AUTOGEN_SOURCE_GROUP "Qt Files"
 	)
 endif()
