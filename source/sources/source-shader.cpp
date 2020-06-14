@@ -90,11 +90,12 @@ void shader_instance::video_render(gs_effect_t* effect)
 
 shader_factory::shader_factory()
 {
-	_info.id           = "obs-stream-effects-source-shader";
+	_info.id           = PREFIX "source-shader";
 	_info.type         = OBS_SOURCE_TYPE_INPUT;
 	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
 
 	finish_setup();
+	register_proxy("obs-stream-effects-source-shader");
 }
 
 shader_factory::~shader_factory() {}
