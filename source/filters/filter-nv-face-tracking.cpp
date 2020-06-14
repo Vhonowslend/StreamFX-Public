@@ -626,12 +626,13 @@ face_tracking_factory::face_tracking_factory()
 	}
 
 	// Info
-	_info.id           = "streamfx-nvidia-face-tracking";
+	_info.id           = PREFIX "filter-nvidia-face-tracking";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO;
 
 	set_resolution_enabled(false);
 	finish_setup();
+	register_proxy("streamfx-nvidia-face-tracking");
 }
 
 face_tracking_factory::~face_tracking_factory() {}

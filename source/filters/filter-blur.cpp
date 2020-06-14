@@ -561,12 +561,13 @@ void blur_instance::video_render(gs_effect_t* effect)
 
 blur_factory::blur_factory()
 {
-	_info.id           = "obs-stream-effects-filter-blur";
+	_info.id           = PREFIX "filter-blur";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO;
 
 	set_resolution_enabled(false);
 	finish_setup();
+	register_proxy("obs-stream-effects-filter-blur");
 }
 
 blur_factory::~blur_factory() {}

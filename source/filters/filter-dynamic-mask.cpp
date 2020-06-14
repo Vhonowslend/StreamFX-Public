@@ -346,12 +346,13 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 
 dynamic_mask_factory::dynamic_mask_factory()
 {
-	_info.id           = "obs-stream-effects-filter-dynamic-mask";
+	_info.id           = PREFIX "filter-dynamic-mask";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO;
 
 	set_resolution_enabled(false);
 	finish_setup();
+	register_proxy("obs-stream-effects-filter-dynamic-mask");
 }
 
 dynamic_mask_factory::~dynamic_mask_factory() {}
