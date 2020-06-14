@@ -251,6 +251,11 @@ set(${PropertyPrefix}ENABLE_TRANSITION_SHADER ${ENABLE_TRANSITION_SHADER} CACHE 
 set(${PropertyPrefix}ENABLE_PROFILING FALSE CACHE BOOL "Enable CPU and GPU performance tracking, which has a non-zero overhead at all times. Do not enable this for release builds.")
 set(${PropertyPrefix}ENABLE_CLANG TRUE CACHE BOOL "Enable Clang integration for supported compilers.")
 
+# Code Signing
+set(${PropertyPrefix}SIGN_ENABLED FALSE CACHE BOOL "Enable signing builds.")
+set(${PropertyPrefix}SIGN_KEY "" CACHE FILEPATH "Path to the private key with which to sign.")
+set(${PropertyPrefix}SIGN_PASSWORD "" CACHE STRING "Password for the private key.")
+
 ################################################################################
 # CMake / Compiler Dependencies
 ################################################################################
@@ -1026,6 +1031,26 @@ if(${PropertyPrefix}ENABLE_CLANG AND HAVE_CLANG)
 		DEPENDENCY
 		VERSION 9.0.0
 	)
+endif()
+
+# Signing
+if(${PropertyPrefix}SIGN_ENABLED)
+	# Investigate: https://github.com/Monetra/mstdlib/blob/master/CMakeModules/CodeSign.cmake
+	if(MSVC) 
+		find_program(${PropertyPrefix}SIGN_TOOL
+			NAMES "signtool"
+			DOC "Path to the signing tool."
+			REQUIRED
+		)
+		
+		if(${PropertyPrefix}SIGN_TOOL)
+			message(STATUS "${PROJECT_NAME}: Signing enabled")
+			add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+				COMMAND ${${PropertyPrefix}SIGN_TOOL}
+				ARGS sign /p "${${PropertyPrefix}SIGN_PASSWORD}" /f "${${PropertyPrefix}SIGN_KEY}" $<TARGET_FILE:${PROJECT_NAME}>
+			)
+		endif()
+	endif()
 endif()
 
 ################################################################################
