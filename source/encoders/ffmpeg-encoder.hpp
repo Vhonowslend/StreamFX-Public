@@ -32,6 +32,7 @@
 #include "ffmpeg/hwapi/base.hpp"
 #include "ffmpeg/swscale.hpp"
 #include "handlers/handler.hpp"
+#include "obs/obs-encoder-factory.hpp"
 
 extern "C" {
 #ifdef _MSC_VER
@@ -49,54 +50,21 @@ extern "C" {
 namespace streamfx::encoder::ffmpeg {
 	class ffmpeg_factory;
 
-	struct ffmpeg_info {
-		std::string      uid;
-		std::string      codec;
-		std::string      readable_name;
-		obs_encoder_info oei = {0};
-	};
-
-	class ffmpeg_factory {
-		ffmpeg_info    info;
-		ffmpeg_info    info_fallback;
-		const AVCodec* avcodec_ptr;
-
-		std::shared_ptr<handler::handler> _handler;
-
-		public:
-		ffmpeg_factory(const AVCodec* codec);
-		virtual ~ffmpeg_factory();
-
-		void register_encoder();
-
-		void get_defaults(obs_data_t* settings, bool hw_encoder = false);
-
-		void get_properties(obs_properties_t* props, bool hw_encoder = false);
-
-		const AVCodec* get_avcodec();
-
-		const ffmpeg_info& get_info();
-
-		const ffmpeg_info& get_fallback();
-	};
-
-	class ffmpeg_instance {
-		obs_encoder_t*  _self;
+	class ffmpeg_instance : public obs::encoder_instance {
 		ffmpeg_factory* _factory;
-
 		const AVCodec*  _codec;
 		AVCodecContext* _context;
 
 		std::shared_ptr<handler::handler> _handler;
 
+		::ffmpeg::swscale _scaler;
+		AVPacket          _packet;
+
 		std::shared_ptr<::ffmpeg::hwapi::base>     _hwapi;
 		std::shared_ptr<::ffmpeg::hwapi::instance> _hwinst;
 
-		::ffmpeg::swscale _swscale;
-		AVPacket          _current_packet;
-
 		std::size_t _lag_in_frames;
-		std::size_t _count_send_frames;
+		std::size_t _sent_frames;
 
 		// Extra Data
 		bool                      _have_first_frame;
@@ -108,6 +76,31 @@ namespace streamfx::encoder::ffmpeg {
 		std::queue<std::shared_ptr<AVFrame>>           _used_frames;
 		std::chrono::high_resolution_clock::time_point _free_frames_last_used;
 
+		public:
+		ffmpeg_instance(obs_data_t* settings, obs_encoder_t* self);
+		virtual ~ffmpeg_instance();
+
+		public:
+		void get_properties(obs_properties_t* props);
+
+		void migrate(obs_data_t* settings, std::uint64_t version) override;
+
+		bool update(obs_data_t* settings) override;
+
+		bool encode_audio(struct encoder_frame* frame, struct encoder_packet* packet, bool* received_packet) override;
+
+		bool encode_video(struct encoder_frame* frame, struct encoder_packet* packet, bool* received_packet) override;
+
+		bool encode_video(uint32_t handle, int64_t pts, uint64_t lock_key, uint64_t* next_key,
+						  struct encoder_packet* packet, bool* received_packet) override;
+
+		bool get_extra_data(uint8_t** extra_data, size_t* size) override;
+
+		bool get_sei_data(uint8_t** sei_data, size_t* size) override;
+
+		void get_video_info(struct video_scale_info* info) override;
+
+		public:
 		void initialize_sw(obs_data_t* settings);
 		void initialize_hw(obs_data_t* settings);
 
@@ -116,35 +109,6 @@ namespace streamfx::encoder::ffmpeg {
 
 		void                     push_used_frame(std::shared_ptr<AVFrame> frame);
 		std::shared_ptr<AVFrame> pop_used_frame();
-
-		public:
-		ffmpeg_instance(obs_data_t* settings, obs_encoder_t* encoder, bool is_texture_encode = false);
-		virtual ~ffmpeg_instance();
-
-		public: // OBS API
-		// Shared
-		void get_properties(obs_properties_t* props, bool hw_encode = false);
-
-		bool update(obs_data_t* settings);
-
-		// Audio only
-		void get_audio_info(struct audio_convert_info* info);
-
-		std::size_t get_frame_size();
-
-		bool audio_encode(struct encoder_frame* frame, struct encoder_packet* packet, bool* received_packet);
-
-		// Video only
-		void get_video_info(struct video_scale_info* info);
-
-		bool get_sei_data(std::uint8_t** sei_data, size_t* size);
-
-		bool get_extra_data(std::uint8_t** extra_data, size_t* size);
-
-		bool video_encode(struct encoder_frame* frame, struct encoder_packet* packet, bool* received_packet);
-
-		bool video_encode_texture(std::uint32_t handle, std::int64_t pts, std::uint64_t lock_key,
-								  std::uint64_t* next_key, struct encoder_packet* packet, bool* received_packet);
 
 		int receive_packet(bool* received_packet, struct encoder_packet* packet);
 
@@ -162,6 +126,29 @@ namespace streamfx::encoder::ffmpeg {
 		void parse_ffmpeg_commandline(std::string text);
 	};
 
+	class ffmpeg_factory : public obs::encoder_factory<ffmpeg_factory, ffmpeg_instance> {
+		std::string _id;
+		std::string _codec;
+		std::string _name;
+
+		const AVCodec* _avcodec;
+
+		std::shared_ptr<handler::handler> _handler;
+
+		public:
+		ffmpeg_factory(const AVCodec* codec);
+		virtual ~ffmpeg_factory();
+
+		const char* get_name() override;
+
+		void get_defaults2(obs_data_t* data) override;
+
+		obs_properties_t* get_properties2(instance_t* data) override;
+
+		public:
+		const AVCodec* get_avcodec();
+	};
+
 	class ffmpeg_manager {
 		std::map<const AVCodec*, std::shared_ptr<ffmpeg_factory>> _factories;
 		std::map<std::string, std::shared_ptr<handler::handler>>  _handlers;
@@ -171,13 +158,13 @@ namespace streamfx::encoder::ffmpeg {
 		ffmpeg_manager();
 		~ffmpeg_manager();
 
+		void register_encoders();
+
 		void register_handler(std::string codec, std::shared_ptr<handler::handler> handler);
 
 		std::shared_ptr<handler::handler> get_handler(std::string codec);
 
 		bool has_handler(std::string codec);
-
-		void register_encoders();
 
 		public: // Singleton
 		static void initialize();

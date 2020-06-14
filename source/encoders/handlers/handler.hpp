@@ -41,10 +41,11 @@ namespace streamfx::encoder::ffmpeg {
 			virtual ~handler(){};
 
 			public /*factory*/:
-			virtual void adjust_encoder_info(ffmpeg_factory* factory, ffmpeg_info* main, ffmpeg_info* fallback);
+			virtual void adjust_info(ffmpeg_factory* factory, const AVCodec* codec, std::string& id, std::string& name,
+									 std::string& codec_id){};
 
 			virtual void get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context,
-									  bool hw_encode);
+									  bool hw_encode){};
 
 			public /*support tests*/:
 			virtual bool has_keyframe_support(ffmpeg_factory* instance);
@@ -57,20 +58,20 @@ namespace streamfx::encoder::ffmpeg {
 
 			public /*settings*/:
 			virtual void get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context,
-										bool hw_encode);
+										bool hw_encode){};
 
-			virtual void update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context);
+			virtual void update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context){};
 
-			virtual void override_update(ffmpeg_instance* instance, obs_data_t* settings);
+			virtual void override_update(ffmpeg_instance* instance, obs_data_t* settings){};
 
-			virtual void log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context);
+			virtual void log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context){};
 
 			public /*instance*/:
 
 			virtual void override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec,
-											  AVCodecContext* context);
+											  AVCodecContext* context){};
 
-			virtual void process_avpacket(AVPacket& packet, const AVCodec* codec, AVCodecContext* context);
+			virtual void process_avpacket(AVPacket& packet, const AVCodec* codec, AVCodecContext* context){};
 		};
 	} // namespace handler
 } // namespace streamfx::encoder::ffmpeg

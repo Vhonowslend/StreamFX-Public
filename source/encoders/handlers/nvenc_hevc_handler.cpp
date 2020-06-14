@@ -60,11 +60,9 @@ std::map<level, std::string> levels{
 	{level::L6_0, "6.0"}, {level::L6_1, "6.1"}, {level::L6_2, "6.2"},
 };
 
-void nvenc_hevc_handler::adjust_encoder_info(ffmpeg_factory*, ffmpeg_info* main, ffmpeg_info* fallback)
+void nvenc_hevc_handler::adjust_info(ffmpeg_factory*, const AVCodec*, std::string&, std::string& name, std::string&)
 {
-	main->readable_name     = "H.265/HEVC Nvidia NVENC";
-	fallback->readable_name = "H.265/HEVC Nvidia NVENC (Software Fallback)";
-	fallback->oei.caps |= OBS_ENCODER_CAP_DEPRECATED;
+	name = "NVIDIA NVENC H.265/HEVC Encoder";
 }
 
 void nvenc_hevc_handler::get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context, bool)
