@@ -24,7 +24,7 @@
 #include "obs/obs-source-tracker.hpp"
 
 #ifdef ENABLE_ENCODER_FFMPEG
-#include "encoders/ffmpeg-encoder.hpp"
+#include "encoders/encoder-ffmpeg.hpp"
 #endif
 
 #ifdef ENABLE_FILTER_BLUR

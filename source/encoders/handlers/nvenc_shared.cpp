@@ -23,7 +23,7 @@
 #include "strings.hpp"
 #include <algorithm>
 #include "../codecs/hevc.hpp"
-#include "../ffmpeg-encoder.hpp"
+#include "../encoder-ffmpeg.hpp"
 #include "ffmpeg/tools.hpp"
 #include "plugin.hpp"
 #include "utility.hpp"
