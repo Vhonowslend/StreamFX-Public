@@ -60,11 +60,9 @@ std::map<level, std::string> levels{
 	{level::L5_1, "5.1"}, {level::L5_2, "5.2"},
 };
 
-void nvenc_h264_handler::adjust_encoder_info(ffmpeg_factory*, ffmpeg_info* main, ffmpeg_info* fallback)
+void nvenc_h264_handler::adjust_info(ffmpeg_factory*, const AVCodec*, std::string&, std::string& name, std::string&)
 {
-	main->readable_name     = "H.264/AVC NVidia NVENC";
-	fallback->readable_name = "H.264/AVC NVidia NVENC (Software Fallback)";
-	fallback->oei.caps |= OBS_ENCODER_CAP_DEPRECATED;
+	name = "NVIDIA NVENC H.264/AVC Encoder";
 }
 
 void nvenc_h264_handler::get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context, bool)

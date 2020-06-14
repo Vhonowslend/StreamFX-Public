@@ -35,7 +35,8 @@ namespace streamfx::encoder::ffmpeg::handler {
 		virtual ~nvenc_h264_handler(){};
 
 		public /*factory*/:
-		virtual void adjust_encoder_info(ffmpeg_factory* factory, ffmpeg_info* main, ffmpeg_info* fallback);
+		virtual void adjust_info(ffmpeg_factory* factory, const AVCodec* codec, std::string& id, std::string& name,
+								 std::string& codec_id);
 
 		virtual void get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context, bool hw_encode);
 
