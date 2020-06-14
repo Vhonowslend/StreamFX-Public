@@ -24,11 +24,11 @@
 namespace nvidia::cuda {
 	class context {
 		std::shared_ptr<::nvidia::cuda::cuda> _cuda;
-		::nvidia::cuda::cu_context_t          _ctx;
+		::nvidia::cuda::context_t          _ctx;
 
 		// Primary Device Context
 		bool                        _has_device;
-		::nvidia::cuda::cu_device_t _device;
+		::nvidia::cuda::device_t _device;
 
 		private:
 		context(std::shared_ptr<::nvidia::cuda::cuda> cuda);
@@ -40,6 +40,6 @@ namespace nvidia::cuda {
 		context(std::shared_ptr<::nvidia::cuda::cuda> cuda, ID3D11Device* device);
 #endif
 
-		::nvidia::cuda::cu_context_t get();
+		::nvidia::cuda::context_t get();
 	};
 } // namespace nvidia::cuda

@@ -79,7 +79,7 @@ face_tracking_instance::face_tracking_instance(obs_data_t* settings, obs_source_
 		_geometry = std::make_shared<gs::vertex_buffer>(4, 1);
 		auto cctx = std::make_shared<::nvidia::cuda::context_stack>(_cuda, _cuda_ctx);
 		_cuda_stream =
-			std::make_shared<::nvidia::cuda::stream>(_cuda, ::nvidia::cuda::cu_stream_flags::NON_BLOCKING, 0);
+			std::make_shared<::nvidia::cuda::stream>(_cuda, ::nvidia::cuda::stream_flags::NON_BLOCKING, 0);
 	}
 
 	{ // Asynchronously load Face Tracking.
@@ -311,26 +311,26 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 #ifdef ENABLE_PROFILING
 			auto prof = _profile_ar_copy->track();
 #endif
-			::nvidia::cuda::cu_memcpy2d_t mc;
+			::nvidia::cuda::memcpy2d_t mc;
 			mc.src_x_in_bytes  = 0;
 			mc.src_y           = 0;
-			mc.src_memory_type = ::nvidia::cuda::cu_memory_type::ARRAY;
+			mc.src_memory_type = ::nvidia::cuda::memory_type::ARRAY;
 			mc.src_host        = nullptr;
 			mc.src_device      = 0;
 			mc.src_array       = _ar_texture_cuda->map(_cuda_stream);
 			mc.src_pitch       = static_cast<size_t>(_ar_image.pitch);
 			mc.dst_x_in_bytes  = 0;
 			mc.dst_y           = 0;
-			mc.dst_memory_type = ::nvidia::cuda::cu_memory_type::DEVICE;
+			mc.dst_memory_type = ::nvidia::cuda::memory_type::DEVICE;
 			mc.dst_host        = 0;
-			mc.dst_device      = reinterpret_cast<::nvidia::cuda::cu_device_ptr_t>(_ar_image.pixels);
+			mc.dst_device      = reinterpret_cast<::nvidia::cuda::device_ptr_t>(_ar_image.pixels);
 			mc.dst_array       = 0;
 			mc.dst_pitch       = static_cast<size_t>(_ar_image.pitch);
 			mc.width_in_bytes  = static_cast<size_t>(_ar_image.pitch);
 			mc.height          = _ar_image.height;
 
-			if (::nvidia::cuda::cu_result res = _cuda->cuMemcpy2DAsync(&mc, _cuda_stream->get());
-				res != ::nvidia::cuda::cu_result::SUCCESS) {
+			if (::nvidia::cuda::result res = _cuda->cuMemcpy2DAsync(&mc, _cuda_stream->get());
+				res != ::nvidia::cuda::result::SUCCESS) {
 				LOG_ERROR("<%s> Failed to prepare buffers for tracking.", obs_source_get_name(_self));
 				return;
 			}
