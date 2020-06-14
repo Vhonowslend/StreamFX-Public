@@ -487,6 +487,8 @@ list(APPEND PROJECT_PRIVATE_SOURCE
 	"source/obs/gs/gs-vertex.cpp"
 	"source/obs/gs/gs-vertexbuffer.hpp"
 	"source/obs/gs/gs-vertexbuffer.cpp"
+	"source/obs/obs-encoder-factory.hpp"
+	"source/obs/obs-encoder-factory.cpp"
 	"source/obs/obs-signal-handler.hpp"
 	"source/obs/obs-signal-handler.cpp"
 	"source/obs/obs-source.hpp"
