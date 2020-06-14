@@ -22,7 +22,7 @@
 #include "nvenc_hevc_handler.hpp"
 #include "strings.hpp"
 #include "../codecs/hevc.hpp"
-#include "../ffmpeg-encoder.hpp"
+#include "../encoder-ffmpeg.hpp"
 #include "ffmpeg/tools.hpp"
 #include "nvenc_shared.hpp"
 #include "plugin.hpp"
