@@ -396,6 +396,8 @@ namespace nvidia::cuda {
 		CUDA_DEFINE_FUNCTION(cuGraphicsD3D11RegisterResource, graphics_resource_t* resource,
 							 ID3D11Resource* d3dresource, std::uint32_t flags);
 #endif
+		public:
+		static std::shared_ptr<cuda> get();
 	};
 } // namespace nvidia::cuda
 

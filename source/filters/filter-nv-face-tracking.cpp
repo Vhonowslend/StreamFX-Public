@@ -606,7 +606,7 @@ bool face_tracking_instance::button_profile(obs_properties_t* props, obs_propert
 face_tracking_factory::face_tracking_factory()
 {
 	// Try and load CUDA.
-	_cuda = std::make_shared<::nvidia::cuda::cuda>();
+	_cuda = ::nvidia::cuda::cuda::get();
 
 	// Try and load AR.
 	_ar = std::make_shared<::nvidia::ar::ar>();

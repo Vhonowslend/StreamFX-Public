@@ -18,8 +18,8 @@
  */
 
 #include "nvidia-cuda.hpp"
-#include <stdexcept>
-#include <util/platform.h>
+#include "common.hpp"
+#include <mutex>
 
 #if defined(_WIN32) || defined(_WIN64)
 #define CUDA_NAME "nvcuda.dll"
@@ -120,4 +120,16 @@ nvidia::cuda::cuda::cuda()
 nvidia::cuda::cuda::~cuda()
 {
 	os_dlclose(_library);
+}
+
+std::shared_ptr<nvidia::cuda::cuda> nvidia::cuda::cuda::get()
+{
+	static std::shared_ptr<nvidia::cuda::cuda> instance;
+	static std::mutex                          lock;
+
+	std::unique_lock<std::mutex> ul(lock);
+	if (!instance) {
+		instance = std::make_shared<nvidia::cuda::cuda>();
+	}
+	return instance;
 }
