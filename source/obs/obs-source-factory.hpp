@@ -525,7 +525,7 @@ namespace obs {
 		public:
 		virtual const char* get_name()
 		{
-			return "Not Implemented Yet";
+			return "Not Yet Implemented";
 		}
 
 		virtual void* create(obs_data_t* settings, obs_source_t* source)
