@@ -123,12 +123,13 @@ std::string displacement_instance::get_file()
 
 displacement_factory::displacement_factory()
 {
-	_info.id           = "obs-stream-effects-filter-displacement";
+	_info.id           = PREFIX "filter-displacement";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO;
 
 	set_resolution_enabled(false);
 	finish_setup();
+	register_proxy("obs-stream-effects-filter-displacement");
 }
 
 displacement_factory::~displacement_factory() {}
