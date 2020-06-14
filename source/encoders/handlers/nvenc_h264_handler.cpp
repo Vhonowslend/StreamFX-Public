@@ -22,7 +22,7 @@
 #include "nvenc_h264_handler.hpp"
 #include "strings.hpp"
 #include "../codecs/h264.hpp"
-#include "../ffmpeg-encoder.hpp"
+#include "../encoder-ffmpeg.hpp"
 #include "ffmpeg/tools.hpp"
 #include "nvenc_shared.hpp"
 #include "plugin.hpp"

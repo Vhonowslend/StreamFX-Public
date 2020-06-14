@@ -20,7 +20,7 @@
 // SOFTWARE.
 
 #include "handler.hpp"
-#include "../ffmpeg-encoder.hpp"
+#include "../encoder-ffmpeg.hpp"
 
 using namespace streamfx::encoder::ffmpeg;
 

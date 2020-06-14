@@ -598,8 +598,8 @@ if(${PropertyPrefix}ENABLE_ENCODER_FFMPEG)
 		"source/ffmpeg/hwapi/d3d11.cpp"
 	
 		# Encoders
-		"source/encoders/ffmpeg-encoder.hpp"
-		"source/encoders/ffmpeg-encoder.cpp"
+		"source/encoders/encoder-ffmpeg.hpp"
+		"source/encoders/encoder-ffmpeg.cpp"
 
 		# Encoders/Codecs
 		"source/encoders/codecs/hevc.hpp"
