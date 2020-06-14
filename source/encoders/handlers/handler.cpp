@@ -24,10 +24,6 @@
 
 using namespace streamfx::encoder::ffmpeg;
 
-void handler::handler::adjust_encoder_info(ffmpeg_factory*, ffmpeg_info*, ffmpeg_info*) {}
-
-void handler::handler::get_defaults(obs_data_t*, const AVCodec*, AVCodecContext*, bool) {}
-
 bool handler::handler::has_keyframe_support(ffmpeg_factory* instance)
 {
 	return (instance->get_avcodec()->capabilities & AV_CODEC_CAP_INTRA_ONLY) == 0;
@@ -47,15 +43,3 @@ bool handler::handler::has_pixel_format_support(ffmpeg_factory* instance)
 {
 	return (instance->get_avcodec()->pix_fmts != nullptr);
 }
-
-void handler::handler::get_properties(obs_properties_t*, const AVCodec*, AVCodecContext*, bool) {}
-
-void handler::handler::update(obs_data_t*, const AVCodec*, AVCodecContext*) {}
-
-void handler::handler::override_update(ffmpeg_instance*, obs_data_t*) {}
-
-void handler::handler::log_options(obs_data_t*, const AVCodec*, AVCodecContext*) {}
-
-void handler::handler::override_colorformat(AVPixelFormat&, obs_data_t*, const AVCodec*, AVCodecContext*) {}
-
-void handler::handler::process_avpacket(AVPacket&, const AVCodec*, AVCodecContext*) {}
