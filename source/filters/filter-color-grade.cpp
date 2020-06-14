@@ -274,12 +274,13 @@ void color_grade_instance::video_render(gs_effect_t* effect)
 
 color_grade_factory::color_grade_factory()
 {
-	_info.id           = "obs-stream-effects-filter-color-grade";
+	_info.id           = PREFIX "filter-color-grade";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO;
 
 	set_resolution_enabled(false);
 	finish_setup();
+	register_proxy("obs-stream-effects-filter-color-grade");
 }
 
 color_grade_factory::~color_grade_factory() {}
