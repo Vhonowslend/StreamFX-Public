@@ -24,14 +24,14 @@
 namespace nvidia::cuda {
 	class stream {
 		std::shared_ptr<::nvidia::cuda::cuda> _cuda;
-		::nvidia::cuda::cu_stream_t           _stream;
+		::nvidia::cuda::stream_t           _stream;
 
 		public:
 		stream(std::shared_ptr<::nvidia::cuda::cuda> cuda,
-			   ::nvidia::cuda::cu_stream_flags       flags    = ::nvidia::cuda::cu_stream_flags::DEFAULT,
+			   ::nvidia::cuda::stream_flags       flags    = ::nvidia::cuda::stream_flags::DEFAULT,
 			   std::int32_t                          priority = 0);
 		~stream();
 
-		::nvidia::cuda::cu_stream_t get();
+		::nvidia::cuda::stream_t get();
 	};
 } // namespace nvidia::cuda

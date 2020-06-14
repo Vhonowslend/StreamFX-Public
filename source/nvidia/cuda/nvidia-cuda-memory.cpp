@@ -23,9 +23,9 @@
 nvidia::cuda::memory::memory(std::shared_ptr<::nvidia::cuda::cuda> cuda, std::size_t size)
 	: _cuda(cuda), _pointer(), _size(size)
 {
-	::nvidia::cuda::cu_result res = _cuda->cuMemAlloc(&_pointer, size);
+	::nvidia::cuda::result res = _cuda->cuMemAlloc(&_pointer, size);
 	switch (res) {
-	case ::nvidia::cuda::cu_result::SUCCESS:
+	case ::nvidia::cuda::result::SUCCESS:
 		break;
 	default:
 		throw std::runtime_error("nvidia::cuda::memory: cuMemAlloc failed.");
@@ -37,7 +37,7 @@ nvidia::cuda::memory::~memory()
 	_cuda->cuMemFree(_pointer);
 }
 
-nvidia::cuda::cu_device_ptr_t nvidia::cuda::memory::get()
+nvidia::cuda::device_ptr_t nvidia::cuda::memory::get()
 {
 	return _pointer;
 }

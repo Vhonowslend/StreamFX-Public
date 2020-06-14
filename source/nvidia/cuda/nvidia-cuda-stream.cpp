@@ -20,18 +20,18 @@
 #include "nvidia-cuda-stream.hpp"
 #include <stdexcept>
 
-nvidia::cuda::stream::stream(std::shared_ptr<::nvidia::cuda::cuda> cuda, ::nvidia::cuda::cu_stream_flags flags,
+nvidia::cuda::stream::stream(std::shared_ptr<::nvidia::cuda::cuda> cuda, ::nvidia::cuda::stream_flags flags,
 							 std::int32_t priority)
 	: _cuda(cuda)
 {
-	nvidia::cuda::cu_result res;
+	nvidia::cuda::result res;
 	if (priority == 0) {
 		res = _cuda->cuStreamCreate(&_stream, flags);
 	} else {
 		res = _cuda->cuStreamCreateWithPriority(&_stream, flags, priority);
 	}
 	switch (res) {
-	case nvidia::cuda::cu_result::SUCCESS:
+	case nvidia::cuda::result::SUCCESS:
 		break;
 	default:
 		throw std::runtime_error("Failed to create CUstream object.");
@@ -43,7 +43,7 @@ nvidia::cuda::stream::~stream()
 	_cuda->cuStreamDestroy(_stream);
 }
 
-::nvidia::cuda::cu_stream_t nvidia::cuda::stream::get()
+::nvidia::cuda::stream_t nvidia::cuda::stream::get()
 {
 	return _stream;
 }

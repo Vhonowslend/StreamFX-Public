@@ -62,12 +62,12 @@ nvidia::cuda::context::context(std::shared_ptr<::nvidia::cuda::cuda> cuda, ID3D1
 	dxgi_device->GetAdapter(&dxgi_adapter);
 
 	// Get Device Index
-	if (cu_result res = _cuda->cuD3D11GetDevice(&_device, dxgi_adapter); res != cu_result::SUCCESS) {
+	if (result res = _cuda->cuD3D11GetDevice(&_device, dxgi_adapter); res != result::SUCCESS) {
 		throw std::runtime_error("Failed to get device index for device.");
 	}
 
 	// Acquire Context
-	if (cu_result res = _cuda->cuDevicePrimaryCtxRetain(&_ctx, _device); res != cu_result::SUCCESS) {
+	if (result res = _cuda->cuDevicePrimaryCtxRetain(&_ctx, _device); res != result::SUCCESS) {
 		throw std::runtime_error("Failed to acquire primary device context.");
 	}
 
@@ -75,7 +75,7 @@ nvidia::cuda::context::context(std::shared_ptr<::nvidia::cuda::cuda> cuda, ID3D1
 }
 #endif
 
-::nvidia::cuda::cu_context_t nvidia::cuda::context::get()
+::nvidia::cuda::context_t nvidia::cuda::context::get()
 {
 	return _ctx;
 }

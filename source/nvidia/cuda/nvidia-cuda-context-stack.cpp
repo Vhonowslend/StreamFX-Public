@@ -31,7 +31,7 @@ nvidia::cuda::context_stack::context_stack(std::shared_ptr<::nvidia::cuda::cuda>
 	if (!context)
 		throw std::invalid_argument("context");
 
-	if (cu_result res = _cuda->cuCtxPushCurrent(_ctx->get()); res != cu_result::SUCCESS) {
+	if (result res = _cuda->cuCtxPushCurrent(_ctx->get()); res != result::SUCCESS) {
 		throw std::runtime_error("Failed to push context.");
 	}
 }
@@ -40,7 +40,7 @@ nvidia::cuda::context_stack::~context_stack()
 {
 	using namespace ::nvidia::cuda;
 
-	cu_context_t ctx;
+	context_t ctx;
 	_cuda->cuCtxGetCurrent(&ctx);
 	if (ctx == _ctx->get()) {
 		_cuda->cuCtxPopCurrent(&ctx);

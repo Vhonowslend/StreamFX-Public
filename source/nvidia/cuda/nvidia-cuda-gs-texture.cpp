@@ -54,7 +54,7 @@ nvidia::cuda::gstexture::gstexture(std::shared_ptr<nvidia::cuda::cuda> cuda, std
 		}
 
 		switch (_cuda->cuGraphicsD3D11RegisterResource(&_resource, resource, 0)) {
-		case nvidia::cuda::cu_result::SUCCESS:
+		case nvidia::cuda::result::SUCCESS:
 			break;
 		default:
 			throw std::runtime_error("nvidia::cuda::gstexture: Failed to register resource.");
@@ -69,15 +69,15 @@ nvidia::cuda::gstexture::~gstexture()
 	_cuda->cuGraphicsUnregisterResource(_resource);
 }
 
-nvidia::cuda::cu_array_t nvidia::cuda::gstexture::map(std::shared_ptr<nvidia::cuda::stream> stream)
+nvidia::cuda::array_t nvidia::cuda::gstexture::map(std::shared_ptr<nvidia::cuda::stream> stream)
 {
 	if (_is_mapped) {
 		return _pointer;
 	}
 
-	cu_graphics_resource_t resources[] = {_resource};
+	graphics_resource_t resources[] = {_resource};
 	switch (_cuda->cuGraphicsMapResources(1, resources, stream->get())) {
-	case nvidia::cuda::cu_result::SUCCESS:
+	case nvidia::cuda::result::SUCCESS:
 		break;
 	default:
 		throw std::runtime_error("nvidia::cuda::gstexture: Mapping failed.");
@@ -87,7 +87,7 @@ nvidia::cuda::cu_array_t nvidia::cuda::gstexture::map(std::shared_ptr<nvidia::cu
 	_is_mapped = true;
 
 	switch (_cuda->cuGraphicsSubResourceGetMappedArray(&_pointer, _resource, 0, 0)) {
-	case nvidia::cuda::cu_result::SUCCESS:
+	case nvidia::cuda::result::SUCCESS:
 		break;
 	default:
 		unmap();
@@ -102,9 +102,9 @@ void nvidia::cuda::gstexture::unmap()
 	if (!_is_mapped)
 		return;
 
-	cu_graphics_resource_t resources[] = {_resource};
+	graphics_resource_t resources[] = {_resource};
 	switch (_cuda->cuGraphicsUnmapResources(1, resources, _stream->get())) {
-	case nvidia::cuda::cu_result::SUCCESS:
+	case nvidia::cuda::result::SUCCESS:
 		break;
 	default:
 		throw std::runtime_error("nvidia::cuda::gstexture: Unmapping failed.");
