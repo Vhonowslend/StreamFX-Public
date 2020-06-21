@@ -373,16 +373,16 @@ std::uint32_t gfx::shader::shader::width()
 	case shader_mode::Source:
 		switch (_width_type) {
 		case size_type::Pixel:
-			return std::clamp(static_cast<uint32_t>(_width_value), 1u, 8192u);
+			return std::clamp(static_cast<uint32_t>(_width_value), 1u, 16384u);
 		case size_type::Percent:
-			return std::clamp(static_cast<uint32_t>(_width_value * _base_width), 1u, 8192u);
+			return std::clamp(static_cast<uint32_t>(_width_value * _base_width), 1u, 16384u);
 		}
 	case shader_mode::Filter:
 		switch (_width_type) {
 		case size_type::Pixel:
-			return std::clamp(static_cast<uint32_t>(_width_value), 1u, 8192u);
+			return std::clamp(static_cast<uint32_t>(_width_value), 1u, 16384u);
 		case size_type::Percent:
-			return std::clamp(static_cast<uint32_t>(_width_value * _base_width), 1u, 8192u);
+			return std::clamp(static_cast<uint32_t>(_width_value * _base_width), 1u, 16384u);
 		}
 	default:
 		return 0;
@@ -397,20 +397,30 @@ std::uint32_t gfx::shader::shader::height()
 	case shader_mode::Source:
 		switch (_height_type) {
 		case size_type::Pixel:
-			return std::clamp(static_cast<uint32_t>(_height_value), 1u, 8192u);
+			return std::clamp(static_cast<uint32_t>(_height_value), 1u, 16384u);
 		case size_type::Percent:
-			return std::clamp(static_cast<uint32_t>(_height_value * _base_height), 1u, 8192u);
+			return std::clamp(static_cast<uint32_t>(_height_value * _base_height), 1u, 16384u);
 		}
 	case shader_mode::Filter:
 		switch (_height_type) {
 		case size_type::Pixel:
-			return std::clamp(static_cast<uint32_t>(_height_value), 1u, 8192u);
+			return std::clamp(static_cast<uint32_t>(_height_value), 1u, 16384u);
 		case size_type::Percent:
-			return std::clamp(static_cast<uint32_t>(_height_value * _base_height), 1u, 8192u);
+			return std::clamp(static_cast<uint32_t>(_height_value * _base_height), 1u, 16384u);
 		}
 	default:
 		return 0;
 	}
+}
+
+std::uint32_t gfx::shader::shader::base_width()
+{
+	return _base_width;
+}
+
+std::uint32_t gfx::shader::shader::base_height()
+{
+	return _base_height;
 }
 
 bool gfx::shader::shader::tick(float_t time)
