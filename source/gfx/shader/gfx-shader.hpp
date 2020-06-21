@@ -101,6 +101,10 @@ namespace gfx {
 
 			std::uint32_t height();
 
+			std::uint32_t base_width();
+
+			std::uint32_t base_height();
+
 			bool tick(float_t time);
 
 			void prepare_render();
