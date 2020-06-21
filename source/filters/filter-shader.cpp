@@ -95,9 +95,9 @@ void shader_instance::video_render(gs_effect_t* effect)
 		gs::debug_marker gdm{gs::debug_color_source, "Cache"};
 #endif
 
-		auto op = _rt->render(_fx->width(), _fx->height());
+		auto op = _rt->render(_fx->base_width(), _fx->base_height());
 
-		gs_ortho(0, static_cast<float_t>(_fx->width()), 0, static_cast<float_t>(_fx->height()), -1, 1);
+		gs_ortho(0, 1, 0, 1, -1, 1);
 
 		vec4 clear_color = {0, 0, 0, 0};
 		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &clear_color, 0, 0);
@@ -114,7 +114,7 @@ void shader_instance::video_render(gs_effect_t* effect)
 			gs_enable_color(true, true, true, true);
 			gs_set_cull_mode(GS_NEITHER);
 
-			obs_source_process_filter_end(_self, obs_get_base_effect(OBS_EFFECT_DEFAULT), _fx->width(), _fx->height());
+			obs_source_process_filter_end(_self, obs_get_base_effect(OBS_EFFECT_DEFAULT), 1, 1);
 
 			gs_blend_state_pop();
 		} else {
