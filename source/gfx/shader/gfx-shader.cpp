@@ -413,6 +413,16 @@ std::uint32_t gfx::shader::shader::height()
 	}
 }
 
+std::uint32_t gfx::shader::shader::base_width()
+{
+	return _base_width;
+}
+
+std::uint32_t gfx::shader::shader::base_height()
+{
+	return _base_height;
+}
+
 bool gfx::shader::shader::tick(float_t time)
 {
 	_shader_file_tick = static_cast<float_t>(static_cast<double_t>(_shader_file_tick) + static_cast<double_t>(time));
