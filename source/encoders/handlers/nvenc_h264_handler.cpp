@@ -62,7 +62,7 @@ std::map<level, std::string> levels{
 
 void nvenc_h264_handler::adjust_info(ffmpeg_factory*, const AVCodec*, std::string&, std::string& name, std::string&)
 {
-	name = "NVIDIA NVENC H.264/AVC Encoder";
+	name = "NVIDIA NVENC H.264/AVC (via FFmpeg)";
 }
 
 void nvenc_h264_handler::get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context, bool)
