@@ -82,8 +82,8 @@ namespace obs {
 			// Create proxy.
 			std::shared_ptr<obs_encoder_info> proxy = std::make_shared<obs_encoder_info>();
 			memcpy(proxy.get(), &_info, sizeof(obs_encoder_info));
-			_info.id = iter.first->c_str();
-			_info.caps |= OBS_SOURCE_DEPRECATED;
+			proxy->id = iter.first->c_str();
+			proxy->caps |= OBS_ENCODER_CAP_DEPRECATED;
 			obs_register_encoder(proxy.get());
 
 			_proxies.emplace(name, proxy);
