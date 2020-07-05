@@ -32,9 +32,6 @@ QPushButton:checked {
 	background: hsl(0, 0%, 25%);
 	border: 0;
 	padding: 5px;
-	box-shadow: 0;
-	cursor: pointer;
-	padding: 4px;
 }
 
 QWidget[objectName=&quot;title&quot;] {
