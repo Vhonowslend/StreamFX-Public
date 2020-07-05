@@ -30,20 +30,26 @@
 #define ST_SHADER_SIZE ST_SHADER ".Size"
 #define ST_SHADER_SIZE_WIDTH ST_SHADER_SIZE ".Width"
 #define ST_SHADER_SIZE_HEIGHT ST_SHADER_SIZE ".Height"
+#define ST_SHADER_SEED ST_SHADER ".Seed"
 #define ST_PARAMETERS ST ".Parameters"
 
 gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
-	: _self(self), _mode(mode), _base_width(1), _base_height(1),
+	: _self(self), _mode(mode), _base_width(1), _base_height(1), _active(true),
 
 	  _shader(), _shader_file(), _shader_tech("Draw"), _shader_file_mt(), _shader_file_sz(), _shader_file_tick(0),
 
 	  _width_type(size_type::Percent), _width_value(1.0), _height_type(size_type::Percent), _height_value(1.0),
 
-	  _time(0), _time_loop(0), _loops(0), _random(), _have_current_params(false),
+	  _have_current_params(false), _time(0), _time_loop(0), _loops(0), _random(), _random_seed(0),
 
 	  _rt_up_to_date(false), _rt(std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE))
 {
-	_random.seed(static_cast<unsigned long long>(time(NULL)));
+	// Intialize random values.
+	_random.seed(static_cast<unsigned long long>(_random_seed));
+	for (size_t idx = 0; idx < 16; idx++) {
+		_random_values[idx] =
+			static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
+	}
 }
 
 gfx::shader::shader::~shader() {}
@@ -180,20 +186,12 @@ void gfx::shader::shader::defaults(obs_data_t* data)
 	obs_data_set_default_string(data, ST_SHADER_TECHNIQUE, "");
 	obs_data_set_default_string(data, ST_SHADER_SIZE_WIDTH, "100.0 %");
 	obs_data_set_default_string(data, ST_SHADER_SIZE_HEIGHT, "100.0 %");
+	obs_data_set_default_int(data, ST_SHADER_SEED, static_cast<long long>(time(NULL)));
 }
 
 void gfx::shader::shader::properties(obs_properties_t* pr)
 {
 	_have_current_params = false;
-
-	{
-		obs_properties_add_button2(
-			pr, ST_REFRESH, D_TRANSLATE(ST_REFRESH),
-			[](obs_properties_t* props, obs_property_t* prop, void* priv) {
-				return reinterpret_cast<gfx::shader::shader*>(priv)->on_refresh_properties(props, prop);
-			},
-			this);
-	}
 
 	{
 		auto grp = obs_properties_create();
@@ -211,23 +209,20 @@ void gfx::shader::shader::properties(obs_properties_t* pr)
 			auto p = obs_properties_add_path(grp, ST_SHADER_FILE, D_TRANSLATE(ST_SHADER_FILE), OBS_PATH_FILE, "*.*",
 											 path.c_str());
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_FILE)));
-			/*obs_property_set_modified_callback2(
-				p,
-				[](void* priv, obs_properties_t* props, obs_property_t* prop, obs_data_t* data) noexcept {
-					return reinterpret_cast<gfx::shader::shader*>(priv)->on_shader_or_technique_modified(props, prop, data);
-				},
-				this);*/
 		}
 		{
 			auto p = obs_properties_add_list(grp, ST_SHADER_TECHNIQUE, D_TRANSLATE(ST_SHADER_TECHNIQUE),
 											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_TECHNIQUE)));
-			/*obs_property_set_modified_callback2(
-				p,
-				[](void* priv, obs_properties_t* props, obs_property_t* prop, obs_data_t* data) noexcept {
-					return reinterpret_cast<gfx::shader::shader*>(priv)->on_shader_or_technique_modified(props, prop, data);
+		}
+
+		{
+			obs_properties_add_button2(
+				grp, ST_REFRESH, D_TRANSLATE(ST_REFRESH),
+				[](obs_properties_t* props, obs_property_t* prop, void* priv) {
+					return reinterpret_cast<gfx::shader::shader*>(priv)->on_refresh_properties(props, prop);
 				},
-				this);*/
+				this);
 		}
 
 		if (_mode != shader_mode::Transition) {
@@ -244,6 +239,12 @@ void gfx::shader::shader::properties(obs_properties_t* pr)
 												 OBS_TEXT_DEFAULT);
 				obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_SIZE)));
 			}
+		}
+
+		{
+			auto p = obs_properties_add_int_slider(grp, ST_SHADER_SEED, D_TRANSLATE(ST_SHADER_SEED),
+												   std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), 1);
+			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_SEED)));
 		}
 	}
 	{
@@ -360,6 +361,15 @@ void gfx::shader::shader::update(obs_data_t* data)
 		_height_value = std::clamp(sz_y.second, 0.01, 8192.0);
 	}
 
+	if (int32_t seed = static_cast<int32_t>(obs_data_get_int(data, ST_SHADER_SEED)); _random_seed != seed) {
+		_random_seed = seed;
+		_random.seed(static_cast<unsigned long long>(_random_seed));
+		for (size_t idx = 0; idx < 16; idx++) {
+			_random_values[idx] =
+				static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
+		}
+	}
+
 	for (auto kv : _shader_params) {
 		kv.second->update(data);
 	}
@@ -444,6 +454,12 @@ bool gfx::shader::shader::tick(float_t time)
 			_loops = -_loops;
 	}
 
+	// Recreate Per-Activation-Random values.
+	for (size_t idx = 0; idx < 8; idx++) {
+		_random_values[8 + idx] =
+			static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
+	}
+
 	return false;
 }
 
@@ -456,21 +472,34 @@ void gfx::shader::shader::prepare_render()
 		kv.second->assign();
 	}
 
-	// Time: (Current Time), (Zero), (Zero), (Random Value)
+	// float4 Time: (Current Time), (Zero), (Zero), (Random Value)
 	if (gs::effect_parameter el = _shader.get_parameter("Time"); el != nullptr) {
 		if (el.get_type() == gs::effect_parameter::type::Float4) {
 			el.set_float4(
 				_time, _time_loop, static_cast<float_t>(_loops),
-				static_cast<float_t>(static_cast<double_t>(_random())
-									 / static_cast<double_t>(std::numeric_limits<unsigned long long>::max())));
+				static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max())));
 		}
 	}
 
-	// ViewSize: (Width), (Height), (1.0 / Width), (1.0 / Height)
+	// float4 ViewSize: (Width), (Height), (1.0 / Width), (1.0 / Height)
 	if (auto el = _shader.get_parameter("ViewSize"); el != nullptr) {
 		if (el.get_type() == gs::effect_parameter::type::Float4) {
 			el.set_float4(static_cast<float_t>(width()), static_cast<float_t>(height()),
 						  1.0f / static_cast<float_t>(width()), 1.0f / static_cast<float_t>(height()));
+		}
+	}
+
+	// float4x4 Random: float4[Per-Instance Random], float4[Per-Activation Random], float4x2[Per-Frame Random]
+	if (auto el = _shader.get_parameter("Random"); el != nullptr) {
+		if (el.get_type() == gs::effect_parameter::type::Matrix) {
+			el.set_value(_random_values, 16);
+		}
+	}
+
+	// int32 RandomSeed: Seed used for random generation
+	if (auto el = _shader.get_parameter("RandomSeed"); el != nullptr) {
+		if (el.get_type() == gs::effect_parameter::type::Integer) {
+			el.set_int(_random_seed);
 		}
 	}
 
@@ -574,5 +603,16 @@ void gfx::shader::shader::set_transition_size(std::uint32_t w, std::uint32_t h)
 		if (el.get_type() == gs::effect_parameter::type::Integer2) {
 			el.set_int2(static_cast<int32_t>(w), static_cast<int32_t>(h));
 		}
+	}
+}
+
+void gfx::shader::shader::set_active(bool active)
+{
+	_active = active;
+
+	// Recreate Per-Activation-Random values.
+	for (size_t idx = 0; idx < 4; idx++) {
+		_random_values[4 + idx] =
+			static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
 	}
 }

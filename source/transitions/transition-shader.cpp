@@ -110,9 +110,14 @@ bool shader_instance::audio_render(uint64_t* ts_out, obs_source_audio_mix* audio
 		[](void*, float_t t) { return t; });
 }
 
-void shader_instance::transition_start() {}
+void shader_instance::transition_start() {
+	_fx->set_active(true);
+}
 
-void shader_instance::transition_stop() {}
+void shader_instance::transition_stop()
+{
+	_fx->set_active(false);
+}
 
 shader_factory::shader_factory()
 {
@@ -120,6 +125,7 @@ shader_factory::shader_factory()
 	_info.type         = OBS_SOURCE_TYPE_TRANSITION;
 	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
 
+	//set_activity_tracking_enabled(true); // Handled via transition start/stop
 	finish_setup();
 	register_proxy("obs-stream-effects-transition-shader");
 }
