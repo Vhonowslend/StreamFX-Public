@@ -180,7 +180,11 @@ void ffmpeg_instance::get_properties(obs_properties_t* props)
 	obs_property_set_enabled(obs_properties_get(props, KEY_FFMPEG_GPU), false);
 }
 
-void ffmpeg_instance::migrate(obs_data_t* settings, std::uint64_t version) {}
+void ffmpeg_instance::migrate(obs_data_t* settings, std::uint64_t version)
+{
+	if (_handler)
+		_handler->migrate(settings, version, _codec, _context);
+}
 
 bool ffmpeg_instance::update(obs_data_t* settings)
 {
