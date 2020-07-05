@@ -133,12 +133,23 @@ void shader_instance::video_render(gs_effect_t* effect)
 	}
 }
 
+void streamfx::filter::shader::shader_instance::activate()
+{
+	_fx->set_active(true);
+}
+
+void streamfx::filter::shader::shader_instance::deactivate()
+{
+	_fx->set_active(false);
+}
+
 shader_factory::shader_factory()
 {
 	_info.id           = PREFIX "filter-shader";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
 
+	set_activity_tracking_enabled(true);
 	finish_setup();
 	register_proxy("obs-stream-effects-filter-shader");
 }

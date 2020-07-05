@@ -88,12 +88,23 @@ void shader_instance::video_render(gs_effect_t* effect)
 	_fx->render();
 }
 
+void streamfx::source::shader::shader_instance::activate()
+{
+	_fx->set_active(true);
+}
+
+void streamfx::source::shader::shader_instance::deactivate()
+{
+	_fx->set_active(false);
+}
+
 shader_factory::shader_factory()
 {
 	_info.id           = PREFIX "source-shader";
 	_info.type         = OBS_SOURCE_TYPE_INPUT;
 	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
 
+	set_activity_tracking_enabled(true);
 	finish_setup();
 	register_proxy("obs-stream-effects-source-shader");
 }
