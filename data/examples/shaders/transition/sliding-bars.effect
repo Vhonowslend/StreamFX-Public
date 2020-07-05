@@ -30,6 +30,9 @@ uniform float TransitionTime<
 uniform int2 TransitionSize<
 	bool automatic = true;
 >;
+uniform float4x4 Random<
+	bool automatic = true;
+>;
 
 uniform bool _49_FadeToColor<
 	string name = "Fade To Color?";
@@ -47,11 +50,20 @@ uniform float4 _50_Color<
 uniform float _100_Rotation<
 	string name = "Rotation";
 	string field_type = "slider";
-	float minimum = -90.;
-	float maximum = 90.;
+	float minimum = -180.;
+	float maximum = 180.;
 	float scale = 1.;
 	float step = .01;
-> = 30.;
+> = 0.;
+
+uniform float _110_RotationRange<
+	string name = "Rotation Random Range";
+	string field_type = "slider";
+	float minimum = -180.;
+	float maximum = 180.;
+	float scale = 1.;
+	float step = .01;
+> = 45.;
 
 uniform float _200_Bars<
 	string name = "Number of Bars";
@@ -61,6 +73,15 @@ uniform float _200_Bars<
 	float scale = 1.;
 	float step = .5;
 > = 20.;
+
+uniform float _210_BarsRange<
+	string name = "Number of Bars Random Range";
+	string field_type = "slider";
+	float minimum = 0.;
+	float maximum = 50.;
+	float scale = 1.;
+	float step = .5;
+> = 5.;
 
 // ---------- Shader Code
 sampler_state def_sampler {
@@ -129,25 +150,28 @@ bool compare_a_b(float time, float x, float dir) {
 }
 
 float4 PSDefault(VertData vtx) : TARGET {
-	float2 ruv = (rotate2D(vtx.uv - .5, TO_RAD(_100_Rotation)) + .5);
+	float ang = _100_Rotation + ((Random[0][1] - .5) * 2.) * _110_RotationRange;
+	float bars = max(_200_Bars + ((Random[2][1] - .5) * 2.) * _210_BarsRange, 1);
+
+	float2 ruv = (rotate2D(vtx.uv - .5, TO_RAD(ang)) + .5);
 
 	float bar_offset_max = .2;
-	float bar_id = floor(ruv.y * _200_Bars);
+	float bar_id = floor(ruv.y * bars) + Random[1][1] * bars;
 	float bar_offset = 0.;
 	float bar_direction = 0.;
 	if (TransitionTime < .5 || !_49_FadeToColor) {
 		bar_offset = -abs(noised(float2(bar_id, 0.)).x * bar_offset_max);
-		bar_direction = step(noised(float2(bar_id, 1.)).x, .5);
+		bar_direction = step(noised(float2(bar_id, 1.)).x, _Random[3][1]);
 	} else {
 		bar_offset = -abs(noised(float2(bar_id, 1.)).x * bar_offset_max);
-		bar_direction = step(noised(float2(bar_id, 0.)).x, .5);
+		bar_direction = step(noised(float2(bar_id, 0.)).x, _Random[3][1]);
 	}
 
 	if (_49_FadeToColor) {
 		float bar_time_a = (TransitionTime * 3.) + bar_offset;
 		float bar_time_b = (TransitionTime * 3. - 2.) - bar_offset;
-		if (compare_a_b(bar_time_a, vtx.uv.x, bar_direction)) {
-			if (compare_a_b(bar_time_b, vtx.uv.x, bar_direction)) {
+		if (compare_a_b(bar_time_a, ruv.x, bar_direction)) {
+			if (compare_a_b(bar_time_b, ruv.x, bar_direction)) {
 				return InputB.Sample(def_sampler, vtx.uv);
 			} else {
 				return _50_Color;
@@ -157,7 +181,7 @@ float4 PSDefault(VertData vtx) : TARGET {
 		}
 	} else {
 		float bar_time_a = clamp((TransitionTime + bar_offset) / (1. - bar_offset_max), 0., 1.);
-		if (compare_a_b(bar_time_a, vtx.uv.x, bar_direction)) {
+		if (compare_a_b(bar_time_a, ruv.x, bar_direction)) {
 			return InputB.Sample(def_sampler, vtx.uv);
 		} else {
 			return InputA.Sample(def_sampler, vtx.uv);
