@@ -101,6 +101,8 @@ namespace streamfx::encoder::ffmpeg::handler::nvenc {
 
 	void get_runtime_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context);
 
+	void migrate(obs_data_t* settings, uint64_t version, const AVCodec* codec, AVCodecContext* context);
+
 	void update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context);
 
 	void log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context);
