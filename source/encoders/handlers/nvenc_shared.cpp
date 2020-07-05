@@ -441,6 +441,10 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 				obs_properties_add_list(grp, KEY_OTHER_BFRAMEREFERENCEMODE, D_TRANSLATE(ST_OTHER_BFRAMEREFERENCEMODE),
 										OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			for (auto kv : b_ref_modes) {
+				if (kv.first == nvenc::b_ref_mode::EACH && (static std::string_view("h264_nvenc") == codec->name)) {
+					// H.264 does not support using all B-Frames as reference.
+					continue;
+				}
 				obs_property_list_add_int(p, D_TRANSLATE(kv.second.c_str()), static_cast<std::int64_t>(kv.first));
 			}
 		}
