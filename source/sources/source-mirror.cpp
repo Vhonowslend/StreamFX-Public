@@ -173,8 +173,10 @@ try {
 	}
 
 	// Everything went well, store.
-	_source_child = std::make_shared<obs::tools::child_source>(_self, source);
-	_source       = source;
+	_source_child       = std::make_shared<obs::tools::child_source>(_self, source);
+	_source             = source;
+	_source_size.first  = obs_source_get_width(_source.get());
+	_source_size.second = obs_source_get_height(_source.get());
 
 	// Listen to the rename event to update our own settings.
 	_signal_rename = std::make_shared<obs::source_signal_handler>("rename", _source);
