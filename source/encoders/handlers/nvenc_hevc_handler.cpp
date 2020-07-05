@@ -211,3 +211,9 @@ void nvenc_hevc_handler::get_runtime_properties(obs_properties_t* props, const A
 {
 	nvenc::get_runtime_properties(props, codec, context);
 }
+
+void streamfx::encoder::ffmpeg::handler::nvenc_hevc_handler::migrate(obs_data_t* settings, std::uint64_t version,
+																	 const AVCodec* codec, AVCodecContext* context)
+{
+	nvenc::migrate(settings, version, codec, context);
+}
