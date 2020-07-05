@@ -31,7 +31,6 @@ shader_instance::shader_instance(obs_data_t* data, obs_source_t* self) : obs::so
 {
 	_fx = std::make_shared<gfx::shader::shader>(self, gfx::shader::shader_mode::Filter);
 	_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	update(data);
 }
 
 shader_instance::~shader_instance() {}
@@ -80,57 +79,57 @@ void shader_instance::video_tick(float_t sec_since_last)
 
 void shader_instance::video_render(gs_effect_t* effect)
 {
-	if (!_fx || !_fx->width() || !_fx->height()) {
-		obs_source_skip_video_filter(_self);
-		return;
-	}
-
-#ifdef ENABLE_PROFILING
-	gs::debug_marker gdmp{gs::debug_color_source, "Shader Filter '%s' on '%s'", obs_source_get_name(_self),
-						  obs_source_get_name(obs_filter_get_parent(_self))};
-#endif
-
-	{
-#ifdef ENABLE_PROFILING
-		gs::debug_marker gdm{gs::debug_color_source, "Cache"};
-#endif
-
-		auto op = _rt->render(_fx->base_width(), _fx->base_height());
-
-		gs_ortho(0, 1, 0, 1, -1, 1);
-
-		vec4 clear_color = {0, 0, 0, 0};
-		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &clear_color, 0, 0);
-
-		/// Render original source
-		if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
-			gs_blend_state_push();
-			gs_reset_blend_state();
-			gs_enable_blending(false);
-			gs_blend_function_separate(GS_BLEND_ONE, GS_BLEND_ZERO, GS_BLEND_SRCALPHA, GS_BLEND_ZERO);
-			gs_enable_depth_test(false);
-			gs_enable_stencil_test(false);
-			gs_enable_stencil_write(false);
-			gs_enable_color(true, true, true, true);
-			gs_set_cull_mode(GS_NEITHER);
-
-			obs_source_process_filter_end(_self, obs_get_base_effect(OBS_EFFECT_DEFAULT), 1, 1);
-
-			gs_blend_state_pop();
-		} else {
-			obs_source_skip_video_filter(_self);
-			return;
+	try {
+		if (!_fx || !_fx->base_width() || !_fx->base_height()) {
+			throw std::runtime_error("No effect, or invalid base size.");
 		}
-	}
 
-	{
 #ifdef ENABLE_PROFILING
-		gs::debug_marker gdm{gs::debug_color_render, "Render"};
+		gs::debug_marker gdmp{gs::debug_color_source, "Shader Filter '%s' on '%s'", obs_source_get_name(_self),
+							  obs_source_get_name(obs_filter_get_parent(_self))};
 #endif
 
-		_fx->prepare_render();
-		_fx->set_input_a(_rt->get_texture());
-		_fx->render();
+		{
+#ifdef ENABLE_PROFILING
+			gs::debug_marker gdm{gs::debug_color_source, "Cache"};
+#endif
+
+			auto op = _rt->render(_fx->base_width(), _fx->base_height());
+
+			gs_ortho(0, 1, 0, 1, -1, 1);
+
+			/// Render original source
+			if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
+				gs_blend_state_push();
+				gs_reset_blend_state();
+				gs_blend_function_separate(GS_BLEND_ONE, GS_BLEND_ZERO, GS_BLEND_SRCALPHA, GS_BLEND_ZERO);
+				gs_enable_blending(false);
+				gs_enable_depth_test(false);
+				gs_enable_stencil_test(false);
+				gs_enable_stencil_write(false);
+				gs_enable_color(true, true, true, true);
+				gs_set_cull_mode(GS_NEITHER);
+
+				obs_source_process_filter_end(_self, obs_get_base_effect(OBS_EFFECT_DEFAULT), 1, 1);
+
+				gs_blend_state_pop();
+			} else {
+				throw std::runtime_error("Failed to render previous source.");
+			}
+		}
+
+		{
+#ifdef ENABLE_PROFILING
+			gs::debug_marker gdm{gs::debug_color_render, "Render"};
+#endif
+
+			_fx->prepare_render();
+			_fx->set_input_a(_rt->get_texture());
+			_fx->render();
+		}
+	} catch (const std::exception& ex) {
+		obs_source_skip_video_filter(_self);
+		throw ex;
 	}
 }
 
