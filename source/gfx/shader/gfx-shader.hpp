@@ -47,6 +47,7 @@ namespace gfx {
 			shader_mode   _mode;
 			std::uint32_t _base_width;
 			std::uint32_t _base_height;
+			bool          _active;
 
 			// Shader
 			gs::effect                      _shader;
@@ -64,11 +65,13 @@ namespace gfx {
 			double_t  _height_value;
 
 			// Cache
+			bool            _have_current_params;
 			float_t         _time;
 			float_t         _time_loop;
 			int32_t         _loops;
 			std::mt19937_64 _random;
-			bool            _have_current_params;
+			int32_t         _random_seed;
+			float_t _random_values[16]; // 0..4 Per-Instance-Random, 4..8 Per-Activation-Random 9..15 Per-Frame-Random
 
 			// Rendering
 			bool                              _rt_up_to_date;
@@ -121,6 +124,8 @@ namespace gfx {
 			void set_transition_time(float_t t);
 
 			void set_transition_size(std::uint32_t w, std::uint32_t h);
+
+			void set_active(bool active);
 		};
 	} // namespace shader
 } // namespace gfx

@@ -43,6 +43,9 @@ namespace streamfx::filter::shader {
 
 		virtual void video_tick(float_t sec_since_last) override;
 		virtual void video_render(gs_effect_t* effect) override;
+
+		void activate() override;
+		void deactivate() override;
 	};
 
 	class shader_factory : public obs::source_factory<filter::shader::shader_factory, filter::shader::shader_instance> {
