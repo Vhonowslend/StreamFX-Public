@@ -30,7 +30,6 @@
 #include "handlers/prores_aw_handler.hpp"
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
-#include "utility.hpp"
 
 extern "C" {
 #pragma warning(push)
@@ -97,7 +96,8 @@ ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* self, bool
 		// Abort if user specified manual override.
 		if ((static_cast<AVPixelFormat>(obs_data_get_int(settings, KEY_FFMPEG_COLORFORMAT)) != AV_PIX_FMT_NONE)
 			|| (obs_data_get_int(settings, KEY_FFMPEG_GPU) != -1) || (obs_encoder_scaling_enabled(_self))) {
-			throw std::runtime_error("Selected settings prevent the use of hardware encoding, falling back to software.");
+			throw std::runtime_error(
+				"Selected settings prevent the use of hardware encoding, falling back to software.");
 		}
 
 #ifdef WIN32
@@ -262,32 +262,33 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 		DLOG_INFO("[%s] Initializing...", _codec->name);
 		DLOG_INFO("[%s]   FFmpeg:", _codec->name);
 		DLOG_INFO("[%s]     Custom Settings: %s", _codec->name,
-				 obs_data_get_string(settings, KEY_FFMPEG_CUSTOMSETTINGS));
+				  obs_data_get_string(settings, KEY_FFMPEG_CUSTOMSETTINGS));
 		DLOG_INFO("[%s]     Standard Compliance: %s", _codec->name,
-				 ::ffmpeg::tools::get_std_compliance_name(_context->strict_std_compliance));
+				  ::ffmpeg::tools::get_std_compliance_name(_context->strict_std_compliance));
 		DLOG_INFO("[%s]     Threading: %s (with %i threads)", _codec->name,
-				 ::ffmpeg::tools::get_thread_type_name(_context->thread_type), _context->thread_count);
+				  ::ffmpeg::tools::get_thread_type_name(_context->thread_type), _context->thread_count);
 
 		DLOG_INFO("[%s]   Video:", _codec->name);
 		if (_hwinst) {
-			DLOG_INFO("[%s]     Texture: %ldx%ld %s %s %s", _codec->name, _context->width, _context->height,
-					 ::ffmpeg::tools::get_pixel_format_name(_context->sw_pix_fmt),
-					 ::ffmpeg::tools::get_color_space_name(_context->colorspace),
-					 av_color_range_name(_context->color_range));
+			DLOG_INFO("[%s]     Texture: %" PRId32 "x%" PRId32 " %s %s %s", _codec->name, _context->width, _context->height,
+					  ::ffmpeg::tools::get_pixel_format_name(_context->sw_pix_fmt),
+					  ::ffmpeg::tools::get_color_space_name(_context->colorspace),
+					  av_color_range_name(_context->color_range));
 		} else {
-			DLOG_INFO("[%s]     Input: %ldx%ld %s %s %s", _codec->name, _scaler.get_source_width(),
-					 _scaler.get_source_height(), ::ffmpeg::tools::get_pixel_format_name(_scaler.get_source_format()),
-					 ::ffmpeg::tools::get_color_space_name(_scaler.get_source_colorspace()),
-					 _scaler.is_source_full_range() ? "Full" : "Partial");
-			DLOG_INFO("[%s]     Output: %ldx%ld %s %s %s", _codec->name, _scaler.get_target_width(),
-					 _scaler.get_target_height(), ::ffmpeg::tools::get_pixel_format_name(_scaler.get_target_format()),
-					 ::ffmpeg::tools::get_color_space_name(_scaler.get_target_colorspace()),
-					 _scaler.is_target_full_range() ? "Full" : "Partial");
+			DLOG_INFO("[%s]     Input: %" PRId32 "x%" PRId32 " %s %s %s", _codec->name, _scaler.get_source_width(),
+					  _scaler.get_source_height(), ::ffmpeg::tools::get_pixel_format_name(_scaler.get_source_format()),
+					  ::ffmpeg::tools::get_color_space_name(_scaler.get_source_colorspace()),
+					  _scaler.is_source_full_range() ? "Full" : "Partial");
+			DLOG_INFO("[%s]     Output: %" PRId32 "x%" PRId32 " %s %s %s", _codec->name, _scaler.get_target_width(),
+					  _scaler.get_target_height(), ::ffmpeg::tools::get_pixel_format_name(_scaler.get_target_format()),
+					  ::ffmpeg::tools::get_color_space_name(_scaler.get_target_colorspace()),
+					  _scaler.is_target_full_range() ? "Full" : "Partial");
 			if (!_hwinst)
 				DLOG_INFO("[%s]     On GPU Index: %lli", _codec->name, obs_data_get_int(settings, KEY_FFMPEG_GPU));
 		}
-		DLOG_INFO("[%s]     Framerate: %ld/%ld (%f FPS)", _codec->name, _context->time_base.den, _context->time_base.num,
-				 static_cast<double_t>(_context->time_base.den) / static_cast<double_t>(_context->time_base.num));
+		DLOG_INFO("[%s]     Framerate: %" PRId32 "/%" PRId32 " (%f FPS)", _codec->name, _context->time_base.den,
+				  _context->time_base.num,
+				  static_cast<double_t>(_context->time_base.den) / static_cast<double_t>(_context->time_base.num));
 
 		DLOG_INFO("[%s]   Keyframes: ", _codec->name);
 		if (_context->keyint_min != _context->gop_size) {
@@ -360,7 +361,7 @@ bool ffmpeg_instance::encode_video(struct encoder_frame* frame, struct encoder_p
 				_scaler.convert(reinterpret_cast<std::uint8_t**>(frame->data), reinterpret_cast<int*>(frame->linesize),
 								0, _context->height, vframe->data, vframe->linesize);
 			if (res <= 0) {
-				DLOG_ERROR("Failed to convert frame: %s (%ld).", ::ffmpeg::tools::get_error_description(res), res);
+				DLOG_ERROR("Failed to convert frame: %s (%" PRId32 ").", ::ffmpeg::tools::get_error_description(res), res);
 				return false;
 			}
 		}
@@ -700,7 +701,7 @@ bool ffmpeg_instance::encode_avframe(std::shared_ptr<AVFrame> frame, encoder_pac
 				sent_frame = true;
 				break;
 			default:
-				DLOG_ERROR("Failed to encode frame: %s (%ld).", ::ffmpeg::tools::get_error_description(res), res);
+				DLOG_ERROR("Failed to encode frame: %s (%" PRId32 ").", ::ffmpeg::tools::get_error_description(res), res);
 				return false;
 			}
 		}
@@ -725,7 +726,7 @@ bool ffmpeg_instance::encode_avframe(std::shared_ptr<AVFrame> frame, encoder_pac
 				}
 				break;
 			default:
-				DLOG_ERROR("Failed to receive packet: %s (%ld).", ::ffmpeg::tools::get_error_description(res), res);
+				DLOG_ERROR("Failed to receive packet: %s (%" PRId32 ").", ::ffmpeg::tools::get_error_description(res), res);
 				return false;
 			}
 		}
@@ -873,7 +874,7 @@ void ffmpeg_instance::parse_ffmpeg_commandline(std::string text)
 			int res = av_opt_set(_context, key.c_str(), value.c_str(), AV_OPT_SEARCH_CHILDREN);
 			if (res < 0) {
 				DLOG_WARNING("Option '%s' (key: '%s', value: '%s') encountered error: %s", opt.c_str(), key.c_str(),
-							value.c_str(), ::ffmpeg::tools::get_error_description(res));
+							 value.c_str(), ::ffmpeg::tools::get_error_description(res));
 			}
 		} catch (const std::exception& ex) {
 			DLOG_ERROR("Option '%s' encountered exception: %s", opt.c_str(), ex.what());

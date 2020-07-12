@@ -171,8 +171,10 @@ bool swscale::initialize(int flags)
 		throw std::invalid_argument("not all target parameters were set");
 	}
 
-	this->context = sws_getContext(source_size.first, source_size.second, source_format, target_size.first,
-								   target_size.second, target_format, flags, nullptr, nullptr, nullptr);
+	this->context =
+		sws_getContext(static_cast<int>(source_size.first), static_cast<int>(source_size.second), source_format,
+					   static_cast<int>(target_size.first), static_cast<int>(target_size.second), target_format, flags,
+					   nullptr, nullptr, nullptr);
 	if (!this->context) {
 		return false;
 	}

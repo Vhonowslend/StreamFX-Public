@@ -101,12 +101,14 @@ void util::threadpool::work()
 			try {
 				local_work->_callback(local_work->_data);
 			} catch (std::exception const& ex) {
-				DLOG_WARNING(LOCAL_PREFIX "Worker %lX caught exception from task (%tX, %tX) with message: %s",
-							 local_number, local_work->_callback.target<ptrdiff_t>(),
+				DLOG_WARNING(LOCAL_PREFIX "Worker %" PRIx32 " caught exception from task (%" PRIxPTR ", %" PRIxPTR
+										  ") with message: %s",
+							 local_number, reinterpret_cast<ptrdiff_t>(local_work->_callback.target<void>()),
 							 reinterpret_cast<ptrdiff_t>(local_work->_data.get()), ex.what());
 			} catch (...) {
-				DLOG_WARNING(LOCAL_PREFIX "Worker %lX caught exception of unknown type from task (%tX, %tX).",
-							 local_number, local_work->_callback.target<ptrdiff_t>(),
+				DLOG_WARNING(LOCAL_PREFIX "Worker %" PRIx32 " caught exception of unknown type from task (%" PRIxPTR
+										  ", %" PRIxPTR ").",
+							 local_number, reinterpret_cast<ptrdiff_t>(local_work->_callback.target<void>()),
 							 reinterpret_cast<ptrdiff_t>(local_work->_data.get()));
 			}
 		}

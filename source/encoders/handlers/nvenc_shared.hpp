@@ -22,7 +22,6 @@
 #pragma once
 #include <map>
 #include "handler.hpp"
-#include "utility.hpp"
 
 extern "C" {
 #ifdef _MSC_VER

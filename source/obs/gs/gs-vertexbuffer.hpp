@@ -21,7 +21,6 @@
 #include "common.hpp"
 #include "gs-limits.hpp"
 #include "gs-vertex.hpp"
-#include "utility.hpp"
 
 namespace gs {
 	class vertex_buffer {

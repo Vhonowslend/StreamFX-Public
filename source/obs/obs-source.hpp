@@ -19,7 +19,7 @@
 
 #pragma once
 #include "common.hpp"
-#include "util-event.hpp"
+#include "util/util-event.hpp"
 
 namespace obs {
 	class deprecated_source {

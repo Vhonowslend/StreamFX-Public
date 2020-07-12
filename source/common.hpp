@@ -46,9 +46,10 @@
 // Common Plugin includes
 #include "strings.hpp"
 #include "version.hpp"
-#include "util-profiler.hpp"
-#include "util-threadpool.hpp"
-#include "utility.hpp"
+#include "util/util-math.hpp"
+#include "util/util-profiler.hpp"
+#include "util/util-threadpool.hpp"
+#include "util/utility.hpp"
 
 // Common OBS includes
 extern "C" {

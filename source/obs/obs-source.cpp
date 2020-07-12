@@ -785,7 +785,7 @@ obs::deprecated_source& obs::deprecated_source::operator=(deprecated_source&& ot
 obs_source_type obs::deprecated_source::type()
 {
 	if (!_self) {
-		return (obs_source_type)-1;
+		return static_cast<obs_source_type>(-1);
 	}
 	return obs_source_get_type(_self);
 }

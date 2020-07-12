@@ -24,7 +24,6 @@
 #include "nvidia/cuda/nvidia-cuda-context-stack.hpp"
 #include "obs/gs/gs-helper.hpp"
 #include "obs/obs-tools.hpp"
-#include "utility.hpp"
 
 #define ST "Filter.Nvidia.FaceTracking"
 #define ST_ROI "Filter.Nvidia.FaceTracking.ROI"
@@ -74,12 +73,11 @@ face_tracking_instance::face_tracking_instance(obs_data_t* settings, obs_source_
 #endif
 
 	{ // Create render target, vertex buffer, and CUDA stream.
-		auto gctx = gs::context{};
-		_rt       = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-		_geometry = std::make_shared<gs::vertex_buffer>(4, 1);
-		auto cctx = std::make_shared<::nvidia::cuda::context_stack>(_cuda, _cuda_ctx);
-		_cuda_stream =
-			std::make_shared<::nvidia::cuda::stream>(_cuda, ::nvidia::cuda::stream_flags::NON_BLOCKING, 0);
+		auto gctx    = gs::context{};
+		_rt          = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+		_geometry    = std::make_shared<gs::vertex_buffer>(uint32_t(4), uint8_t(1));
+		auto cctx    = std::make_shared<::nvidia::cuda::context_stack>(_cuda, _cuda_ctx);
+		_cuda_stream = std::make_shared<::nvidia::cuda::stream>(_cuda, ::nvidia::cuda::stream_flags::NON_BLOCKING, 0);
 	}
 
 	{ // Asynchronously load Face Tracking.
@@ -235,7 +233,7 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 			gs::debug_marker marker{gs::debug_color_allocate, "Reallocate GPU Buffer"};
 #endif
 			_ar_texture =
-				std::make_shared<gs::texture>(_size.first, _size.second, GS_RGBA, 1, nullptr, gs::texture::flags::None);
+				std::make_shared<gs::texture>(_size.first, _size.second, GS_RGBA, uint32_t(1), nullptr, gs::texture::flags::None);
 			_ar_texture_cuda_fresh = false;
 		}
 
@@ -593,10 +591,10 @@ bool face_tracking_instance::button_profile(obs_properties_t* props, obs_propert
 	};
 	for (auto& kv : profilers) {
 		DLOG_INFO("  %-20s: %8lldµs %10lld %8lldµs %8lldµs %8lldµs", kv.first.c_str(),
-				 std::chrono::duration_cast<std::chrono::microseconds>(kv.second->total_duration()).count(),
-				 kv.second->count(), static_cast<std::int64_t>(kv.second->average_duration() / 1000.0),
-				 std::chrono::duration_cast<std::chrono::microseconds>(kv.second->percentile(0.999)).count(),
-				 std::chrono::duration_cast<std::chrono::microseconds>(kv.second->percentile(0.95)).count());
+				  std::chrono::duration_cast<std::chrono::microseconds>(kv.second->total_duration()).count(),
+				  kv.second->count(), static_cast<std::int64_t>(kv.second->average_duration() / 1000.0),
+				  std::chrono::duration_cast<std::chrono::microseconds>(kv.second->percentile(0.999)).count(),
+				  std::chrono::duration_cast<std::chrono::microseconds>(kv.second->percentile(0.95)).count());
 	}
 
 	return false;

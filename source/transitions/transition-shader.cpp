@@ -21,14 +21,13 @@
 #include "strings.hpp"
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
-#include "utility.hpp"
 
 #define ST "Transition.Shader"
 
 using namespace streamfx::transition::shader;
 
 shader_instance::shader_instance(obs_data_t* data, obs_source_t* self)
-	: obs::source_instance(data, self), _is_main(false)
+	: obs::source_instance(data, self)
 {
 	_fx = std::make_shared<gfx::shader::shader>(self, gfx::shader::shader_mode::Transition);
 
@@ -110,7 +109,8 @@ bool shader_instance::audio_render(uint64_t* ts_out, obs_source_audio_mix* audio
 		[](void*, float_t t) { return t; });
 }
 
-void shader_instance::transition_start() {
+void shader_instance::transition_start()
+{
 	_fx->set_active(true);
 }
 

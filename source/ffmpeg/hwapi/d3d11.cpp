@@ -25,7 +25,6 @@
 #include <sstream>
 #include <vector>
 #include "obs/gs/gs-helper.hpp"
-#include "utility.hpp"
 
 extern "C" {
 #pragma warning(push)
@@ -88,8 +87,9 @@ std::list<device> d3d11::enumerate_adapters()
 		dxgi_adapter->GetDesc1(&desc);
 
 		std::vector<char> buf(1024);
-		std::size_t       len = snprintf(buf.data(), buf.size(), "%ls (VEN_%04x/DEV_%04x/SUB_%04x/REV_%04x)",
-                                   desc.Description, desc.VendorId, desc.DeviceId, desc.SubSysId, desc.Revision);
+		std::size_t       len =
+			static_cast<size_t>(snprintf(buf.data(), buf.size(), "%ls (VEN_%04x/DEV_%04x/SUB_%04x/REV_%04x)",
+										 desc.Description, desc.VendorId, desc.DeviceId, desc.SubSysId, desc.Revision));
 
 		device dev;
 		dev.name      = std::string(buf.data(), buf.data() + len);

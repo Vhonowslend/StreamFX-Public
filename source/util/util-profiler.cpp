@@ -34,7 +34,7 @@ void util::profiler::track(std::chrono::nanoseconds duration)
 	std::unique_lock<std::mutex> ul(_timings_lock);
 	auto                         itr = _timings.find(duration);
 	if (itr == _timings.end()) {
-		_timings.insert({duration, 1});
+		_timings.emplace(duration, 1u);
 	} else {
 		itr->second++;
 	}
@@ -113,10 +113,7 @@ std::chrono::nanoseconds util::profiler::percentile(double_t percentile, bool by
 		// Find largest and smallest time.
 		std::chrono::nanoseconds smallest = copy_timings.begin()->first;
 		std::chrono::nanoseconds largest  = copy_timings.rbegin()->first;
-
 		std::chrono::nanoseconds variance = largest - smallest;
-		std::chrono::nanoseconds threshold =
-			std::chrono::nanoseconds(smallest.count() + int64_t(variance.count() * percentile));
 
 		for (auto kv : copy_timings) {
 			double_t kv_pct = double_t((kv.first - smallest).count()) / double_t(variance.count());
