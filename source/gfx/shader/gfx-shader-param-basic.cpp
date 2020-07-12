@@ -96,9 +96,9 @@ gfx::shader::basic_parameter::basic_parameter(gs::effect_parameter param, std::s
 		_keys[0]  = get_key();
 	} else {
 		for (std::size_t idx = 0; idx < get_size(); idx++) {
-			snprintf(string_buffer, sizeof(string_buffer), "[%d]", static_cast<int32_t>(idx));
+			snprintf(string_buffer, sizeof(string_buffer), "[%" PRId32 "]", static_cast<int32_t>(idx));
 			_names[idx] = std::string(string_buffer, string_buffer + strnlen(string_buffer, sizeof(string_buffer)));
-			snprintf(string_buffer, sizeof(string_buffer), "%s[%d]", get_key().data(), static_cast<int32_t>(idx));
+			snprintf(string_buffer, sizeof(string_buffer), "%s[%" PRId32 "]", get_key().data(), static_cast<int32_t>(idx));
 			_keys[idx] = std::string(string_buffer, string_buffer + strnlen(string_buffer, sizeof(string_buffer)));
 		}
 	}
@@ -203,7 +203,7 @@ void gfx::shader::bool_parameter::update(obs_data_t* settings)
 
 	// TODO: Support for bool[]
 	if (get_size() == 1) {
-		_data[0] = obs_data_get_int(settings, get_key().data());
+		_data[0] = static_cast<int32_t>(obs_data_get_int(settings, get_key().data()));
 	}
 }
 

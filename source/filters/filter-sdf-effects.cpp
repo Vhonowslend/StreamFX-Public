@@ -106,7 +106,7 @@ sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* s
 				kv.second = gs::effect::create(path);
 			} catch (const std::exception& ex) {
 				DLOG_ERROR(LOG_PREFIX "Failed to load _effect '%s' (located at '%s') with error(s): %s", kv.first, path,
-						  ex.what());
+						   ex.what());
 			}
 			bfree(path);
 		}
@@ -312,7 +312,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 #endif
 
 				auto op = _source_rt->render(baseW, baseH);
-				gs_ortho(0, (float)baseW, 0, (float)baseH, -1, 1);
+				gs_ortho(0, static_cast<float>(baseW), 0, static_cast<float>(baseH), -1, 1);
 				gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &color_transparent, 0, 0);
 
 				if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {

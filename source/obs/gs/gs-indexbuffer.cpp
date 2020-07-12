@@ -31,12 +31,12 @@ gs::index_buffer::index_buffer(std::uint32_t maximumVertices)
 
 gs::index_buffer::index_buffer() : index_buffer(MAXIMUM_VERTICES) {}
 
-gs::index_buffer::index_buffer(index_buffer& other) : index_buffer((uint32_t)other.size())
+gs::index_buffer::index_buffer(index_buffer& other) : index_buffer(static_cast<uint32_t>(other.size()))
 {
 	std::copy(other.begin(), other.end(), this->end());
 }
 
-gs::index_buffer::index_buffer(std::vector<uint32_t>& other) : index_buffer((uint32_t)other.size())
+gs::index_buffer::index_buffer(std::vector<uint32_t>& other) : index_buffer(static_cast<uint32_t>(other.size()))
 {
 	std::copy(other.begin(), other.end(), this->end());
 }

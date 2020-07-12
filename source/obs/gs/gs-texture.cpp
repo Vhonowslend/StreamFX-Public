@@ -22,7 +22,6 @@
 #include <stdexcept>
 #include <sys/stat.h>
 #include "obs/gs/gs-helper.hpp"
-#include "util-math.hpp"
 
 static std::uint32_t decode_flags(gs::texture::flags texture_flags)
 {
@@ -74,9 +73,9 @@ gs::texture::texture(std::uint32_t width, std::uint32_t height, std::uint32_t de
 		throw std::logic_error("mip_levels must be at least 1");
 
 	if (mip_levels > 1 || ((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps)) {
-		bool isPOT = (util::math::is_equal(pow(2, (int64_t)floor(log(width) / log(2))), width)
-					  && util::math::is_equal(pow(2, (int64_t)floor(log(height) / log(2))), height)
-					  && util::math::is_equal(pow(2, (int64_t)floor(log(depth) / log(2))), depth));
+		bool isPOT = (util::math::is_equal(pow(2, static_cast<int64_t>(floor(log(width) / log(2)))), width)
+					  && util::math::is_equal(pow(2, static_cast<int64_t>(floor(log(height) / log(2)))), height)
+					  && util::math::is_equal(pow(2, static_cast<int64_t>(floor(log(depth) / log(2)))), depth));
 		if (!isPOT)
 			throw std::logic_error("mip mapping requires power of two dimensions");
 	}
@@ -102,7 +101,7 @@ gs::texture::texture(std::uint32_t size, gs_color_format format, std::uint32_t m
 		throw std::logic_error("mip_levels must be at least 1");
 
 	if (mip_levels > 1 || ((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps)) {
-		bool isPOT = util::math::is_equal(pow(2, (int64_t)floor(log(size) / log(2))), size);
+		bool isPOT = util::math::is_equal(pow(2, static_cast<int64_t>(floor(log(size) / log(2)))), size);
 		if (!isPOT)
 			throw std::logic_error("mip mapping requires power of two dimensions");
 	}

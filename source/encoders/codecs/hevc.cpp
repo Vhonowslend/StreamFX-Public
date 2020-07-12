@@ -20,7 +20,6 @@
 // SOFTWARE.
 
 #include "hevc.hpp"
-#include "utility.hpp"
 
 using namespace streamfx::encoder::codec;
 

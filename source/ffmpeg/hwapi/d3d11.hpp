@@ -22,22 +22,17 @@
 #pragma once
 #include "base.hpp"
 
-extern "C++" {
+#ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4191)
-#pragma warning(disable : 4242)
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4365)
-#pragma warning(disable : 4777)
-#pragma warning(disable : 4986)
-#pragma warning(disable : 5039)
-#pragma warning(disable : 5204)
+#pragma warning(disable : 4191 4242 4244 4365 4777 4986 5039 5204)
+#endif
 #include <atlutil.h>
 #include <d3d11.h>
 #include <d3d11_1.h>
 #include <dxgi.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
-}
+#endif
 
 namespace ffmpeg::hwapi {
 	class d3d11 : public ffmpeg::hwapi::base {

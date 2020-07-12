@@ -19,7 +19,6 @@
 
 #include "gs-sampler.hpp"
 #include <stdexcept>
-#include "utility.hpp"
 
 gs::sampler::sampler()
 {

@@ -21,7 +21,6 @@
 #include "strings.hpp"
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
-#include "util-math.hpp"
 
 // OBS
 #ifdef _MSC_VER

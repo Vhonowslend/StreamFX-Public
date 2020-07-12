@@ -26,7 +26,6 @@
 #include <vector>
 #include "handler.hpp"
 #include "plugin.hpp"
-#include "utility.hpp"
 
 extern "C" {
 #include <obs-properties.h>
@@ -47,7 +46,7 @@ template<>
 std::string to_string(int64_t value)
 {
 	std::vector<char> buf(32);
-	snprintf(buf.data(), buf.size(), "%lld", value);
+	snprintf(buf.data(), buf.size(), "%" PRId64, value);
 	return std::string(buf.data(), buf.data() + buf.size());
 }
 
@@ -55,7 +54,7 @@ template<>
 std::string to_string(uint64_t value)
 {
 	std::vector<char> buf(32);
-	snprintf(buf.data(), buf.size(), "%llu", value);
+	snprintf(buf.data(), buf.size(), "%" PRIu64, value);
 	return std::string(buf.data(), buf.data() + buf.size());
 }
 
@@ -119,8 +118,8 @@ void debug_handler::get_properties(obs_properties_t*, const AVCodec* codec, AVCo
 			} else {
 				auto unit_type = unit_types.find(opt->unit);
 				if (unit_type == unit_types.end()) {
-					DLOG_INFO("  [%s] Flag '%s' and help text '%s' with value '%lld'.", opt->unit, opt->name, opt->help,
-							 opt->default_val.i64);
+					DLOG_INFO("  [%s] Flag '%s' and help text '%s' with value '%" PRId64 "'.", opt->unit, opt->name, opt->help,
+							  opt->default_val.i64);
 				} else {
 					std::string out;
 					switch (unit_type->second) {
@@ -148,7 +147,7 @@ void debug_handler::get_properties(obs_properties_t*, const AVCodec* codec, AVCo
 					}
 
 					DLOG_INFO("  [%s] Constant '%s' and help text '%s' with value '%s'.", opt->unit, opt->name,
-							 opt->help, out.c_str());
+							  opt->help, out.c_str());
 				}
 			}
 		} else {

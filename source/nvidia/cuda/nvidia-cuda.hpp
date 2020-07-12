@@ -18,10 +18,10 @@
  */
 
 #pragma once
+#include "common.hpp"
 #include <cstddef>
 #include <functional>
 #include <memory>
-#include "utility.hpp"
 
 #ifdef WIN32
 #pragma warning(push)

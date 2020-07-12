@@ -22,7 +22,6 @@
 #include <algorithm>
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
-#include "util-math.hpp"
 
 // OBS
 #ifdef _MSC_VER
@@ -130,7 +129,7 @@ void transform_instance::update(obs_data_t* settings)
 {
 	// Camera
 	_camera_orthographic = obs_data_get_int(settings, ST_CAMERA) == 0;
-	_camera_fov          = (float)obs_data_get_double(settings, ST_CAMERA_FIELDOFVIEW);
+	_camera_fov          = static_cast<float_t>(obs_data_get_double(settings, ST_CAMERA_FIELDOFVIEW));
 
 	// Source
 	_position->x    = static_cast<float_t>(obs_data_get_double(settings, ST_POSITION_X) / 100.0);
@@ -365,8 +364,9 @@ void transform_instance::video_render(gs_effect_t* effect)
 
 			std::size_t mip_levels = std::max(util::math::get_power_of_two_exponent_ceil(cache_width),
 											  util::math::get_power_of_two_exponent_ceil(cache_height));
-			_mipmap_texture = std::make_shared<gs::texture>(cache_width, cache_height, GS_RGBA, mip_levels, nullptr,
-															gs::texture::flags::None);
+			_mipmap_texture =
+				std::make_shared<gs::texture>(cache_width, cache_height, GS_RGBA, static_cast<uint32_t>(mip_levels),
+											  nullptr, gs::texture::flags::None);
 		}
 		_mipmapper.rebuild(_cache_texture, _mipmap_texture);
 
@@ -457,7 +457,7 @@ const char* transform_factory::get_name()
 
 void transform_factory::get_defaults2(obs_data_t* settings)
 {
-	obs_data_set_default_int(settings, ST_CAMERA, (int64_t)CameraMode::Orthographic);
+	obs_data_set_default_int(settings, ST_CAMERA, static_cast<int64_t>(CameraMode::Orthographic));
 	obs_data_set_default_double(settings, ST_CAMERA_FIELDOFVIEW, 90.0);
 	obs_data_set_default_double(settings, ST_POSITION_X, 0);
 	obs_data_set_default_double(settings, ST_POSITION_Y, 0);
@@ -465,7 +465,7 @@ void transform_factory::get_defaults2(obs_data_t* settings)
 	obs_data_set_default_double(settings, ST_ROTATION_X, 0);
 	obs_data_set_default_double(settings, ST_ROTATION_Y, 0);
 	obs_data_set_default_double(settings, ST_ROTATION_Z, 0);
-	obs_data_set_default_int(settings, ST_ROTATION_ORDER, RotationOrder::ZXY);
+	obs_data_set_default_int(settings, ST_ROTATION_ORDER, static_cast<int64_t>(RotationOrder::ZXY));
 	obs_data_set_default_double(settings, ST_SCALE_X, 100);
 	obs_data_set_default_double(settings, ST_SCALE_Y, 100);
 	obs_data_set_default_double(settings, ST_SHEAR_X, 0);
@@ -475,7 +475,7 @@ void transform_factory::get_defaults2(obs_data_t* settings)
 
 static bool modified_properties(obs_properties_t* pr, obs_property_t*, obs_data_t* d) noexcept
 try {
-	switch ((CameraMode)obs_data_get_int(d, ST_CAMERA)) {
+	switch (static_cast<CameraMode>(obs_data_get_int(d, ST_CAMERA))) {
 	case CameraMode::Orthographic:
 		obs_property_set_visible(obs_properties_get(pr, ST_CAMERA_FIELDOFVIEW), false);
 		obs_property_set_visible(obs_properties_get(pr, ST_POSITION_Z), false);
@@ -507,8 +507,10 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 			auto p = obs_properties_add_list(grp, ST_CAMERA, D_TRANSLATE(ST_CAMERA), OBS_COMBO_TYPE_LIST,
 											 OBS_COMBO_FORMAT_INT);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_CAMERA)));
-			obs_property_list_add_int(p, D_TRANSLATE(ST_CAMERA_ORTHOGRAPHIC), (int64_t)CameraMode::Orthographic);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_CAMERA_PERSPECTIVE), (int64_t)CameraMode::Perspective);
+			obs_property_list_add_int(p, D_TRANSLATE(ST_CAMERA_ORTHOGRAPHIC),
+									  static_cast<int64_t>(CameraMode::Orthographic));
+			obs_property_list_add_int(p, D_TRANSLATE(ST_CAMERA_PERSPECTIVE),
+									  static_cast<int64_t>(CameraMode::Perspective));
 			obs_property_set_modified_callback(p, modified_properties);
 		}
 		{ // Field Of View

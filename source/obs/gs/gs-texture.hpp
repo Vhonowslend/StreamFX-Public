@@ -19,7 +19,6 @@
 
 #pragma once
 #include "common.hpp"
-#include "utility.hpp"
 
 namespace gs {
 	class texture {

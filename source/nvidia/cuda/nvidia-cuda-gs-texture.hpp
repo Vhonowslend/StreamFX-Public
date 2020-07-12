@@ -28,10 +28,10 @@ namespace nvidia::cuda {
 	class gstexture {
 		std::shared_ptr<::nvidia::cuda::cuda> _cuda;
 		std::shared_ptr<gs::texture>          _texture;
-		graphics_resource_t                _resource;
+		graphics_resource_t                   _resource;
 
 		bool                                  _is_mapped;
-		array_t                            _pointer;
+		array_t                               _pointer;
 		std::shared_ptr<nvidia::cuda::stream> _stream;
 
 		public:
@@ -39,6 +39,6 @@ namespace nvidia::cuda {
 		~gstexture();
 
 		array_t map(std::shared_ptr<nvidia::cuda::stream> stream);
-		void       unmap();
+		void    unmap();
 	};
 } // namespace nvidia::cuda

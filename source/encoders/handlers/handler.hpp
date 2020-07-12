@@ -60,7 +60,8 @@ namespace streamfx::encoder::ffmpeg {
 			virtual void get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context,
 										bool hw_encode){};
 
-			virtual void migrate(obs_data_t* settings, std::uint64_t version, const AVCodec* codec, AVCodecContext* context){};
+			virtual void migrate(obs_data_t* settings, std::uint64_t version, const AVCodec* codec,
+								 AVCodecContext* context){};
 
 			virtual void update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context){};
 

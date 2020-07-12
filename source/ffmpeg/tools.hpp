@@ -38,8 +38,6 @@ extern "C" {
 }
 
 namespace ffmpeg::tools {
-	std::string translate_encoder_capabilities(int capabilities);
-
 	const char* get_pixel_format_name(AVPixelFormat v);
 
 	const char* get_color_space_name(AVColorSpace v);

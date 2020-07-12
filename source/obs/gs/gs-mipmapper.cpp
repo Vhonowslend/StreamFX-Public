@@ -25,7 +25,7 @@
 #ifdef _WIN32
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4201 4365 5039)
+#pragma warning(disable : 4191 4242 4244 4365 4777 4986 5039 5204)
 #endif
 #include <Windows.h>
 #include <atlutil.h>
@@ -118,7 +118,6 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 	ID3D11Resource*      d3d_source  = nullptr;
 	ID3D11Resource*      d3d_target  = nullptr;
 	if (gs_get_device_type() == GS_DEVICE_DIRECT3D_11) {
-		D3D11_TEXTURE2D_DESC td;
 		d3d_source = reinterpret_cast<ID3D11Resource*>(gs_texture_get_obj(source->get_object()));
 		d3d_target = reinterpret_cast<ID3D11Resource*>(gs_texture_get_obj(target->get_object()));
 		d3d_device = reinterpret_cast<ID3D11Device*>(gs_get_device_obj());
@@ -138,14 +137,14 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 
 			{
 #ifdef ENABLE_PROFILING
-				auto cctr = gs::debug_marker(gs::debug_color_azure_radiance, "Mip Level %lld", 0);
+				auto cctr = gs::debug_marker(gs::debug_color_azure_radiance, "Mip Level %" PRId64 "", 0);
 #endif
 
 #ifdef _WIN32
 				if (gs_get_device_type() == GS_DEVICE_DIRECT3D_11) {
 					{ // Retrieve maximum mip map level.
 						D3D11_TEXTURE2D_DESC td;
-						reinterpret_cast<ID3D11Texture2D*>(d3d_target)->GetDesc(&td);
+						static_cast<ID3D11Texture2D*>(d3d_target)->GetDesc(&td);
 						max_mip_level = td.MipLevels;
 					}
 
@@ -165,13 +164,13 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 			// Render each mip map level.
 			for (size_t mip = 1; mip < max_mip_level; mip++) {
 #ifdef ENABLE_PROFILING
-				auto cctr = gs::debug_marker(gs::debug_color_azure_radiance, "Mip Level %lld", mip);
+				auto cctr = gs::debug_marker(gs::debug_color_azure_radiance, "Mip Level %" PRIuMAX, mip);
 #endif
 
 				uint32_t cwidth  = std::max<uint32_t>(width >> mip, 1);
 				uint32_t cheight = std::max<uint32_t>(height >> mip, 1);
-				float_t  iwidth  = 1. / static_cast<float_t>(cwidth);
-				float_t  iheight = 1. / static_cast<float_t>(cheight);
+				float_t  iwidth  = 1.f / static_cast<float_t>(cwidth);
+				float_t  iheight = 1.f / static_cast<float_t>(cheight);
 
 				// Set up rendering state.
 				gs_load_vertexbuffer(_vb->update(false));
@@ -187,7 +186,7 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 				gs_set_cull_mode(GS_NEITHER);
 				try {
 					auto op = _rt->render(width, height);
-					gs_set_viewport(0, 0, cwidth, cheight);
+					gs_set_viewport(0, 0, static_cast<int>(cwidth), static_cast<int>(cheight));
 					gs_ortho(0, 1, 0, 1, 0, 1);
 
 					vec4 black = {1., 1., 1., 1};
