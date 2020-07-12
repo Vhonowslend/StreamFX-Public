@@ -101,13 +101,13 @@ namespace gfx {
 			bool_parameter(gs::effect_parameter param, std::string prefix);
 			virtual ~bool_parameter();
 
-			virtual void defaults(obs_data_t* settings);
+			void defaults(obs_data_t* settings) override;
 
-			virtual void properties(obs_properties_t* props, obs_data_t* settings) override;
+			void properties(obs_properties_t* props, obs_data_t* settings) override;
 
-			virtual void update(obs_data_t* settings) override;
+			void update(obs_data_t* settings) override;
 
-			virtual void assign() override;
+			void assign() override;
 		};
 
 		struct float_parameter : public basic_parameter {
@@ -117,13 +117,13 @@ namespace gfx {
 			float_parameter(gs::effect_parameter param, std::string prefix);
 			virtual ~float_parameter();
 
-			virtual void defaults(obs_data_t* settings);
+			void defaults(obs_data_t* settings) override;
 
-			virtual void properties(obs_properties_t* props, obs_data_t* settings) override;
+			void properties(obs_properties_t* props, obs_data_t* settings) override;
 
-			virtual void update(obs_data_t* settings) override;
+			void update(obs_data_t* settings) override;
 
-			virtual void assign() override;
+			void assign() override;
 		};
 
 		struct int_parameter : public basic_parameter {
@@ -133,13 +133,13 @@ namespace gfx {
 			int_parameter(gs::effect_parameter param, std::string prefix);
 			virtual ~int_parameter();
 
-			virtual void defaults(obs_data_t* settings);
+			void defaults(obs_data_t* settings) override;
 
-			virtual void properties(obs_properties_t* props, obs_data_t* settings) override;
+			void properties(obs_properties_t* props, obs_data_t* settings) override;
 
-			virtual void update(obs_data_t* settings) override;
+			void update(obs_data_t* settings) override;
 
-			virtual void assign() override;
+			void assign() override;
 		};
 
 	} // namespace shader

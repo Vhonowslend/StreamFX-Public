@@ -25,7 +25,6 @@
 #include <sstream>
 #include <stdexcept>
 #include "plugin.hpp"
-#include "utility.hpp"
 
 extern "C" {
 #pragma warning(push)
@@ -38,44 +37,6 @@ extern "C" {
 }
 
 using namespace ffmpeg;
-
-std::string tools::translate_encoder_capabilities(int capabilities)
-{
-	// Sorted by relative importance.
-	std::pair<int, std::string> caps[] = {
-		{AV_CODEC_CAP_EXPERIMENTAL, "Experimental"},
-
-		// Quality
-		{AV_CODEC_CAP_LOSSLESS, "Lossless"},
-
-		// Features
-		{AV_CODEC_CAP_PARAM_CHANGE, "Dynamic Parameter Change"},
-		{AV_CODEC_CAP_SUBFRAMES, "Sub-Frames"},
-		{AV_CODEC_CAP_VARIABLE_FRAME_SIZE, "Variable Frame Size"},
-		{AV_CODEC_CAP_SMALL_LAST_FRAME, "Small Final Frame"},
-
-		// Other
-		{AV_CODEC_CAP_TRUNCATED, "Truncated"},
-		{AV_CODEC_CAP_CHANNEL_CONF, "AV_CODEC_CAP_CHANNEL_CONF"},
-		{AV_CODEC_CAP_DRAW_HORIZ_BAND, "AV_CODEC_CAP_DRAW_HORIZ_BAND"},
-		{AV_CODEC_CAP_AVOID_PROBING, "AV_CODEC_CAP_AVOID_PROBING"},
-	};
-
-	std::stringstream sstr;
-	for (auto const kv : caps) {
-		if (capabilities & kv.first) {
-			capabilities &= ~kv.first;
-			sstr << kv.second;
-			if (capabilities != 0) {
-				sstr << ", ";
-			} else {
-				break;
-			}
-		}
-	}
-
-	return sstr.str();
-}
 
 const char* tools::get_pixel_format_name(AVPixelFormat v)
 {
@@ -327,11 +288,11 @@ void tools::print_av_option_bool(AVCodecContext* ctx_codec, void* ctx_option, co
 	int64_t v = 0;
 	if (int err = av_opt_get_int(ctx_option, option, AV_OPT_SEARCH_CHILDREN, &v); err != 0) {
 		DLOG_INFO("[%s] %s: <Error: %s>", ctx_codec->codec->name, text.c_str(),
-				 ffmpeg::tools::get_error_description(err));
+				  ffmpeg::tools::get_error_description(err));
 	} else {
 		DLOG_INFO("[%s] %s: %s%s", ctx_codec->codec->name, text.c_str(),
-				 (inverse ? v != 0 : v == 0) ? "Disabled" : "Enabled",
-				 av_opt_is_set_to_default_by_name(ctx_option, option, AV_OPT_SEARCH_CHILDREN) > 0 ? " <Default>" : "");
+				  (inverse ? v != 0 : v == 0) ? "Disabled" : "Enabled",
+				  av_opt_is_set_to_default_by_name(ctx_option, option, AV_OPT_SEARCH_CHILDREN) > 0 ? " <Default>" : "");
 	}
 }
 
@@ -350,11 +311,11 @@ void tools::print_av_option_int(AVCodecContext* ctx_codec, void* ctx_option, con
 			DLOG_INFO("[%s] %s: <Default>", ctx_codec->codec->name, text.c_str());
 		} else {
 			DLOG_INFO("[%s] %s: <Error: %s>", ctx_codec->codec->name, text.c_str(),
-					 ffmpeg::tools::get_error_description(err));
+					  ffmpeg::tools::get_error_description(err));
 		}
 	} else {
-		DLOG_INFO("[%s] %s: %lld %s%s", ctx_codec->codec->name, text.c_str(), v, suffix.c_str(),
-				 is_default ? " <Default>" : "");
+		DLOG_INFO("[%s] %s: %" PRId64 " %s%s", ctx_codec->codec->name, text.c_str(), v, suffix.c_str(),
+				  is_default ? " <Default>" : "");
 	}
 }
 
@@ -370,13 +331,13 @@ void tools::print_av_option_string(AVCodecContext* ctx_codec, void* ctx_option, 
 	int64_t v = 0;
 	if (int err = av_opt_get_int(ctx_option, option, AV_OPT_SEARCH_CHILDREN, &v); err != 0) {
 		DLOG_INFO("[%s] %s: <Error: %s>", ctx_codec->codec->name, text.c_str(),
-				 ffmpeg::tools::get_error_description(err));
+				  ffmpeg::tools::get_error_description(err));
 	} else {
 		std::string name = "<Unknown>";
 		if (decoder)
 			name = decoder(v);
 		DLOG_INFO("[%s] %s: %s%s", ctx_codec->codec->name, text.c_str(), name.c_str(),
-				 av_opt_is_set_to_default_by_name(ctx_option, option, AV_OPT_SEARCH_CHILDREN) > 0 ? " <Default>" : "");
+				  av_opt_is_set_to_default_by_name(ctx_option, option, AV_OPT_SEARCH_CHILDREN) > 0 ? " <Default>" : "");
 	}
 }
 

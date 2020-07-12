@@ -19,7 +19,6 @@
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
-#include "util-math.hpp"
 
 #ifdef _MSC_VER
 #pragma warning(push)

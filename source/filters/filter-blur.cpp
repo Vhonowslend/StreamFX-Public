@@ -31,7 +31,6 @@
 #include "gfx/blur/gfx-blur-gaussian.hpp"
 #include "obs/gs/gs-helper.hpp"
 #include "obs/obs-source-tracker.hpp"
-#include "util-math.hpp"
 
 // OBS
 #ifdef _MSC_VER
@@ -333,7 +332,7 @@ void blur_instance::video_tick(float)
 				_mask.image.path_old = _mask.image.path;
 			} catch (...) {
 				DLOG_ERROR("<filter-blur> Instance '%s' failed to load image '%s'.", obs_source_get_name(_self),
-						  _mask.image.path.c_str());
+						   _mask.image.path.c_str());
 			}
 		}
 	} else if (_mask.type == mask_type::Source) {
@@ -344,7 +343,7 @@ void blur_instance::video_tick(float)
 				_mask.source.name_old = _mask.source.name;
 			} catch (...) {
 				DLOG_ERROR("<filter-blur> Instance '%s' failed to grab source '%s'.", obs_source_get_name(_self),
-						  _mask.source.name.c_str());
+						   _mask.source.name.c_str());
 			}
 		}
 	}
@@ -399,7 +398,7 @@ void blur_instance::video_render(gs_effect_t* effect)
 					gs_stencil_op(GS_STENCIL_BOTH, GS_KEEP, GS_KEEP, GS_KEEP);
 
 					// Orthographic Camera and clear RenderTarget.
-					gs_ortho(0, (float)baseW, 0, (float)baseH, -1., 1.);
+					gs_ortho(0, static_cast<float>(baseW), 0, static_cast<float>(baseH), -1., 1.);
 					//gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
 
 					// Render

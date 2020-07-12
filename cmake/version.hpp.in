@@ -21,7 +21,7 @@
 #include <cinttypes>
 #include <cstddef>
 
-#define STREAMFX_MAKE_VERSION(major,minor,patch,tweak) ((uint64_t(major) & 0xFFFFull) << 48ull) | ((uint64_t(minor) & 0xFFFFull) << 32ull) | ((uint64_t(patch) & 0xFFFFull) << 16ull) | ((uint64_t(tweak) & 0xFFFFull))
+#define STREAMFX_MAKE_VERSION(major,minor,patch,tweak) (((uint64_t(major) & 0xFFFFull) << 48ull) | ((uint64_t(minor) & 0xFFFFull) << 32ull) | ((uint64_t(patch) & 0xFFFFull) << 16ull) | ((uint64_t(tweak) & 0xFFFFull)))
 
 #define STREAMFX_MASK_MAJOR 0xFFFF000000000000ull
 #define STREAMFX_MASK_COMPAT 0xFFFFFFFF00000000ull

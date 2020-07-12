@@ -233,7 +233,7 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 				gs_enable_stencil_write(false);
 				gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
 				gs_stencil_op(GS_STENCIL_BOTH, GS_KEEP, GS_KEEP, GS_KEEP);
-				gs_ortho(0, (float)width, 0, (float)height, -1., 1.);
+				gs_ortho(0, static_cast<float>(width), 0, static_cast<float>(height), -1., 1.);
 
 				obs_source_process_filter_end(_self, default_effect, width, height);
 

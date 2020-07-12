@@ -19,7 +19,6 @@
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
-#include "util-math.hpp"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -260,7 +259,7 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 	// Downsample
 	for (std::size_t n = 1; n <= actual_iterations; n++) {
 #ifdef ENABLE_PROFILING
-		auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Down %lld", n);
+		auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Down %" PRIuMAX, n);
 #endif
 
 		// Select Texture
@@ -297,7 +296,7 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 	// Upsample
 	for (std::size_t n = actual_iterations; n > 0; n--) {
 #ifdef ENABLE_PROFILING
-		auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Up %lld", n);
+		auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Up %" PRIuMAX, n);
 #endif
 
 		// Select Texture

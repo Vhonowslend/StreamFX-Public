@@ -26,7 +26,6 @@
 #include "ffmpeg/tools.hpp"
 #include "nvenc_shared.hpp"
 #include "plugin.hpp"
-#include "utility.hpp"
 
 extern "C" {
 #include <obs-module.h>

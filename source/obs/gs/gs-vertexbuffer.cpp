@@ -20,7 +20,6 @@
 #include "gs-vertexbuffer.hpp"
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
-#include "utility.hpp"
 
 void gs::vertex_buffer::initialize(uint32_t capacity, uint8_t layers)
 {
@@ -37,10 +36,10 @@ void gs::vertex_buffer::initialize(uint32_t capacity, uint8_t layers)
 	_data          = std::make_shared<decltype(_data)::element_type>();
 	_data->num     = _capacity;
 	_data->num_tex = _layers;
-	_data->points = _positions = (vec3*)util::malloc_aligned(16, sizeof(vec3) * _capacity);
-	_data->normals = _normals = (vec3*)util::malloc_aligned(16, sizeof(vec3) * _capacity);
-	_data->tangents = _tangents = (vec3*)util::malloc_aligned(16, sizeof(vec3) * _capacity);
-	_data->colors = _colors = (uint32_t*)util::malloc_aligned(16, sizeof(uint32_t) * _capacity);
+	_data->points = _positions = static_cast<vec3*>(util::malloc_aligned(16, sizeof(vec3) * _capacity));
+	_data->normals = _normals = static_cast<vec3*>(util::malloc_aligned(16, sizeof(vec3) * _capacity));
+	_data->tangents = _tangents = static_cast<vec3*>(util::malloc_aligned(16, sizeof(vec3) * _capacity));
+	_data->colors = _colors = static_cast<uint32_t*>(util::malloc_aligned(16, sizeof(uint32_t) * _capacity));
 
 	// Clear the allocated memory of any data.
 	memset(_positions, 0, sizeof(vec3) * _capacity);
@@ -51,9 +50,10 @@ void gs::vertex_buffer::initialize(uint32_t capacity, uint8_t layers)
 	if (_layers == 0) {
 		_data->tvarray = nullptr;
 	} else {
-		_data->tvarray = _uv_layers = (gs_tvertarray*)util::malloc_aligned(16, sizeof(gs_tvertarray) * _layers);
+		_data->tvarray = _uv_layers =
+			static_cast<gs_tvertarray*>(util::malloc_aligned(16, sizeof(gs_tvertarray) * _layers));
 		for (uint8_t n = 0; n < _layers; n++) {
-			_uv_layers[n].array = _uvs[n] = (vec4*)util::malloc_aligned(16, sizeof(vec4) * _capacity);
+			_uv_layers[n].array = _uvs[n] = static_cast<vec4*>(util::malloc_aligned(16, sizeof(vec4) * _capacity));
 			_uv_layers[n].width           = 4;
 			memset(_uvs[n], 0, sizeof(vec4) * _capacity);
 		}
@@ -62,18 +62,18 @@ void gs::vertex_buffer::initialize(uint32_t capacity, uint8_t layers)
 	// Allocate actual GPU vertex buffer.
 	{
 		auto gctx = gs::context();
-		_buffer =
-			decltype(_buffer)(gs_vertexbuffer_create(_data.get(), GS_DYNAMIC | GS_DUP_BUFFER), [this](gs_vertbuffer_t* v) {
-				try {
-					auto gctx = gs::context();
-					gs_vertexbuffer_destroy(v);
-				} catch (...) {
-					if (obs_get_version() < MAKE_SEMANTIC_VERSION(26, 0, 0)) {
-						// Fixes a memory leak with OBS Studio versions older than 26.x.
-						gs_vbdata_destroy(_obs_data);
-					}
-				}
-			});
+		_buffer   = decltype(_buffer)(gs_vertexbuffer_create(_data.get(), GS_DYNAMIC | GS_DUP_BUFFER),
+                                    [this](gs_vertbuffer_t* v) {
+                                        try {
+                                            auto gctx = gs::context();
+                                            gs_vertexbuffer_destroy(v);
+                                        } catch (...) {
+                                            if (obs_get_version() < MAKE_SEMANTIC_VERSION(26, 0, 0)) {
+                                                // Fixes a memory leak with OBS Studio versions older than 26.x.
+                                                gs_vbdata_destroy(_obs_data);
+                                            }
+                                        }
+                                    });
 		_obs_data = gs_vertexbuffer_get_data(_buffer.get());
 	}
 

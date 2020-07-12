@@ -21,8 +21,8 @@
 #include <fstream>
 #include <stdexcept>
 #include "configuration.hpp"
-#include "obs/obs-source-tracker.hpp"
 #include "obs/gs/gs-vertexbuffer.hpp"
+#include "obs/obs-source-tracker.hpp"
 
 #ifdef ENABLE_ENCODER_FFMPEG
 #include "encoders/encoder-ffmpeg.hpp"
@@ -86,7 +86,7 @@ try {
 
 	// GS Stuff
 	{
-		_gs_fstri_vb = std::make_shared<gs::vertex_buffer>(3, 1);
+		_gs_fstri_vb = std::make_shared<gs::vertex_buffer>(uint32_t(3), uint8_t(1));
 		{
 			auto vtx = _gs_fstri_vb->at(0);
 			vec3_set(vtx.position, 0, 0, 0);

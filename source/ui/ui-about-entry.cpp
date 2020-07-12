@@ -70,6 +70,8 @@ streamfx::ui::about_entry::about_entry(QWidget* parent, streamfx::ui::about::ent
 	case streamfx::ui::about::role_type::CREATOR:
 		title->setText(D_TRANSLATE(i18n_role_creator.data()));
 		break;
+	default:
+		break;
 	}
 
 	std::tuple<streamfx::ui::about::link_type, std::string, std::string, QPushButton*, QUrl&> els[]{
@@ -98,6 +100,8 @@ streamfx::ui::about_entry::about_entry(QWidget* parent, streamfx::ui::about::ent
 			break;
 		case streamfx::ui::about::link_type::SOCIAL_FACEBOOK:
 			std::get<3>(el)->setIcon(QIcon(":/linktype/facebook"));
+			break;
+		default:
 			break;
 		}
 		std::get<3>(el)->setText(QString::fromUtf8(std::get<2>(el).c_str()));
