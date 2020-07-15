@@ -265,117 +265,122 @@ configure_file(
 	"${PROJECT_BINARY_DIR}/generated/module.cpp"
 )
 
-# Packaging
-if("${CMAKE_PACKAGE_SUFFIX_OVERRIDE}" STREQUAL "")
-	set(_PACKAGE_SUFFIX_OVERRIDE "${VERSION_STRING}")
-else()
-	set(_PACKAGE_SUFFIX_OVERRIDE "${CMAKE_PACKAGE_SUFFIX_OVERRIDE}")
-endif()
-set(_PACKAGE_FULL_NAME "${CMAKE_PACKAGE_PREFIX}/${CMAKE_PACKAGE_NAME}-${_PACKAGE_SUFFIX_OVERRIDE}")
-
-# Windows
-if(WIN32)
-	## Installer (InnoSetup)
-	get_filename_component(ISS_FILES_DIR "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
-	file(TO_NATIVE_PATH "${ISS_FILES_DIR}" ISS_FILES_DIR)
-	get_filename_component(ISS_PACKAGE_DIR "${CMAKE_PACKAGE_PREFIX}" ABSOLUTE)
-	file(TO_NATIVE_PATH "${ISS_PACKAGE_DIR}" ISS_PACKAGE_DIR)
-	get_filename_component(ISS_SOURCE_DIR "${PROJECT_SOURCE_DIR}" ABSOLUTE)
-	file(TO_NATIVE_PATH "${ISS_SOURCE_DIR}" ISS_SOURCE_DIR)
-	configure_file(
-		"cmake/installer.iss.in"
-		"${PROJECT_BINARY_DIR}/installer.iss"
-	)
-
-	# Windows Specific Resource Definition
-	set(PROJECT_PRODUCT_NAME "${PROJECT_FULL_NAME}")
-	set(PROJECT_COMPANY_NAME "${PROJECT_AUTHORS}")
-	set(PROJECT_COPYRIGHT "${PROJECT_AUTHORS} © ${PROJECT_COPYRIGHT_YEARS}")
-	set(PROJECT_LEGAL_TRADEMARKS_1 "")
-	set(PROJECT_LEGAL_TRADEMARKS_2 "")
-	
-	configure_file(
-		"cmake/version.rc.in"
-		"${PROJECT_BINARY_DIR}/generated/version.rc"
-		@ONLY
-	)
-endif()
-
-# Download OBS Studio and OBS Dependencies
-if(${PropertyPrefix}OBS_DOWNLOAD)
-	include("DownloadProject")
-	
-	set(OBS_DOWNLOAD_VERSION "25.0.3-fe-ci")
-	if(WIN32)
-		# Windows
-		set(OBS_DEPENDENCIES_VERSION "25.0.0")
-		set(OBS_QT_VERSION "5.10.1")
-
-		download_project(
-			PROJ libobs
-			URL https://github.com/Xaymar/obs-studio/releases/download/${OBS_DOWNLOAD_VERSION}/obs-studio-${ARCH}-0.0.0.0-vs2019.7z
-			UPDATE_DISCONNECTED 1
-		)
-
-		download_project(
-			PROJ obsdeps
-			URL https://cdn.xaymar.com/obs/dependencies_${OBS_DEPENDENCIES_VERSION}.7z
-			UPDATE_DISCONNECTED 1
-		)
-	elseif(UNIX)
-		# Unix, Linux
-		download_project(
-			PROJ libobs
-			URL https://github.com/Xaymar/obs-studio/releases/download/${OBS_DOWNLOAD_VERSION}/obs-studio-${ARCH}-0.0.0.0-ubuntu1804.7z
-			UPDATE_DISCONNECTED 1
-		)
-
-		# Dependencies must be installed like normal OBS Studio
-		message("Linux builds require your install the necessary development packages, take a look at the obs-studio build guide for them.")
+if(NOT TARGET libobs)
+	# Packaging
+	if("${CMAKE_PACKAGE_SUFFIX_OVERRIDE}" STREQUAL "")
+		set(_PACKAGE_SUFFIX_OVERRIDE "${VERSION_STRING}")
 	else()
-		# Other OS
-		message(FATAL "Unable to download libOBS as this Operating System is not yet supported.")
+		set(_PACKAGE_SUFFIX_OVERRIDE "${CMAKE_PACKAGE_SUFFIX_OVERRIDE}")
 	endif()
-endif()
+	set(_PACKAGE_FULL_NAME "${CMAKE_PACKAGE_PREFIX}/${CMAKE_PACKAGE_NAME}-${_PACKAGE_SUFFIX_OVERRIDE}")
 
-# Load OBS Studio & Dependencies
-if(${PropertyPrefix}OBS_PACKAGE)
-	include("${OBS_STUDIO_DIR}/cmake/LibObs/LibObsConfig.cmake")
-	if (EXISTS "${OBS_STUDIO_DIR}/cmake/obs-frontend-api/obs-frontend-apiConfig.cmake")
-		include("${OBS_STUDIO_DIR}/cmake/obs-frontend-api/obs-frontend-apiConfig.cmake")
-		set(HAVE_OBS_FRONTEND TRUE)
-	endif()
-elseif(${PropertyPrefix}OBS_REFERENCE)
-	set(obsPath "${OBS_STUDIO_DIR}")
-	include("${OBS_STUDIO_DIR}/cmake/external/FindLibobs.cmake")
-elseif(${PropertyPrefix}OBS_DOWNLOAD)
-	set(_INCLUDE_PREFIX "")
+	# Windows
 	if(WIN32)
-		set(_INCLUDE_PREFIX "${libobs_SOURCE_DIR}/cmake")
-	elseif(UNIX)
-		set(_INCLUDE_PREFIX "${libobs_SOURCE_DIR}/usr/local/lib/cmake")
-	else()
-	endif()
-	
-	include("${_INCLUDE_PREFIX}/LibObs/LibObsConfig.cmake")
-	if (EXISTS "${_INCLUDE_PREFIX}/obs-frontend-api/obs-frontend-apiConfig.cmake")
-		include("${_INCLUDE_PREFIX}/obs-frontend-api/obs-frontend-apiConfig.cmake")
+		## Installer (InnoSetup)
+		get_filename_component(ISS_FILES_DIR "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
+		file(TO_NATIVE_PATH "${ISS_FILES_DIR}" ISS_FILES_DIR)
+		get_filename_component(ISS_PACKAGE_DIR "${CMAKE_PACKAGE_PREFIX}" ABSOLUTE)
+		file(TO_NATIVE_PATH "${ISS_PACKAGE_DIR}" ISS_PACKAGE_DIR)
+		get_filename_component(ISS_SOURCE_DIR "${PROJECT_SOURCE_DIR}" ABSOLUTE)
+		file(TO_NATIVE_PATH "${ISS_SOURCE_DIR}" ISS_SOURCE_DIR)
+		get_filename_component(ISS_MSVCHELPER_PATH "${msvc-redist-helper_BUILD_DIR}" ABSOLUTE)
+		file(TO_NATIVE_PATH "${ISS_MSVCHELPER_PATH}" ISS_MSVCHELPER_PATH)
+		configure_file(
+			"cmake/installer.iss.in"
+			"${PROJECT_BINARY_DIR}/installer.iss"
+		)
+
+		# Windows Specific Resource Definition
+		set(PROJECT_PRODUCT_NAME "${PROJECT_FULL_NAME}")
+		set(PROJECT_COMPANY_NAME "${PROJECT_AUTHORS}")
+		set(PROJECT_COPYRIGHT "${PROJECT_AUTHORS} © ${PROJECT_COPYRIGHT_YEARS}")
+		set(PROJECT_LEGAL_TRADEMARKS_1 "")
+		set(PROJECT_LEGAL_TRADEMARKS_2 "")
 		
+		configure_file(
+			"cmake/version.rc.in"
+			"${PROJECT_BINARY_DIR}/generated/version.rc"
+			@ONLY
+		)
+
+	endif()
+
+	# Download OBS Studio and OBS Dependencies
+	if(${PropertyPrefix}OBS_DOWNLOAD)
+		include("DownloadProject")
+		
+		set(OBS_DOWNLOAD_VERSION "25.0.3-fe-ci")
 		if(WIN32)
+			# Windows
+			set(OBS_DEPENDENCIES_VERSION "25.0.0")
+			set(OBS_QT_VERSION "5.10.1")
+
 			download_project(
-				PROJ qt
-				URL https://cdn.xaymar.com/obs/qt_${OBS_QT_VERSION}.7z
+				PROJ libobs
+				URL https://github.com/Xaymar/obs-studio/releases/download/${OBS_DOWNLOAD_VERSION}/obs-studio-${ARCH}-0.0.0.0-vs2019.7z
 				UPDATE_DISCONNECTED 1
 			)
 
-			set(Qt5_DIR "${qt_SOURCE_DIR}" CACHE STRING "Path to Qt5")
-			if("${BITS}" STREQUAL "32")
-				CacheSet(Qt5_DIR "${qt_SOURCE_DIR}/msvc2017/lib/cmake/Qt5/")
-			else()
-				CacheSet(Qt5_DIR "${qt_SOURCE_DIR}/msvc2017_64/lib/cmake/Qt5/")
-			endif()
+			download_project(
+				PROJ obsdeps
+				URL https://cdn.xaymar.com/obs/dependencies_${OBS_DEPENDENCIES_VERSION}.7z
+				UPDATE_DISCONNECTED 1
+			)
+		elseif(UNIX)
+			# Unix, Linux
+			download_project(
+				PROJ libobs
+				URL https://github.com/Xaymar/obs-studio/releases/download/${OBS_DOWNLOAD_VERSION}/obs-studio-${ARCH}-0.0.0.0-ubuntu1804.7z
+				UPDATE_DISCONNECTED 1
+			)
+
+			# Dependencies must be installed like normal OBS Studio
+			message("Linux builds require your install the necessary development packages, take a look at the obs-studio build guide for them.")
+		else()
+			# Other OS
+			message(FATAL "Unable to download libOBS as this Operating System is not yet supported.")
 		endif()
-		set(HAVE_OBS_FRONTEND TRUE)
+	endif()
+
+	# Load OBS Studio & Dependencies
+	if(${PropertyPrefix}OBS_PACKAGE)
+		include("${OBS_STUDIO_DIR}/cmake/LibObs/LibObsConfig.cmake")
+		if (EXISTS "${OBS_STUDIO_DIR}/cmake/obs-frontend-api/obs-frontend-apiConfig.cmake")
+			include("${OBS_STUDIO_DIR}/cmake/obs-frontend-api/obs-frontend-apiConfig.cmake")
+			set(HAVE_OBS_FRONTEND TRUE)
+		endif()
+	elseif(${PropertyPrefix}OBS_REFERENCE)
+		set(obsPath "${OBS_STUDIO_DIR}")
+		include("${OBS_STUDIO_DIR}/cmake/external/FindLibobs.cmake")
+	elseif(${PropertyPrefix}OBS_DOWNLOAD)
+		set(_INCLUDE_PREFIX "")
+		if(WIN32)
+			set(_INCLUDE_PREFIX "${libobs_SOURCE_DIR}/cmake")
+		elseif(UNIX)
+			set(_INCLUDE_PREFIX "${libobs_SOURCE_DIR}/usr/local/lib/cmake")
+		else()
+		endif()
+		
+		include("${_INCLUDE_PREFIX}/LibObs/LibObsConfig.cmake")
+		if (EXISTS "${_INCLUDE_PREFIX}/obs-frontend-api/obs-frontend-apiConfig.cmake")
+			include("${_INCLUDE_PREFIX}/obs-frontend-api/obs-frontend-apiConfig.cmake")
+			
+			if(WIN32)
+				download_project(
+					PROJ qt
+					URL https://cdn.xaymar.com/obs/qt_${OBS_QT_VERSION}.7z
+					UPDATE_DISCONNECTED 1
+				)
+
+				set(Qt5_DIR "${qt_SOURCE_DIR}" CACHE STRING "Path to Qt5")
+				if("${BITS}" STREQUAL "32")
+					CacheSet(Qt5_DIR "${qt_SOURCE_DIR}/msvc2017/lib/cmake/Qt5/")
+				else()
+					CacheSet(Qt5_DIR "${qt_SOURCE_DIR}/msvc2017_64/lib/cmake/Qt5/")
+				endif()
+			endif()
+			set(HAVE_OBS_FRONTEND TRUE)
+		endif()
 	endif()
 endif()
 

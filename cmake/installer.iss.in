@@ -10,31 +10,41 @@
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
+
+; app Information
 AppId={{DE56A03A-C8A4-474B-83B0-CFD270262D38}}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
-;AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
+AppMutex={#MyAppName}
+VersionInfoVersion={#MyAppVersion}
+VersionInfoCompany={#MyAppPublisher}
+VersionInfoDescription={#MyAppName} Setup
+; Compression
+Compression=lzma2/ultra64
+SolidCompression=yes
+LZMAAlgorithm=1
+; Other Information
 DefaultDirName={code:GetDirName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 LicenseFile="@ISS_SOURCE_DIR@/LICENSE"
 OutputDir="@ISS_PACKAGE_DIR@"
 OutputBaseFilename=@CMAKE_PACKAGE_NAME@-@_PACKAGE_SUFFIX_OVERRIDE@
-Compression=lzma
-SolidCompression=yes
-VersionInfoVersion={#MyAppVersion}
-VersionInfoCompany={#MyAppPublisher}
-VersionInfoDescription={#MyAppName} Setup
+; Wizard Information
+WizardStyle=modern
+WizardResizable=yes
+SetupIconFile="@PROJECT_SOURCE_DIR@/media/icon.ico"
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "@ISS_FILES_DIR@/*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "@PROJECT_SOURCE_DIR@/third-party/msvc-redist-helper.exe"; DestDir: "{app}"; DestName: "msvc-redist-helper.exe"; Flags: ignoreversion dontcopy noencryption
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
@@ -93,7 +103,7 @@ begin
   sUnInstallString := GetUninstallString();
   if sUnInstallString <> '' then begin
     sUnInstallString := RemoveQuotes(sUnInstallString);
-    if Exec(sUnInstallString, '/SILENT /NORESTART /SUPPRESSMSGBOXES','', SW_HIDE, ewWaitUntilTerminated, iResultCode) then
+    if Exec(sUnInstallString, '/VERYSILENT /NORESTART /SUPPRESSMSGBOXES','', SW_HIDE, ewWaitUntilTerminated, iResultCode) then
       Result := 3
     else
       Result := 2;
@@ -103,6 +113,8 @@ end;
 
 /////////////////////////////////////////////////////////////////////
 procedure CurStepChanged(CurStep: TSetupStep);
+var
+  ResultCode: Integer;
 begin
   if (CurStep=ssInstall) then
   begin
@@ -110,5 +122,10 @@ begin
     begin
       UnInstallOldVersion();
     end;
+  end;
+  if (CurStep=ssPostInstall) then
+  begin
+    ExtractTemporaryFile('msvc-redist-helper.exe');
+    Exec(ExpandConstant('{tmp}\msvc-redist-helper.exe'), '2019', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   end;
 end;
