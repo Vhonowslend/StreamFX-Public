@@ -1,15 +1,7 @@
 name: Build
 
-on:
+on: 
   push:
-    tags:
-      - '[0-9].[0-9].[0-9]'
-      - '[0-9].[1-9][0-9].[1-9][0-9]'
-      - '[0-9].[1-9][0-9].[0-9]'
-      - '[1-9][0-9].[1-9][0-9].[1-9][0-9]'
-      - '[1-9][0-9].[1-9][0-9].[0-9]'
-      - '[1-9][0-9].[0-9].[1-9][0-9]'
-      - '[1-9][0-9].[0-9].[0-9]'
     branches-ignore:
       - 'l10n_master'
   pull_request:
@@ -40,6 +32,14 @@ jobs:
     - name: "Clone Submodules"
       shell: bash
       run: git submodule update --init --recursive
+    - name: "Cache: Prerequisites"
+      uses: actions/cache@v2
+      with:
+        path: |
+          build/temp/qt-download/qt-download-prefix/src/qt.7z
+          build/temp/obsdeps-download/obsdeps-download-prefix/src/obsdeps.7z
+          build/temp/libobs-download/libobs-download-prefix/src/libobs.7z
+        key: ${{ matrix.id }}
     - name: "Configure Project"
       shell: bash
       run: |
@@ -143,6 +143,12 @@ jobs:
           git \
           qt5-default libqwt-qt5-dev libqt5svg5-dev
         ${{ matrix.extra_command }}
+    - name: "Cache: Prerequisites"
+      uses: actions/cache@v2
+      with:
+        path: |
+          build/temp/libobs-download/libobs-download-prefix/src/libobs.7z
+        key: ${{ matrix.id }}
     - name: "Configure Project"
       shell: bash
       run: |
