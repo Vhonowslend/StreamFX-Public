@@ -59,7 +59,7 @@ gfx::blur::dual_filtering_data::dual_filtering_data()
 		_effect    = gs::effect::create(file);
 		bfree(file);
 	} catch (...) {
-		LOG_ERROR("<gfx::blur::box_linear> Failed to load _effect.");
+		DLOG_ERROR("<gfx::blur::box_linear> Failed to load _effect.");
 	}
 }
 
