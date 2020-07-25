@@ -39,7 +39,7 @@ uniform float Sharpness<
 
 uniform bool LumaIsExponential<
 	string name = "Is Luminosity exponential?";
->;
+> = false;
 uniform float LumaExponent<
 	string name = "Luminosity Exponent";
 	string field_type = "slider";
@@ -47,7 +47,30 @@ uniform float LumaExponent<
 	float maximum = 500.;
 	float step = .01;
 	float scale = .01;
-> = 150.;
+> = 100.;
+
+uniform float4 TransitionColor<
+	string name = "Color";
+	string field_type = "slider";
+	float4 minimum = {0.,0.,0.,0.};
+	float4 maximum = {100.,100.,100.,100.};
+	float4 scale = {.01,.01,.01,.01};
+	float4 step = {.01,.01,.01,.01};
+> = { 80.0, 33.0, 33.0, 75.0 };
+
+uniform bool ColorEase<
+	string name = "Ease Color?";
+> = false;
+
+uniform int ColorEaseStart<
+	string name = "Ease Color Start";
+	string field_type = "slider";
+	string suffix = " %";
+	int minimum = 0;
+	int maximum = 100;
+	int step = 1;
+	int scale = 1;
+> = 75;
 
 // ---------- Shader Code
 sampler_state def_sampler {
@@ -68,30 +91,37 @@ VertData VSDefault(VertData v_in) {
 	return vert_out;
 }
 
-float4 RGBtoYUV(float4 rgba, float3x3 yuv) {
-	return float4(
-		rgba.r * yuv._m00 + rgba.g * yuv._m01 + rgba.b * yuv._m02,
-		rgba.r * yuv._m10 + rgba.g * yuv._m11 + rgba.b * yuv._m12,
-		rgba.r * yuv._m20 + rgba.g * yuv._m21 + rgba.b * yuv._m22,
-		rgba.a
-	) + float4(0,0.5,0.5,0);
+float TransitionAlphaEase(float transition)
+{
+	// (sin(3.5*(x - 0.5))+1)* 0.5) * (cos(3.5(x - 0.5)) +.333 - custom formula to create fast alpha to 100% then quick fade out
+	// based on y= a sin( b(x+c)) + D wave function combined with cos wave deform
+	float alpha = ((sin(4.5 * (transition - 0.2)) + 1.0) * 0.5) * (cos(3.5 * (transition - 0.5))) + (ColorEaseStart * 0.01);
+	return alpha;
 }
 
-#define C_e 2,7182818284590452353602874713527
+float4 RGBtoYUV(float4 rgba) {
+	float3x3 yuv = float3x3(float3(0.2126,0.7152,0.0722),float3(-0.1145721060573399,-0.3854278939426601,0.5),float3(0.5,-0.4541529083058166,-0.0458470916941834));
+
+	float4 result = float4(0,0.5,0.5,0);
+	result += float4(
+		rgba.r * yuv[0][0] + rgba.g * yuv[0][1] + rgba.b * yuv[0][2],
+		rgba.r * yuv[1][0] + rgba.g * yuv[1][1] + rgba.b * yuv[1][2],
+		rgba.r * yuv[2][0] + rgba.g * yuv[2][1] + rgba.b * yuv[2][2],
+		rgba.a
+	);
+	return result;
+}
+
+//#define C_e 2,7182818284590452353602874713527
 #define C_log2_e 1.4426950408889634073599246810019 // Windows calculator: log(e(1)) / log(2)
 
-float4 PSDefault(VertData v_in) : TARGET {
-	const float3x3 mYUV709n = { // Normalized
-		0.2126, 0.7152, 0.0722,
-		-0.1145721060573399, -0.3854278939426601, 0.5,
-		0.5, -0.4541529083058166, -0.0458470916941834
-	};
-
+float4 PSDefault(VertData v_in) : TARGET 
+{
 	float4 sampleA = InputA.Sample(def_sampler, v_in.uv);
 	float4 sampleB = InputB.Sample(def_sampler, v_in.uv);
 
-	float4 sampleAYUV = RGBtoYUV(sampleA, mYUV709n);
-	float4 sampleBYUV = RGBtoYUV(sampleB, mYUV709n);
+	float4 sampleAYUV = RGBtoYUV(sampleA);
+	float4 sampleBYUV = RGBtoYUV(sampleB);
 	
 	float sharpinv = 1.0 / Sharpness;
 	float luma = sampleAYUV.r;
@@ -108,27 +138,14 @@ float4 PSDefault(VertData v_in) : TARGET {
 	//return transition;
 }
 
-technique Draw
+float4 PSInverse(VertData v_in) : TARGET 
 {
-	pass
-	{
-		vertex_shader = VSDefault(v_in);
-		pixel_shader  = PSDefault(v_in); 
-	}
-}
-
-float4 PSInverse(VertData v_in) : TARGET {
-	const float3x3 mYUV709n = { // Normalized
-		0.2126, 0.7152, 0.0722,
-		-0.1145721060573399, -0.3854278939426601, 0.5,
-		0.5, -0.4541529083058166, -0.0458470916941834
-	};
 
 	float4 sampleA = InputA.Sample(def_sampler, v_in.uv);
 	float4 sampleB = InputB.Sample(def_sampler, v_in.uv);
 
-	float4 sampleAYUV = RGBtoYUV(sampleA, mYUV709n);
-	float4 sampleBYUV = RGBtoYUV(sampleB, mYUV709n);
+	float4 sampleAYUV = RGBtoYUV(sampleA);
+	float4 sampleBYUV = RGBtoYUV(sampleB);
 	
 	float sharpinv = 1.0 / Sharpness;
 	float luma = (1.0 - sampleAYUV.r);
@@ -145,11 +162,200 @@ float4 PSInverse(VertData v_in) : TARGET {
 	//return transition;
 }
 
+float4 PSDarkToLightColored(VertData v_in) : TARGET
+{
+
+	float4 sampleA = InputA.Sample(def_sampler, v_in.uv);
+	float4 sampleB = InputB.Sample(def_sampler, v_in.uv);
+
+	float4 sampleAYUV = RGBtoYUV(sampleA);
+	float4 sampleBYUV = RGBtoYUV(sampleB);
+	
+	float sharpinv = 1.0 / Sharpness;
+	float luma = sampleAYUV.r;
+	if (LumaIsExponential)
+	{
+		luma = exp2(luma * LumaExponent * LumaExponent * -C_log2_e);
+	}
+	float transition = sharpinv + luma * (1.0 - sharpinv);
+	transition -= TransitionTime;
+	transition *= Sharpness;
+	transition += 0.5;
+	transition = clamp(transition, 0., 1.);
+
+	float colorAlpha = TransitionColor.a;
+	if (ColorEase)
+	{
+		colorAlpha *= TransitionAlphaEase(TransitionTime);
+	}		
+	sampleB.rgb = lerp(sampleB.rgb, sampleB.rgb * TransitionColor.rgb, colorAlpha); // implement transition coloration
+	return sampleB * (1.0 - transition) + sampleA * (transition);
+	//return transition;
+}
+
+float4 PSLightToDarkColored(VertData v_in) : TARGET
+{
+
+	float4 sampleA = InputA.Sample(def_sampler, v_in.uv);
+	float4 sampleB = InputB.Sample(def_sampler, v_in.uv);
+
+	float4 sampleAYUV = RGBtoYUV(sampleA);
+	float4 sampleBYUV = RGBtoYUV(sampleB);
+	
+	float sharpinv = 1.0 / Sharpness;
+	float luma = (1.0 - sampleAYUV.r);
+	if (LumaIsExponential)
+	{
+		luma = exp2(luma * LumaExponent * LumaExponent * -C_log2_e);
+	}
+	float transition = sharpinv + luma * (1.0 - sharpinv);
+	transition -= TransitionTime;
+	transition *= Sharpness;
+	transition += 0.5;
+	transition = clamp(transition, 0., 1.);
+
+	float colorAlpha = TransitionColor.a;
+	if (ColorEase)
+	{
+		colorAlpha *= TransitionAlphaEase(TransitionTime);
+	}
+	sampleB.rgb = lerp(sampleB.rgb, sampleB.rgb * TransitionColor.rgb, colorAlpha); // implement transition coloration
+	return sampleB * (1.0 - transition) + sampleA * (transition);
+	//return transition;
+}
+
+float4 PSDarkColoredToLight(VertData v_in) : TARGET
+{
+
+	float4 sampleA = InputA.Sample(def_sampler, v_in.uv);
+	float4 sampleB = InputB.Sample(def_sampler, v_in.uv);
+
+	float4 sampleAYUV = RGBtoYUV(sampleA);
+	float4 sampleBYUV = RGBtoYUV(sampleB);
+	
+	float sharpinv = 1.0 / Sharpness;
+	float luma = sampleAYUV.r;
+	if (LumaIsExponential)
+	{
+		luma = exp2(luma * LumaExponent * LumaExponent * -C_log2_e);
+	}
+	float transition = sharpinv + luma * (1.0 - sharpinv);
+	transition -= TransitionTime;
+	transition *= Sharpness;
+	transition += 0.5;
+	transition = clamp(transition, 0., 1.);
+
+	float colorAlpha = TransitionColor.a;
+	if (ColorEase)
+	{
+		colorAlpha *= TransitionAlphaEase(TransitionTime);
+	}
+	sampleA.rgb = lerp(sampleA.rgb, sampleA.rgb * TransitionColor.rgb, colorAlpha); // implement transition coloration
+	return sampleB * (1.0 - transition) + sampleA * (transition);
+	//return transition;
+}
+
+float4 PSLightColoredToDark(VertData v_in) : TARGET
+{
+
+	float4 sampleA = InputA.Sample(def_sampler, v_in.uv);
+	float4 sampleB = InputB.Sample(def_sampler, v_in.uv);	
+
+	float4 sampleAYUV = RGBtoYUV(sampleA);
+	float4 sampleBYUV = RGBtoYUV(sampleB);
+	
+	float sharpinv = 1.0 / Sharpness;
+	float luma = (1.0 - sampleAYUV.r);
+	if (LumaIsExponential)
+	{
+		luma = exp2(luma * LumaExponent * LumaExponent * -C_log2_e);
+	}
+	float transition = sharpinv + luma * (1.0 - sharpinv);
+	transition -= TransitionTime;
+	transition *= Sharpness;
+	transition += 0.5;
+	transition = clamp(transition, 0., 1.);
+
+	float colorAlpha = TransitionColor.a;
+	if (ColorEase)
+	{
+		colorAlpha *= TransitionAlphaEase(TransitionTime);
+	}
+	sampleA.rgb = lerp(sampleA.rgb, sampleA.rgb * TransitionColor.rgb, colorAlpha); // implement transition coloration
+	return sampleB * (1.0 - transition) + sampleA * (transition);
+	//return transition;
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSDefault(v_in);
+	}
+}
+
 technique DrawInverse
 {
 	pass
 	{
 		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSInverse(v_in);
+	}
+}
+
+
+technique LightToDark
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
 		pixel_shader  = PSInverse(v_in); 
+	}
+}
+
+technique DarkToLight
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSDefault(v_in); 
+	}
+}
+
+technique LightToDarkColored
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSLightToDarkColored(v_in);
+	}
+}
+
+technique DarkToLightColored
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSDarkToLightColored(v_in);
+	}
+}
+
+technique DarkColoredToLight
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSDarkColoredToLight(v_in);
+	}
+}
+
+
+technique LightColoredToDark
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSLightColoredToDark(v_in);
 	}
 }
