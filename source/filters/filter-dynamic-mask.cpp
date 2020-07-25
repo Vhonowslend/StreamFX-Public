@@ -63,7 +63,7 @@ dynamic_mask_instance::dynamic_mask_instance(obs_data_t* settings, obs_source_t*
 		try {
 			_effect = gs::effect::create(file);
 		} catch (const std::exception& ex) {
-			LOG_ERROR("Loading channel mask effect failed with error(s):\n%s", ex.what());
+			DLOG_ERROR("Loading channel mask effect failed with error(s):\n%s", ex.what());
 		}
 		assert(_effect != nullptr);
 		bfree(file);
@@ -332,7 +332,7 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 		gs_effect_t* final_effect = in_effect ? in_effect : default_effect;
 		gs_eparam_t* param        = gs_effect_get_param_by_name(final_effect, "image");
 		if (!param) {
-			LOG_ERROR("<filter-dynamic-mask:%s> Failed to set image param.", obs_source_get_name(_self));
+			DLOG_ERROR("<filter-dynamic-mask:%s> Failed to set image param.", obs_source_get_name(_self));
 			obs_source_skip_video_filter(_self);
 			return;
 		} else {

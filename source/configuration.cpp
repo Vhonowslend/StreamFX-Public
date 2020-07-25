@@ -37,7 +37,7 @@ streamfx::configuration::~configuration()
 			throw std::exception();
 		}
 	} catch (...) {
-		LOG_ERROR("Failed to save configuration, next start will be using defaults or backed up configuration.");
+		DLOG_ERROR("Failed to save configuration, next start will be using defaults or backed up configuration.");
 	}
 }
 

@@ -78,7 +78,7 @@ void debug_handler::get_properties(obs_properties_t*, const AVCodec* codec, AVCo
 		return;
 	}
 
-	LOG_INFO("Options for '%s':", codec->name);
+	DLOG_INFO("Options for '%s':", codec->name);
 
 	std::pair<AVOptionType, std::string> opt_type_name[] = {
 		{AV_OPT_TYPE_FLAGS, "Flags"},
@@ -115,11 +115,11 @@ void debug_handler::get_properties(obs_properties_t*, const AVCodec* codec, AVCo
 
 		if (opt->type == AV_OPT_TYPE_CONST) {
 			if (opt->unit == nullptr) {
-				LOG_INFO("  Constant '%s' and help text '%s' with unknown settings.", opt->name, opt->help);
+				DLOG_INFO("  Constant '%s' and help text '%s' with unknown settings.", opt->name, opt->help);
 			} else {
 				auto unit_type = unit_types.find(opt->unit);
 				if (unit_type == unit_types.end()) {
-					LOG_INFO("  [%s] Flag '%s' and help text '%s' with value '%lld'.", opt->unit, opt->name, opt->help,
+					DLOG_INFO("  [%s] Flag '%s' and help text '%s' with value '%lld'.", opt->unit, opt->name, opt->help,
 							 opt->default_val.i64);
 				} else {
 					std::string out;
@@ -147,7 +147,7 @@ void debug_handler::get_properties(obs_properties_t*, const AVCodec* codec, AVCo
 						break;
 					}
 
-					LOG_INFO("  [%s] Constant '%s' and help text '%s' with value '%s'.", opt->unit, opt->name,
+					DLOG_INFO("  [%s] Constant '%s' and help text '%s' with value '%s'.", opt->unit, opt->name,
 							 opt->help, out.c_str());
 				}
 			}
@@ -185,7 +185,7 @@ void debug_handler::get_properties(obs_properties_t*, const AVCodec* codec, AVCo
 				}
 			}
 
-			LOG_INFO(
+			DLOG_INFO(
 				"  Option '%s'%s%s%s with help '%s' of type '%s' with default value '%s', minimum '%s' and maximum "
 				"'%s'.",
 				opt->name, opt->unit ? " with unit (" : "", opt->unit ? opt->unit : "", opt->unit ? ")" : "", opt->help,

@@ -50,7 +50,7 @@ try {
 		self->_sources.insert({std::string(name), {weak, obs::obs_weak_source_deleter}});
 	}
 } catch (...) {
-	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::source_tracker::source_destroy_handler(void* ptr, calldata_t* data) noexcept
@@ -78,7 +78,7 @@ try {
 		self->_sources.erase(found);
 	}
 } catch (...) {
-	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::source_tracker::source_rename_handler(void* ptr, calldata_t* data) noexcept
@@ -115,7 +115,7 @@ try {
 		self->_sources.erase(found);
 	}
 } catch (...) {
-	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 void obs::source_tracker::initialize()

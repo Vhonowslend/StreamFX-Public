@@ -487,10 +487,10 @@ try {
 
 	return true;
 } catch (const std::exception& ex) {
-	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 	return true;
 } catch (...) {
-	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return true;
 }
 
