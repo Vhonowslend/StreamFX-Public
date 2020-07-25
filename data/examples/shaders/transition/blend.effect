@@ -1,0 +1,592 @@
+// Blend transition effects for StreamFX by Charles "Surn" Fettinger v1.0
+
+// Always provided by OBS
+uniform float4x4 ViewProj<
+	bool automatic = true;
+	string name = "View Projection Matrix";
+>;
+
+// Provided by Stream Effects
+uniform float4 Time<
+	bool automatic = true;
+	string name = "Time Array";
+	string description = "A float4 value containing the total time, rendering time and the time since the last tick. The last value is a random number between 0 and 1.";
+>;
+uniform float4x4 Random<
+	bool automatic = true;
+	string name = "Random Array";
+	string description = "A float4x4 value containing random values between 0 and 1";
+>;
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+uniform texture2d InputB<
+	bool automatic = true;
+>;
+uniform float TransitionTime<
+	bool automatic = true;
+>;
+uniform int2 TransitionSize<
+	bool automatic = true;
+>;
+
+uniform float4 TransitionColor<
+	string name = "Color";
+	string field_type = "slider";
+	float4 minimum = {0.,0.,0.,0.};
+	float4 maximum = {100.,100.,100.,100.};
+	float4 scale = {.01,.01,.01,.01};
+	float4 step = {.01,.01,.01,.01};
+> = { 80.0, 33.0, 33.0, 75.0 };
+
+uniform float Sharpness<
+	string field_type = "slider";
+	string suffix = " %";
+	float minimum = 8.0;
+	float maximum = 128.0;
+	float step = 0.01;
+	float scale = 1.0;
+> = 10.0;
+
+//uniform int BlendType<
+//	string name = "Blend Type";
+//	string description = "enumeration of blend types";
+//	string field_type = "enum";
+//	// Enumeration
+//	int enum = 5;
+//	int enum_0 = 0;
+//	string enum_0_name = "Exclusion";
+//	int enum_1 = 1;
+//	string enum_1_name = "Overlay";
+//	int enum_2 = 2;
+//	string enum_2_name = "Soft Light";
+//	int enum_3 = 3;
+//	string enum_3_name = "Color Dodge";
+//	int enum_4 = 4;
+//	string enum_4_name = "Screen";
+//	int enum_5 = 5;
+//	string enum_5_name = "Multiply";
+//> = 0;
+
+uniform int ColorEaseStart <
+	string name = "Ease Color Start";
+	string field_type = "slider";
+	string suffix = " %";
+	int minimum = 0;
+	int maximum = 100;
+	int step = 1;
+	int scale = 1;
+> = 75;
+// ---------- Shader Code
+sampler_state def_sampler {
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+	Filter    = Linear;
+};
+
+struct VertData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertData VSDefault(VertData v_in) {
+	VertData vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+	return vert_out;
+}
+
+float TransitionAlphaEase(float transition)
+{
+	// (sin(3.5*(x - 0.5))+1)* 0.5) * (cos(3.5(x - 0.5)) +.333 - custom formula to create fast alpha to 100% then quick fade out
+	// based on y= a sin( b(x+c)) + D wave function combined with cos wave deform
+	float alpha = ((sin(4.5 * (transition - 0.2)) + 1.0) * 0.5) * (cos(3.5 * (transition - 0.5))) + (ColorEaseStart * 0.01);
+	return alpha;
+}
+
+float4 RGBtoHSV(float4 RGBA) {
+	const float4 K = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+	const float e = 1.0e-10;
+	float4 p = lerp(float4(RGBA.bg, K.wz), float4(RGBA.gb, K.xy), step(RGBA.b, RGBA.g));
+	float4 q = lerp(float4(p.xyw, RGBA.r), float4(RGBA.r, p.yzx), step(p.x, RGBA.r));
+	float d = q.x - min(q.w, q.y);
+	return float4(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x, RGBA.a);
+}
+
+float4 HSVtoRGB(float4 HSVA) {
+	const float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+	float4 v = float4(0,0,0,0);
+	v.rgb = HSVA.z * lerp(K.xxx, clamp(abs(frac(HSVA.xxx + K.xyz) * 6.0 - K.www) - K.xxx, 0.0, 1.0), HSVA.y);
+	v.a = HSVA.a;
+	return v;
+}
+
+float blend(float dst, float src, int blendtype)
+{
+	float result = 0;
+	switch(blendtype)
+	{		
+		case 1:{ 
+			if (dst >= 0.5)
+				result = 1.0 - (1.0 - src) * (1.0 - dst) * 2.0;
+			else
+				result = src * dst * 2.0;
+			break; } // Overlay
+		case 2:{ 
+			if (src <= 0.5)
+				result = dst - (1.0 - 2.0 * src) * dst * (1.0 - dst);
+			else if (dst <= 0.25)
+				result = dst + (2.0 * src - 1.0) * (4.0 * dst * (4.0 * dst + 1.0) * (dst - 1.0) + 7.0 * dst);
+			else
+				result = dst + (2.0 * src - 1.0) * (sqrt(dst) - dst);
+			break; } // Soft Light
+		case 3:{
+			if (dst == 0.0)
+				result = 0.0;
+			else if (1.0-src <= dst)
+				result = 1.0;
+			else
+				result = clamp (dst / (1.0 - src), 0.0, 1.0);
+			break; } // Color Dodge
+		case 4:{
+				result = (dst + src) - (dst * src);			// (a + b) - (a * b) Screen
+			break; }
+		case 5:{
+				result = dst * src;
+			break; }
+		case 6:{
+			if (src >= 0.5)
+				result = 1.0 - (1.0 - src) / ((dst - 0.5) * 2.0);
+			else
+				result = src / (1 - (dst * 2.0));
+			break; } // Vivid Light 
+		case 7:{
+			 if (src == 0.0)
+			 	result = 0.0;
+			 else
+			 	result = clamp(1.0 - (1.0 - dst) / src, 0.0, 1.0);
+			 break; } // Color Burn
+		case 8:{
+				result = abs(dst - src);
+			break; // Difference
+		}
+		default:{
+				result = 0.5 - 2.0 * (dst - 0.5) * (src - 0.5);
+			break;
+			} // Exclusion
+	}
+
+	return result;
+}
+
+float4 PSBlendInverse(VertData v_in, int blendtype) : TARGET
+{
+	float4 sampleA = InputA.Sample(def_sampler, v_in.uv);
+	float4 sampleB = InputB.Sample(def_sampler, v_in.uv);
+	float4 rgba;
+
+	// -- start -- blend each color then mix by alpha
+	rgba.r = blend(sampleB.r, sampleA.r, blendtype);
+	rgba.g = blend(sampleB.g, sampleA.g, blendtype);
+	rgba.b = blend(sampleB.b, sampleA.b, blendtype);
+
+	rgba.rgb = lerp(sampleA.rgb, rgba.rgb, sampleB.a);
+
+ 	float esa = sampleA.a * TransitionTime;  // * TransitionSize;
+ 	rgba.a = max(esa, sampleB.a);
+	
+	rgba.rgb = lerp(rgba.rgb, sampleB.rgb, esa);
+	 
+	// -- end ---	
+	return rgba;
+}
+
+float4 PSBlend(VertData v_in, int blendtype) : TARGET
+{
+	float4 sampleA = InputA.Sample(def_sampler, v_in.uv);
+	float4 sampleB = InputB.Sample(def_sampler, v_in.uv);
+	float4 rgba;
+
+	// -- start -- blend each color then mix by alpha
+	rgba.r = blend(sampleB.r, sampleA.r, blendtype);
+	rgba.g = blend(sampleB.g, sampleA.g, blendtype);
+	rgba.b = blend(sampleB.b, sampleA.b, blendtype);
+
+	rgba.rgb = lerp(sampleA.rgb, rgba.rgb, 1 - sampleB.a);
+
+	float esa = sampleA.a * TransitionTime; // * TransitionSize;
+	rgba.a = max(esa, sampleB.a);
+	
+	rgba.rgb = lerp(rgba.rgb, sampleB.rgb, esa);
+	 
+	// -- end ---	
+	return rgba;
+}
+
+float4 PSColoredBlendInverse(VertData v_in, int blendtype) : TARGET
+{
+	float4 sampleA = InputA.Sample(def_sampler, v_in.uv);
+	float4 sampleB = InputB.Sample(def_sampler, v_in.uv);
+	float4 rgba;
+
+	// -- start -- blend each color then mix by alpha
+	rgba.r = blend(sampleB.r, sampleA.r, blendtype);
+	rgba.g = blend(sampleB.g, sampleA.g, blendtype);
+	rgba.b = blend(sampleB.b, sampleA.b, blendtype);
+
+	rgba.rgb = lerp(sampleA.rgb, rgba.rgb, sampleB.a);
+
+ 	float esa = sampleA.a * TransitionTime;  // * TransitionSize;
+ 	rgba.a = max(esa, sampleB.a);
+
+	float colorAlpha = TransitionColor.a;
+	colorAlpha *= TransitionAlphaEase(TransitionTime);
+
+	sampleB.rgb = lerp(sampleB.rgb, sampleB.rgb * TransitionColor.rgb, colorAlpha); // implement transition coloration
+	rgba.rgb = lerp(rgba.rgb, sampleB.rgb, esa);
+	 
+	// -- end ---
+	return rgba;
+}
+
+float4 PSColoredBlend(VertData v_in, int blendtype) : TARGET
+{
+	float4 sampleA = InputA.Sample(def_sampler, v_in.uv);
+	float4 sampleB = InputB.Sample(def_sampler, v_in.uv);
+	float4 rgba;
+
+	// -- start -- blend each color then mix by alpha
+	rgba.r = blend(sampleB.r, sampleA.r, blendtype);
+	rgba.g = blend(sampleB.g, sampleA.g, blendtype);
+	rgba.b = blend(sampleB.b, sampleA.b, blendtype);
+
+	rgba.rgb = lerp(sampleA.rgb, rgba.rgb, 1 - sampleB.a);
+
+	float esa = sampleA.a * TransitionTime; // * TransitionSize;
+	rgba.a = max(esa, sampleB.a);
+	rgba.rgb = lerp(rgba.rgb, rgba.rgb * TransitionColor.rgb, TransitionColor.a); // implement transition coloration	
+	rgba.rgb = lerp(rgba.rgb, sampleB.rgb, esa);
+	 
+	// -- end ---
+	return rgba;
+}
+
+technique ExclusionDraw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBlend(v_in,0);
+	}
+}
+
+technique ExclusionDrawInverse
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBlendInverse(v_in,0);
+	}
+}
+
+technique ExclusionColoredDraw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSColoredBlend(v_in,0);
+	}
+}
+
+technique ExclusionColorDrawInverse
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSColoredBlendInverse(v_in,0);
+	}
+}
+technique OverlayDraw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBlend(v_in, 1);
+	}
+}
+
+technique OverlayDrawInverse
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBlendInverse(v_in, 1);
+	}
+}
+
+technique OverlayColoredDraw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSColoredBlend(v_in, 1);
+	}
+}
+
+technique OverlayColorDrawInverse
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSColoredBlendInverse(v_in, 1);
+	}
+}
+technique SoftLightDraw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBlend(v_in, 2);
+	}
+}
+
+technique SoftLightDrawInverse
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBlendInverse(v_in, 2);
+	}
+}
+
+technique SoftLightColoredDraw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSColoredBlend(v_in, 2);
+	}
+}
+
+technique VividLightDraw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBlend(v_in, 6);
+	}
+}
+
+technique VividLightDrawInverse
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBlendInverse(v_in, 6);
+	}
+}
+
+technique VividLightColoredDraw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSColoredBlend(v_in, 6);
+	}
+}
+
+technique VividLightColorDrawInverse
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSColoredBlendInverse(v_in, 6);
+	}
+}
+
+technique SoftLightColorDrawInverse
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSColoredBlendInverse(v_in, 2);
+	}
+}
+technique ColorDodgeDraw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBlend(v_in, 3);
+	}
+}
+
+technique ColorDodgeDrawInverse
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBlendInverse(v_in, 3);
+	}
+}
+
+technique ColorDodgeColoredDraw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSColoredBlend(v_in, 3);
+	}
+}
+
+technique ColorDodgeColorDrawInverse
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSColoredBlendInverse(v_in, 3);
+	}
+}
+
+technique ColorBurnDraw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBlend(v_in, 7);
+	}
+}
+
+technique ColorBurnDrawInverse
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBlendInverse(v_in, 7);
+	}
+}
+
+technique ColorBurnColoredDraw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSColoredBlend(v_in, 7);
+	}
+}
+
+technique ColorBurnColorDrawInverse
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSColoredBlendInverse(v_in, 7);
+	}
+}
+
+technique ScreenDraw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBlend(v_in, 4);
+	}
+}
+
+technique ScreenDrawInverse
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBlendInverse(v_in, 4);
+	}
+}
+
+technique ScreenColoredDraw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSColoredBlend(v_in, 4);
+	}
+}
+
+technique ScreenColorDrawInverse
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSColoredBlendInverse(v_in, 4);
+	}
+}
+technique MultiplyDraw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBlend(v_in, 5);
+	}
+}
+
+technique MultiplyDrawInverse
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBlendInverse(v_in, 5);
+	}
+}
+
+technique MultiplyColoredDraw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSColoredBlend(v_in, 5);
+	}
+}
+
+technique MultiplyColorDrawInverse
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSColoredBlendInverse(v_in, 5);
+	}
+}
+
+technique DifferenceDraw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBlend(v_in, 8);
+	}
+}
+
+technique DifferenceDrawInverse
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSBlendInverse(v_in, 8);
+	}
+}
+
+technique DifferenceColoredDraw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSColoredBlend(v_in, 8);
+	}
+}
+
+technique DifferenceColorDrawInverse
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader = PSColoredBlendInverse(v_in, 8);
+	}
+}
