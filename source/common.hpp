@@ -85,11 +85,11 @@ extern "C" {
 
 // Common Global defines
 /// Logging
-#define LOG_(level, ...) blog(level, "[" PLUGIN_NAME "] " __VA_ARGS__)
-#define LOG_ERROR(...) LOG_(LOG_ERROR, __VA_ARGS__)
-#define LOG_WARNING(...) LOG_(LOG_WARNING, __VA_ARGS__)
-#define LOG_INFO(...) LOG_(LOG_INFO, __VA_ARGS__)
-#define LOG_DEBUG(...) LOG_(LOG_DEBUG, __VA_ARGS__)
+#define DLOG_(level, ...) blog(level, "[" PLUGIN_NAME "] " __VA_ARGS__)
+#define DLOG_ERROR(...) DLOG_(LOG_ERROR, __VA_ARGS__)
+#define DLOG_WARNING(...) DLOG_(LOG_WARNING, __VA_ARGS__)
+#define DLOG_INFO(...) DLOG_(LOG_INFO, __VA_ARGS__)
+#define DLOG_DEBUG(...) DLOG_(LOG_DEBUG, __VA_ARGS__)
 /// Currrent function name (as const char*)
 #ifdef _MSC_VER
 // Microsoft Visual Studio

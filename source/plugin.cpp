@@ -72,7 +72,7 @@ static std::shared_ptr<gs::vertex_buffer> _gs_fstri_vb;
 
 MODULE_EXPORT bool obs_module_load(void)
 try {
-	LOG_INFO("Loading Version %s", STREAMFX_VERSION_STRING);
+	DLOG_INFO("Loading Version %s", STREAMFX_VERSION_STRING);
 
 	// Initialize global configuration.
 	streamfx::configuration::initialize();
@@ -162,16 +162,16 @@ try {
 	streamfx::ui::handler::initialize();
 #endif
 
-	LOG_INFO("Loaded Version %s", STREAMFX_VERSION_STRING);
+	DLOG_INFO("Loaded Version %s", STREAMFX_VERSION_STRING);
 	return true;
 } catch (...) {
-	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return false;
 }
 
 MODULE_EXPORT void obs_module_unload(void)
 try {
-	LOG_INFO("Unloading Version %s", STREAMFX_VERSION_STRING);
+	DLOG_INFO("Unloading Version %s", STREAMFX_VERSION_STRING);
 
 	// Frontend
 #ifdef ENABLE_FRONTEND
@@ -244,9 +244,9 @@ try {
 	// Finalize Configuration
 	streamfx::configuration::finalize();
 
-	LOG_INFO("Unloaded Version %s", STREAMFX_VERSION_STRING);
+	DLOG_INFO("Unloaded Version %s", STREAMFX_VERSION_STRING);
 } catch (...) {
-	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 std::shared_ptr<util::threadpool> streamfx::threadpool()

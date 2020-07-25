@@ -88,7 +88,7 @@ color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self)
 				_effect = gs::effect::create(file);
 				bfree(file);
 			} catch (std::runtime_error& ex) {
-				LOG_ERROR("<filter-color-grade> Loading _effect '%s' failed with error(s): %s", file, ex.what());
+				DLOG_ERROR("<filter-color-grade> Loading _effect '%s' failed with error(s): %s", file, ex.what());
 				bfree(file);
 				throw ex;
 			}

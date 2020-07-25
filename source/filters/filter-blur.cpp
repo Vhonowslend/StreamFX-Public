@@ -118,7 +118,7 @@ blur_instance::blur_instance(obs_data_t* settings, obs_source_t* self)
 			try {
 				_effect_mask = gs::effect::create(file);
 			} catch (std::runtime_error& ex) {
-				LOG_ERROR("<filter-blur> Loading _effect '%s' failed with error(s): %s", file, ex.what());
+				DLOG_ERROR("<filter-blur> Loading _effect '%s' failed with error(s): %s", file, ex.what());
 			}
 
 			bfree(file);
@@ -332,7 +332,7 @@ void blur_instance::video_tick(float)
 				_mask.image.texture  = std::make_shared<gs::texture>(_mask.image.path);
 				_mask.image.path_old = _mask.image.path;
 			} catch (...) {
-				LOG_ERROR("<filter-blur> Instance '%s' failed to load image '%s'.", obs_source_get_name(_self),
+				DLOG_ERROR("<filter-blur> Instance '%s' failed to load image '%s'.", obs_source_get_name(_self),
 						  _mask.image.path.c_str());
 			}
 		}
@@ -343,7 +343,7 @@ void blur_instance::video_tick(float)
 				_mask.source.is_scene = (obs_scene_from_source(_mask.source.source_texture->get_object()) != nullptr);
 				_mask.source.name_old = _mask.source.name;
 			} catch (...) {
-				LOG_ERROR("<filter-blur> Instance '%s' failed to grab source '%s'.", obs_source_get_name(_self),
+				DLOG_ERROR("<filter-blur> Instance '%s' failed to grab source '%s'.", obs_source_get_name(_self),
 						  _mask.source.name.c_str());
 			}
 		}
@@ -547,7 +547,7 @@ void blur_instance::video_render(gs_effect_t* effect)
 
 		gs_eparam_t* param = gs_effect_get_param_by_name(finalEffect, "image");
 		if (!param) {
-			LOG_ERROR("<filter-blur:%s> Failed to set image param.", obs_source_get_name(this->_self));
+			DLOG_ERROR("<filter-blur:%s> Failed to set image param.", obs_source_get_name(this->_self));
 			obs_source_skip_video_filter(_self);
 			return;
 		} else {
@@ -773,7 +773,7 @@ try {
 
 	return true;
 } catch (...) {
-	LOG_ERROR("Unexpected exception in modified_properties callback.");
+	DLOG_ERROR("Unexpected exception in modified_properties callback.");
 	return false;
 }
 

@@ -168,7 +168,7 @@ void face_tracking_instance::async_initialize(std::shared_ptr<void> ptr)
 		// Finally enable Temporal tracking if possible.
 		if (NvCV_Status res = _ar_library->set_uint32(_ar_feature.get(), NvAR_Parameter_Config(Temporal), 1);
 			res != NVCV_SUCCESS) {
-			LOG_WARNING("<%s> Unable to enable Temporal tracking mode.", obs_source_get_name(remote_work.get()));
+			DLOG_WARNING("<%s> Unable to enable Temporal tracking mode.", obs_source_get_name(remote_work.get()));
 		}
 
 		// Create Bounding Boxes Data
@@ -191,7 +191,7 @@ void face_tracking_instance::async_initialize(std::shared_ptr<void> ptr)
 
 		// And finally, load the feature (takes long).
 		if (NvCV_Status res = _ar_library->load(_ar_feature.get()); res != NVCV_SUCCESS) {
-			LOG_ERROR("<%s> Failed to load Face Tracking feature.", obs_source_get_name(_self));
+			DLOG_ERROR("<%s> Failed to load Face Tracking feature.", obs_source_get_name(_self));
 			_ar_loaded = false;
 			return;
 		} else {
@@ -299,7 +299,7 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 			if (NvCV_Status res = _ar_library->set_object(_ar_feature.get(), NvAR_Parameter_Input(Image),
 														  &_ar_image_bgr, sizeof(NvCVImage));
 				res != NVCV_SUCCESS) {
-				LOG_ERROR("<%s> Failed to update input image for tracking.", obs_source_get_name(_self));
+				DLOG_ERROR("<%s> Failed to update input image for tracking.", obs_source_get_name(_self));
 				return;
 			}
 
@@ -331,7 +331,7 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 
 			if (::nvidia::cuda::result res = _cuda->cuMemcpy2DAsync(&mc, _cuda_stream->get());
 				res != ::nvidia::cuda::result::SUCCESS) {
-				LOG_ERROR("<%s> Failed to prepare buffers for tracking.", obs_source_get_name(_self));
+				DLOG_ERROR("<%s> Failed to prepare buffers for tracking.", obs_source_get_name(_self));
 				return;
 			}
 		}
@@ -344,7 +344,7 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 					_ar_library->image_transfer(&_ar_image, &_ar_image_bgr, 1.0,
 												reinterpret_cast<CUstream_st*>(_cuda_stream->get()), &_ar_image_temp);
 				res != NVCV_SUCCESS) {
-				LOG_ERROR("<%s> Failed to convert from RGBX 32-bit to BGR 24-bit.", obs_source_get_name(_self));
+				DLOG_ERROR("<%s> Failed to convert from RGBX 32-bit to BGR 24-bit.", obs_source_get_name(_self));
 				return;
 			}
 
@@ -358,7 +358,7 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 			auto prof = _profile_ar_run->track();
 #endif
 			if (NvCV_Status res = _ar_library->run(_ar_feature.get()); res != NVCV_SUCCESS) {
-				LOG_ERROR("<%s> Failed to run tracking.", obs_source_get_name(_self));
+				DLOG_ERROR("<%s> Failed to run tracking.", obs_source_get_name(_self));
 				return;
 			}
 		}
@@ -583,7 +583,7 @@ void face_tracking_instance::video_render(gs_effect_t* effect)
 #ifdef ENABLE_PROFILING
 bool face_tracking_instance::button_profile(obs_properties_t* props, obs_property_t* property)
 {
-	LOG_INFO("%-22s: %-10s %-10s %-10s %-10s %-10s", "Task", "Total", "Count", "Average", "99.9%ile", "95.0%ile");
+	DLOG_INFO("%-22s: %-10s %-10s %-10s %-10s %-10s", "Task", "Total", "Count", "Average", "99.9%ile", "95.0%ile");
 
 	std::pair<std::string, std::shared_ptr<util::profiler>> profilers[]{
 		{"Capture", _profile_capture},   {"Reallocate", _profile_capture_realloc},
@@ -592,7 +592,7 @@ bool face_tracking_instance::button_profile(obs_properties_t* props, obs_propert
 		{"AR Run", _profile_ar_run},     {"AR Calculate", _profile_ar_calc},
 	};
 	for (auto& kv : profilers) {
-		LOG_INFO("  %-20s: %8lldµs %10lld %8lldµs %8lldµs %8lldµs", kv.first.c_str(),
+		DLOG_INFO("  %-20s: %8lldµs %10lld %8lldµs %8lldµs %8lldµs", kv.first.c_str(),
 				 std::chrono::duration_cast<std::chrono::microseconds>(kv.second->total_duration()).count(),
 				 kv.second->count(), static_cast<std::int64_t>(kv.second->average_duration() / 1000.0),
 				 std::chrono::duration_cast<std::chrono::microseconds>(kv.second->percentile(0.999)).count(),
@@ -722,7 +722,7 @@ void streamfx::filter::nvidia::face_tracking_factory::initialize()
 	try {
 		_filter_nvidia_face_tracking_factory_instance = std::make_shared<filter::nvidia::face_tracking_factory>();
 	} catch (const std::exception& ex) {
-		LOG_ERROR("<NVIDIA Face Tracking Filter> %s", ex.what());
+		DLOG_ERROR("<NVIDIA Face Tracking Filter> %s", ex.what());
 	}
 }
 
