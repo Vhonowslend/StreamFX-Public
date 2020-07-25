@@ -138,7 +138,7 @@ void nvenc_hevc_handler::log_options(obs_data_t* settings, const AVCodec* codec,
 {
 	nvenc::log_options(settings, codec, context);
 
-	LOG_INFO("[%s]     H.265/HEVC:", codec->name);
+	DLOG_INFO("[%s]     H.265/HEVC:", codec->name);
 	::ffmpeg::tools::print_av_option_string(context, "profile", "      Profile", [](int64_t v) {
 		profile val   = static_cast<profile>(v);
 		auto    index = profiles.find(val);

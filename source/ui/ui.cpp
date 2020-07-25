@@ -44,7 +44,7 @@ constexpr std::string_view _cfg_have_shown_about = "UI.HaveShownAboutStreamFX";
 constexpr std::string_view _url_report_issue = "https://github.com/Xaymar/obs-StreamFX/issues/new?template=issue.md";
 constexpr std::string_view _url_request_help = "https://github.com/Xaymar/obs-StreamFX/issues/new?template=help.md";
 constexpr std::string_view _url_website      = "https://streamfx.xaymar.com";
-constexpr std::string_view _url_discord      = "https://discordapp.com/invite/DaeJg7M";
+constexpr std::string_view _url_discord      = "https://discord.gg/rjkxERs";
 constexpr std::string_view _url_github       = "https://github.com/Xaymar/obs-StreamFX";
 
 inline void qt_init_resource()

@@ -96,10 +96,10 @@ namespace obs {
 				return reinterpret_cast<factory_t*>(type_data)->get_name();
 			return nullptr;
 		} catch (const std::exception& ex) {
-			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return nullptr;
 		} catch (...) {
-			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 			return nullptr;
 		}
 
@@ -116,10 +116,10 @@ namespace obs {
 				}
 			}
 		} catch (const std::exception& ex) {
-			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return nullptr;
 		} catch (...) {
-			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 			return nullptr;
 		}
 
@@ -128,9 +128,9 @@ namespace obs {
 			if (type_data)
 				reinterpret_cast<factory_t*>(type_data)->get_defaults2(settings);
 		} catch (const std::exception& ex) {
-			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static obs_properties_t* _get_properties2(void* data, void* type_data) noexcept
@@ -139,10 +139,10 @@ namespace obs {
 				return reinterpret_cast<factory_t*>(type_data)->get_properties2(reinterpret_cast<instance_t*>(data));
 			return nullptr;
 		} catch (const std::exception& ex) {
-			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return nullptr;
 		} catch (...) {
-			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 			return nullptr;
 		}
 
@@ -152,9 +152,9 @@ namespace obs {
 			if (data)
 				delete reinterpret_cast<instance_t*>(data);
 		} catch (const std::exception& ex) {
-			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static bool _update(void* data, obs_data_t* settings) noexcept
@@ -169,10 +169,10 @@ namespace obs {
 			}
 			return false;
 		} catch (const std::exception& ex) {
-			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return false;
 		} catch (...) {
-			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 			return false;
 		}
 
@@ -183,10 +183,10 @@ namespace obs {
 				return reinterpret_cast<instance_t*>(data)->encode(frame, packet, received_packet);
 			return false;
 		} catch (const std::exception& ex) {
-			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return false;
 		} catch (...) {
-			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 			return false;
 		}
 
@@ -198,10 +198,10 @@ namespace obs {
 																		 received_packet);
 			return false;
 		} catch (const std::exception& ex) {
-			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return false;
 		} catch (...) {
-			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 			return false;
 		}
 
@@ -211,10 +211,10 @@ namespace obs {
 				return reinterpret_cast<instance_t*>(data)->get_frame_size();
 			return 0;
 		} catch (const std::exception& ex) {
-			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return 0;
 		} catch (...) {
-			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 			return 0;
 		}
 
@@ -224,10 +224,10 @@ namespace obs {
 				return reinterpret_cast<instance_t*>(data)->get_extra_data(extra_data, size);
 			return false;
 		} catch (const std::exception& ex) {
-			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return false;
 		} catch (...) {
-			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 			return false;
 		}
 
@@ -237,10 +237,10 @@ namespace obs {
 				return reinterpret_cast<instance_t*>(data)->get_sei_data(sei_data, size);
 			return false;
 		} catch (const std::exception& ex) {
-			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 			return false;
 		} catch (...) {
-			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 			return false;
 		}
 
@@ -249,9 +249,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<instance_t*>(data)->get_audio_info(info);
 		} catch (const std::exception& ex) {
-			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		static void _get_video_info(void* data, struct video_scale_info* info) noexcept
@@ -259,9 +259,9 @@ namespace obs {
 			if (data)
 				reinterpret_cast<instance_t*>(data)->get_video_info(info);
 		} catch (const std::exception& ex) {
-			LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
-			LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
 		public:

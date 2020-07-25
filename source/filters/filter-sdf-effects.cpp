@@ -99,13 +99,13 @@ sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* s
 		for (auto& kv : load_arr) {
 			char* path = obs_module_file(kv.first);
 			if (!path) {
-				LOG_ERROR(LOG_PREFIX "Unable to load _effect '%s' as file is missing or locked.", kv.first);
+				DLOG_ERROR(LOG_PREFIX "Unable to load _effect '%s' as file is missing or locked.", kv.first);
 				continue;
 			}
 			try {
 				kv.second = gs::effect::create(path);
 			} catch (const std::exception& ex) {
-				LOG_ERROR(LOG_PREFIX "Failed to load _effect '%s' (located at '%s') with error(s): %s", kv.first, path,
+				DLOG_ERROR(LOG_PREFIX "Failed to load _effect '%s' (located at '%s') with error(s): %s", kv.first, path,
 						  ex.what());
 			}
 			bfree(path);
@@ -589,10 +589,10 @@ try {
 	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_INNER_ALPHA), v);
 	return true;
 } catch (const std::exception& ex) {
-	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 	return true;
 } catch (...) {
-	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return true;
 }
 
@@ -607,10 +607,10 @@ try {
 	obs_property_set_visible(obs_properties_get(props, ST_SHADOW_OUTER_ALPHA), v);
 	return true;
 } catch (const std::exception& ex) {
-	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 	return true;
 } catch (...) {
-	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return true;
 }
 
@@ -623,10 +623,10 @@ try {
 	obs_property_set_visible(obs_properties_get(props, ST_GLOW_INNER_SHARPNESS), v);
 	return true;
 } catch (const std::exception& ex) {
-	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 	return true;
 } catch (...) {
-	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return true;
 }
 
@@ -639,10 +639,10 @@ try {
 	obs_property_set_visible(obs_properties_get(props, ST_GLOW_OUTER_SHARPNESS), v);
 	return true;
 } catch (const std::exception& ex) {
-	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 	return true;
 } catch (...) {
-	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return true;
 }
 
@@ -656,10 +656,10 @@ try {
 	obs_property_set_visible(obs_properties_get(props, ST_OUTLINE_SHARPNESS), v);
 	return true;
 } catch (const std::exception& ex) {
-	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 	return true;
 } catch (...) {
-	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return true;
 }
 
@@ -670,10 +670,10 @@ try {
 	obs_property_set_visible(obs_properties_get(props, ST_SDF_THRESHOLD), show_advanced);
 	return true;
 } catch (const std::exception& ex) {
-	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 	return true;
 } catch (...) {
-	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return true;
 }
 
