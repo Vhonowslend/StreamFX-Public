@@ -114,49 +114,46 @@ try {
 
 	// Filters
 	{
-		using namespace streamfx::filter;
 #ifdef ENABLE_FILTER_BLUR
-		blur::blur_factory::initialize();
+		streamfx::filter::blur::blur_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_COLOR_GRADE
-		color_grade::color_grade_factory::initialize();
+		streamfx::filter::color_grade::color_grade_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_DISPLACEMENT
-		displacement::displacement_factory::initialize();
+		streamfx::filter::displacement::displacement_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_DYNAMIC_MASK
-		dynamic_mask::dynamic_mask_factory::initialize();
+		streamfx::filter::dynamic_mask::dynamic_mask_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_NVIDIA_FACE_TRACKING
 		streamfx::filter::nvidia::face_tracking_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_SDF_EFFECTS
-		sdf_effects::sdf_effects_factory::initialize();
+		streamfx::filter::sdf_effects::sdf_effects_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_SHADER
-		shader::shader_factory::initialize();
+		streamfx::filter::shader::shader_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_TRANSFORM
-		transform::transform_factory::initialize();
+		streamfx::filter::transform::transform_factory::initialize();
 #endif
 	}
 
 	// Sources
 	{
-		using namespace streamfx::source;
 #ifdef ENABLE_SOURCE_MIRROR
-		mirror::mirror_factory::initialize();
+		streamfx::source::mirror::mirror_factory::initialize();
 #endif
 #ifdef ENABLE_SOURCE_SHADER
-		shader::shader_factory::initialize();
+		streamfx::source::shader::shader_factory::initialize();
 #endif
 	}
 
 	// Transitions
 	{
-		using namespace streamfx::transition;
 #ifdef ENABLE_TRANSITION_SHADER
-		shader::shader_factory::initialize();
+		streamfx::transition::shader::shader_factory::initialize();
 #endif
 	}
 
@@ -183,57 +180,53 @@ try {
 
 	// Transitions
 	{
-		using namespace streamfx::transition;
 #ifdef ENABLE_TRANSITION_SHADER
-		shader::shader_factory::finalize();
+		streamfx::transition::shader::shader_factory::finalize();
 #endif
 	}
 
 	// Sources
 	{
-		using namespace streamfx::source;
 #ifdef ENABLE_SOURCE_MIRROR
-		mirror::mirror_factory::finalize();
+		streamfx::source::mirror::mirror_factory::finalize();
 #endif
 #ifdef ENABLE_SOURCE_SHADER
-		shader::shader_factory::finalize();
+		streamfx::source::shader::shader_factory::finalize();
 #endif
 	}
 
 	// Filters
 	{
-		using namespace streamfx::filter;
 #ifdef ENABLE_FILTER_BLUR
-		blur::blur_factory::finalize();
+		streamfx::filter::blur::blur_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_COLOR_GRADE
-		color_grade::color_grade_factory::finalize();
+		streamfx::filter::color_grade::color_grade_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_DISPLACEMENT
-		displacement::displacement_factory::finalize();
+		streamfx::filter::displacement::displacement_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_DYNAMIC_MASK
-		dynamic_mask::dynamic_mask_factory::finalize();
+		streamfx::filter::dynamic_mask::dynamic_mask_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_NVIDIA_FACE_TRACKING
 		streamfx::filter::nvidia::face_tracking_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_SDF_EFFECTS
-		sdf_effects::sdf_effects_factory::finalize();
+		streamfx::filter::sdf_effects::sdf_effects_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_SHADER
-		shader::shader_factory::finalize();
+		streamfx::filter::shader::shader_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_TRANSFORM
-		transform::transform_factory::finalize();
+		streamfx::filter::transform::transform_factory::finalize();
 #endif
 	}
 
 	// Encoders
 	{
 #ifdef ENABLE_ENCODER_FFMPEG
-		using namespace streamfx::encoder::ffmpeg;
-		ffmpeg_manager::finalize();
+		streamfx::encoder::ffmpeg::ffmpeg_manager::finalize();
 #endif
 	}
 
