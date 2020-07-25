@@ -680,7 +680,7 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 
 		int64_t wp = obs_data_get_int(settings, KEY_OTHER_WEIGHTEDPREDICTION);
 		if ((context->max_b_frames > 0) && util::is_tristate_enabled(wp)) {
-			LOG_WARNING("[%s] Weighted Prediction disabled because of B-Frames being used.", codec->name);
+			DLOG_WARNING("[%s] Weighted Prediction disabled because of B-Frames being used.", codec->name);
 			av_opt_set_int(context->priv_data, "weighted_pred", 0, AV_OPT_SEARCH_CHILDREN);
 		} else if (!util::is_tristate_default(wp)) {
 			av_opt_set_int(context->priv_data, "weighted_pred", wp, AV_OPT_SEARCH_CHILDREN);
@@ -700,7 +700,7 @@ void nvenc::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* conte
 {
 	using namespace ::ffmpeg;
 
-	LOG_INFO("[%s]   Nvidia NVENC:", codec->name);
+	DLOG_INFO("[%s]   Nvidia NVENC:", codec->name);
 	tools::print_av_option_string(context, "preset", "    Preset", [](int64_t v) {
 		preset      val   = static_cast<preset>(v);
 		std::string name  = "<Default>";
@@ -723,16 +723,16 @@ void nvenc::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* conte
 	if (strcmp(codec->name, "h264_nvenc") == 0)
 		tools::print_av_option_bool(context, "b_adapt", "      Adaptive B-Frames");
 
-	LOG_INFO("[%s]       Bitrate:", codec->name);
+	DLOG_INFO("[%s]       Bitrate:", codec->name);
 	tools::print_av_option_int(context, "b", "        Target", "bits/sec");
 	tools::print_av_option_int(context, "minrate", "        Minimum", "bits/sec");
 	tools::print_av_option_int(context, "maxrate", "        Maximum", "bits/sec");
 	tools::print_av_option_int(context, "bufsize", "        Buffer", "bits");
-	LOG_INFO("[%s]       Quality:", codec->name);
+	DLOG_INFO("[%s]       Quality:", codec->name);
 	tools::print_av_option_int(context, "cq", "        Target", "");
 	tools::print_av_option_int(context, "qmin", "        Minimum", "");
 	tools::print_av_option_int(context, "qmax", "        Maximum", "");
-	LOG_INFO("[%s]       Quantization Parameters:", codec->name);
+	DLOG_INFO("[%s]       Quantization Parameters:", codec->name);
 	tools::print_av_option_int(context, "init_qpI", "        I-Frame", "");
 	tools::print_av_option_int(context, "init_qpP", "        P-Frame", "");
 	tools::print_av_option_int(context, "init_qpB", "        B-Frame", "");
@@ -747,7 +747,7 @@ void nvenc::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* conte
 		return name;
 	});
 
-	LOG_INFO("[%s]     Adaptive Quantization:", codec->name);
+	DLOG_INFO("[%s]     Adaptive Quantization:", codec->name);
 	if (strcmp(codec->name, "h264_nvenc") == 0) {
 		tools::print_av_option_bool(context, "spatial-aq", "      Spatial AQ");
 		tools::print_av_option_int(context, "aq-strength", "        Strength", "");
@@ -758,7 +758,7 @@ void nvenc::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* conte
 		tools::print_av_option_bool(context, "temporal_aq", "      Temporal AQ");
 	}
 
-	LOG_INFO("[%s]     Other:", codec->name);
+	DLOG_INFO("[%s]     Other:", codec->name);
 	tools::print_av_option_bool(context, "zerolatency", "      Zero Latency");
 	tools::print_av_option_bool(context, "weighted_pred", "      Weighted Prediction");
 	tools::print_av_option_bool(context, "nonref_p", "      Non-reference P-Frames");

@@ -326,10 +326,10 @@ void ffmpeg::tools::print_av_option_bool(AVCodecContext* ctx_codec, void* ctx_op
 {
 	int64_t v = 0;
 	if (int err = av_opt_get_int(ctx_option, option, AV_OPT_SEARCH_CHILDREN, &v); err != 0) {
-		LOG_INFO("[%s] %s: <Error: %s>", ctx_codec->codec->name, text.c_str(),
+		DLOG_INFO("[%s] %s: <Error: %s>", ctx_codec->codec->name, text.c_str(),
 				 ffmpeg::tools::get_error_description(err));
 	} else {
-		LOG_INFO("[%s] %s: %s%s", ctx_codec->codec->name, text.c_str(),
+		DLOG_INFO("[%s] %s: %s%s", ctx_codec->codec->name, text.c_str(),
 				 (inverse ? v != 0 : v == 0) ? "Disabled" : "Enabled",
 				 av_opt_is_set_to_default_by_name(ctx_option, option, AV_OPT_SEARCH_CHILDREN) > 0 ? " <Default>" : "");
 	}
@@ -347,13 +347,13 @@ void ffmpeg::tools::print_av_option_int(AVCodecContext* ctx_codec, void* ctx_opt
 	bool    is_default = av_opt_is_set_to_default_by_name(ctx_option, option, AV_OPT_SEARCH_CHILDREN) > 0;
 	if (int err = av_opt_get_int(ctx_option, option, AV_OPT_SEARCH_CHILDREN, &v); err != 0) {
 		if (is_default) {
-			LOG_INFO("[%s] %s: <Default>", ctx_codec->codec->name, text.c_str());
+			DLOG_INFO("[%s] %s: <Default>", ctx_codec->codec->name, text.c_str());
 		} else {
-			LOG_INFO("[%s] %s: <Error: %s>", ctx_codec->codec->name, text.c_str(),
+			DLOG_INFO("[%s] %s: <Error: %s>", ctx_codec->codec->name, text.c_str(),
 					 ffmpeg::tools::get_error_description(err));
 		}
 	} else {
-		LOG_INFO("[%s] %s: %lld %s%s", ctx_codec->codec->name, text.c_str(), v, suffix.c_str(),
+		DLOG_INFO("[%s] %s: %lld %s%s", ctx_codec->codec->name, text.c_str(), v, suffix.c_str(),
 				 is_default ? " <Default>" : "");
 	}
 }
@@ -369,13 +369,13 @@ void ffmpeg::tools::print_av_option_string(AVCodecContext* ctx_codec, void* ctx_
 {
 	int64_t v = 0;
 	if (int err = av_opt_get_int(ctx_option, option, AV_OPT_SEARCH_CHILDREN, &v); err != 0) {
-		LOG_INFO("[%s] %s: <Error: %s>", ctx_codec->codec->name, text.c_str(),
+		DLOG_INFO("[%s] %s: <Error: %s>", ctx_codec->codec->name, text.c_str(),
 				 ffmpeg::tools::get_error_description(err));
 	} else {
 		std::string name = "<Unknown>";
 		if (decoder)
 			name = decoder(v);
-		LOG_INFO("[%s] %s: %s%s", ctx_codec->codec->name, text.c_str(), name.c_str(),
+		DLOG_INFO("[%s] %s: %s%s", ctx_codec->codec->name, text.c_str(), name.c_str(),
 				 av_opt_is_set_to_default_by_name(ctx_option, option, AV_OPT_SEARCH_CHILDREN) > 0 ? " <Default>" : "");
 	}
 }

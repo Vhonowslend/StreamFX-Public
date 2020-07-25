@@ -116,7 +116,7 @@ ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* self)
 	// Initialize context.
 	_context = avcodec_alloc_context3(_codec);
 	if (!_context) {
-		LOG_ERROR("Failed to create context for encoder '%s'.", _codec->name);
+		DLOG_ERROR("Failed to create context for encoder '%s'.", _codec->name);
 		throw std::runtime_error("Failed to create encoder context.");
 	}
 
@@ -259,42 +259,42 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 
 	// Handler Logging
 	if (_handler) {
-		LOG_INFO("[%s] Initializing...", _codec->name);
-		LOG_INFO("[%s]   FFmpeg:", _codec->name);
-		LOG_INFO("[%s]     Custom Settings: %s", _codec->name,
+		DLOG_INFO("[%s] Initializing...", _codec->name);
+		DLOG_INFO("[%s]   FFmpeg:", _codec->name);
+		DLOG_INFO("[%s]     Custom Settings: %s", _codec->name,
 				 obs_data_get_string(settings, KEY_FFMPEG_CUSTOMSETTINGS));
-		LOG_INFO("[%s]     Standard Compliance: %s", _codec->name,
+		DLOG_INFO("[%s]     Standard Compliance: %s", _codec->name,
 				 ::ffmpeg::tools::get_std_compliance_name(_context->strict_std_compliance));
-		LOG_INFO("[%s]     Threading: %s (with %i threads)", _codec->name,
+		DLOG_INFO("[%s]     Threading: %s (with %i threads)", _codec->name,
 				 ::ffmpeg::tools::get_thread_type_name(_context->thread_type), _context->thread_count);
 
-		LOG_INFO("[%s]   Video:", _codec->name);
+		DLOG_INFO("[%s]   Video:", _codec->name);
 		if (_hwinst) {
-			LOG_INFO("[%s]     Texture: %ldx%ld %s %s %s", _codec->name, _context->width, _context->height,
+			DLOG_INFO("[%s]     Texture: %ldx%ld %s %s %s", _codec->name, _context->width, _context->height,
 					 ::ffmpeg::tools::get_pixel_format_name(_context->sw_pix_fmt),
 					 ::ffmpeg::tools::get_color_space_name(_context->colorspace),
 					 av_color_range_name(_context->color_range));
 		} else {
-			LOG_INFO("[%s]     Input: %ldx%ld %s %s %s", _codec->name, _scaler.get_source_width(),
+			DLOG_INFO("[%s]     Input: %ldx%ld %s %s %s", _codec->name, _scaler.get_source_width(),
 					 _scaler.get_source_height(), ::ffmpeg::tools::get_pixel_format_name(_scaler.get_source_format()),
 					 ::ffmpeg::tools::get_color_space_name(_scaler.get_source_colorspace()),
 					 _scaler.is_source_full_range() ? "Full" : "Partial");
-			LOG_INFO("[%s]     Output: %ldx%ld %s %s %s", _codec->name, _scaler.get_target_width(),
+			DLOG_INFO("[%s]     Output: %ldx%ld %s %s %s", _codec->name, _scaler.get_target_width(),
 					 _scaler.get_target_height(), ::ffmpeg::tools::get_pixel_format_name(_scaler.get_target_format()),
 					 ::ffmpeg::tools::get_color_space_name(_scaler.get_target_colorspace()),
 					 _scaler.is_target_full_range() ? "Full" : "Partial");
 			if (!_hwinst)
-				LOG_INFO("[%s]     On GPU Index: %lli", _codec->name, obs_data_get_int(settings, KEY_FFMPEG_GPU));
+				DLOG_INFO("[%s]     On GPU Index: %lli", _codec->name, obs_data_get_int(settings, KEY_FFMPEG_GPU));
 		}
-		LOG_INFO("[%s]     Framerate: %ld/%ld (%f FPS)", _codec->name, _context->time_base.den, _context->time_base.num,
+		DLOG_INFO("[%s]     Framerate: %ld/%ld (%f FPS)", _codec->name, _context->time_base.den, _context->time_base.num,
 				 static_cast<double_t>(_context->time_base.den) / static_cast<double_t>(_context->time_base.num));
 
-		LOG_INFO("[%s]   Keyframes: ", _codec->name);
+		DLOG_INFO("[%s]   Keyframes: ", _codec->name);
 		if (_context->keyint_min != _context->gop_size) {
-			LOG_INFO("[%s]     Minimum: %i frames", _codec->name, _context->keyint_min);
-			LOG_INFO("[%s]     Maximum: %i frames", _codec->name, _context->gop_size);
+			DLOG_INFO("[%s]     Minimum: %i frames", _codec->name, _context->keyint_min);
+			DLOG_INFO("[%s]     Maximum: %i frames", _codec->name, _context->gop_size);
 		} else {
-			LOG_INFO("[%s]     Distance: %i frames", _codec->name, _context->gop_size);
+			DLOG_INFO("[%s]     Distance: %i frames", _codec->name, _context->gop_size);
 		}
 		_handler->log_options(settings, _codec, _context);
 	}
@@ -360,7 +360,7 @@ bool ffmpeg_instance::encode_video(struct encoder_frame* frame, struct encoder_p
 				_scaler.convert(reinterpret_cast<std::uint8_t**>(frame->data), reinterpret_cast<int*>(frame->linesize),
 								0, _context->height, vframe->data, vframe->linesize);
 			if (res <= 0) {
-				LOG_ERROR("Failed to convert frame: %s (%ld).", ::ffmpeg::tools::get_error_description(res), res);
+				DLOG_ERROR("Failed to convert frame: %s (%ld).", ::ffmpeg::tools::get_error_description(res), res);
 				return false;
 			}
 		}
@@ -376,7 +376,7 @@ bool ffmpeg_instance::encode_video(uint32_t handle, int64_t pts, uint64_t lock_k
 								   struct encoder_packet* packet, bool* received_packet)
 {
 	if (handle == GS_INVALID_HANDLE) {
-		LOG_ERROR("Received invalid handle.");
+		DLOG_ERROR("Received invalid handle.");
 		*next_key = lock_key;
 		return false;
 	}
@@ -690,17 +690,17 @@ bool ffmpeg_instance::encode_avframe(std::shared_ptr<AVFrame> frame, encoder_pac
 				// This means we should call receive_packet again, but what do we do with that data?
 				// Why can't we queue on both? Do I really have to implement threading for this stuff?
 				if (*received_packet == true) {
-					LOG_WARNING("Skipped frame due to EAGAIN when a packet was already returned.");
+					DLOG_WARNING("Skipped frame due to EAGAIN when a packet was already returned.");
 					sent_frame = true;
 				}
 				eagain_is_stupid = true;
 				break;
 			case AVERROR(EOF):
-				LOG_ERROR("Skipped frame due to end of stream.");
+				DLOG_ERROR("Skipped frame due to end of stream.");
 				sent_frame = true;
 				break;
 			default:
-				LOG_ERROR("Failed to encode frame: %s (%ld).", ::ffmpeg::tools::get_error_description(res), res);
+				DLOG_ERROR("Failed to encode frame: %s (%ld).", ::ffmpeg::tools::get_error_description(res), res);
 				return false;
 			}
 		}
@@ -712,7 +712,7 @@ bool ffmpeg_instance::encode_avframe(std::shared_ptr<AVFrame> frame, encoder_pac
 				recv_packet = true;
 				break;
 			case AVERROR(EOF):
-				LOG_ERROR("Received end of file.");
+				DLOG_ERROR("Received end of file.");
 				recv_packet = true;
 				break;
 			case AVERROR(EAGAIN):
@@ -720,12 +720,12 @@ bool ffmpeg_instance::encode_avframe(std::shared_ptr<AVFrame> frame, encoder_pac
 					recv_packet = true;
 				}
 				if (eagain_is_stupid) {
-					LOG_ERROR("Both send and recieve returned EAGAIN, encoder is broken.");
+					DLOG_ERROR("Both send and recieve returned EAGAIN, encoder is broken.");
 					return false;
 				}
 				break;
 			default:
-				LOG_ERROR("Failed to receive packet: %s (%ld).", ::ffmpeg::tools::get_error_description(res), res);
+				DLOG_ERROR("Failed to receive packet: %s (%ld).", ::ffmpeg::tools::get_error_description(res), res);
 				return false;
 			}
 		}
@@ -854,7 +854,7 @@ void ffmpeg_instance::parse_ffmpeg_commandline(std::string text)
 
 		// Skip options that don't start with a '-'.
 		if (opt.at(0) != '-') {
-			LOG_WARNING("Option '%s' is malformed, must start with a '-'.", opt.c_str());
+			DLOG_WARNING("Option '%s' is malformed, must start with a '-'.", opt.c_str());
 			continue;
 		}
 
@@ -862,7 +862,7 @@ void ffmpeg_instance::parse_ffmpeg_commandline(std::string text)
 		const char* cstr  = opt.c_str();
 		const char* eq_at = strchr(cstr, '=');
 		if (eq_at == nullptr) {
-			LOG_WARNING("Option '%s' is malformed, must contain a '='.", opt.c_str());
+			DLOG_WARNING("Option '%s' is malformed, must contain a '='.", opt.c_str());
 			continue;
 		}
 
@@ -872,11 +872,11 @@ void ffmpeg_instance::parse_ffmpeg_commandline(std::string text)
 
 			int res = av_opt_set(_context, key.c_str(), value.c_str(), AV_OPT_SEARCH_CHILDREN);
 			if (res < 0) {
-				LOG_WARNING("Option '%s' (key: '%s', value: '%s') encountered error: %s", opt.c_str(), key.c_str(),
+				DLOG_WARNING("Option '%s' (key: '%s', value: '%s') encountered error: %s", opt.c_str(), key.c_str(),
 							value.c_str(), ::ffmpeg::tools::get_error_description(res));
 			}
 		} catch (const std::exception& ex) {
-			LOG_ERROR("Option '%s' encountered exception: %s", opt.c_str(), ex.what());
+			DLOG_ERROR("Option '%s' encountered exception: %s", opt.c_str(), ex.what());
 		}
 	}
 }
@@ -973,10 +973,10 @@ try {
 	obs_property_set_visible(obs_properties_get(props, KEY_KEYFRAMES_INTERVAL_SECONDS), is_seconds);
 	return true;
 } catch (const std::exception& ex) {
-	LOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 	return false;
 } catch (...) {
-	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return false;
 }
 
@@ -1108,7 +1108,7 @@ void ffmpeg_manager::register_encoders()
 			try {
 				_factories.emplace(codec, std::make_shared<ffmpeg_factory>(codec));
 			} catch (const std::exception& ex) {
-				LOG_ERROR("Failed to register encoder '%s': %s", codec->id, ex.what());
+				DLOG_ERROR("Failed to register encoder '%s': %s", codec->id, ex.what());
 			}
 		}
 	}
