@@ -19,6 +19,7 @@
 
 #include "obs-source-tracker.hpp"
 #include <stdexcept>
+#include "obs/obs-tools.hpp"
 #include "plugin.hpp"
 
 static std::shared_ptr<obs::source_tracker> source_tracker_instance;
@@ -35,17 +36,19 @@ try {
 	}
 
 	const char* name = obs_source_get_name(target);
-	if (!name) {
-		// Do not track unnamed sources.
+	if (!name) { // Do not track unnamed sources.
 		return;
 	}
 
 	obs_weak_source_t* weak = obs_source_get_weak_source(target);
-	if (!weak) {
+	if (!weak) { // This source has already been deleted, do not track.
 		return;
 	}
 
-	self->_source_map.insert({std::string(name), weak});
+	{
+		std::unique_lock<std::mutex> ul(self->_lock);
+		self->_sources.insert({std::string(name), {weak, obs::obs_weak_source_deleter}});
+	}
 } catch (...) {
 	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -62,18 +65,18 @@ try {
 	}
 
 	const char* name = obs_source_get_name(target);
-	if (!name) {
-		// Not tracking unnamed sources.
+	if (!name) { // Not tracking unnamed sources.
 		return;
 	}
 
-	auto found = self->_source_map.find(std::string(name));
-	if (found == self->_source_map.end()) {
-		return;
+	{
+		std::unique_lock<std::mutex> ul(self->_lock);
+		auto                         found = self->_sources.find(std::string(name));
+		if (found == self->_sources.end()) {
+			return;
+		}
+		self->_sources.erase(found);
 	}
-
-	obs_weak_source_release(found->second);
-	self->_source_map.erase(found);
 } catch (...) {
 	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -94,20 +97,23 @@ try {
 		return;
 	}
 
-	auto found = self->_source_map.find(std::string(prev_name));
-	if (found == self->_source_map.end()) {
-		// Untracked source, insert.
-		obs_weak_source_t* weak = obs_source_get_weak_source(target);
-		if (!weak) {
+	{
+		std::unique_lock<std::mutex> ul(self->_lock);
+		auto                         found = self->_sources.find(std::string(prev_name));
+		if (found == self->_sources.end()) {
+			// Untracked source, insert.
+			obs_weak_source_t* weak = obs_source_get_weak_source(target);
+			if (!weak) {
+				return;
+			}
+			self->_sources.insert({new_name, {weak, obs::obs_weak_source_deleter}});
 			return;
 		}
-		self->_source_map.insert({new_name, weak});
-		return;
-	}
 
-	// Insert at new key, remove old pair.
-	self->_source_map.insert({new_name, found->second});
-	self->_source_map.erase(found);
+		// Insert at new key, remove old pair.
+		self->_sources.insert({new_name, found->second});
+		self->_sources.erase(found);
+	}
 } catch (...) {
 	LOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
@@ -144,37 +150,36 @@ obs::source_tracker::~source_tracker()
 		signal_handler_disconnect(osi, "source_rename", &source_rename_handler, this);
 	}
 
-	for (auto kv : this->_source_map) {
-		obs_weak_source_release(kv.second);
-	}
-	this->_source_map.clear();
+	this->_sources.clear();
 }
 
 void obs::source_tracker::enumerate(enumerate_cb_t ecb, filter_cb_t fcb)
 {
 	// Need func-local copy, otherwise we risk corruption if a new source is created or destroyed.
-	auto source_map_copy = this->_source_map;
-	for (auto kv : this->_source_map) {
-		obs_source_t* source = obs_weak_source_get_source(kv.second);
+	decltype(_sources) _clone;
+	{
+		std::unique_lock<std::mutex> ul(_lock);
+		_clone = _sources;
+	}
+
+	for (auto kv : _clone) {
+		auto source =
+			std::shared_ptr<obs_source_t>(obs_weak_source_get_source(kv.second.get()), obs::obs_source_deleter);
 		if (!source) {
 			continue;
 		}
 
 		if (fcb) {
-			if (fcb(kv.first, source)) {
-				obs_source_release(source);
+			if (fcb(kv.first, source.get())) {
 				continue;
 			}
 		}
 
 		if (ecb) {
-			if (ecb(kv.first, source)) {
-				obs_source_release(source);
+			if (ecb(kv.first, source.get())) {
 				break;
 			}
 		}
-
-		obs_source_release(source);
 	}
 }
 

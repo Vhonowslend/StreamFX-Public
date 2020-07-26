@@ -21,10 +21,12 @@
 #include "common.hpp"
 #include <functional>
 #include <map>
+#include <mutex>
 
 namespace obs {
 	class source_tracker {
-		std::map<std::string, obs_weak_source_t*> _source_map;
+		std::map<std::string, std::shared_ptr<obs_weak_source_t>> _sources;
+		std::mutex                                                _lock;
 
 		static void source_create_handler(void* ptr, calldata_t* data) noexcept;
 		static void source_destroy_handler(void* ptr, calldata_t* data) noexcept;
