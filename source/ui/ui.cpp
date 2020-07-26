@@ -59,13 +59,15 @@ inline void qt_cleanup_resource()
 
 bool streamfx::ui::handler::have_shown_about_streamfx(bool shown)
 {
+	auto config = streamfx::configuration::instance();
+	auto data   = config->get();
 	if (shown) {
-		obs_data_set_bool(streamfx::configuration::instance()->get().get(), _cfg_have_shown_about.data(), true);
+		obs_data_set_bool(data.get(), _cfg_have_shown_about.data(), true);
 	}
-	if (streamfx::configuration::instance()->is_different_version()) {
+	if (config->is_different_version()) {
 		return false;
 	} else {
-		return obs_data_get_bool(streamfx::configuration::instance()->get().get(), _cfg_have_shown_about.data());
+		return obs_data_get_bool(data.get(), _cfg_have_shown_about.data());
 	}
 }
 
