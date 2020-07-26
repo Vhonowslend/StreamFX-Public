@@ -22,6 +22,7 @@
 #include <stdexcept>
 #include "configuration.hpp"
 #include "obs/obs-source-tracker.hpp"
+#include "obs/gs/gs-vertexbuffer.hpp"
 
 #ifdef ENABLE_ENCODER_FFMPEG
 #include "encoders/encoder-ffmpeg.hpp"
