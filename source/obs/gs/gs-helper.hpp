@@ -28,6 +28,8 @@ namespace gs {
 		inline context()
 		{
 			obs_enter_graphics();
+			if (gs_get_context() == nullptr)
+				throw std::runtime_error("Failed to enter graphics context.");
 		}
 		~context()
 		{
