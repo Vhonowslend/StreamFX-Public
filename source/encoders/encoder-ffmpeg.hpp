@@ -77,7 +77,7 @@ namespace streamfx::encoder::ffmpeg {
 		std::chrono::high_resolution_clock::time_point _free_frames_last_used;
 
 		public:
-		ffmpeg_instance(obs_data_t* settings, obs_encoder_t* self);
+		ffmpeg_instance(obs_data_t* settings, obs_encoder_t* self, bool is_hw);
 		virtual ~ffmpeg_instance();
 
 		public:
