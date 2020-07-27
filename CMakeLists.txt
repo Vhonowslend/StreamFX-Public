@@ -74,22 +74,22 @@ set(PROJECT_COPYRIGHT_YEARS "2018 - 2020")
 # Setup / Bootstrap
 ################################################################################
 
+# Detect Build Type
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
+	set(PropertyPrefix "")
+else()
+	set(PropertyPrefix "${PROJECT_NAME}_")
+endif()
+
 # Search Path
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/clang" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules" "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # CMake Modules
 include("util")
 ## Clang Integration
-if(${PropertyPrefix}ENABLE_CLANG AND (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Clang/Clang.cmake"))
+if(${PropertyPrefix}ENABLE_CLANG AND (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/clang/Clang.cmake"))
 	include("Clang")
 	set(HAVE_CLANG ON)
-endif()
-
-# Detect Build Type
-if("${CMAKE_SOURCE_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
-	set(PropertyPrefix "")
-else()
-	set(PropertyPrefix "${PROJECT_NAME}_")
 endif()
 
 # Detect Architecture
