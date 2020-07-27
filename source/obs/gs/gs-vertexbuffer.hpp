@@ -25,23 +25,27 @@
 
 namespace gs {
 	class vertex_buffer {
-		std::uint32_t _size;
-		std::uint32_t _capacity;
-		std::uint32_t _layers;
-
-		// Memory Storage
-		vec3*     _positions;
-		vec3*     _normals;
-		vec3*     _tangents;
-		uint32_t* _colors;
-		vec4*     _uvs[MAXIMUM_UVW_LAYERS];
+		uint32_t _capacity;
+		uint32_t _size;
+		uint8_t  _layers;
 
 		// OBS GS Data
-		gs_vb_data*      _data;
-		gs_vertbuffer_t* _buffer;
-		gs_tvertarray*   _layer_data;
+		std::shared_ptr<gs_vertbuffer_t> _buffer;
+		std::shared_ptr<gs_vb_data>      _data;
 
-		void initialize(std::size_t capacity, std::size_t layers);
+		// Memory Storage
+		vec3*          _positions;
+		vec3*          _normals;
+		vec3*          _tangents;
+		uint32_t*      _colors;
+		gs_tvertarray* _uv_layers;
+		vec4*          _uvs[MAXIMUM_UVW_LAYERS];
+
+		// OBS compatability
+		gs_vb_data* _obs_data;
+
+		void initialize(uint32_t capacity, uint8_t layers);
+		void finalize();
 
 		public:
 		virtual ~vertex_buffer();
@@ -49,14 +53,14 @@ namespace gs {
 		/*!
 		* \brief Create a Vertex Buffer with the default number of Vertices.
 		*/
-		vertex_buffer();
+		vertex_buffer() : vertex_buffer(MAXIMUM_VERTICES, MAXIMUM_UVW_LAYERS) {}
 
 		/*!
 		* \brief Create a Vertex Buffer with a specific number of Vertices.
 		*
 		* \param vertices Number of vertices to store.
 		*/
-		vertex_buffer(std::uint32_t vertices);
+		vertex_buffer(uint32_t vertices) : vertex_buffer(vertices, MAXIMUM_UVW_LAYERS) {}
 
 		/*!
 		* \brief Create a Vertex Buffer with a specific number of Vertices and uv layers.
@@ -64,7 +68,7 @@ namespace gs {
 		* \param vertices Number of vertices to store.
 		* \param layers Number of uv layers to store.
 		*/
-		vertex_buffer(std::uint32_t vertices, std::uint8_t layers);
+		vertex_buffer(uint32_t vertices, uint8_t layers);
 
 		/*!
 		* \brief Create a copy of a Vertex Buffer
@@ -90,7 +94,7 @@ namespace gs {
 		*
 		* \param other
 		*/
-		void operator=(vertex_buffer const& other) = delete;
+		void operator=(vertex_buffer const& other);
 
 		// Move Constructor & Assignments
 
@@ -108,21 +112,23 @@ namespace gs {
 		*
 		* \param other
 		*/
-		void operator=(vertex_buffer const&& other) noexcept;
+		void operator=(vertex_buffer const&& other);
 
-		void resize(std::uint32_t new_size);
+		void resize(uint32_t new_size);
 
-		std::uint32_t size();
+		uint32_t size();
+
+		uint32_t capacity();
 
 		bool empty();
 
-		const gs::vertex at(std::uint32_t idx);
+		const gs::vertex at(uint32_t idx);
 
-		const gs::vertex operator[](std::uint32_t const pos);
+		const gs::vertex operator[](uint32_t const pos);
 
-		void set_uv_layers(std::uint32_t layers);
+		void set_uv_layers(uint8_t layers);
 
-		std::uint32_t get_uv_layers();
+		uint8_t get_uv_layers();
 
 		/*!
 		* \brief Directly access the positions buffer
@@ -162,7 +168,7 @@ namespace gs {
 		*
 		* \return A <vec4*> that points at the first vertex's uv.
 		*/
-		vec4* get_uv_layer(std::size_t idx);
+		vec4* get_uv_layer(uint8_t idx);
 
 		gs_vertbuffer_t* update();
 
