@@ -18,12 +18,15 @@
 */
 
 #include "util-threadpool.hpp"
+#include "common.hpp"
 #include <cstddef>
+
+#define LOCAL_PREFIX "<util::threadpool> "
 
 // Most Tasks likely wait for IO, so we can use that time for other tasks.
 #define CONCURRENCY_MULTIPLIER 2
 
-util::threadpool::threadpool() : _workers(), _worker_stop(false), _tasks(), _tasks_lock(), _tasks_cv()
+util::threadpool::threadpool() : _workers(), _worker_stop(false), _worker_idx(0), _tasks(), _tasks_lock(), _tasks_cv()
 {
 	std::size_t concurrency = static_cast<size_t>(std::thread::hardware_concurrency() * CONCURRENCY_MULTIPLIER);
 	for (std::size_t n = 0; n < concurrency; n++) {
@@ -63,7 +66,8 @@ void util::threadpool::pop(std::shared_ptr<::util::threadpool::task> work)
 
 void util::threadpool::work()
 {
-	static thread_local std::shared_ptr<util::threadpool::task> local_work{};
+	std::shared_ptr<util::threadpool::task> local_work{};
+	uint32_t                                local_number = _worker_idx.fetch_add(1);
 
 	while (!_worker_stop) {
 		// Wait for more work, or immediately continue if there is still work to do.
@@ -88,7 +92,7 @@ void util::threadpool::work()
 		}
 
 		// If the task was killed, skip everything again.
-		if (local_work->_is_dead.load()) {
+		if (local_work->_is_dead) {
 			continue;
 		}
 
@@ -97,13 +101,21 @@ void util::threadpool::work()
 			try {
 				local_work->_callback(local_work->_data);
 			} catch (std::exception const& ex) {
-			} catch (...) { // This does not catch unrecoverable exceptions, or exceptions that went through C code.
+				DLOG_WARNING(LOCAL_PREFIX "Worker %lX caught exception from task (%tX, %tX) with message: %s",
+							 local_number, local_work->_callback.target<ptrdiff_t>(),
+							 reinterpret_cast<ptrdiff_t>(local_work->_data.get()), ex.what());
+			} catch (...) {
+				DLOG_WARNING(LOCAL_PREFIX "Worker %lX caught exception of unknown type from task (%tX, %tX).",
+							 local_number, local_work->_callback.target<ptrdiff_t>(),
+							 reinterpret_cast<ptrdiff_t>(local_work->_data.get()));
 			}
 		}
 	}
+
+	_worker_idx.fetch_sub(1);
 }
 
 util::threadpool::task::task() {}
 
-util::threadpool::task::task(threadpool_callback_t fn, threadpool_data_t dt) : _callback(fn), _data(dt), _is_dead(false)
+util::threadpool::task::task(threadpool_callback_t fn, threadpool_data_t dt) : _is_dead(false), _callback(fn), _data(dt)
 {}
