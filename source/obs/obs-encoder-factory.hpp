@@ -42,7 +42,7 @@ namespace obs {
 			_info.type_data = this;
 
 			_info.get_name        = _get_name;
-			_info.create          = _create;
+			_info.create          = _create_hw;
 			_info.destroy         = _destroy;
 			_info.get_defaults2   = _get_defaults2;
 			_info.get_properties2 = _get_properties2;
@@ -67,9 +67,13 @@ namespace obs {
 				memcpy(&_info_fallback, &_info, sizeof(obs_encoder_info));
 				_info_fallback_id = std::string(_info.id) + "_sw";
 				_info_fallback.id = _info_fallback_id.c_str();
-				_info_fallback.caps &= ~OBS_ENCODER_CAP_PASS_TEXTURE;
-				_info_fallback.caps |= OBS_ENCODER_CAP_DEPRECATED;
+				_info_fallback.caps =
+					(_info_fallback.caps & ~OBS_ENCODER_CAP_PASS_TEXTURE) | OBS_ENCODER_CAP_DEPRECATED;
+				_info_fallback.create         = _create;
 				_info_fallback.encode_texture = nullptr;
+				obs_register_encoder(&_info_fallback);
+			} else {
+				_info.create = _create;
 			}
 
 			obs_register_encoder(&_info);
@@ -105,15 +109,23 @@ namespace obs {
 
 		static void* _create(obs_data_t* settings, obs_encoder_t* encoder) noexcept
 		try {
+			auto* fac = reinterpret_cast<factory_t*>(obs_encoder_get_type_data(encoder));
+			return fac->create(settings, encoder, false);
+		} catch (const std::exception& ex) {
+			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			return nullptr;
+		} catch (...) {
+			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			return nullptr;
+		}
+
+		static void* _create_hw(obs_data_t* settings, obs_encoder_t* encoder) noexcept
+		try {
+			auto* fac = reinterpret_cast<factory_t*>(obs_encoder_get_type_data(encoder));
 			try {
-				return reinterpret_cast<factory_t*>(obs_encoder_get_type_data(encoder))->create(settings, encoder);
-			} catch (const std::exception& ex) {
-				if (factory_t* fac = reinterpret_cast<factory_t*>(obs_encoder_get_type_data(encoder));
-					fac && (fac->_info.caps & OBS_ENCODER_CAP_PASS_TEXTURE)) {
-					return obs_encoder_create_rerouted(encoder, fac->_info_fallback.id);
-				} else {
-					throw ex;
-				}
+				return fac->create(settings, encoder, true);
+			} catch (...) {
+				return obs_encoder_create_rerouted(encoder, fac->_info_fallback.id);
 			}
 		} catch (const std::exception& ex) {
 			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
@@ -270,9 +282,9 @@ namespace obs {
 			return "Not Yet Implemented";
 		}
 
-		virtual void* create(obs_data_t* settings, obs_encoder_t* encoder)
+		virtual void* create(obs_data_t* settings, obs_encoder_t* encoder, bool is_hw)
 		{
-			return reinterpret_cast<void*>(new instance_t(settings, encoder));
+			return reinterpret_cast<void*>(new instance_t(settings, encoder, is_hw));
 		}
 
 		virtual void get_defaults2(obs_data_t* data) {}
@@ -288,7 +300,7 @@ namespace obs {
 		obs_encoder_t* _self;
 
 		public:
-		encoder_instance(obs_data_t* settings, obs_encoder_t* self) : _self(self) {}
+		encoder_instance(obs_data_t* settings, obs_encoder_t* self, bool is_hw) : _self(self) {}
 		virtual ~encoder_instance(){};
 
 		virtual void migrate(obs_data_t* settings, std::uint64_t version) {}
