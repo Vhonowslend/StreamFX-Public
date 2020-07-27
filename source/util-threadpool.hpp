@@ -49,6 +49,7 @@ namespace util {
 		private:
 		std::list<std::thread>                               _workers;
 		std::atomic_bool                                     _worker_stop;
+		std::atomic<uint32_t>                                _worker_idx;
 		std::list<std::shared_ptr<::util::threadpool::task>> _tasks;
 		std::mutex                                           _tasks_lock;
 		std::condition_variable                              _tasks_cv;
