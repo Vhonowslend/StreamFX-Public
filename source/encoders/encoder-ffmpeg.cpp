@@ -77,8 +77,8 @@ using namespace streamfx::encoder::codec;
 
 enum class keyframe_type { SECONDS, FRAMES };
 
-ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* self)
-	: encoder_instance(settings, self),
+ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* self, bool is_hw)
+	: encoder_instance(settings, self, is_hw),
 
 	  _factory(reinterpret_cast<ffmpeg_factory*>(obs_encoder_get_type_data(self))),
 
@@ -93,11 +93,11 @@ ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* self)
 	  _free_frames(), _used_frames(), _free_frames_last_used()
 {
 	// Initialize GPU Stuff
-	if (obs_encoder_get_caps(self) & OBS_ENCODER_CAP_PASS_TEXTURE) {
+	if (is_hw) {
 		// Abort if user specified manual override.
 		if ((static_cast<AVPixelFormat>(obs_data_get_int(settings, KEY_FFMPEG_COLORFORMAT)) != AV_PIX_FMT_NONE)
 			|| (obs_data_get_int(settings, KEY_FFMPEG_GPU) != -1) || (obs_encoder_scaling_enabled(_self))) {
-			throw std::runtime_error("Unable to create accelerated encoder due to user settings.");
+			throw std::runtime_error("Selected settings prevent the use of hardware encoding, falling back to software.");
 		}
 
 #ifdef WIN32
@@ -125,7 +125,7 @@ ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* self)
 	av_new_packet(&_packet, 8 * 1024 * 1024); // 8 MB precached Packet size.
 
 	// Initialize
-	if (obs_encoder_get_caps(self) & OBS_ENCODER_CAP_PASS_TEXTURE) {
+	if (is_hw) {
 		initialize_hw(settings);
 	} else {
 		initialize_sw(settings);
@@ -883,58 +883,70 @@ void ffmpeg_instance::parse_ffmpeg_commandline(std::string text)
 
 ffmpeg_factory::ffmpeg_factory(const AVCodec* codec) : _avcodec(codec)
 {
-	{ // Generate information
-		_id = std::string(PREFIX) + "-" + std::string(_avcodec->name);
-
-		// Figure out what codec this encoder is for.
-		if (auto* desc = avcodec_descriptor_get(_avcodec->id); desc) {
-			_codec = desc->name;
-		} else {
-			// If FFmpeg doesn't know better, fall back to the name.
-			_codec = _avcodec->name;
-		}
-
-		// Generate a readable name
-		std::stringstream sstr;
-		if (_avcodec->long_name) {
-			sstr << _avcodec->long_name;
-			sstr << " (" << _avcodec->name << ")";
-		} else {
-			sstr << _avcodec->name;
-		}
-		sstr << D_TRANSLATE(ST_FFMPEG_SUFFIX);
-		_name = sstr.str();
+	// Generate default identifier.
+	{
+		std::stringstream str;
+		str << PREFIX << _avcodec->name;
+		_id = str.str();
 	}
 
-	// Find Codec UI handler.
-	_handler = ffmpeg_manager::get()->get_handler(_avcodec->name);
-	if (_handler)
+	{ // Generate default name.
+		std::stringstream str;
+		if (_avcodec->long_name) {
+			str << _avcodec->long_name;
+			str << " (" << _avcodec->name << ")";
+		} else {
+			str << _avcodec->name;
+		}
+		str << D_TRANSLATE(ST_FFMPEG_SUFFIX);
+		_name = str.str();
+	}
+
+	// Try and find a codec name that libOBS understands.
+	if (auto* desc = avcodec_descriptor_get(_avcodec->id); desc) {
+		_codec = desc->name;
+	} else {
+		// If FFmpeg doesn't know better, fall back to the name.
+		_codec = _avcodec->name;
+	}
+
+	// Find any available handlers for this codec.
+	if (_handler = ffmpeg_manager::get()->get_handler(_avcodec->name); _handler) {
+		// Override any found info with the one specified by the handler.
 		_handler->adjust_info(this, _avcodec, _id, _name, _codec);
 
-	// Build Info structure.
-	_info.id    = _id.c_str();
-	_info.codec = _codec.c_str();
-	if (_avcodec->type == AVMediaType::AVMEDIA_TYPE_VIDEO) {
-		_info.type = obs_encoder_type::OBS_ENCODER_VIDEO;
-	} else if (_avcodec->type == AVMediaType::AVMEDIA_TYPE_AUDIO) {
-		_info.type = obs_encoder_type::OBS_ENCODER_AUDIO;
-	}
-	if (::ffmpeg::tools::can_hardware_encode(_avcodec)) {
-		_info.caps |= OBS_ENCODER_CAP_PASS_TEXTURE;
+		// Add texture capability for hardware encoders.
+		if (_handler->is_hardware_encoder(this)) {
+			_info.caps |= OBS_ENCODER_CAP_PASS_TEXTURE;
+		}
+	} else {
+		// If there are no handlers, default to mark it deprecated.
+		_info.caps |= OBS_ENCODER_CAP_DEPRECATED;
 	}
 
-	finish_setup();
-	{
-		std::string id  = std::string("StreamFX-") + _avcodec->name;
-		std::string id2 = id + "_sw";
-		register_proxy(id);
-		register_proxy(id2);
+	{ // Build Info structure.
+		_info.id    = _id.c_str();
+		_info.codec = _codec.c_str();
+		if (_avcodec->type == AVMediaType::AVMEDIA_TYPE_VIDEO) {
+			_info.type = obs_encoder_type::OBS_ENCODER_VIDEO;
+		} else if (_avcodec->type == AVMediaType::AVMEDIA_TYPE_AUDIO) {
+			_info.type = obs_encoder_type::OBS_ENCODER_AUDIO;
+		}
 	}
-	{
-		std::string id  = std::string("obs-ffmpeg-encoder_") + _avcodec->name;
-		std::string id2 = id + "_sw";
-		register_proxy(id);
-		register_proxy(id2);
+
+	// Register encoder and proxies.
+	finish_setup();
+	const std::string proxies[] = {
+		std::string("streamfx--") + _avcodec->name,
+		std::string("StreamFX-") + _avcodec->name,
+		std::string("obs-ffmpeg-encoder_") + _avcodec->name,
+	};
+	for (auto proxy_id : proxies) {
+		register_proxy(proxy_id);
+		if (_info.caps & OBS_ENCODER_CAP_PASS_TEXTURE) {
+			std::string proxy_fallback_id = proxy_id + "_sw";
+			register_proxy(proxy_fallback_id);
+		}
 	}
 }
 
