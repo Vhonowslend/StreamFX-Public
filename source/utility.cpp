@@ -224,6 +224,8 @@ void util::free_aligned(void* mem)
 #elif defined(USE_STD_ALLOC_FREE)
 	free(mem);
 #else
+	if (mem == nullptr)
+		return;
 	void* ptr = reinterpret_cast<void*>(*reinterpret_cast<intptr_t*>(static_cast<char*>(mem) - sizeof(void*)));
 	free(ptr);
 #endif
