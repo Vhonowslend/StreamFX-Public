@@ -79,4 +79,9 @@ namespace ffmpeg::tools {
 	void print_av_option_string(AVCodecContext* ctx_codec, void* ctx_option, const char* option, std::string text,
 								std::function<std::string(int64_t)> decoder);
 
+	void print_av_option_string2(AVCodecContext* context, std::string_view option, std::string_view text,
+								 std::function<std::string(int64_t, std::string_view)> decoder);
+	void print_av_option_string2(AVCodecContext* ctx_codec, void* ctx_option, std::string_view option,
+								 std::string_view text, std::function<std::string(int64_t, std::string_view)> decoder);
+
 } // namespace ffmpeg::tools
