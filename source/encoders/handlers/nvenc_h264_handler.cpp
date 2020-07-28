@@ -54,10 +54,10 @@ std::map<profile, std::string> profiles{
 };
 
 std::map<level, std::string> levels{
-	{level::L1_0, "1.0"}, {level::L1_0b, "1.0b"}, {level::L1_1, "1.1"}, {level::L1_2, "1.2"}, {level::L1_3, "1.3"},
-	{level::L2_0, "2.0"}, {level::L2_1, "2.1"},   {level::L2_2, "2.2"}, {level::L3_0, "3.0"}, {level::L3_1, "3.1"},
-	{level::L3_2, "3.2"}, {level::L4_0, "4.0"},   {level::L4_1, "4.1"}, {level::L4_2, "4.2"}, {level::L5_0, "5.0"},
-	{level::L5_1, "5.1"}, {level::L5_2, "5.2"},
+	{level::L1_0, "1.0"}, {level::L1_0b, "1.0b"}, {level::L1_1, "1.1"}, {level::L1_2, "1.2"},
+	{level::L1_3, "1.3"}, {level::L2_0, "2.0"},   {level::L2_1, "2.1"}, {level::L2_2, "2.2"},
+	{level::L3_0, "3.0"}, {level::L3_1, "3.1"},   {level::L3_2, "3.2"}, {level::L4_0, "4.0"},
+	{level::L4_1, "4.1"}, {level::L4_2, "4.2"},   {level::L5_0, "5.0"}, {level::L5_1, "5.1"},
 };
 
 void nvenc_h264_handler::adjust_info(ffmpeg_factory*, const AVCodec*, std::string&, std::string& name, std::string&)
