@@ -141,27 +141,12 @@ void nvenc_hevc_handler::log_options(obs_data_t* settings, const AVCodec* codec,
 	nvenc::log_options(settings, codec, context);
 
 	DLOG_INFO("[%s]     H.265/HEVC:", codec->name);
-	::ffmpeg::tools::print_av_option_string(context, "profile", "      Profile", [](int64_t v) {
-		profile val   = static_cast<profile>(v);
-		auto    index = profiles.find(val);
-		if (index != profiles.end())
-			return index->second;
-		return std::string("<Unknown>");
-	});
-	::ffmpeg::tools::print_av_option_string(context, "level", "      Level", [](int64_t v) {
-		level val   = static_cast<level>(v);
-		auto  index = levels.find(val);
-		if (index != levels.end())
-			return index->second;
-		return std::string("<Unknown>");
-	});
-	::ffmpeg::tools::print_av_option_string(context, "tier", "      Tier", [](int64_t v) {
-		tier val   = static_cast<tier>(v);
-		auto index = tiers.find(val);
-		if (index != tiers.end())
-			return index->second;
-		return std::string("<Unknown>");
-	});
+	::ffmpeg::tools::print_av_option_string2(context, "profile", "      Profile",
+											 [](int64_t v, std::string_view o) { return std::string(o); });
+	::ffmpeg::tools::print_av_option_string2(context, "level", "      Level",
+											 [](int64_t v, std::string_view o) { return std::string(o); });
+	::ffmpeg::tools::print_av_option_string2(context, "tier", "      Tier",
+											 [](int64_t v, std::string_view o) { return std::string(o); });
 }
 
 void nvenc_hevc_handler::get_encoder_properties(obs_properties_t* props, const AVCodec* codec)
