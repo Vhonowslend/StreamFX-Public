@@ -321,8 +321,8 @@ void tools::print_av_option_bool(AVCodecContext* ctx_codec, const char* option, 
 	print_av_option_bool(ctx_codec, ctx_codec, option, text, inverse);
 }
 
-void ffmpeg::tools::print_av_option_bool(AVCodecContext* ctx_codec, void* ctx_option, const char* option,
-										 std::string text, bool inverse)
+void tools::print_av_option_bool(AVCodecContext* ctx_codec, void* ctx_option, const char* option, std::string text,
+								 bool inverse)
 {
 	int64_t v = 0;
 	if (int err = av_opt_get_int(ctx_option, option, AV_OPT_SEARCH_CHILDREN, &v); err != 0) {
@@ -340,8 +340,8 @@ void tools::print_av_option_int(AVCodecContext* ctx_codec, const char* option, s
 	print_av_option_int(ctx_codec, ctx_codec, option, text, suffix);
 }
 
-void ffmpeg::tools::print_av_option_int(AVCodecContext* ctx_codec, void* ctx_option, const char* option,
-										std::string text, std::string suffix)
+void tools::print_av_option_int(AVCodecContext* ctx_codec, void* ctx_option, const char* option, std::string text,
+								std::string suffix)
 {
 	int64_t v          = 0;
 	bool    is_default = av_opt_is_set_to_default_by_name(ctx_option, option, AV_OPT_SEARCH_CHILDREN) > 0;
@@ -364,8 +364,8 @@ void tools::print_av_option_string(AVCodecContext* ctx_codec, const char* option
 	print_av_option_string(ctx_codec, ctx_codec, option, text, decoder);
 }
 
-void ffmpeg::tools::print_av_option_string(AVCodecContext* ctx_codec, void* ctx_option, const char* option,
-										   std::string text, std::function<std::string(int64_t)> decoder)
+void tools::print_av_option_string(AVCodecContext* ctx_codec, void* ctx_option, const char* option, std::string text,
+								   std::function<std::string(int64_t)> decoder)
 {
 	int64_t v = 0;
 	if (int err = av_opt_get_int(ctx_option, option, AV_OPT_SEARCH_CHILDREN, &v); err != 0) {
@@ -377,5 +377,42 @@ void ffmpeg::tools::print_av_option_string(AVCodecContext* ctx_codec, void* ctx_
 			name = decoder(v);
 		DLOG_INFO("[%s] %s: %s%s", ctx_codec->codec->name, text.c_str(), name.c_str(),
 				 av_opt_is_set_to_default_by_name(ctx_option, option, AV_OPT_SEARCH_CHILDREN) > 0 ? " <Default>" : "");
+	}
+}
+
+void tools::print_av_option_string2(AVCodecContext* ctx_codec, std::string_view option, std::string_view text,
+									std::function<std::string(int64_t, std::string_view)> decoder)
+{
+	print_av_option_string2(ctx_codec, ctx_codec, option, text, decoder);
+}
+
+void tools::print_av_option_string2(AVCodecContext* ctx_codec, void* ctx_option, std::string_view option,
+									std::string_view                                      text,
+									std::function<std::string(int64_t, std::string_view)> decoder)
+{
+	int64_t v = 0;
+	if (int err = av_opt_get_int(ctx_option, option.data(), AV_OPT_SEARCH_CHILDREN, &v); err != 0) {
+		DLOG_INFO("[%s] %s: <Error: %s>", ctx_codec->codec->name, text.data(), tools::get_error_description(err));
+	} else {
+		std::string name = "<Unknown>";
+
+		// Find the unit for the option.
+		auto* unitopt = av_opt_find(ctx_option, option.data(), nullptr, 0, AV_OPT_SEARCH_CHILDREN);
+		if (unitopt) {
+			std::string_view optname;
+			for (auto* opt = unitopt;
+				 (opt = av_opt_next(ctx_option, opt)) != nullptr && (strcmp(unitopt->unit, opt->unit) == 0);) {
+				if (opt->default_val.i64 == v)
+					optname = opt->name;
+			}
+
+			if (decoder) {
+				name = decoder(v, optname);
+			}
+			DLOG_INFO("[%s] %s: %s%s", ctx_codec->codec->name, text.data(), name.c_str(),
+					  av_opt_is_set_to_default_by_name(ctx_option, option.data(), AV_OPT_SEARCH_CHILDREN) > 0
+						  ? " <Default>"
+						  : "");
+		}
 	}
 }
