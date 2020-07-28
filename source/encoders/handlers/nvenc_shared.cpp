@@ -701,22 +701,10 @@ void nvenc::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* conte
 	using namespace ::ffmpeg;
 
 	DLOG_INFO("[%s]   Nvidia NVENC:", codec->name);
-	tools::print_av_option_string(context, "preset", "    Preset", [](int64_t v) {
-		preset      val   = static_cast<preset>(v);
-		std::string name  = "<Default>";
-		auto        index = preset_to_opt.find(val);
-		if (index != preset_to_opt.end())
-			name = index->second;
-		return name;
-	});
-	tools::print_av_option_string(context, "rc", "    Rate Control", [](int64_t v) {
-		ratecontrolmode val   = static_cast<ratecontrolmode>(v);
-		std::string     name  = "<Default>";
-		auto            index = ratecontrolmode_to_opt.find(val);
-		if (index != ratecontrolmode_to_opt.end())
-			name = index->second;
-		return name;
-	});
+	tools::print_av_option_string2(context, "preset", "    Preset",
+								   [](int64_t v, std::string_view o) { return std::string(o); });
+	tools::print_av_option_string2(context, "rc", "    Rate Control",
+								   [](int64_t v, std::string_view o) { return std::string(o); });
 	tools::print_av_option_bool(context, "2pass", "      Two Pass");
 	tools::print_av_option_int(context, "rc-lookahead", "      Look-Ahead", "Frames");
 	tools::print_av_option_bool(context, "no-scenecut", "      Adaptive I-Frames", true);
@@ -738,14 +726,8 @@ void nvenc::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* conte
 	tools::print_av_option_int(context, "init_qpB", "        B-Frame", "");
 
 	tools::print_av_option_int(context, "bf", "    B-Frames", "Frames");
-	tools::print_av_option_string(context, "b_ref_mode", "      Reference Mode", [](int64_t v) {
-		b_ref_mode  val   = static_cast<b_ref_mode>(v);
-		std::string name  = "<Default>";
-		auto        index = b_ref_mode_to_opt.find(val);
-		if (index != b_ref_mode_to_opt.end())
-			name = index->second;
-		return name;
-	});
+	tools::print_av_option_string2(context, "b_ref_mode", "      Reference Mode",
+								   [](int64_t v, std::string_view o) { return std::string(o); });
 
 	DLOG_INFO("[%s]     Adaptive Quantization:", codec->name);
 	if (strcmp(codec->name, "h264_nvenc") == 0) {
