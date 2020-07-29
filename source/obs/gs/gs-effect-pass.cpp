@@ -31,7 +31,7 @@ extern "C" {
 #endif
 }
 
-gs::effect_pass::effect_pass(gs_epass_t* pass, std::shared_ptr<gs_technique_t>* parent) : _parent(parent)
+gs::effect_pass::effect_pass(gs_epass_t* pass, std::shared_ptr<gs_technique_t> parent) : _parent(parent)
 {
 	reset(pass, [](void*) {});
 }
@@ -55,7 +55,7 @@ gs::effect_parameter gs::effect_pass::get_vertex_parameter(std::size_t idx)
 	if (idx >= count_vertex_parameters())
 		return nullptr;
 
-	return gs::effect_parameter((get()->vertshader_params.array + idx)->eparam, this);
+	return gs::effect_parameter((get()->vertshader_params.array + idx)->eparam, *this);
 }
 
 gs::effect_parameter gs::effect_pass::get_vertex_parameter(std::string name)
@@ -63,7 +63,7 @@ gs::effect_parameter gs::effect_pass::get_vertex_parameter(std::string name)
 	for (std::size_t idx = 0; idx < count_vertex_parameters(); idx++) {
 		auto ptr = get()->vertshader_params.array + idx;
 		if (strcmp(ptr->eparam->name, name.c_str()) == 0)
-			return gs::effect_parameter(ptr->eparam, this);
+			return gs::effect_parameter(ptr->eparam, *this);
 	}
 	return nullptr;
 }
@@ -91,7 +91,7 @@ gs::effect_parameter gs::effect_pass::get_pixel_parameter(std::size_t idx)
 	if (idx >= count_pixel_parameters())
 		return nullptr;
 
-	return gs::effect_parameter((get()->pixelshader_params.array + idx)->eparam, this);
+	return gs::effect_parameter((get()->pixelshader_params.array + idx)->eparam, *this);
 }
 
 gs::effect_parameter gs::effect_pass::get_pixel_parameter(std::string name)
@@ -99,7 +99,7 @@ gs::effect_parameter gs::effect_pass::get_pixel_parameter(std::string name)
 	for (std::size_t idx = 0; idx < count_pixel_parameters(); idx++) {
 		auto ptr = get()->pixelshader_params.array + idx;
 		if (strcmp(ptr->eparam->name, name.c_str()) == 0)
-			return gs::effect_parameter(ptr->eparam, this);
+			return gs::effect_parameter(ptr->eparam, *this);
 	}
 	return nullptr;
 }

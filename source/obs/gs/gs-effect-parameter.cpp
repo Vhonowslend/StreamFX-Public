@@ -44,19 +44,18 @@ gs::effect_parameter::effect_parameter(gs_eparam_t* param)
 	reset(param, [](void*) {});
 }
 
-gs::effect_parameter::effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_effect_t>* parent)
+gs::effect_parameter::effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_effect_t> parent)
 	: effect_parameter(param)
 {
 	_effect_parent = parent;
 }
 
-gs::effect_parameter::effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_epass_t>* parent)
-	: effect_parameter(param)
+gs::effect_parameter::effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_epass_t> parent) : effect_parameter(param)
 {
 	_pass_parent = parent;
 }
 
-gs::effect_parameter::effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_eparam_t>* parent)
+gs::effect_parameter::effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_eparam_t> parent)
 	: effect_parameter(param)
 {
 	_param_parent = parent;
@@ -161,7 +160,7 @@ gs::effect_parameter gs::effect_parameter::get_annotation(std::size_t idx)
 		return nullptr;
 	}
 
-	return effect_parameter(get()->annotations.array + idx, this);
+	return effect_parameter(get()->annotations.array + idx, *this);
 }
 
 gs::effect_parameter gs::effect_parameter::get_annotation(const std::string_view name)
@@ -169,7 +168,7 @@ gs::effect_parameter gs::effect_parameter::get_annotation(const std::string_view
 	for (std::size_t idx = 0; idx < get()->annotations.num; idx++) {
 		auto ptr = get()->annotations.array + idx;
 		if (name == std::string_view{ptr->name}) {
-			return gs::effect_parameter(ptr, this);
+			return gs::effect_parameter(ptr, *this);
 		}
 	}
 

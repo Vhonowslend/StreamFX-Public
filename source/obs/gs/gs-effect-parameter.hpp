@@ -24,9 +24,9 @@
 
 namespace gs {
 	class effect_parameter : public std::shared_ptr<gs_eparam_t> {
-		std::shared_ptr<gs_effect_t>* _effect_parent;
-		std::shared_ptr<gs_epass_t>*  _pass_parent;
-		std::shared_ptr<gs_eparam_t>* _param_parent;
+		std::shared_ptr<gs_effect_t> _effect_parent;
+		std::shared_ptr<gs_epass_t>  _pass_parent;
+		std::shared_ptr<gs_eparam_t> _param_parent;
 
 		public:
 		enum class type {
@@ -50,9 +50,9 @@ namespace gs {
 		public:
 		effect_parameter();
 		effect_parameter(gs_eparam_t* param);
-		effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_effect_t>* parent);
-		effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_epass_t>* parent);
-		effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_eparam_t>* parent);
+		effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_effect_t> parent);
+		effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_epass_t> parent);
+		effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_eparam_t> parent);
 		~effect_parameter();
 
 		effect_parameter(const effect_parameter& rhs);
