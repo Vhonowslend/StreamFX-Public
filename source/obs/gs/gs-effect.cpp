@@ -77,7 +77,7 @@ gs::effect_technique gs::effect::get_technique(std::size_t idx)
 		return nullptr;
 	}
 
-	return gs::effect_technique(get()->techniques.array + idx, this);
+	return gs::effect_technique(get()->techniques.array + idx, *this);
 }
 
 gs::effect_technique gs::effect::get_technique(const std::string& name)
@@ -85,7 +85,7 @@ gs::effect_technique gs::effect::get_technique(const std::string& name)
 	for (std::size_t idx = 0; idx < count_techniques(); idx++) {
 		auto ptr = get()->techniques.array + idx;
 		if (strcmp(ptr->name, name.c_str()) == 0) {
-			return gs::effect_technique(ptr, this);
+			return gs::effect_technique(ptr, *this);
 		}
 	}
 
@@ -110,7 +110,7 @@ gs::effect_parameter gs::effect::get_parameter(std::size_t idx)
 		throw std::out_of_range("Index is out of range.");
 	}
 
-	return gs::effect_parameter(get()->params.array + idx, this);
+	return gs::effect_parameter(get()->params.array + idx, *this);
 }
 
 gs::effect_parameter gs::effect::get_parameter(const std::string& name)
@@ -118,7 +118,7 @@ gs::effect_parameter gs::effect::get_parameter(const std::string& name)
 	for (std::size_t idx = 0; idx < count_parameters(); idx++) {
 		auto ptr = get()->params.array + idx;
 		if (strcmp(ptr->name, name.c_str()) == 0) {
-			return gs::effect_parameter(ptr, this);
+			return gs::effect_parameter(ptr, *this);
 		}
 	}
 

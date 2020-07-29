@@ -23,10 +23,10 @@
 
 namespace gs {
 	class effect_technique : public std::shared_ptr<gs_technique_t> {
-		std::shared_ptr<gs_effect_t>* _parent;
+		std::shared_ptr<gs_effect_t> _parent;
 
 		public:
-		effect_technique(gs_technique_t* technique, std::shared_ptr<gs_effect_t>* parent = nullptr);
+		effect_technique(gs_technique_t* technique, std::shared_ptr<gs_effect_t> parent = nullptr);
 		~effect_technique();
 
 		std::string name();

@@ -23,16 +23,17 @@
 
 namespace gs {
 	class effect_pass : public std::shared_ptr<gs_epass_t> {
-		std::shared_ptr<gs_technique_t>* _parent;
+		std::shared_ptr<gs_technique_t> _parent;
 
 		public:
-		effect_pass(gs_epass_t* pass, std::shared_ptr<gs_technique_t>* parent = nullptr);
+		effect_pass(gs_epass_t* pass, std::shared_ptr<gs_technique_t> parent = nullptr);
 		~effect_pass();
 
 		std::string name();
 
 		//gs::shader get_pixel_shader();
 		//gs::shader get_vertex_shader();
+		//
 
 		std::size_t          count_vertex_parameters();
 		gs::effect_parameter get_vertex_parameter(std::size_t idx);

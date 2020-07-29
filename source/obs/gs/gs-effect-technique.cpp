@@ -32,8 +32,7 @@ extern "C" {
 #endif
 }
 
-gs::effect_technique::effect_technique(gs_technique_t* technique, std::shared_ptr<gs_effect_t>* parent)
-	: _parent(parent)
+gs::effect_technique::effect_technique(gs_technique_t* technique, std::shared_ptr<gs_effect_t> parent) : _parent(parent)
 {
 	reset(technique, [](void*) {});
 }
@@ -58,7 +57,7 @@ gs::effect_pass gs::effect_technique::get_pass(std::size_t idx)
 		return nullptr;
 	}
 
-	return gs::effect_pass(get()->passes.array + idx, this);
+	return gs::effect_pass(get()->passes.array + idx, *this);
 }
 
 gs::effect_pass gs::effect_technique::get_pass(std::string name)
@@ -66,7 +65,7 @@ gs::effect_pass gs::effect_technique::get_pass(std::string name)
 	for (std::size_t idx = 0; idx < get()->passes.num; idx++) {
 		auto ptr = get()->passes.array + idx;
 		if (strcmp(ptr->name, name.c_str()) == 0)
-			return gs::effect_pass(ptr, this);
+			return gs::effect_pass(ptr, *this);
 	}
 
 	return nullptr;
