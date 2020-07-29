@@ -70,49 +70,39 @@ jobs:
     name: "Ubuntu 64-bit"
     strategy:
       matrix:
-        ubuntu: [ bionic ]
+        ubuntu: [ bionic, focal ]
         compiler: [ gcc, clang ]
-        compiler-version: [ 8, 9, 10 ]
-        exclude:
-          - ubuntu: bionic
-            compiler: gcc
-            compiler-version: 10
-          - ubuntu: bionic
-            compiler: clang
-            compiler-version: 8
         include:
           - ubuntu: bionic
             compiler: gcc
-            compiler-version: 8
             compiler-cxx: g++
             runner: ubuntu-18.04
             packages: gcc-8 g++8
             extra_command: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
-            id: ubuntu1804-gcc8
+            id: ubuntu-18.04
           - ubuntu: bionic
+            compiler: clang
+            compiler-cxx: clang
+            compiler-version: 8
+            runner: ubuntu-18.04
+            packages: clang-8
+            extra_command: ""
+            id: ubuntu-18.04-clang
+          - ubuntu: focal
             compiler: gcc
-            compiler-version: 9
             compiler-cxx: g++
-            runner: ubuntu-latest
+            runner: ubuntu-20.04
             packages: gcc-9 g++9
             extra_command: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 800 --slave /usr/bin/g++ g++ /usr/bin/g++-9
-            id: ubuntu1910-gcc9
-          - ubuntu: bionic
+            id: ubuntu-20.04
+          - ubuntu: focal
             compiler: clang
+            compiler-cxx: clang
             compiler-version: 9
-            compiler-cxx: clang++
-            runner: ubuntu-18.04
+            runner: ubuntu-20.04
             packages: clang-9
             extra_command: ""
-            id: ubuntu1804-clang9
-          - ubuntu: bionic
-            compiler: clang
-            compiler-version: 10
-            compiler-cxx: clang++
-            runner: ubuntu-latest
-            packages: clang-10
-            extra_command: ""
-            id: ubuntu1910-clang10
+            id: ubuntu-20.04-clang
     runs-on: ${{ matrix.runner }}
     env:
       CMAKE_GENERATOR: "Ninja"
@@ -127,10 +117,6 @@ jobs:
     - name: "Prerequisites: Apt-Get"
       shell: bash
       run: |
-        if [ "${{ matrix.compiler }}" == "clang" ]; then
-          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo add-apt-repository "deb http://apt.llvm.org/${{ matrix.ubuntu }}/ llvm-toolchain-${{ matrix.ubuntu }}-${{ matrix.compiler-version }} main"
-        fi
         sudo apt-get -qq update
         sudo apt-get purge libjpeg9-dev:amd64 libjpeg8-dev:amd64 libjpeg-turbo8-dev:amd64
         sudo apt-get install \
