@@ -398,10 +398,12 @@ void tools::print_av_option_string2(AVCodecContext* ctx_codec, void* ctx_option,
 
 		// Find the unit for the option.
 		auto* unitopt = av_opt_find(ctx_option, option.data(), nullptr, 0, AV_OPT_SEARCH_CHILDREN);
-		if (unitopt) {
+		if (unitopt && unitopt->unit) {
 			std::string_view optname;
-			for (auto* opt = unitopt;
-				 (opt = av_opt_next(ctx_option, opt)) != nullptr && (strcmp(unitopt->unit, opt->unit) == 0);) {
+			for (auto* opt = unitopt; (opt = av_opt_next(ctx_option, opt)) != nullptr;) {
+				if (opt->unit && (strcmp(unitopt->unit, opt->unit) != 0))
+					continue;
+
 				if (opt->default_val.i64 == v)
 					optname = opt->name;
 			}
