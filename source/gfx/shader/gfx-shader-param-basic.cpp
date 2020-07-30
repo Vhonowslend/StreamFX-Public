@@ -98,7 +98,8 @@ gfx::shader::basic_parameter::basic_parameter(gs::effect_parameter param, std::s
 		for (std::size_t idx = 0; idx < get_size(); idx++) {
 			snprintf(string_buffer, sizeof(string_buffer), "[%" PRId32 "]", static_cast<int32_t>(idx));
 			_names[idx] = std::string(string_buffer, string_buffer + strnlen(string_buffer, sizeof(string_buffer)));
-			snprintf(string_buffer, sizeof(string_buffer), "%s[%" PRId32 "]", get_key().data(), static_cast<int32_t>(idx));
+			snprintf(string_buffer, sizeof(string_buffer), "%s[%" PRId32 "]", get_key().data(),
+					 static_cast<int32_t>(idx));
 			_keys[idx] = std::string(string_buffer, string_buffer + strnlen(string_buffer, sizeof(string_buffer)));
 		}
 	}
