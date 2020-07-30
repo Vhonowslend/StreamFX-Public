@@ -409,7 +409,7 @@ void ffmpeg_factory::register_encoder()
 
 	obs_register_encoder(&info.oei);
 	DLOG_DEBUG("Registered encoder #%llX with name '%s' and long name '%s' and caps %llX", avcodec_ptr,
-			  avcodec_ptr->name, avcodec_ptr->long_name, avcodec_ptr->capabilities);
+			   avcodec_ptr->name, avcodec_ptr->long_name, avcodec_ptr->capabilities);
 	if (info_fallback.uid.size() > 0) {
 		obs_register_encoder(&info_fallback.oei);
 		DLOG_DEBUG("Registered software fallback for encoder #%llX", avcodec_ptr);
@@ -888,32 +888,35 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 		DLOG_INFO("[%s] Initializing...", _codec->name);
 		DLOG_INFO("[%s]   FFmpeg:", _codec->name);
 		DLOG_INFO("[%s]     Custom Settings: %s", _codec->name,
-				 obs_data_get_string(settings, KEY_FFMPEG_CUSTOMSETTINGS));
+				  obs_data_get_string(settings, KEY_FFMPEG_CUSTOMSETTINGS));
 		DLOG_INFO("[%s]     Standard Compliance: %s", _codec->name,
-				 ::ffmpeg::tools::get_std_compliance_name(_context->strict_std_compliance));
+				  ::ffmpeg::tools::get_std_compliance_name(_context->strict_std_compliance));
 		DLOG_INFO("[%s]     Threading: %s (with %i threads)", _codec->name,
-				 ::ffmpeg::tools::get_thread_type_name(_context->thread_type), _context->thread_count);
+				  ::ffmpeg::tools::get_thread_type_name(_context->thread_type), _context->thread_count);
 
 		DLOG_INFO("[%s]   Video:", _codec->name);
 		if (_hwinst) {
 			DLOG_INFO("[%s]     Texture: %ldx%ld %s %s %s", _codec->name, _context->width, _context->height,
-					 ::ffmpeg::tools::get_pixel_format_name(_context->sw_pix_fmt),
-					 ::ffmpeg::tools::get_color_space_name(_context->colorspace),
-					 av_color_range_name(_context->color_range));
+					  ::ffmpeg::tools::get_pixel_format_name(_context->sw_pix_fmt),
+					  ::ffmpeg::tools::get_color_space_name(_context->colorspace),
+					  av_color_range_name(_context->color_range));
 		} else {
 			DLOG_INFO("[%s]     Input: %ldx%ld %s %s %s", _codec->name, _swscale.get_source_width(),
-					 _swscale.get_source_height(), ::ffmpeg::tools::get_pixel_format_name(_swscale.get_source_format()),
-					 ::ffmpeg::tools::get_color_space_name(_swscale.get_source_colorspace()),
-					 _swscale.is_source_full_range() ? "Full" : "Partial");
+					  _swscale.get_source_height(),
+					  ::ffmpeg::tools::get_pixel_format_name(_swscale.get_source_format()),
+					  ::ffmpeg::tools::get_color_space_name(_swscale.get_source_colorspace()),
+					  _swscale.is_source_full_range() ? "Full" : "Partial");
 			DLOG_INFO("[%s]     Output: %ldx%ld %s %s %s", _codec->name, _swscale.get_target_width(),
-					 _swscale.get_target_height(), ::ffmpeg::tools::get_pixel_format_name(_swscale.get_target_format()),
-					 ::ffmpeg::tools::get_color_space_name(_swscale.get_target_colorspace()),
-					 _swscale.is_target_full_range() ? "Full" : "Partial");
+					  _swscale.get_target_height(),
+					  ::ffmpeg::tools::get_pixel_format_name(_swscale.get_target_format()),
+					  ::ffmpeg::tools::get_color_space_name(_swscale.get_target_colorspace()),
+					  _swscale.is_target_full_range() ? "Full" : "Partial");
 			if (!_hwinst)
 				DLOG_INFO("[%s]     On GPU Index: %lli", _codec->name, obs_data_get_int(settings, KEY_FFMPEG_GPU));
 		}
-		DLOG_INFO("[%s]     Framerate: %ld/%ld (%f FPS)", _codec->name, _context->time_base.den, _context->time_base.num,
-				 static_cast<double_t>(_context->time_base.den) / static_cast<double_t>(_context->time_base.num));
+		DLOG_INFO("[%s]     Framerate: %ld/%ld (%f FPS)", _codec->name, _context->time_base.den,
+				  _context->time_base.num,
+				  static_cast<double_t>(_context->time_base.den) / static_cast<double_t>(_context->time_base.num));
 
 		DLOG_INFO("[%s]   Keyframes: ", _codec->name);
 		if (_context->keyint_min != _context->gop_size) {
@@ -1347,7 +1350,7 @@ void ffmpeg_instance::parse_ffmpeg_commandline(std::string text)
 			int res = av_opt_set(_context, key.c_str(), value.c_str(), AV_OPT_SEARCH_CHILDREN);
 			if (res < 0) {
 				DLOG_WARNING("Option '%s' (key: '%s', value: '%s') encountered error: %s", opt.c_str(), key.c_str(),
-							value.c_str(), ::ffmpeg::tools::get_error_description(res));
+							 value.c_str(), ::ffmpeg::tools::get_error_description(res));
 			}
 		} catch (const std::exception& ex) {
 			DLOG_ERROR("Option '%s' encountered exception: %s", opt.c_str(), ex.what());

@@ -120,7 +120,7 @@ void debug_handler::get_properties(obs_properties_t*, const AVCodec* codec, AVCo
 				auto unit_type = unit_types.find(opt->unit);
 				if (unit_type == unit_types.end()) {
 					DLOG_INFO("  [%s] Flag '%s' and help text '%s' with value '%lld'.", opt->unit, opt->name, opt->help,
-							 opt->default_val.i64);
+							  opt->default_val.i64);
 				} else {
 					std::string out;
 					switch (unit_type->second) {
@@ -148,7 +148,7 @@ void debug_handler::get_properties(obs_properties_t*, const AVCodec* codec, AVCo
 					}
 
 					DLOG_INFO("  [%s] Constant '%s' and help text '%s' with value '%s'.", opt->unit, opt->name,
-							 opt->help, out.c_str());
+							  opt->help, out.c_str());
 				}
 			}
 		} else {

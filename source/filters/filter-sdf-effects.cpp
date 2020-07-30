@@ -106,7 +106,7 @@ sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* s
 				kv.second = gs::effect::create(path);
 			} catch (const std::exception& ex) {
 				DLOG_ERROR(LOG_PREFIX "Failed to load _effect '%s' (located at '%s') with error(s): %s", kv.first, path,
-						  ex.what());
+						   ex.what());
 			}
 			bfree(path);
 		}

@@ -333,7 +333,7 @@ void blur_instance::video_tick(float)
 				_mask.image.path_old = _mask.image.path;
 			} catch (...) {
 				DLOG_ERROR("<filter-blur> Instance '%s' failed to load image '%s'.", obs_source_get_name(_self),
-						  _mask.image.path.c_str());
+						   _mask.image.path.c_str());
 			}
 		}
 	} else if (_mask.type == mask_type::Source) {
@@ -344,7 +344,7 @@ void blur_instance::video_tick(float)
 				_mask.source.name_old = _mask.source.name;
 			} catch (...) {
 				DLOG_ERROR("<filter-blur> Instance '%s' failed to grab source '%s'.", obs_source_get_name(_self),
-						  _mask.source.name.c_str());
+						   _mask.source.name.c_str());
 			}
 		}
 	}

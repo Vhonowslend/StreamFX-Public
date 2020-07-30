@@ -593,10 +593,10 @@ bool face_tracking_instance::button_profile(obs_properties_t* props, obs_propert
 	};
 	for (auto& kv : profilers) {
 		DLOG_INFO("  %-20s: %8lldµs %10lld %8lldµs %8lldµs %8lldµs", kv.first.c_str(),
-				 std::chrono::duration_cast<std::chrono::microseconds>(kv.second->total_duration()).count(),
-				 kv.second->count(), static_cast<std::int64_t>(kv.second->average_duration() / 1000.0),
-				 std::chrono::duration_cast<std::chrono::microseconds>(kv.second->percentile(0.999)).count(),
-				 std::chrono::duration_cast<std::chrono::microseconds>(kv.second->percentile(0.95)).count());
+				  std::chrono::duration_cast<std::chrono::microseconds>(kv.second->total_duration()).count(),
+				  kv.second->count(), static_cast<std::int64_t>(kv.second->average_duration() / 1000.0),
+				  std::chrono::duration_cast<std::chrono::microseconds>(kv.second->percentile(0.999)).count(),
+				  std::chrono::duration_cast<std::chrono::microseconds>(kv.second->percentile(0.95)).count());
 	}
 
 	return false;
