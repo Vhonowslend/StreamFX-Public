@@ -43,7 +43,7 @@ jobs:
     - name: "Configure Project"
       shell: bash
       run: |
-        cmake -H. -B"build/temp" -DCMAKE_PACKAGE_NAME="streamfx-${{ matrix.id }}" -DCMAKE_INSTALL_PREFIX="build/distrib" -DCMAKE_PACKAGE_PREFIX="build/package" -DOBS_DOWNLOAD=ON
+        cmake -H. -B"build/temp" -DCMAKE_INSTALL_PREFIX="build/distrib" -DCMAKE_PACKAGE_NAME="streamfx-${{ matrix.id }}" -DCMAKE_PACKAGE_PREFIX="build/package" -DOBS_DOWNLOAD=ON
     - name: "Build Project"
       shell: bash
       run: |
@@ -138,7 +138,7 @@ jobs:
     - name: "Configure Project"
       shell: bash
       run: |
-        cmake -H. -B"build/temp" -DCMAKE_PACKAGE_NAME="streamfx-${{ matrix.id }}" -DCMAKE_INSTALL_PREFIX="build/distrib" -DCMAKE_PACKAGE_PREFIX="build/package" -DOBS_DOWNLOAD=ON
+        cmake -H. -B"build/temp" -DCMAKE_INSTALL_PREFIX="build/distrib" -DCMAKE_PACKAGE_NAME="streamfx-${{ matrix.id }}" -DCMAKE_PACKAGE_PREFIX="build/package" -DOBS_DOWNLOAD=ON
     - name: "Build Project"
       shell: bash
       run: |
