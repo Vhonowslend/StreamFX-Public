@@ -62,18 +62,18 @@ void gs::vertex_buffer::initialize(uint32_t capacity, uint8_t layers)
 	// Allocate actual GPU vertex buffer.
 	{
 		auto gctx = gs::context();
-		_buffer =
-			decltype(_buffer)(gs_vertexbuffer_create(_data.get(), GS_DYNAMIC | GS_DUP_BUFFER), [this](gs_vertbuffer_t* v) {
-				try {
-					auto gctx = gs::context();
-					gs_vertexbuffer_destroy(v);
-				} catch (...) {
-					if (obs_get_version() < MAKE_SEMANTIC_VERSION(26, 0, 0)) {
-						// Fixes a memory leak with OBS Studio versions older than 26.x.
-						gs_vbdata_destroy(_obs_data);
-					}
-				}
-			});
+		_buffer   = decltype(_buffer)(gs_vertexbuffer_create(_data.get(), GS_DYNAMIC | GS_DUP_BUFFER),
+                                    [this](gs_vertbuffer_t* v) {
+                                        try {
+                                            auto gctx = gs::context();
+                                            gs_vertexbuffer_destroy(v);
+                                        } catch (...) {
+                                            if (obs_get_version() < MAKE_SEMANTIC_VERSION(26, 0, 0)) {
+                                                // Fixes a memory leak with OBS Studio versions older than 26.x.
+                                                gs_vbdata_destroy(_obs_data);
+                                            }
+                                        }
+                                    });
 		_obs_data = gs_vertexbuffer_get_data(_buffer.get());
 	}
 
