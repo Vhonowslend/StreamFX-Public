@@ -118,8 +118,8 @@ void debug_handler::get_properties(obs_properties_t*, const AVCodec* codec, AVCo
 			} else {
 				auto unit_type = unit_types.find(opt->unit);
 				if (unit_type == unit_types.end()) {
-					DLOG_INFO("  [%s] Flag '%s' and help text '%s' with value '%" PRId64 "'.", opt->unit, opt->name, opt->help,
-							  opt->default_val.i64);
+					DLOG_INFO("  [%s] Flag '%s' and help text '%s' with value '%" PRId64 "'.", opt->unit, opt->name,
+							  opt->help, opt->default_val.i64);
 				} else {
 					std::string out;
 					switch (unit_type->second) {

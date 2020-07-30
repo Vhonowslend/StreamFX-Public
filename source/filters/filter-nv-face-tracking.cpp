@@ -232,8 +232,8 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 			auto             prof = _profile_capture_realloc->track();
 			gs::debug_marker marker{gs::debug_color_allocate, "Reallocate GPU Buffer"};
 #endif
-			_ar_texture =
-				std::make_shared<gs::texture>(_size.first, _size.second, GS_RGBA, uint32_t(1), nullptr, gs::texture::flags::None);
+			_ar_texture = std::make_shared<gs::texture>(_size.first, _size.second, GS_RGBA, uint32_t(1), nullptr,
+														gs::texture::flags::None);
 			_ar_texture_cuda_fresh = false;
 		}
 
