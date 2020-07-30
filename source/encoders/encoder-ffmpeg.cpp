@@ -270,8 +270,8 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 
 		DLOG_INFO("[%s]   Video:", _codec->name);
 		if (_hwinst) {
-			DLOG_INFO("[%s]     Texture: %" PRId32 "x%" PRId32 " %s %s %s", _codec->name, _context->width, _context->height,
-					  ::ffmpeg::tools::get_pixel_format_name(_context->sw_pix_fmt),
+			DLOG_INFO("[%s]     Texture: %" PRId32 "x%" PRId32 " %s %s %s", _codec->name, _context->width,
+					  _context->height, ::ffmpeg::tools::get_pixel_format_name(_context->sw_pix_fmt),
 					  ::ffmpeg::tools::get_color_space_name(_context->colorspace),
 					  av_color_range_name(_context->color_range));
 		} else {
@@ -361,7 +361,8 @@ bool ffmpeg_instance::encode_video(struct encoder_frame* frame, struct encoder_p
 				_scaler.convert(reinterpret_cast<std::uint8_t**>(frame->data), reinterpret_cast<int*>(frame->linesize),
 								0, _context->height, vframe->data, vframe->linesize);
 			if (res <= 0) {
-				DLOG_ERROR("Failed to convert frame: %s (%" PRId32 ").", ::ffmpeg::tools::get_error_description(res), res);
+				DLOG_ERROR("Failed to convert frame: %s (%" PRId32 ").", ::ffmpeg::tools::get_error_description(res),
+						   res);
 				return false;
 			}
 		}
@@ -701,7 +702,8 @@ bool ffmpeg_instance::encode_avframe(std::shared_ptr<AVFrame> frame, encoder_pac
 				sent_frame = true;
 				break;
 			default:
-				DLOG_ERROR("Failed to encode frame: %s (%" PRId32 ").", ::ffmpeg::tools::get_error_description(res), res);
+				DLOG_ERROR("Failed to encode frame: %s (%" PRId32 ").", ::ffmpeg::tools::get_error_description(res),
+						   res);
 				return false;
 			}
 		}
@@ -726,7 +728,8 @@ bool ffmpeg_instance::encode_avframe(std::shared_ptr<AVFrame> frame, encoder_pac
 				}
 				break;
 			default:
-				DLOG_ERROR("Failed to receive packet: %s (%" PRId32 ").", ::ffmpeg::tools::get_error_description(res), res);
+				DLOG_ERROR("Failed to receive packet: %s (%" PRId32 ").", ::ffmpeg::tools::get_error_description(res),
+						   res);
 				return false;
 			}
 		}
