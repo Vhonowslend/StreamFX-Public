@@ -8,227 +8,228 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   sodipodi:docname="streamfx-state-unstable.svg"
-   inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
-   id="svg8"
-   version="1.1"
-   viewBox="0 0 96 24"
-   height="24"
-   width="96"
-   inkscape:export-filename="D:\Projects\Xaymar\obs-streamfx\media\streamfx-state-unstable.png"
+   inkscape:export-ydpi="96"
    inkscape:export-xdpi="96"
-   inkscape:export-ydpi="96">
+   inkscape:export-filename="D:\Projects\Xaymar\obs-streamfx-pages\media\states\state-unstable.png"
+   width="96"
+   height="20"
+   viewBox="0 0 96 20"
+   version="1.1"
+   id="svg8"
+   inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
+   sodipodi:docname="state-unstable.svg">
   <defs
      id="defs2">
     <linearGradient
-       id="linearGradient839"
-       inkscape:collect="always">
+       inkscape:collect="always"
+       id="linearGradient839">
       <stop
-         id="stop835"
+         style="stop-color:#0b0600;stop-opacity:1"
          offset="0"
-         style="stop-color:#1e1600;stop-opacity:1" />
+         id="stop835" />
       <stop
-         id="stop837"
+         style="stop-color:#be6c14;stop-opacity:1"
          offset="1"
-         style="stop-color:#ff7500;stop-opacity:1" />
+         id="stop837" />
     </linearGradient>
     <linearGradient
-       gradientTransform="matrix(3.7396667,0,0,3.5961673,0.50623665,0.58217224)"
-       gradientUnits="userSpaceOnUse"
-       y2="0.47830594"
-       x2="15.311945"
-       y1="5.7699728"
-       x1="15.278933"
-       id="linearGradient841"
+       inkscape:collect="always"
        xlink:href="#linearGradient839"
-       inkscape:collect="always" />
+       id="linearGradient841"
+       x1="15.278933"
+       y1="5.7699728"
+       x2="15.311945"
+       y2="0.47830594"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(3.7396667,0,0,3.5961673,0.50623641,-1.417828)" />
     <filter
-       style="color-interpolation-filters:sRGB"
-       id="filter26"
-       inkscape:label="filter0"
-       x="-0.030000000000000013"
-       y="-0.15000000000000002"
+       width="1.0599999"
        height="1.3"
-       width="1.0599999999999998">
+       y="-0.15000001"
+       x="-0.029999999"
+       inkscape:label="filter0"
+       id="filter26"
+       style="color-interpolation-filters:sRGB">
       <feFlood
-         id="feFlood923"
-         result="result1"
-         in="SourceGraphic"
+         flood-color="rgb(0,0,0)"
          flood-opacity="1"
-         flood-color="rgb(0,0,0)" />
-      <feComposite
-         in2="result1"
-         id="feComposite933"
          in="SourceGraphic"
+         result="result1"
+         id="feFlood923" />
+      <feComposite
+         result="result2"
          operator="atop"
-         result="result2" />
-      <feGaussianBlur
-         stdDeviation="0.33000000000000002"
-         id="feGaussianBlur913"
-         result="result4" />
-      <feColorMatrix
-         id="feColorMatrix979"
-         type="saturate"
-         values="0.89698492462311563" />
-      <feComposite
-         in2="SourceGraphic"
-         id="feComposite937"
-         operator="in"
-         result="result6" />
-      <feGaussianBlur
-         stdDeviation="0.67000000000000004"
-         id="feGaussianBlur915"
-         in="result2" />
-      <feColorMatrix
-         values="0.79648241206030146"
-         type="saturate"
-         id="feColorMatrix981" />
-      <feComposite
-         operator="in"
-         id="feComposite939"
-         in2="SourceGraphic"
-         result="result10" />
-      <feGaussianBlur
-         stdDeviation="1"
-         id="feGaussianBlur917"
-         in="result2" />
-      <feColorMatrix
-         values="0.70100502512562812"
-         type="saturate"
-         id="feColorMatrix983" />
-      <feComposite
-         operator="in"
-         id="feComposite941"
-         in2="SourceGraphic"
-         result="result11" />
-      <feGaussianBlur
-         stdDeviation="1.3300000000000001"
-         id="feGaussianBlur919"
-         in="result2" />
-      <feColorMatrix
-         id="feColorMatrix987"
-         type="saturate"
-         values="0.59673366834170849" />
-      <feComposite
-         operator="in"
-         id="feComposite943"
-         in2="SourceGraphic"
-         result="result12" />
-      <feGaussianBlur
-         stdDeviation="1.6699999999999999"
-         id="feGaussianBlur921"
-         in="result2"
-         result="result3" />
-      <feColorMatrix
-         id="feColorMatrix989"
-         type="saturate"
-         values="0.49748743718592964" />
-      <feComposite
-         operator="in"
-         id="feComposite945"
-         in2="SourceGraphic"
-         result="result5" />
-      <feBlend
-         mode="screen"
-         in2="result6"
-         id="feBlend947"
          in="SourceGraphic"
-         result="result7" />
-      <feBlend
-         mode="screen"
-         in2="result10"
-         id="feBlend949"
-         result="result8" />
-      <feBlend
-         mode="screen"
-         in2="result11"
-         id="feBlend951"
-         result="result9" />
-      <feBlend
-         mode="screen"
-         in2="result12"
-         id="feBlend953"
-         result="result13" />
-      <feBlend
-         mode="screen"
-         in2="result5"
-         id="feBlend955"
-         result="result17" />
+         id="feComposite933"
+         in2="result1" />
       <feGaussianBlur
-         stdDeviation="1"
-         id="feGaussianBlur957"
-         result="result14" />
+         result="result4"
+         id="feGaussianBlur913"
+         stdDeviation="0.33000000000000002" />
+      <feColorMatrix
+         values="0.89698492462311563"
+         type="saturate"
+         id="feColorMatrix979" />
       <feComposite
-         id="feComposite971"
+         result="result6"
+         operator="in"
+         id="feComposite937"
+         in2="SourceGraphic" />
+      <feGaussianBlur
+         in="result2"
+         id="feGaussianBlur915"
+         stdDeviation="0.67000000000000004" />
+      <feColorMatrix
+         id="feColorMatrix981"
+         type="saturate"
+         values="0.79648241206030146" />
+      <feComposite
+         result="result10"
          in2="SourceGraphic"
+         id="feComposite939"
+         operator="in" />
+      <feGaussianBlur
+         in="result2"
+         id="feGaussianBlur917"
+         stdDeviation="1" />
+      <feColorMatrix
+         id="feColorMatrix983"
+         type="saturate"
+         values="0.70100502512562812" />
+      <feComposite
+         result="result11"
+         in2="SourceGraphic"
+         id="feComposite941"
+         operator="in" />
+      <feGaussianBlur
+         in="result2"
+         id="feGaussianBlur919"
+         stdDeviation="1.3300000000000001" />
+      <feColorMatrix
+         values="0.59673366834170849"
+         type="saturate"
+         id="feColorMatrix987" />
+      <feComposite
+         result="result12"
+         in2="SourceGraphic"
+         id="feComposite943"
+         operator="in" />
+      <feGaussianBlur
+         result="result3"
+         in="result2"
+         id="feGaussianBlur921"
+         stdDeviation="1.6699999999999999" />
+      <feColorMatrix
+         values="0.49748743718592964"
+         type="saturate"
+         id="feColorMatrix989" />
+      <feComposite
+         result="result5"
+         in2="SourceGraphic"
+         id="feComposite945"
+         operator="in" />
+      <feBlend
+         result="result7"
+         in="SourceGraphic"
+         id="feBlend947"
+         in2="result6"
+         mode="screen" />
+      <feBlend
+         result="result8"
+         id="feBlend949"
+         in2="result10"
+         mode="screen" />
+      <feBlend
+         result="result9"
+         id="feBlend951"
+         in2="result11"
+         mode="screen" />
+      <feBlend
+         result="result13"
+         id="feBlend953"
+         in2="result12"
+         mode="screen" />
+      <feBlend
+         result="result17"
+         id="feBlend955"
+         in2="result5"
+         mode="screen" />
+      <feGaussianBlur
+         result="result14"
+         id="feGaussianBlur957"
+         stdDeviation="1" />
+      <feComposite
+         result="result16"
          operator="out"
-         result="result16" />
+         in2="SourceGraphic"
+         id="feComposite971" />
       <feMerge
          id="feMerge973">
         <feMergeNode
-           inkscape:collect="always"
+           in="result16"
            id="feMergeNode975"
-           in="result16" />
+           inkscape:collect="always" />
         <feMergeNode
-           inkscape:collect="always"
+           in="result17"
            id="feMergeNode977"
-           in="result17" />
+           inkscape:collect="always" />
       </feMerge>
     </filter>
     <filter
-       style="color-interpolation-filters:sRGB"
+       inkscape:label="filter1"
        id="filter891"
-       inkscape:label="filter1">
+       style="color-interpolation-filters:sRGB">
       <feGaussianBlur
-         stdDeviation="1.5"
-         id="feGaussianBlur903" />
+         id="feGaussianBlur903"
+         stdDeviation="1.5" />
       <feComposite
-         in2="SourceGraphic"
+         result="result2"
+         operator="in"
          id="feComposite905"
-         operator="in"
-         result="result2" />
+         in2="SourceGraphic" />
       <feGaussianBlur
-         stdDeviation="0.75"
+         in="SourceGraphic"
          id="feGaussianBlur907"
-         in="SourceGraphic" />
+         stdDeviation="0.75" />
       <feComposite
-         id="feComposite909"
-         in2="SourceGraphic"
+         result="result3"
          operator="in"
-         result="result3" />
+         in2="SourceGraphic"
+         id="feComposite909" />
       <feBlend
-         mode="color-dodge"
-         in2="result3"
-         id="feBlend901"
+         in="result2"
          result="result1"
-         in="result2" />
+         id="feBlend901"
+         in2="result3"
+         mode="color-dodge" />
       <feBlend
-         mode="color-dodge"
-         in2="result1"
+         in="SourceGraphic"
          id="feBlend911"
-         in="SourceGraphic" />
+         in2="result1"
+         mode="color-dodge" />
     </filter>
   </defs>
   <sodipodi:namedview
-     inkscape:window-maximized="1"
-     inkscape:window-y="-8"
-     inkscape:window-x="2552"
-     inkscape:window-height="1417"
-     inkscape:window-width="2560"
-     units="px"
-     showgrid="false"
-     inkscape:document-rotation="0"
-     inkscape:current-layer="g36"
-     inkscape:document-units="px"
-     inkscape:cy="5.5525503"
-     inkscape:cx="42.815803"
-     inkscape:zoom="11.2"
-     inkscape:pageshadow="2"
-     inkscape:pageopacity="0.0"
-     borderopacity="1.0"
-     bordercolor="#666666"
+     inkscape:pagecheckerboard="true"
+     id="base"
      pagecolor="#ffffff"
-     id="base" />
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="2"
+     inkscape:cx="60.038866"
+     inkscape:cy="-11.63229"
+     inkscape:document-units="px"
+     inkscape:current-layer="g36"
+     inkscape:document-rotation="0"
+     showgrid="false"
+     units="px"
+     inkscape:window-width="2560"
+     inkscape:window-height="1417"
+     inkscape:window-x="2552"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1" />
   <metadata
      id="metadata5">
     <rdf:RDF>
@@ -242,35 +243,37 @@
     </rdf:RDF>
   </metadata>
   <g
-     id="layer1"
+     inkscape:label="Ebene 1"
      inkscape:groupmode="layer"
-     inkscape:label="Ebene 1">
+     id="layer1">
     <g
-       id="g36"
-       style="filter:url(#filter26)">
+       id="g36">
       <rect
-         style="display:inline;fill:url(#linearGradient841);fill-opacity:1;stroke:#000000;stroke-width:0.970284;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
-         id="rect833"
-         width="91.029716"
-         height="19.029716"
-         x="2.485142"
-         y="2.485142"
+         inkscape:export-ydpi="96"
+         inkscape:export-xdpi="96"
+         ry="3.8059433"
          rx="3.9578137"
-         ry="3.8059433" />
+         y="0.48514175"
+         x="2.4851418"
+         height="19.029716"
+         width="91.029716"
+         id="rect833"
+         style="display:inline;fill:url(#linearGradient841);fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers;filter:url(#filter26)" />
       <text
-         xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:condensed;font-size:18.6667px;line-height:1.25;font-family:Bahnschrift;-inkscape-font-specification:'Bahnschrift Bold Condensed';text-align:center;letter-spacing:0px;text-anchor:middle;display:inline;fill:#000000;fill-opacity:1;stroke:none"
+         id="text849"
+         y="16.630871"
          x="47.78125"
-         y="18.630871"
-         id="text849"><tspan
-           sodipodi:role="line"
-           id="tspan847"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:condensed;font-size:18.6667px;line-height:1.25;font-family:Bahnschrift;-inkscape-font-specification:'Bahnschrift Bold Condensed';text-align:center;letter-spacing:0px;text-anchor:middle;display:inline;fill:#000000;fill-opacity:1;stroke:none"
+         xml:space="preserve"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Bahnschrift;-inkscape-font-specification:'Bahnschrift Bold'"
+           y="16.630871"
            x="47.78125"
-           y="18.630871">UNSTABLE</tspan></text>
+           id="tspan847"
+           sodipodi:role="line">UNSTABLE</tspan></text>
     </g>
     <g
-       inkscape:groupmode="layer"
+       inkscape:label="Ebene 2"
        id="layer2"
-       inkscape:label="Ebene 2" />
+       inkscape:groupmode="layer" />
   </g>
 </svg>
