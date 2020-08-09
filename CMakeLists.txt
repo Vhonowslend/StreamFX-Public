@@ -493,6 +493,8 @@ list(APPEND PROJECT_PRIVATE_SOURCE
 	"source/util/utility.hpp"
 	"source/util/utility.cpp"
 	"source/util/util-event.hpp"
+	"source/util/util-library.cpp"
+	"source/util/util-library.hpp"
 	"source/util/util-profiler.cpp"
 	"source/util/util-profiler.hpp"
 	"source/util/util-threadpool.cpp"
