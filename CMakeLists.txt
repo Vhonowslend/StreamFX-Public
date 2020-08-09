@@ -262,11 +262,11 @@ set(${PropertyPrefix}SIGN_PASSWORD "" CACHE STRING "Password for the private key
 
 # Configure Version Header
 configure_file(
-	"cmake/version.hpp.in"
+	"templates/version.hpp.in"
 	"${PROJECT_BINARY_DIR}/generated/version.hpp"
 )
 configure_file(
-	"cmake/module.cpp.in"
+	"templates/module.cpp.in"
 	"${PROJECT_BINARY_DIR}/generated/module.cpp"
 )
 
@@ -291,7 +291,7 @@ if(NOT TARGET libobs)
 		get_filename_component(ISS_MSVCHELPER_PATH "${msvc-redist-helper_BUILD_DIR}" ABSOLUTE)
 		file(TO_NATIVE_PATH "${ISS_MSVCHELPER_PATH}" ISS_MSVCHELPER_PATH)
 		configure_file(
-			"cmake/installer.iss.in"
+			"templates/installer.iss.in"
 			"${PROJECT_BINARY_DIR}/installer.iss"
 		)
 
@@ -303,7 +303,7 @@ if(NOT TARGET libobs)
 		set(PROJECT_LEGAL_TRADEMARKS_2 "")
 		
 		configure_file(
-			"cmake/version.rc.in"
+			"templates/version.rc.in"
 			"${PROJECT_BINARY_DIR}/generated/version.rc"
 			@ONLY
 		)
@@ -466,8 +466,8 @@ list(APPEND PROJECT_DATA
 	"data/effects/pack-unpack.effect"
 )
 list(APPEND PROJECT_TEMPLATES
-	"cmake/version.hpp.in"
-	"cmake/module.cpp.in"
+	"templates/version.hpp.in"
+	"templates/module.cpp.in"
 )
 list(APPEND PROJECT_PRIVATE_SOURCE
 	# Plugin
@@ -534,8 +534,8 @@ list(APPEND PROJECT_PRIVATE_GENERATED
 )
 if(WIN32)
 	list(APPEND PROJECT_TEMPLATES
-		"cmake/installer.iss.in"
-		"cmake/version.rc.in"
+		"templates/installer.iss.in"
+		"templates/version.rc.in"
 	)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/windll.cpp"
@@ -902,8 +902,10 @@ set(PROJECT_PRIVATE
 source_group(TREE "${PROJECT_SOURCE_DIR}/data" PREFIX "Data Files" FILES ${PROJECT_DATA})
 source_group(TREE "${PROJECT_SOURCE_DIR}/source" PREFIX "Code Files" FILES ${PROJECT_PRIVATE_SOURCE})
 source_group(TREE "${PROJECT_BINARY_DIR}/generated" PREFIX "Generated Files" FILES ${PROJECT_PRIVATE_GENERATED})
-source_group(TREE "${PROJECT_SOURCE_DIR}/cmake" PREFIX "Template Files" FILES ${PROJECT_TEMPLATES})
+source_group(TREE "${PROJECT_SOURCE_DIR}/templates" PREFIX "Template Files" FILES ${PROJECT_TEMPLATES})
 source_group(TREE "${PROJECT_SOURCE_DIR}/ui" PREFIX "User Interface Files" FILES ${PROJECT_UI})
+
+set_source_files_properties(${PROJECT_TEMPLATES} PROPERTIES HEADER_FILE_ONLY TRUE)
 
 ################################################################################
 # Target
