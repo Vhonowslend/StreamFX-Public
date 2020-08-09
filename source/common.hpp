@@ -44,6 +44,7 @@
 #include <vector>
 
 // Common Plugin includes
+#include "config.hpp"
 #include "strings.hpp"
 #include "version.hpp"
 #include "util/util-math.hpp"
