@@ -20,7 +20,7 @@ NamespaceIndentation: All
 # Includes
 #IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex: '^(<|")(common.hpp|strings.hpp|version.hpp|obs.h)("|>)'
+  - Regex: '^(<|")(config.hpp|common.hpp|strings.hpp|version.hpp|obs.h)("|>)'
     Priority: 100
   - Regex: '^<obs-'
     Priority: 150

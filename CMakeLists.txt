@@ -260,7 +260,7 @@ set(${PropertyPrefix}SIGN_PASSWORD "" CACHE STRING "Password for the private key
 # CMake / Compiler Dependencies
 ################################################################################
 
-# Configure Version Header
+# Configure Files
 configure_file(
 	"templates/version.hpp.in"
 	"${PROJECT_BINARY_DIR}/generated/version.hpp"
@@ -268,6 +268,18 @@ configure_file(
 configure_file(
 	"templates/module.cpp.in"
 	"${PROJECT_BINARY_DIR}/generated/module.cpp"
+)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+	set(D_PLATFORM_WINDOWS 1)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	set(D_PLATFORM_LINUX 1)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Mac")
+	set(D_PLATFORM_MAC 1)
+endif()
+configure_file(
+	"templates/config.hpp.in"
+	"${PROJECT_BINARY_DIR}/generated/config.hpp"
 )
 
 if(NOT TARGET libobs)
@@ -468,6 +480,7 @@ list(APPEND PROJECT_DATA
 list(APPEND PROJECT_TEMPLATES
 	"templates/version.hpp.in"
 	"templates/module.cpp.in"
+	"templates/config.hpp.in"
 )
 list(APPEND PROJECT_PRIVATE_SOURCE
 	# Plugin
@@ -531,6 +544,7 @@ list(APPEND PROJECT_PRIVATE_SOURCE
 list(APPEND PROJECT_PRIVATE_GENERATED
 	"${PROJECT_BINARY_DIR}/generated/module.cpp"
 	"${PROJECT_BINARY_DIR}/generated/version.hpp"
+	"${PROJECT_BINARY_DIR}/generated/config.hpp"
 )
 if(WIN32)
 	list(APPEND PROJECT_TEMPLATES
