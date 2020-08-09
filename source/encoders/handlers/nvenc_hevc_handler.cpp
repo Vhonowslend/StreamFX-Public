@@ -59,9 +59,11 @@ std::map<level, std::string> levels{
 	{level::L6_0, "6.0"}, {level::L6_1, "6.1"}, {level::L6_2, "6.2"},
 };
 
-void nvenc_hevc_handler::adjust_info(ffmpeg_factory*, const AVCodec*, std::string&, std::string& name, std::string&)
+void nvenc_hevc_handler::adjust_info(ffmpeg_factory* fac, const AVCodec*, std::string&, std::string& name, std::string&)
 {
 	name = "NVIDIA NVENC H.265/HEVC (via FFmpeg)";
+	if (!nvenc::is_available())
+		fac->get_info()->caps |= OBS_ENCODER_CAP_DEPRECATED;
 }
 
 void nvenc_hevc_handler::get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context, bool)

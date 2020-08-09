@@ -59,9 +59,11 @@ std::map<level, std::string> levels{
 	{level::L4_1, "4.1"}, {level::L4_2, "4.2"},   {level::L5_0, "5.0"}, {level::L5_1, "5.1"},
 };
 
-void nvenc_h264_handler::adjust_info(ffmpeg_factory*, const AVCodec*, std::string&, std::string& name, std::string&)
+void nvenc_h264_handler::adjust_info(ffmpeg_factory* fac, const AVCodec*, std::string&, std::string& name, std::string&)
 {
 	name = "NVIDIA NVENC H.264/AVC (via FFmpeg)";
+	if (!nvenc::is_available())
+		fac->get_info()->caps |= OBS_ENCODER_CAP_DEPRECATED;
 }
 
 void nvenc_h264_handler::get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context, bool)

@@ -20,15 +20,10 @@
 // SOFTWARE.
 
 #include "nvenc_shared.hpp"
-#include "strings.hpp"
-#include <algorithm>
-#include "../codecs/hevc.hpp"
-#include "../encoder-ffmpeg.hpp"
+#include "encoders/encoder-ffmpeg.hpp"
 #include "ffmpeg/tools.hpp"
-#include "plugin.hpp"
 
 extern "C" {
-#include <obs-module.h>
 #pragma warning(push)
 #pragma warning(disable : 4244)
 #include <libavutil/opt.h>
@@ -154,6 +149,25 @@ std::map<nvenc::b_ref_mode, std::string> nvenc::b_ref_mode_to_opt{
 	{nvenc::b_ref_mode::EACH, "each"},
 	{nvenc::b_ref_mode::MIDDLE, "middle"},
 };
+
+bool streamfx::encoder::ffmpeg::handler::nvenc::is_available()
+{
+#if defined(D_PLATFORM_WINDOWS)
+#if defined(D_PLATFORM_64BIT)
+	std::filesystem::path lib_name = "nvEncodeAPI64.dll";
+#else
+	std::filesystem::path lib_name = "nvEncodeAPI.dll";
+#endif
+#else
+	std::filesystem::path lib_name = "libnvidia-encode.so.1";
+#endif
+	try {
+		util::library::load(lib_name);
+		return true;
+	} catch (...) {
+		return false;
+	}
+}
 
 void nvenc::override_update(ffmpeg_instance* instance, obs_data_t*)
 {

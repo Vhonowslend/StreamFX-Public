@@ -20,7 +20,7 @@
 // SOFTWARE.
 
 #pragma once
-#include <map>
+#include "common.hpp"
 #include "handler.hpp"
 
 extern "C" {
@@ -89,6 +89,8 @@ namespace streamfx::encoder::ffmpeg::handler::nvenc {
 	extern std::map<b_ref_mode, std::string> b_ref_modes;
 
 	extern std::map<b_ref_mode, std::string> b_ref_mode_to_opt;
+
+	bool is_available();
 
 	void override_update(ffmpeg_instance* instance, obs_data_t* settings);
 
