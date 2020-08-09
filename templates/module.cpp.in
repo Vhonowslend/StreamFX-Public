@@ -17,7 +17,6 @@ MODULE_EXPORT const char* obs_module_name()
 	return "@PROJECT_FULL_NAME@";
 }
 
-
 MODULE_EXPORT const char* obs_module_description()
 {
 	return "@PROJECT_DESCRIPTION@";
