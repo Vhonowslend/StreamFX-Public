@@ -47,6 +47,7 @@
 #include "config.hpp"
 #include "strings.hpp"
 #include "version.hpp"
+#include "util/util-library.hpp"
 #include "util/util-math.hpp"
 #include "util/util-profiler.hpp"
 #include "util/util-threadpool.hpp"
