@@ -127,7 +127,8 @@ jobs:
           cmake \
           ninja-build \
           git \
-          qt5-default libqwt-qt5-dev libqt5svg5-dev
+          qt5-default libqwt-qt5-dev libqt5svg5-dev \
+          libavcodec-dev libavutil-dev libswscale-dev
         ${{ matrix.extra_command }}
     - name: "Cache: Prerequisites"
       uses: actions/cache@v2
