@@ -21,9 +21,7 @@
 
 #include "tools.hpp"
 #include <list>
-#include <map>
 #include <sstream>
-#include <stdexcept>
 #include "plugin.hpp"
 
 extern "C" {
@@ -172,7 +170,7 @@ bool tools::can_hardware_encode(const AVCodec* codec)
 
 std::vector<AVPixelFormat> tools::get_software_formats(const AVPixelFormat* list)
 {
-	AVPixelFormat hardware_formats[] = {
+	constexpr AVPixelFormat hardware_formats[] = {
 #if FF_API_VAAPI
 		AV_PIX_FMT_VAAPI_MOCO,
 		AV_PIX_FMT_VAAPI_IDCT,
@@ -188,7 +186,6 @@ std::vector<AVPixelFormat> tools::get_software_formats(const AVPixelFormat* list
 		AV_PIX_FMT_VIDEOTOOLBOX,
 		AV_PIX_FMT_MEDIACODEC,
 		AV_PIX_FMT_D3D11,
-		AV_PIX_FMT_OPENCL,
 	};
 
 	std::vector<AVPixelFormat> fmts;
