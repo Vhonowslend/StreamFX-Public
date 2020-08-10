@@ -21,7 +21,7 @@
 #include <stdexcept>
 
 nvidia::cuda::stream::stream(std::shared_ptr<::nvidia::cuda::cuda> cuda, ::nvidia::cuda::stream_flags flags,
-							 std::int32_t priority)
+							 int32_t priority)
 	: _cuda(cuda)
 {
 	nvidia::cuda::result res;

@@ -38,13 +38,13 @@ namespace gs {
 		void            set_address_mode_w(gs_address_mode v);
 		gs_address_mode get_address_mode_w();
 
-		void set_max_anisotropy(std::int32_t v);
+		void set_max_anisotropy(int32_t v);
 		int  get_max_anisotropy();
 
-		void          set_border_color(std::uint32_t v);
-		void          set_border_color(std::uint8_t r, std::uint8_t g, std::uint8_t b, std::uint8_t a);
-		std::uint32_t get_border_color();
-		std::uint8_t  get_border_color(bool r, bool g, bool b, bool a);
+		void     set_border_color(uint32_t v);
+		void     set_border_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+		uint32_t get_border_color();
+		uint8_t  get_border_color(bool r, bool g, bool b, bool a);
 
 		gs_sampler_state* refresh();
 

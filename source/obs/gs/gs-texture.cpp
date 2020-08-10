@@ -23,9 +23,9 @@
 #include <sys/stat.h>
 #include "obs/gs/gs-helper.hpp"
 
-static std::uint32_t decode_flags(gs::texture::flags texture_flags)
+static uint32_t decode_flags(gs::texture::flags texture_flags)
 {
-	std::uint32_t flags = 0;
+	uint32_t flags = 0;
 	if (exact(texture_flags, gs::texture::flags::Dynamic))
 		flags |= GS_DYNAMIC;
 	if (exact(texture_flags, gs::texture::flags::BuildMipMaps))
@@ -33,8 +33,8 @@ static std::uint32_t decode_flags(gs::texture::flags texture_flags)
 	return flags;
 }
 
-gs::texture::texture(std::uint32_t width, std::uint32_t height, gs_color_format format, std::uint32_t mip_levels,
-					 const std::uint8_t** mip_data, gs::texture::flags texture_flags)
+gs::texture::texture(uint32_t width, uint32_t height, gs_color_format format, uint32_t mip_levels,
+					 const uint8_t** mip_data, gs::texture::flags texture_flags)
 {
 	if (width == 0)
 		throw std::logic_error("width must be at least 1");
@@ -60,8 +60,8 @@ gs::texture::texture(std::uint32_t width, std::uint32_t height, gs_color_format 
 	_type = type::Normal;
 }
 
-gs::texture::texture(std::uint32_t width, std::uint32_t height, std::uint32_t depth, gs_color_format format,
-					 std::uint32_t mip_levels, const std::uint8_t** mip_data, gs::texture::flags texture_flags)
+gs::texture::texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_format format, uint32_t mip_levels,
+					 const uint8_t** mip_data, gs::texture::flags texture_flags)
 {
 	if (width == 0)
 		throw std::logic_error("width must be at least 1");
@@ -92,8 +92,8 @@ gs::texture::texture(std::uint32_t width, std::uint32_t height, std::uint32_t de
 	_type = type::Volume;
 }
 
-gs::texture::texture(std::uint32_t size, gs_color_format format, std::uint32_t mip_levels,
-					 const std::uint8_t** mip_data, gs::texture::flags texture_flags)
+gs::texture::texture(uint32_t size, gs_color_format format, uint32_t mip_levels, const uint8_t** mip_data,
+					 gs::texture::flags texture_flags)
 {
 	if (size == 0)
 		throw std::logic_error("size must be at least 1");
@@ -149,7 +149,7 @@ gs::texture::~texture()
 	_texture = nullptr;
 }
 
-void gs::texture::load(std::int32_t unit)
+void gs::texture::load(int32_t unit)
 {
 	auto gctx = gs::context();
 	gs_load_texture(_texture, unit);
@@ -160,7 +160,7 @@ gs_texture_t* gs::texture::get_object()
 	return _texture;
 }
 
-std::uint32_t gs::texture::get_width()
+uint32_t gs::texture::get_width()
 {
 	switch (_type) {
 	case type::Normal:
@@ -173,7 +173,7 @@ std::uint32_t gs::texture::get_width()
 	return 0;
 }
 
-std::uint32_t gs::texture::get_height()
+uint32_t gs::texture::get_height()
 {
 	switch (_type) {
 	case type::Normal:
@@ -186,7 +186,7 @@ std::uint32_t gs::texture::get_height()
 	return 0;
 }
 
-std::uint32_t gs::texture::get_depth()
+uint32_t gs::texture::get_depth()
 {
 	switch (_type) {
 	case type::Normal:

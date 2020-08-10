@@ -35,12 +35,12 @@ shader_instance::shader_instance(obs_data_t* data, obs_source_t* self) : obs::so
 
 shader_instance::~shader_instance() {}
 
-std::uint32_t shader_instance::get_width()
+uint32_t shader_instance::get_width()
 {
 	return _fx->width();
 }
 
-std::uint32_t shader_instance::get_height()
+uint32_t shader_instance::get_height()
 {
 	return _fx->height();
 }
@@ -84,13 +84,13 @@ void shader_instance::video_render(gs_effect_t* effect)
 	gs::debug_marker gdmp{gs::debug_color_source, "Shader Transition '%s'", obs_source_get_name(_self)};
 #endif
 
-	obs_transition_video_render(
-		_self, [](void* data, gs_texture_t* a, gs_texture_t* b, float t, std::uint32_t cx, std::uint32_t cy) {
-			reinterpret_cast<shader_instance*>(data)->transition_render(a, b, t, cx, cy);
-		});
+	obs_transition_video_render(_self,
+								[](void* data, gs_texture_t* a, gs_texture_t* b, float t, uint32_t cx, uint32_t cy) {
+									reinterpret_cast<shader_instance*>(data)->transition_render(a, b, t, cx, cy);
+								});
 }
 
-void shader_instance::transition_render(gs_texture_t* a, gs_texture_t* b, float_t t, std::uint32_t cx, std::uint32_t cy)
+void shader_instance::transition_render(gs_texture_t* a, gs_texture_t* b, float_t t, uint32_t cx, uint32_t cy)
 {
 	_fx->set_input_a(std::make_shared<::gs::texture>(a, false));
 	_fx->set_input_b(std::make_shared<::gs::texture>(b, false));
@@ -100,7 +100,7 @@ void shader_instance::transition_render(gs_texture_t* a, gs_texture_t* b, float_
 	_fx->render();
 }
 
-bool shader_instance::audio_render(uint64_t* ts_out, obs_source_audio_mix* audio_output, std::uint32_t mixers,
+bool shader_instance::audio_render(uint64_t* ts_out, obs_source_audio_mix* audio_output, uint32_t mixers,
 								   std::size_t channels, std::size_t sample_rate)
 {
 	return obs_transition_audio_render(

@@ -86,7 +86,7 @@ namespace streamfx::filter::sdf_effects {
 		virtual ~sdf_effects_instance();
 
 		virtual void load(obs_data_t* settings) override;
-		virtual void migrate(obs_data_t* data, std::uint64_t version) override;
+		virtual void migrate(obs_data_t* data, uint64_t version) override;
 		virtual void update(obs_data_t* settings) override;
 
 		virtual void video_tick(float_t) override;

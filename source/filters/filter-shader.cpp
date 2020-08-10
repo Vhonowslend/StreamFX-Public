@@ -34,12 +34,12 @@ shader_instance::shader_instance(obs_data_t* data, obs_source_t* self) : obs::so
 
 shader_instance::~shader_instance() {}
 
-std::uint32_t shader_instance::get_width()
+uint32_t shader_instance::get_width()
 {
 	return _fx->width();
 }
 
-std::uint32_t shader_instance::get_height()
+uint32_t shader_instance::get_height()
 {
 	return _fx->height();
 }
@@ -54,7 +54,7 @@ void shader_instance::load(obs_data_t* data)
 	update(data);
 }
 
-void shader_instance::migrate(obs_data_t* data, std::uint64_t version) {}
+void shader_instance::migrate(obs_data_t* data, uint64_t version) {}
 
 void shader_instance::update(obs_data_t* data)
 {

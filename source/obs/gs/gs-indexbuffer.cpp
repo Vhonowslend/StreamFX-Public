@@ -22,7 +22,7 @@
 #include "gs-limits.hpp"
 #include "obs/gs/gs-helper.hpp"
 
-gs::index_buffer::index_buffer(std::uint32_t maximumVertices)
+gs::index_buffer::index_buffer(uint32_t maximumVertices)
 {
 	this->reserve(maximumVertices);
 	auto gctx     = gs::context();

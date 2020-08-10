@@ -37,9 +37,9 @@
 namespace streamfx::filter::nvidia {
 	class face_tracking_instance : public obs::source_instance {
 		// Filter Cache
-		std::pair<std::uint32_t, std::uint32_t> _size;
-		bool                                    _rt_is_fresh;
-		std::shared_ptr<gs::rendertarget>       _rt;
+		std::pair<uint32_t, uint32_t>     _size;
+		bool                              _rt_is_fresh;
+		std::shared_ptr<gs::rendertarget> _rt;
 
 		std::mutex _delete_protection;
 
@@ -114,7 +114,7 @@ namespace streamfx::filter::nvidia {
 
 		virtual void load(obs_data_t* data) override;
 
-		virtual void migrate(obs_data_t* data, std::uint64_t version) override;
+		virtual void migrate(obs_data_t* data, uint64_t version) override;
 
 		virtual void update(obs_data_t* data) override;
 

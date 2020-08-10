@@ -798,7 +798,7 @@ void* obs::deprecated_source::type_data()
 	return obs_source_get_type_data(_self);
 }
 
-std::uint32_t obs::deprecated_source::width()
+uint32_t obs::deprecated_source::width()
 {
 	if (!_self) {
 		return 0;
@@ -806,7 +806,7 @@ std::uint32_t obs::deprecated_source::width()
 	return obs_source_get_width(_self);
 }
 
-std::uint32_t obs::deprecated_source::height()
+uint32_t obs::deprecated_source::height()
 {
 	if (!_self) {
 		return 0;

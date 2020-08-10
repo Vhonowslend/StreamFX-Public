@@ -35,7 +35,7 @@ namespace streamfx::ui {
 		Q_OBJECT
 
 		public:
-		enum class role_type : std::int32_t {
+		enum class role_type : int32_t {
 			NONE,
 			SPACER,
 			THANKYOU,
@@ -49,7 +49,7 @@ namespace streamfx::ui {
 			CREATOR,
 
 		};
-		enum class link_type : std::int32_t {
+		enum class link_type : int32_t {
 			NONE,
 			GENERIC,
 

@@ -208,7 +208,7 @@ std::shared_ptr<AVFrame> d3d11_instance::allocate_frame(AVBufferRef* frames)
 	return frame;
 }
 
-void d3d11_instance::copy_from_obs(AVBufferRef*, std::uint32_t handle, uint64_t lock_key, uint64_t* next_lock_key,
+void d3d11_instance::copy_from_obs(AVBufferRef*, uint32_t handle, uint64_t lock_key, uint64_t* next_lock_key,
 								   std::shared_ptr<AVFrame> frame)
 {
 	auto gctx = gs::context();
@@ -251,7 +251,7 @@ void d3d11_instance::copy_from_obs(AVBufferRef*, std::uint32_t handle, uint64_t 
 	mutex->ReleaseSync(*next_lock_key);
 }
 
-std::shared_ptr<AVFrame> d3d11_instance::avframe_from_obs(AVBufferRef* frames, std::uint32_t handle, uint64_t lock_key,
+std::shared_ptr<AVFrame> d3d11_instance::avframe_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key,
 														  uint64_t* next_lock_key)
 {
 	auto gctx = gs::context();

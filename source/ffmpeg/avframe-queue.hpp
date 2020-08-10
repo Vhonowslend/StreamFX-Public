@@ -40,8 +40,8 @@ namespace ffmpeg {
 		std::deque<std::shared_ptr<AVFrame>> _frames;
 		std::mutex                           _lock;
 
-		std::pair<std::int32_t, std::int32_t> _resolution;
-		AVPixelFormat                         _format = AV_PIX_FMT_NONE;
+		std::pair<int32_t, int32_t> _resolution;
+		AVPixelFormat               _format = AV_PIX_FMT_NONE;
 
 		std::shared_ptr<AVFrame> create_frame();
 
@@ -49,10 +49,10 @@ namespace ffmpeg {
 		avframe_queue();
 		~avframe_queue();
 
-		void         set_resolution(std::int32_t width, std::int32_t height);
-		void         get_resolution(std::int32_t& width, std::int32_t& height);
-		std::int32_t get_width();
-		std::int32_t get_height();
+		void    set_resolution(int32_t width, int32_t height);
+		void    get_resolution(int32_t& width, int32_t& height);
+		int32_t get_width();
+		int32_t get_height();
 
 		void          set_pixel_format(AVPixelFormat format);
 		AVPixelFormat get_pixel_format();

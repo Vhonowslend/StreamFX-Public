@@ -33,15 +33,15 @@ namespace streamfx::filter::displacement {
 		float_t                      _scale_type;
 
 		// Cache
-		std::uint32_t _width;
-		std::uint32_t _height;
+		uint32_t _width;
+		uint32_t _height;
 
 		public:
 		displacement_instance(obs_data_t*, obs_source_t*);
 		virtual ~displacement_instance();
 
 		virtual void load(obs_data_t* settings) override;
-		virtual void migrate(obs_data_t* data, std::uint64_t version) override;
+		virtual void migrate(obs_data_t* data, uint64_t version) override;
 		virtual void update(obs_data_t* settings) override;
 
 		virtual void video_tick(float_t) override;

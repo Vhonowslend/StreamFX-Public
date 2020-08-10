@@ -199,7 +199,7 @@ void blur_instance::load(obs_data_t* settings)
 	update(settings);
 }
 
-void blur_instance::migrate(obs_data_t* settings, std::uint64_t version)
+void blur_instance::migrate(obs_data_t* settings, uint64_t version)
 {
 	// Now we use a fall-through switch to gradually upgrade each known version change.
 	switch (version) {
@@ -292,12 +292,12 @@ void blur_instance::update(obs_data_t* settings)
 				break;
 			}
 			if ((_mask.type == mask_type::Image) || (_mask.type == mask_type::Source)) {
-				std::uint32_t color = static_cast<uint32_t>(obs_data_get_int(settings, ST_MASK_COLOR));
-				_mask.color.r       = ((color >> 0) & 0xFF) / 255.0f;
-				_mask.color.g       = ((color >> 8) & 0xFF) / 255.0f;
-				_mask.color.b       = ((color >> 16) & 0xFF) / 255.0f;
-				_mask.color.a       = static_cast<float_t>(obs_data_get_double(settings, ST_MASK_ALPHA));
-				_mask.multiplier    = float_t(obs_data_get_double(settings, ST_MASK_MULTIPLIER));
+				uint32_t color   = static_cast<uint32_t>(obs_data_get_int(settings, ST_MASK_COLOR));
+				_mask.color.r    = ((color >> 0) & 0xFF) / 255.0f;
+				_mask.color.g    = ((color >> 8) & 0xFF) / 255.0f;
+				_mask.color.b    = ((color >> 16) & 0xFF) / 255.0f;
+				_mask.color.a    = static_cast<float_t>(obs_data_get_double(settings, ST_MASK_ALPHA));
+				_mask.multiplier = float_t(obs_data_get_double(settings, ST_MASK_MULTIPLIER));
 			}
 		}
 	}
@@ -357,8 +357,8 @@ void blur_instance::video_render(gs_effect_t* effect)
 	obs_source_t* parent        = obs_filter_get_parent(this->_self);
 	obs_source_t* target        = obs_filter_get_target(this->_self);
 	gs_effect_t*  defaultEffect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
-	std::uint32_t baseW         = obs_source_get_base_width(target);
-	std::uint32_t baseH         = obs_source_get_base_height(target);
+	uint32_t      baseW         = obs_source_get_base_width(target);
+	uint32_t      baseH         = obs_source_get_base_height(target);
 
 	// Verify that we can actually run first.
 	if (!target || !parent || !this->_self || !this->_blur || (baseW == 0) || (baseH == 0)) {
@@ -474,8 +474,8 @@ void blur_instance::video_render(gs_effect_t* effect)
 			}
 
 			if (_mask.source.source_texture) {
-				std::uint32_t source_width  = obs_source_get_width(this->_mask.source.source_texture->get_object());
-				std::uint32_t source_height = obs_source_get_height(this->_mask.source.source_texture->get_object());
+				uint32_t source_width  = obs_source_get_width(this->_mask.source.source_texture->get_object());
+				uint32_t source_height = obs_source_get_height(this->_mask.source.source_texture->get_object());
 
 				if (source_width == 0) {
 					source_width = baseW;

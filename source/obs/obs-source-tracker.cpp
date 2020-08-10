@@ -190,13 +190,13 @@ bool obs::source_tracker::filter_sources(std::string, obs_source_t* source)
 
 bool obs::source_tracker::filter_audio_sources(std::string, obs_source_t* source)
 {
-	std::uint32_t flags = obs_source_get_output_flags(source);
+	uint32_t flags = obs_source_get_output_flags(source);
 	return !(flags & OBS_SOURCE_AUDIO) || (obs_source_get_type(source) != OBS_SOURCE_TYPE_INPUT);
 }
 
 bool obs::source_tracker::filter_video_sources(std::string, obs_source_t* source)
 {
-	std::uint32_t flags = obs_source_get_output_flags(source);
+	uint32_t flags = obs_source_get_output_flags(source);
 	return !(flags & OBS_SOURCE_VIDEO) || (obs_source_get_type(source) != OBS_SOURCE_TYPE_INPUT);
 }
 

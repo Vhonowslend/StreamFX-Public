@@ -28,7 +28,7 @@
 #include "obs/obs-source.hpp"
 
 namespace streamfx::filter::dynamic_mask {
-	enum class channel : std::int8_t { Invalid = -1, Red, Green, Blue, Alpha };
+	enum class channel : int8_t { Invalid = -1, Red, Green, Blue, Alpha };
 
 	class dynamic_mask_instance : public obs::source_instance {
 		std::map<std::tuple<channel, channel, std::string>, std::string> _translation_map;
@@ -66,7 +66,7 @@ namespace streamfx::filter::dynamic_mask {
 		virtual ~dynamic_mask_instance();
 
 		virtual void load(obs_data_t* settings) override;
-		virtual void migrate(obs_data_t* data, std::uint64_t version) override;
+		virtual void migrate(obs_data_t* data, uint64_t version) override;
 		virtual void update(obs_data_t* settings) override;
 		virtual void save(obs_data_t* settings) override;
 

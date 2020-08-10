@@ -241,7 +241,7 @@ namespace obs {
 			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
-		static std::uint32_t _get_width(void* data) noexcept
+		static uint32_t _get_width(void* data) noexcept
 		try {
 			if (data)
 				return reinterpret_cast<_instance*>(data)->get_width();
@@ -254,7 +254,7 @@ namespace obs {
 			return 0;
 		}
 
-		static std::uint32_t _get_height(void* data) noexcept
+		static uint32_t _get_height(void* data) noexcept
 		try {
 			if (data)
 				return reinterpret_cast<_instance*>(data)->get_height();
@@ -367,9 +367,9 @@ namespace obs {
 		try {
 			auto priv = reinterpret_cast<_instance*>(data);
 			if (priv) {
-				std::uint64_t version = static_cast<std::uint64_t>(obs_data_get_int(settings, S_VERSION));
+				uint64_t version = static_cast<uint64_t>(obs_data_get_int(settings, S_VERSION));
 				priv->migrate(settings, version);
-				obs_data_set_int(settings, S_VERSION, static_cast<std::int64_t>(STREAMFX_VERSION));
+				obs_data_set_int(settings, S_VERSION, static_cast<int64_t>(STREAMFX_VERSION));
 				obs_data_set_string(settings, S_COMMIT, STREAMFX_COMMIT);
 				priv->load(settings);
 			}
@@ -393,7 +393,7 @@ namespace obs {
 		try {
 			if (data) {
 				reinterpret_cast<_instance*>(data)->save(settings);
-				obs_data_set_int(settings, S_VERSION, static_cast<std::int64_t>(STREAMFX_VERSION));
+				obs_data_set_int(settings, S_VERSION, static_cast<int64_t>(STREAMFX_VERSION));
 				obs_data_set_string(settings, S_COMMIT, STREAMFX_COMMIT);
 			}
 		} catch (const std::exception& ex) {
@@ -403,7 +403,7 @@ namespace obs {
 		}
 
 		static void _mouse_click(void* data, const struct obs_mouse_event* event, int32_t type, bool mouse_up,
-								 std::uint32_t click_count) noexcept
+								 uint32_t click_count) noexcept
 		try {
 			if (data)
 				reinterpret_cast<_instance*>(data)->mouse_click(event, type, mouse_up, click_count);
@@ -464,7 +464,7 @@ namespace obs {
 		}
 
 		static bool _audio_render(void* data, uint64_t* ts_out, struct obs_source_audio_mix* audio_output,
-								  std::uint32_t mixers, std::size_t channels, std::size_t sample_rate) noexcept
+								  uint32_t mixers, std::size_t channels, std::size_t sample_rate) noexcept
 		try {
 			if (data)
 				return reinterpret_cast<_instance*>(data)->audio_render(ts_out, audio_output, mixers, channels,
@@ -549,12 +549,12 @@ namespace obs {
 		source_instance(obs_data_t* settings, obs_source_t* source) : _self(source) {}
 		virtual ~source_instance(){};
 
-		virtual std::uint32_t get_width()
+		virtual uint32_t get_width()
 		{
 			return 0;
 		}
 
-		virtual std::uint32_t get_height()
+		virtual uint32_t get_height()
 		{
 			return 0;
 		}
@@ -585,19 +585,18 @@ namespace obs {
 
 		virtual void load(obs_data_t* settings) {}
 
-		virtual void migrate(obs_data_t* settings, std::uint64_t version) {}
+		virtual void migrate(obs_data_t* settings, uint64_t version) {}
 
 		virtual void update(obs_data_t* settings) {}
 
 		virtual void save(obs_data_t* settings) {}
 
-		virtual void mouse_click(const struct obs_mouse_event* event, std::int32_t type, bool mouse_up,
-								 std::uint32_t click_count)
+		virtual void mouse_click(const struct obs_mouse_event* event, int32_t type, bool mouse_up, uint32_t click_count)
 		{}
 
 		virtual void mouse_move(const struct obs_mouse_event* event, bool mouse_leave) {}
 
-		virtual void mouse_wheel(const struct obs_mouse_event* event, std::int32_t x_delta, std::int32_t y_delta) {}
+		virtual void mouse_wheel(const struct obs_mouse_event* event, int32_t x_delta, int32_t y_delta) {}
 
 		virtual void focus(bool focus) {}
 
@@ -605,8 +604,8 @@ namespace obs {
 
 		virtual void filter_remove(obs_source_t* source) {}
 
-		virtual bool audio_render(std::uint64_t* ts_out, struct obs_source_audio_mix* audio_output,
-								  std::uint32_t mixers, std::size_t channels, std::size_t sample_rate)
+		virtual bool audio_render(uint64_t* ts_out, struct obs_source_audio_mix* audio_output, uint32_t mixers,
+								  std::size_t channels, std::size_t sample_rate)
 		{
 			return false;
 		}
@@ -617,7 +616,7 @@ namespace obs {
 
 		virtual void transition_stop() {}
 
-		virtual bool audio_mix(std::uint64_t* ts_out, struct audio_output_data* audio_output, std::size_t channels,
+		virtual bool audio_mix(uint64_t* ts_out, struct audio_output_data* audio_output, std::size_t channels,
 							   std::size_t sample_rate)
 		{
 			return false;

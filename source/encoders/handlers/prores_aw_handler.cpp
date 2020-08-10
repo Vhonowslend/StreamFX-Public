@@ -42,7 +42,7 @@ void prores_aw_handler::override_colorformat(AVPixelFormat& target_format, obs_d
 			std::pair{profile::AP4H, AV_PIX_FMT_YUV444P10}, std::pair{profile::AP4X, AV_PIX_FMT_YUV444P10},
 		};
 
-	const std::int64_t profile_id = obs_data_get_int(settings, P_PRORES_PROFILE);
+	const int64_t profile_id = obs_data_get_int(settings, P_PRORES_PROFILE);
 	for (auto kv : profile_to_format_map) {
 		if (kv.first == static_cast<profile>(profile_id)) {
 			target_format = kv.second;

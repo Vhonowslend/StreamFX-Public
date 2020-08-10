@@ -100,7 +100,7 @@ namespace streamfx::filter::blur {
 
 		public:
 		virtual void load(obs_data_t* settings) override;
-		virtual void migrate(obs_data_t* settings, std::uint64_t version) override;
+		virtual void migrate(obs_data_t* settings, uint64_t version) override;
 		virtual void update(obs_data_t* settings) override;
 
 		virtual void video_tick(float_t time) override;

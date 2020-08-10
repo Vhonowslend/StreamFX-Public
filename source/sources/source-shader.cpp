@@ -35,12 +35,12 @@ shader_instance::shader_instance(obs_data_t* data, obs_source_t* self) : obs::so
 
 shader_instance::~shader_instance() {}
 
-std::uint32_t shader_instance::get_width()
+uint32_t shader_instance::get_width()
 {
 	return _fx->width();
 }
 
-std::uint32_t shader_instance::get_height()
+uint32_t shader_instance::get_height()
 {
 	return _fx->height();
 }

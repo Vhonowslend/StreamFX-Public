@@ -59,6 +59,6 @@ namespace streamfx::encoder::codec::hevc {
 		UNKNOWN = -1,
 	};
 
-	void extract_header_sei(std::uint8_t* data, std::size_t sz_data, std::vector<std::uint8_t>& header,
-							std::vector<std::uint8_t>& sei);
+	void extract_header_sei(uint8_t* data, std::size_t sz_data, std::vector<uint8_t>& header,
+							std::vector<uint8_t>& sei);
 } // namespace streamfx::encoder::codec::hevc

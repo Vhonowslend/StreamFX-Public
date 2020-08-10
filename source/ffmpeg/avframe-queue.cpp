@@ -49,24 +49,24 @@ avframe_queue::~avframe_queue()
 	clear();
 }
 
-void avframe_queue::set_resolution(std::int32_t const width, std::int32_t const height)
+void avframe_queue::set_resolution(int32_t const width, int32_t const height)
 {
 	this->_resolution.first  = width;
 	this->_resolution.second = height;
 }
 
-void avframe_queue::get_resolution(std::int32_t& width, std::int32_t& height)
+void avframe_queue::get_resolution(int32_t& width, int32_t& height)
 {
 	width  = this->_resolution.first;
 	height = this->_resolution.second;
 }
 
-std::int32_t avframe_queue::get_width()
+int32_t avframe_queue::get_width()
 {
 	return this->_resolution.first;
 }
 
-std::int32_t avframe_queue::get_height()
+int32_t avframe_queue::get_height()
 {
 	return this->_resolution.second;
 }
@@ -113,8 +113,8 @@ std::shared_ptr<AVFrame> avframe_queue::pop()
 				ret = create_frame();
 			} else {
 				_frames.pop_front();
-				if ((static_cast<std::int32_t>(ret->width) != this->_resolution.first)
-					|| (static_cast<std::int32_t>(ret->height) != this->_resolution.second)
+				if ((static_cast<int32_t>(ret->width) != this->_resolution.first)
+					|| (static_cast<int32_t>(ret->height) != this->_resolution.second)
 					|| (ret->format != this->_format)) {
 					ret = nullptr;
 				}

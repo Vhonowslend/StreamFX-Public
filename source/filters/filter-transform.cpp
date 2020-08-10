@@ -85,7 +85,7 @@ transform_instance::transform_instance(obs_data_t* data, obs_source_t* context)
 {
 	_cache_rt      = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	_source_rt     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	_vertex_buffer = std::make_shared<gs::vertex_buffer>(uint32_t(4u), std::uint8_t(1u));
+	_vertex_buffer = std::make_shared<gs::vertex_buffer>(uint32_t(4u), uint8_t(1u));
 
 	_position = std::make_unique<util::vec3a>();
 	_rotation = std::make_unique<util::vec3a>();
@@ -116,7 +116,7 @@ void transform_instance::load(obs_data_t* settings)
 	update(settings);
 }
 
-void transform_instance::migrate(obs_data_t* data, std::uint64_t version)
+void transform_instance::migrate(obs_data_t* data, uint64_t version)
 {
 	switch (version & STREAMFX_MASK_COMPAT) {
 	case 0:
@@ -154,8 +154,8 @@ void transform_instance::update(obs_data_t* settings)
 
 void transform_instance::video_tick(float_t)
 {
-	std::uint32_t width  = 0;
-	std::uint32_t height = 0;
+	uint32_t width  = 0;
+	uint32_t height = 0;
 
 	// Grab parent and target.
 	obs_source_t* target = obs_filter_get_target(_self);
@@ -274,8 +274,8 @@ void transform_instance::video_render(gs_effect_t* effect)
 {
 	obs_source_t* parent         = obs_filter_get_parent(_self);
 	obs_source_t* target         = obs_filter_get_target(_self);
-	std::uint32_t base_width     = obs_source_get_base_width(target);
-	std::uint32_t base_height    = obs_source_get_base_height(target);
+	uint32_t      base_width     = obs_source_get_base_width(target);
+	uint32_t      base_height    = obs_source_get_base_height(target);
 	gs_effect_t*  default_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
 	if (!effect)
 		effect = default_effect;
@@ -290,8 +290,8 @@ void transform_instance::video_render(gs_effect_t* effect)
 						  obs_source_get_name(obs_filter_get_parent(_self))};
 #endif
 
-	std::uint32_t cache_width  = base_width;
-	std::uint32_t cache_height = base_height;
+	uint32_t cache_width  = base_width;
+	uint32_t cache_height = base_height;
 
 	if (_mipmap_enabled) {
 		double_t aspect  = double_t(base_width) / double_t(base_height);
