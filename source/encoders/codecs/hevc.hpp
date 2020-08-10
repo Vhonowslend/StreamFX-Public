@@ -20,7 +20,7 @@
 // SOFTWARE.
 
 #pragma once
-#include <vector>
+#include "common.hpp"
 
 // Codec: HEVC
 #define P_HEVC "Codec.HEVC"
