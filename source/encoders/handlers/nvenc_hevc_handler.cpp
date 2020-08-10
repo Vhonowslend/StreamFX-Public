@@ -42,18 +42,18 @@ extern "C" {
 using namespace streamfx::encoder::ffmpeg::handler;
 using namespace streamfx::encoder::codec::hevc;
 
-std::map<profile, std::string> profiles{
+static std::map<profile, std::string> profiles{
 	{profile::MAIN, "main"},
 	{profile::MAIN10, "main10"},
 	{profile::RANGE_EXTENDED, "rext"},
 };
 
-std::map<tier, std::string> tiers{
+static std::map<tier, std::string> tiers{
 	{tier::MAIN, "main"},
 	{tier::HIGH, "high"},
 };
 
-std::map<level, std::string> levels{
+static std::map<level, std::string> levels{
 	{level::L1_0, "1.0"}, {level::L2_0, "2.0"}, {level::L2_1, "2.1"}, {level::L3_0, "3.0"}, {level::L3_1, "3.1"},
 	{level::L4_0, "4.0"}, {level::L4_1, "4.1"}, {level::L5_0, "5.0"}, {level::L5_1, "5.1"}, {level::L5_2, "5.2"},
 	{level::L6_0, "6.0"}, {level::L6_1, "6.1"}, {level::L6_2, "6.2"},

@@ -169,11 +169,11 @@ void nvenc::override_update(ffmpeg_instance* instance, obs_data_t*)
 
 	// Calculate and set the number of surfaces to allocate (if not user overridden).
 	if (surfaces == 0) {
-		surfaces = std::max(4ll, (context->max_b_frames + 1ll) * 4ll);
+		surfaces = std::max<int64_t>(4ll, (context->max_b_frames + 1ll) * 4ll);
 		if (rclookahead > 0) {
-			surfaces = std::max(1ll, std::max(surfaces, rclookahead + (context->max_b_frames + 5ll)));
+			surfaces = std::max<int64_t>(1ll, std::max<int64_t>(surfaces, rclookahead + (context->max_b_frames + 5ll)));
 		} else if (context->max_b_frames > 0) {
-			surfaces = std::max(4ll, (context->max_b_frames + 1ll) * 4ll);
+			surfaces = std::max<int64_t>(4ll, (context->max_b_frames + 1ll) * 4ll);
 		} else {
 			surfaces = 4;
 		}
@@ -182,7 +182,7 @@ void nvenc::override_update(ffmpeg_instance* instance, obs_data_t*)
 	}
 
 	// Set delay
-	context->delay = static_cast<int>(std::min(std::max(async_depth, 3ll), surfaces - 1));
+	context->delay = std::min<int>(std::max<int64_t>(async_depth, 3ll), surfaces - 1);
 }
 
 void nvenc::get_defaults(obs_data_t* settings, const AVCodec*, AVCodecContext*)
@@ -440,7 +440,7 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 				obs_properties_add_list(grp, KEY_OTHER_BFRAMEREFERENCEMODE, D_TRANSLATE(ST_OTHER_BFRAMEREFERENCEMODE),
 										OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			for (auto kv : b_ref_modes) {
-				if (kv.first == nvenc::b_ref_mode::EACH && (static std::string_view("h264_nvenc") == codec->name)) {
+				if (kv.first == nvenc::b_ref_mode::EACH && (std::string_view("h264_nvenc") == codec->name)) {
 					// H.264 does not support using all B-Frames as reference.
 					continue;
 				}
