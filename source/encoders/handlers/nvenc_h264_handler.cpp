@@ -45,14 +45,14 @@ extern "C" {
 using namespace streamfx::encoder::ffmpeg::handler;
 using namespace streamfx::encoder::codec::h264;
 
-std::map<profile, std::string> profiles{
+static std::map<profile, std::string> profiles{
 	{profile::BASELINE, "baseline"},
 	{profile::MAIN, "main"},
 	{profile::HIGH, "high"},
 	{profile::HIGH444_PREDICTIVE, "high444p"},
 };
 
-std::map<level, std::string> levels{
+static std::map<level, std::string> levels{
 	{level::L1_0, "1.0"}, {level::L1_0b, "1.0b"}, {level::L1_1, "1.1"}, {level::L1_2, "1.2"},
 	{level::L1_3, "1.3"}, {level::L2_0, "2.0"},   {level::L2_1, "2.1"}, {level::L2_2, "2.2"},
 	{level::L3_0, "3.0"}, {level::L3_1, "3.1"},   {level::L3_2, "3.2"}, {level::L4_0, "4.0"},
