@@ -1097,6 +1097,11 @@ const AVCodec* ffmpeg_factory::get_avcodec()
 	return _avcodec;
 }
 
+obs_encoder_info* streamfx::encoder::ffmpeg::ffmpeg_factory::get_info()
+{
+	return &_info;
+}
+
 ffmpeg_manager::ffmpeg_manager() : _factories(), _handlers(), _debug_handler()
 {
 	// Handlers

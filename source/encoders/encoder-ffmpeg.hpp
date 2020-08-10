@@ -147,6 +147,8 @@ namespace streamfx::encoder::ffmpeg {
 
 		public:
 		const AVCodec* get_avcodec();
+
+		obs_encoder_info* get_info();
 	};
 
 	class ffmpeg_manager {
