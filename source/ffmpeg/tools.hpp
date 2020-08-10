@@ -22,8 +22,6 @@
 #pragma once
 #include "common.hpp"
 #include <functional>
-#include <string>
-#include <vector>
 
 extern "C" {
 #ifdef _MSC_VER
