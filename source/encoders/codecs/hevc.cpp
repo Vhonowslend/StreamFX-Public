@@ -23,7 +23,7 @@
 
 using namespace streamfx::encoder::codec;
 
-enum class nal_unit_type : std::uint8_t { // 6 bits
+enum class nal_unit_type : uint8_t { // 6 bits
 	TRAIL_N        = 0,
 	TRAIL_R        = 1,
 	TSA_N          = 2,
@@ -93,17 +93,17 @@ enum class nal_unit_type : std::uint8_t { // 6 bits
 struct hevc_nal_unit_header {
 	bool          zero_bit : 1;
 	nal_unit_type nut : 6;
-	std::uint8_t  layer_id : 6;
-	std::uint8_t  temporal_id_plus1 : 3;
+	uint8_t       layer_id : 6;
+	uint8_t       temporal_id_plus1 : 3;
 };
 
 struct hevc_nal {
 	hevc_nal_unit_header* header;
 	std::size_t           size = 0;
-	std::uint8_t*         data = nullptr;
+	uint8_t*              data = nullptr;
 };
 
-bool is_nal(std::uint8_t* data, std::uint8_t* end)
+bool is_nal(uint8_t* data, uint8_t* end)
 {
 	std::size_t s = static_cast<size_t>(end - data);
 	if (s < 4)
@@ -121,7 +121,7 @@ bool is_nal(std::uint8_t* data, std::uint8_t* end)
 	return true;
 }
 
-bool seek_to_nal(std::uint8_t*& data, std::uint8_t* end)
+bool seek_to_nal(uint8_t*& data, uint8_t* end)
 {
 	if (data > end)
 		return false;
@@ -135,16 +135,16 @@ bool seek_to_nal(std::uint8_t*& data, std::uint8_t* end)
 	return false;
 }
 
-std::size_t get_nal_size(std::uint8_t* data, std::uint8_t* end)
+std::size_t get_nal_size(uint8_t* data, uint8_t* end)
 {
-	std::uint8_t* ptr = data + 4;
+	uint8_t* ptr = data + 4;
 	if (!seek_to_nal(ptr, end)) {
 		return static_cast<size_t>(end - data);
 	}
 	return static_cast<size_t>(ptr - data);
 }
 
-bool is_discard_marker(std::uint8_t* data, std::uint8_t* end)
+bool is_discard_marker(uint8_t* data, uint8_t* end)
 {
 	std::size_t s = static_cast<size_t>(end - data);
 	if (s < 4)
@@ -179,7 +179,7 @@ bool is_discard_marker(std::uint8_t* data, std::uint8_t* end)
 	}
 }
 
-bool should_discard_nal(std::uint8_t* data, std::uint8_t* end)
+bool should_discard_nal(uint8_t* data, uint8_t* end)
 {
 	if (data > end)
 		return true;
@@ -192,17 +192,17 @@ bool should_discard_nal(std::uint8_t* data, std::uint8_t* end)
 	return false;
 }
 
-void progress_parse(std::uint8_t*& ptr, std::uint8_t* end, size_t& sz)
+void progress_parse(uint8_t*& ptr, uint8_t* end, size_t& sz)
 {
 	ptr += sz;
 	sz = get_nal_size(ptr, end);
 }
 
-void hevc::extract_header_sei(std::uint8_t* data, std::size_t sz_data, std::vector<std::uint8_t>& header,
-							  std::vector<std::uint8_t>& sei)
+void hevc::extract_header_sei(uint8_t* data, std::size_t sz_data, std::vector<uint8_t>& header,
+							  std::vector<uint8_t>& sei)
 {
-	std::uint8_t* ptr = data;
-	std::uint8_t* end = data + sz_data;
+	uint8_t* ptr = data;
+	uint8_t* end = data + sz_data;
 
 	// Reserve enough memory to store the entire packet data if necessary.
 	header.reserve(sz_data);

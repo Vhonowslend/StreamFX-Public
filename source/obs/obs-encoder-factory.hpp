@@ -173,9 +173,9 @@ namespace obs {
 		try {
 			auto priv = reinterpret_cast<instance_t*>(data);
 			if (priv) {
-				std::uint64_t version = static_cast<std::uint64_t>(obs_data_get_int(settings, S_VERSION));
+				uint64_t version = static_cast<uint64_t>(obs_data_get_int(settings, S_VERSION));
 				priv->migrate(settings, version);
-				obs_data_set_int(settings, S_VERSION, static_cast<std::int64_t>(STREAMFX_VERSION));
+				obs_data_set_int(settings, S_VERSION, static_cast<int64_t>(STREAMFX_VERSION));
 				obs_data_set_string(settings, S_COMMIT, STREAMFX_COMMIT);
 				return priv->update(settings);
 			}
@@ -303,7 +303,7 @@ namespace obs {
 		encoder_instance(obs_data_t* settings, obs_encoder_t* self, bool is_hw) : _self(self) {}
 		virtual ~encoder_instance(){};
 
-		virtual void migrate(obs_data_t* settings, std::uint64_t version) {}
+		virtual void migrate(obs_data_t* settings, uint64_t version) {}
 
 		virtual bool update(obs_data_t* settings)
 		{

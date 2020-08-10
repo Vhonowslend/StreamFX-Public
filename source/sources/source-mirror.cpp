@@ -81,12 +81,12 @@ mirror_instance::~mirror_instance()
 	release();
 }
 
-std::uint32_t mirror_instance::get_width()
+uint32_t mirror_instance::get_width()
 {
 	return _source_size.first;
 }
 
-std::uint32_t mirror_instance::get_height()
+uint32_t mirror_instance::get_height()
 {
 	return _source_size.second;
 }
@@ -96,7 +96,7 @@ void mirror_instance::load(obs_data_t* data)
 	update(data);
 }
 
-void mirror_instance::migrate(obs_data_t* data, std::uint64_t version)
+void mirror_instance::migrate(obs_data_t* data, uint64_t version)
 {
 	switch (version) {
 	case 0:

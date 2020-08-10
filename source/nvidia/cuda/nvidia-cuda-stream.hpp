@@ -28,7 +28,7 @@ namespace nvidia::cuda {
 
 		public:
 		stream(std::shared_ptr<::nvidia::cuda::cuda> cuda,
-			   ::nvidia::cuda::stream_flags flags = ::nvidia::cuda::stream_flags::DEFAULT, std::int32_t priority = 0);
+			   ::nvidia::cuda::stream_flags flags = ::nvidia::cuda::stream_flags::DEFAULT, int32_t priority = 0);
 		~stream();
 
 		::nvidia::cuda::stream_t get();

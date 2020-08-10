@@ -31,7 +31,7 @@ swscale::~swscale()
 	finalize();
 }
 
-void swscale::set_source_size(std::uint32_t width, std::uint32_t height)
+void swscale::set_source_size(uint32_t width, uint32_t height)
 {
 	source_size.first  = width;
 	source_size.second = height;
@@ -48,12 +48,12 @@ std::pair<uint32_t, uint32_t> swscale::get_source_size()
 	return this->source_size;
 }
 
-std::uint32_t swscale::get_source_width()
+uint32_t swscale::get_source_width()
 {
 	return this->source_size.first;
 }
 
-std::uint32_t swscale::get_source_height()
+uint32_t swscale::get_source_height()
 {
 	return this->source_size.second;
 }
@@ -94,7 +94,7 @@ bool swscale::is_source_full_range()
 	return this->source_full_range;
 }
 
-void swscale::set_target_size(std::uint32_t width, std::uint32_t height)
+void swscale::set_target_size(uint32_t width, uint32_t height)
 {
 	target_size.first  = width;
 	target_size.second = height;
@@ -111,12 +111,12 @@ std::pair<uint32_t, uint32_t> swscale::get_target_size()
 	return this->target_size;
 }
 
-std::uint32_t swscale::get_target_width()
+uint32_t swscale::get_target_width()
 {
 	return this->target_size.first;
 }
 
-std::uint32_t swscale::get_target_height()
+uint32_t swscale::get_target_height()
 {
 	return this->target_size.second;
 }
@@ -196,8 +196,8 @@ bool swscale::finalize()
 	return false;
 }
 
-int32_t swscale::convert(const std::uint8_t* const source_data[], const int source_stride[], int32_t source_row,
-						 int32_t source_rows, std::uint8_t* const target_data[], const int target_stride[])
+int32_t swscale::convert(const uint8_t* const source_data[], const int source_stride[], int32_t source_row,
+						 int32_t source_rows, uint8_t* const target_data[], const int target_stride[])
 {
 	if (!this->context) {
 		return 0;

@@ -32,8 +32,8 @@ namespace streamfx::transition::shader {
 		shader_instance(obs_data_t* data, obs_source_t* self);
 		virtual ~shader_instance();
 
-		virtual std::uint32_t get_width() override;
-		virtual std::uint32_t get_height() override;
+		virtual uint32_t get_width() override;
+		virtual uint32_t get_height() override;
 
 		void properties(obs_properties_t* props);
 
@@ -43,9 +43,9 @@ namespace streamfx::transition::shader {
 		virtual void video_tick(float_t sec_since_last) override;
 		virtual void video_render(gs_effect_t* effect) override;
 
-		void transition_render(gs_texture_t* a, gs_texture_t* b, float_t t, std::uint32_t cx, std::uint32_t cy);
+		void transition_render(gs_texture_t* a, gs_texture_t* b, float_t t, uint32_t cx, uint32_t cy);
 
-		virtual bool audio_render(uint64_t* ts_out, struct obs_source_audio_mix* audio_output, std::uint32_t mixers,
+		virtual bool audio_render(uint64_t* ts_out, struct obs_source_audio_mix* audio_output, uint32_t mixers,
 								  std::size_t channels, std::size_t sample_rate) override;
 
 		virtual void transition_start() override;

@@ -45,7 +45,7 @@ gs::mipmapper::~mipmapper()
 
 gs::mipmapper::mipmapper()
 {
-	_vb = std::make_unique<gs::vertex_buffer>(uint32_t(3u), std::uint8_t(1u));
+	_vb = std::make_unique<gs::vertex_buffer>(uint32_t(3u), uint8_t(1u));
 
 	{
 		auto vtx        = _vb->at(0);
@@ -211,7 +211,7 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 				if (gs_get_device_type() == GS_DEVICE_DIRECT3D_11) {
 					ID3D11Texture2D* rtt =
 						reinterpret_cast<ID3D11Texture2D*>(gs_texture_get_obj(_rt->get_texture()->get_object()));
-					std::uint32_t level = uint32_t(D3D11CalcSubresource(UINT(mip), 0, UINT(max_mip_level)));
+					uint32_t level = uint32_t(D3D11CalcSubresource(UINT(mip), 0, UINT(max_mip_level)));
 
 					D3D11_BOX box = {0, 0, 0, cwidth, cheight, 1};
 					d3d_context->CopySubresourceRegion(d3d_target, level, 0, 0, 0, rtt, 0, &box);

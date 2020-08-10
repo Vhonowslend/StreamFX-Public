@@ -345,21 +345,21 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		{
 			auto p = obs_properties_add_int(grp, KEY_RATECONTROL_LIMITS_BITRATE_TARGET,
 											D_TRANSLATE(ST_RATECONTROL_LIMITS_BITRATE_TARGET), -1,
-											std::numeric_limits<std::int32_t>::max(), 1);
+											std::numeric_limits<int32_t>::max(), 1);
 			obs_property_int_set_suffix(p, " kbit/s");
 		}
 
 		{
 			auto p = obs_properties_add_int(grp, KEY_RATECONTROL_LIMITS_BITRATE_MAXIMUM,
 											D_TRANSLATE(ST_RATECONTROL_LIMITS_BITRATE_MAXIMUM), -1,
-											std::numeric_limits<std::int32_t>::max(), 1);
+											std::numeric_limits<int32_t>::max(), 1);
 			obs_property_int_set_suffix(p, " kbit/s");
 		}
 
 		{
 			auto p = obs_properties_add_int(grp, KEY_RATECONTROL_LIMITS_BUFFERSIZE,
 											D_TRANSLATE(ST_RATECONTROL_LIMITS_BUFFERSIZE), 0,
-											std::numeric_limits<std::int32_t>::max(), 1);
+											std::numeric_limits<int32_t>::max(), 1);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RATECONTROL_LIMITS_BUFFERSIZE)));
 			obs_property_int_set_suffix(p, " kbit");
 		}
@@ -444,7 +444,7 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 					// H.264 does not support using all B-Frames as reference.
 					continue;
 				}
-				obs_property_list_add_int(p, D_TRANSLATE(kv.second.c_str()), static_cast<std::int64_t>(kv.first));
+				obs_property_list_add_int(p, D_TRANSLATE(kv.second.c_str()), static_cast<int64_t>(kv.first));
 			}
 		}
 

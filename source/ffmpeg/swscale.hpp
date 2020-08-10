@@ -53,11 +53,11 @@ namespace ffmpeg {
 		swscale();
 		~swscale();
 
-		void                          set_source_size(std::uint32_t width, std::uint32_t height);
+		void                          set_source_size(uint32_t width, uint32_t height);
 		void                          get_source_size(uint32_t& width, uint32_t& height);
 		std::pair<uint32_t, uint32_t> get_source_size();
-		std::uint32_t                 get_source_width();
-		std::uint32_t                 get_source_height();
+		uint32_t                      get_source_width();
+		uint32_t                      get_source_height();
 		void                          set_source_format(AVPixelFormat format);
 		AVPixelFormat                 get_source_format();
 		void                          set_source_color(bool full_range, AVColorSpace space);
@@ -66,11 +66,11 @@ namespace ffmpeg {
 		void                          set_source_full_range(bool full_range);
 		bool                          is_source_full_range();
 
-		void                          set_target_size(std::uint32_t width, std::uint32_t height);
+		void                          set_target_size(uint32_t width, uint32_t height);
 		void                          get_target_size(uint32_t& width, uint32_t& height);
 		std::pair<uint32_t, uint32_t> get_target_size();
-		std::uint32_t                 get_target_width();
-		std::uint32_t                 get_target_height();
+		uint32_t                      get_target_width();
+		uint32_t                      get_target_height();
 		void                          set_target_format(AVPixelFormat format);
 		AVPixelFormat                 get_target_format();
 		void                          set_target_color(bool full_range, AVColorSpace space);
@@ -82,7 +82,7 @@ namespace ffmpeg {
 		bool initialize(int flags);
 		bool finalize();
 
-		int32_t convert(const std::uint8_t* const source_data[], const int source_stride[], int32_t source_row,
-						int32_t source_rows, std::uint8_t* const target_data[], const int target_stride[]);
+		int32_t convert(const uint8_t* const source_data[], const int source_stride[], int32_t source_row,
+						int32_t source_rows, uint8_t* const target_data[], const int target_stride[]);
 	};
 } // namespace ffmpeg

@@ -38,37 +38,37 @@ namespace nvidia::ar {
 		inline NvCV_Status get(std::string name, T& value);
 
 		template<>
-		inline NvCV_Status set(std::string name, std::int32_t value)
+		inline NvCV_Status set(std::string name, int32_t value)
 		{
 			return _ar->set_int32(_feature.get(), name.c_str(), value);
 		}
 
 		template<>
-		inline NvCV_Status get(std::string name, std::int32_t& value)
+		inline NvCV_Status get(std::string name, int32_t& value)
 		{
 			return _ar->get_int32(_feature.get(), name.c_str(), &value);
 		}
 
 		template<>
-		inline NvCV_Status set(std::string name, std::uint32_t value)
+		inline NvCV_Status set(std::string name, uint32_t value)
 		{
 			return _ar->set_uint32(_feature.get(), name.c_str(), value);
 		}
 
 		template<>
-		inline NvCV_Status get(std::string name, std::uint32_t& value)
+		inline NvCV_Status get(std::string name, uint32_t& value)
 		{
 			return _ar->get_uint32(_feature.get(), name.c_str(), &value);
 		}
 
 		template<>
-		inline NvCV_Status set(std::string name, std::uint64_t value)
+		inline NvCV_Status set(std::string name, uint64_t value)
 		{
 			return _ar->set_uint64(_feature.get(), name.c_str(), value);
 		}
 
 		template<>
-		inline NvCV_Status get(std::string name, std::uint64_t& value)
+		inline NvCV_Status get(std::string name, uint64_t& value)
 		{
 			return _ar->get_uint64(_feature.get(), name.c_str(), &value);
 		}
@@ -89,7 +89,7 @@ namespace nvidia::ar {
 		inline NvCV_Status set(std::string name, std::vector<std::float_t> value)
 		{
 			return _ar->set_float32_array(_feature.get(), name.c_str(), value.data(),
-										  static_cast<std::int32_t>(value.size()));
+										  static_cast<int32_t>(value.size()));
 		}
 
 		template<>

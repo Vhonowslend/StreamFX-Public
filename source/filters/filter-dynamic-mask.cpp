@@ -79,7 +79,7 @@ void dynamic_mask_instance::load(obs_data_t* settings)
 	update(settings);
 }
 
-void dynamic_mask_instance::migrate(obs_data_t* data, std::uint64_t version) {}
+void dynamic_mask_instance::migrate(obs_data_t* data, uint64_t version) {}
 
 void dynamic_mask_instance::update(obs_data_t* settings)
 {
@@ -191,8 +191,8 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 {
 	obs_source_t* parent = obs_filter_get_parent(_self);
 	obs_source_t* target = obs_filter_get_target(_self);
-	std::uint32_t width  = obs_source_get_base_width(target);
-	std::uint32_t height = obs_source_get_base_height(target);
+	uint32_t      width  = obs_source_get_base_width(target);
+	uint32_t      height = obs_source_get_base_height(target);
 
 	if (!_self || !parent || !target || !width || !height || !_input || !_input_capture || !_effect) {
 		obs_source_skip_video_filter(_self);

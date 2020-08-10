@@ -48,7 +48,7 @@ namespace streamfx::filter::transform {
 		// Mesh
 		bool                               _update_mesh;
 		std::shared_ptr<gs::vertex_buffer> _vertex_buffer;
-		std::uint32_t                      _rotation_order;
+		uint32_t                           _rotation_order;
 		std::unique_ptr<util::vec3a>       _position;
 		std::unique_ptr<util::vec3a>       _rotation;
 		std::unique_ptr<util::vec3a>       _scale;
@@ -63,7 +63,7 @@ namespace streamfx::filter::transform {
 		virtual ~transform_instance() override;
 
 		virtual void load(obs_data_t* settings) override;
-		virtual void migrate(obs_data_t* data, std::uint64_t version) override;
+		virtual void migrate(obs_data_t* data, uint64_t version) override;
 		virtual void update(obs_data_t*) override;
 
 		virtual void video_tick(float_t) override;

@@ -271,8 +271,8 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 		}
 
 		// Reduce Size
-		std::uint32_t owidth  = width >> n;
-		std::uint32_t oheight = height >> n;
+		uint32_t owidth  = width >> n;
+		uint32_t oheight = height >> n;
 		if ((owidth <= 0) || (oheight <= 0)) {
 			actual_iterations = n - 1;
 			break;
@@ -303,10 +303,10 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 		std::shared_ptr<gs::texture> tex_in = _rts[n]->get_texture();
 
 		// Get Size
-		std::uint32_t iwidth  = width >> n;
-		std::uint32_t iheight = height >> n;
-		std::uint32_t owidth  = width >> (n - 1);
-		std::uint32_t oheight = height >> (n - 1);
+		uint32_t iwidth  = width >> n;
+		uint32_t iheight = height >> n;
+		uint32_t owidth  = width >> (n - 1);
+		uint32_t oheight = height >> (n - 1);
 
 		// Apply
 		effect.get_parameter("pImage").set_texture(tex_in);
