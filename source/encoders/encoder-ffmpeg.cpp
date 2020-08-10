@@ -376,6 +376,7 @@ bool ffmpeg_instance::encode_video(struct encoder_frame* frame, struct encoder_p
 bool ffmpeg_instance::encode_video(uint32_t handle, int64_t pts, uint64_t lock_key, uint64_t* next_key,
 								   struct encoder_packet* packet, bool* received_packet)
 {
+#ifdef D_PLATFORM_WINDOWS
 	if (handle == GS_INVALID_HANDLE) {
 		DLOG_ERROR("Received invalid handle.");
 		*next_key = lock_key;
@@ -397,6 +398,9 @@ bool ffmpeg_instance::encode_video(uint32_t handle, int64_t pts, uint64_t lock_k
 	*next_key = lock_key;
 
 	return true;
+#else
+	return false;
+#endif
 }
 
 void ffmpeg_instance::initialize_sw(obs_data_t* settings)
@@ -469,6 +473,7 @@ void ffmpeg_instance::initialize_sw(obs_data_t* settings)
 
 void ffmpeg_instance::initialize_hw(obs_data_t*)
 {
+#ifdef D_PLATFORM_WINDOWS
 	// Initialize Video Encoding
 	auto voi = video_output_get_info(obs_encoder_video(_self));
 
@@ -481,13 +486,9 @@ void ffmpeg_instance::initialize_hw(obs_data_t*)
 	_context->framerate.den = _context->time_base.num = static_cast<int>(voi->fps_den);
 	::ffmpeg::tools::setup_obs_color(voi->colorspace, voi->range, _context);
 	_context->sw_pix_fmt = ::ffmpeg::tools::obs_videoformat_to_avpixelformat(voi->format);
-
-#ifdef WIN32
-	_context->pix_fmt = AV_PIX_FMT_D3D11;
-#endif
+	_context->pix_fmt    = AV_PIX_FMT_D3D11;
 
 	_context->hw_device_ctx = _hwinst->create_device_context();
-
 	_context->hw_frames_ctx = av_hwframe_ctx_alloc(_context->hw_device_ctx);
 	if (!_context->hw_frames_ctx)
 		throw std::runtime_error("Allocating hardware context failed, chosen pixel format is likely not supported.");
@@ -500,6 +501,9 @@ void ffmpeg_instance::initialize_hw(obs_data_t*)
 
 	if (av_hwframe_ctx_init(_context->hw_frames_ctx) < 0)
 		throw std::runtime_error("Initializing hardware context failed, chosen pixel format is likely not supported.");
+#else
+	throw std::runtime_error("OBS Studio currently does not support zero copy encoding for this platform.");
+#endif
 }
 
 void ffmpeg_instance::push_free_frame(std::shared_ptr<AVFrame> frame)
