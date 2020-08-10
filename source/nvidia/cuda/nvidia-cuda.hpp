@@ -58,14 +58,14 @@ namespace nvidia::cuda {
 		// Still missing some.
 	};
 
-	enum class memory_type : std::uint32_t {
+	enum class memory_type : uint32_t {
 		HOST    = 1,
 		DEVICE  = 2,
 		ARRAY   = 3,
 		UNIFIED = 4,
 	};
 
-	enum class array_format : std::uint32_t {
+	enum class array_format : uint32_t {
 		UNSIGNED_INT8  = 0b00000001,
 		UNSIGNED_INT16 = 0b00000010,
 		UNSIGNED_INT32 = 0b00000011,
@@ -76,7 +76,7 @@ namespace nvidia::cuda {
 		FLOAT          = 0b00100000,
 	};
 
-	enum class context_flags : std::uint32_t {
+	enum class context_flags : uint32_t {
 		SCHEDULER_AUTO                 = 0x0,
 		SCHEDULER_SPIN                 = 0x1,
 		SCHEDULER_YIELD                = 0x2,
@@ -85,17 +85,17 @@ namespace nvidia::cuda {
 		LOCAL_MEMORY_RESIZE_TO_MAXIMUM = 0x10,
 	};
 
-	enum class stream_flags : std::uint32_t {
+	enum class stream_flags : uint32_t {
 		DEFAULT      = 0x0,
 		NON_BLOCKING = 0x1,
 	};
 
-	typedef void*         array_t;
-	typedef void*         context_t;
-	typedef std::uint64_t device_ptr_t;
-	typedef void*         graphics_resource_t;
-	typedef void*         stream_t;
-	typedef std::int32_t  device_t;
+	typedef void*    array_t;
+	typedef void*    context_t;
+	typedef uint64_t device_ptr_t;
+	typedef void*    graphics_resource_t;
+	typedef void*    stream_t;
+	typedef int32_t  device_t;
 
 	struct memcpy2d_t {
 		std::size_t src_x_in_bytes;
@@ -121,10 +121,10 @@ namespace nvidia::cuda {
 	};
 
 	struct array_descriptor_t {
-		std::size_t   width;
-		std::size_t   height;
-		std::uint32_t num_channels;
-		array_format  format;
+		std::size_t  width;
+		std::size_t  height;
+		uint32_t     num_channels;
+		array_format format;
 	};
 
 	class cuda {
@@ -137,10 +137,10 @@ namespace nvidia::cuda {
 
 		public:
 		// Initialization
-		CUDA_DEFINE_FUNCTION(cuInit, std::int32_t flags);
+		CUDA_DEFINE_FUNCTION(cuInit, int32_t flags);
 
 		// Version Management
-		CUDA_DEFINE_FUNCTION(cuDriverGetVersion, std::int32_t* driverVersion);
+		CUDA_DEFINE_FUNCTION(cuDriverGetVersion, int32_t* driverVersion);
 
 		// Device Management
 		// cuDeviceGet
@@ -169,7 +169,7 @@ namespace nvidia::cuda {
 		// cuCtxGetFlags
 		// cuCtxGetLimit
 		// cuCtxGetSharedMemConfig
-		CUDA_DEFINE_FUNCTION(cuCtxGetStreamPriorityRange, std::int32_t* lowestPriority, std::int32_t* highestPriority);
+		CUDA_DEFINE_FUNCTION(cuCtxGetStreamPriorityRange, int32_t* lowestPriority, int32_t* highestPriority);
 		CUDA_DEFINE_FUNCTION(cuCtxPopCurrent, context_t* ctx);
 		CUDA_DEFINE_FUNCTION(cuCtxPushCurrent, context_t ctx);
 		// cuCtxSetCacheConfig
@@ -214,13 +214,13 @@ namespace nvidia::cuda {
 		// cuMemAllocHost_v2
 		// cuMemAllocManaged
 		CUDA_DEFINE_FUNCTION(cuMemAllocPitch, device_ptr_t* ptr, std::size_t* pitch, std::size_t width_in_bytes,
-							 std::size_t height, std::uint32_t element_size_bytes);
+							 std::size_t height, uint32_t element_size_bytes);
 		CUDA_DEFINE_FUNCTION(cuMemFree, device_ptr_t ptr);
 		// cuMemFreeHost
 		// cuMemGetAddressRange_v2
 		// cuMemGetInfo_v2
 		// cuMemHostAlloc
-		CUDA_DEFINE_FUNCTION(cuMemHostGetDevicePointer, device_ptr_t* devptr, void* ptr, std::uint32_t flags);
+		CUDA_DEFINE_FUNCTION(cuMemHostGetDevicePointer, device_ptr_t* devptr, void* ptr, uint32_t flags);
 		// cuMemHostGetFlags
 		// cuMemHostRegister_v2
 		// cuMemHostUnregister
@@ -292,7 +292,7 @@ namespace nvidia::cuda {
 		// cuStreamAttachMemAsync
 		// cuStreamBeginCapture_v2
 		CUDA_DEFINE_FUNCTION(cuStreamCreate, stream_t* stream, stream_flags flags);
-		CUDA_DEFINE_FUNCTION(cuStreamCreateWithPriority, stream_t* stream, stream_flags flags, std::int32_t priority);
+		CUDA_DEFINE_FUNCTION(cuStreamCreateWithPriority, stream_t* stream, stream_flags flags, int32_t priority);
 		CUDA_DEFINE_FUNCTION(cuStreamDestroy, stream_t stream);
 		// cuStreamEndCapture
 		// cuStreamGetCaptureInfo
@@ -356,15 +356,13 @@ namespace nvidia::cuda {
 		// Todo
 
 		// Graphics Interoperability
-		CUDA_DEFINE_FUNCTION(cuGraphicsMapResources, std::uint32_t count, graphics_resource_t* resources,
-							 stream_t stream);
+		CUDA_DEFINE_FUNCTION(cuGraphicsMapResources, uint32_t count, graphics_resource_t* resources, stream_t stream);
 		// cuGraphicsResourcesGetMappedMipmappedArray
 		// cuGraphicsResourcesGetMappedPointer_v2
 		// cuGraphicsResourcesSetMapFlags_v2
 		CUDA_DEFINE_FUNCTION(cuGraphicsSubResourceGetMappedArray, array_t* array, graphics_resource_t resource,
-							 std::uint32_t index, std::uint32_t level);
-		CUDA_DEFINE_FUNCTION(cuGraphicsUnmapResources, std::uint32_t count, graphics_resource_t* resources,
-							 stream_t stream);
+							 uint32_t index, uint32_t level);
+		CUDA_DEFINE_FUNCTION(cuGraphicsUnmapResources, uint32_t count, graphics_resource_t* resources, stream_t stream);
 		CUDA_DEFINE_FUNCTION(cuGraphicsUnregisterResource, graphics_resource_t resource);
 
 		// Profile Control
@@ -394,7 +392,7 @@ namespace nvidia::cuda {
 		CUDA_DEFINE_FUNCTION(cuD3D11GetDevice, device_t* device, IDXGIAdapter* adapter);
 		// cuD3D11GetDevices
 		CUDA_DEFINE_FUNCTION(cuGraphicsD3D11RegisterResource, graphics_resource_t* resource,
-							 ID3D11Resource* d3dresource, std::uint32_t flags);
+							 ID3D11Resource* d3dresource, uint32_t flags);
 #endif
 		public:
 		static std::shared_ptr<cuda> get();

@@ -67,9 +67,9 @@ namespace streamfx::encoder::ffmpeg {
 		std::size_t _sent_frames;
 
 		// Extra Data
-		bool                      _have_first_frame;
-		std::vector<std::uint8_t> _extra_data;
-		std::vector<std::uint8_t> _sei_data;
+		bool                 _have_first_frame;
+		std::vector<uint8_t> _extra_data;
+		std::vector<uint8_t> _sei_data;
 
 		// Frame Stack and Queue
 		std::stack<std::shared_ptr<AVFrame>>           _free_frames;
@@ -83,7 +83,7 @@ namespace streamfx::encoder::ffmpeg {
 		public:
 		void get_properties(obs_properties_t* props);
 
-		void migrate(obs_data_t* settings, std::uint64_t version) override;
+		void migrate(obs_data_t* settings, uint64_t version) override;
 
 		bool update(obs_data_t* settings) override;
 

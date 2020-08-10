@@ -172,7 +172,7 @@ void face_tracking_instance::async_initialize(std::shared_ptr<void> ptr)
 		// Create Bounding Boxes Data
 		_ar_bboxes_data.assign(1, {0., 0., 0., 0.});
 		_ar_bboxes.boxes     = _ar_bboxes_data.data();
-		_ar_bboxes.max_boxes = std::clamp<std::uint8_t>(static_cast<std::uint8_t>(_ar_bboxes_data.size()), 0, 255);
+		_ar_bboxes.max_boxes = std::clamp<uint8_t>(static_cast<uint8_t>(_ar_bboxes_data.size()), 0, 255);
 		_ar_bboxes.num_boxes = 0;
 		_ar_bboxes_confidence.resize(_ar_bboxes_data.size());
 		if (NvCV_Status res = _ar_library->set_object(_ar_feature.get(), NvAR_Parameter_Output(BoundingBoxes),
@@ -474,7 +474,7 @@ void face_tracking_instance::load(obs_data_t* data)
 	update(data);
 }
 
-void face_tracking_instance::migrate(obs_data_t* data, std::uint64_t version) {}
+void face_tracking_instance::migrate(obs_data_t* data, uint64_t version) {}
 
 void face_tracking_instance::update(obs_data_t* data)
 {
@@ -592,7 +592,7 @@ bool face_tracking_instance::button_profile(obs_properties_t* props, obs_propert
 	for (auto& kv : profilers) {
 		DLOG_INFO("  %-20s: %8lldµs %10lld %8lldµs %8lldµs %8lldµs", kv.first.c_str(),
 				  std::chrono::duration_cast<std::chrono::microseconds>(kv.second->total_duration()).count(),
-				  kv.second->count(), static_cast<std::int64_t>(kv.second->average_duration() / 1000.0),
+				  kv.second->count(), static_cast<int64_t>(kv.second->average_duration() / 1000.0),
 				  std::chrono::duration_cast<std::chrono::microseconds>(kv.second->percentile(0.999)).count(),
 				  std::chrono::duration_cast<std::chrono::microseconds>(kv.second->percentile(0.95)).count());
 	}

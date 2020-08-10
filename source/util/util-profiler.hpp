@@ -53,7 +53,7 @@ namespace util {
 
 		void track(std::chrono::nanoseconds duration);
 
-		std::uint64_t count();
+		uint64_t count();
 
 		std::chrono::nanoseconds total_duration();
 

@@ -98,17 +98,17 @@ namespace util {
 
 	obs_property_t* obs_properties_add_tristate(obs_properties_t* props, const char* name, const char* desc);
 
-	inline bool is_tristate_enabled(std::int64_t tristate)
+	inline bool is_tristate_enabled(int64_t tristate)
 	{
 		return tristate == 1;
 	}
 
-	inline bool is_tristate_disabled(std::int64_t tristate)
+	inline bool is_tristate_disabled(int64_t tristate)
 	{
 		return tristate == 0;
 	}
 
-	inline bool is_tristate_default(std::int64_t tristate)
+	inline bool is_tristate_default(int64_t tristate)
 	{
 		return tristate == -1;
 	}
@@ -178,27 +178,27 @@ namespace util {
 	{                                   \
 		return is_power_of_two_loop(v); \
 	}
-		P_IS_POWER_OF_TWO_AS_LOOP(std::int8_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(std::uint8_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(std::int16_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(std::uint16_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(std::int32_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(std::uint32_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(std::int64_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(std::uint64_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(int8_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(uint8_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(int16_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(uint16_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(int32_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(uint32_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(int64_t)
+		P_IS_POWER_OF_TWO_AS_LOOP(uint64_t)
 #undef P_IS_POWER_OF_TWO_AS_LOOP
 #pragma pop_macro("P_IS_POWER_OF_TWO_AS_LOOP")
 
 		template<typename T>
-		inline std::uint64_t get_power_of_two_exponent_floor(T v)
+		inline uint64_t get_power_of_two_exponent_floor(T v)
 		{
-			return std::uint64_t(floor(log10(T(v)) / log10(2.0)));
+			return uint64_t(floor(log10(T(v)) / log10(2.0)));
 		}
 
 		template<typename T>
-		inline std::uint64_t get_power_of_two_exponent_ceil(T v)
+		inline uint64_t get_power_of_two_exponent_ceil(T v)
 		{
-			return std::uint64_t(ceil(log10(T(v)) / log10(2.0)));
+			return uint64_t(ceil(log10(T(v)) / log10(2.0)));
 		}
 
 		template<typename T, typename C>

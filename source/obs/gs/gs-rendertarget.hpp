@@ -53,7 +53,7 @@ namespace gs {
 
 		gs_zstencil_format get_zstencil_format();
 
-		gs::rendertarget_op render(std::uint32_t width, std::uint32_t height);
+		gs::rendertarget_op render(uint32_t width, uint32_t height);
 	};
 
 	class rendertarget_op {
@@ -62,7 +62,7 @@ namespace gs {
 		public:
 		~rendertarget_op();
 
-		rendertarget_op(gs::rendertarget* rt, std::uint32_t width, std::uint32_t height);
+		rendertarget_op(gs::rendertarget* rt, uint32_t width, uint32_t height);
 
 		// Move Constructor
 		rendertarget_op(gs::rendertarget_op&&);

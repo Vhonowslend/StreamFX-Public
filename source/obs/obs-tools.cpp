@@ -105,7 +105,7 @@ struct _hack_obs_property {
 struct _hack_obs_properties {
 	void* param;
 	void (*destroy)(void* param);
-	std::uint32_t flags;
+	uint32_t flags;
 
 	struct _hack_obs_property*  first_property;
 	struct _hack_obs_property** last;

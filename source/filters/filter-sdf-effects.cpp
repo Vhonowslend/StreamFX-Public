@@ -122,7 +122,7 @@ void sdf_effects_instance::load(obs_data_t* settings)
 	update(settings);
 }
 
-void sdf_effects_instance::migrate(obs_data_t* data, std::uint64_t version) {}
+void sdf_effects_instance::migrate(obs_data_t* data, uint64_t version) {}
 
 void sdf_effects_instance::update(obs_data_t* data)
 {
@@ -132,12 +132,12 @@ void sdf_effects_instance::update(obs_data_t* data)
 			&& (obs_data_get_double(data, ST_SHADOW_OUTER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			struct cs {
-				std::uint8_t r, g, b, a;
+				uint8_t r, g, b, a;
 			};
 			union {
-				std::uint32_t color;
-				std::uint8_t  channel[4];
-				cs            c;
+				uint32_t color;
+				uint8_t  channel[4];
+				cs       c;
 			};
 			color                 = uint32_t(obs_data_get_int(data, ST_SHADOW_OUTER_COLOR));
 			_outer_shadow_color.x = float_t(c.r / 255.0);
@@ -157,12 +157,12 @@ void sdf_effects_instance::update(obs_data_t* data)
 			&& (obs_data_get_double(data, ST_SHADOW_INNER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			struct cs {
-				std::uint8_t r, g, b, a;
+				uint8_t r, g, b, a;
 			};
 			union {
-				std::uint32_t color;
-				std::uint8_t  channel[4];
-				cs            c;
+				uint32_t color;
+				uint8_t  channel[4];
+				cs       c;
 			};
 			color                 = uint32_t(obs_data_get_int(data, ST_SHADOW_INNER_COLOR));
 			_inner_shadow_color.x = float_t(c.r / 255.0);
@@ -181,12 +181,12 @@ void sdf_effects_instance::update(obs_data_t* data)
 					  && (obs_data_get_double(data, ST_GLOW_OUTER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			struct cs {
-				std::uint8_t r, g, b, a;
+				uint8_t r, g, b, a;
 			};
 			union {
-				std::uint32_t color;
-				std::uint8_t  channel[4];
-				cs            c;
+				uint32_t color;
+				uint8_t  channel[4];
+				cs       c;
 			};
 			color               = uint32_t(obs_data_get_int(data, ST_GLOW_OUTER_COLOR));
 			_outer_glow_color.x = float_t(c.r / 255.0);
@@ -207,12 +207,12 @@ void sdf_effects_instance::update(obs_data_t* data)
 					  && (obs_data_get_double(data, ST_GLOW_INNER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			struct cs {
-				std::uint8_t r, g, b, a;
+				uint8_t r, g, b, a;
 			};
 			union {
-				std::uint32_t color;
-				std::uint8_t  channel[4];
-				cs            c;
+				uint32_t color;
+				uint8_t  channel[4];
+				cs       c;
 			};
 			color               = uint32_t(obs_data_get_int(data, ST_GLOW_INNER_COLOR));
 			_inner_glow_color.x = float_t(c.r / 255.0);
@@ -233,12 +233,12 @@ void sdf_effects_instance::update(obs_data_t* data)
 				   && (obs_data_get_double(data, ST_OUTLINE_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			struct cs {
-				std::uint8_t r, g, b, a;
+				uint8_t r, g, b, a;
 			};
 			union {
-				std::uint32_t color;
-				std::uint8_t  channel[4];
-				cs            c;
+				uint32_t color;
+				uint8_t  channel[4];
+				cs       c;
 			};
 			color            = uint32_t(obs_data_get_int(data, ST_OUTLINE_COLOR));
 			_outline_color.x = float_t(c.r / 255.0);
@@ -271,8 +271,8 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 {
 	obs_source_t* parent         = obs_filter_get_parent(_self);
 	obs_source_t* target         = obs_filter_get_target(_self);
-	std::uint32_t baseW          = obs_source_get_base_width(target);
-	std::uint32_t baseH          = obs_source_get_base_height(target);
+	uint32_t      baseW          = obs_source_get_base_width(target);
+	uint32_t      baseH          = obs_source_get_base_height(target);
 	gs_effect_t*  final_effect   = effect ? effect : obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 	gs_effect_t*  default_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
 

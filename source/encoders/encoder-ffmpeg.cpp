@@ -180,7 +180,7 @@ void ffmpeg_instance::get_properties(obs_properties_t* props)
 	obs_property_set_enabled(obs_properties_get(props, KEY_FFMPEG_GPU), false);
 }
 
-void ffmpeg_instance::migrate(obs_data_t* settings, std::uint64_t version)
+void ffmpeg_instance::migrate(obs_data_t* settings, uint64_t version)
 {
 	if (_handler)
 		_handler->migrate(settings, version, _codec, _context);
@@ -314,15 +314,15 @@ static inline void copy_data(encoder_frame* frame, AVFrame* vframe)
 
 		std::size_t plane_height = static_cast<size_t>(vframe->height) >> (idx ? v_chroma_shift : 0);
 
-		if (static_cast<std::uint32_t>(vframe->linesize[idx]) == frame->linesize[idx]) {
+		if (static_cast<uint32_t>(vframe->linesize[idx]) == frame->linesize[idx]) {
 			std::memcpy(vframe->data[idx], frame->data[idx], frame->linesize[idx] * plane_height);
 		} else {
 			std::size_t ls_in  = static_cast<size_t>(frame->linesize[idx]);
 			std::size_t ls_out = static_cast<size_t>(vframe->linesize[idx]);
 			std::size_t bytes  = ls_in < ls_out ? ls_in : ls_out;
 
-			std::uint8_t* to   = vframe->data[idx];
-			std::uint8_t* from = frame->data[idx];
+			uint8_t* to   = vframe->data[idx];
+			uint8_t* from = frame->data[idx];
 
 			for (std::size_t y = 0; y < plane_height; y++) {
 				std::memcpy(to, from, bytes);
@@ -357,9 +357,8 @@ bool ffmpeg_instance::encode_video(struct encoder_frame* frame, struct encoder_p
 			&& (_scaler.get_source_format() == _scaler.get_target_format())) {
 			copy_data(frame, vframe.get());
 		} else {
-			int res =
-				_scaler.convert(reinterpret_cast<std::uint8_t**>(frame->data), reinterpret_cast<int*>(frame->linesize),
-								0, _context->height, vframe->data, vframe->linesize);
+			int res = _scaler.convert(reinterpret_cast<uint8_t**>(frame->data), reinterpret_cast<int*>(frame->linesize),
+									  0, _context->height, vframe->data, vframe->linesize);
 			if (res <= 0) {
 				DLOG_ERROR("Failed to convert frame: %s (%" PRId32 ").", ::ffmpeg::tools::get_error_description(res),
 						   res);
@@ -447,13 +446,11 @@ void ffmpeg_instance::initialize_sw(obs_data_t* settings)
 		_context->framerate.num = _context->time_base.den = static_cast<int>(voi->fps_num);
 		_context->framerate.den = _context->time_base.num = static_cast<int>(voi->fps_den);
 
-		_scaler.set_source_size(static_cast<std::uint32_t>(_context->width),
-								static_cast<std::uint32_t>(_context->height));
+		_scaler.set_source_size(static_cast<uint32_t>(_context->width), static_cast<uint32_t>(_context->height));
 		_scaler.set_source_color(_context->color_range == AVCOL_RANGE_JPEG, _context->colorspace);
 		_scaler.set_source_format(_pixfmt_source);
 
-		_scaler.set_target_size(static_cast<std::uint32_t>(_context->width),
-								static_cast<std::uint32_t>(_context->height));
+		_scaler.set_target_size(static_cast<uint32_t>(_context->width), static_cast<uint32_t>(_context->height));
 		_scaler.set_target_color(_context->color_range == AVCOL_RANGE_JPEG, _context->colorspace);
 		_scaler.set_target_format(_pixfmt_target);
 
@@ -603,10 +600,10 @@ int ffmpeg_instance::receive_packet(bool* received_packet, struct encoder_packet
 
 	if (!_have_first_frame) {
 		if (_codec->id == AV_CODEC_ID_H264) {
-			std::uint8_t* tmp_packet;
-			std::uint8_t* tmp_header;
-			std::uint8_t* tmp_sei;
-			std::size_t   sz_packet, sz_header, sz_sei;
+			uint8_t*    tmp_packet;
+			uint8_t*    tmp_header;
+			uint8_t*    tmp_sei;
+			std::size_t sz_packet, sz_header, sz_sei;
 
 			obs_extract_avc_headers(_packet.data, static_cast<size_t>(_packet.size), &tmp_packet, &sz_packet,
 									&tmp_header, &sz_header, &tmp_sei, &sz_sei);
@@ -1025,13 +1022,13 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 		}
 		{ // Key-Frame Interval Seconds
 			auto p = obs_properties_add_float(grp, KEY_KEYFRAMES_INTERVAL_SECONDS, D_TRANSLATE(ST_KEYFRAMES_INTERVAL),
-											  0.00, std::numeric_limits<std::int16_t>::max(), 0.01);
+											  0.00, std::numeric_limits<int16_t>::max(), 0.01);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_KEYFRAMES_INTERVAL)));
 			obs_property_float_set_suffix(p, " seconds");
 		}
 		{ // Key-Frame Interval Frames
 			auto p = obs_properties_add_int(grp, KEY_KEYFRAMES_INTERVAL_FRAMES, D_TRANSLATE(ST_KEYFRAMES_INTERVAL), 0,
-											std::numeric_limits<std::int32_t>::max(), 1);
+											std::numeric_limits<int32_t>::max(), 1);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_KEYFRAMES_INTERVAL)));
 			obs_property_int_set_suffix(p, " frames");
 		}
@@ -1053,7 +1050,7 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 
 		if (_handler && _handler->is_hardware_encoder(this)) {
 			auto p = obs_properties_add_int(grp, KEY_FFMPEG_GPU, D_TRANSLATE(ST_FFMPEG_GPU), -1,
-											std::numeric_limits<std::uint8_t>::max(), 1);
+											std::numeric_limits<uint8_t>::max(), 1);
 			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_FFMPEG_GPU)));
 		}
 

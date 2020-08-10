@@ -55,7 +55,7 @@ void displacement_instance::load(obs_data_t* settings)
 	update(settings);
 }
 
-void displacement_instance::migrate(obs_data_t* data, std::uint64_t version)
+void displacement_instance::migrate(obs_data_t* data, uint64_t version)
 {
 	switch (version & STREAMFX_MASK_COMPAT) {
 	case 0:

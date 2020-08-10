@@ -375,7 +375,7 @@ void gfx::shader::shader::update(obs_data_t* data)
 	}
 }
 
-std::uint32_t gfx::shader::shader::width()
+uint32_t gfx::shader::shader::width()
 {
 	switch (_mode) {
 	case shader_mode::Transition:
@@ -399,7 +399,7 @@ std::uint32_t gfx::shader::shader::width()
 	}
 }
 
-std::uint32_t gfx::shader::shader::height()
+uint32_t gfx::shader::shader::height()
 {
 	switch (_mode) {
 	case shader_mode::Transition:
@@ -423,12 +423,12 @@ std::uint32_t gfx::shader::shader::height()
 	}
 }
 
-std::uint32_t gfx::shader::shader::base_width()
+uint32_t gfx::shader::shader::base_width()
 {
 	return _base_width;
 }
 
-std::uint32_t gfx::shader::shader::base_height()
+uint32_t gfx::shader::shader::base_height()
 {
 	return _base_height;
 }
@@ -537,7 +537,7 @@ void gfx::shader::shader::render()
 	}
 }
 
-void gfx::shader::shader::set_size(std::uint32_t w, std::uint32_t h)
+void gfx::shader::shader::set_size(uint32_t w, uint32_t h)
 {
 	_base_width  = w;
 	_base_height = h;
@@ -595,7 +595,7 @@ void gfx::shader::shader::set_transition_time(float_t t)
 	}
 }
 
-void gfx::shader::shader::set_transition_size(std::uint32_t w, std::uint32_t h)
+void gfx::shader::shader::set_transition_size(uint32_t w, uint32_t h)
 {
 	if (!_shader)
 		return;

@@ -33,7 +33,7 @@
 #define P_PRORES_PROFILE_AP4X "Codec.ProRes.Profile.AP4X"
 
 namespace streamfx::encoder::codec::prores {
-	enum class profile : std::int32_t {
+	enum class profile : int32_t {
 		APCO       = 0,
 		Y422_PROXY = APCO,
 		APCS       = 1,
