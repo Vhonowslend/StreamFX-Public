@@ -1,4 +1,4 @@
-// https://www.shadertoy.com/view/XljBW3
+// https://www.shadertoy.com/view/?????
 
 #define vec2 float2
 #define vec3 float3
@@ -40,21 +40,28 @@ uniform float4 ViewSize<
 >;
 
 uniform float4x4 Random <
-	bool visible = false;	
+	bool visible = false;
+	bool automatic = true;
 	string name = "Random Array";
 	string description = "A float4x4 value containing random values between 0 and 1";
->;
-
-uniform float4x4 Random <
-	bool automatic = true;
 >;
 
 int2 iMouse() {
 	return int2(mouse.x * ViewSize.x, mouse.y * ViewSize.y);
 }
 
+float mod(float x, float y)
+{
+	return x - y * floor(x / y);
+}
+
 /*ps start*/
 
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+	vec2 uv = fragCoord.xy / iResolution.xy;
+	fragColor = vec4(1.0 - uv.x, uv.x, 1.0 - uv.y, uv.y);
+}
 
 /*ps end*/
 
@@ -70,7 +77,11 @@ VertFragData VSDefault(VertFragData vtx) {
 
 float4 PSDefault(VertFragData vtx) : TARGET {
 	float4 col = float4(1., 1., 1., 1.);
-	mainImage(col, vtx.uv * ViewSize.xy);
+	// use (1.0 - vtx.uv) if coordinates are reversed
+	float2 uv = vtx.uv;
+	if(direction)
+		 uv = 1.0 - vtx.uv;	
+	mainImage(col, uv * ViewSize.xy); 
 	return col;
 }
 

@@ -1,0 +1,334 @@
+// https://www.shadertoy.com/view/wl2Gzc
+
+#define vec2 float2
+#define vec3 float3
+#define vec4 float4
+#define ivec2 int2
+#define ivec3 int3
+#define ivec4 int4
+#define mat2 matrix <float,2,2>
+#define mat3 matrix <float,3,3>
+#define mat4 matrix <float,4,4>
+#define fract frac
+#define mix lerp
+#define iTime Time.x
+#define iResolution ViewSize
+
+uniform float2 mouse<
+	string name = "Virtual Mouse Coordinates";
+	string field_type = "slider";
+	float2 minimum = {0.0, 0.0};
+	float2 maximum = {100.0, 100.0};
+	float2 scale = {0.01, 0.01};
+	float2 step = {0.01, 0.01};
+> = {0.0, 0.0};
+
+uniform float4x4 ViewProj<
+	bool automatic = true;
+>;
+
+uniform float4 Time<
+	bool automatic = true;
+>;
+
+uniform float4 ViewSize<
+	bool automatic = true;
+>;
+
+uniform float4x4 Random<
+	bool visible = false;
+	bool automatic = true;
+	string name = "Random Array";
+	string description = "A float4x4 value containing random values between 0 and 1";
+>;
+
+int2 iMouse() {
+	return int2(mouse.x * ViewSize.x, mouse.y * ViewSize.y);
+}
+
+uniform float Animation_Speed<
+	bool visible = true;
+	string name = "Animation Speed";
+	string field_type = "slider";
+	float minimum = 0.1;
+	float maximum = 10.0;
+	float step = 0.01;
+	float scale = 1.0;
+> = 1.5;
+
+uniform float Movement_Speed<
+	bool visible = true;
+	string name = "Movement Speed";
+	string field_type = "slider";
+	float minimum = -20.0;
+	float maximum = 20.0;
+	float step = 0.01;
+	float scale = 1.0;
+> = 5.0;
+
+uniform float2 Movement_Direction<
+	bool visible = true;
+	string name = "Movement Direction";
+	string field_type = "slider";
+	float2 minimum = {-15., -15.0};
+	float2 maximum = {15., 15.};
+	float2 scale = {.01, .01};
+	float2 step = {.05, .05};
+> = {7.0, -10.0};
+
+uniform int Layers_Count<
+	bool visible = true;
+	string name = "Layers";
+> = 15;
+
+/*ps start*/
+#define PI 3.1415927
+#define TWO_PI 6.283185
+
+#define PARTICLE_SIZE 0.009
+
+#define PARTICLE_SCALE float2(0.5, 1.6)
+#define PARTICLE_SCALE_VAR float2(0.25, 0.2)
+
+#define PARTICLE_BLOOM_SCALE float2(0.5, 0.8)
+#define PARTICLE_BLOOM_SCALE_VAR float2(0.3, 0.1)
+
+#define SPARK_COLOR float3(1.0, 0.4, 0.05) * 1.5
+#define BLOOM_COLOR float3(1.0, 0.4, 0.05) * 0.8
+#define SMOKE_COLOR float3(1.0, 0.43, 0.1) * 0.8
+
+#define SIZE_MOD 1.05
+#define ALPHA_MOD 0.9
+
+float hash1_2(float2 x)
+{
+	return fract(sin(dot(x, float2(52.127, 61.2871))) * 521.582);
+}
+
+float2 hash2_2(float2 x)
+{
+	//return fract(sin(mul(x, mat2(20.52, 24.1994, 70.291, 80.171))) * 492.194); //original
+	float4 hash = float4(20.52, 24.1994, 70.291, 80.171);
+	float2 result = float2((x.x * hash.r) + (x.y * hash.b), (x.x * hash.g) + (x.y * hash.a));//Ubuntu does not recognize float2x2
+	return fract(sin(result) * 492.194);
+
+}
+
+//Simple interpolated noise
+float2 noise2_2(float2 uv)
+{
+    //float2 f = fract(uv);
+    float2 f = smoothstep(0.0, 1.0, fract(uv));
+    
+ 	float2 uv00 = floor(uv);
+    float2 uv01 = uv00 + vec2(0, 1);
+    float2 uv10 = uv00 + vec2(1, 0);
+    float2 uv11 = uv00 + 1.0;
+    float2 v00 = hash2_2(uv00);
+    float2 v01 = hash2_2(uv01);
+    float2 v10 = hash2_2(uv10);
+    float2 v11 = hash2_2(uv11);
+    
+    float2 v0 = mix(v00, v01, f.y);
+    float2 v1 = mix(v10, v11, f.y);
+    float2 v = mix(v0, v1, f.x);
+    
+	return v;
+}
+
+//Simple interpolated noise
+float noise1_2(float2 uv)
+{
+    float2 f = fract(uv);
+    
+ 	float2 uv00 = floor(uv);
+    float2 uv01 = uv00 + vec2(0, 1);
+    float2 uv10 = uv00 + vec2(1, 0);
+    float2 uv11 = uv00 + 1.0;
+    
+	float v00 = hash1_2(uv00);
+	float v01 = hash1_2(uv01);
+	float v10 = hash1_2(uv10);
+	float v11 = hash1_2(uv11);
+    
+	float v0 = mix(v00, v01, f.y);
+	float v1 = mix(v10, v11, f.y);
+	float v = mix(v0, v1, f.x);
+    
+	return v;
+}
+
+float layeredNoise1_2(float2 uv, float sizeMod, float alphaMod, int layers, float animation)
+{
+	float noise1 = 0.0;
+	float alpha = 1.0;
+	float size = 1.0;
+    float2 offset = float2(0.0,0.0);
+	for (int i = 0; i < layers; i++)
+	{
+		offset += hash2_2(float2(alpha, size)) * 10.0;
+        
+        //Adding noise with movement
+		noise1 += noise1_2(uv * size + iTime * animation * 8.0 * Movement_Direction * Movement_Speed + offset) * alpha;
+		alpha *= alphaMod;
+		size *= sizeMod;
+	}
+    
+	noise1 *= (1.0 - alphaMod) / (1.0 - pow(alphaMod, float(layers)));
+	return noise1;
+}
+
+//Rotates point around 0,0
+float2 rotate(float2 vpoint, float deg)
+{
+	float s = sin(deg);
+	float c = cos(deg);
+	float4 hash = float4(s, c,-c, s);
+	return float2((hash.r * vpoint.x) + (hash.g * vpoint.y), (hash.b * vpoint.x) + (hash.a * vpoint.y)); //Ubuntu does not recognize float2x2
+	//return mul(float2x2( s, c, -c, s),vpoint); //original
+}
+
+//Cell center from point on the grid
+float2 voronoiPointFromRoot(float2 root, float deg)
+{
+  	float2 vpoint = hash2_2(root) - 0.5;
+	float s = sin(deg);
+	float c = cos(deg);
+	float4 hash = float4(s, c, -c, s);
+	vpoint = float2((hash.r * vpoint.x) + (hash.g * vpoint.y), (hash.b * vpoint.x) + (hash.a * vpoint.y)) * 0.66; //Ubuntu does not recognize float2x2
+	//vpoint = mul(float2x2(s, c, -c, s), vpoint) * 0.66; //original
+    vpoint += root + 0.5;
+	return vpoint;
+}
+
+//Voronoi cell point rotation degrees
+float degFromRootUV(in float2 uv)
+{
+	return iTime * Animation_Speed * (hash1_2(uv) - 0.5) * 2.0;
+}
+
+float2 randomAround2_2(in float2 vpoint, in float2 range, in float2 uv)
+{
+	return vpoint +(hash2_2(uv) - 0.5) * range;
+}
+
+
+vec3 fireParticles(in float2 uv, in float2 originalUV)
+{
+    vec3 particles = vec3(0.0,0.0,0.0);
+    float2 rootUV = floor(uv);
+	float deg = degFromRootUV(rootUV);
+    float2 pointUV = voronoiPointFromRoot(rootUV, deg);
+	float dist = 2.0;
+	float distBloom = 0.0;
+   
+   	//UV manipulation for the faster particle movement
+    float2 tempUV = uv + (noise2_2(uv * 2.0) - 0.5) * 0.1;
+	tempUV += -(noise2_2(uv * 3.0 + iTime) - 0.5) * 0.07;
+
+    //Sparks sdf
+	dist = length(rotate(tempUV - pointUV, 0.7) * randomAround2_2(PARTICLE_SCALE, PARTICLE_SCALE_VAR, rootUV));
+    
+    //Bloom sdf
+	distBloom = length(rotate(tempUV - pointUV, 0.7) * randomAround2_2(PARTICLE_BLOOM_SCALE, PARTICLE_BLOOM_SCALE_VAR, rootUV));
+
+    //Add sparks
+	particles += (1.0 - smoothstep(PARTICLE_SIZE * 0.6, PARTICLE_SIZE * 3.0, dist)) * SPARK_COLOR;
+    
+    //Add bloom
+	particles += pow((1.0 - smoothstep(0.0, PARTICLE_SIZE * 6.0, distBloom)) * 1.0, 3.0) * BLOOM_COLOR;
+
+    //Upper disappear curve randomization
+	float border = (hash1_2(rootUV) - 0.5) * 2.0;
+	float disappear = 1.0 - smoothstep(border, border + 0.5, originalUV.y);
+	
+    //Lower appear curve randomization
+	border = (hash1_2(rootUV + 0.214) - 1.8) * 0.7;
+	float appear = smoothstep(border, border + 0.4, originalUV.y);
+    
+	return particles * disappear * appear;
+}
+
+
+//Layering particles to imitate 3D view
+vec3 layeredParticles(in float2 uv, in float sizeMod, in float alphaMod, in int layers, in float smoke)
+{
+    vec3 particles = vec3(0.0,0.0,0.0);
+	float size = 1.0;
+	float alpha = 1.0;
+    float2 offset = vec2(0.0,0.0);
+    float2 noiseOffset;
+    float2 bokehUV;
+    
+	for (int i = 0; i < layers; i++)
+	{
+        //Particle noise movement
+		noiseOffset = (noise2_2(uv * size * 2.0 + 0.5) - 0.5) * 0.15;
+        
+        //UV with applied movement 
+		bokehUV = (uv * size + iTime * Movement_Direction * Movement_Speed) + offset + noiseOffset;
+        
+        //Adding particles								if there is more smoke, remove smaller particles
+		particles += fireParticles(bokehUV, uv) * alpha * (1.0 - smoothstep(0.0, 1.0, smoke) * (float(i) / float(layers)));
+        
+        //Moving uv origin to avoid generating the same particles
+		offset += hash2_2(vec2(alpha, alpha)) * 10.0;
+        
+		alpha *= alphaMod;
+		size *= sizeMod;
+	}
+    
+	return particles;
+}
+
+void mainImage(out vec4 fragColor, in float2 fragCoord)
+{
+    float2 uv = (2.0 * fragCoord - iResolution.xy) / iResolution.x;
+    
+	float vignette = 1.0 - smoothstep(0.4, 1.4, length(uv + vec2(0.0, 0.3)));
+    
+	uv *= 1.8;
+    
+	float smokeIntensity = layeredNoise1_2(uv * 10.0 + iTime * 4.0 * Movement_Direction * Movement_Speed, 1.7, 0.7, 6, 0.2);
+	smokeIntensity *= pow(1.0 - smoothstep(-1.0, 1.6, uv.y), 2.0);	
+    vec3 smoke = smokeIntensity * SMOKE_COLOR * 0.8 * vignette;
+    
+    //Cutting holes in smoke
+	smoke *= pow(layeredNoise1_2(uv * 4.0 + iTime * 0.5 * Movement_Direction * Movement_Speed, 1.8, 0.5, 3, 0.2), 2.0) * 1.5;
+    
+    vec3 particles = layeredParticles(uv, SIZE_MOD, ALPHA_MOD, Layers_Count, smokeIntensity);
+    
+    vec3 col = particles + smoke + SMOKE_COLOR * 0.02; //float3(1.0 - uv.x, uv.x, uv.y) + smoke + SMOKE_COLOR * 0.02;
+	col *= vignette;
+    
+	col = smoothstep(-0.08, 1.0, col);
+
+	fragColor = vec4(col, 1.0);
+}
+
+/*ps end*/
+
+struct VertFragData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertFragData VSDefault(VertFragData vtx) {
+	vtx.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
+	return vtx;
+}
+
+float4 PSDefault(VertFragData vtx) : TARGET {
+	float4 col = float4(1., 1., 1., 1.);
+	mainImage(col, vtx.uv * ViewSize.xy);
+	return col;
+}
+
+technique Draw 
+{
+	pass
+	{
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSDefault(vtx); 
+	}
+}
