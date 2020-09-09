@@ -467,6 +467,11 @@ if(REQUIRE_CURL)
 	endif()
 endif()
 
+# JSON
+if(REQUIRE_JSON)
+	set(JSON_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/third-party/nlohmann-json/single_include")	
+endif()
+
 ################################################################################
 # Code
 ################################################################################
@@ -521,6 +526,13 @@ if(REQUIRE_CURL)
 	list(APPEND PROJECT_INCLUDE_DIRS
 		${CURL_INCLUDE_DIR}
 	)
+endif()
+
+## Dependency: nlohmann_json
+if(REQUIRE_JSON)
+	list(APPEND PROJECT_INCLUDE_DIRS
+		${JSON_INCLUDE_DIR}
+	)	
 endif()
 
 ## Data & Source
