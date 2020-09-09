@@ -263,6 +263,7 @@ set(${PropertyPrefix}ENABLE_TRANSITION_SHADER ${ENABLE_TRANSITION_SHADER} CACHE 
 ## Code Related
 set(${PropertyPrefix}ENABLE_PROFILING FALSE CACHE BOOL "Enable CPU and GPU performance tracking, which has a non-zero overhead at all times. Do not enable this for release builds.")
 set(${PropertyPrefix}ENABLE_CLANG TRUE CACHE BOOL "Enable Clang integration for supported compilers.")
+set(${PropertyPrefix}ENABLE_UPDATER TRUE CACHE BOOL "Enable automatic update checks.")
 
 # Code Signing
 set(${PropertyPrefix}SIGN_ENABLED FALSE CACHE BOOL "Enable signing builds.")
@@ -294,6 +295,12 @@ configure_file(
 	"templates/config.hpp.in"
 	"${PROJECT_BINARY_DIR}/generated/config.hpp"
 )
+
+# Optional Code & Dependencies
+if(${PropertyPrefix}ENABLE_UPDATER)
+	set(REQUIRE_CURL TRUE)
+	set(REQUIRE_JSON TRUE)
+endif()
 
 # libOBS 
 if(NOT TARGET libobs)
@@ -445,25 +452,24 @@ endif()
 
 # CURL
 if(REQUIRE_CURL)
-	find_package(CURL QUIET)
-	if(NOT CURL_FOUND)
+	if(WIN32)
 		# CURL built by OBS Project is not compatible with find modules.
-		if(${PropertyPrefix}OBS_DOWNLOAD)
-			set(CURL_LIBRARIES "${obsdeps_SOURCE_DIR}/win${BITS}/bin/libcurl.lib")
-			set(CURL_INCLUDE_DIRS "${obsdeps_SOURCE_DIR}/win${BITS}/include")
-		endif()
 		if(${PropertyPrefix}OBS_NATIVE) # Already defined by OBS
 			set(CURL_LIBRARIES "${CURL_LIB}")
 			set(CURL_INCLUDE_DIRS "${CURL_INCLUDE_DIR}")
-		endif()
-		if((${PropertyPrefix}OBS_REFERENCE) OR (${PropertyPrefix}OBS_PACKAGE))
+		elseif(${PropertyPrefix}OBS_DOWNLOAD)
+			set(CURL_LIBRARIES "${obsdeps_SOURCE_DIR}/win${BITS}/bin/libcurl.lib")
+			set(CURL_INCLUDE_DIRS "${obsdeps_SOURCE_DIR}/win${BITS}/include")
+		elseif((${PropertyPrefix}OBS_REFERENCE) OR (${PropertyPrefix}OBS_PACKAGE))
 			set(CURL_LIBRARIES "${OBS_DEPENDENCIES_DIR}/bin/libcurl.lib")
 			set(CURL_INCLUDE_DIRS "${OBS_DEPENDENCIES_DIR}/include")
 		endif()
-		CacheSet(CURL_LIBRARY_DEBUG ${CURL_LIBRARIES})
-		CacheSet(CURL_LIBRARY_RELEASE ${CURL_LIBRARIES})
-		CacheSet(CURL_INCLUDE_DIR ${CURL_INCLUDE_DIRS})
+		set(CURL_LIBRARY_DEBUG ${CURL_LIBRARIES})
+		set(CURL_LIBRARY_RELEASE ${CURL_LIBRARIES})
+		set(CURL_INCLUDE_DIR ${CURL_INCLUDE_DIRS})
 		set(CURL_FOUND ON)
+	else()
+		find_package(CURL REQUIRED)
 	endif()
 endif()
 
@@ -661,6 +667,26 @@ if(HAVE_OBS_FRONTEND)
 	list(APPEND PROJECT_DEFINITIONS
 		ENABLE_FRONTEND
 	)
+endif()
+
+## Feature - Automatic Updater
+if(${PropertyPrefix}ENABLE_UPDATER AND CURL_FOUND)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/updater.hpp"
+		"source/updater.cpp"
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_UPDATER
+	)
+	if(HAVE_OBS_FRONTEND)
+		list(APPEND PROJECT_PRIVATE_SOURCE
+			"source/ui/ui-updater.hpp"
+			"source/ui/ui-updater.cpp"
+		)
+		list(APPEND PROJECT_UI
+			"ui/updater.ui"
+		)
+	endif()
 endif()
 
 ## Feature - FFmpeg Encoder
