@@ -87,33 +87,36 @@ streamfx::ui::handler::handler()
 	// Handle all frontend events.
 	obs_frontend_add_event_callback(frontend_event_handler, this);
 
-	{ // Build StreamFX menu.
-		_menu = new QMenu(reinterpret_cast<QWidget*>(obs_frontend_get_main_window()));
+	// Build StreamFX menu.
+	_menu = new QMenu(reinterpret_cast<QWidget*>(obs_frontend_get_main_window()));
 
-		{ // Github Issues
-			//_menu->addSeparator();
-			_report_issue = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_report_issue.data())));
-			_request_help = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_request_help.data())));
-			connect(_report_issue, &QAction::triggered, this, &streamfx::ui::handler::on_action_report_issue);
-			connect(_request_help, &QAction::triggered, this, &streamfx::ui::handler::on_action_request_help);
-		}
+	{ // Github Issues
+		//_menu->addSeparator();
+		_report_issue = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_report_issue.data())));
+		_request_help = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_request_help.data())));
+		connect(_report_issue, &QAction::triggered, this, &streamfx::ui::handler::on_action_report_issue);
+		connect(_request_help, &QAction::triggered, this, &streamfx::ui::handler::on_action_request_help);
+	}
 
-		{ // Official Links
-			_menu->addSeparator();
-			_link_website = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_website.data())));
-			_link_discord = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_discord.data())));
-			_link_github  = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_github.data())));
-			connect(_link_website, &QAction::triggered, this, &streamfx::ui::handler::on_action_website);
-			connect(_link_discord, &QAction::triggered, this, &streamfx::ui::handler::on_action_discord);
-			connect(_link_github, &QAction::triggered, this, &streamfx::ui::handler::on_action_github);
-		}
+	{ // Official Links
+		_menu->addSeparator();
+		_link_website = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_website.data())));
+		_link_discord = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_discord.data())));
+		_link_github  = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_github.data())));
+		connect(_link_website, &QAction::triggered, this, &streamfx::ui::handler::on_action_website);
+		connect(_link_discord, &QAction::triggered, this, &streamfx::ui::handler::on_action_discord);
+		connect(_link_github, &QAction::triggered, this, &streamfx::ui::handler::on_action_github);
+	}
 
-		{ // About StreamFX
-			_about_dialog = new streamfx::ui::about();
-			_menu->addSeparator();
-			_about_action = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_about.data())));
-			connect(_about_action, &QAction::triggered, this, &streamfx::ui::handler::on_action_about);
-		}
+#ifdef ENABLE_UPDATER
+	_updater = streamfx::ui::updater::instance(_menu);
+#endif
+
+	{ // About StreamFX
+		_about_dialog = new streamfx::ui::about();
+		_menu->addSeparator();
+		_about_action = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_about.data())));
+		connect(_about_action, &QAction::triggered, this, &streamfx::ui::handler::on_action_about);
 	}
 }
 
