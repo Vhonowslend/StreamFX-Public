@@ -22,7 +22,16 @@ jobs:
         git submodule update --init --recursive
         sudo apt-get -qq update
         sudo apt-get purge libjpeg9-dev:amd64 libjpeg8-dev:amd64 libjpeg-turbo8-dev:amd64
-        sudo apt-get install build-essential clang clang-format checkinstall pkg-config cmake ninja-build git qt5-default libqwt-qt5-dev libqt5svg5-dev libavcodec-dev libavutil-dev libswscale-dev
+        sudo apt-get install \
+          build-essential \
+          cmake \
+          ninja-build \
+          git \
+          qt5-default libqwt-qt5-dev libqt5svg5-dev \
+          libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev \
+          libcurl4-openssl-dev \
+          checkinstall pkg-config \
+          clang clang-format
     - name: "Cache: Prerequisites"
       uses: actions/cache@v2
       with:

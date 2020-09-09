@@ -21,6 +21,10 @@
 #include "ui-about.hpp"
 #include "ui-common.hpp"
 
+#ifdef ENABLE_UPDATER
+#include "ui-updater.hpp"
+#endif
+
 namespace streamfx::ui {
 	class handler : public QObject {
 		Q_OBJECT
@@ -42,6 +46,10 @@ namespace streamfx::ui {
 		QAction*   _about_action;
 		ui::about* _about_dialog;
 
+#ifdef ENABLE_UPDATER
+		std::shared_ptr<streamfx::ui::updater> _updater;
+#endif
+
 		public:
 		handler();
 		~handler();
@@ -55,11 +63,17 @@ namespace streamfx::ui {
 
 		public slots:
 		; // Not having this breaks some linters.
+
+		// Issues & Help
 		void on_action_report_issue(bool);
 		void on_action_request_help(bool);
+
+		// Official Links
 		void on_action_website(bool);
 		void on_action_discord(bool);
 		void on_action_github(bool);
+
+		// About
 		void on_action_about(bool);
 
 		public /* Singleton */:

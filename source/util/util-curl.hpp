@@ -20,6 +20,7 @@
 
 #pragma once
 #include <cinttypes>
+#include <cstring>
 #include <functional>
 #include <map>
 #include <string>
@@ -59,20 +60,17 @@ namespace util {
 			return curl_easy_setopt(_curl, opt, value);
 		};
 
-		template<>
 		CURLcode set_option(CURLoption opt, const bool value)
 		{
 			// CURL does not seem to accept boolean, so we err on the side of safety here.
 			return curl_easy_setopt(_curl, opt, value ? 1 : 0);
 		};
 
-		template<>
 		CURLcode set_option(CURLoption opt, const std::string value)
 		{
 			return curl_easy_setopt(_curl, opt, value.c_str());
 		};
 
-		template<>
 		CURLcode set_option(CURLoption opt, const std::string_view value)
 		{
 			return curl_easy_setopt(_curl, opt, value.data());
@@ -84,7 +82,6 @@ namespace util {
 			return curl_easy_getinfo(_curl, info, &value);
 		};
 
-		template<>
 		CURLcode get_info(CURLINFO info, std::vector<char>& value)
 		{
 			char* buffer;
@@ -99,7 +96,6 @@ namespace util {
 			return CURLE_OK;
 		};
 
-		template<>
 		CURLcode get_info(CURLINFO info, std::string& value)
 		{
 			std::vector<char> buffer;

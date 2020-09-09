@@ -68,6 +68,11 @@
 #include "ui/ui.hpp"
 #endif
 
+#ifdef ENABLE_UPDATER
+#include "updater.hpp"
+//static std::shared_ptr<streamfx::updater> _updater;
+#endif
+
 static std::shared_ptr<util::threadpool>  _threadpool;
 static std::shared_ptr<gs::vertex_buffer> _gs_fstri_vb;
 
@@ -238,6 +243,11 @@ try {
 
 	// Finalize Source Tracker
 	obs::source_tracker::finalize();
+
+	//	// Auto-Updater
+	//#ifdef ENABLE_UPDATER
+	//	_updater.reset();
+	//#endif
 
 	// Finalize Thread Pool
 	_threadpool.reset();

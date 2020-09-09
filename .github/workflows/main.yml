@@ -120,15 +120,15 @@ jobs:
         sudo apt-get -qq update
         sudo apt-get purge libjpeg9-dev:amd64 libjpeg8-dev:amd64 libjpeg-turbo8-dev:amd64
         sudo apt-get install \
-          ${{ matrix.packages }} \
           build-essential \
-          checkinstall \
-          pkg-config \
           cmake \
           ninja-build \
           git \
           qt5-default libqwt-qt5-dev libqt5svg5-dev \
-          libavcodec-dev libavutil-dev libswscale-dev
+          libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev \
+          libcurl4-openssl-dev \
+          ${{ matrix.packages }} \
+          checkinstall pkg-config
         ${{ matrix.extra_command }}
     - name: "Cache: Prerequisites"
       uses: actions/cache@v2
