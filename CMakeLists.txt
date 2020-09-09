@@ -295,6 +295,7 @@ configure_file(
 	"${PROJECT_BINARY_DIR}/generated/config.hpp"
 )
 
+# libOBS 
 if(NOT TARGET libobs)
 	# Packaging
 	if("${CMAKE_PACKAGE_SUFFIX_OVERRIDE}" STREQUAL "")
@@ -442,6 +443,30 @@ if(HAVE_OBS_FRONTEND)
 	find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 endif()
 
+# CURL
+if(REQUIRE_CURL)
+	find_package(CURL QUIET)
+	if(NOT CURL_FOUND)
+		# CURL built by OBS Project is not compatible with find modules.
+		if(${PropertyPrefix}OBS_DOWNLOAD)
+			set(CURL_LIBRARIES "${obsdeps_SOURCE_DIR}/win${BITS}/bin/libcurl.lib")
+			set(CURL_INCLUDE_DIRS "${obsdeps_SOURCE_DIR}/win${BITS}/include")
+		endif()
+		if(${PropertyPrefix}OBS_NATIVE) # Already defined by OBS
+			set(CURL_LIBRARIES "${CURL_LIB}")
+			set(CURL_INCLUDE_DIRS "${CURL_INCLUDE_DIR}")
+		endif()
+		if((${PropertyPrefix}OBS_REFERENCE) OR (${PropertyPrefix}OBS_PACKAGE))
+			set(CURL_LIBRARIES "${OBS_DEPENDENCIES_DIR}/bin/libcurl.lib")
+			set(CURL_INCLUDE_DIRS "${OBS_DEPENDENCIES_DIR}/include")
+		endif()
+		CacheSet(CURL_LIBRARY_DEBUG ${CURL_LIBRARIES})
+		CacheSet(CURL_LIBRARY_RELEASE ${CURL_LIBRARIES})
+		CacheSet(CURL_INCLUDE_DIR ${CURL_INCLUDE_DIRS})
+		set(CURL_FOUND ON)
+	endif()
+endif()
+
 ################################################################################
 # Code
 ################################################################################
@@ -456,9 +481,10 @@ set(PROJECT_PUBLIC )
 set(PROJECT_PRIVATE_GENERATED )
 set(PROJECT_PRIVATE_SOURCE )
 set(PROJECT_UI )
-set(PROJECT_DEFINES )
+set(PROJECT_DEFINITIONS )
 
-## OBS Studio
+# Dependencies
+## Dependency: libOBS
 if(${PropertyPrefix}OBS_NATIVE)
 	list(APPEND PROJECT_LIBRARIES
 		libobs
@@ -480,6 +506,20 @@ elseif(${PropertyPrefix}OBS_PACKAGE)
 elseif(${PropertyPrefix}OBS_DOWNLOAD)
 	list(APPEND PROJECT_LIBRARIES
 		libobs
+	)
+endif()
+
+## Dependency: CURL
+if(REQUIRE_CURL)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/util/util-curl.hpp"
+		"source/util/util-curl.cpp"
+	)
+	list(APPEND PROJECT_LIBRARIES
+		${CURL_LIBRARY_RELEASE}
+	)
+	list(APPEND PROJECT_INCLUDE_DIRS
+		${CURL_INCLUDE_DIR}
 	)
 endif()
 
