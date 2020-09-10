@@ -209,9 +209,17 @@ streamfx::ui::translator::~translator() {}
 QString streamfx::ui::translator::translate(const char* context, const char* sourceText, const char* disambiguation,
 											int n) const
 {
-	std::string_view sourceView{sourceText};
-	if (sourceView.substr(0, _i18n_prefix.length()) == _i18n_prefix) {
-		return QString::fromUtf8(D_TRANSLATE(sourceView.substr(_i18n_prefix.length()).data()));
+	if (sourceText) {
+		std::string_view sourceView{sourceText};
+		if (sourceView.substr(0, _i18n_prefix.length()) == _i18n_prefix) {
+			return QString::fromUtf8(D_TRANSLATE(sourceView.substr(_i18n_prefix.length()).data()));
+		}
+	}
+	if (disambiguation) {
+		std::string_view disambiguationView{disambiguation};
+		if (disambiguationView.substr(0, _i18n_prefix.length()) == _i18n_prefix) {
+			return QString::fromUtf8(D_TRANSLATE(disambiguationView.substr(_i18n_prefix.length()).data()));
+		}
 	}
 	return QString();
 }
