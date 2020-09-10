@@ -112,6 +112,9 @@ void util::threadpool::work()
 							 reinterpret_cast<ptrdiff_t>(local_work->_data.get()));
 			}
 		}
+
+		// Remove our reference to the work unit.
+		local_work.reset();
 	}
 
 	_worker_idx.fetch_sub(1);
