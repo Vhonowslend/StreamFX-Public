@@ -562,15 +562,17 @@ list(APPEND PROJECT_PRIVATE_GENERATED
 	"${PROJECT_BINARY_DIR}/generated/config.hpp"
 )
 if(WIN32)
-	list(APPEND PROJECT_TEMPLATES
-		"templates/installer.iss.in"
-		"templates/version.rc.in"
-	)
+	if(NOT TARGET libobs)
+		list(APPEND PROJECT_TEMPLATES
+			"templates/installer.iss.in"
+			"templates/version.rc.in"
+		)
+		list(APPEND PROJECT_PRIVATE_GENERATED
+			"${PROJECT_BINARY_DIR}/generated/version.rc"
+		)
+	endif()
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/windll.cpp"
-	)
-	list(APPEND PROJECT_PRIVATE_GENERATED
-		"${PROJECT_BINARY_DIR}/generated/version.rc"
 	)
 endif()
 if((CMAKE_C_COMPILER_ID STREQUAL "GNU")
