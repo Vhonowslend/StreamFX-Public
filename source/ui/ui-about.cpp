@@ -58,7 +58,7 @@ static const std::list<streamfx::ui::about::entry> _entries = {
 							   text_social_twitch.data(), streamfx::ui::about::link_type::NONE, "", ""},
 	/// https://crowdin.com/profile/hydargos (Proofreader, French)
 	streamfx::ui::about::entry{"hydargos", streamfx::ui::about::role_type::TRANSLATOR, "",
-							   streamfx::ui::about::link_type::SOCIAL_TWITCH, "https://www.youtube.com/hydargos",
+							   streamfx::ui::about::link_type::SOCIAL_YOUTUBE, "https://www.youtube.com/hydargos",
 							   text_social_youtube.data(), streamfx::ui::about::link_type::NONE, "", ""},
 	/// https://crowdin.com/profile/saygo1125 (Proofreader, Japanese)
 	streamfx::ui::about::entry{"saygo1125", streamfx::ui::about::role_type::TRANSLATOR, "",
