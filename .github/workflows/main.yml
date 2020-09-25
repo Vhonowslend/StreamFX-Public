@@ -2,6 +2,8 @@ name: Build
 
 on: 
   push:
+    tags:
+      - '*'
     branches-ignore:
       - 'l10n_master'
   pull_request:
