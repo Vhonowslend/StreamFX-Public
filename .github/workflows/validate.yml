@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-20.04
     env:
       CC: clang-9
-      CXX: clang-9
+      CXX: clang++-9
       CMAKE_GENERATOR: "Ninja"
     steps:
     - name: "Clone Repository"
@@ -31,7 +31,7 @@ jobs:
           libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev \
           libcurl4-openssl-dev \
           checkinstall pkg-config \
-          clang clang-format
+          clang-9 clang-format-9 clang-tidy-9
     - name: "Cache: Prerequisites"
       uses: actions/cache@v2
       with:
@@ -44,8 +44,7 @@ jobs:
         cmake -H. -B"build/temp" \
           -DCMAKE_INSTALL_PREFIX="build/distrib" \
           -DCMAKE_PACKAGE_NAME="streamfx-${{ matrix.id }}" -DCMAKE_PACKAGE_PREFIX="build/package" \
-          -DOBS_DOWNLOAD=ON \
-          -DENABLE_CLANG=TRUE
+          -DENABLE_CLANG=TRUE -DENABLE_FILTER_NVIDIA_FACE_TRACKING=FALSE
         cmake --build "build/temp" --config RelWithDebInfo --target StreamFX_CLANG-FORMAT
     - name: "Validate Formatting"
       shell: bash
