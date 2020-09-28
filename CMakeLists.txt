@@ -101,57 +101,53 @@ else()
 	set(ARCH "x64")
 endif()
 
-# All Warnings, Extra Warnings, Pedantic
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-	# using Clang
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-missing-braces -Wmissing-field-initializers -Wno-c++98-compat-pedantic -Wold-style-cast -Wno-documentation -Wno-documentation-unknown-command -Wno-covered-switch-default -Wno-switch-enum")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-missing-braces -Wmissing-field-initializers -Wno-c++98-compat-pedantic -Wold-style-cast -Wno-documentation -Wno-documentation-unknown-command -Wno-covered-switch-default -Wno-switch-enum")
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-	# GCC: -fpermissive is required as GCC does not allow the same template to be in different namespaces.
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fpermissive -Wno-long-long -Wno-missing-braces -Wmissing-field-initializers")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fpermissive -Wno-long-long -Wno-missing-braces -Wmissing-field-initializers")
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-	# using Intel C++
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-	set(MSVC_EXTRA_FLAGS "/wd4061 /wd4100 /wd4180 /wd4201 /wd4464 /wd4505 /wd4514 /wd4571 /wd4623 /wd4625 /wd4626 /wd4668 /wd4710 /wd4774 /wd4820 /wd5026 /wd5027 /wd5039 /wd5045 /wd26812")
-	# Force to always compile with W4
-	if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
-		string(REGEX REPLACE "/W[0-4]" "/Wall" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-	else()
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Wall")
-	endif()
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MSVC_EXTRA_FLAGS}")
+################################################################################
+# C/C++ Compiler Adjustments
+################################################################################
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR (WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+	message(STATUS "Applying custom flags for MSVC style build.")
+
+	# MSVC/ClangCL
+	# - Dynamically link Microsoft C/C++ Redistributable.
+	# - Enable /W3 and disable useless warnings.
+	# - Enable C++ exceptions with SEH exceptions.
+	# - Enable multi-processor compiling.
+
+	# Enable most useful warnings.
+	set(DISABLED_WARNINGS 
+		"/wd4061" "/wd4100" "/wd4180" "/wd4201" "/wd4464" "/wd4505" "/wd4514"
+		"/wd4571" "/wd4623" "/wd4625" "/wd4626" "/wd4668" "/wd4710" "/wd4774"
+		"/wd4820" "/wd5026" "/wd5027" "/wd5039" "/wd5045" "/wd26812"
+	)
+	add_compile_options("/W3")
+	foreach(WARN ${DISABLED_WARNINGS})
+		add_compile_options("${WARN}")
+	endforeach()
+
+	# Build with dynamic MSVC linkage.
+    add_compile_options(
+        $<$<CONFIG:>:/MD>
+        $<$<CONFIG:Debug>:/MDd>
+        $<$<CONFIG:Release>:/MD>
+        $<$<CONFIG:RelWithDebInfo>:/MD>
+        $<$<CONFIG:MinSizeRel>:/MD>
+    )
+
+	# C++ Exceptions & SEH
+	add_compile_options("/EHa")
+
+	# Multiprocessor compiling
+	add_compile_options("/MP")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+	message(STATUS "Applying custom flags for GNU style build.")
 	
-	if(CMAKE_C_FLAGS MATCHES "/W[0-4]")
-		string(REGEX REPLACE "/W[0-4]" "/Wall" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-	else()
-		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /Wall")
-	endif()
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MSVC_EXTRA_FLAGS}")
-
-	if("${PropertyPrefix}" STREQUAL "")
-		# Speed Optimized Configuration
-		set(_SPEED_COMPILER_FLAGS "/O2 /Oi /Ot /Oy /GF /GS- /Qpar /arch:AVX /GR /GL")
-		set(_SPEED_LINKER_FLAGS "/LTCG:incremental /OPT:ICF=4 /INCREMENTAL /OPT:REF")
-		set(CMAKE_CXX_FLAGS_SPEED "${CMAKE_CXX_FLAGS_RELWTIHDEBINFO} ${_SPEED_COMPILER_FLAGS}")
-		set(CMAKE_C_FLAGS_SPEED "${CMAKE_C_FLAGS_RELWTIHDEBINFO} ${_SPEED_COMPILER_FLAGS}")
-		set(CMAKE_EXE_LINKER_FLAGS_SPEED "${CMAKE_EXE_LINKER_FLAGS_RELWTIHDEBINFO} ${_SPEED_LINKER_FLAGS}")
-		set(CMAKE_SHARED_LINKER_FLAGS_SPEED "${CMAKE_EXE_LINKER_FLAGS_RELWTIHDEBINFO} ${_SPEED_LINKER_FLAGS}")
-		set(CMAKE_MODULE_LINKER_FLAGS_SPEED "${CMAKE_EXE_LINKER_FLAGS_RELWTIHDEBINFO} ${_SPEED_LINKER_FLAGS}")
-		mark_as_advanced(
-			CMAKE_CXX_FLAGS_SPEED
-			CMAKE_C_FLAGS_SPEED
-			CMAKE_EXE_LINKER_FLAGS_SPEED
-			CMAKE_SHARED_LINKER_FLAGS_SPEED
-			CMAKE_MODULE_LINKER_FLAGS_SPEED
-		)
-
-		if(CMAKE_CONFIGURATION_TYPES)
-			list(APPEND CMAKE_CONFIGURATION_TYPES Speed)
-			list(REMOVE_DUPLICATES CMAKE_CONFIGURATION_TYPES)
-			CacheSet(CMAKE_CONFIGURATION_TYPES "${CMAKE_CONFIGURATION_TYPES}")
-		endif()
-	endif()
+	# Clang/AppleClang/GNU
+	# - Don't export by default.
+	# - Enable all and extra warnings.
+	
+	add_compile_options("-Wall")
+	add_compile_options("-Wextra")
+	add_compile_options("-fvisibility=hidden")
 endif()
 
 # C++ Standard and Extensions
