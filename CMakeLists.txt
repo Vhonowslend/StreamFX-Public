@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 # CMake Setup
-cmake_minimum_required(VERSION 3.8.0)
+cmake_minimum_required(VERSION 3.8...3.12)
 
 # Automatic Versioning
 set(VERSION_MAJOR 0)
@@ -58,12 +58,6 @@ if(VERSION_COMMIT)
 	set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}${VERSION_SUFFIX}-${VERSION_COMMIT}")
 else()
 	set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}${VERSION_SUFFIX}")
-endif()
-
-# Policies
-cmake_policy(PUSH)
-if (${CMAKE_VERSION} VERSION_GREATER "3.12.0")
-	cmake_policy(SET CMP0074 NEW)
 endif()
 
 # Define Project
@@ -1264,5 +1258,3 @@ else()
 		)
 	endif()	
 endif()
-
-cmake_policy(POP)
