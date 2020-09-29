@@ -11,7 +11,7 @@
 ; Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 
-; app Information
+; Application Information
 AppId={{DE56A03A-C8A4-474B-83B0-CFD270262D38}}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
@@ -20,13 +20,21 @@ AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 AppMutex={#MyAppName}
+
+; Versioning
 VersionInfoVersion={#MyAppVersion}
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription={#MyAppName} Setup
-; Compression
-Compression=lzma2/ultra64
-SolidCompression=yes
-LZMAAlgorithm=1
+
+; Architecture (Platform is always Windows)
+ArchitecturesInstallIn64BitMode=@ARCH@
+ArchitecturesAllowed=@ARCH@
+
+; Wizard Information
+WizardStyle=modern
+WizardResizable=yes
+SetupIconFile="@PROJECT_SOURCE_DIR@/media/icon.ico"
+
 ; Other Information
 DefaultDirName={code:GetDirName}
 DefaultGroupName={#MyAppName}
@@ -34,10 +42,9 @@ AllowNoIcons=yes
 LicenseFile="@ISS_SOURCE_DIR@/LICENSE"
 OutputDir="@ISS_PACKAGE_DIR@"
 OutputBaseFilename=@CMAKE_PACKAGE_NAME@-@_PACKAGE_SUFFIX_OVERRIDE@
-; Wizard Information
-WizardStyle=modern
-WizardResizable=yes
-SetupIconFile="@PROJECT_SOURCE_DIR@/media/icon.ico"
+Compression=lzma2/ultra64
+SolidCompression=yes
+LZMAAlgorithm=1
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -58,7 +65,7 @@ var
 begin
   // initialize default path, which will be returned when the following registry
   // key queries fail due to missing keys or for some different reason
-  Result := '{pf}\obs-studio';
+  Result := ExpandConstant('{pf}\obs-studio');
   // query the first registry value; if this succeeds, return the obtained value
   if RegQueryStringValue(HKLM32, 'SOFTWARE\OBS Studio', '', InstallPath) then
     Result := InstallPath
@@ -77,13 +84,11 @@ begin
   Result := sUnInstallString;
 end;
 
-
 /////////////////////////////////////////////////////////////////////
 function IsUpgrade(): Boolean;
 begin
   Result := (GetUninstallString() <> '');
 end;
-
 
 /////////////////////////////////////////////////////////////////////
 function UnInstallOldVersion(): Integer;
