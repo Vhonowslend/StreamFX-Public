@@ -103,7 +103,14 @@ void streamfx::ui::updater_dialog::show(streamfx::update_info current, streamfx:
 
 	_update_url = QUrl(QString::fromStdString(update.url));
 
+	this->setModal(true);
 	QDialog::show();
+}
+
+void streamfx::ui::updater_dialog::hide()
+{
+	this->setModal(false);
+	QDialog::hide();
 }
 
 void streamfx::ui::updater_dialog::on_ok()
@@ -121,14 +128,6 @@ streamfx::ui::updater::updater(QMenu* menu)
 {
 	// Create dialog.
 	_dialog = new updater_dialog();
-
-	// Create GitHub message box.
-	_gdpr = new QMessageBox(reinterpret_cast<QWidget*>(obs_frontend_get_main_window()));
-	_gdpr->setWindowTitle(QString::fromUtf8(D_TRANSLATE(D_I18N_GITHUBPERMISSION_TITLE)));
-	_gdpr->setTextFormat(Qt::TextFormat::RichText);
-	_gdpr->setText(QString::fromUtf8(D_TRANSLATE(D_I18N_GITHUBPERMISSION_TEXT)));
-	_gdpr->setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
-	connect(_gdpr, &QMessageBox::buttonClicked, this, &streamfx::ui::updater::on_gdpr_button);
 
 	{ // Create the necessary menu entries.
 		menu->addSeparator();
@@ -179,6 +178,7 @@ streamfx::ui::updater::updater(QMenu* menu)
 			if (_updater->gdpr()) {
 				_updater->refresh();
 			} else {
+				create_gdpr_box();
 				_gdpr->exec();
 			}
 		}
@@ -243,6 +243,7 @@ void streamfx::ui::updater::on_gdpr_button(QAbstractButton* btn)
 void streamfx::ui::updater::on_cfu_triggered(bool)
 {
 	if (!_updater->gdpr()) {
+		create_gdpr_box();
 		_gdpr->exec();
 	} else {
 		emit check_active(true);
@@ -286,4 +287,20 @@ void streamfx::ui::updater::on_check_active(bool active)
 	_channel_preview->setEnabled(!active);
 	_channel_stable->setEnabled(!active);
 	_channel_menu->setEnabled(!active);
+}
+
+void streamfx::ui::updater::create_gdpr_box()
+{
+	if (_gdpr) {
+		_gdpr->deleteLater();
+		_gdpr = nullptr;
+	}
+
+	// Create GitHub message box.
+	_gdpr = new QMessageBox(reinterpret_cast<QWidget*>(obs_frontend_get_main_window()));
+	_gdpr->setWindowTitle(QString::fromUtf8(D_TRANSLATE(D_I18N_GITHUBPERMISSION_TITLE)));
+	_gdpr->setTextFormat(Qt::TextFormat::RichText);
+	_gdpr->setText(QString::fromUtf8(D_TRANSLATE(D_I18N_GITHUBPERMISSION_TEXT)));
+	_gdpr->setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+	connect(_gdpr, &QMessageBox::buttonClicked, this, &streamfx::ui::updater::on_gdpr_button);
 }
