@@ -54,6 +54,7 @@ namespace streamfx::ui {
 		~updater_dialog();
 
 		void show(streamfx::update_info current, streamfx::update_info update);
+		void hide();
 
 		public slots:
 		; // Needed by some linters.
@@ -82,6 +83,8 @@ namespace streamfx::ui {
 		public:
 		updater(QMenu* menu);
 		~updater();
+
+		void create_gdpr_box();
 
 		void on_updater_automation_changed(streamfx::updater&, bool);
 		void on_updater_channel_changed(streamfx::updater&, streamfx::update_channel);
