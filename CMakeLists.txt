@@ -190,7 +190,7 @@ set(_CXX_EXTENSIONS OFF)
 if(TARGET libobs)
 	# Plugin is built together with libOBS.
 	message(STATUS "${PROJECT_NAME}: Using native libOBS.")
-	set(OBS_NATIVE TRUE)
+	set(${PREFIX}OBS_NATIVE TRUE)
 	if (TARGET obs-frontend-api)
 		set(HAVE_OBS_FRONTEND TRUE)
 	endif()
@@ -200,7 +200,7 @@ else()
 	if(NOT WIN32)
 		message(STATUS "${PROJECT_NAME}: Linux builds require preinstalled development packages. Refer to the manual for more information.")
 	endif()
-	set(OBS_NATIVE FALSE)
+	set(${PREFIX}OBS_NATIVE FALSE)
 endif()
 
 ################################################################################
@@ -435,7 +435,7 @@ endfunction()
 refresh_components()
 
 # OBS (Always first)
-if(NOT OBS_NATIVE)
+if(NOT ${PREFIX}OBS_NATIVE)
 	if(WIN32)
 		set(DLSUFFIX "vs2019")
 	elseif(UNIX AND NOT APPLE)
@@ -506,7 +506,7 @@ endif()
 
 # FFmpeg
 if(REQUIRE_FFMPEG)
-	if(WIN32 AND NOT OBS_NATIVE)
+	if(WIN32 AND NOT ${PREFIX}OBS_NATIVE)
 		find_path(
 			FFmpegPath "libavcodec/avcodec.h"
 			HINTS
@@ -555,7 +555,7 @@ endif()
 
 # Qt
 if(REQUIRE_QT)
-	if(WIN32 AND NOT OBS_NATIVE)
+	if(WIN32 AND NOT ${PREFIX}OBS_NATIVE)
 		download_project(
 			PROJ qt
 			URL https://github.com/Xaymar/obs-studio/releases/download/${OBS_DEPENDENCIES_VERSION}/qt_${OBS_QT_VERSION}.7z
@@ -586,7 +586,7 @@ endif()
 
 # OBS Frontend API
 if(REQUIRE_OBSFE)
-	if(NOT OBS_NATIVE)
+	if(NOT ${PREFIX}OBS_NATIVE)
 		if (EXISTS "${_INCLUDE_PREFIX}/obs-frontend-api/obs-frontend-apiConfig.cmake")
 			include("${_INCLUDE_PREFIX}/obs-frontend-api/obs-frontend-apiConfig.cmake")
 			set(HAVE_OBSFE TRUE)
@@ -785,7 +785,7 @@ if(WIN32)
 	list(APPEND PROJECT_PRIVATE_GENERATED
 		"${PROJECT_BINARY_DIR}/generated/version.rc"
 	)
-	if(NOT OBS_NATIVE)
+	if(NOT ${PREFIX}OBS_NATIVE)
 		list(APPEND PROJECT_TEMPLATES
 			"templates/installer.iss.in"
 		)
