@@ -95,7 +95,8 @@ ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* self, bool
 	if (is_hw) {
 		// Abort if user specified manual override.
 		if ((static_cast<AVPixelFormat>(obs_data_get_int(settings, KEY_FFMPEG_COLORFORMAT)) != AV_PIX_FMT_NONE)
-			|| (obs_data_get_int(settings, KEY_FFMPEG_GPU) != -1) || (obs_encoder_scaling_enabled(_self))) {
+			|| (obs_data_get_int(settings, KEY_FFMPEG_GPU) != -1) || (obs_encoder_scaling_enabled(_self))
+			|| (video_output_get_info(obs_encoder_video(_self))->format != VIDEO_FORMAT_NV12)) {
 			throw std::runtime_error(
 				"Selected settings prevent the use of hardware encoding, falling back to software.");
 		}
