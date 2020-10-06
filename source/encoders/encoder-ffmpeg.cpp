@@ -586,9 +586,10 @@ bool ffmpeg_instance::get_sei_data(uint8_t** data, size_t* size)
 
 void ffmpeg_instance::get_video_info(struct video_scale_info* info)
 {
-	info->width  = _scaler.get_source_width();
-	info->height = _scaler.get_source_height();
-	info->format = ::ffmpeg::tools::avpixelformat_to_obs_videoformat(_scaler.get_source_format());
+	if (!is_hardware_encode()) {
+		// Override input with supported format if software encode.
+		info->format = ::ffmpeg::tools::avpixelformat_to_obs_videoformat(_scaler.get_source_format());
+	}
 }
 
 int ffmpeg_instance::receive_packet(bool* received_packet, struct encoder_packet* packet)
