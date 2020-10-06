@@ -43,20 +43,20 @@ namespace ffmpeg::tools {
 	const char* get_error_description(int error);
 
 	AVPixelFormat obs_videoformat_to_avpixelformat(video_format v);
-
-	video_format avpixelformat_to_obs_videoformat(AVPixelFormat v);
+	video_format  avpixelformat_to_obs_videoformat(AVPixelFormat v);
 
 	AVPixelFormat get_least_lossy_format(const AVPixelFormat* haystack, AVPixelFormat needle);
 
-	AVColorSpace obs_videocolorspace_to_avcolorspace(video_colorspace v);
-
-	AVColorRange obs_videorangetype_to_avcolorrange(video_range_type v);
+	AVColorRange                  obs_to_av_color_range(video_range_type v);
+	AVColorSpace                  obs_to_av_color_space(video_colorspace v);
+	AVColorPrimaries              obs_to_av_color_primary(video_colorspace v);
+	AVColorTransferCharacteristic obs_to_av_color_transfer_characteristics(video_colorspace v);
 
 	bool can_hardware_encode(const AVCodec* codec);
 
 	std::vector<AVPixelFormat> get_software_formats(const AVPixelFormat* list);
 
-	void setup_obs_color(video_colorspace colorspace, video_range_type range, AVCodecContext* context);
+	void context_setup_from_obs(const video_output_info* voi, AVCodecContext* context);
 
 	const char* get_std_compliance_name(int compliance);
 

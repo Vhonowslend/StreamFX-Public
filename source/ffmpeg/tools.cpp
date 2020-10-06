@@ -128,21 +128,7 @@ AVPixelFormat tools::get_least_lossy_format(const AVPixelFormat* haystack, AVPix
 	return avcodec_find_best_pix_fmt_of_list(haystack, needle, 0, &data_loss);
 }
 
-AVColorSpace tools::obs_videocolorspace_to_avcolorspace(video_colorspace v)
-{
-	switch (v) {
-	case VIDEO_CS_DEFAULT:
-	case VIDEO_CS_709:
-		return AVCOL_SPC_BT709;
-	case VIDEO_CS_601:
-		return AVCOL_SPC_BT470BG;
-	case VIDEO_CS_SRGB:
-		return AVCOL_SPC_RGB;
-	}
-	throw std::invalid_argument("unknown color space");
-}
-
-AVColorRange tools::obs_videorangetype_to_avcolorrange(video_range_type v)
+AVColorRange tools::obs_to_av_color_range(video_range_type v)
 {
 	switch (v) {
 	case VIDEO_RANGE_DEFAULT:
@@ -151,7 +137,50 @@ AVColorRange tools::obs_videorangetype_to_avcolorrange(video_range_type v)
 	case VIDEO_RANGE_FULL:
 		return AVCOL_RANGE_JPEG;
 	}
-	throw std::invalid_argument("unknown range");
+	throw std::invalid_argument("Unknown Color Range");
+}
+
+AVColorSpace tools::obs_to_av_color_space(video_colorspace v)
+{
+	switch (v) {
+	case VIDEO_CS_601:
+		return AVCOL_SPC_BT470BG;
+	case VIDEO_CS_DEFAULT:
+	case VIDEO_CS_709:
+	case VIDEO_CS_SRGB:
+		return AVCOL_SPC_BT709;
+	default:
+		throw std::invalid_argument("Unknown Color Space");
+	}
+}
+
+AVColorPrimaries ffmpeg::tools::obs_to_av_color_primary(video_colorspace v)
+{
+	switch (v) {
+	case VIDEO_CS_601:
+		return AVCOL_PRI_BT470BG;
+	case VIDEO_CS_DEFAULT:
+	case VIDEO_CS_709:
+	case VIDEO_CS_SRGB:
+		return AVCOL_PRI_BT709;
+	default:
+		throw std::invalid_argument("Unknown Color Primaries");
+	}
+}
+
+AVColorTransferCharacteristic ffmpeg::tools::obs_to_av_color_transfer_characteristics(video_colorspace v)
+{
+	switch (v) {
+	case VIDEO_CS_601:
+		return AVCOL_TRC_LINEAR;
+	case VIDEO_CS_DEFAULT:
+	case VIDEO_CS_709:
+		return AVCOL_TRC_BT709;
+	case VIDEO_CS_SRGB:
+		return AVCOL_TRC_IEC61966_2_1;
+	default:
+		throw std::invalid_argument("Unknown Color Transfer Characteristics");
+	}
 }
 
 bool tools::can_hardware_encode(const AVCodec* codec)
@@ -204,43 +233,28 @@ std::vector<AVPixelFormat> tools::get_software_formats(const AVPixelFormat* list
 	return std::move(fmts);
 }
 
-void tools::setup_obs_color(video_colorspace colorspace, video_range_type range, AVCodecContext* context)
+void tools::context_setup_from_obs(const video_output_info* voi, AVCodecContext* context)
 {
-	std::map<video_colorspace, std::tuple<AVColorSpace, AVColorPrimaries, AVColorTransferCharacteristic>> colorspaces =
-		{
-			{VIDEO_CS_601, {AVCOL_SPC_BT470BG, AVCOL_PRI_BT470BG, AVCOL_TRC_SMPTE170M}},
-			{VIDEO_CS_709, {AVCOL_SPC_BT709, AVCOL_PRI_BT709, AVCOL_TRC_BT709}},
-			{VIDEO_CS_SRGB, {AVCOL_SPC_RGB, AVCOL_PRI_BT709, AVCOL_TRC_IEC61966_2_1}},
-		};
-	std::map<video_range_type, AVColorRange> colorranges = {
-		{VIDEO_RANGE_PARTIAL, AVCOL_RANGE_MPEG},
-		{VIDEO_RANGE_FULL, AVCOL_RANGE_JPEG},
-	};
+	// Resolution
+	context->width  = static_cast<int>(voi->width);
+	context->height = static_cast<int>(voi->height);
 
-	{
-		if (colorspace == VIDEO_CS_DEFAULT)
-			colorspace = VIDEO_CS_601;
-		if (range == VIDEO_RANGE_DEFAULT)
-			range = VIDEO_RANGE_PARTIAL;
-	}
+	// Framerate
+	context->ticks_per_frame = 1;
+	context->framerate.num = context->time_base.den = static_cast<int>(voi->fps_num);
+	context->framerate.den = context->time_base.num = static_cast<int>(voi->fps_den);
 
-	{
-		auto found = colorspaces.find(colorspace);
-		if (found != colorspaces.end()) {
-			context->colorspace      = std::get<AVColorSpace>(found->second);
-			context->color_primaries = std::get<AVColorPrimaries>(found->second);
-			context->color_trc       = std::get<AVColorTransferCharacteristic>(found->second);
-		}
-	}
-	{
-		auto found = colorranges.find(range);
-		if (found != colorranges.end()) {
-			context->color_range = found->second;
-		}
-	}
+	// Aspect Ratio, Progressive
+	context->sample_aspect_ratio.num = 1;
+	context->sample_aspect_ratio.den = 1;
+	context->field_order             = AV_FIELD_PROGRESSIVE;
 
-	// Downscaling should result in downscaling, not pixelation
-	context->chroma_sample_location = AVCHROMA_LOC_CENTER;
+	// Decipher Pixel information
+	context->pix_fmt         = obs_videoformat_to_avpixelformat(voi->format);
+	context->color_range     = obs_to_av_color_range(voi->range);
+	context->colorspace      = obs_to_av_color_space(voi->colorspace);
+	context->color_primaries = obs_to_av_color_primary(voi->colorspace);
+	context->color_trc       = obs_to_av_color_transfer_characteristics(voi->colorspace);
 }
 
 const char* tools::get_std_compliance_name(int compliance)
