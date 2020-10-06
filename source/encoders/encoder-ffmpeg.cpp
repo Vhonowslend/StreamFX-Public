@@ -439,16 +439,18 @@ void ffmpeg_instance::initialize_sw(obs_data_t* settings)
 			}
 		}
 
-		_context->width  = static_cast<int>(obs_encoder_get_width(_self));
-		_context->height = static_cast<int>(obs_encoder_get_height(_self));
-		::ffmpeg::tools::setup_obs_color(voi->colorspace, voi->range, _context);
+		// Setup from OBS information.
+		::ffmpeg::tools::context_setup_from_obs(voi, _context);
 
-		_context->pix_fmt                 = _pixfmt_target;
-		_context->field_order             = AV_FIELD_PROGRESSIVE;
-		_context->ticks_per_frame         = 1;
-		_context->sample_aspect_ratio.num = _context->sample_aspect_ratio.den = 1;
-		_context->framerate.num = _context->time_base.den = static_cast<int>(voi->fps_num);
-		_context->framerate.den = _context->time_base.num = static_cast<int>(voi->fps_den);
+		// Override with other information.
+		_context->width   = static_cast<int>(obs_encoder_get_width(_self));
+		_context->height  = static_cast<int>(obs_encoder_get_height(_self));
+		_context->pix_fmt = _pixfmt_target;
+
+		// Prevent pixelation by sampling "center" instead of corners. This creates
+		// a smoother look, which may not be H.264/AVC standard compliant, however it
+		// provides better support for scaling algorithms, such as Bicubic.
+		_context->chroma_sample_location = AVCHROMA_LOC_CENTER;
 
 		_scaler.set_source_size(static_cast<uint32_t>(_context->width), static_cast<uint32_t>(_context->height));
 		_scaler.set_source_color(_context->color_range == AVCOL_RANGE_JPEG, _context->colorspace);
@@ -473,36 +475,37 @@ void ffmpeg_instance::initialize_sw(obs_data_t* settings)
 
 void ffmpeg_instance::initialize_hw(obs_data_t*)
 {
-#ifdef D_PLATFORM_WINDOWS
+#ifndef D_PLATFORM_WINDOWS
+	throw std::runtime_error("OBS Studio currently does not support zero copy encoding for this platform.");
+#else
 	// Initialize Video Encoding
-	auto voi = video_output_get_info(obs_encoder_video(_self));
+	const video_output_info* voi = video_output_get_info(obs_encoder_video(_self));
 
-	_context->width                   = static_cast<int>(voi->width);
-	_context->height                  = static_cast<int>(voi->height);
-	_context->field_order             = AV_FIELD_PROGRESSIVE;
-	_context->ticks_per_frame         = 1;
-	_context->sample_aspect_ratio.num = _context->sample_aspect_ratio.den = 1;
-	_context->framerate.num = _context->time_base.den = static_cast<int>(voi->fps_num);
-	_context->framerate.den = _context->time_base.num = static_cast<int>(voi->fps_den);
-	::ffmpeg::tools::setup_obs_color(voi->colorspace, voi->range, _context);
-	_context->sw_pix_fmt = ::ffmpeg::tools::obs_videoformat_to_avpixelformat(voi->format);
+	// Apply pixel format settings.
+	::ffmpeg::tools::context_setup_from_obs(voi, _context);
+	_context->sw_pix_fmt = _context->pix_fmt;
 	_context->pix_fmt    = AV_PIX_FMT_D3D11;
 
+	// Try to create a hardware context.
 	_context->hw_device_ctx = _hwinst->create_device_context();
 	_context->hw_frames_ctx = av_hwframe_ctx_alloc(_context->hw_device_ctx);
-	if (!_context->hw_frames_ctx)
-		throw std::runtime_error("Allocating hardware context failed, chosen pixel format is likely not supported.");
+	if (!_context->hw_frames_ctx) {
+		throw std::runtime_error("Creating hardware context failed.");
+	}
 
+	// Initialize Hardware Context
 	AVHWFramesContext* ctx = reinterpret_cast<AVHWFramesContext*>(_context->hw_frames_ctx->data);
 	ctx->width             = _context->width;
 	ctx->height            = _context->height;
 	ctx->format            = _context->pix_fmt;
 	ctx->sw_format         = _context->sw_pix_fmt;
-
-	if (av_hwframe_ctx_init(_context->hw_frames_ctx) < 0)
-		throw std::runtime_error("Initializing hardware context failed, chosen pixel format is likely not supported.");
-#else
-	throw std::runtime_error("OBS Studio currently does not support zero copy encoding for this platform.");
+	if (int32_t res = av_hwframe_ctx_init(_context->hw_frames_ctx); res < 0) {
+		std::array<char, 2048> buffer;
+		size_t                 len = static_cast<size_t>(snprintf(buffer.data(), buffer.size(),
+                                                  "Initializing hardware context failed with error: %s (%" PRIu32 ")",
+                                                  ::ffmpeg::tools::get_error_description(res), res));
+		throw std::runtime_error(std::string(buffer.data(), buffer.data() + len));
+	}
 #endif
 }
 

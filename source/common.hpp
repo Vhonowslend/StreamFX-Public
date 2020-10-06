@@ -32,6 +32,7 @@
 
 // Common C++ includes
 #include <algorithm>
+#include <array>
 #include <limits>
 #include <map>
 #include <memory>
