@@ -1136,7 +1136,7 @@ void ffmpeg_manager::register_encoders()
 			try {
 				_factories.emplace(codec, std::make_shared<ffmpeg_factory>(codec));
 			} catch (const std::exception& ex) {
-				DLOG_ERROR("Failed to register encoder '%s': %s", codec->id, ex.what());
+				DLOG_ERROR("Failed to register encoder '%s': %s", codec->name, ex.what());
 			}
 		}
 	}
@@ -1151,7 +1151,7 @@ void ffmpeg_manager::register_encoders()
 			try {
 				_factories.emplace(codec, std::make_shared<ffmpeg_factory>(codec));
 			} catch (const std::exception& ex) {
-				DLOG_ERROR("Failed to register encoder '%s': %s", codec->id, ex.what());
+				DLOG_ERROR("Failed to register encoder '%s': %s", codec->name, ex.what());
 			}
 		}
 	}
