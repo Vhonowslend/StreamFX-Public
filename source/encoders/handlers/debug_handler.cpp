@@ -40,7 +40,10 @@ using namespace streamfx::encoder::ffmpeg::handler;
 void debug_handler::get_defaults(obs_data_t*, const AVCodec*, AVCodecContext*, bool) {}
 
 template<typename T>
-std::string to_string(T value){};
+std::string to_string(T value)
+{
+	return std::string("Error: to_string not implemented for this type!");
+};
 
 template<>
 std::string to_string(int64_t value)
