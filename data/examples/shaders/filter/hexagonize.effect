@@ -59,7 +59,7 @@ VertData VSDefault(VertData v_in) {
 
 #define PI		3.1415926f
 #define TAU		6.2831853f
-#define deg30	0.20943951
+#define deg30	0.52359877
 
 float hexDist(float2 a, float2 b){
 	float2 p = abs(b-a);
