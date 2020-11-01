@@ -37,6 +37,14 @@ uniform float HexagonWallScale<
 	float step = 0.01;
 	float scale = 0.01;
 > = 100.0;
+uniform float LuminanceScale<
+	string name = "Luminance Scale";
+	string field_type = "slider";
+	float minimum = 0.0;
+	float maximum = 100.0;
+	float step = 0.01;
+	float scale = 0.01;
+> = 0.00;
 
 // ---------- Shader Code
 sampler_state def_sampler {
@@ -120,8 +128,9 @@ float4 PSDefault(VertData v_in) : TARGET {
 	float dist = hexDist(coord, nearest);
 	
 	float luminance = (texel.r + texel.g + texel.b)/3.0;
+	luminance = (luminance * LuminanceScale) + (1-LuminanceScale);
 	//float interiorSize = luminance*s;
-	float interiorSize = s * HexagonWallScale;
+	float interiorSize = luminance * s * HexagonWallScale;
 	float interior = 1.0 - smoothstep(interiorSize-1.0, interiorSize, dist);
 	//fragColor = float4(dist);
 	return float4(texel.rgb*interior, 1.0);
