@@ -71,11 +71,11 @@ set(PROJECT_AUTHORS "Michael Fabian 'Xaymar' Dirks <info@xaymar.com>")
 set(PROJECT_COPYRIGHT_YEARS "2018 - 2020")
 
 # Internal Configuration
-set(OBS_DOWNLOAD_VERSION "25.0.3-fe-ci")
+set(OBS_DOWNLOAD_VERSION "26.0.2-ci")
 if(WIN32)
 	set(OBS_DOWNLOAD_HASH_32 "SHA512=C8CABFAA59BDF5E4CD1C69CBC349F3E62FD6FE37A1A1A8BE4AC1B37BF087F597A313B2B004E019827C43A5951B50957B60578B7F2249383C117E634FD8714844")
 	set(OBS_DOWNLOAD_HASH_64 "SHA512=75E83548AD8FD994D45BE2395E97499BED8444C245857C811BA44D35BF3C49186B1187D3EF250F2618295D7AFA7D8ED5A66582BD140A01A46A77F6BC19BDDBE2")
-	set(OBS_DEPENDENCIES_VERSION "25.0.0")
+	set(OBS_DEPENDENCIES_VERSION "26.0.0")
 	set(OBS_DEPENDENCIES_HASH "SHA512=7545696B5B684E6BF57F11158FBDF7A0477C4C2CBB872070105A400E56ACD16A54934928BB917E8C952631667DB63953B56F8BACB9C52D36285EA3DD83B9F473")
 	set(OBS_QT_VERSION "5.10.1")
 	set(OBS_QT_HASH "SHA512=848B9AC00B06FCA1F1A85BD4EFEA4138D278E8EC96823C5C36CC988DDE5D27E2F91300B02F2F0E71F075CCB0D791D3C888CDA6A5048DDFE6F946A8697DFEF1E9")
@@ -106,6 +106,8 @@ if(${PREFIX}ENABLE_CLANG AND (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/clang/Cl
 	include("Clang")
 	set(HAVE_CLANG ON)
 endif()
+## Download Project
+include("DownloadProject")
 
 # Detect Platform & Architecture
 math(EXPR BITS "8*${CMAKE_SIZEOF_VOID_P}")
@@ -436,15 +438,17 @@ refresh_components()
 
 # OBS (Always first)
 if(NOT ${PREFIX}OBS_NATIVE)
-	if(WIN32)
-		set(DLSUFFIX "vs2019")
-	elseif(UNIX AND NOT APPLE)
-		set(DLSUFFIX "ubuntu1804")
+	if(D_PLATFORM_WINDOWS)
+		set(DLSUFFIX "windows${BITS}")
+	elseif(D_PLATFORM_LINUX)
+		set(DLSUFFIX "ubuntu${BITS}")
+	elseif(D_PLATFORM_MAC)
+		set(DLSUFFIX "macos${BITS}")
 	else()
 		message(FATAL_ERROR "Standalone builds are not supported for this platform. Please consider submitting the necessary changes to make them work.")
 	endif()
 
-	include("DownloadProject")
+	# Library
 	download_project(
 		PROJ libobs
 		URL https://github.com/Xaymar/obs-studio/releases/download/${OBS_DOWNLOAD_VERSION}/obs-studio-${ARCH}-0.0.0.0-${DLSUFFIX}.7z
@@ -452,9 +456,10 @@ if(NOT ${PREFIX}OBS_NATIVE)
 		DOWNLOAD_NAME "libobs.7z"
 		DOWNLOAD_NO_PROGRESS OFF
 		UPDATE_DISCONNECTED OFF
-		QUIET
 	)
-	if(WIN32)
+
+	# Dependencies
+	if(D_PLATFORM_WINDOWS)
 		download_project(
 			PROJ obsdeps
 			URL https://github.com/Xaymar/obs-studio/releases/download/${OBS_DEPENDENCIES_VERSION}/dependencies.7z
@@ -462,20 +467,13 @@ if(NOT ${PREFIX}OBS_NATIVE)
 			DOWNLOAD_NAME "obsdeps.7z"
 			DOWNLOAD_NO_PROGRESS OFF
 			UPDATE_DISCONNECTED OFF
-			QUIET
 		)
 	else() # Unix systems use system packages instead.
-		message(STATUS "Linux builds require that you have the necessary packages installed!")
+		message(STATUS "StreamFX: Builds on non-Windows platforms require that you install the necessary packages.")
 	endif()
 
 	# Include config file.
-	set(_INCLUDE_PREFIX "")
-	if(WIN32)
-		set(_INCLUDE_PREFIX "${libobs_SOURCE_DIR}/cmake")
-	elseif(UNIX)
-		set(_INCLUDE_PREFIX "${libobs_SOURCE_DIR}/usr/local/lib/cmake")
-	endif()
-	include("${_INCLUDE_PREFIX}/LibObs/LibObsConfig.cmake")
+	include("${libobs_SOURCE_DIR}/cmake/LibObs/LibObsConfig.cmake")
 endif()
 
 # CURL
@@ -587,8 +585,8 @@ endif()
 # OBS Frontend API
 if(REQUIRE_OBSFE)
 	if(NOT ${PREFIX}OBS_NATIVE)
-		if (EXISTS "${_INCLUDE_PREFIX}/obs-frontend-api/obs-frontend-apiConfig.cmake")
-			include("${_INCLUDE_PREFIX}/obs-frontend-api/obs-frontend-apiConfig.cmake")
+		if (EXISTS "${libobs_SOURCE_DIR}/cmake/obs-frontend-api/obs-frontend-apiConfig.cmake")
+			include("${libobs_SOURCE_DIR}/cmake/obs-frontend-api/obs-frontend-apiConfig.cmake")
 			set(HAVE_OBSFE TRUE)
 		else()
 			set(HAVE_OBSFE FALSE)
