@@ -125,6 +125,8 @@ void streamfx::ui::updater_dialog::on_cancel()
 }
 
 streamfx::ui::updater::updater(QMenu* menu)
+	: _updater(), _dialog(nullptr), _gdpr(nullptr), _cfu(nullptr), _cfu_auto(nullptr), _channel(nullptr),
+	  _channel_menu(nullptr), _channel_stable(nullptr), _channel_preview(nullptr), _channel_group(nullptr)
 {
 	// Create dialog.
 	_dialog = new updater_dialog();
