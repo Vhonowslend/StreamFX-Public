@@ -109,8 +109,8 @@ void streamfx::ui::updater_dialog::show(streamfx::update_info current, streamfx:
 
 void streamfx::ui::updater_dialog::hide()
 {
-	this->setModal(false);
 	QDialog::hide();
+	this->setModal(false);
 }
 
 void streamfx::ui::updater_dialog::on_ok()
