@@ -161,10 +161,10 @@ float4 PSDefault(VertData vtx) : TARGET {
 	float bar_direction = 0.;
 	if (TransitionTime < .5 || !_49_FadeToColor) {
 		bar_offset = -abs(noised(float2(bar_id, 0.)).x * bar_offset_max);
-		bar_direction = step(noised(float2(bar_id, 1.)).x, _Random[3][1]);
+		bar_direction = step(noised(float2(bar_id, 1.)).x, Random[3][1]);
 	} else {
 		bar_offset = -abs(noised(float2(bar_id, 1.)).x * bar_offset_max);
-		bar_direction = step(noised(float2(bar_id, 0.)).x, _Random[3][1]);
+		bar_direction = step(noised(float2(bar_id, 0.)).x, Random[3][1]);
 	}
 
 	if (_49_FadeToColor) {
