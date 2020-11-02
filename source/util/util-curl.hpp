@@ -24,6 +24,7 @@
 #include <functional>
 #include <map>
 #include <string>
+#include <vector>
 
 extern "C" {
 #ifndef NOMINMAX
