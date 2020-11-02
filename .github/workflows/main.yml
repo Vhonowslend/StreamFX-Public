@@ -10,6 +10,9 @@ on:
     branches:
       - '*'
 
+env:
+  DOWNLOAD_OBS_VERSION: "26.0.2-ci"
+
 jobs:
   windows:
     name: "Windows 64-bit"
@@ -24,6 +27,11 @@ jobs:
             cmake_generator_platform: "x64"
     runs-on: ${{ matrix.runner }}
     env:
+      DOWNLOAD_OBS_HASH_64: "SHA512=571B4196DF5CFBD3A8E113C97C7890000C490DDF1C6747529DE0F06063F928E7488095775919017104DE7A693CCF51A7A82BD04BCE62D6B3F0ED1F74A5F32B32"
+      DOWNLOAD_OBSDEPS_VERSION: "26.0.0"
+      DOWNLOAD_OBSDEPS_HASH: "SHA512=2D47E7579DE3FBD88C52BB62C2CA4D649BD958FBAE8E5B01EE263D7583B4D8EEEA8CE13C543BEF110FAC9142891C031973A1BC20AC6EED596E6AB97CCC669D16"
+      DOWNLOAD_QT_VERSION: "5.10.1"
+      DOWNLOAD_QT_HASH: "SHA512=848B9AC00B06FCA1F1A85BD4EFEA4138D278E8EC96823C5C36CC988DDE5D27E2F91300B02F2F0E71F075CCB0D791D3C888CDA6A5048DDFE6F946A8697DFEF1E9"
       CMAKE_GENERATOR: ${{ matrix.cmake_generator }}
       CMAKE_GENERATOR_PLATFORM: ${{ matrix.cmake_generator_platform }}
       CMAKE_GENERATOR_TOOLSET: "host=x64"
@@ -34,14 +42,21 @@ jobs:
     - name: "Clone Submodules"
       shell: bash
       run: git submodule update --init --recursive
-    - name: "Cache: Prerequisites"
+    - name: "Cache: OBS"
       uses: actions/cache@v2
       with:
-        path: |
-          build/temp/qt-download/qt-download-prefix/src/qt.7z
-          build/temp/obsdeps-download/obsdeps-download-prefix/src/obsdeps.7z
-          build/temp/libobs-download/libobs-download-prefix/src/libobs.7z
-        key: ${{ matrix.id }}
+        path: "build/temp/libobs-download/libobs-download-prefix/src/libobs.7z"
+        key: ${{ matrix.id }}-${{ env.DOWNLOAD_OBS_VERSION }}-${{ env.DOWNLOAD_OBS_HASH_64 }}
+    - name: "Cache: OBS Dependencies"
+      uses: actions/cache@v2
+      with:
+        path: "build/temp/obsdeps-download/obsdeps-download-prefix/src/obsdeps.7z"
+        key: ${{ matrix.id }}-${{ env.DOWNLOAD_OBSDEPS_VERSION }}-${{ env.DOWNLOAD_OBSDEPS_HASH }}
+    - name: "Cache: Qt"
+      uses: actions/cache@v2
+      with:
+        path: "build/temp/qt-download/qt-download-prefix/src/qt.7z"
+        key: ${{ matrix.id }}-${{ env.DOWNLOAD_QT_VERSION }}-${{ env.DOWNLOAD_QT_HASH }}
     - name: "Configure Project"
       shell: bash
       run: |
@@ -110,6 +125,7 @@ jobs:
             id: ubuntu-20.04-clang
     runs-on: ${{ matrix.runner }}
     env:
+      DOWNLOAD_OBS_HASH_64: "SHA512=62EAD42890CEF953806F5780ED37304D6BD110F65D3ED83A88ADA462B0A0E46E9DEE477A76D456C444102EBA4F9F9A9EAAA299DCFDB2872233E2B35F775CCD0D"
       CMAKE_GENERATOR: "Ninja"
       CC: ${{ matrix.compiler }}
       CXX: ${{ matrix.compiler-cxx }}
@@ -135,12 +151,11 @@ jobs:
           ${{ matrix.packages }} \
           checkinstall pkg-config
         ${{ matrix.extra_command }}
-    - name: "Cache: Prerequisites"
+    - name: "Cache: OBS"
       uses: actions/cache@v2
       with:
-        path: |
-          build/temp/libobs-download/libobs-download-prefix/src/libobs.7z
-        key: ${{ matrix.id }}
+        path: "build/temp/libobs-download/libobs-download-prefix/src/libobs.7z"
+        key: ${{ matrix.id }}-${{ env.DOWNLOAD_OBS_VERSION }}-${{ env.DOWNLOAD_OBS_HASH_64 }}
     - name: "Configure Project"
       shell: bash
       run: |
