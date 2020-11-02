@@ -17,6 +17,7 @@ jobs:
   windows:
     name: "Windows 64-bit"
     strategy:
+      fail-fast: true
       matrix: 
         runner: [ windows-2019 ]
         include:
@@ -89,6 +90,7 @@ jobs:
   ubuntu:
     name: "Ubuntu 64-bit"
     strategy:
+      fail-fast: true
       matrix:
         ubuntu: [ bionic, focal ]
         compiler: [ gcc, clang ]
