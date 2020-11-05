@@ -31,13 +31,13 @@ namespace nvidia::cuda {
 		::nvidia::cuda::device_t _device;
 
 		private:
-		context(std::shared_ptr<::nvidia::cuda::cuda> cuda);
+		context();
 
 		public:
 		~context();
 
 #ifdef WIN32
-		context(std::shared_ptr<::nvidia::cuda::cuda> cuda, ID3D11Device* device);
+		context(ID3D11Device* device);
 #endif
 
 		::nvidia::cuda::context_t get();

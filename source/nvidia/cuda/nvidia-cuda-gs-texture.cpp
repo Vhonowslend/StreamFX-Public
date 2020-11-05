@@ -20,13 +20,11 @@
 #include "nvidia-cuda-gs-texture.hpp"
 #include "obs/gs/gs-helper.hpp"
 
-nvidia::cuda::gstexture::gstexture(std::shared_ptr<nvidia::cuda::cuda> cuda, std::shared_ptr<gs::texture> texture)
-	: _cuda(cuda), _texture(texture), _resource(), _is_mapped(false), _pointer()
+nvidia::cuda::gstexture::gstexture(std::shared_ptr<gs::texture> texture)
+	: _cuda(::nvidia::cuda::cuda::get()), _texture(texture), _resource(), _is_mapped(false), _pointer()
 {
 	if (!texture)
 		throw std::invalid_argument("texture");
-	if (!cuda)
-		throw std::invalid_argument("cuda");
 
 	gs::context gctx;
 	int         dev_type = gs_get_device_type();
