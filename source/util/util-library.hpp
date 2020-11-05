@@ -21,7 +21,7 @@
 #pragma once
 #include <filesystem>
 #include <memory>
-#include <string>
+#include <string_view>
 
 namespace util {
 	class library {
@@ -31,10 +31,10 @@ namespace util {
 		library(std::filesystem::path file);
 		~library();
 
-		void* load_symbol(std::string name);
+		void* load_symbol(std::string_view name);
 
 		static std::shared_ptr<::util::library> load(std::filesystem::path file);
 
-		static std::shared_ptr<::util::library> load(std::string name);
+		static std::shared_ptr<::util::library> load(std::string_view name);
 	};
 } // namespace util
