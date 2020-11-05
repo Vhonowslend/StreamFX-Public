@@ -20,10 +20,9 @@
 #include "nvidia-cuda-memory.hpp"
 #include <stdexcept>
 
-nvidia::cuda::memory::memory(std::shared_ptr<::nvidia::cuda::cuda> cuda, std::size_t size)
-	: _cuda(cuda), _pointer(), _size(size)
+nvidia::cuda::memory::memory(size_t size) : _cuda(::nvidia::cuda::cuda::get()), _pointer(), _size(size)
 {
-	::nvidia::cuda::result res = _cuda->cuMemAlloc(&_pointer, size);
+	::nvidia::cuda::result res = _cuda->cuMemAlloc(&_pointer, _size);
 	switch (res) {
 	case ::nvidia::cuda::result::SUCCESS:
 		break;
@@ -36,7 +35,6 @@ nvidia::cuda::memory::~memory()
 {
 	_cuda->cuMemFree(_pointer);
 }
-
 nvidia::cuda::device_ptr_t nvidia::cuda::memory::get()
 {
 	return _pointer;

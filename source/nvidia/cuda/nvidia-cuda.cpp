@@ -18,8 +18,22 @@
  */
 
 #include "nvidia-cuda.hpp"
-#include "common.hpp"
 #include <mutex>
+#include "util/util-logging.hpp"
+
+#ifdef _DEBUG
+#define ST_PREFIX "<%s> "
+#define D_LOG_ERROR(x, ...) P_LOG_ERROR(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_WARNING(x, ...) P_LOG_WARN(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_INFO(x, ...) P_LOG_INFO(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_DEBUG(x, ...) P_LOG_DEBUG(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#else
+#define ST_PREFIX "<nvidia::cuda::cuda> "
+#define D_LOG_ERROR(...) P_LOG_ERROR(ST_PREFIX __VA_ARGS__)
+#define D_LOG_WARNING(...) P_LOG_WARN(ST_PREFIX __VA_ARGS__)
+#define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
+#define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
+#endif
 
 #if defined(_WIN32) || defined(_WIN64)
 #define CUDA_NAME "nvcuda.dll"
@@ -29,28 +43,33 @@
 
 #define CUDA_LOAD_SYMBOL(NAME)                                                            \
 	{                                                                                     \
-		NAME = reinterpret_cast<decltype(NAME)>(os_dlsym(_library, #NAME));                    \
+		NAME = reinterpret_cast<decltype(NAME)>(_library->load_symbol(#NAME));            \
 		if (!NAME)                                                                        \
 			throw std::runtime_error("Failed to load '" #NAME "' from '" CUDA_NAME "'."); \
 	}
 #define CUDA_LOAD_SYMBOL_V2(NAME)                                                         \
 	{                                                                                     \
-		NAME = reinterpret_cast<decltype(NAME)>(os_dlsym(_library, #NAME "_v2"));              \
+		NAME = reinterpret_cast<decltype(NAME)>(_library->load_symbol(#NAME "_v2"));      \
 		if (!NAME)                                                                        \
 			throw std::runtime_error("Failed to load '" #NAME "' from '" CUDA_NAME "'."); \
 	}
 #define CUDA_LOAD_SYMBOL_EX(NAME, OVERRIDE)                                               \
 	{                                                                                     \
-		NAME = reinterpret_cast<decltype(NAME)>(os_dlsym(_library, #OVERRIDE));                \
+		NAME = reinterpret_cast<decltype(NAME)>(_library->load_symbol(#OVERRIDE));        \
 		if (!NAME)                                                                        \
 			throw std::runtime_error("Failed to load '" #NAME "' from '" CUDA_NAME "'."); \
 	}
 
-nvidia::cuda::cuda::cuda()
+nvidia::cuda::cuda::~cuda()
 {
-	_library = os_dlopen(CUDA_NAME);
-	if (!_library)
-		throw std::runtime_error("Failed to load '" CUDA_NAME "'.");
+	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
+}
+
+nvidia::cuda::cuda::cuda() : _library()
+{
+	D_LOG_DEBUG("Initialization... (Addr: 0x%" PRIuPTR ")", this);
+
+	_library = util::library::load(std::string_view(CUDA_NAME));
 
 	// Initialization
 	CUDA_LOAD_SYMBOL(cuInit);
@@ -117,19 +136,16 @@ nvidia::cuda::cuda::cuda()
 	cuInit(0);
 }
 
-nvidia::cuda::cuda::~cuda()
-{
-	os_dlclose(_library);
-}
-
 std::shared_ptr<nvidia::cuda::cuda> nvidia::cuda::cuda::get()
 {
-	static std::shared_ptr<nvidia::cuda::cuda> instance;
-	static std::mutex                          lock;
+	static std::weak_ptr<nvidia::cuda::cuda> instance;
+	static std::mutex                        lock;
 
 	std::unique_lock<std::mutex> ul(lock);
-	if (!instance) {
-		instance = std::make_shared<nvidia::cuda::cuda>();
+	if (instance.expired()) {
+		auto hard_instance = std::make_shared<nvidia::cuda::cuda>();
+		instance           = hard_instance;
+		return hard_instance;
 	}
-	return instance;
+	return instance.lock();
 }

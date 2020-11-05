@@ -26,10 +26,10 @@ namespace nvidia::cuda {
 	class memory {
 		std::shared_ptr<::nvidia::cuda::cuda> _cuda;
 		device_ptr_t                          _pointer;
-		std::size_t                           _size;
+		size_t                                _size;
 
 		public:
-		memory(std::shared_ptr<::nvidia::cuda::cuda> cuda, std::size_t size);
+		memory(size_t size);
 		~memory();
 
 		device_ptr_t get();
