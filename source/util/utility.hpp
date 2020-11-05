@@ -48,45 +48,6 @@ extern "C" {
 
 const char* obs_module_recursive_text(const char* to_translate, std::size_t depth = std::numeric_limits<size_t>::max());
 
-template<typename Enum>
-struct enable_bitmask_operators {
-	static const bool enable = false;
-};
-
-template<typename Enum>
-typename std::enable_if<enable_bitmask_operators<Enum>::enable, Enum>::type operator|(Enum lhs, Enum rhs)
-{
-	using underlying = typename std::underlying_type<Enum>::type;
-	return static_cast<Enum>(static_cast<underlying>(lhs) | static_cast<underlying>(rhs));
-}
-
-template<typename Enum>
-typename std::enable_if<enable_bitmask_operators<Enum>::enable, Enum>::type operator&(Enum lhs, Enum rhs)
-{
-	using underlying = typename std::underlying_type<Enum>::type;
-	return static_cast<Enum>(static_cast<underlying>(lhs) & static_cast<underlying>(rhs));
-}
-
-template<typename Enum>
-typename std::enable_if<enable_bitmask_operators<Enum>::enable, bool>::type any(Enum lhs)
-{
-	using underlying = typename std::underlying_type<Enum>::type;
-	return static_cast<underlying>(lhs) != static_cast<underlying>(0);
-}
-
-template<typename Enum>
-typename std::enable_if<enable_bitmask_operators<Enum>::enable, bool>::type exact(Enum lhs, Enum rhs)
-{
-	using underlying = typename std::underlying_type<Enum>::type;
-	return static_cast<underlying>(lhs) == static_cast<underlying>(rhs);
-}
-
-#define P_ENABLE_BITMASK_OPERATORS(x)    \
-	template<>                           \
-	struct enable_bitmask_operators<x> { \
-		static const bool enable = true; \
-	};
-
 #define D_STR(s) #s
 #define D_VSTR(s) D_STR(s)
 
