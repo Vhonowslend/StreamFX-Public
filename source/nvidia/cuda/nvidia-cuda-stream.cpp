@@ -20,9 +20,7 @@
 #include "nvidia-cuda-stream.hpp"
 #include <stdexcept>
 
-nvidia::cuda::stream::stream(std::shared_ptr<::nvidia::cuda::cuda> cuda, ::nvidia::cuda::stream_flags flags,
-							 int32_t priority)
-	: _cuda(cuda)
+nvidia::cuda::stream::stream(::nvidia::cuda::stream_flags flags, int32_t priority) : _cuda(::nvidia::cuda::cuda::get())
 {
 	nvidia::cuda::result res;
 	if (priority == 0) {

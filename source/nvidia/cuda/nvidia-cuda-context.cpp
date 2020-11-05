@@ -31,13 +31,7 @@
 #endif
 #endif
 
-nvidia::cuda::context::context(std::shared_ptr<::nvidia::cuda::cuda> cuda)
-	: _cuda(cuda), _ctx(), _has_device(false), _device()
-{
-	if (!cuda)
-		throw std::invalid_argument("cuda");
-}
-
+nvidia::cuda::context::context() : _cuda(::nvidia::cuda::cuda::get()), _ctx(), _has_device(false), _device() {}
 nvidia::cuda::context::~context()
 {
 	if (_has_device) {
@@ -47,7 +41,7 @@ nvidia::cuda::context::~context()
 }
 
 #ifdef WIN32
-nvidia::cuda::context::context(std::shared_ptr<::nvidia::cuda::cuda> cuda, ID3D11Device* device) : context(cuda)
+nvidia::cuda::context::context(ID3D11Device* device) : context()
 {
 	using namespace nvidia::cuda;
 

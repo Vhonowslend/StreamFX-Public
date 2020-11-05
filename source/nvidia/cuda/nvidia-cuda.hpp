@@ -18,10 +18,9 @@
  */
 
 #pragma once
-#include "common.hpp"
 #include <cstddef>
-#include <functional>
-#include <memory>
+#include "util/util-bitmask.hpp"
+#include "util/util-library.hpp"
 
 #ifdef WIN32
 #pragma warning(push)
@@ -128,8 +127,7 @@ namespace nvidia::cuda {
 	};
 
 	class cuda {
-		private:
-		void* _library;
+		std::shared_ptr<util::library> _library;
 
 		public:
 		cuda();
@@ -395,7 +393,7 @@ namespace nvidia::cuda {
 							 ID3D11Resource* d3dresource, uint32_t flags);
 #endif
 		public:
-		static std::shared_ptr<cuda> get();
+		static std::shared_ptr<::nvidia::cuda::cuda> get();
 	};
 } // namespace nvidia::cuda
 
