@@ -712,6 +712,7 @@ list(APPEND PROJECT_PRIVATE_SOURCE
 	"source/plugin.cpp"
 	"source/util/utility.hpp"
 	"source/util/utility.cpp"
+	"source/util/util-bitmask.hpp"
 	"source/util/util-event.hpp"
 	"source/util/util-library.cpp"
 	"source/util/util-library.hpp"
