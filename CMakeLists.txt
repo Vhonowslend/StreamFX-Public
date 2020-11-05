@@ -173,12 +173,12 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL 
 	message(STATUS "Applying custom flags for GNU style build.")
 	
 	# Clang/AppleClang/GNU
-	# - Don't export by default.
+	# - Don't export by default. (Temporarily disabled)
 	# - Enable all and extra warnings.
 	
 	add_compile_options("-Wall")
 	add_compile_options("-Wextra")
-	add_compile_options("-fvisibility=hidden")
+	# add_compile_options("-fvisibility=hidden")
 endif()
 
 # C++ Standard and Extensions
