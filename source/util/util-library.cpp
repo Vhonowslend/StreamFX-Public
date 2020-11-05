@@ -73,12 +73,12 @@ util::library::~library()
 #endif
 }
 
-void* util::library::load_symbol(std::string name)
+void* util::library::load_symbol(std::string_view name)
 {
 #if defined(ST_WINDOWS)
-	return reinterpret_cast<void*>(GetProcAddress(reinterpret_cast<HMODULE>(_library), name.c_str()));
+	return reinterpret_cast<void*>(GetProcAddress(reinterpret_cast<HMODULE>(_library), name.data()));
 #elif defined(ST_UNIX)
-	return reinterpret_cast<void*>(dlsym(_library, name.c_str()));
+	return reinterpret_cast<void*>(dlsym(_library, name.data()));
 #endif
 }
 
@@ -101,7 +101,7 @@ std::shared_ptr<::util::library> util::library::load(std::filesystem::path file)
 	return ptr;
 }
 
-std::shared_ptr<::util::library> util::library::load(std::string name)
+std::shared_ptr<::util::library> util::library::load(std::string_view name)
 {
 	return load(std::filesystem::path(name));
 }
