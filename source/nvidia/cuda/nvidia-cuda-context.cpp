@@ -19,6 +19,21 @@
 
 #include "nvidia-cuda-context.hpp"
 #include <stdexcept>
+#include "util/util-logging.hpp"
+
+#ifdef _DEBUG
+#define ST_PREFIX "<%s> "
+#define D_LOG_ERROR(x, ...) P_LOG_ERROR(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_WARNING(x, ...) P_LOG_WARN(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_INFO(x, ...) P_LOG_INFO(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_DEBUG(x, ...) P_LOG_DEBUG(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#else
+#define ST_PREFIX "<nvidia::cuda::context> "
+#define D_LOG_ERROR(...) P_LOG_ERROR(ST_PREFIX __VA_ARGS__)
+#define D_LOG_WARNING(...) P_LOG_WARN(ST_PREFIX __VA_ARGS__)
+#define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
+#define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
+#endif
 
 #ifdef WIN32
 #ifdef _MSC_VER
@@ -31,9 +46,14 @@
 #endif
 #endif
 
-nvidia::cuda::context::context() : _cuda(::nvidia::cuda::cuda::get()), _ctx(), _has_device(false), _device() {}
+nvidia::cuda::context::context() : _cuda(::nvidia::cuda::cuda::get()), _ctx(), _has_device(false), _device()
+{
+	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
+}
 nvidia::cuda::context::~context()
 {
+	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
+
 	if (_has_device) {
 		_cuda->cuDevicePrimaryCtxRelease(_device);
 	}
