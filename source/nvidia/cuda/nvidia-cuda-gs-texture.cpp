@@ -19,10 +19,27 @@
 
 #include "nvidia-cuda-gs-texture.hpp"
 #include "obs/gs/gs-helper.hpp"
+#include "util/util-logging.hpp"
+
+#ifdef _DEBUG
+#define ST_PREFIX "<%s> "
+#define D_LOG_ERROR(x, ...) P_LOG_ERROR(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_WARNING(x, ...) P_LOG_WARN(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_INFO(x, ...) P_LOG_INFO(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_DEBUG(x, ...) P_LOG_DEBUG(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#else
+#define ST_PREFIX "<nvidia::cuda::gstexture> "
+#define D_LOG_ERROR(...) P_LOG_ERROR(ST_PREFIX __VA_ARGS__)
+#define D_LOG_WARNING(...) P_LOG_WARN(ST_PREFIX __VA_ARGS__)
+#define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
+#define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
+#endif
 
 nvidia::cuda::gstexture::gstexture(std::shared_ptr<gs::texture> texture)
 	: _cuda(::nvidia::cuda::cuda::get()), _texture(texture), _resource(), _is_mapped(false), _pointer()
 {
+	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
+
 	if (!texture)
 		throw std::invalid_argument("texture");
 
@@ -63,6 +80,8 @@ nvidia::cuda::gstexture::gstexture(std::shared_ptr<gs::texture> texture)
 
 nvidia::cuda::gstexture::~gstexture()
 {
+	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
+
 	unmap();
 	_cuda->cuGraphicsUnregisterResource(_resource);
 }
