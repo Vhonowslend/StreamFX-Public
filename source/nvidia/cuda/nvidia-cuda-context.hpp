@@ -25,10 +25,8 @@ namespace nvidia::cuda {
 	class context {
 		std::shared_ptr<::nvidia::cuda::cuda> _cuda;
 		::nvidia::cuda::context_t             _ctx;
-
-		// Primary Device Context
-		bool                     _has_device;
-		::nvidia::cuda::device_t _device;
+		bool                                  _has_device;
+		::nvidia::cuda::device_t              _device;
 
 		private:
 		context();
