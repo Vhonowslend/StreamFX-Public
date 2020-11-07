@@ -126,6 +126,19 @@ namespace nvidia::cuda {
 		array_format format;
 	};
 
+	class cuda_error : public std::exception {
+		::nvidia::cuda::result _code;
+
+		public:
+		cuda_error(::nvidia::cuda::result code) : _code(code) {}
+		~cuda_error(){};
+
+		::nvidia::cuda::result code()
+		{
+			return _code;
+		}
+	};
+
 	class cuda {
 		std::shared_ptr<util::library> _library;
 
