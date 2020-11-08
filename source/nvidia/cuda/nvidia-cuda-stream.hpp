@@ -31,5 +31,7 @@ namespace nvidia::cuda {
 		stream(::nvidia::cuda::stream_flags flags = ::nvidia::cuda::stream_flags::DEFAULT, int32_t priority = 0);
 
 		::nvidia::cuda::stream_t get();
+
+		void synchronize();
 	};
 } // namespace nvidia::cuda
