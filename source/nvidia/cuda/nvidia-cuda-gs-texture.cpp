@@ -35,6 +35,14 @@
 #define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
 #endif
 
+nvidia::cuda::gstexture::~gstexture()
+{
+	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
+
+	unmap();
+	_cuda->cuGraphicsUnregisterResource(_resource);
+}
+
 nvidia::cuda::gstexture::gstexture(std::shared_ptr<gs::texture> texture)
 	: _cuda(::nvidia::cuda::cuda::get()), _texture(texture), _resource(), _is_mapped(false), _pointer()
 {
@@ -76,14 +84,6 @@ nvidia::cuda::gstexture::gstexture(std::shared_ptr<gs::texture> texture)
 		}
 	}
 #endif
-}
-
-nvidia::cuda::gstexture::~gstexture()
-{
-	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
-
-	unmap();
-	_cuda->cuGraphicsUnregisterResource(_resource);
 }
 
 nvidia::cuda::array_t nvidia::cuda::gstexture::map(std::shared_ptr<nvidia::cuda::stream> stream)

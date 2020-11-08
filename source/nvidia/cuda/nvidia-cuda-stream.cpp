@@ -35,6 +35,13 @@
 #define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
 #endif
 
+nvidia::cuda::stream::~stream()
+{
+	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
+
+	_cuda->cuStreamDestroy(_stream);
+}
+
 nvidia::cuda::stream::stream(::nvidia::cuda::stream_flags flags, int32_t priority) : _cuda(::nvidia::cuda::cuda::get())
 {
 	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
@@ -51,13 +58,6 @@ nvidia::cuda::stream::stream(::nvidia::cuda::stream_flags flags, int32_t priorit
 	default:
 		throw std::runtime_error("Failed to create CUstream object.");
 	}
-}
-
-nvidia::cuda::stream::~stream()
-{
-	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
-
-	_cuda->cuStreamDestroy(_stream);
 }
 
 ::nvidia::cuda::stream_t nvidia::cuda::stream::get()

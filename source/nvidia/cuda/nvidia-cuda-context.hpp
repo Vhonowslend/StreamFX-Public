@@ -30,12 +30,13 @@ namespace nvidia::cuda {
 		bool                                  _has_device;
 		::nvidia::cuda::device_t              _device;
 
+		public:
+		~context();
+
 		private:
 		context();
 
 		public:
-		~context();
-
 #ifdef WIN32
 		context(ID3D11Device* device);
 #endif
