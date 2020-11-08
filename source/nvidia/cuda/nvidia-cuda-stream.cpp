@@ -64,3 +64,11 @@ nvidia::cuda::stream::~stream()
 {
 	return _stream;
 }
+
+void nvidia::cuda::stream::synchronize()
+{
+	D_LOG_DEBUG("Synchronizing... (Addr: 0x%" PRIuPTR ")", this);
+	if (auto res = _cuda->cuStreamSynchronize(_stream); res != ::nvidia::cuda::result::SUCCESS) {
+		throw ::nvidia::cuda::cuda_error(res);
+	}
+}
