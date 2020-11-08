@@ -987,6 +987,8 @@ list(APPEND PROJECT_PRIVATE_SOURCE
 	"source/util/util-event.hpp"
 	"source/util/util-library.cpp"
 	"source/util/util-library.hpp"
+	"source/util/util-logging.cpp"
+	"source/util/util-logging.hpp"
 	"source/util/util-threadpool.cpp"
 	"source/util/util-threadpool.hpp"
 	"source/gfx/gfx-source-texture.hpp"
