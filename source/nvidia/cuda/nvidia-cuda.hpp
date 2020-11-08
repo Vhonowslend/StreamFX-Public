@@ -130,8 +130,8 @@ namespace nvidia::cuda {
 		::nvidia::cuda::result _code;
 
 		public:
-		cuda_error(::nvidia::cuda::result code) : _code(code) {}
 		~cuda_error(){};
+		cuda_error(::nvidia::cuda::result code) : _code(code) {}
 
 		::nvidia::cuda::result code()
 		{
@@ -143,8 +143,8 @@ namespace nvidia::cuda {
 		std::shared_ptr<util::library> _library;
 
 		public:
-		cuda();
 		~cuda();
+		cuda();
 
 		public:
 		// Initialization
