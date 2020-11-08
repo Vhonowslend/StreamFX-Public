@@ -35,6 +35,13 @@
 #define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
 #endif
 
+nvidia::cuda::memory::~memory()
+{
+	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
+
+	_cuda->cuMemFree(_pointer);
+}
+
 nvidia::cuda::memory::memory(size_t size) : _cuda(::nvidia::cuda::cuda::get()), _pointer(), _size(size)
 {
 	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
@@ -48,12 +55,6 @@ nvidia::cuda::memory::memory(size_t size) : _cuda(::nvidia::cuda::cuda::get()), 
 	}
 }
 
-nvidia::cuda::memory::~memory()
-{
-	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
-
-	_cuda->cuMemFree(_pointer);
-}
 nvidia::cuda::device_ptr_t nvidia::cuda::memory::get()
 {
 	return _pointer;
