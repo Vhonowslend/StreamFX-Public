@@ -29,8 +29,8 @@ namespace nvidia::cuda {
 		size_t                                _size;
 
 		public:
-		memory(size_t size);
 		~memory();
+		memory(size_t size);
 
 		device_ptr_t get();
 

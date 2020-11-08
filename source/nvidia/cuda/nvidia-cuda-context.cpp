@@ -49,10 +49,6 @@
 
 #define ENABLE_STACK_CHECKS
 
-nvidia::cuda::context::context() : _cuda(::nvidia::cuda::cuda::get()), _ctx(), _has_device(false), _device()
-{
-	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
-}
 nvidia::cuda::context::~context()
 {
 	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
@@ -61,6 +57,11 @@ nvidia::cuda::context::~context()
 		_cuda->cuDevicePrimaryCtxRelease(_device);
 	}
 	_cuda->cuCtxDestroy(_ctx);
+}
+
+nvidia::cuda::context::context() : _cuda(::nvidia::cuda::cuda::get()), _ctx(), _has_device(false), _device()
+{
+	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
 }
 
 #ifdef WIN32
