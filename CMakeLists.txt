@@ -950,8 +950,6 @@ if(HAVE_NVIDIA_CUDA)
 		"source/nvidia/cuda/nvidia-cuda.cpp"
 		"source/nvidia/cuda/nvidia-cuda-context.hpp"
 		"source/nvidia/cuda/nvidia-cuda-context.cpp"
-		"source/nvidia/cuda/nvidia-cuda-context-stack.hpp"
-		"source/nvidia/cuda/nvidia-cuda-context-stack.cpp"
 		"source/nvidia/cuda/nvidia-cuda-gs-texture.hpp"
 		"source/nvidia/cuda/nvidia-cuda-gs-texture.cpp"
 		"source/nvidia/cuda/nvidia-cuda-memory.hpp"

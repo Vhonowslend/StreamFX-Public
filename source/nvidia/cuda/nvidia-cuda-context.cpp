@@ -18,6 +18,7 @@
  */
 
 #include "nvidia-cuda-context.hpp"
+#include <cassert>
 #include <stdexcept>
 #include "util/util-logging.hpp"
 
@@ -45,6 +46,8 @@
 #pragma warning(pop)
 #endif
 #endif
+
+#define ENABLE_STACK_CHECKS
 
 nvidia::cuda::context::context() : _cuda(::nvidia::cuda::cuda::get()), _ctx(), _has_device(false), _device()
 {
@@ -92,4 +95,42 @@ nvidia::cuda::context::context(ID3D11Device* device) : context()
 ::nvidia::cuda::context_t nvidia::cuda::context::get()
 {
 	return _ctx;
+}
+
+std::shared_ptr<::nvidia::cuda::context_stack> nvidia::cuda::context::enter()
+{
+	return std::make_shared<::nvidia::cuda::context_stack>(shared_from_this());
+}
+
+void nvidia::cuda::context::push()
+{
+	if (auto res = _cuda->cuCtxPushCurrent(_ctx); res != ::nvidia::cuda::result::SUCCESS) {
+		throw ::nvidia::cuda::cuda_error(res);
+	}
+}
+
+void nvidia::cuda::context::pop()
+{
+#ifdef ENABLE_STACK_CHECKS
+	::nvidia::cuda::context_t ctx;
+	if (_cuda->cuCtxGetCurrent(&ctx) == ::nvidia::cuda::result::SUCCESS)
+		assert(ctx == _ctx);
+#endif
+
+	assert(_cuda->cuCtxPopCurrent(&ctx) == ::nvidia::cuda::result::SUCCESS);
+}
+
+void nvidia::cuda::context::synchronize()
+{
+	D_LOG_DEBUG("Synchronizing... (Addr: 0x%" PRIuPTR ")", this);
+
+#ifdef ENABLE_STACK_CHECKS
+	::nvidia::cuda::context_t ctx;
+	if (_cuda->cuCtxGetCurrent(&ctx) == ::nvidia::cuda::result::SUCCESS)
+		assert(ctx == _ctx);
+#endif
+
+	if (auto res = _cuda->cuCtxSynchronize(); res != ::nvidia::cuda::result::SUCCESS) {
+		throw ::nvidia::cuda::cuda_error(res);
+	}
 }
