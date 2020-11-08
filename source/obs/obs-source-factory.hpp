@@ -143,7 +143,7 @@ namespace obs {
 					break;
 				case OBS_SOURCE_VIDEO:
 					_info.video_tick   = _video_tick;
-					_info.video_render = _video_render;
+					_info.video_render = _video_render_filter;
 					break;
 				}
 				if ((_info.output_flags & OBS_SOURCE_AUDIO) != 0) {
@@ -325,6 +325,18 @@ namespace obs {
 			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
 			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+		}
+
+		static void _video_render_filter(void* data, gs_effect_t* effect) noexcept
+		try {
+			if (data)
+				reinterpret_cast<_instance*>(data)->video_render(effect);
+		} catch (const std::exception& ex) {
+			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			obs_source_skip_video_filter(reinterpret_cast<_instance*>(data)->get());
+		} catch (...) {
+			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			obs_source_skip_video_filter(reinterpret_cast<_instance*>(data)->get());
 		}
 
 		static struct obs_source_frame* _filter_video(void* data, struct obs_source_frame* frame) noexcept
@@ -548,6 +560,11 @@ namespace obs {
 		public:
 		source_instance(obs_data_t* settings, obs_source_t* source) : _self(source) {}
 		virtual ~source_instance(){};
+
+		virtual obs_source_t* get()
+		{
+			return _self;
+		}
 
 		virtual uint32_t get_width()
 		{
