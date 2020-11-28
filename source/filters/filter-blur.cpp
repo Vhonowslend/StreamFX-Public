@@ -113,14 +113,12 @@ blur_instance::blur_instance(obs_data_t* settings, obs_source_t* self)
 
 		// Load Effects
 		{
-			char* file = obs_module_file("effects/mask.effect");
+			auto file = streamfx::data_file_path("effects/mask.effect").string();
 			try {
 				_effect_mask = gs::effect::create(file);
 			} catch (std::runtime_error& ex) {
-				DLOG_ERROR("<filter-blur> Loading _effect '%s' failed with error(s): %s", file, ex.what());
+				DLOG_ERROR("<filter-blur> Loading effect '%s' failed with error(s): %s", file.c_str(), ex.what());
 			}
-
-			bfree(file);
 		}
 	}
 
@@ -601,11 +599,7 @@ void blur_factory::get_defaults2(obs_data_t* settings)
 	obs_data_set_default_double(settings, ST_MASK_REGION_FEATHER, 0.0);
 	obs_data_set_default_double(settings, ST_MASK_REGION_FEATHER_SHIFT, 0.0);
 	obs_data_set_default_bool(settings, ST_MASK_REGION_INVERT, false);
-	{
-		char* default_file = obs_module_file("white.png");
-		obs_data_set_default_string(settings, ST_MASK_IMAGE, default_file);
-		bfree(default_file);
-	}
+	obs_data_set_default_string(settings, ST_MASK_IMAGE, streamfx::data_file_path("white.png").u8string().c_str());
 	obs_data_set_default_string(settings, ST_MASK_SOURCE, "");
 	obs_data_set_default_int(settings, ST_MASK_COLOR, 0xFFFFFFFFull);
 	obs_data_set_default_double(settings, ST_MASK_MULTIPLIER, 1.0);
