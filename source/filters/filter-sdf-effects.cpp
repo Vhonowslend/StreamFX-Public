@@ -97,18 +97,13 @@ sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* s
 			{"effects/sdf/sdf-consumer.effect", _sdf_consumer_effect},
 		};
 		for (auto& kv : load_arr) {
-			char* path = obs_module_file(kv.first);
-			if (!path) {
-				DLOG_ERROR(LOG_PREFIX "Unable to load _effect '%s' as file is missing or locked.", kv.first);
-				continue;
-			}
+			auto path = streamfx::data_file_path(kv.first).u8string();
 			try {
 				kv.second = gs::effect::create(path);
 			} catch (const std::exception& ex) {
-				DLOG_ERROR(LOG_PREFIX "Failed to load _effect '%s' (located at '%s') with error(s): %s", kv.first, path,
-						   ex.what());
+				DLOG_ERROR(LOG_PREFIX "Failed to load effect '%s' (located at '%s') with error(s): %s", kv.first,
+						   path.c_str(), ex.what());
 			}
-			bfree(path);
 		}
 	}
 
