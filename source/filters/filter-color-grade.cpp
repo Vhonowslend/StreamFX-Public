@@ -81,18 +81,12 @@ color_grade_instance::~color_grade_instance() {}
 color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self) : obs::source_instance(data, self)
 {
 	{
-		char* file = obs_module_file("effects/color-grade.effect");
-		if (file) {
-			try {
-				_effect = gs::effect::create(file);
-				bfree(file);
-			} catch (std::runtime_error& ex) {
-				DLOG_ERROR("<filter-color-grade> Loading _effect '%s' failed with error(s): %s", file, ex.what());
-				bfree(file);
-				throw ex;
-			}
-		} else {
-			throw std::runtime_error("Missing file color-grade.effect.");
+		auto file = streamfx::data_file_path("effects/color-grade.effect").u8string();
+		try {
+			_effect = gs::effect::create(file);
+		} catch (std::runtime_error& ex) {
+			DLOG_ERROR("<filter-color-grade> Loading effect '%s' failed with error(s): %s", file.c_str(), ex.what());
+			throw;
 		}
 	}
 	{
