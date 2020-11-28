@@ -270,3 +270,27 @@ void streamfx::gs_draw_fullscreen_tri()
 	gs_load_vertexbuffer(_gs_fstri_vb->update(false));
 	gs_draw(GS_TRIS, 0, 3); //_gs_fstri_vb->size());
 }
+
+std::filesystem::path streamfx::data_file_path(std::string_view file)
+{
+	const char* root_path = obs_get_module_data_path(obs_current_module());
+	if (root_path) {
+		auto ret = std::filesystem::u8path(root_path);
+		ret.append(file.data());
+		return ret;
+	} else {
+		throw std::runtime_error("obs_get_module_data_path returned nullptr");
+	}
+}
+
+std::filesystem::path streamfx::config_file_path(std::string_view file)
+{
+	char* root_path = obs_module_get_config_path(obs_current_module(), file.data());
+	if (root_path) {
+		auto ret = std::filesystem::u8path(root_path);
+		bfree(root_path);
+		return ret;
+	} else {
+		throw std::runtime_error("obs_module_get_config_path returned nullptr");
+	}
+}
