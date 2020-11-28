@@ -43,12 +43,7 @@
 gfx::blur::gaussian_linear_data::gaussian_linear_data()
 {
 	auto gctx = gs::context();
-
-	{
-		char* file = obs_module_file("effects/blur/gaussian-linear.effect");
-		_effect    = gs::effect::create(file);
-		bfree(file);
-	}
+	_effect   = gs::effect::create(streamfx::data_file_path("effects/blur/gaussian-linear.effect").u8string());
 
 	// Precalculate Kernels
 	for (std::size_t kernel_size = 1; kernel_size <= MAX_BLUR_SIZE; kernel_size++) {
