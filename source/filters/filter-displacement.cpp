@@ -33,14 +33,7 @@ using namespace streamfx::filter::displacement;
 displacement_instance::displacement_instance(obs_data_t* data, obs_source_t* context)
 	: obs::source_instance(data, context)
 {
-	std::string effect = "";
-	{
-		char* buf = obs_module_file("effects/displace.effect");
-		effect    = buf;
-		bfree(buf);
-	}
-
-	_effect = gs::effect::create(effect);
+	_effect = gs::effect::create(streamfx::data_file_path("effects/displace.effect").u8string());
 
 	update(data);
 }
@@ -141,12 +134,8 @@ const char* displacement_factory::get_name()
 
 void displacement_factory::get_defaults2(obs_data_t* data)
 {
-	{
-		char* disp = obs_module_file("examples/normal-maps/neutral.png");
-		obs_data_set_default_string(data, ST_FILE, disp);
-		bfree(disp);
-	}
-
+	obs_data_set_default_string(data, ST_FILE,
+								streamfx::data_file_path("examples/normal-maps/neutral.png").u8string().c_str());
 	obs_data_set_default_double(data, ST_SCALE, 0.0);
 	obs_data_set_default_double(data, ST_SCALE_TYPE, 0.0);
 }
@@ -159,9 +148,7 @@ obs_properties_t* displacement_factory::get_properties2(displacement_instance* d
 	if (data) {
 		path = data->get_file();
 	} else {
-		char* buf = obs_module_file("examples/normal-maps/neutral.png");
-		path      = buf;
-		bfree(buf);
+		path = streamfx::data_file_path("examples/normal-maps/neutral.png").u8string();
 	}
 
 	{
