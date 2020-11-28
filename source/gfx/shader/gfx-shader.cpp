@@ -202,9 +202,7 @@ void gfx::shader::shader::properties(obs_properties_t* pr)
 			if (_shader_file.has_parent_path()) {
 				path = _shader_file.parent_path().string();
 			} else {
-				char* vp = obs_module_file("examples");
-				path     = vp;
-				bfree(vp);
+				path = streamfx::data_file_path("examples/").u8string();
 			}
 			auto p = obs_properties_add_path(grp, ST_SHADER_FILE, D_TRANSLATE(ST_SHADER_FILE), OBS_PATH_FILE, "*.*",
 											 path.c_str());
