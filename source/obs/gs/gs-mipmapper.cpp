@@ -71,11 +71,7 @@ gs::mipmapper::mipmapper()
 
 	_vb->update();
 
-	{
-		char* path = obs_module_file("effects/mipgen.effect");
-		_effect    = gs::effect::create(path);
-		bfree(path);
-	}
+	_effect = gs::effect::create(streamfx::data_file_path("effects/mipgen.effect").u8string());
 }
 
 void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr<gs::texture> target)
