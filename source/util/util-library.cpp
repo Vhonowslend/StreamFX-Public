@@ -54,7 +54,7 @@ util::library::library(std::filesystem::path file) : _library(nullptr)
 		throw std::runtime_error("Failed to load library.");
 	}
 #elif defined(ST_UNIX)
-	_library = dlopen(file.string().c_str(), RTLD_LAZY);
+	_library = dlopen(file.u8string().c_str(), RTLD_LAZY);
 	if (!_library) {
 		if (char* error = dlerror(); error)
 			throw std::runtime_error(error);
@@ -86,9 +86,7 @@ static std::unordered_map<std::string, std::weak_ptr<::util::library>> libraries
 
 std::shared_ptr<::util::library> util::library::load(std::filesystem::path file)
 {
-	std::string utf8_name = file.string();
-
-	auto kv = libraries.find(utf8_name);
+	auto kv = libraries.find(file.u8string());
 	if (kv != libraries.end()) {
 		if (auto ptr = kv->second.lock(); ptr)
 			return ptr;
@@ -96,12 +94,12 @@ std::shared_ptr<::util::library> util::library::load(std::filesystem::path file)
 	}
 
 	auto ptr = std::make_shared<::util::library>(file);
-	libraries.emplace(utf8_name, ptr);
+	libraries.emplace(file.u8string(), ptr);
 
 	return ptr;
 }
 
 std::shared_ptr<::util::library> util::library::load(std::string_view name)
 {
-	return load(std::filesystem::path(name));
+	return load(std::filesystem::u8path(name));
 }
