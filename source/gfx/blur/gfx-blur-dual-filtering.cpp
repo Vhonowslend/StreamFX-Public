@@ -54,9 +54,7 @@ gfx::blur::dual_filtering_data::dual_filtering_data()
 {
 	auto gctx = gs::context();
 	try {
-		char* file = obs_module_file("effects/blur/dual-filtering.effect");
-		_effect    = gs::effect::create(file);
-		bfree(file);
+		_effect = gs::effect::create(streamfx::data_file_path("effects/blur/dual-filtering.effect").u8string());
 	} catch (...) {
 		DLOG_ERROR("<gfx::blur::box_linear> Failed to load _effect.");
 	}
