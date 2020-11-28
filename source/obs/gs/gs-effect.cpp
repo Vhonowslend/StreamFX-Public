@@ -58,7 +58,7 @@ gs::effect::effect(const std::string& code, const std::string& name)
 	reset(effect, [](gs_effect_t* ptr) { gs_effect_destroy(ptr); });
 }
 
-gs::effect::effect(std::filesystem::path file) : effect(load_file_as_code(file), file.string()) {}
+gs::effect::effect(std::filesystem::path file) : effect(load_file_as_code(file), file.u8string()) {}
 
 gs::effect::~effect()
 {
