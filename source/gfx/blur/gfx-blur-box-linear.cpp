@@ -38,9 +38,7 @@ gfx::blur::box_linear_data::box_linear_data()
 {
 	auto gctx = gs::context();
 	try {
-		char* file = obs_module_file("effects/blur/box-linear.effect");
-		_effect    = gs::effect::create(file);
-		bfree(file);
+		_effect = gs::effect::create(streamfx::data_file_path("effects/blur/box-linear.effect").u8string());
 	} catch (...) {
 		DLOG_ERROR("<gfx::blur::box_linear> Failed to load _effect.");
 	}
