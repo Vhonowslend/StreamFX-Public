@@ -59,14 +59,11 @@ dynamic_mask_instance::dynamic_mask_instance(obs_data_t* settings, obs_source_t*
 	_final_rt  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 
 	{
-		char* file = obs_module_file("effects/channel-mask.effect");
 		try {
-			_effect = gs::effect::create(file);
+			_effect = gs::effect::create(streamfx::data_file_path("effects/channel-mask.effect").u8string());
 		} catch (const std::exception& ex) {
 			DLOG_ERROR("Loading channel mask effect failed with error(s):\n%s", ex.what());
 		}
-		assert(_effect != nullptr);
-		bfree(file);
 	}
 
 	update(settings);
