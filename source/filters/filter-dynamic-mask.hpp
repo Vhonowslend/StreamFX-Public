@@ -26,6 +26,7 @@
 #include "obs/obs-source-factory.hpp"
 #include "obs/obs-source-tracker.hpp"
 #include "obs/obs-source.hpp"
+#include "obs/obs-tools.hpp"
 
 namespace streamfx::filter::dynamic_mask {
 	enum class channel : int8_t { Invalid = -1, Red, Green, Blue, Alpha };
@@ -39,10 +40,12 @@ namespace streamfx::filter::dynamic_mask {
 		std::shared_ptr<gs::rendertarget> _filter_rt;
 		std::shared_ptr<gs::texture>      _filter_texture;
 
-		bool                                    _have_input_texture;
-		std::shared_ptr<obs::deprecated_source> _input;
-		std::shared_ptr<gfx::source_texture>    _input_capture;
-		std::shared_ptr<gs::texture>            _input_texture;
+		bool                                        _have_input_texture;
+		std::shared_ptr<obs::deprecated_source>     _input;
+		std::shared_ptr<gfx::source_texture>        _input_capture;
+		std::shared_ptr<gs::texture>                _input_texture;
+		std::shared_ptr<obs::tools::visible_source> _input_vs;
+		std::shared_ptr<obs::tools::active_source>  _input_ac;
 
 		bool                              _have_final_texture;
 		std::shared_ptr<gs::rendertarget> _final_rt;
@@ -74,6 +77,14 @@ namespace streamfx::filter::dynamic_mask {
 
 		virtual void video_tick(float_t _time) override;
 		virtual void video_render(gs_effect_t* effect) override;
+
+		void enum_active_sources(obs_source_enum_proc_t enum_callback, void* param) override;
+		void enum_all_sources(obs_source_enum_proc_t enum_callback, void* param) override;
+
+		void show() override;
+		void hide() override;
+		void activate() override;
+		void deactivate() override;
 	};
 
 	class dynamic_mask_factory : public obs::source_factory<filter::dynamic_mask::dynamic_mask_factory,
