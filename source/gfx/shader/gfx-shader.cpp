@@ -458,6 +458,9 @@ bool gfx::shader::shader::tick(float_t time)
 			static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
 	}
 
+	// Flag Render Target as outdated.
+	_rt_up_to_date = false;
+
 	return false;
 }
 
@@ -466,11 +469,12 @@ void gfx::shader::shader::prepare_render()
 	if (!_shader)
 		return;
 
+	// Assign user parameters
 	for (auto kv : _shader_params) {
 		kv.second->assign();
 	}
 
-	// float4 Time: (Current Time), (Zero), (Zero), (Random Value)
+	// float4 Time: (Time in Seconds), (Time in Current Second), (Time in Seconds only), (Random Value)
 	if (gs::effect_parameter el = _shader.get_parameter("Time"); el != nullptr) {
 		if (el.get_type() == gs::effect_parameter::type::Float4) {
 			el.set_float4(
@@ -501,7 +505,7 @@ void gfx::shader::shader::prepare_render()
 		}
 	}
 
-	_rt_up_to_date = false;
+	return;
 }
 
 void gfx::shader::shader::render()
@@ -526,6 +530,8 @@ void gfx::shader::shader::render()
 		}
 
 		gs_blend_state_pop();
+
+		_rt_up_to_date = true;
 	}
 
 	gs_effect_set_texture(gs_effect_get_param_by_name(obs_get_base_effect(OBS_EFFECT_DEFAULT), "image"),
