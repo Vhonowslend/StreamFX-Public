@@ -58,12 +58,10 @@ dynamic_mask_instance::dynamic_mask_instance(obs_data_t* settings, obs_source_t*
 	_filter_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	_final_rt  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 
-	{
-		try {
-			_effect = gs::effect::create(streamfx::data_file_path("effects/channel-mask.effect").u8string());
-		} catch (const std::exception& ex) {
-			DLOG_ERROR("Loading channel mask effect failed with error(s):\n%s", ex.what());
-		}
+	try {
+		_effect = gs::effect::create(streamfx::data_file_path("effects/channel-mask.effect").u8string());
+	} catch (const std::exception& ex) {
+		DLOG_ERROR("Loading channel mask effect failed with error(s):\n%s", ex.what());
 	}
 
 	update(settings);
@@ -82,14 +80,26 @@ void dynamic_mask_instance::update(obs_data_t* settings)
 {
 	// Update source.
 	try {
-		_input         = std::make_shared<obs::deprecated_source>(obs_data_get_string(settings, ST_INPUT));
-		_input_capture = std::make_shared<gfx::source_texture>(_input, _self);
-		_input->events.rename += std::bind(&dynamic_mask_instance::input_renamed, this, std::placeholders::_1,
-										   std::placeholders::_2, std::placeholders::_3);
-	} catch (...) {
-		_input.reset();
+		auto input   = std::make_shared<obs::deprecated_source>(obs_data_get_string(settings, ST_INPUT));
+		auto gctx    = gs::context();
+		auto capture = std::make_shared<gfx::source_texture>(input, _self);
+
+		input->events.rename += std::bind(&dynamic_mask_instance::input_renamed, this, std::placeholders::_1,
+										  std::placeholders::_2, std::placeholders::_3);
+
+		_input         = input;
+		_input_capture = capture;
+
+		activate();
+		show();
+	} catch (std::exception const& ex) {
+		deactivate();
+		hide();
+
 		_input_capture.reset();
-		_input_texture.reset();
+		_input.reset();
+
+		DLOG_ERROR("Failed to update input: %s", ex.what());
 	}
 
 	// Update data store
@@ -341,13 +351,55 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 	}
 }
 
+void dynamic_mask_instance::enum_active_sources(obs_source_enum_proc_t enum_callback, void* param)
+{
+	if (_input)
+		enum_callback(_self, _input->get(), param);
+}
+
+void dynamic_mask_instance::enum_all_sources(obs_source_enum_proc_t enum_callback, void* param)
+{
+	if (_input)
+		enum_callback(_self, _input->get(), param);
+}
+
+void streamfx::filter::dynamic_mask::dynamic_mask_instance::show()
+{
+	if (!_input || !obs_source_showing(obs_filter_get_parent(_self)))
+		return;
+
+	_input_vs = std::make_shared<obs::tools::visible_source>(_input->get());
+}
+
+void streamfx::filter::dynamic_mask::dynamic_mask_instance::hide()
+{
+	_input_vs.reset();
+}
+
+void streamfx::filter::dynamic_mask::dynamic_mask_instance::activate()
+{
+	if (!_input || !obs_source_active(obs_filter_get_parent(_self)))
+		return;
+
+	_input_ac = std::make_shared<obs::tools::active_source>(_input->get());
+}
+
+void streamfx::filter::dynamic_mask::dynamic_mask_instance::deactivate()
+{
+	_input_ac.reset();
+}
+
 dynamic_mask_factory::dynamic_mask_factory()
 {
 	_info.id           = PREFIX "filter-dynamic-mask";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO;
 
+	set_have_active_child_sources(true);
+	set_have_child_sources(true);
 	set_resolution_enabled(false);
+	set_activity_tracking_enabled(true);
+	set_visibility_tracking_enabled(true);
 	finish_setup();
 	register_proxy("obs-stream-effects-filter-dynamic-mask");
 }
