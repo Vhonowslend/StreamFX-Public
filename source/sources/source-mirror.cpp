@@ -74,7 +74,9 @@ mirror_audio_data::mirror_audio_data(const audio_data* audio, speaker_layout lay
 mirror_instance::mirror_instance(obs_data_t* settings, obs_source_t* self)
 	: obs::source_instance(settings, self), _source(), _source_child(), _signal_rename(), _audio_enabled(false),
 	  _audio_layout(SPEAKERS_UNKNOWN)
-{}
+{
+	update(settings);
+}
 
 mirror_instance::~mirror_instance()
 {
