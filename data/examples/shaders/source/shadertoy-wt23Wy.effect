@@ -1,0 +1,109 @@
+// Smooth Pixelate by existical
+// https://www.shadertoy.com/view/wt23Wy
+// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
+// Contact the author for other licensing options
+
+// Always provided by OBS
+uniform float4x4 ViewProj<
+	bool automatic = true;
+>;
+
+// Provided by Stream Effects
+uniform float4 Time<
+	bool automatic = true;
+>;
+uniform float4 ViewSize<
+	bool automatic = true;
+>;
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+
+sampler_state def_sampler {
+    AddressU  = Clamp;
+    AddressV  = Clamp;
+    Filter    = Linear;
+};
+
+float4 blur13(texture2D image, float2 uv, float2 resolution, float2 direction) {
+  float4 color = float4(0.0,0.0,0.0,0.0);
+  float2 off1 = float2(1.411764705882353,1.411764705882353) * direction;
+  float2 off2 = float2(3.2941176470588234,3.2941176470588234) * direction;
+  float2 off3 = float2(5.176470588235294,5.176470588235294) * direction;
+  color += image.Sample(def_sampler, uv) * 0.1964825501511404;
+  color += image.Sample(def_sampler, uv + (off1 / resolution)) * 0.2969069646728344;
+  color += image.Sample(def_sampler, uv - (off1 / resolution)) * 0.2969069646728344;
+  color += image.Sample(def_sampler, uv + (off2 / resolution)) * 0.09447039785044732;
+  color += image.Sample(def_sampler, uv - (off2 / resolution)) * 0.09447039785044732;
+  color += image.Sample(def_sampler, uv + (off3 / resolution)) * 0.010381362401148057;
+  color += image.Sample(def_sampler, uv - (off3 / resolution)) * 0.010381362401148057;
+  return color;
+}
+
+float4 blur9(texture2D image, float2 uv, float2 resolution, float2 direction) {
+  float4 color = vec4(0.0,0.0,0.0,0.0);
+  float2 off1 = vec2(1.3846153846,1.3846153846) * direction;
+  float2 off2 = vec2(3.2307692308,3.2307692308) * direction;
+  color += image.Sample(def_sampler, uv) * 0.2270270270;
+  color += image.Sample(def_sampler, uv + (off1 / resolution)) * 0.3162162162;
+  color += image.Sample(def_sampler, uv - (off1 / resolution)) * 0.3162162162;
+  color += image.Sample(def_sampler, uv + (off2 / resolution)) * 0.0702702703;
+  color += image.Sample(def_sampler, uv - (off2 / resolution)) * 0.0702702703;
+  return color;
+}
+
+float4 blur5(texture2D image, float2 uv, float2 resolution, float2 direction) {
+  float4 color = float4(0.0,0.0,0.0,0.0);;
+  float2 off1 = float2(1.3333333333333333,1.3333333333333333) * direction;
+  color += image.Sample(def_sampler, uv) * 0.29411764705882354;
+  color += image.Sample(def_sampler, uv + (off1 / resolution)) * 0.35294117647058826;
+  color += image.Sample(def_sampler, uv - (off1 / resolution)) * 0.35294117647058826;
+  return color; 
+}
+
+void mainImage( out float4 fragColor, in float2 fragCoord )
+{
+    float4 color = float4(0.0,0.0,0.0,0.0);
+    float2 direction = float2(1.0,1.0);
+    
+    float2 uv = float2(fragCoord.xy / ViewSize.xy);
+    float2 tempCoord = float2(fragCoord.x,-fragCoord.y);
+    
+    float Pixels = 1000.0;
+    float dx = 9.0 * (1.0 / Pixels);
+    float dy = 12.0 * (1.0 / Pixels);
+    float2 Coord = float2(dx * floor(uv.x / dx), dy * floor(uv.y / dy));
+ 
+    direction = float2(2.0,2.0);
+    color += blur13(InputA, Coord, ViewSize.xy, direction)*0.5;
+    direction = float2(2.0,-2.0);
+    color += blur13(InputA, Coord, ViewSize.xy, direction)*0.5;
+    
+    fragColor = color;
+    //fragColor =  InputA.Sample( def_sampler, Coord);
+}
+
+struct VertFragData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertFragData VSDefault(VertFragData vtx) {
+	vtx.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
+	return vtx;
+}
+
+float4 PSDefault(VertFragData vtx) : TARGET {
+    float4 col = float4(1., 1., 1., 1.);
+    mainImage(col, vtx.uv * ViewSize.xy);
+    return col;
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSDefault(vtx); 
+	}
+}

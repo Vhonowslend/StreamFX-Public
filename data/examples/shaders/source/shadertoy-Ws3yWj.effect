@@ -1,0 +1,78 @@
+// digital b&w by Skeleton_craft
+// https://www.shadertoy.com/view/Ws3yWj
+// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
+// Contact the author for other licensing options
+
+// Always provided by OBS
+uniform float4x4 ViewProj<
+	bool automatic = true;
+>;
+
+// Provided by Stream Effects
+uniform float4 Time<
+	bool automatic = true;
+>;
+uniform float4 ViewSize<
+	bool automatic = true;
+>;
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+
+sampler_state def_sampler {
+    AddressU  = Clamp;
+    AddressV  = Clamp;
+    Filter    = Linear;
+};
+
+void mainImage( out float4 fragColor, in float2 fragCoord )
+{
+    float2 xy = fragCoord.xy; //We obtain our coordinates for the current pixel
+    float t = 0.75; 
+    float avrg = 0.0;
+    float3 o;
+    float4 texColor;  
+	xy.x = xy.x / (ViewSize.x/1.0); //We divide the coordinates by the screen size
+    xy.y = xy.y / (ViewSize.y/1.0);   
+    texColor = InputA.Sample(def_sampler,xy);
+    
+    o.r = texColor.r;
+    o.g = texColor.g;
+    o.b = texColor.b;
+    avrg = (o.r+o.g+o.b)/3.0;
+    if(avrg > t){ 
+        o.r = 0.0;
+    	o.g = 0.0;
+    	o.b = 0.0;
+    }else{
+    	o.r = 1.0;
+    	o.g = 1.0;
+    	o.b = 1.0;
+    }
+    fragColor = float4(o,1.0);
+}
+
+struct VertFragData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertFragData VSDefault(VertFragData vtx) {
+	vtx.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
+	return vtx;
+}
+
+float4 PSDefault(VertFragData vtx) : TARGET {
+    float4 col = float4(1., 1., 1., 1.);
+    mainImage(col, vtx.uv * ViewSize.xy);
+    return col;
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSDefault(vtx); 
+	}
+}

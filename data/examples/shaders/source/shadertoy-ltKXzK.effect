@@ -1,0 +1,97 @@
+// PIXELATE by Necromurlok
+// https://www.shadertoy.com/view/ltKXzK
+// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
+// Contact the author for other licensing options
+
+// Always provided by OBS
+uniform float4x4 ViewProj<
+	bool automatic = true;
+>;
+
+// Provided by Stream Effects
+uniform float4 Time<
+	bool automatic = true;
+>;
+uniform float4 ViewSize<
+	bool automatic = true;
+>;
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+
+sampler_state def_sampler {
+    AddressU  = Clamp;
+    AddressV  = Clamp;
+    Filter    = Linear;
+};
+
+#define PIXELS_PER_LED 22.0
+#define LED_INTENSITY 15.0
+#define VIGNET_INTENSITY 0.0
+
+//#define CHROMATIC_ABERRATION 0.1
+
+//#define INTERFERENCES 2.0
+//#define INTERFERENCE_SIZE 0.1
+//#define INTERFERENCE_SPEED 0.2
+
+void mainImage( out float4 fragColor, in float2 fragCoord )
+{
+	float2 uv = (fragCoord.xy + 0.5) / ViewSize.xy;
+    
+#ifdef INTERFERENCES
+    float interference = fract((uv.y + iTime * INTERFERENCE_SPEED) * INTERFERENCES);
+//    uv.y += (1.0 - (smoothstep(INTERFERENCE_SIZE, INTERFERENCE_SIZE, interference / INTERFERENCES)));
+    uv.y -= step(INTERFERENCE_SIZE, interference - uv.y) * INTERFERENCE_SIZE;
+    
+    
+#endif    
+          
+    float2 txSize = float2(1.0 / PIXELS_PER_LED, 1.0 / PIXELS_PER_LED);
+    float2 cell = floor(uv * PIXELS_PER_LED) * txSize;
+    float2 txCenter = cell + txSize * 0.5;
+    float2 d2LED = (uv - txCenter);    
+//    float intensity = clamp(1.0 - length(d2LED), 0.0, 1.0);
+    float intensity = pow(1.0 - smoothstep(0.0, txSize.x, length(d2LED)), 1.0 / LED_INTENSITY);
+    
+    float2 dCenter = uv - 0.5;
+    float vignet = pow(1.0 - length(dCenter), VIGNET_INTENSITY);
+
+#ifdef CHROMATIC_ABERRATION    
+    float4 col;
+    dCenter *= CHROMATIC_ABERRATION * vignet;
+    col.r = InputA.Sample(def_sampler, txCenter).r;
+    col.g = InputA.Sample(def_sampler, txCenter + dCenter).g;
+    col.b = InputA.Sample(def_sampler, txCenter + dCenter * 2.0).b;
+    fragColor = col * intensity * vignet;
+#else            
+    fragColor = InputA.Sample(def_sampler, txCenter) * intensity * vignet;
+#endif
+    
+//    fragColor = 1.0 - fragColor;
+}
+
+struct VertFragData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertFragData VSDefault(VertFragData vtx) {
+	vtx.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
+	return vtx;
+}
+
+float4 PSDefault(VertFragData vtx) : TARGET {
+    float4 col = float4(1., 1., 1., 1.);
+    mainImage(col, vtx.uv * ViewSize.xy);
+    return col;
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSDefault(vtx); 
+	}
+}
