@@ -7,3 +7,6 @@
 [submodule "third-party/nlohmann-json"]
 	path = third-party/nlohmann-json
 	url = https://github.com/nlohmann/json.git
+[submodule "third-party/msvc-redist-helper"]
+	path = third-party/msvc-redist-helper
+	url = https://github.com/Xaymar/msvc-redist-helper.git
