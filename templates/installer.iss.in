@@ -2,9 +2,11 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "@PROJECT_FULL_NAME@"
-#define MyAppVersion "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@.@PROJECT_VERSION_TWEAK@"
+#define MyAppVersion "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@.@VERSION_TWEAK@"
+#define MyAppVersionText "@VERSION_STRING@"
 #define MyAppPublisher "Xaymars Technology Workshop"
-#define MyAppURL "https://www.xaymar.com/"
+#define MyAppURL "https://xaymar.com/"
+#define MyAppCopyright "@PROJECT_COPYRIGHT_YEARS@ @PROJECT_AUTHORS@"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -22,12 +24,17 @@ AppUpdatesURL={#MyAppURL}
 AppMutex={#MyAppName}
 
 ; Versioning
+VersionInfoProductName={#MyAppName}
+VersionInfoProductVersion={#MyAppVersion}
 VersionInfoVersion={#MyAppVersion}
+VersionInfoProductTextVersion={#MyAppVersionText}
+VersionInfoTextVersion={#MyAppVersionText}
 VersionInfoCompany={#MyAppPublisher}
+VersionInfoCopyright={#MyAppCopyright}
 VersionInfoDescription={#MyAppName} Setup
 
 ; Architecture (Platform is always Windows)
-ArchitecturesInstallIn64BitMode=@ARCH@
+ArchitecturesInstallIn64BitMode=x64 arm64 ia64
 ArchitecturesAllowed=@ARCH@
 
 ; Wizard Information
@@ -36,7 +43,8 @@ WizardResizable=yes
 SetupIconFile="@PROJECT_SOURCE_DIR@/media/icon.ico"
 
 ; Other Information
-DefaultDirName={code:GetDirName}
+UsePreviousAppDir=yes
+DefaultDirName={code:GetDefaultDirectory}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 LicenseFile="@ISS_SOURCE_DIR@/LICENSE"
@@ -51,7 +59,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "@ISS_FILES_DIR@/*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "@PROJECT_SOURCE_DIR@/third-party/msvc-redist-helper.exe"; DestDir: "{app}"; DestName: "msvc-redist-helper.exe"; Flags: ignoreversion dontcopy noencryption
+Source: "@PROJECT_SOURCE_DIR@/templates/msvc-redist-helper.exe"; DestDir: "{app}"; DestName: "msvc-redist-helper.exe"; Flags: ignoreversion dontcopy noencryption
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
@@ -59,78 +67,104 @@ Name: "{group}\{cm:ProgramOnTheWeb,{#MyAppName}}"; Filename: "{#MyAppURL}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 
 [Code]
-function GetDirName(Value: string): string;
-var
-  InstallPath: string;
+// ------------------------------------------------------------------------------------------------------------------ //
+function FindRegistryKey(): String;
 begin
-  // initialize default path, which will be returned when the following registry
-  // key queries fail due to missing keys or for some different reason
-  Result := ExpandConstant('{pf}\obs-studio');
-  // query the first registry value; if this succeeds, return the obtained value
-  if RegQueryStringValue(HKLM32, 'SOFTWARE\OBS Studio', '', InstallPath) then
-    Result := InstallPath
+	Result := ExpandConstant('Software\Microsoft\Windows\CurrentVersion\Uninstall\{#emit SetupSetting('AppId')}_is1');	
 end;
 
-/////////////////////////////////////////////////////////////////////
-function GetUninstallString(): String;
+// ------------------------------------------------------------------------------------------------------------------ //
+function GetDefaultDirectory(Value: String): String;
 var
-  sUnInstPath: String;
-  sUnInstallString: String;
+	sInstallPath: String;
 begin
-  sUnInstPath := ExpandConstant('Software\Microsoft\Windows\CurrentVersion\Uninstall\{#emit SetupSetting("AppId")}_is1');
-  sUnInstallString := '';
-  if not RegQueryStringValue(HKLM, sUnInstPath, 'UninstallString', sUnInstallString) then
-    RegQueryStringValue(HKCU, sUnInstPath, 'UninstallString', sUnInstallString);
-  Result := sUnInstallString;
+	// 1. Use the path we were given on call.
+	sInstallPath := Value;
+
+	// 2. If that was empty, try and find it ourselves from the registry.
+	if (sInstallPath = '') then
+		RegQueryStringValue(HKA64, FindRegistryKey(), 'InstallLocation', sInstallPath);
+
+	// 2. If empty, try and find the "Local Machine" installation of OBS Studio.
+	if (sInstallPath = '') then 
+		RegQueryStringValue(HKLM64, 'SOFTWARE\OBS Studio', '', sInstallPath);
+
+	// 3. If empty, try and find the "Current User" installation of OBS Studio.
+	if (sInstallPath = '') then 
+		RegQueryStringValue(HKCU64, 'SOFTWARE\OBS Studio', '', sInstallPath);
+
+	// 4. If empty, try and find the 32-bit "Local Machine" installation of OBS Studio.
+	if (sInstallPath = '') then 
+		RegQueryStringValue(HKLM32, 'SOFTWARE\OBS Studio', '', sInstallPath);
+
+	// 5. If empty, try and find the 32-bit "Current User" installation of OBS Studio.
+	if (sInstallPath = '') then 
+		RegQueryStringValue(HKCU32, 'SOFTWARE\OBS Studio', '', sInstallPath);
+
+	// 6. If empty, just use the default path.
+	if (sInstallPath = '') then 
+		sInstallPath := ExpandConstant('{commonpf}\obs-studio');
+	
+	Result := sInstallPath
 end;
 
-/////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------------------------------------------ //
+function GetUninstallerPath(): String;
+var
+	sRegistryKey: String;
+	sUninstallerPath: String;
+begin
+	sRegistryKey := FindRegistryKey();
+
+	RegQueryStringValue(HKLM64, sRegistryKey, 'UninstallString', sUninstallerPath);
+
+	if (sUninstallerPath = '') then
+		RegQueryStringValue(HKCU64, sRegistryKey, 'UninstallString', sUninstallerPath);
+
+	if (sUninstallerPath = '') then
+		RegQueryStringValue(HKLM32, sRegistryKey, 'UninstallString', sUninstallerPath);
+
+	if (sUninstallerPath = '') then
+		RegQueryStringValue(HKCU32, sRegistryKey, 'UninstallString', sUninstallerPath);
+
+	Result := sUninstallerPath;
+end;
+
+// ------------------------------------------------------------------------------------------------------------------ //
 function IsUpgrade(): Boolean;
 begin
-  Result := (GetUninstallString() <> '');
+	Result := (GetUninstallerPath() <> '');
 end;
 
-/////////////////////////////////////////////////////////////////////
-function UnInstallOldVersion(): Integer;
+// ------------------------------------------------------------------------------------------------------------------ //
+function UninstallOldVersion(): Integer;
 var
-  sUnInstallString: String;
-  iResultCode: Integer;
+	sUninstallerPath: String;
+	iResultCode: Integer;
 begin
-// Return Values:
-// 1 - uninstall string is empty
-// 2 - error executing the UnInstallString
-// 3 - successfully executed the UnInstallString
-
-  // default return value
-  Result := 0;
-
-  // get the uninstall string of the old app
-  sUnInstallString := GetUninstallString();
-  if sUnInstallString <> '' then begin
-    sUnInstallString := RemoveQuotes(sUnInstallString);
-    if Exec(sUnInstallString, '/VERYSILENT /NORESTART /SUPPRESSMSGBOXES','', SW_HIDE, ewWaitUntilTerminated, iResultCode) then
-      Result := 3
-    else
-      Result := 2;
-  end else
-    Result := 1;
+	Result := 0;
+	sUninstallerPath := GetUninstallerPath();
+	if (sUninstallerPath <> '') then begin
+		sUninstallerPath := RemoveQuotes(sUninstallerPath);
+		if Exec(sUninstallerPath, '/VERYSILENT /NORESTART /SUPPRESSMSGBOXES', '', SW_HIDE, ewWaitUntilTerminated, iResultCode) then begin
+			Result := iResultCode
+		end else begin
+			Result := 1
+		end;
+	end;
 end;
 
-/////////////////////////////////////////////////////////////////////
-procedure CurStepChanged(CurStep: TSetupStep);
+// ------------------------------------------------------------------------------------------------------------------ //
+function PrepareToInstall(var NeedsRestart: Boolean): String;
 var
-  ResultCode: Integer;
+	iResultCode: Integer;
 begin
-  if (CurStep=ssInstall) then
-  begin
-    if (IsUpgrade()) then
-    begin
-      UnInstallOldVersion();
-    end;
-  end;
-  if (CurStep=ssPostInstall) then
-  begin
+	// Attempt to remove old version if it exists.
+	if (IsUpgrade()) then begin
+		UninstallOldVersion();
+	end;
+
+	// Also ensure that we have the necessary prerequisites installed to run the program.
     ExtractTemporaryFile('msvc-redist-helper.exe');
-    Exec(ExpandConstant('{tmp}\msvc-redist-helper.exe'), '2019', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-  end;
+    Exec(ExpandConstant('{tmp}\msvc-redist-helper.exe'), '2019', '', SW_HIDE, ewWaitUntilTerminated, iResultCode);
 end;
