@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
@@ -15,7 +13,7 @@
    viewBox="0 0 256 256"
    version="1.1"
    id="svg8"
-   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+   inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
    sodipodi:docname="icon.svg"
    inkscape:export-filename="D:\Projects\Xaymar\obs-streamfx\media\icon.png"
    inkscape:export-xdpi="96"
@@ -58,17 +56,17 @@
       <feGaussianBlur
          result="result5"
          id="feGaussianBlur842-6"
-         stdDeviation="2" />
+         stdDeviation="6" />
       <feGaussianBlur
          result="result3"
          in="SourceGraphic"
          id="feGaussianBlur844-1"
-         stdDeviation="1" />
+         stdDeviation="4" />
       <feGaussianBlur
          result="result1"
          in="SourceGraphic"
          id="feGaussianBlur846-7"
-         stdDeviation="0.5" />
+         stdDeviation="2" />
       <feBlend
          result="result2"
          in="result5"
@@ -130,6 +128,45 @@
        x2="248.24243"
        y2="248.24243"
        gradientUnits="userSpaceOnUse" />
+    <filter
+       style="color-interpolation-filters:sRGB"
+       id="filter840-1-0"
+       inkscape:label="awesome_glow"
+       y="-0.25"
+       height="1.5"
+       x="-0.1">
+      <feGaussianBlur
+         stdDeviation="2"
+         id="feGaussianBlur842-6-6"
+         result="result5" />
+      <feGaussianBlur
+         stdDeviation="1"
+         id="feGaussianBlur844-1-8"
+         in="SourceGraphic"
+         result="result3" />
+      <feGaussianBlur
+         stdDeviation="0.5"
+         id="feGaussianBlur846-7-1"
+         in="SourceGraphic"
+         result="result1" />
+      <feBlend
+         mode="color-dodge"
+         in2="result3"
+         id="feBlend848-5-0"
+         in="result5"
+         result="result2" />
+      <feBlend
+         mode="color-dodge"
+         in2="result1"
+         id="feBlend850-5-1"
+         in="result2"
+         result="result4" />
+      <feBlend
+         mode="color-dodge"
+         in2="SourceGraphic"
+         id="feBlend852-3-0"
+         result="result6" />
+    </filter>
   </defs>
   <sodipodi:namedview
      id="base"
@@ -138,18 +175,27 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.4142136"
-     inkscape:cx="131.54908"
-     inkscape:cy="171.96826"
+     inkscape:zoom="2.8237469"
+     inkscape:cx="175.74562"
+     inkscape:cy="146.39594"
      inkscape:document-units="px"
-     inkscape:current-layer="svg8"
+     inkscape:current-layer="g1339"
      showgrid="false"
      units="px"
      inkscape:window-width="2560"
      inkscape:window-height="1417"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
-     inkscape:window-maximized="1" />
+     inkscape:window-maximized="1"
+     inkscape:document-rotation="0"
+     inkscape:pagecheckerboard="true">
+    <inkscape:grid
+       type="xygrid"
+       id="grid434"
+       spacingx="8"
+       spacingy="8"
+       empspacing="16" />
+  </sodipodi:namedview>
   <metadata
      id="metadata5">
     <rdf:RDF>
@@ -158,35 +204,90 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <rect
-     style="display:inline;fill:#010002;fill-opacity:1;stroke:url(#linearGradient1216);stroke-width:12;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:8;stroke-opacity:1;paint-order:normal;filter:url(#filter1178)"
-     id="rect901"
-     width="240.48485"
-     height="240.48485"
-     x="7.757576"
-     y="7.757576"
-     rx="128" />
-  <text
-     id="text817"
-     y="216.83"
-     x="28.392656"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:24px;line-height:1.25;font-family:'Defcon Zero';-inkscape-font-specification:'Defcon Zero, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;display:inline;fill:#6d59ff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;filter:url(#filter840-1)"
-     xml:space="preserve"
-     transform="matrix(4.5078358,0,0,4.5078358,3.6944741e-7,-885.09103)"><tspan
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10px;line-height:0;font-family:'Defcon Zero';-inkscape-font-specification:'Defcon Zero, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;letter-spacing:0px;writing-mode:lr-tb;direction:ltr;text-anchor:middle;fill:#6d59ff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       y="216.83"
-       x="28.392656"
-       id="tspan815"
-       sodipodi:role="line"
-       dy="0">Stream</tspan><tspan
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:30px;line-height:0;font-family:'Defcon Zero';-inkscape-font-specification:'Defcon Zero, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;writing-mode:lr-tb;text-anchor:middle;fill:#6d59ff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       y="246.83"
-       x="28.392656"
-       sodipodi:role="line"
-       id="tspan899"
-       dy="-7.5">FX</tspan></text>
+  <g
+     id="g1280"
+     style="filter:url(#filter1178)">
+    <rect
+       style="display:none;fill:#010002;fill-opacity:1;stroke:url(#linearGradient1216);stroke-width:12;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:8;stroke-opacity:1;paint-order:normal;filter:url(#filter1178)"
+       id="rect901"
+       width="240.48485"
+       height="240.48485"
+       x="7.757576"
+       y="7.757576"
+       rx="128" />
+    <path
+       d="M 248,128 188,231.92305 H 68 L 8,128 68,24.076952 l 120,0 z"
+       inkscape:randomized="0"
+       inkscape:rounded="0"
+       inkscape:flatsided="true"
+       sodipodi:arg2="0.52359878"
+       sodipodi:arg1="0"
+       sodipodi:r2="103.92305"
+       sodipodi:r1="120"
+       sodipodi:cy="128"
+       sodipodi:cx="128"
+       sodipodi:sides="6"
+       id="path442"
+       style="fill:#000000;fill-opacity:1;stroke:#ebf2ff;stroke-width:8;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+       sodipodi:type="star" />
+    <path
+       inkscape:transform-center-y="-3.5355338"
+       inkscape:transform-center-x="-2.828427"
+       d="M 128,40 204.21024,84.000002 204.21023,172 128,216 51.789763,172 l 3e-6,-88.000002 z"
+       inkscape:randomized="0"
+       inkscape:rounded="0"
+       inkscape:flatsided="true"
+       sodipodi:arg2="-1.0471976"
+       sodipodi:arg1="-1.5707963"
+       sodipodi:r2="76.210236"
+       sodipodi:r1="88"
+       sodipodi:cy="128"
+       sodipodi:cx="128"
+       sodipodi:sides="6"
+       id="path1273"
+       style="fill:#000000;fill-opacity:1;stroke:#e5e5e5;stroke-width:8;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"
+       sodipodi:type="star" />
+  </g>
+  <g
+     id="g1339"
+     style="filter:url(#filter840-1)"
+     transform="matrix(0.95,0,0,0.95,6.3999897,6.4000079)">
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:74.6669px;line-height:1.05;font-family:'Defcon Zero';-inkscape-font-specification:'Defcon Zero, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;display:inline;fill:#6d59ff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:4.50784;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       x="127.03922"
+       y="130.29129"
+       id="text817"><tspan
+         sodipodi:role="line"
+         id="tspan815"
+         x="127.03922"
+         y="130.29129"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:74.6669px;font-family:'Defcon Zero';-inkscape-font-specification:'Defcon Zero, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;letter-spacing:0px;writing-mode:lr-tb;direction:ltr;text-anchor:middle;fill:#6d59ff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:4.50784;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" /><tspan
+         y="230.86159"
+         x="127.03922"
+         dy="-33.808769"
+         id="tspan899"
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:101.053px;font-family:'Defcon Zero';-inkscape-font-specification:'Defcon Zero, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;writing-mode:lr-tb;text-anchor:middle;fill:#6d59ff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:4.50784;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">FX</tspan></text>
+    <text
+       transform="scale(0.83775661,1.1936641)"
+       y="102.68661"
+       x="152.77435"
+       id="text817-0"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:62.5523px;line-height:1.05;font-family:'Defcon Zero';-inkscape-font-specification:'Defcon Zero, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;display:inline;fill:#6d59ff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:3.13326;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:62.5523px;font-family:'Defcon Zero';-inkscape-font-specification:'Defcon Zero, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;writing-mode:lr-tb;text-anchor:middle;fill:#6d59ff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:3.13326;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         y="102.68661"
+         x="152.77435"
+         sodipodi:role="line"
+         id="tspan899-7"
+         dy="0 0 0 0 0 0"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:62.5523px;font-family:'Defcon Zero';-inkscape-font-specification:'Defcon Zero, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;letter-spacing:0px;writing-mode:lr-tb;direction:ltr;text-anchor:middle;fill:#6d59ff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:3.13326;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="tspan1331"
+           dy="0">Stream</tspan></tspan></text>
+  </g>
 </svg>
