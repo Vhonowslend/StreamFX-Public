@@ -12,6 +12,7 @@ on:
 
 env:
   DOWNLOAD_OBS_VERSION: "26.0.2-ci"
+  DOWNLOAD_OBSDEPS_VERSION: "26.1.0"
 
 jobs:
   windows:
@@ -22,17 +23,15 @@ jobs:
         runner: [ windows-2019 ]
         include:
           - runner: windows-2019
-            id: windows2019
+            id: windows-2019
             windows_sdk: "10.0.18362.0"
             cmake_generator: "Visual Studio 16 2019"
             cmake_generator_platform: "x64"
     runs-on: ${{ matrix.runner }}
     env:
+      QT_VERSION: "5.15.2"
       DOWNLOAD_OBS_HASH_64: "SHA512=571B4196DF5CFBD3A8E113C97C7890000C490DDF1C6747529DE0F06063F928E7488095775919017104DE7A693CCF51A7A82BD04BCE62D6B3F0ED1F74A5F32B32"
-      DOWNLOAD_OBSDEPS_VERSION: "26.0.0"
       DOWNLOAD_OBSDEPS_HASH: "SHA512=2D47E7579DE3FBD88C52BB62C2CA4D649BD958FBAE8E5B01EE263D7583B4D8EEEA8CE13C543BEF110FAC9142891C031973A1BC20AC6EED596E6AB97CCC669D16"
-      DOWNLOAD_QT_VERSION: "5.10.1"
-      DOWNLOAD_QT_HASH: "SHA512=848B9AC00B06FCA1F1A85BD4EFEA4138D278E8EC96823C5C36CC988DDE5D27E2F91300B02F2F0E71F075CCB0D791D3C888CDA6A5048DDFE6F946A8697DFEF1E9"
       CMAKE_GENERATOR: ${{ matrix.cmake_generator }}
       CMAKE_GENERATOR_PLATFORM: ${{ matrix.cmake_generator_platform }}
       CMAKE_GENERATOR_TOOLSET: "host=x64"
@@ -55,16 +54,24 @@ jobs:
         key: ${{ matrix.id }}-${{ env.DOWNLOAD_OBSDEPS_VERSION }}-${{ env.DOWNLOAD_OBSDEPS_HASH }}
     - name: "Cache: Qt"
       uses: actions/cache@v2
+      id: cache-qt
       with:
-        path: "build/temp/qt-download/qt-download-prefix/src/qt.7z"
-        key: ${{ matrix.id }}-${{ env.DOWNLOAD_QT_VERSION }}-${{ env.DOWNLOAD_QT_HASH }}
+        path: "../Qt"
+        key: ${{ matrix.id }}-${{ env.QT_VERSION }}
+    - name: "Prerequisites: Qt"
+      if: "steps.cache-qt.outputs.cache-hit != true"
+      shell: bash
+      run: |
+        curl -L "https://github.com/Xaymar/obs-studio/releases/download/26.1.0/qt_${QT_VERSION}_windows_64.7z" -o qt.7z
+        7z x -o../Qt/ qt.7z
     - name: "Configure Project"
       shell: bash
       run: |
         cmake -H. -B"build/temp" \
           -DCMAKE_INSTALL_PREFIX="build/distrib" \
-          -DCMAKE_PACKAGE_NAME="streamfx-${{ matrix.id }}" \
-          -DCMAKE_PACKAGE_PREFIX="build/package"
+          -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
+          -DPACKAGE_PREFIX="build/package" \
+          -DQt5_DIR="${PWD}/../Qt/msvc2019_64/lib/cmake/Qt5/"
     - name: "Build Project"
       shell: bash
       run: |
@@ -148,9 +155,9 @@ jobs:
       run: |
         cmake -H. -B"build/temp" \
           -DCMAKE_INSTALL_PREFIX="build/distrib" \
-          -DCMAKE_PACKAGE_NAME="streamfx-${{ matrix.id }}" \
-          -DCMAKE_PACKAGE_PREFIX="build/package" \
-          -DENABLE_FILTER_NVIDIA_FACE_TRACKING=FALSE
+          -DENABLE_FILTER_NVIDIA_FACE_TRACKING=FALSE \
+          -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
+          -DPACKAGE_PREFIX="build/package" 
     - name: "Build Project"
       shell: bash
       run: |
