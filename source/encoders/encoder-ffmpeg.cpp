@@ -24,14 +24,23 @@
 #include <sstream>
 #include "codecs/hevc.hpp"
 #include "ffmpeg/tools.hpp"
-#include "handlers/amf_h264_handler.hpp"
-#include "handlers/amf_hevc_handler.hpp"
 #include "handlers/debug_handler.hpp"
-#include "handlers/nvenc_h264_handler.hpp"
-#include "handlers/nvenc_hevc_handler.hpp"
-#include "handlers/prores_aw_handler.hpp"
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
+
+#ifdef ENABLE_ENCODER_FFMPEG_AMF
+#include "handlers/amf_h264_handler.hpp"
+#include "handlers/amf_hevc_handler.hpp"
+#endif
+
+#ifdef ENABLE_ENCODER_FFMPEG_NVENC
+#include "handlers/nvenc_h264_handler.hpp"
+#include "handlers/nvenc_hevc_handler.hpp"
+#endif
+
+#ifdef ENABLE_ENCODER_FFMPEG_PRORES
+#include "handlers/prores_aw_handler.hpp"
+#endif
 
 extern "C" {
 #pragma warning(push)
@@ -1114,11 +1123,17 @@ ffmpeg_manager::ffmpeg_manager() : _factories(), _handlers(), _debug_handler()
 {
 	// Handlers
 	_debug_handler = ::std::make_shared<handler::debug_handler>();
-	register_handler("prores_aw", ::std::make_shared<handler::prores_aw_handler>());
-	register_handler("h264_nvenc", ::std::make_shared<handler::nvenc_h264_handler>());
-	register_handler("hevc_nvenc", ::std::make_shared<handler::nvenc_hevc_handler>());
+#ifdef ENABLE_ENCODER_FFMPEG_AMF
 	register_handler("h264_amf", ::std::make_shared<handler::amf_h264_handler>());
 	register_handler("hevc_amf", ::std::make_shared<handler::amf_hevc_handler>());
+#endif
+#ifdef ENABLE_ENCODER_FFMPEG_NVENC
+	register_handler("h264_nvenc", ::std::make_shared<handler::nvenc_h264_handler>());
+	register_handler("hevc_nvenc", ::std::make_shared<handler::nvenc_hevc_handler>());
+#endif
+#ifdef ENABLE_ENCODER_FFMPEG_PRORES
+	register_handler("prores_aw", ::std::make_shared<handler::prores_aw_handler>());
+#endif
 }
 
 ffmpeg_manager::~ffmpeg_manager()
