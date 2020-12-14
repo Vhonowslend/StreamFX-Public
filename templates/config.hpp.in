@@ -20,13 +20,23 @@
 
 // Platform Information
 #define D_PLATFORM "@CMAKE_SYSTEM_NAME@"
+#define D_PLATFORM_OS "@D_PLATFORM_OS@"
 #cmakedefine D_PLATFORM_WINDOWS
 #cmakedefine D_PLATFORM_LINUX
 #cmakedefine D_PLATFORM_MAC
+#cmakedefine D_PLATFORM_UNKNOWN
 
-#define D_PLATFORM_BITS @BITS@
-#if D_PLATFORM_BITS == 64
-#define D_PLATFORM_64BIT
+// Instruction Set
+#define D_PLATFORM_INSTR "@D_PLATFORM_INSTR@"
+#cmakedefine D_PLATFORM_INSTR_X86
+#cmakedefine D_PLATFORM_INSTR_ARM
+#cmakedefine D_PLATFORM_INSTR_ITANIUM
+
+// Bitness
+#define D_PLATFORM_BITS @D_PLATFORM_BITS@
+#define D_PLATFORM_BITS_PTR @D_PLATFORM_BITS_PTR@
+#if D_PLATFORM_BITS == 32
+	#define D_PLATFORM_32BIT
 #else
-#define D_PLATFORM_32BIT
+	#define D_PLATFORM_64BIT
 #endif

@@ -1,5 +1,5 @@
-# Experimental new Sources, Filters and Transitions for OBS Studio
-# Copyright (C) 2017 - 2018 Michael Fabian Dirks
+# StreamFX - The premier VFX plugin for OBS Studio.
+# Copyright (C) 2017 - 2020 Michael Fabian Dirks
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,19 +16,17 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 # CMake Setup
-cmake_minimum_required(VERSION 3.8...3.12)
+cmake_minimum_required(VERSION 3.8...4.0)
 
 ################################################################################
-# Build Type
+# Configure Type
 ################################################################################
 
 # Detect if we are building by ourselves or as part of something else.
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
-	set(STANDALONE ON)
 	set(GROUPED OFF)
 	set(PREFIX "")
 else()
-	set(STANDALONE OFF)
 	set(GROUPED ON)
 	set(PREFIX "StreamFX_")
 endif()
@@ -146,59 +144,74 @@ message(STATUS "${LOGPREFIX} Version ${VERSION_STRING}")
 project(
 	StreamFX
 	VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}
+	DESCRIPTION "Additional sources, filters, transitions and encoders for OBS Studio."
+	HOMEPAGE_URL "https://streamfx.xaymar.com/"
 )
 
-set(PROJECT_FULL_NAME "StreamFX for OBS Studio")
+# Full Project Name
+set(PROJECT_FULL_NAME "StreamFX (for OBS Studio)")
+
+# Description
 set(PROJECT_DESCRIPTION "Better Production Quality, for free.")
+
+# Authors (TODO: Generate this from AUTHORS)
 set(PROJECT_AUTHORS "Michael Fabian 'Xaymar' Dirks <info@xaymar.com>")
+
+# Copyright Years (TODO: Update every year)
 set(PROJECT_COPYRIGHT_YEARS "2018 - 2020")
 
+# Versioning
+set(PROJECT_VERSION_STRING ${VERSION_STRING})
+
 ################################################################################
-# Setup / Bootstrap
+# Modules
 ################################################################################
 
-# Detect Project Type (solo, combined)
-if("${CMAKE_SOURCE_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
-	set(PREFIX "")
-else()
-	set(PREFIX "${PROJECT_NAME}_")
-endif()
+# Search Paths
+set(CMAKE_MODULE_PATH 
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/clang" 
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules" 
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+)
 
-# Search Path
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/clang" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules" "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+# Include
+include("Architecture")					# Architecture Detection
+include("util")							# CacheClear, CacheSet
+include("DownloadProject")				# DownloadProject
 
-# CMake Modules
-include("util")
-## Clang Integration
-if(${PREFIX}ENABLE_CLANG AND (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/clang/Clang.cmake"))
-	include("Clang")
-	set(HAVE_CLANG ON)
-endif()
-## Download Project
-include("DownloadProject")
+################################################################################
+# Platform Setup
+################################################################################
 
-# Detect Platform & Architecture
-math(EXPR BITS "8*${CMAKE_SIZEOF_VOID_P}")
-if(BITS EQUAL 32)
-	set(D_PLATFORM_BITS 32)
-	set(ARCH "x86")
-elseif(BITS EQUAL 64)
-	set(D_PLATFORM_BITS 64)
-	set(ARCH "x64")
-else()
-	message(FATAL_ERROR "Unknown architecture, please file a bug with your exact setup if you believe this to be an error.")
-	return()
-endif()
+# Operating System
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+	set(D_PLATFORM_OS "windows")
 	set(D_PLATFORM_WINDOWS 1)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	set(D_PLATFORM_OS "linux")
 	set(D_PLATFORM_LINUX 1)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+	set(D_PLATFORM_OS "macos")
 	set(D_PLATFORM_MAC 1)
 else()
-	message(FATAL_ERROR "Unknown platform, please file a bug with your exact setup if you believe this to be an error.")
-	return()
+	set(D_PLATFORM_OS "unknown")
+	set(D_PLATFORM_UNKNOWN 1)
+	message(WARNING "${LOGPREFIX} The operating system '${CMAKE_SYSTEM_NAME}' is unknown to to this script, continue at your own risk.")
 endif()
+
+# Architecture
+set(D_PLATFORM_INSTR ${ARCH_INST})
+if(ARCH_INST STREQUAL "x86")
+	set(D_PLATFORM_INSTR_X86 ON)
+elseif(ARCH_INST STREQUAL "ARM")
+	set(D_PLATFORM_INSTR_ARM ON)
+elseif(ARCH_INST STREQUAL "IA64")
+	set(D_PLATFORM_INSTR_ITANIUM ON)
+endif()
+
+# Bitness
+set(D_PLATFORM_BITS ${ARCH_BITS})
+set(D_PLATFORM_BITS_PTR ${ARCH_BITS_POINTER})
 
 ################################################################################
 # C/C++ Compiler Adjustments
@@ -249,84 +262,77 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL 
 	# add_compile_options("-fvisibility=hidden")
 endif()
 
-# C++ Standard and Extensions
-## Use C++17 and no non-standard extensions.
-set(_CXX_STANDARD 17)
-set(_CXX_EXTENSIONS OFF)
+################################################################################
+# Detect if we are building with OBS Studio (different from Grouped builds)
+################################################################################
 
-################################################################################
-# Resolve Plugin Build Type
-################################################################################
-if(TARGET libobs)
-	# Plugin is built together with libOBS.
-	message(STATUS "${PROJECT_NAME}: Using native libOBS.")
-	set(${PREFIX}OBS_NATIVE TRUE)
+set(STANDALONE ON)
+if(GROUPED AND (TARGET libobs))
+	set(STANDALONE OFF)
+endif()
+if(STANDALONE)
+	message(STATUS "${LOGPREFIX} This is a standalone build, please make sure you've followed the instructions.")
+	set(${PREFIX}OBS_NATIVE OFF)
 	if (TARGET obs-frontend-api)
-		set(HAVE_OBS_FRONTEND TRUE)
+		set(HAVE_OBS_FRONTEND ON)
 	endif()
 else()
-	# Plugin is built by itself.
-	message(STATUS "${PROJECT_NAME}: Using downloaded libOBS.")
-	if(NOT WIN32)
-		message(STATUS "${PROJECT_NAME}: Linux builds require preinstalled development packages. Refer to the manual for more information.")
-	endif()
-	set(${PREFIX}OBS_NATIVE FALSE)
+	message(STATUS "${LOGPREFIX} This is a combined build.")
+	set(${PREFIX}OBS_NATIVE ON)
+	set(HAVE_OBS_FRONTEND ON)
 endif()
 
 ################################################################################
 # Options
 ################################################################################
 
-# Configuration by build type
-if(${PREFIX}OBS_NATIVE)
-else()
-	# Packaging
-	set(CMAKE_PACKAGE_PREFIX "${CMAKE_BINARY_DIR}" CACHE PATH "Path for generated archives.")
-	set(CMAKE_PACKAGE_NAME "${PROJECT_NAME}" CACHE STRING "Name for the generated archives.")
-	set(CMAKE_PACKAGE_SUFFIX_OVERRIDE "" CACHE STRING "Override for the suffix.")
-
-	# Unix builds
-	if(UNIX)
-		set(UNIX_LOCAL_STRUCTURE TRUE CACHE BOOL "Package for a local linux install.")
-	endif()
-endif()
-
 # Features
 ## Encoders
-set(${PREFIX}ENABLE_ENCODER_FFMPEG TRUE CACHE BOOL "Enable FFmpeg Encoder")
+set(${PREFIX}ENABLE_ENCODER_FFMPEG ON CACHE BOOL "Enable FFmpeg Encoder integration.")
+set(${PREFIX}ENABLE_ENCODER_FFMPEG_AMF ON CACHE BOOL "Enable AMF Encoder in FFmpeg.")
+set(${PREFIX}ENABLE_ENCODER_FFMPEG_NVENC ON CACHE BOOL "Enable NVENC Encoder in FFmpeg.")
+set(${PREFIX}ENABLE_ENCODER_FFMPEG_PRORES ON CACHE BOOL "Enable ProRes Encoder in FFmpeg.")
 
 ## Filters
-set(${PREFIX}ENABLE_FILTER_BLUR TRUE CACHE BOOL "Enable Blur Filter")
-set(${PREFIX}ENABLE_FILTER_COLOR_GRADE TRUE CACHE BOOL "Enable Color Grade Filter")
-set(${PREFIX}ENABLE_FILTER_DISPLACEMENT TRUE CACHE BOOL "Enable Displacement Filter")
-set(${PREFIX}ENABLE_FILTER_DYNAMIC_MASK TRUE CACHE BOOL "Enable Dynamic Mask Filter")
-set(${PREFIX}ENABLE_FILTER_NVIDIA_FACE_TRACKING TRUE CACHE BOOL "Enable NVidia Face Tracking Filter")
-set(${PREFIX}ENABLE_FILTER_SDF_EFFECTS TRUE CACHE BOOL "Enable SDF Effects Filter")
-set(${PREFIX}ENABLE_FILTER_SHADER TRUE CACHE BOOL "Enable Shader Filter")
-set(${PREFIX}ENABLE_FILTER_TRANSFORM TRUE CACHE BOOL "Enable Transform Filter")
+set(${PREFIX}ENABLE_FILTER_BLUR ON CACHE BOOL "Enable Blur Filter")
+set(${PREFIX}ENABLE_FILTER_COLOR_GRADE ON CACHE BOOL "Enable Color Grade Filter")
+set(${PREFIX}ENABLE_FILTER_DISPLACEMENT ON CACHE BOOL "Enable Displacement Filter")
+set(${PREFIX}ENABLE_FILTER_DYNAMIC_MASK ON CACHE BOOL "Enable Dynamic Mask Filter")
+set(${PREFIX}ENABLE_FILTER_NVIDIA_FACE_TRACKING ON CACHE BOOL "Enable NVidia Face Tracking Filter")
+set(${PREFIX}ENABLE_FILTER_SDF_EFFECTS ON CACHE BOOL "Enable SDF Effects Filter")
+set(${PREFIX}ENABLE_FILTER_SHADER ON CACHE BOOL "Enable Shader Filter")
+set(${PREFIX}ENABLE_FILTER_TRANSFORM ON CACHE BOOL "Enable Transform Filter")
 
 ## Sources
-set(${PREFIX}ENABLE_SOURCE_MIRROR TRUE CACHE BOOL "Enable Mirror Source")
-set(${PREFIX}ENABLE_SOURCE_SHADER TRUE CACHE BOOL "Enable Shader Source")
+set(${PREFIX}ENABLE_SOURCE_MIRROR ON CACHE BOOL "Enable Mirror Source")
+set(${PREFIX}ENABLE_SOURCE_SHADER ON CACHE BOOL "Enable Shader Source")
 
 ## Transitions
-set(${PREFIX}ENABLE_TRANSITION_SHADER TRUE CACHE BOOL "Enable Shader Transition")
+set(${PREFIX}ENABLE_TRANSITION_SHADER ON CACHE BOOL "Enable Shader Transition")
 
-## FrontEnd / UI
-set(${PREFIX}ENABLE_FRONTEND TRUE CACHE BOOL "Enable Frontend code.")
+## FrontEnd & UI
+set(${PREFIX}ENABLE_FRONTEND ON CACHE BOOL "Enable Frontend code.")
+set(${PREFIX}ENABLE_UPDATER ON CACHE BOOL "Enable automatic update checks.")
 
 ## Code Related
-set(${PREFIX}ENABLE_CLANG TRUE CACHE BOOL "Enable Clang integration for supported compilers.")
-set(${PREFIX}ENABLE_PROFILING FALSE CACHE BOOL "Enable CPU and GPU performance tracking, which has a non-zero overhead at all times. Do not enable this for release builds.")
-set(${PREFIX}ENABLE_UPDATER TRUE CACHE BOOL "Enable automatic update checks.")
+set(${PREFIX}ENABLE_CLANG ON CACHE BOOL "Enable Clang integration for supported compilers.")
+set(${PREFIX}ENABLE_PROFILING OFF CACHE BOOL "Enable CPU and GPU performance tracking, which has a non-zero overhead at all times. Do not enable this for release builds.")
 
-# Code Signing
-set(${PREFIX}SIGN_ENABLED FALSE CACHE BOOL "Enable signing builds.")
-set(${PREFIX}SIGN_KEY "" CACHE FILEPATH "Path to the private key with which to sign.")
-set(${PREFIX}SIGN_PASSWORD "" CACHE STRING "Password for the private key.")
+################################################################################
+# Clang
+################################################################################
 
-# Not-Native Components
-if(NOT ${PREFIX}OBS_NATIVE) 
+if(${PREFIX}ENABLE_CLANG AND (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/clang/Clang.cmake"))
+	include("Clang")
+	set(HAVE_CLANG ON)
+endif()
+
+################################################################################
+# Standalone Build: OBS Studio
+################################################################################
+
+if(NOT ${PREFIX}OBS_NATIVE)
+	# Options
 	set(${PREFIX}DOWNLOAD_OBS_VERSION "" CACHE STRING "(Optional) OBS Studio version to build against.")
 	set(${PREFIX}DOWNLOAD_OBS_HASH_32 "" CACHE STRING "")
 	set(${PREFIX}DOWNLOAD_OBS_HASH_64 "" CACHE STRING "")
@@ -336,202 +342,41 @@ if(NOT ${PREFIX}OBS_NATIVE)
 		${PREFIX}DOWNLOAD_OBS_HASH_64
 	)
 
-	if(WIN32)
-		set(${PREFIX}DOWNLOAD_OBSDEPS_VERSION "" CACHE STRING "(Optional) OBS Studio dependencies version to build against.")
-		set(${PREFIX}DOWNLOAD_OBSDEPS_HASH "" CACHE STRING "")
-		set(${PREFIX}DOWNLOAD_QT_VERSION "" CACHE STRING "(Optional) Qt Version to build against.")
-		set(${PREFIX}DOWNLOAD_QT_HASH "" CACHE STRING "")
-		mark_as_advanced(
-			${PREFIX}DOWNLOAD_OBSDEPS_VERSION
-			${PREFIX}DOWNLOAD_OBSDEPS_HASH
-			${PREFIX}DOWNLOAD_QT_VERSION
-			${PREFIX}DOWNLOAD_QT_HASH
-		)
-	endif()	
-endif()
-
-################################################################################
-# CMake / Compiler Dependencies
-################################################################################
-
-# Configure Files
-configure_file(
-	"templates/config.hpp.in"
-	"${PROJECT_BINARY_DIR}/generated/config.hpp"
-)
-configure_file(
-	"templates/version.hpp.in"
-	"${PROJECT_BINARY_DIR}/generated/version.hpp"
-)
-configure_file(
-	"templates/module.cpp.in"
-	"${PROJECT_BINARY_DIR}/generated/module.cpp"
-)
-if(WIN32) # Windows Resource Definition
-	set(PROJECT_PRODUCT_NAME "${PROJECT_FULL_NAME}")
-	set(PROJECT_COMPANY_NAME "${PROJECT_AUTHORS}")
-	set(PROJECT_COPYRIGHT "${PROJECT_AUTHORS} © ${PROJECT_COPYRIGHT_YEARS}")
-	set(PROJECT_LEGAL_TRADEMARKS_1 "")
-	set(PROJECT_LEGAL_TRADEMARKS_2 "")
-
-	configure_file(
-		"templates/version.rc.in"
-		"${PROJECT_BINARY_DIR}/generated/version.rc"
-		@ONLY
-	)
-endif()
-
-################################################################################
-# Code & Dependencies
-################################################################################
-
-function(refresh_components)
-	# CURL
-	if((${PREFIX}ENABLE_UPDATER AND NOT ${PREFIX}DISABLE_UPDATER))
-		set(REQUIRE_CURL TRUE PARENT_SCOPE)
-	else()
-		set(REQUIRE_CURL FALSE PARENT_SCOPE)
+	# Operating System
+	set(OBS_DOWNLOAD_OS "unknown")
+	if (D_PLATFORM_WINDOWS)
+		set(OBS_DOWNLOAD_OS "windows")
+	elseif(D_PLATFORM_LINUX)
+		set(OBS_DOWNLOAD_OS "ubuntu")
+	elseif(D_PLATFORM_MAC)
+		set(OBS_DOWNLOAD_OS "macos")
 	endif()
 
-	# FFmpeg
-	if(${PREFIX}ENABLE_ENCODER_FFMPEG AND NOT ${PREFIX}DISABLE_ENCODER_FFMPEG)
-		set(REQUIRE_FFMPEG TRUE PARENT_SCOPE)
+	# Bitness
+	set(OBS_DOWNLOAD_BITS 0)
+	if(D_PLATFORM_BITS EQUAL 32)
+		set(OBS_DOWNLOAD_BITS 32)
 	else()
-		set(REQUIRE_FFMPEG FALSE PARENT_SCOPE)
+		set(OBS_DOWNLOAD_BITS 64)
 	endif()
 
-	# JSON
-	if((${PREFIX}ENABLE_UPDATER AND NOT ${PREFIX}DISABLE_UPDATER))
-		set(REQUIRE_JSON TRUE PARENT_SCOPE)
-	else()
-		set(REQUIRE_JSON FALSE PARENT_SCOPE)
-	endif()
-
-	# OBS Frontend API
-	if((${PREFIX}ENABLE_FRONTEND AND NOT ${PREFIX}DISABLE_FRONTEND))
-		set(REQUIRE_OBSFE TRUE PARENT_SCOPE)
-	else()
-		set(REQUIRE_OBSFE FALSE PARENT_SCOPE)
-	endif()
-
-	# Qt
-	if((${PREFIX}ENABLE_FRONTEND AND NOT ${PREFIX}DISABLE_FRONTEND))
-		set(REQUIRE_QT TRUE PARENT_SCOPE)
-	else()
-		set(REQUIRE_QT FALSE PARENT_SCOPE)
+	# OBS Architecture String
+	if(D_PLATFORM_INSTR_X86)
+		if(D_PLATFORM_BITS EQUAL 64)
+			set(OBS_DOWNLOAD_ARCH "x64")
+		else()
+			set(OBS_DOWNLOAD_ARCH "x86")
+		endif()
+	elseif(D_PLATFORM_INSTR_ARM)
+		if(D_PLATFORM_BITS EQUAL 64)
+			set(OBS_DOWNLOAD_ARCH "arm64")
+		else()
+			set(OBS_DOWNLOAD_ARCH "arm32")
+		endif()
 	endif()
 	
-	# NVIDIA Broadcast/Augmented Reality
-	if((${PREFIX}ENABLE_FILTER_NVIDIA_FACE_TRACKING AND NOT ${PREFIX}DISABLE_FILTER_NVIDIA_FACE_TRACKING))
-		set(REQUIRE_NVAR TRUE PARENT_SCOPE)
-	else()
-		set(REQUIRE_NVAR FALSE PARENT_SCOPE)
-	endif()
-
-	# NVIDIA CUDA
-	if((${PREFIX}ENABLE_FILTER_NVIDIA_FACE_TRACKING AND NOT ${PREFIX}DISABLE_FILTER_NVIDIA_FACE_TRACKING))
-		set(REQUIRE_NVCUDA TRUE PARENT_SCOPE)
-	else()
-		set(REQUIRE_NVCUDA FALSE PARENT_SCOPE)
-	endif()
-endfunction()
-
-function(resolve_components)
-	# Resolve features by dependencies
-	if(${PREFIX}ENABLE_ENCODER_FFMPEG AND HAVE_FFMPEG)
-		set(${PREFIX}DISABLE_ENCODER_FFMPEG FALSE PARENT_SCOPE)
-	else()
-		set(${PREFIX}DISABLE_ENCODER_FFMPEG TRUE PARENT_SCOPE)
-		if(${PREFIX}ENABLE_ENCODER_FFMPEG)
-			message(WARNING "Encoder 'FFmpeg' requires FFmpeg.")
-		endif()
-	endif()
-
-	if(${PREFIX}ENABLE_FILTER_BLUR)
-		set(${PREFIX}DISABLE_FILTER_BLUR FALSE PARENT_SCOPE)
-	else()
-		set(${PREFIX}DISABLE_FILTER_BLUR TRUE PARENT_SCOPE)
-	endif()
-	if(${PREFIX}ENABLE_FILTER_COLOR_GRADE)
-		set(${PREFIX}DISABLE_FILTER_COLOR_GRADE FALSE PARENT_SCOPE)
-	else()
-		set(${PREFIX}DISABLE_FILTER_COLOR_GRADE TRUE PARENT_SCOPE)
-	endif()
-	if(${PREFIX}ENABLE_FILTER_DISPLACEMENT)
-		set(${PREFIX}DISABLE_FILTER_DISPLACEMENT FALSE PARENT_SCOPE)
-	else()
-		set(${PREFIX}DISABLE_FILTER_DISPLACEMENT TRUE PARENT_SCOPE)
-	endif()
-	if(${PREFIX}ENABLE_FILTER_DYNAMIC_MASK)
-		set(${PREFIX}DISABLE_FILTER_DYNAMIC_MASK FALSE PARENT_SCOPE)
-	else()
-		set(${PREFIX}DISABLE_FILTER_DYNAMIC_MASK TRUE PARENT_SCOPE)
-	endif()
-	if(${PREFIX}ENABLE_FILTER_NVIDIA_FACE_TRACKING AND WIN32 AND HAVE_NVCUDA AND HAVE_NVAR)
-		set(${PREFIX}DISABLE_FILTER_NVIDIA_FACE_TRACKING FALSE PARENT_SCOPE)
-	else()
-		set(${PREFIX}DISABLE_FILTER_NVIDIA_FACE_TRACKING TRUE PARENT_SCOPE)
-		if(${PREFIX}ENABLE_FILTER_NVIDIA_FACE_TRACKING)
-			message(WARNING "Filter 'NVIDIA Face Tracking' requires Windows, NVIDIA CUDA and NVIDIA AR SDK.")
-		endif()
-	endif()
-	if(${PREFIX}ENABLE_FILTER_SDF_EFFECTS)
-		set(${PREFIX}DISABLE_FILTER_SDF_EFFECTS FALSE PARENT_SCOPE)
-	else()
-		set(${PREFIX}DISABLE_FILTER_SDF_EFFECTS TRUE PARENT_SCOPE)
-	endif()
-	if(${PREFIX}ENABLE_FILTER_SHADER)
-		set(${PREFIX}DISABLE_FILTER_SHADER FALSE PARENT_SCOPE)
-	else()
-		set(${PREFIX}DISABLE_FILTER_SHADER TRUE PARENT_SCOPE)
-	endif()
-
-	if(${PREFIX}ENABLE_SOURCE_MIRROR)
-		set(${PREFIX}DISABLE_SOURCE_MIRROR FALSE PARENT_SCOPE)
-	else()
-		set(${PREFIX}DISABLE_SOURCE_MIRROR TRUE PARENT_SCOPE)
-	endif()
-	if(${PREFIX}ENABLE_SOURCE_SHADER)
-		set(${PREFIX}DISABLE_SOURCE_SHADER FALSE PARENT_SCOPE)
-	else()
-		set(${PREFIX}DISABLE_SOURCE_SHADER TRUE PARENT_SCOPE)
-	endif()
-
-	if(${PREFIX}ENABLE_TRANSITION_SHADER)
-		set(${PREFIX}DISABLE_TRANSITION_SHADER FALSE PARENT_SCOPE)
-	else()
-		set(${PREFIX}DISABLE_TRANSITION_SHADER TRUE PARENT_SCOPE)
-	endif()
-
-	if(${PREFIX}ENABLE_FRONTEND AND HAVE_QT AND HAVE_OBSFE)
-		set(${PREFIX}DISABLE_FRONTEND FALSE PARENT_SCOPE)
-	else()
-		set(${PREFIX}DISABLE_FRONTEND TRUE PARENT_SCOPE)
-		if(${PREFIX}ENABLE_FRONTEND)
-			message(WARNING "Front-End requires Qt5 and OBS Frontend API.")
-		endif()
-	endif()
-	if(${PREFIX}ENABLE_PROFILING)
-		set(${PREFIX}DISABLE_PROFILING FALSE PARENT_SCOPE)
-	else()
-		set(${PREFIX}DISABLE_PROFILING TRUE PARENT_SCOPE)
-	endif()
-	if(${PREFIX}ENABLE_UPDATER AND HAVE_CURL AND HAVE_JSON)
-		set(${PREFIX}DISABLE_UPDATER FALSE PARENT_SCOPE)
-	else()
-		set(${PREFIX}DISABLE_UPDATER TRUE PARENT_SCOPE)
-		if(${PREFIX}ENABLE_UPDATER)
-			message(WARNING "Updater requires CURL and nlohmann/json")
-		endif()
-	endif()
-endfunction()
-
-# Update Required Parts
-refresh_components()
-
-# OBS (Always first)
-if(NOT ${PREFIX}OBS_NATIVE)
-	if(NOT ${PREFIX}DOWNLOAD_OBS_VERSION STREQUAL "")
+	# Allow overriding what version we build against.
+	if(${PREFIX}DOWNLOAD_OBS_VERSION)
 		set(_DOWNLOAD_OBS_VERSION ${PREFIX}DOWNLOAD_OBS_VERSION)
 		set(_DOWNLOAD_OBS_HASH_32 ${PREFIX}DOWNLOAD_OBS_HASH_32)
 		set(_DOWNLOAD_OBS_HASH_64 ${PREFIX}DOWNLOAD_OBS_HASH_64)
@@ -551,70 +396,254 @@ if(NOT ${PREFIX}OBS_NATIVE)
 			return()
 		endif()
 	endif()
-	if(WIN32)
-		if(NOT ${PREFIX}DOWNLOAD_OBSDEPS_VERSION STREQUAL "")
-			set(_DOWNLOAD_OBSDEPS_VERSION ${PREFIX}DOWNLOAD_OBSDEPS_VERSION)
-			set(_DOWNLOAD_OBSDEPS_HASH ${PREFIX}DOWNLOAD_OBSDEPS_HASH)
-		else()
-			set(_DOWNLOAD_OBSDEPS_VERSION "26.0.0")
-			set(_DOWNLOAD_OBSDEPS_HASH "SHA512=2D47E7579DE3FBD88C52BB62C2CA4D649BD958FBAE8E5B01EE263D7583B4D8EEEA8CE13C543BEF110FAC9142891C031973A1BC20AC6EED596E6AB97CCC669D16")
-		endif()
-		if(NOT ${PREFIX}DOWNLOAD_QT_VERSION STREQUAL "")
-			set(_DOWNLOAD_QT_VERSION ${PREFIX}DOWNLOAD_QT_VERSION)
-			set(_DOWNLOAD_QT_HASH ${PREFIX}DOWNLOAD_QT_HASH)
-		else()
-			set(_DOWNLOAD_QT_VERSION "5.10.1")
-			set(_DOWNLOAD_QT_HASH "SHA512=848B9AC00B06FCA1F1A85BD4EFEA4138D278E8EC96823C5C36CC988DDE5D27E2F91300B02F2F0E71F075CCB0D791D3C888CDA6A5048DDFE6F946A8697DFEF1E9")
-		endif()
-	endif()
 
-	if(D_PLATFORM_WINDOWS)
-		set(DLSUFFIX "windows${BITS}")
-	elseif(D_PLATFORM_LINUX)
-		set(DLSUFFIX "ubuntu${BITS}")
-	elseif(D_PLATFORM_MAC)
-		set(DLSUFFIX "macos${BITS}")
-	else()
-		message(FATAL_ERROR "Standalone builds are not supported for this platform. Please consider submitting the necessary changes to make them work.")
-	endif()
-
-	# Library
+	# Download libOBS
 	download_project(
 		PROJ libobs
-		URL "https://github.com/Xaymar/obs-studio/releases/download/${_DOWNLOAD_OBS_VERSION}/obs-studio-${ARCH}-0.0.0.0-${DLSUFFIX}.7z"
+		URL "https://github.com/Xaymar/obs-studio/releases/download/${_DOWNLOAD_OBS_VERSION}/obs-studio-${OBS_DOWNLOAD_ARCH}-0.0.0.0-${OBS_DOWNLOAD_OS}-${OBS_DOWNLOAD_BITS}.7z"
 		URL_HASH "${_DOWNLOAD_OBS_HASH_${BITS}}"
 		DOWNLOAD_NAME "libobs.7z"
 		DOWNLOAD_NO_PROGRESS OFF
 		UPDATE_DISCONNECTED OFF
 	)
 
-	# Dependencies
+	include("${libobs_SOURCE_DIR}/cmake/LibObs/LibObsConfig.cmake")
+
 	if(D_PLATFORM_WINDOWS)
+		set(${PREFIX}DOWNLOAD_OBSDEPS_VERSION "" CACHE STRING "(Optional) OBS Studio dependencies version to build against.")
+		set(${PREFIX}DOWNLOAD_OBSDEPS_HASH "" CACHE STRING "")
+		mark_as_advanced(
+			${PREFIX}DOWNLOAD_OBSDEPS_VERSION
+			${PREFIX}DOWNLOAD_OBSDEPS_HASH
+		)
+
+		if(${PREFIX}DOWNLOAD_OBSDEPS_VERSION)
+			set(_DOWNLOAD_OBSDEPS_VERSION ${PREFIX}DOWNLOAD_OBSDEPS_VERSION)
+			set(_DOWNLOAD_OBSDEPS_HASH ${PREFIX}DOWNLOAD_OBSDEPS_HASH)
+		else()
+			set(_DOWNLOAD_OBSDEPS_VERSION "26.0.0")
+			set(_DOWNLOAD_OBSDEPS_HASH "SHA512=2D47E7579DE3FBD88C52BB62C2CA4D649BD958FBAE8E5B01EE263D7583B4D8EEEA8CE13C543BEF110FAC9142891C031973A1BC20AC6EED596E6AB97CCC669D16")
+		endif()
+		
 		download_project(
 			PROJ obsdeps
-			URL "https://github.com/Xaymar/obs-studio/releases/download/${_DOWNLOAD_OBSDEPS_VERSION}/dependencies.7z"
+			URL "https://github.com/Xaymar/obs-studio/releases/download/${_DOWNLOAD_OBSDEPS_VERSION}/dependencies_${OBS_DOWNLOAD_OS}.7z"
 			URL_HASH "${_DOWNLOAD_OBSDEPS_HASH}"
 			DOWNLOAD_NAME "obsdeps.7z"
 			DOWNLOAD_NO_PROGRESS OFF
 			UPDATE_DISCONNECTED OFF
 		)
-	else() # Unix systems use system packages instead.
-		message(STATUS "StreamFX: Builds on non-Windows platforms require that you install the necessary packages.")
+	else()
+		message(STATUS "${LOGPREFIX} Please make sure that you have installed all required packages to build StreamFX.")
 	endif()
-
-	# Include config file.
-	include("${libobs_SOURCE_DIR}/cmake/LibObs/LibObsConfig.cmake")
 endif()
 
-# CURL
+################################################################################
+# Standalone Build: Qt v5.x
+################################################################################
+
+if(D_PLATFORM_WINDOWS AND (NOT ${PREFIX}OBS_NATIVE))
+	set(${PREFIX}DOWNLOAD_QT OFF CACHE BOOL "Download Qt?")
+
+	if(${PREFIX}DOWNLOAD_QT)
+		set(${PREFIX}DOWNLOAD_QT_VERSION "" CACHE STRING "(Optional) Qt Version to build against.")
+		set(${PREFIX}DOWNLOAD_QT_HASH "" CACHE STRING "")
+		mark_as_advanced(
+			${PREFIX}DOWNLOAD_OBSDEPS_VERSION
+			${PREFIX}DOWNLOAD_OBSDEPS_HASH
+		)
+		
+		download_project(
+			PROJ qt
+			URL "https://github.com/Xaymar/obs-studio/releases/download/${_DOWNLOAD_OBSDEPS_VERSION}/qt_${_DOWNLOAD_QT_VERSION}_${OBS_DOWNLOAD_OS}.7z"
+			URL_HASH "${_DOWNLOAD_QT_HASH}"
+			DOWNLOAD_NAME "qt.7z"
+			DOWNLOAD_NO_PROGRESS ON
+			UPDATE_DISCONNECTED ON
+			QUIET
+		)
+
+		set(Qt5_DIR "${qt_SOURCE_DIR}" CACHE STRING "Path to Qt5")
+		if("${BITS}" STREQUAL "32")
+			CacheSet(Qt5_DIR "${qt_SOURCE_DIR}/msvc2017/lib/cmake/Qt5/")
+		else()
+			CacheSet(Qt5_DIR "${qt_SOURCE_DIR}/msvc2017_64/lib/cmake/Qt5/")
+		endif()
+	endif()
+endif()
+
+################################################################################
+# Components
+################################################################################
+
+# Component resolving:
+# 1. Check which features are enabled. For each feature, set what they require to ON.
+# 2. Try and find required items.
+# 3. Again check which features are enabled, if their requirements are missing, warn about it and disable them.
+# TODO: Consider making this an error instead.
+
+function(is_feature_enabled FEATURE OUTPUT)
+	set(T_ENABLED ${${PREFIX}ENABLE_${FEATURE}})
+	set(T_DISABLED ${${PREFIX}DISABLE_${FEATURE}})
+	if(T_ENABLED AND NOT T_DISABLED)
+		set(${OUTPUT} ON PARENT_SCOPE)
+	else()
+		set(${PREFIX}DISABLE_${FEATURE} ON PARENT_SCOPE)
+		set(${OUTPUT} OFF PARENT_SCOPE)
+	endif()
+endfunction()
+
+function(set_feature_disabled FEATURE DISABLED)
+	set(${PREFIX}DISABLE_${FEATURE} ${DISABLED} PARENT_SCOPE)
+endfunction()
+
+# Features
+function(feature_encoder_ffmpeg RESOLVE)
+	is_feature_enabled(ENCODER_FFMPEG T_CHECK)
+	if(RESOLVE AND T_CHECK)
+		if(NOT HAVE_FFMPEG)
+			message(WARNING "${LOGPREFIX}: FFmpeg Encoder requires FFmpeg. Disabling...")
+			set_feature_disabled(ENCODER_FFMPEG ON)
+		else()
+			# AMF
+			is_feature_enabled(ENCODER_FFMPEG_AMF T_CHECK)
+			if(T_CHECK AND D_PLATFORM_MAC)
+				message(WARNING "${LOGPREFIX}: FFmpeg Encoder 'AMF' requires Windows or Linux. Disabling...")
+				set_feature_disabled(ENCODER_FFMPEG_AMF ON)
+			endif()
+
+			# NVENC
+			is_feature_enabled(ENCODER_FFMPEG_NVENC T_CHECK)
+			if(T_CHECK AND D_PLATFORM_MAC)
+				message(WARNING "${LOGPREFIX}: FFmpeg Encoder 'NVENC' requires Windows or Linux. Disabling...")
+				set_feature_disabled(ENCODER_FFMPEG_NVENC ON)
+			endif()
+
+			# ProRes
+			is_feature_enabled(ENCODER_FFMPEG_PRORES T_CHECK)
+		endif()
+	elseif(T_CHECK)
+		set(REQUIRE_FFMPEG ON PARENT_SCOPE)
+	endif()
+endfunction()
+
+function(feature_filter_blur RESOLVE)
+	is_feature_enabled(FILTER_BLUR T_CHECK)
+endfunction()
+
+function(feature_filter_color_grade RESOLVE)
+	is_feature_enabled(FILTER_COLOR_GRADE T_CHECK)
+endfunction()
+
+function(feature_filter_displacement RESOLVE)
+	is_feature_enabled(FILTER_DISPLACEMENT T_CHECK)
+endfunction()
+
+function(feature_filter_dynamic_mask RESOLVE)
+	is_feature_enabled(FILTER_DYNAMIC_MASK T_CHECK)
+endfunction()
+
+function(feature_filter_nvidia_face_tracking RESOLVE)
+	is_feature_enabled(FILTER_NVIDIA_FACE_TRACKING T_CHECK)
+	if(RESOLVE AND T_CHECK)
+		if(NOT D_PLATFORM_WINDOWS)
+			message(WARNING "${LOGPREFIX}: NVIDIA Face Tracking requires Windows. Disabling...")
+			set_feature_disabled(FILTER_NVIDIA_FACE_TRACKING ON)
+		elseif(NOT HAVE_NVIDIA_ARSDK)
+			message(WARNING "${LOGPREFIX}: NVIDIA Face Tracking requires NVIDIA AR SDK. Disabling...")
+			set_feature_disabled(FILTER_NVIDIA_FACE_TRACKING ON)
+		elseif(NOT HAVE_NVIDIA_CUDA)
+			message(WARNING "${LOGPREFIX}: NVIDIA Face Tracking requires NVIDIA CUDA. Disabling...")
+			set_feature_disabled(FILTER_NVIDIA_FACE_TRACKING ON)
+		endif()
+	elseif(T_CHECK)
+		set(REQUIRE_NVIDIA_ARSDK ON PARENT_SCOPE)
+		set(REQUIRE_NVIDIA_CUDA ON PARENT_SCOPE)
+	endif()
+endfunction()
+
+function(feature_filter_sdf_effects RESOLVE)
+	is_feature_enabled(FILTER_SDF_EFFECTS T_CHECK)
+endfunction()
+
+function(feature_filter_shader RESOLVE)
+	is_feature_enabled(FILTER_SHADER T_CHECK)
+endfunction()
+
+function(feature_filter_transform RESOLVE)
+	is_feature_enabled(FILTER_TRANSFORM T_CHECK)
+endfunction()
+
+function(feature_source_mirror RESOLVE)
+	is_feature_enabled(SOURCE_MIRROR T_CHECK)
+endfunction()
+
+function(feature_source_shader RESOLVE)
+	is_feature_enabled(SOURCE_SHADER T_CHECK)
+endfunction()
+
+function(feature_transition_shader RESOLVE)
+	is_feature_enabled(TRANSITION_SHADER T_CHECK)
+endfunction()
+
+function(feature_frontend RESOLVE)
+	is_feature_enabled(FRONTEND T_CHECK)
+	if(RESOLVE AND T_CHECK)
+		if(NOT HAVE_QT)
+			message(WARNING "${LOGPREFIX}: Front-End requires Qt. Disabling...")
+			set_feature_disabled(FRONTEND ON)
+		elseif(NOT HAVE_OBSFE)
+			message(WARNING "${LOGPREFIX}: Front-End requires OBS FrontEnd API. Disabling...")
+			set_feature_disabled(FRONTEND ON)
+		endif()
+	elseif(T_CHECK)
+		set(REQUIRE_QT ON PARENT_SCOPE)
+		set(REQUIRE_OBSFE ON PARENT_SCOPE)
+	endif()
+endfunction()
+
+function(feature_updater RESOLVE)
+	is_feature_enabled(UPDATER T_CHECK)
+	if(RESOLVE AND T_CHECK)
+		if(NOT HAVE_CURL)
+			message(WARNING "${LOGPREFIX}: Updater requires CURL. Disabling...")
+			set_feature_disabled(UPDATER ON)
+		elseif(NOT HAVE_JSON)
+			message(WARNING "${LOGPREFIX}: Updater requires nlohmann::json. Disabling...")
+			set_feature_disabled(UPDATER ON)
+		endif()
+	elseif(T_CHECK)
+		set(REQUIRE_CURL ON PARENT_SCOPE)
+		set(REQUIRE_JSON ON PARENT_SCOPE)
+	endif()
+endfunction()
+
+# Set Requirements
+feature_encoder_ffmpeg(OFF)
+feature_filter_blur(OFF)
+feature_filter_color_grade(OFF)
+feature_filter_displacement(OFF)
+feature_filter_dynamic_mask(OFF)
+feature_filter_nvidia_face_tracking(OFF)
+feature_filter_sdf_effects(OFF)
+feature_filter_shader(OFF)
+feature_filter_transform(OFF)
+feature_source_mirror(OFF)
+feature_source_shader(OFF)
+feature_transition_shader(OFF)
+feature_frontend(OFF)
+feature_updater(OFF)
+
+# Fulfill Requirements
+set(HAVE_CURL OFF)
 if(REQUIRE_CURL)
-	if(WIN32) # CURL built by OBS Project is not compatible with find modules.
+	if(D_PLATFORM_WINDOWS)
 		if(${PREFIX}OBS_NATIVE) # Already defined by OBS
 			set(CURL_LIBRARIES "${CURL_LIB}")
 			set(CURL_INCLUDE_DIRS "${CURL_INCLUDE_DIR}")
 		else()
-			set(CURL_LIBRARIES "${obsdeps_SOURCE_DIR}/win${BITS}/bin/libcurl.lib")
-			set(CURL_INCLUDE_DIRS "${obsdeps_SOURCE_DIR}/win${BITS}/include")
+			set(CURL_LIBRARIES "${obsdeps_SOURCE_DIR}/win${D_PLATFORM_BITS}/bin/libcurl.lib")
+			set(CURL_INCLUDE_DIRS "${obsdeps_SOURCE_DIR}/win${D_PLATFORM_BITS}/include")
 		endif()
 		set(CURL_LIBRARY_DEBUG ${CURL_LIBRARIES})
 		set(CURL_LIBRARY_RELEASE ${CURL_LIBRARIES})
@@ -625,16 +654,11 @@ if(REQUIRE_CURL)
 	endif()
 
 	set(HAVE_CURL ${CURL_FOUND})
-else()
-	set(HAVE_CURL FALSE)
-endif()
-if(NOT HAVE_CURL AND REQUIRE_CURL)
-	message(WARNING "CURL could not be found.")
 endif()
 
-# FFmpeg
+set(HAVE_FFMPEG OFF)
 if(REQUIRE_FFMPEG)
-	if(WIN32 AND NOT ${PREFIX}OBS_NATIVE)
+	if(D_PLATFORM_WINDOWS AND NOT ${PREFIX}OBS_NATIVE)
 		find_path(
 			FFmpegPath "libavcodec/avcodec.h"
 			HINTS
@@ -650,116 +674,85 @@ if(REQUIRE_FFMPEG)
 				/opt/local/include
 				/sw/include
 			PATH_SUFFIXES
-				win${BITS}
-				win${BITS}/bin
-				win${BITS}/include
-				win${ARCH}
-				win${ARCH}/bin
-				win${ARCH}/include
+				win${D_PLATFORM_BITS}
+				win${D_PLATFORM_BITS}/bin
+				win${D_PLATFORM_BITS}/include
+				win${D_PLATFORM_INSTR}
+				win${D_PLATFORM_INSTR}/bin
+				win${D_PLATFORM_INSTR}/include
 				bin
 				include
 		)
 	endif()
+
 	find_package(FFmpeg COMPONENTS avutil avcodec swscale)
-	
 	set(HAVE_FFMPEG ${FFmpeg_FOUND})
-else()
-	set(HAVE_FFMPEG FALSE)
-endif()
-if(NOT HAVE_FFMPEG AND REQUIRE_FFMPEG)
-	message(WARNING "FFmpeg could not be found.")
 endif()
 
-# JSON
-if(REQUIRE_JSON AND EXISTS "${PROJECT_SOURCE_DIR}/third-party/nlohmann-json/single_include")
-	set(JSON_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/third-party/nlohmann-json/single_include")
-	set(HAVE_JSON TRUE)
-else()
-	set(HAVE_JSON FALSE)
-endif()
-if(NOT HAVE_JSON AND REQUIRE_JSON)
-	message(WARNING "nlohmann/json was not found.")
-endif()
-
-# Qt
-if(REQUIRE_QT)
-	if(WIN32 AND NOT ${PREFIX}OBS_NATIVE)
-		download_project(
-			PROJ qt
-			URL "https://github.com/Xaymar/obs-studio/releases/download/${_DOWNLOAD_OBSDEPS_VERSION}/qt_${_DOWNLOAD_QT_VERSION}.7z"
-			URL_HASH "${_DOWNLOAD_QT_HASH}"
-			DOWNLOAD_NAME "qt.7z"
-			DOWNLOAD_NO_PROGRESS ON
-			UPDATE_DISCONNECTED ON
-			QUIET
-		)
-
-		set(Qt5_DIR "${qt_SOURCE_DIR}" CACHE STRING "Path to Qt5")
-		if("${BITS}" STREQUAL "32")
-			CacheSet(Qt5_DIR "${qt_SOURCE_DIR}/msvc2017/lib/cmake/Qt5/")
-		else()
-			CacheSet(Qt5_DIR "${qt_SOURCE_DIR}/msvc2017_64/lib/cmake/Qt5/")
-		endif()
-	endif()
-
-	find_package(Qt5 COMPONENTS Core Widgets)
-
-	set(HAVE_QT ${Qt5_FOUND})
-else()
-	set(HAVE_QT FALSE)
-endif()
-if(NOT HAVE_QT AND REQUIRE_QT)
-	message(WARNING "Qt5 was not found.")
-endif()
-
-# OBS Frontend API
-if(REQUIRE_OBSFE)
-	if(NOT ${PREFIX}OBS_NATIVE)
-		if (EXISTS "${libobs_SOURCE_DIR}/cmake/obs-frontend-api/obs-frontend-apiConfig.cmake")
-			include("${libobs_SOURCE_DIR}/cmake/obs-frontend-api/obs-frontend-apiConfig.cmake")
-			set(HAVE_OBSFE TRUE)
-		else()
-			set(HAVE_OBSFE FALSE)
-		endif()
+set(HAVE_JSON OFF)
+if(REQUIRE_JSON)
+	if(NOT EXISTS "${PROJECT_SOURCE_DIR}/third-party/nlohmann-json/single_include")
+		message(FATAL_ERROR "${LOGPREFIX} Please make sure to update git submodules to their latest supported version.")
+		return()
 	else()
-		if(TARGET obs-frontend-api)
-			set(HAVE_OBSFE TRUE)
-		else()
-			set(HAVE_OBSFE FALSE)
-		endif()
+		set(JSON_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/third-party/nlohmann-json/single_include")
+		set(HAVE_JSON ON)
 	endif()
 endif()
-if(NOT HAVE_OBSFE AND REQUIRE_OBSFE)
-	message(WARNING "obs-frontend-api was as not found.")
-endif()
 
-# NVIDIA CUDA
-if(REQUIRE_NVCUDA)
-	# CUDA is provided by the NVIDIA Driver, we just load it dynamically.
-	set(HAVE_NVCUDA TRUE)
-else()
-	set(HAVE_NVCUDA FALSE)
-endif()
-if(NOT HAVE_NVCUDA AND REQUIRE_NVCUDA)
-	message(WARNING "NVIDIA CUDA was as not found.")
-endif()
+set(HAVE_NVIDIA_ARSDK OFF)
+if(REQUIRE_NVIDIA_ARSDK)
+	if(EXISTS "${PROJECT_SOURCE_DIR}/third-party/nvidia-arsdk/version.h")
+		set(NVAR_ROOT "${PROJECT_SOURCE_DIR}/third-party/nvidia-arsdk")
+	endif()
 
-# NVIDIA Broadcast / Augmented Reality
-if(REQUIRE_NVAR AND EXISTS "${PROJECT_SOURCE_DIR}/third-party/nvidia-arsdk/version.h")
-	set(NVAR_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/third-party/nvidia-arsdk")
 	find_package(NVAR)
 
-	set(HAVE_NVAR ${NVAR_FOUND})
-else()
-	set(HAVE_NVAR FALSE)
-endif()
-if(NOT HAVE_NVAR AND REQUIRE_NVAR)
-	message(WARNING "NVIDIA AR was as not found.")
+	set(HAVE_NVIDIA_ARSDK ${NVAR_FOUND})
 endif()
 
-# Update selected Components
-resolve_components()
-refresh_components()
+set(HAVE_NVIDIA_CUDA OFF)
+if(REQUIRE_NVIDIA_CUDA)
+	set(HAVE_NVIDIA_CUDA ON)
+endif()
+
+set(HAVE_OBSFE OFF)
+if(REQUIRE_OBSFE)
+	if(${PREFIX}OBS_NATIVE)
+		if(TARGET obs-frontend-api)
+			set(HAVE_OBSFE ON)
+		endif()
+	else()
+		if (EXISTS "${libobs_SOURCE_DIR}/cmake/obs-frontend-api/obs-frontend-apiConfig.cmake")
+			include("${libobs_SOURCE_DIR}/cmake/obs-frontend-api/obs-frontend-apiConfig.cmake")
+			set(HAVE_OBSFE ON)
+		endif()
+	endif()
+endif()
+
+set(HAVE_QT OFF)
+if(REQUIRE_QT)
+	find_package(Qt5 
+		COMPONENTS Widgets Core REQUIRED
+	)
+	set(HAVE_QT ${Qt5_FOUND})
+endif()
+
+# Verify Requirements
+feature_encoder_ffmpeg(ON)
+feature_filter_blur(ON)
+feature_filter_color_grade(ON)
+feature_filter_displacement(ON)
+feature_filter_dynamic_mask(ON)
+feature_filter_nvidia_face_tracking(ON)
+feature_filter_sdf_effects(ON)
+feature_filter_shader(ON)
+feature_filter_transform(ON)
+feature_source_mirror(ON)
+feature_source_shader(ON)
+feature_transition_shader(ON)
+feature_frontend(ON)
+feature_updater(ON)
 
 ################################################################################
 # Code
@@ -777,18 +770,72 @@ set(PROJECT_UI )
 set(PROJECT_UI_SOURCE )
 set(PROJECT_DEFINITIONS )
 
-# Dependencies
+# Configure Files
+configure_file(
+	"templates/config.hpp.in"
+	"generated/config.hpp"
+)
+LIST(APPEND PROJECT_TEMPLATES "templates/config.hpp.in")
+LIST(APPEND PROJECT_PRIVATE_GENERATED "${PROJECT_BINARY_DIR}/generated/config.hpp")
+
+configure_file(
+	"templates/version.hpp.in"
+	"generated/version.hpp"
+)
+LIST(APPEND PROJECT_TEMPLATES "templates/version.hpp.in")
+LIST(APPEND PROJECT_PRIVATE_GENERATED "${PROJECT_BINARY_DIR}/generated/version.hpp")
+
+configure_file(
+	"templates/module.cpp.in"
+	"generated/module.cpp"
+)
+LIST(APPEND PROJECT_TEMPLATES "templates/module.cpp.in")
+LIST(APPEND PROJECT_PRIVATE_GENERATED "${PROJECT_BINARY_DIR}/generated/module.cpp")
+
+if(D_PLATFORM_WINDOWS) # Windows Support
+	set(PROJECT_PRODUCT_NAME "${PROJECT_FULL_NAME}")
+	set(PROJECT_COMPANY_NAME "${PROJECT_AUTHORS}")
+	set(PROJECT_COPYRIGHT "${PROJECT_AUTHORS} © ${PROJECT_COPYRIGHT_YEARS}")
+	set(PROJECT_LEGAL_TRADEMARKS_1 "")
+	set(PROJECT_LEGAL_TRADEMARKS_2 "")
+
+	configure_file(
+		"templates/version.rc.in"
+		"generated/version.rc"
+		@ONLY
+	)
+	LIST(APPEND PROJECT_TEMPLATES "templates/version.rc.in")
+	LIST(APPEND PROJECT_PRIVATE_GENERATED "${PROJECT_BINARY_DIR}/generated/version.rc")
+	
+	if(NOT ${PREFIX}OBS_NATIVE)
+		## Installer (InnoSetup)
+		get_filename_component(ISS_FILES_DIR "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
+		file(TO_NATIVE_PATH "${ISS_FILES_DIR}" ISS_FILES_DIR)
+
+		get_filename_component(ISS_PACKAGE_DIR "${CMAKE_PACKAGE_PREFIX}" ABSOLUTE)
+		file(TO_NATIVE_PATH "${ISS_PACKAGE_DIR}" ISS_PACKAGE_DIR)
+
+		get_filename_component(ISS_SOURCE_DIR "${PROJECT_SOURCE_DIR}" ABSOLUTE)
+		file(TO_NATIVE_PATH "${ISS_SOURCE_DIR}" ISS_SOURCE_DIR)
+
+		get_filename_component(ISS_MSVCHELPER_PATH "${msvc-redist-helper_BUILD_DIR}" ABSOLUTE)
+		file(TO_NATIVE_PATH "${ISS_MSVCHELPER_PATH}" ISS_MSVCHELPER_PATH)
+
+		configure_file(
+			"templates/installer.iss.in"
+			"installer.iss"
+		)
+		list(APPEND PROJECT_TEMPLATES
+			"templates/installer.iss.in"
+		)
+	endif()
+endif()
+
+# Minimum Dependencies
 list(APPEND PROJECT_LIBRARIES libobs)
-if(REQUIRE_QT AND HAVE_QT)
-	list(APPEND PROJECT_LIBRARIES Qt5::Core Qt5::Widgets)
-endif()
-if(REQUIRE_OBSFE AND HAVE_OBSFE)
-	list(APPEND PROJECT_LIBRARIES obs-frontend-api)
-endif()
-if(REQUIRE_JSON AND HAVE_JSON)
-	list(APPEND PROJECT_INCLUDE_DIRS ${JSON_INCLUDE_DIR})
-endif()
-if(REQUIRE_CURL AND HAVE_CURL)
+
+# Components
+if(HAVE_CURL)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/util/util-curl.hpp"
 		"source/util/util-curl.cpp"
@@ -796,15 +843,33 @@ if(REQUIRE_CURL AND HAVE_CURL)
 	list(APPEND PROJECT_LIBRARIES ${CURL_LIBRARY_RELEASE})
 	list(APPEND PROJECT_INCLUDE_DIRS ${CURL_INCLUDE_DIR})
 endif()
-if(REQUIRE_FFMPEG AND HAVE_FFMPEG)
+
+if(HAVE_FFMPEG)
 	list(APPEND PROJECT_LIBRARIES
 		${FFMPEG_LIBRARIES}
 	)
 	list(APPEND PROJECT_INCLUDE_DIRS
 		${FFMPEG_INCLUDE_DIRS}
-	)	
+	)
 endif()
-if(REQUIRE_NVCUDA AND HAVE_NVCUDA)
+
+if(HAVE_JSON)
+	list(APPEND PROJECT_INCLUDE_DIRS ${JSON_INCLUDE_DIR})
+endif()
+
+if(HAVE_NVIDIA_ARSDK)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/nvidia/ar/nvidia-ar.hpp"
+		"source/nvidia/ar/nvidia-ar.cpp"
+		"source/nvidia/ar/nvidia-ar-feature.hpp"
+		"source/nvidia/ar/nvidia-ar-feature.cpp"
+	)
+	list(APPEND PROJECT_LIBRARIES
+		nvARProxy
+	)
+endif()
+
+if(HAVE_NVIDIA_CUDA)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/nvidia/cuda/nvidia-cuda.hpp"
 		"source/nvidia/cuda/nvidia-cuda.cpp"
@@ -820,17 +885,18 @@ if(REQUIRE_NVCUDA AND HAVE_NVCUDA)
 		"source/nvidia/cuda/nvidia-cuda-stream.cpp"
 	)
 endif()
-if(REQUIRE_NVAR AND HAVE_NVAR)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/nvidia/ar/nvidia-ar.hpp"
-		"source/nvidia/ar/nvidia-ar.cpp"
-		"source/nvidia/ar/nvidia-ar-feature.hpp"
-		"source/nvidia/ar/nvidia-ar-feature.cpp"
-	)
-	list(APPEND PROJECT_LIBRARIES
-		nvARProxy
-	)
+
+if(REQUIRE_OBSFE AND HAVE_OBSFE)
+	list(APPEND PROJECT_LIBRARIES obs-frontend-api)
 endif()
+
+if(REQUIRE_QT AND HAVE_QT)
+	list(APPEND PROJECT_LIBRARIES Qt5::Core Qt5::Widgets)
+endif()
+
+################################################################################
+# Features
+################################################################################
 
 # Core
 list(APPEND PROJECT_PRIVATE_SOURCE
@@ -888,79 +954,22 @@ list(APPEND PROJECT_PRIVATE_SOURCE
 	"source/obs/obs-tools.hpp"
 	"source/obs/obs-tools.cpp"
 )
-list(APPEND PROJECT_PRIVATE_GENERATED
-	"${PROJECT_BINARY_DIR}/generated/module.cpp"
-	"${PROJECT_BINARY_DIR}/generated/version.hpp"
-	"${PROJECT_BINARY_DIR}/generated/config.hpp"
-)
-list(APPEND PROJECT_TEMPLATES
-	"templates/version.hpp.in"
-	"templates/module.cpp.in"
-	"templates/config.hpp.in"
-)
 list(APPEND PROJECT_DATA
-	"data/locale/en-US.ini"
 	"data/effects/color-conversion.effect"
 	"data/effects/mipgen.effect"
 	"data/effects/pack-unpack.effect"
+	"data/locale/en-US.ini"
 )
-if(WIN32)
-	list(APPEND PROJECT_TEMPLATES
-		"templates/version.rc.in"
-	)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/windll.cpp"
-	)
-	list(APPEND PROJECT_PRIVATE_GENERATED
-		"${PROJECT_BINARY_DIR}/generated/version.rc"
-	)
-	if(NOT ${PREFIX}OBS_NATIVE)
-		list(APPEND PROJECT_TEMPLATES
-			"templates/installer.iss.in"
-		)
-	endif()
-endif()
+list(APPEND PROJECT_INCLUDE_DIRS
+	"${PROJECT_BINARY_DIR}/generated"
+	"${PROJECT_SOURCE_DIR}/source"
+)
+file(GLOB_RECURSE PROJECT_EXAMPLES "data/examples/*")
+list(APPEND PROJECT_DATA ${PROJECT_EXAMPLES})
 
-# Old Compiler Support
-if((CMAKE_C_COMPILER_ID STREQUAL "GNU")
-	OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	OR (CMAKE_C_COMPILER_ID STREQUAL "Clang")
-	OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
-	if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
-		list(APPEND PROJECT_LIBRARIES
-			"stdc++fs"
-		)
-	endif()
-endif()
-
-################################################################################
-# Components
-################################################################################
-
-# Component: Profiling
-if(NOT ${PREFIX}DISABLE_PROFILING)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/util/util-profiler.cpp"
-		"source/util/util-profiler.hpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_PROFILING
-	)
-endif()
-
-# Component: Updater
-if(NOT ${PREFIX}DISABLE_UPDATER)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/updater.hpp"
-		"source/updater.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_UPDATER
-	)
-endif()
-
-# Component: Encoder/FFmpeg
-if(NOT ${PREFIX}DISABLE_ENCODER_FFMPEG)
+# Encoder/FFmpeg
+is_feature_enabled(ENCODER_FFMPEG T_CHECK)
+if(T_CHECK)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		# FFmpeg
 		"source/ffmpeg/avframe-queue.cpp"
@@ -991,28 +1000,59 @@ if(NOT ${PREFIX}DISABLE_ENCODER_FFMPEG)
 		"source/encoders/handlers/handler.cpp"
 		"source/encoders/handlers/debug_handler.hpp"
 		"source/encoders/handlers/debug_handler.cpp"
-		"source/encoders/handlers/prores_aw_handler.hpp"
-		"source/encoders/handlers/prores_aw_handler.cpp"
-		"source/encoders/handlers/nvenc_shared.hpp"
-		"source/encoders/handlers/nvenc_shared.cpp"
-		"source/encoders/handlers/nvenc_h264_handler.hpp"
-		"source/encoders/handlers/nvenc_h264_handler.cpp"
-		"source/encoders/handlers/nvenc_hevc_handler.hpp"
-		"source/encoders/handlers/nvenc_hevc_handler.cpp"
-		"source/encoders/handlers/amf_shared.hpp"
-		"source/encoders/handlers/amf_shared.cpp"
-		"source/encoders/handlers/amf_h264_handler.hpp"
-		"source/encoders/handlers/amf_h264_handler.cpp"
-		"source/encoders/handlers/amf_hevc_handler.hpp"
-		"source/encoders/handlers/amf_hevc_handler.cpp"
 	)
 	list(APPEND PROJECT_DEFINITIONS
 		ENABLE_ENCODER_FFMPEG
 	)
+
+	# AMF
+	is_feature_enabled(ENCODER_FFMPEG_AMF T_CHECK)
+	if(T_CHECK)
+		list(APPEND PROJECT_PRIVATE_SOURCE
+			"source/encoders/handlers/amf_shared.hpp"
+			"source/encoders/handlers/amf_shared.cpp"
+			"source/encoders/handlers/amf_h264_handler.hpp"
+			"source/encoders/handlers/amf_h264_handler.cpp"
+			"source/encoders/handlers/amf_hevc_handler.hpp"
+			"source/encoders/handlers/amf_hevc_handler.cpp"
+		)
+		list(APPEND PROJECT_DEFINITIONS
+			ENABLE_ENCODER_FFMPEG_AMF
+		)
+	endif()
+	
+	# NVENC
+	is_feature_enabled(ENCODER_FFMPEG_NVENC T_CHECK)
+	if(T_CHECK)
+		list(APPEND PROJECT_PRIVATE_SOURCE
+			"source/encoders/handlers/nvenc_shared.hpp"
+			"source/encoders/handlers/nvenc_shared.cpp"
+			"source/encoders/handlers/nvenc_h264_handler.hpp"
+			"source/encoders/handlers/nvenc_h264_handler.cpp"
+			"source/encoders/handlers/nvenc_hevc_handler.hpp"
+			"source/encoders/handlers/nvenc_hevc_handler.cpp"
+		)
+		list(APPEND PROJECT_DEFINITIONS
+			ENABLE_ENCODER_FFMPEG_NVENC
+		)
+	endif()
+	
+	# ProRES
+	is_feature_enabled(ENCODER_FFMPEG_PRORES T_CHECK)
+	if(T_CHECK)
+		list(APPEND PROJECT_PRIVATE_SOURCE
+			"source/encoders/handlers/prores_aw_handler.hpp"
+			"source/encoders/handlers/prores_aw_handler.cpp"
+		)
+		list(APPEND PROJECT_DEFINITIONS
+			ENABLE_ENCODER_FFMPEG_PRORES
+		)
+	endif()
 endif()
 
-# Component: Filter/Blur
-if(NOT ${PREFIX}DISABLE_FILTER_BLUR)
+# Filter/Blur
+is_feature_enabled(FILTER_BLUR T_CHECK)
+if(T_CHECK)
 	list(APPEND PROJECT_DATA
 		"data/effects/mask.effect"
 		"data/effects/blur/box.effect"
@@ -1035,15 +1075,16 @@ if(NOT ${PREFIX}DISABLE_FILTER_BLUR)
 		"source/gfx/blur/gfx-blur-gaussian-linear.hpp"
 		"source/gfx/blur/gfx-blur-gaussian-linear.cpp"
 		"source/filters/filter-blur.hpp"
-		"source/filters/filter-blur.cpp"		
+		"source/filters/filter-blur.cpp"
 	)
 	list(APPEND PROJECT_DEFINITIONS
 		ENABLE_FILTER_BLUR
 	)
 endif()
 
-# Component: Filter/Color Grade
-if(NOT ${PREFIX}DISABLE_FILTER_COLOR_GRADE)
+# Filter/Color Grade
+is_feature_enabled(FILTER_COLOR_GRADE T_CHECK)
+if(T_CHECK)
 	list(APPEND PROJECT_DATA
 		"data/effects/color-grade.effect"
 	)
@@ -1056,8 +1097,9 @@ if(NOT ${PREFIX}DISABLE_FILTER_COLOR_GRADE)
 	)
 endif()
 
-# Component: Filter/Displacement
-if(NOT ${PREFIX}DISABLE_FILTER_DISPLACEMENT)
+# Filter/Displacement
+is_feature_enabled(FILTER_DISPLACEMENT T_CHECK)
+if(T_CHECK)
 	list(APPEND PROJECT_DATA
 		"data/effects/displace.effect"
 	)
@@ -1070,8 +1112,9 @@ if(NOT ${PREFIX}DISABLE_FILTER_DISPLACEMENT)
 	)
 endif()
 
-# Component: Filter/Dynamic Mask
-if(NOT ${PREFIX}DISABLE_FILTER_DYNAMIC_MASK)
+# Filter/Dynamic Mask
+is_feature_enabled(FILTER_DYNAMIC_MASK T_CHECK)
+if(T_CHECK)
 	list(APPEND PROJECT_DATA
 		"data/effects/channel-mask.effect"
 	)
@@ -1084,8 +1127,9 @@ if(NOT ${PREFIX}DISABLE_FILTER_DYNAMIC_MASK)
 	)
 endif()
 
-# Component: Filter/NVIDIA Face Tracking
-if(NOT ${PREFIX}DISABLE_FILTER_NVIDIA_FACE_TRACKING)
+# Filter/NVIDIA Face Tracking
+is_feature_enabled(FILTER_NVIDIA_FACE_TRACKING T_CHECK)
+if(T_CHECK)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/filters/filter-nv-face-tracking.hpp"
 		"source/filters/filter-nv-face-tracking.cpp"
@@ -1095,8 +1139,9 @@ if(NOT ${PREFIX}DISABLE_FILTER_NVIDIA_FACE_TRACKING)
 	)
 endif()
 
-# Component: Filter/SDF Effects
-if(NOT ${PREFIX}DISABLE_FILTER_SDF_EFFECTS)
+# Filter/SDF Effects
+is_feature_enabled(FILTER_SDF_EFFECTS T_CHECK)
+if(T_CHECK)
 	list(APPEND PROJECT_DATA
 		"data/effects/sdf/sdf-producer.effect"
 		"data/effects/sdf/sdf-consumer.effect"
@@ -1110,16 +1155,10 @@ if(NOT ${PREFIX}DISABLE_FILTER_SDF_EFFECTS)
 	)
 endif()
 
-# Component: Filter/Shader
-if(NOT ${PREFIX}DISABLE_FILTER_SHADER)
-	set(REQUIRE_SHADER_CODE ON)
-	list(APPEND PROJECT_DATA
-		"data/examples/shaders/filter/crt-curvature.effect"
-		"data/examples/shaders/filter/crt-scanlines.effect"
-		"data/examples/shaders/filter/drunk.effect"
-		"data/examples/shaders/filter/hexagonize.effect"
-		"data/examples/shaders/filter/semiline.effect"
-	)
+# Filter/Shader
+is_feature_enabled(FILTER_SHADER T_CHECK)
+if(T_CHECK)
+	set(REQUIRE_PART_SHADER ON)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/filters/filter-shader.hpp"
 		"source/filters/filter-shader.cpp"
@@ -1129,8 +1168,9 @@ if(NOT ${PREFIX}DISABLE_FILTER_SHADER)
 	)
 endif()
 
-# Component: Filter/Transform
-if(NOT ${PREFIX}DISABLE_FILTER_TRANSFORM)
+# Filter/Transform
+is_feature_enabled(FILTER_TRANFORM T_CHECK)
+if(T_CHECK)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/filters/filter-transform.hpp"
 		"source/filters/filter-transform.cpp"
@@ -1140,8 +1180,9 @@ if(NOT ${PREFIX}DISABLE_FILTER_TRANSFORM)
 	)
 endif()
 
-# Component: Source/Mirror
-if(NOT ${PREFIX}DISABLE_SOURCE_MIRROR)
+# Source/Mirror
+is_feature_enabled(SOURCE_MIRROR T_CHECK)
+if(T_CHECK)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/sources/source-mirror.hpp"
 		"source/sources/source-mirror.cpp"
@@ -1151,8 +1192,10 @@ if(NOT ${PREFIX}DISABLE_SOURCE_MIRROR)
 	)
 endif()
 
-# Component: Source/Shader
-if(NOT ${PREFIX}DISABLE_SOURCE_SHADER)
+# Source/Shader
+is_feature_enabled(SOURCE_SHADER T_CHECK)
+if(T_CHECK)
+	set(REQUIRE_PART_SHADER ON)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/sources/source-shader.hpp"
 		"source/sources/source-shader.cpp"
@@ -1162,8 +1205,10 @@ if(NOT ${PREFIX}DISABLE_SOURCE_SHADER)
 	)
 endif()
 
-# Component: Transition/Shader
-if(NOT ${PREFIX}DISABLE_TRANSITION_SHADER)
+# Transition/Shader
+is_feature_enabled(TRANSITION_SHADER T_CHECK)
+if(T_CHECK)
+	set(REQUIRE_PART_SHADER ON)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/transitions/transition-shader.hpp"
 		"source/transitions/transition-shader.cpp"
@@ -1173,8 +1218,33 @@ if(NOT ${PREFIX}DISABLE_TRANSITION_SHADER)
 	)
 endif()
 
-# Component: Frontend
-if(NOT ${PREFIX}DISABLE_FRONTEND)
+# Profiling
+is_feature_enabled(PROFILING T_CHECK)
+if(T_CHECK)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/util/util-profiler.cpp"
+		"source/util/util-profiler.hpp"
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_PROFILING
+	)
+endif()
+
+# Updater
+is_feature_enabled(UPDATER T_CHECK)
+if(T_CHECK)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/updater.hpp"
+		"source/updater.cpp"
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_UPDATER
+	)
+endif()
+
+# Frontend
+is_feature_enabled(FRONTEND T_CHECK)
+if(T_CHECK)
 	list(APPEND PROJECT_UI
 		"ui/streamfx.qrc"
 		"ui/about.ui"
@@ -1196,7 +1266,8 @@ if(NOT ${PREFIX}DISABLE_FRONTEND)
 		ENABLE_FRONTEND
 	)
 	
-	if(NOT ${PREFIX}DISABLE_UPDATER)
+	is_feature_enabled(UPDATER T_CHECK)
+	if(T_CHECK)
 		list(APPEND PROJECT_UI_SOURCE
 			"source/ui/ui-updater.hpp"
 			"source/ui/ui-updater.cpp"
@@ -1207,8 +1278,12 @@ if(NOT ${PREFIX}DISABLE_FRONTEND)
 	endif()
 endif()
 
-# Extra Parts
-if(NOT ${PREFIX}DISABLE_FILTER_SHADER OR NOT ${PREFIX}DISABLE_SOURCE_SHADER OR NOT ${PREFIX}DISABLE_TRANSITION_SHADER)
+################################################################################
+# Parts
+################################################################################
+
+# Shaders
+if(REQUIRE_PART_SHADER)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/gfx/shader/gfx-shader.hpp"
 		"source/gfx/shader/gfx-shader.cpp"
@@ -1223,77 +1298,19 @@ if(NOT ${PREFIX}DISABLE_FILTER_SHADER OR NOT ${PREFIX}DISABLE_SOURCE_SHADER OR N
 		"source/gfx/shader/gfx-shader-param-texture.hpp"
 		"source/gfx/shader/gfx-shader-param-texture.cpp"
 	)
-	list(APPEND PROJECT_DATA
-		"data/examples/shaders/feature-test.effect"
-	)
 endif()
 
-# Combine it all
-set(PROJECT_FILES
-	# Always exists
-	${PROJECT_TEMPLATES}
-	${PROJECT_PRIVATE_GENERATED}
-	${PROJECT_PRIVATE_SOURCE}
-	${PROJECT_DATA}
-	# UI-only (empty if not enabled)
-	${PROJECT_UI}
-	${PROJECT_UI_SOURCE}
-)
-
-source_group(TREE "${PROJECT_SOURCE_DIR}/data" PREFIX "Data" FILES ${PROJECT_DATA})
-source_group(TREE "${PROJECT_SOURCE_DIR}/source" PREFIX "Source" FILES ${PROJECT_PRIVATE_SOURCE} ${PROJECT_UI_SOURCE})
-source_group(TREE "${PROJECT_BINARY_DIR}/generated" PREFIX "Source" FILES ${PROJECT_PRIVATE_GENERATED})
-source_group(TREE "${PROJECT_SOURCE_DIR}/templates" PREFIX "Templates" FILES ${PROJECT_TEMPLATES})
-source_group(TREE "${PROJECT_SOURCE_DIR}/ui" PREFIX "User Interface" FILES ${PROJECT_UI})
-
-if(NOT ${PREFIX}DISABLE_FRONTEND)
-	set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} ${PROJECT_PRIVATE_GENERATED} ${PROJECT_PRIVATE_SOURCE} PROPERTIES
-		SKIP_AUTOUIC TRUE
-		SKIP_AUTOGEN TRUE
+# Windows
+if(D_PLATFORM_WINDOWS)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/windll.cpp"
 	)
-endif()
-set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} PROPERTIES
-	HEADER_FILE_ONLY TRUE
-)
-
-################################################################################
-# Target
-################################################################################
-
-# Set up
-add_library(${PROJECT_NAME} MODULE
-	${PROJECT_FILES}
-)
-target_include_directories(${PROJECT_NAME} PRIVATE
-	"${PROJECT_BINARY_DIR}/generated"
-	"${PROJECT_SOURCE_DIR}/source"
-	${PROJECT_INCLUDE_DIRS}
-)
-target_link_libraries(${PROJECT_NAME} ${PROJECT_LIBRARIES} )
-target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_DEFINITIONS})
-
-# Extra Changes
-set_target_properties(${PROJECT_NAME}
-	PROPERTIES
-		PREFIX ""
-		IMPORT_PREFIX ""
-)
-if(WIN32)
-	# /DELAYLOAD MSVC
-	target_link_libraries(${PROJECT_NAME}
+	list(APPEND PROJECT_LIBRARIES
 		Delayimp.lib
 	)
-	foreach(DELAYLOAD ${PROJECT_LIBRARIES_DELAYED})
-		get_target_property(_lf ${PROJECT_NAME} LINK_FLAGS)
-		if (NOT _lf)
-			set(_lf "")
-		endif()
-		set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${_lf} /DELAYLOAD:${DELAYLOAD}")
-		add_link_options("/DELAYLOAD:${DELAYLOAD}")
-	endforeach()
-
-	# Windows.h shrinking
-	target_compile_definitions(${PROJECT_NAME} PRIVATE
+	# Disable/Enable a ton of things.
+	list(APPEND PROJECT_DEFINITIONS
+		# Microsoft Visual C++
 		_CRT_SECURE_NO_WARNINGS
 		_ENABLE_EXTENDED_ALIGNED_STORAGE
 		# windows.h
@@ -1342,37 +1359,113 @@ if(WIN32)
 	)
 endif()
 
-# C++ Standard and Extensions
-set_target_properties(${PROJECT_NAME} PROPERTIES
-	CXX_STANDARD ${_CXX_STANDARD}
-	CXX_STANDARD_REQUIRED ON
-	CXX_EXTENSIONS ${_CXX_EXTENSIONS}
+# GCC before 9.0, Clang before 9.0
+if((CMAKE_C_COMPILER_ID STREQUAL "GNU")
+	OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+	OR (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+	OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+	if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+		list(APPEND PROJECT_LIBRARIES
+			"stdc++fs"
+		)
+	endif()
+endif()
+
+################################################################################
+# Register Library
+################################################################################
+
+# Combine all variables that matter.
+set(PROJECT_FILES
+	# Always exist
+	${PROJECT_DATA}
+	${PROJECT_PRIVATE_GENERATED}
+	${PROJECT_PRIVATE_SOURCE}
+	${PROJECT_TEMPLATES}
+	# UI-only (empty if not enabled)
+	${PROJECT_UI}
+	${PROJECT_UI_SOURCE}
 )
 
-# File Version
-if(NOT APPLE)
+# Set source groups for IDE generators.
+source_group(TREE "${PROJECT_SOURCE_DIR}/data" PREFIX "Data" FILES ${PROJECT_DATA})
+source_group(TREE "${PROJECT_SOURCE_DIR}/source" PREFIX "Source" FILES ${PROJECT_PRIVATE_SOURCE} ${PROJECT_UI_SOURCE})
+source_group(TREE "${PROJECT_BINARY_DIR}/generated" PREFIX "Source" FILES ${PROJECT_PRIVATE_GENERATED})
+source_group(TREE "${PROJECT_SOURCE_DIR}/templates" PREFIX "Templates" FILES ${PROJECT_TEMPLATES})
+source_group(TREE "${PROJECT_SOURCE_DIR}/ui" PREFIX "User Interface" FILES ${PROJECT_UI})
+
+# Prevent unwanted files from being built as source.
+set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} ${PROJECT_UI} PROPERTIES
+	HEADER_FILE_ONLY ON
+)
+
+# Prevent non-UI files from being Qt'd
+if(HAVE_QT)
+	set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} ${PROJECT_PRIVATE_GENERATED} ${PROJECT_PRIVATE_SOURCE} PROPERTIES
+		SKIP_AUTOGEN ON
+		SKIP_AUTOMOC ON
+		SKIP_AUTORCC ON
+		SKIP_AUTOUIC ON
+	)
+endif()
+
+# Register the library
+add_library(${PROJECT_NAME} MODULE ${PROJECT_FILES}) # We are a module for libOBS.
+target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_INCLUDE_DIRS})
+target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_DEFINITIONS})
+target_link_libraries(${PROJECT_NAME} ${PROJECT_LIBRARIES})
+
+# Set C++ Standard and Extensions
+set_target_properties(${PROJECT_NAME} PROPERTIES
+	CXX_STANDARD 17
+	CXX_STANDARD_REQUIRED ON
+	CXX_EXTENSIONS OFF
+)
+
+# Remove prefix on other platforms.
+set_target_properties(${PROJECT_NAME} PROPERTIES
+	PREFIX ""
+	IMPORT_PREFIX ""
+)
+
+# Set file version (on anything but MacOS)
+if(NOT D_PLATFORM_MAC)
 	set_target_properties(${PROJECT_NAME} PROPERTIES
 		VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${PROJECT_VERSION_TWEAK}
 		SOVERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${PROJECT_VERSION_TWEAK}
 	)
 endif()
 
-# UI
-if(NOT ${PREFIX}DISABLE_FRONTEND)
+# Delay-Loading on Microsoft Visual C++
+if(D_PLATFORM_WINDOWS)
+	foreach(DELAYLOAD ${PROJECT_LIBRARIES_DELAYED})
+		get_target_property(_lf ${PROJECT_NAME} LINK_FLAGS)
+		if (NOT _lf)
+			set(_lf "")
+		endif()
+		set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${_lf} /DELAYLOAD:${DELAYLOAD}")
+		add_link_options("/DELAYLOAD:${DELAYLOAD}")
+	endforeach()
+endif()
+
+# Enable Qt if needed
+if(HAVE_QT)
 	set_target_properties(${PROJECT_NAME} PROPERTIES
-		AUTOUIC TRUE
+		AUTOUIC ON
 		AUTOUIC_SEARCH_PATHS "${PROJECT_SOURCE_DIR};${PROJECT_SOURCE_DIR}/ui"
-		AUTOMOC TRUE
-		AUTORCC TRUE
+		AUTOMOC ON
+		AUTORCC ON
 		AUTOGEN_BUILD_DIR "${PROJECT_BINARY_DIR}/generated"
-		AUTOGEN_SOURCE_GROUP "Qt/GEN"
-		AUTOMOC_SOURCE_GROUP "Qt/MOC"
-		AUTORCC_SOURCE_GROUP "Qt/RCC"
 	)
 endif()
 
-# Clang Tools
-if(${PREFIX}ENABLE_CLANG AND HAVE_CLANG)
+################################################################################
+# Extra Tools
+################################################################################
+
+# Clang
+is_feature_enabled(CLANG T_CHECK)
+if(T_CHECK AND HAVE_CLANG)
 	generate_compile_commands_json(
 		TARGETS ${PROJECT_NAME}
 	)
@@ -1387,114 +1480,12 @@ if(${PREFIX}ENABLE_CLANG AND HAVE_CLANG)
 	)
 endif()
 
-# Signing
-if(${PREFIX}SIGN_ENABLED)
-	# Investigate: https://github.com/Monetra/mstdlib/blob/master/CMakeModules/CodeSign.cmake
-	if(MSVC) 
-		find_program(${PREFIX}SIGN_TOOL
-			NAMES "signtool"
-			DOC "Path to the signing tool."
-			REQUIRED
-		)
-		
-		if(${PREFIX}SIGN_TOOL)
-			message(STATUS "${PROJECT_NAME}: Signing enabled")
-			add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-				COMMAND ${${PREFIX}SIGN_TOOL}
-				ARGS sign /p "${${PREFIX}SIGN_PASSWORD}" /f "${${PREFIX}SIGN_KEY}" $<TARGET_FILE:${PROJECT_NAME}>
-			)
-		endif()
-	endif()
-endif()
-
 ################################################################################
 # Installation
 ################################################################################
 
 if(${PREFIX}OBS_NATIVE)
+	# Grouped builds don't offer standalone services.
 	install_obs_plugin_with_data(${PROJECT_NAME} data)
 else()
-	# Packaging
-	if("${CMAKE_PACKAGE_SUFFIX_OVERRIDE}" STREQUAL "")
-		set(_PACKAGE_SUFFIX_OVERRIDE "${VERSION_STRING}")
-	else()
-		set(_PACKAGE_SUFFIX_OVERRIDE "${CMAKE_PACKAGE_SUFFIX_OVERRIDE}")
-	endif()
-	set(_PACKAGE_FULL_NAME "${CMAKE_PACKAGE_PREFIX}/${CMAKE_PACKAGE_NAME}-${_PACKAGE_SUFFIX_OVERRIDE}")
-
-	if(UNIX_LOCAL_STRUCTURE)
-		install(
-			TARGETS ${PROJECT_NAME}
-			RUNTIME DESTINATION "./plugins/${PROJECT_NAME}/bin/${BITS}bit/" COMPONENT Runtime
-			LIBRARY DESTINATION "./plugins/${PROJECT_NAME}/bin/${BITS}bit/" COMPONENT Runtime		
-		)
-
-		install(
-			DIRECTORY "data/"
-			DESTINATION "./plugins/${PROJECT_NAME}/data/"
-		)
-		
-		add_custom_target(
-			PACKAGE_7Z
-			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.7z" --format=7zip --
-				"${CMAKE_INSTALL_PREFIX}/plugins/${PROJECT_NAME}"
-			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
-		)
-		add_custom_target(
-			PACKAGE_ZIP
-			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.zip" --format=zip --
-				"${CMAKE_INSTALL_PREFIX}/plugins/${PROJECT_NAME}"
-			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
-		)
-	else()
-		install(
-			TARGETS ${PROJECT_NAME}
-			RUNTIME DESTINATION "./obs-plugins/${BITS}bit/" COMPONENT Runtime
-			LIBRARY DESTINATION "./obs-plugins/${BITS}bit/" COMPONENT Runtime
-		)
-		if(MSVC)
-			install(
-				FILES $<TARGET_PDB_FILE:${PROJECT_NAME}>
-				DESTINATION "./obs-plugins/${BITS}bit/"
-				OPTIONAL
-			)
-		endif()
-	
-		install(
-			DIRECTORY "data/"
-			DESTINATION "./data/obs-plugins/${PROJECT_NAME}/"
-		)
-		
-		add_custom_target(
-			PACKAGE_7Z
-			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.7z" --format=7zip --
-				"${CMAKE_INSTALL_PREFIX}/obs-plugins"
-				"${CMAKE_INSTALL_PREFIX}/data"
-			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
-		)
-		add_custom_target(
-			PACKAGE_ZIP
-			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.zip" --format=zip --
-				"${CMAKE_INSTALL_PREFIX}/obs-plugins"
-				"${CMAKE_INSTALL_PREFIX}/data"
-			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
-		)
-		
-		# Windows
-		if(WIN32)
-			## Installer (InnoSetup)
-			get_filename_component(ISS_FILES_DIR "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
-			file(TO_NATIVE_PATH "${ISS_FILES_DIR}" ISS_FILES_DIR)
-			get_filename_component(ISS_PACKAGE_DIR "${CMAKE_PACKAGE_PREFIX}" ABSOLUTE)
-			file(TO_NATIVE_PATH "${ISS_PACKAGE_DIR}" ISS_PACKAGE_DIR)
-			get_filename_component(ISS_SOURCE_DIR "${PROJECT_SOURCE_DIR}" ABSOLUTE)
-			file(TO_NATIVE_PATH "${ISS_SOURCE_DIR}" ISS_SOURCE_DIR)
-			get_filename_component(ISS_MSVCHELPER_PATH "${msvc-redist-helper_BUILD_DIR}" ABSOLUTE)
-			file(TO_NATIVE_PATH "${ISS_MSVCHELPER_PATH}" ISS_MSVCHELPER_PATH)
-			configure_file(
-				"templates/installer.iss.in"
-				"${PROJECT_BINARY_DIR}/installer.iss"
-			)
-		endif()
-	endif()	
 endif()
