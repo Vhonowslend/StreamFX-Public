@@ -100,11 +100,38 @@ vec3 sort3(vec2 p, int c){
   vec3 c1 = sort2(p,c), c2 = sort2(p+vec2( (c==1)?SFT:-SFT, 0.) , c);
   return compare(c1, c2, c);   
 }
+
+// More levels of sorts, just comment out until desired level and then replace sort3 underneath with desired level
+
+// vec3 sort4(vec2 p, int c){
+//   vec3 c1 = sort3(p,c), c2 = sort3(p+vec2( (c==1)?SFT:-SFT, 0.) , c);
+//   return compare(c1, c2, c);      
+// }
+// vec3 sort5(vec2 p, int c){
+//   vec3 c1 = sort4(p,c), c2 = sort4(p+vec2( (c==1)?SFT:-SFT, 0.) , c);
+//   return compare(c1, c2, c);      
+// }
+// vec3 sort6(vec2 p, int c){
+//   vec3 c1 = sort5(p,c), c2 = sort5(p+vec2( (c==1)?SFT:-SFT, 0.) , c);
+//   return compare(c1, c2, c);      
+// }
+// vec3 sort7(vec2 p, int c){
+//   vec3 c1 = sort6(p,c), c2 = sort6(p+vec2( (c==1)?SFT:-SFT, 0.) , c);
+//   return compare(c1, c2, c);      
+// }
+// vec3 sort8(vec2 p, int c){
+//   vec3 c1 = sort7(p,c), c2 = sort7(p+vec2( (c==1)?SFT:-SFT, 0.) , c);
+//   return compare(c1, c2, c);      
+// }
+// vec3 sort9(vec2 p, int c){
+//   vec3 c1 = sort8(p,c), c2 = sort8(p+vec2( (c==1)?SFT:-SFT, 0.) , c);
+//   return compare(c1, c2, c);      
+// }
 void mainImage( out vec4 fragColor, in vec2 fragCoord ){
     
     vec2 p = vec2(floor(fragCoord.x),floor(fragCoord.y)); //vec2 p = fragCoord.xy;
     int cnd = ( odd(p.x) ^ odd(iTime*50.) )? 1: 0;//condition
-    vec3 c = sort3(p, cnd);
+    vec3 c = sort3(p, cnd); //replace sort3 with different level if wanted
     fragColor = vec4(c, 1.0);
 }
 
