@@ -1,0 +1,136 @@
+// Broken Pixelsort by vladstorm
+// https://www.shadertoy.com/view/XlfSzr
+
+#define vec2 float2
+#define vec3 float3
+#define vec4 float4
+#define ivec2 int2
+#define ivec3 int3
+#define ivec4 int4
+#define mat2 float2x2
+#define mat3 float3x3
+#define mat4 float4x4
+#define fract frac
+#define mix lerp
+#define iTime Time.x
+#define iResolution ViewSize
+
+uniform float2 mouse<
+	string name = "Virtual Mouse Coordinates";
+	string field_type = "slider";
+	float2 minimum = {0, 0};
+	float2 maximum = {100., 100.};
+	float2 scale = {.01, .01};
+	float2 step = {.01, .01};
+> = {0., 0.};
+
+uniform float4x4 ViewProj<
+	bool automatic = true;
+>;
+
+uniform bool direction<
+	string name = "Invert Direction";
+> = true;
+
+uniform float4 Time<
+	bool automatic = true;
+>;
+
+uniform float4 ViewSize<
+	bool automatic = true;
+>;
+
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+
+uniform float4x4 Random <
+	bool visible = false;	
+	string name = "Random Array";
+	string description = "A float4x4 value containing random values between 0 and 1";
+>;
+
+uniform float4x4 Random <
+	bool automatic = true;
+>;
+
+sampler_state def_sampler {
+    AddressU  = Clamp;
+    AddressV  = Clamp;
+    Filter    = Linear;
+};
+
+int2 iMouse() {
+	return int2(mouse.x * ViewSize.x, mouse.y * ViewSize.y);
+}
+
+/*ps start*/
+
+#define SFT 5.
+
+vec3 prev(vec2 p) {
+    
+    if( p.x>=iResolution.x || p.y>=iResolution.y) 	return vec3(1.,1.,1.);
+    if( p.x<0. || p.y<0.) 							return vec3(0.,0.,0.);    
+    return InputA.Sample(def_sampler, (p+.5)/iResolution.xy).rgb;    
+    
+}
+
+bool odd(float x) { return (fmod(x, 2.0) < 1.0); }
+float cv(vec3 c){ return c.r+c.g+c.b; } //color value
+
+vec3 compare(vec3 c1, vec3 c2, int c){
+  if(c==1) return (cv(c1) < cv(c2)) ? c1: c2*.5;
+  else     return (cv(c1) > cv(c2)) ? c1: c2*.5;
+}
+
+vec3 sort0(vec2 p, int c){
+  vec3 c1 = prev(p), c2 = prev(p +vec2( (c==1)?SFT:-SFT, 0.) );
+  return compare(c1, c2, c);      
+}
+vec3 sort1(vec2 p, int c){
+  vec3 c1 = sort0(p,c), c2 = sort0(p+vec2( (c==1)?SFT:-SFT, 0.) , c);
+  return compare(c1, c2, c);      
+}
+vec3 sort2(vec2 p, int c){
+  vec3 c1 = sort1(p,c), c2 = sort1(p+vec2( (c==1)?SFT:-SFT, 0.) , c);
+  return compare(c1, c2, c);      
+}
+vec3 sort3(vec2 p, int c){
+  vec3 c1 = sort2(p,c), c2 = sort2(p+vec2( (c==1)?SFT:-SFT, 0.) , c);
+  return compare(c1, c2, c);   
+}
+void mainImage( out vec4 fragColor, in vec2 fragCoord ){
+    
+    vec2 p = vec2(floor(fragCoord.x),floor(fragCoord.y)); //vec2 p = fragCoord.xy;
+    int cnd = ( odd(p.x) ^ odd(iTime*50.) )? 1: 0;//condition
+    vec3 c = sort3(p, cnd);
+    fragColor = vec4(c, 1.0);
+}
+
+/*ps end*/
+
+struct VertFragData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertFragData VSDefault(VertFragData vtx) {
+	vtx.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
+	return vtx;
+}
+
+float4 PSDefault(VertFragData vtx) : TARGET {
+	float4 col = float4(1., 1., 1., 1.);
+	mainImage(col, vtx.uv * ViewSize.xy);
+	return col;
+}
+
+technique Draw 
+{
+	pass
+	{
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSDefault(vtx); 
+	}
+}
