@@ -1,0 +1,130 @@
+// PIXELATE by Necromurlok
+// https://www.shadertoy.com/view/ltKXzK
+
+#define vec2 float2
+#define vec3 float3
+#define vec4 float4
+#define ivec2 int2
+#define ivec3 int3
+#define ivec4 int4
+#define mat2 float2x2
+#define mat3 float3x3
+#define mat4 float4x4
+#define fract frac
+#define mix lerp
+#define iTime Time.x
+#define iResolution ViewSize
+
+uniform float2 mouse<
+	string name = "Virtual Mouse Coordinates";
+	string field_type = "slider";
+	float2 minimum = {0, 0};
+	float2 maximum = {100., 100.};
+	float2 scale = {.01, .01};
+	float2 step = {.01, .01};
+> = {0., 0.};
+
+uniform float4x4 ViewProj<
+	bool automatic = true;
+>;
+
+uniform bool direction<
+	string name = "Invert Direction";
+> = true;
+
+uniform float4 Time<
+	bool automatic = true;
+>;
+
+uniform float4 ViewSize<
+	bool automatic = true;
+>;
+
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+
+uniform float4x4 Random <
+	bool visible = false;	
+	string name = "Random Array";
+	string description = "A float4x4 value containing random values between 0 and 1";
+>;
+
+uniform float4x4 Random <
+	bool automatic = true;
+>;
+
+sampler_state def_sampler {
+    AddressU  = Clamp;
+    AddressV  = Clamp;
+    Filter    = Linear;
+};
+
+int2 iMouse() {
+	return int2(mouse.x * ViewSize.x, mouse.y * ViewSize.y);
+}
+
+/*ps start*/
+
+#define PIXELS_PER_LED 22.0
+#define LED_INTENSITY 15.0
+#define VIGNET_INTENSITY 0.0
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+	vec2 uv = (fragCoord.xy + 0.5) / iResolution.xy;
+    
+#ifdef INTERFERENCES
+    float interference = fract((uv.y + iTime * INTERFERENCE_SPEED) * INTERFERENCES);
+    uv.y -= step(INTERFERENCE_SIZE, interference - uv.y) * INTERFERENCE_SIZE;
+    
+    
+#endif    
+          
+    vec2 txSize = vec2(1.0 / PIXELS_PER_LED, 1.0 / PIXELS_PER_LED);
+    vec2 cell = floor(uv * PIXELS_PER_LED) * txSize;
+    vec2 txCenter = cell + txSize * 0.5;
+    vec2 d2LED = (uv - txCenter);    
+    float intensity = pow(1.0 - smoothstep(0.0, txSize.x, length(d2LED)), 1.0 / LED_INTENSITY);
+    
+    vec2 dCenter = uv - 0.5;
+    float vignet = pow(1.0 - length(dCenter), VIGNET_INTENSITY);
+
+#ifdef CHROMATIC_ABERRATION    
+    vec4 col;
+    dCenter *= CHROMATIC_ABERRATION * vignet;
+    col.r = InputA.Sample(def_sampler, txCenter).r;
+    col.g = InputA.Sample(def_sampler, txCenter + dCenter).g;
+    col.b = InputA.Sample(def_sampler, txCenter + dCenter * 2.0).b;
+    fragColor = col * intensity * vignet;
+#else            
+    fragColor = InputA.Sample(def_sampler, txCenter) * intensity * vignet;
+#endif
+}
+
+/*ps end*/
+
+struct VertFragData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertFragData VSDefault(VertFragData vtx) {
+	vtx.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
+	return vtx;
+}
+
+float4 PSDefault(VertFragData vtx) : TARGET {
+	float4 col = float4(1., 1., 1., 1.);
+	mainImage(col, vtx.uv * ViewSize.xy);
+	return col;
+}
+
+technique Draw 
+{
+	pass
+	{
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSDefault(vtx); 
+	}
+}
