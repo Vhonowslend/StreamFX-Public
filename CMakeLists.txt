@@ -20,10 +20,10 @@ cmake_minimum_required(VERSION 3.8...3.12)
 
 # Automatic Versioning
 set(VERSION_MAJOR 0)
-set(VERSION_MINOR 9)
+set(VERSION_MINOR 10)
 set(VERSION_PATCH 0)
 set(VERSION_TWEAK 0)
-set(VERSION_SUFFIX "")
+set(VERSION_SUFFIX "a")
 if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
 	set(GIT_RESULT "")
 	set(GIT_OUTPUT "")
