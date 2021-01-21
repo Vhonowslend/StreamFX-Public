@@ -156,6 +156,9 @@ void streamfx::ui::handler::on_obs_loaded()
 		_about_dialog->show();
 		have_shown_about_streamfx(true);
 	}
+
+	// Let the Updater start its work.
+	this->_updater->obs_ready();
 }
 
 void streamfx::ui::handler::on_action_report_issue(bool)
