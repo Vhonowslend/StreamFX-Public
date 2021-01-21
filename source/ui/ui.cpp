@@ -78,55 +78,16 @@ streamfx::ui::handler::handler()
 
 	  _link_website(), _link_discord(), _link_github(),
 
-	  _about_action(), _about_dialog()
+	  _about_action(), _about_dialog(),
+
+	  _translator(), _updater()
 {
-	// Qt Resources and Translators
-	qt_init_resource();
-	QCoreApplication::installTranslator(new streamfx::ui::translator(this));
-
-	// Handle all frontend events.
 	obs_frontend_add_event_callback(frontend_event_handler, this);
-
-	// Build StreamFX menu.
-	_menu = new QMenu(reinterpret_cast<QWidget*>(obs_frontend_get_main_window()));
-
-	{ // Github Issues
-		//_menu->addSeparator();
-		_report_issue = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_report_issue.data())));
-		_request_help = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_request_help.data())));
-		connect(_report_issue, &QAction::triggered, this, &streamfx::ui::handler::on_action_report_issue);
-		connect(_request_help, &QAction::triggered, this, &streamfx::ui::handler::on_action_request_help);
-	}
-
-	{ // Official Links
-		_menu->addSeparator();
-		_link_website = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_website.data())));
-		_link_discord = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_discord.data())));
-		_link_github  = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_github.data())));
-		connect(_link_website, &QAction::triggered, this, &streamfx::ui::handler::on_action_website);
-		connect(_link_discord, &QAction::triggered, this, &streamfx::ui::handler::on_action_discord);
-		connect(_link_github, &QAction::triggered, this, &streamfx::ui::handler::on_action_github);
-	}
-
-#ifdef ENABLE_UPDATER
-	_updater = streamfx::ui::updater::instance(_menu);
-#endif
-
-	{ // About StreamFX
-		_about_dialog = new streamfx::ui::about();
-		_menu->addSeparator();
-		_about_action = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_about.data())));
-		connect(_about_action, &QAction::triggered, this, &streamfx::ui::handler::on_action_about);
-	}
 }
 
 streamfx::ui::handler::~handler()
 {
-	// Handle all frontend events.
 	obs_frontend_remove_event_callback(frontend_event_handler, this);
-
-	// Qt Resources and Translators
-	qt_cleanup_resource();
 }
 
 void streamfx::ui::handler::frontend_event_handler(obs_frontend_event event, void* private_data)
@@ -136,6 +97,9 @@ void streamfx::ui::handler::frontend_event_handler(obs_frontend_event event, voi
 	case OBS_FRONTEND_EVENT_FINISHED_LOADING:
 		ptr->on_obs_loaded();
 		break;
+	case OBS_FRONTEND_EVENT_EXIT:
+		ptr->on_obs_exit();
+		break;
 	default:
 		break;
 	}
@@ -143,6 +107,53 @@ void streamfx::ui::handler::frontend_event_handler(obs_frontend_event event, voi
 
 void streamfx::ui::handler::on_obs_loaded()
 {
+	// Initialize the required Qt resources.
+	qt_init_resource();
+
+	// Add our own translation helper to the Qt Application.
+	_translator = new streamfx::ui::translator(this);
+	QCoreApplication::installTranslator(_translator);
+
+	// Create the 'About StreamFX' dialog.
+	_about_dialog = new streamfx::ui::about();
+
+	{ // Create and build the StreamFX menu
+		_menu = new QMenu(reinterpret_cast<QWidget*>(obs_frontend_get_main_window()));
+
+		// Report an Issue
+		_report_issue = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_report_issue.data())));
+		connect(_report_issue, &QAction::triggered, this, &streamfx::ui::handler::on_action_report_issue);
+
+		// Request help
+		_request_help = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_request_help.data())));
+		connect(_request_help, &QAction::triggered, this, &streamfx::ui::handler::on_action_request_help);
+
+		_menu->addSeparator();
+
+		// Website
+		_link_website = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_website.data())));
+		connect(_link_website, &QAction::triggered, this, &streamfx::ui::handler::on_action_website);
+
+		// Discord
+		_link_discord = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_discord.data())));
+		connect(_link_discord, &QAction::triggered, this, &streamfx::ui::handler::on_action_discord);
+
+		// Github
+		_link_github = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_github.data())));
+		connect(_link_github, &QAction::triggered, this, &streamfx::ui::handler::on_action_github);
+
+		// Create the updater.
+#ifdef ENABLE_UPDATER
+		_updater = streamfx::ui::updater::instance(_menu);
+#endif
+
+		_menu->addSeparator();
+
+		// About
+		_about_action = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_about.data())));
+		connect(_about_action, &QAction::triggered, this, &streamfx::ui::handler::on_action_about);
+	}
+
 	// Add an actual Menu entry.
 	QMainWindow* main_widget = reinterpret_cast<QMainWindow*>(obs_frontend_get_main_window());
 	_menu_action             = new QAction(main_widget);
@@ -159,6 +170,15 @@ void streamfx::ui::handler::on_obs_loaded()
 
 	// Let the Updater start its work.
 	this->_updater->obs_ready();
+}
+
+void streamfx::ui::handler::on_obs_exit()
+{
+	// Remove translator.
+	QCoreApplication::removeTranslator(_translator);
+
+	// Clean up any Qt resources we added.
+	qt_cleanup_resource();
 }
 
 void streamfx::ui::handler::on_action_report_issue(bool)
