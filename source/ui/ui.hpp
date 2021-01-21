@@ -46,6 +46,8 @@ namespace streamfx::ui {
 		QAction*   _about_action;
 		ui::about* _about_dialog;
 
+		QTranslator* _translator;
+
 #ifdef ENABLE_UPDATER
 		std::shared_ptr<streamfx::ui::updater> _updater;
 #endif
@@ -60,6 +62,7 @@ namespace streamfx::ui {
 		static void frontend_event_handler(obs_frontend_event event, void* private_data);
 
 		void on_obs_loaded();
+		void on_obs_exit();
 
 		public slots:
 		; // Not having this breaks some linters.
