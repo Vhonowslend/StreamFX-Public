@@ -176,14 +176,6 @@ streamfx::ui::updater::updater(QMenu* menu)
 													   std::placeholders::_1, std::placeholders::_2));
 		_updater->events.refreshed.add(
 			std::bind(&streamfx::ui::updater::on_updater_refreshed, this, std::placeholders::_1));
-		if (_updater->automation()) {
-			if (_updater->gdpr()) {
-				_updater->refresh();
-			} else {
-				create_gdpr_box();
-				_gdpr->exec();
-			}
-		}
 
 		// Sync with updater information.
 		emit autoupdate_changed(_updater->automation());
@@ -211,6 +203,18 @@ void streamfx::ui::updater::on_updater_refreshed(streamfx::updater&)
 		return;
 
 	emit update_detected();
+}
+
+void streamfx::ui::updater::obs_ready()
+{
+	if (_updater->automation()) {
+		if (_updater->gdpr()) {
+			_updater->refresh();
+		} else {
+			create_gdpr_box();
+			_gdpr->exec();
+		}
+	}
 }
 
 void streamfx::ui::updater::on_channel_changed(streamfx::update_channel channel)
