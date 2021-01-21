@@ -90,6 +90,8 @@ namespace streamfx::ui {
 		void on_updater_channel_changed(streamfx::updater&, streamfx::update_channel);
 		void on_updater_refreshed(streamfx::updater&);
 
+		void obs_ready();
+
 		signals:
 		; // Needed by some linters.
 
