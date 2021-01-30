@@ -85,12 +85,12 @@ mirror_instance::~mirror_instance()
 
 uint32_t mirror_instance::get_width()
 {
-	return _source_size.first;
+	return _source_size.first ? _source_size.first : 1;
 }
 
 uint32_t mirror_instance::get_height()
 {
-	return _source_size.second;
+	return _source_size.second ? _source_size.second : 1;
 }
 
 void mirror_instance::load(obs_data_t* data)
