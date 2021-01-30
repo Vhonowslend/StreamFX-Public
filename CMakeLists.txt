@@ -364,17 +364,15 @@ if(NOT TARGET libobs)
 				DOWNLOAD_NAME "libobs.7z"
 				DOWNLOAD_NO_PROGRESS ON
 				UPDATE_DISCONNECTED ON
-				QUIET
 			)
 
 			download_project(
 				PROJ obsdeps
-				URL https://cdn.xaymar.com/obs/dependencies_${OBS_DEPENDENCIES_VERSION}.7z
+				URL https://github.com/Xaymar/obs-studio/releases/download/${OBS_DEPENDENCIES_VERSION}/dependencies.7z
 				URL_HASH "${OBS_DEPENDENCIES_HASH}"
 				DOWNLOAD_NAME "obsdeps.7z"
 				DOWNLOAD_NO_PROGRESS ON
 				UPDATE_DISCONNECTED ON
-				QUIET
 			)
 		elseif(UNIX)
 			# Unix, Linux
@@ -388,7 +386,6 @@ if(NOT TARGET libobs)
 				DOWNLOAD_NAME "libobs.7z"
 				DOWNLOAD_NO_PROGRESS ON
 				UPDATE_DISCONNECTED ON
-				QUIET
 			)
 
 			# Dependencies must be installed like normal OBS Studio
@@ -425,12 +422,11 @@ if(NOT TARGET libobs)
 			if(WIN32)
 				download_project(
 					PROJ qt
-					URL https://cdn.xaymar.com/obs/qt_${OBS_QT_VERSION}.7z
+					URL https://github.com/Xaymar/obs-studio/releases/download/${OBS_DEPENDENCIES_VERSION}/qt_${OBS_QT_VERSION}.7z
 					URL_HASH "${OBS_QT_HASH}"
 					DOWNLOAD_NAME "qt.7z"
 					DOWNLOAD_NO_PROGRESS ON
 					UPDATE_DISCONNECTED ON
-					QUIET
 				)
 
 				set(Qt5_DIR "${qt_SOURCE_DIR}" CACHE STRING "Path to Qt5")
