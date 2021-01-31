@@ -18,53 +18,116 @@
 # CMake Setup
 cmake_minimum_required(VERSION 3.8...3.12)
 
-# Automatic Versioning
+################################################################################
+# Build Type
+################################################################################
+
+# Detect if we are building by ourselves or as part of something else.
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
+	set(STANDALONE ON)
+	set(GROUPED OFF)
+	set(PREFIX "")
+else()
+	set(STANDALONE OFF)
+	set(GROUPED ON)
+	set(PREFIX "StreamFX_")
+endif()
+set(LOGPREFIX "StreamFX:")
+
+################################################################################
+# Versioning
+################################################################################
+
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 10)
 set(VERSION_PATCH 0)
 set(VERSION_TWEAK 0)
 set(VERSION_SUFFIX "a")
-if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
-	set(GIT_RESULT "")
-	set(GIT_OUTPUT "")
+set(VERSION_COMMIT "00000000")
 
-	# Get commit index
-	execute_process(
-		COMMAND git rev-list --count --topo-order ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}${VERSION_SUFFIX}..HEAD
-		WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-		RESULT_VARIABLE GIT_RESULT
-		OUTPUT_VARIABLE GIT_OUTPUT
-		OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE ERROR_QUIET
+# Check if we are in a git repository.
+if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
+	# Try and figure out where git is.
+	find_program(GIT git
+		PATHS
+			/bin
+			/sbin
+			/usr/bin
+			/usr/local/bin
 	)
-	if(GIT_RESULT EQUAL 0)
-		set(VERSION_TWEAK ${GIT_OUTPUT})
-	endif()
-	
-	# Get commit hash
-	execute_process(
-		COMMAND git rev-parse --short=8 HEAD
-		WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-		RESULT_VARIABLE GIT_RESULT
-		OUTPUT_VARIABLE GIT_OUTPUT
-		OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE ERROR_QUIET
-	)
-	if(GIT_RESULT EQUAL 0)
-		set(VERSION_COMMIT ${GIT_OUTPUT})
-	else()
-		set(VERSION_COMMIT "")
+
+	if(GIT)
+		set(GIT_RESULT)
+		set(GIT_OUTPUT)
+		set(GIT_ERROR)
+
+		execute_process(
+			COMMAND "${GIT}" describe --tags --match "[0-9]*.[0-9]*.[0-9]*" --abbrev=8 HEAD
+			WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+			RESULT_VARIABLE GIT_RESULT
+			OUTPUT_VARIABLE GIT_OUTPUT
+			ERROR_VARIABLE GIT_ERROR
+			OUTPUT_STRIP_TRAILING_WHITESPACE
+			ERROR_STRIP_TRAILING_WHITESPACE
+			ERROR_QUIET
+		)
+
+		if(GIT_RESULT EQUAL 0)
+			string(REPLACE "-" "." GIT_OUTPUT "${GIT_OUTPUT}")
+			string(REPLACE "." ";" GIT_OUTPUT "${GIT_OUTPUT}")
+
+			# Parse Version
+			list(GET GIT_OUTPUT 0 VERSION_MAJOR)
+			list(GET GIT_OUTPUT 1 VERSION_MINOR)
+			list(GET GIT_OUTPUT 2 VERSION_PATCH)
+			list(GET GIT_OUTPUT 3 VERSION_BUILD)
+			list(GET GIT_OUTPUT 4 VERSION_COMMIT)
+
+			# Patch needs additional parsing.
+			# This may be a [0-9]*[a-z]*[0-9]+ string.
+			string(REGEX MATCHALL "([0-9]+)([a-z0-9]+)" T_MATCHES "${VERSION_PATCH}")
+			set(VERSION_PATCH "${CMAKE_MATCH_1}")
+			if(CMAKE_MATCH_2)
+				set(VERSION_SUFFIX "${CMAKE_MATCH_2}")
+			endif()
+		else()
+			message(WARNING "${LOGPREFIX} Failed to detect version, using default instead.")
+		endif()
 	endif()
 endif()
+
+# Allow manual overrides of the detected version.
+set(${PREFIX}VERSION "" CACHE STRING "Override StreamFX version with this string. Format: /[0-9]{1,9}.[0-9]{1,9}.[0-9]{1,9}(|[a-z]{1,1}[0-9]{1,9})-[0-9]{1,9}-[0-9a-fA-F]{8,8}")
+if(${PREFIX}VERSION)
+	string(REPLACE "-" "." T_VERSION "${${PREFIX}VERSION}")
+	string(REPLACE "." ";" T_VERSION "${T_VERSION}")
+
+	# Parse Version
+	list(GET GIT_OUTPUT 0 VERSION_MAJOR)
+	list(GET GIT_OUTPUT 1 VERSION_MINOR)
+	list(GET GIT_OUTPUT 2 VERSION_PATCH)
+	list(GET GIT_OUTPUT 3 VERSION_BUILD)
+	list(GET GIT_OUTPUT 4 VERSION_COMMIT)
+endif()
+
+# Generate Version String
 if(VERSION_COMMIT)
 	set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}${VERSION_SUFFIX}-${VERSION_COMMIT}")
 else()
 	set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}${VERSION_SUFFIX}")
 endif()
 
-# Define Project
+# Log the detected version.
+message(STATUS "${LOGPREFIX} Version ${VERSION_STRING}")
+
+################################################################################
+# Project
+################################################################################
 project(
 	StreamFX
 	VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}
 )
+
 set(PROJECT_FULL_NAME "StreamFX for OBS Studio")
 set(PROJECT_DESCRIPTION "Better Production Quality, for free.")
 set(PROJECT_AUTHORS "Michael Fabian 'Xaymar' Dirks <info@xaymar.com>")
