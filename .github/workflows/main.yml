@@ -92,24 +92,9 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        ubuntu: [ bionic, focal ]
+        ubuntu: [ focal ]
         compiler: [ gcc, clang ]
         include:
-          - ubuntu: bionic
-            compiler: gcc
-            compiler-cxx: g++
-            runner: ubuntu-18.04
-            packages: gcc-8 g++8
-            extra_command: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
-            id: ubuntu-18.04
-          - ubuntu: bionic
-            compiler: clang
-            compiler-cxx: clang++
-            compiler-version: 8
-            runner: ubuntu-18.04
-            packages: clang-8 clang-format-8 clang-tidy-8
-            extra_command: ""
-            id: ubuntu-18.04-clang
           - ubuntu: focal
             compiler: gcc
             compiler-cxx: g++
