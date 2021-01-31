@@ -318,6 +318,18 @@ set(${PREFIX}ENABLE_UPDATER ON CACHE BOOL "Enable automatic update checks.")
 set(${PREFIX}ENABLE_CLANG ON CACHE BOOL "Enable Clang integration for supported compilers.")
 set(${PREFIX}ENABLE_PROFILING OFF CACHE BOOL "Enable CPU and GPU performance tracking, which has a non-zero overhead at all times. Do not enable this for release builds.")
 
+# Installation / Packaging
+if(STANDALONE)
+	set(STRUCTURE_PLUGINMANAGER CACHE BOOL "Install for use in a Plugin Manager")
+	if(D_PLATFORM_LINUX)
+		set(STRUCTURE_PACKAGEMANAGER CACHE BOOL "Install for use in a Package Manager (system-wide installation)")
+	endif()
+
+	set(PACKAGE_PREFIX "${CMAKE_BINARY_DIR}" CACHE PATH "Where to place the packages?")
+	set(PACKAGE_NAME "{PROJECT_NAME}" CACHE STRING "What should the package be called?")
+	set(PACKAGE_SUFFIX "" CACHE STRING "Any suffix for the package name? (Defaults to the current version string)")
+endif()
+
 ################################################################################
 # Clang
 ################################################################################
@@ -1488,4 +1500,168 @@ if(${PREFIX}OBS_NATIVE)
 	# Grouped builds don't offer standalone services.
 	install_obs_plugin_with_data(${PROJECT_NAME} data)
 else()
+	if(STRUCTURE_PLUGINMANAGER)
+		install(
+			DIRECTORY "data/"
+			DESTINATION "data/"
+			FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+		)
+
+		if(D_PLATFORM_WINDOWS)
+			install(
+				TARGETS ${PROJECT_NAME}
+				RUNTIME DESTINATION "bin/windows-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
+				LIBRARY DESTINATION "bin/windows-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
+				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			)
+			if(MSVC)
+				install(
+					FILES $<TARGET_PDB_FILE:${PROJECT_NAME}>
+					DESTINATION "bin/windows-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/"
+					COMPONENT StreamFX
+					OPTIONAL
+				)
+			endif()
+		elseif(D_PLATFORM_LINUX)
+			install(
+				TARGETS ${PROJECT_NAME}
+				RUNTIME DESTINATION "bin/linux-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
+				LIBRARY DESTINATION "bin/linux-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
+				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			)
+		elseif(D_PLATFORM_MAC)
+			install(
+				TARGETS ${PROJECT_NAME}
+				RUNTIME DESTINATION "bin/mac-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
+				LIBRARY DESTINATION "bin/mac-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
+				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			)
+		endif()
+
+		install(
+			FILES LICENSE
+			DESTINATION "LICENSE"
+			COMPONENT StreamFX
+		)
+		install(
+			FILES icon.png
+			DESTINATION "icon.png"
+			COMPONENT StreamFX
+		)
+	elseif(D_PLATFORM_WINDOWS)
+		install(
+			TARGETS ${PROJECT_NAME}
+			RUNTIME DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
+			LIBRARY DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
+		)
+		install(
+			DIRECTORY "data/"
+			DESTINATION "data/obs-plugins/${PROJECT_NAME}/"
+		)
+		if(MSVC)
+			install(
+				FILES $<TARGET_PDB_FILE:${PROJECT_NAME}>
+				DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/"
+				OPTIONAL
+			)
+		endif()
+	elseif(D_PLATFORM_LINUX)
+		if(STRUCTURE_PACKAGEMANAGER)
+			install(
+				TARGETS ${PROJECT_NAME}
+				RUNTIME DESTINATION "lib/obs-plugins/" COMPONENT StreamFX
+				LIBRARY DESTINATION "lib/obs-plugins/" COMPONENT StreamFX
+				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			)
+			install(
+				DIRECTORY "data/"
+				DESTINATION "share/obs/obs-plugins/${PROJECT_NAME}"
+				COMPONENT StreamFX
+				FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+				DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			)
+		else()
+			install(
+				TARGETS ${PROJECT_NAME}
+				RUNTIME DESTINATION "plugins/${PROJECT_NAME}/bin/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
+				LIBRARY DESTINATION "plugins/${PROJECT_NAME}/bin/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
+				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			)
+			install(
+				DIRECTORY "data/"
+				DESTINATION "plugins/${PROJECT_NAME}/data/"
+				COMPONENT StreamFX
+				FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+				DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			)
+		endif()
+	elseif(D_PLATFORM_MAC)
+		install(
+			TARGETS ${PROJECT_NAME}
+			RUNTIME DESTINATION "Library/Application Support/obs-studio/plugins/${PROJECT_NAME}/bin/" COMPONENT StreamFX
+			LIBRARY DESTINATION "Library/Application Support/obs-studio/plugins/${PROJECT_NAME}/bin/" COMPONENT StreamFX
+			PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+		)
+		install(
+			DIRECTORY "data/"
+			DESTINATION "Library/Application Support/obs-studio/plugins/${PROJECT_NAME}/data/"
+			COMPONENT StreamFX
+			FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+		)
+	endif()
+endif()
+
+################################################################################
+# Packaging
+################################################################################
+
+if(NOT ${PREFIX}OBS_NATIVE)
+	# Packaging
+	if(NOT PACKAGE_SUFFIX)
+		set(_PACKAGE_SUFFIX_OVERRIDE "${VERSION_STRING}")
+	else()
+		set(_PACKAGE_SUFFIX_OVERRIDE "${PACKAGE_SUFFIX}")
+	endif()
+	set(_PACKAGE_FULL_NAME "${PACKAGE_PREFIX}/${PACKAGE_NAME}-${_PACKAGE_SUFFIX_OVERRIDE}")
+
+	if(STRUCTURE_PLUGINMANAGER)
+		add_custom_target(
+			PACKAGE_ZIP
+			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.obs" --format=zip --
+				"${CMAKE_INSTALL_PREFIX}/"
+			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
+		)
+	else()
+		add_custom_target(
+			PACKAGE_7Z
+			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.7z" --format=7zip --
+				"${CMAKE_INSTALL_PREFIX}/"
+			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
+		)
+		add_custom_target(
+			PACKAGE_ZIP
+			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.zip" --format=zip --
+				"${CMAKE_INSTALL_PREFIX}/"
+			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
+		)
+
+		# Windows
+		if(D_PLATFORM_WINDOWS)
+			## Installer (InnoSetup)
+			get_filename_component(ISS_FILES_DIR "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
+			file(TO_NATIVE_PATH "${ISS_FILES_DIR}" ISS_FILES_DIR)
+			get_filename_component(ISS_PACKAGE_DIR "${PACKAGE_PREFIX}" ABSOLUTE)
+			file(TO_NATIVE_PATH "${ISS_PACKAGE_DIR}" ISS_PACKAGE_DIR)
+			get_filename_component(ISS_SOURCE_DIR "${PROJECT_SOURCE_DIR}" ABSOLUTE)
+			file(TO_NATIVE_PATH "${ISS_SOURCE_DIR}" ISS_SOURCE_DIR)
+			get_filename_component(ISS_MSVCHELPER_PATH "${msvc-redist-helper_BUILD_DIR}" ABSOLUTE)
+			file(TO_NATIVE_PATH "${ISS_MSVCHELPER_PATH}" ISS_MSVCHELPER_PATH)
+			configure_file(
+				"templates/installer.iss.in"
+				"${PROJECT_BINARY_DIR}/installer.iss"
+			)
+		endif()
+	endif()
 endif()
