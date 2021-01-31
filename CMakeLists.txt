@@ -1630,20 +1630,20 @@ if(NOT ${PREFIX}OBS_NATIVE)
 		add_custom_target(
 			PACKAGE_ZIP
 			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.obs" --format=zip --
-				"${CMAKE_INSTALL_PREFIX}/"
+				"${CMAKE_INSTALL_PREFIX}/*"
 			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
 		)
 	else()
 		add_custom_target(
 			PACKAGE_7Z
 			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.7z" --format=7zip --
-				"${CMAKE_INSTALL_PREFIX}/"
+				"${CMAKE_INSTALL_PREFIX}/*"
 			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
 		)
 		add_custom_target(
 			PACKAGE_ZIP
 			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.zip" --format=zip --
-				"${CMAKE_INSTALL_PREFIX}/"
+				"${CMAKE_INSTALL_PREFIX}/*"
 			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
 		)
 
