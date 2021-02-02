@@ -1315,6 +1315,23 @@ if(REQUIRE_PART_SHADER)
 	)
 endif()
 
+# LUT
+if(REQUIRE_LUT)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/gfx/lut/gfx-lut.hpp"
+		"source/gfx/lut/gfx-lut.cpp"
+		"source/gfx/lut/gfx-lut-consumer.hpp"
+		"source/gfx/lut/gfx-lut-consumer.cpp"
+		"source/gfx/lut/gfx-lut-producer.hpp"
+		"source/gfx/lut/gfx-lut-producer.cpp"
+	)
+	list(APPEND PROJECT_DATA
+		"data/effects/lut.effect"
+		"data/effects/lut-consumer.effect"
+		"data/effects/lut-producer.effect"
+	)
+endif()
+
 # Windows
 if(D_PLATFORM_WINDOWS)
 	list(APPEND PROJECT_PRIVATE_SOURCE
