@@ -967,7 +967,9 @@ list(APPEND PROJECT_PRIVATE_SOURCE
 	"source/obs/obs-tools.cpp"
 )
 list(APPEND PROJECT_DATA
-	"data/effects/color-conversion.effect"
+	"data/effects/color_conversion_rgb_hsl.effect"
+	"data/effects/color_conversion_rgb_hsv.effect"
+	"data/effects/color_conversion_rgb_yuv.effect"
 	"data/effects/mipgen.effect"
 	"data/effects/pack-unpack.effect"
 	"data/effects/shared.effect"

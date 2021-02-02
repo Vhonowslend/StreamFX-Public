@@ -51,4 +51,6 @@ VertexData DefaultVertexShader(VertexData vtx) {
 //------------------------------------------------------------------------------
 // Color Conversion
 //------------------------------------------------------------------------------
-
+#include "color_conversion_rgb_yuv.effect"
+#include "color_conversion_rgb_hsv.effect"
+#include "color_conversion_rgb_hsl.effect"
