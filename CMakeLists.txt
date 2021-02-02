@@ -1110,6 +1110,7 @@ if(T_CHECK)
 	list(APPEND PROJECT_DEFINITIONS
 		ENABLE_FILTER_COLOR_GRADE
 	)
+	set(REQUIRE_LUT ON)
 endif()
 
 # Filter/Displacement

@@ -54,6 +54,14 @@
 #define ST_CORRECTION ST ".Correction"
 #define ST_CORRECTION_(x) ST_CORRECTION "." D_VSTR(x)
 
+#define ST_RENDERMODE ST ".RenderMode"
+#define ST_RENDERMODE_DIRECT ST_RENDERMODE ".Direct"
+#define ST_RENDERMODE_LUT_2BIT ST_RENDERMODE ".LUT.2Bit"
+#define ST_RENDERMODE_LUT_4BIT ST_RENDERMODE ".LUT.4Bit"
+#define ST_RENDERMODE_LUT_6BIT ST_RENDERMODE ".LUT.6Bit"
+#define ST_RENDERMODE_LUT_8BIT ST_RENDERMODE ".LUT.8Bit"
+#define ST_RENDERMODE_LUT_10BIT ST_RENDERMODE ".LUT.10Bit"
+
 #define RED Red
 #define GREEN Green
 #define BLUE Blue
@@ -76,35 +84,62 @@
 
 using namespace streamfx::filter::color_grade;
 
+// TODO: Figure out a way to merge _lut_rt, _lut_texture, _rt_source, _rt_grad, _tex_source, _tex_grade, _source_updated and _grade_updated.
+// Seriously this is too much GPU space wasted on unused trash.
+
+#define LOCAL_PREFIX "<filter::color-grade> "
+
 color_grade_instance::~color_grade_instance() {}
 
-color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self) : obs::source_instance(data, self)
+color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self)
+	: obs::source_instance(data, self), _effect(),
+
+	  _lift(), _gamma(), _gain(), _offset(), _tint_detection(), _tint_luma(), _tint_exponent(), _tint_low(),
+	  _tint_mid(), _tint_hig(), _correction(), _lut_enabled(true), _lut_depth(),
+
+	  _cache_rt(), _cache_texture(), _cache_fresh(false),
+
+	  _lut_initialized(false), _lut_dirty(true), _lut_producer(), _lut_consumer()
 {
-	{
-		auto file = streamfx::data_file_path("effects/color-grade.effect").u8string();
+	// Load the color grading effect.
+	auto path = streamfx::data_file_path("effects/color-grade.effect");
+	if (!std::filesystem::exists(path)) {
+		DLOG_ERROR(LOCAL_PREFIX "Failed to locate effect file '%s'.", path.u8string().c_str());
+		throw std::runtime_error("Failed to load color grade effect.");
+	} else {
 		try {
-			_effect = gs::effect::create(file);
-		} catch (std::runtime_error& ex) {
-			DLOG_ERROR("<filter-color-grade> Loading effect '%s' failed with error(s): %s", file.c_str(), ex.what());
+			_effect = gs::effect::create(path.u8string());
+		} catch (std::exception const& ex) {
+			DLOG_ERROR(LOCAL_PREFIX "Failed to load effect '%s': %s", path.u8string().c_str(), ex.what());
 			throw;
 		}
 	}
-	{
-		_rt_source = std::make_unique<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-		{
-			auto op = _rt_source->render(1, 1);
-		}
-		_tex_source = _rt_source->get_texture();
+
+	// Initialize LUT work flow.
+	try {
+		_lut_producer    = std::make_shared<gfx::lut::producer>();
+		_lut_consumer    = std::make_shared<gfx::lut::consumer>();
+		_lut_initialized = true;
+	} catch (std::exception const& ex) {
+		DLOG_WARNING(LOCAL_PREFIX "Failed to initialize LUT rendering, falling back to direct rendering.\n%s",
+					 ex.what());
+		_lut_initialized = false;
 	}
-	{
-		_rt_grade = std::make_unique<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-		{
-			auto op = _rt_grade->render(1, 1);
-		}
-		_tex_grade = _rt_grade->get_texture();
+
+	// Allocate render target for rendering.
+	try {
+		allocate_rendertarget(GS_RGBA);
+	} catch (std::exception const& ex) {
+		DLOG_ERROR(LOCAL_PREFIX "Failed to acquire render target for rendering: %s", ex.what());
+		throw;
 	}
 
 	update(data);
+}
+
+void color_grade_instance::allocate_rendertarget(gs_color_format format)
+{
+	_cache_rt = std::make_unique<gs::rendertarget>(format, GS_ZS_NONE);
 }
 
 float_t fix_gamma_value(double_t v)
@@ -157,86 +192,110 @@ void color_grade_instance::update(obs_data_t* data)
 	_correction.y   = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(SATURATION)) / 100.0);
 	_correction.z   = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(LIGHTNESS)) / 100.0);
 	_correction.w   = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(CONTRAST)) / 100.0);
-}
 
-void color_grade_instance::video_tick(float)
-{
-	_source_updated = false;
-	_grade_updated  = false;
-}
+	{
+		int64_t v = obs_data_get_int(data, ST_RENDERMODE);
 
-void color_grade_instance::video_render(gs_effect_t* effect)
-{
-	// Grab initial values.
-	obs_source_t* parent         = obs_filter_get_parent(_self);
-	obs_source_t* target         = obs_filter_get_target(_self);
-	uint32_t      width          = obs_source_get_base_width(target);
-	uint32_t      height         = obs_source_get_base_height(target);
-	gs_effect_t*  effect_default = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
+		// LUT status depends on selected option.
+		_lut_enabled = v != 0; // 0 (Direct)
 
-	// Skip filter if anything is wrong.
-	if (!parent || !target || !width || !height || !effect_default) {
-		obs_source_skip_video_filter(_self);
-		return;
+		if (v == -1) {
+			_lut_depth = gfx::lut::color_depth::_8;
+		} else if (v > 0) {
+			_lut_depth = static_cast<gfx::lut::color_depth>(v);
+		}
 	}
 
+	if (_lut_enabled && _lut_initialized)
+		_lut_dirty = true;
+}
+
+void color_grade_instance::prepare_effect()
+{
+	if (auto p = _effect.get_parameter("pLift"); p) {
+		p.set_float4(_lift);
+	}
+
+	if (auto p = _effect.get_parameter("pGamma"); p) {
+		p.set_float4(_gamma);
+	}
+
+	if (auto p = _effect.get_parameter("pGain"); p) {
+		p.set_float4(_gain);
+	}
+
+	if (auto p = _effect.get_parameter("pOffset"); p) {
+		p.set_float4(_offset);
+	}
+
+	if (auto p = _effect.get_parameter("pLift"); p) {
+		p.set_float4(_lift);
+	}
+
+	if (auto p = _effect.get_parameter("pTintDetection"); p) {
+		p.set_int(static_cast<int32_t>(_tint_detection));
+	}
+
+	if (auto p = _effect.get_parameter("pTintMode"); p) {
+		p.set_int(static_cast<int32_t>(_tint_luma));
+	}
+
+	if (auto p = _effect.get_parameter("pTintExponent"); p) {
+		p.set_float(_tint_exponent);
+	}
+
+	if (auto p = _effect.get_parameter("pTintLow"); p) {
+		p.set_float3(_tint_low);
+	}
+
+	if (auto p = _effect.get_parameter("pTintMid"); p) {
+		p.set_float3(_tint_mid);
+	}
+
+	if (auto p = _effect.get_parameter("pTintHig"); p) {
+		p.set_float3(_tint_hig);
+	}
+
+	if (auto p = _effect.get_parameter("pCorrection"); p) {
+		p.set_float4(_correction);
+	}
+}
+
+void color_grade_instance::rebuild_lut()
+{
 #ifdef ENABLE_PROFILING
-	gs::debug_marker gdmp{gs::debug_color_source, "Color Grading '%s'", obs_source_get_name(_self)};
+	gs::debug_marker gdm{gs::debug_color_cache, "Rebuild LUT"};
 #endif
 
-	if (!_source_updated) {
-#ifdef ENABLE_PROFILING
-		gs::debug_marker gdm{gs::debug_color_cache, "Cache"};
-#endif
+	// Generate a fresh LUT texture.
+	auto lut_texture = _lut_producer->produce(_lut_depth);
 
-		if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
-			auto op = _rt_source->render(width, height);
-			gs_blend_state_push();
-			gs_reset_blend_state();
-			gs_set_cull_mode(GS_NEITHER);
-			gs_enable_color(true, true, true, true);
-			gs_enable_blending(false);
-			gs_enable_depth_test(false);
-			gs_enable_stencil_test(false);
-			gs_enable_stencil_write(false);
-			gs_ortho(0, static_cast<float_t>(width), 0, static_cast<float_t>(height), -1., 1.);
-			obs_source_process_filter_end(_self, effect ? effect : effect_default, width, height);
-			gs_blend_state_pop();
+	// Modify the LUT with our color grade.
+	if (lut_texture) {
+		// Check if we have a render target to work with and if it's the correct format.
+		if (!_lut_rt || (lut_texture->get_color_format() != _lut_rt->get_color_format())) {
+			// Create a new render target with new format.
+			_lut_rt = std::make_unique<gs::rendertarget>(lut_texture->get_color_format(), GS_ZS_NONE);
 		}
 
-		_tex_source     = _rt_source->get_texture();
-		_source_updated = true;
-	}
+		// Prepare our color grade effect.
+		prepare_effect();
 
-	if (!_grade_updated) {
-#ifdef ENABLE_PROFILING
-		gs::debug_marker gdm{gs::debug_color_convert, "Calculate"};
-#endif
+		// Assign texture.
+		if (auto p = _effect.get_parameter("image"); p) {
+			p.set_texture(lut_texture);
+		}
 
-		{
-			auto op = _rt_grade->render(width, height);
+		{ // Begin rendering.
+			auto op = _lut_rt->render(lut_texture->get_width(), lut_texture->get_height());
+
+			// Set up graphics context.
+			gs_ortho(0, 1, 0, 1, 0, 1);
 			gs_blend_state_push();
-			gs_reset_blend_state();
-			gs_set_cull_mode(GS_NEITHER);
-			gs_enable_color(true, true, true, true);
 			gs_enable_blending(false);
-			gs_enable_depth_test(false);
+			gs_enable_color(true, true, true, true);
 			gs_enable_stencil_test(false);
 			gs_enable_stencil_write(false);
-			gs_ortho(0, 1, 0, 1, -1., 1.);
-
-			_effect.get_parameter("image").set_texture(_tex_source);
-			_effect.get_parameter("pLift").set_float4(_lift);
-			_effect.get_parameter("pGamma").set_float4(_gamma);
-			_effect.get_parameter("pGain").set_float4(_gain);
-			_effect.get_parameter("pOffset").set_float4(_offset);
-			_effect.get_parameter("pTintDetection").set_int(static_cast<int32_t>(_tint_detection));
-			_effect.get_parameter("pTintMode").set_int(static_cast<int32_t>(_tint_luma));
-			_effect.get_parameter("pTintExponent").set_float(_tint_exponent);
-			_effect.get_parameter("pTintLow").set_float3(_tint_low);
-			_effect.get_parameter("pTintMid").set_float3(_tint_mid);
-			_effect.get_parameter("pTintHig").set_float3(_tint_hig);
-			_effect.get_parameter("pCorrection").set_float4(_correction);
 
 			while (gs_effect_loop(_effect.get_object(), "Draw")) {
 				streamfx::gs_draw_fullscreen_tri();
@@ -245,21 +304,140 @@ void color_grade_instance::video_render(gs_effect_t* effect)
 			gs_blend_state_pop();
 		}
 
-		_tex_grade      = _rt_grade->get_texture();
-		_source_updated = true;
+		_lut_rt->get_texture(_lut_texture);
+		if (!_lut_texture) {
+			throw std::runtime_error("Failed to produce modified LUT texture.");
+		}
+	} else {
+		throw std::runtime_error("Failed to produce LUT texture.");
 	}
 
-	// Render final result.
-	{
+	_lut_dirty = false;
+}
+
+void color_grade_instance::video_tick(float)
+{
+	_ccache_fresh = false;
+	_cache_fresh  = false;
+}
+
+void color_grade_instance::video_render(gs_effect_t*)
+{
+	// Grab initial values.
+	obs_source_t* parent = obs_filter_get_parent(_self);
+	obs_source_t* target = obs_filter_get_target(_self);
+	uint32_t      width  = obs_source_get_base_width(target);
+	uint32_t      height = obs_source_get_base_height(target);
+
+	// Skip filter if anything is wrong.
+	if (!parent || !target || !width || !height) {
+		obs_source_skip_video_filter(_self);
+		return;
+	}
+
 #ifdef ENABLE_PROFILING
-		gs::debug_marker gdm{gs::debug_color_render, "Render"};
+	gs::debug_marker gdmp{gs::debug_color_source, "Color Grading '%s'", obs_source_get_name(_self)};
 #endif
 
+	// TODO: Optimize this once (https://github.com/obsproject/obs-studio/pull/4199) is merged.
+	// - We can skip the original capture and reduce the overall impact of this.
+
+	// 1. Capture the filter/source rendered above this.
+	if (!_ccache_fresh) {
+#ifdef ENABLE_PROFILING
+		gs::debug_marker gdmp{gs::debug_color_cache, "Cache '%s'", obs_source_get_name(target)};
+#endif
+		if (!_ccache_rt) {
+			_ccache_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+		}
+
+		{
+			auto op = _ccache_rt->render(width, height);
+			gs_ortho(0, static_cast<float_t>(width), 0, static_cast<float_t>(height), 0, 1);
+
+			obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING);
+			obs_source_process_filter_end(_self, obs_get_base_effect(OBS_EFFECT_DEFAULT), width, height);
+		}
+
+		_ccache_rt->get_texture(_ccache_texture);
+		if (!_ccache_texture) {
+			throw std::runtime_error("Failed to cache original source.");
+		}
+
+		_ccache_fresh = true;
+	}
+
+	// 2. Apply one of the two rendering methods (LUT or Direct).
+	if (_lut_initialized && _lut_enabled) {
+		try {
+#ifdef ENABLE_PROFILING
+			gs::debug_marker gdm{gs::debug_color_convert, "LUT Rendering"};
+#endif
+			if (_lut_dirty) {
+				rebuild_lut();
+				_cache_fresh = false;
+			}
+
+			if (!_cache_fresh) {
+				{ // Render the source to the cache.
+					auto op = _cache_rt->render(width, height);
+					gs_ortho(0, 1., 0, 1., 0, 1);
+
+					auto effect = _lut_consumer->prepare(_lut_depth, _lut_texture);
+					effect->get_parameter("image").set_texture(_ccache_texture);
+					while (gs_effect_loop(effect->get_object(), "Draw")) {
+						streamfx::gs_draw_fullscreen_tri();
+					}
+				}
+
+				_cache_rt->get_texture(_cache_texture);
+				_cache_fresh = true;
+			}
+		} catch (std::exception const& ex) {
+			_lut_rt.reset();
+			_lut_texture.reset();
+			_lut_enabled = false;
+			DLOG_WARNING(LOCAL_PREFIX "Reverting to direct rendering due to error: %s", ex.what());
+		}
+	}
+	if ((!_lut_initialized || !_lut_enabled) && !_cache_fresh) {
+#ifdef ENABLE_PROFILING
+		gs::debug_marker gdm{gs::debug_color_convert, "Direct Rendering"};
+#endif
+		// Reallocate the rendertarget if necessary.
+		if (_cache_rt->get_color_format() != GS_RGBA) {
+			allocate_rendertarget(GS_RGBA);
+		}
+
+		{ // Render the source to the cache.
+			auto op = _cache_rt->render(width, height);
+			gs_ortho(0, static_cast<float_t>(width), 0, static_cast<float_t>(height), 0, 1);
+			// TODO: Check if clearing things is required.
+
+			prepare_effect();
+			obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING);
+			obs_source_process_filter_end(_self, _effect.get_object(), width, height);
+		}
+
+		_cache_rt->get_texture(_cache_texture);
+		_cache_fresh = true;
+	}
+
+	if (!_cache_texture) {
+		throw std::runtime_error("Failed to cache processed source.");
+	}
+
+	// 3. Render the output cache.
+	{
+#ifdef ENABLE_PROFILING
+		gs::debug_marker gdm{gs::debug_color_cache_render, "Draw Cache"};
+#endif
 		auto shader = obs_get_base_effect(OBS_EFFECT_DEFAULT);
+
 		gs_enable_depth_test(false);
 		while (gs_effect_loop(shader, "Draw")) {
 			gs_effect_set_texture(gs_effect_get_param_by_name(shader, "image"),
-								  _tex_grade ? _tex_grade->get_object() : nullptr);
+								  _cache_texture ? _cache_texture->get_object() : nullptr);
 			gs_draw_sprite(nullptr, 0, width, height);
 		}
 	}
@@ -269,7 +447,7 @@ color_grade_factory::color_grade_factory()
 {
 	_info.id           = PREFIX "filter-color-grade";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
-	_info.output_flags = OBS_SOURCE_VIDEO;
+	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
 
 	set_resolution_enabled(false);
 	finish_setup();
@@ -318,6 +496,8 @@ void color_grade_factory::get_defaults2(obs_data_t* data)
 	obs_data_set_default_double(data, ST_CORRECTION_(SATURATION), 100.0);
 	obs_data_set_default_double(data, ST_CORRECTION_(LIGHTNESS), 100.0);
 	obs_data_set_default_double(data, ST_CORRECTION_(CONTRAST), 100.0);
+
+	obs_data_set_default_int(data, ST_RENDERMODE, -1);
 }
 
 obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* data)
@@ -433,6 +613,24 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 		}
 
 		obs_properties_add_float_slider(grp, ST_TINT_EXPONENT, D_TRANSLATE(ST_TINT_EXPONENT), 0., 10., 0.01);
+
+		{
+			auto p = obs_properties_add_list(grp, ST_RENDERMODE, D_TRANSLATE(ST_RENDERMODE), OBS_COMBO_TYPE_LIST,
+											 OBS_COMBO_FORMAT_INT);
+			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RENDERMODE)));
+			std::pair<const char*, int64_t> els[] = {
+				{S_STATE_AUTOMATIC, -1},
+				{ST_RENDERMODE_DIRECT, 0},
+				{ST_RENDERMODE_LUT_2BIT, static_cast<int64_t>(gfx::lut::color_depth::_2)},
+				{ST_RENDERMODE_LUT_4BIT, static_cast<int64_t>(gfx::lut::color_depth::_4)},
+				{ST_RENDERMODE_LUT_6BIT, static_cast<int64_t>(gfx::lut::color_depth::_6)},
+				{ST_RENDERMODE_LUT_8BIT, static_cast<int64_t>(gfx::lut::color_depth::_8)},
+				//{ST_RENDERMODE_LUT_10BIT, static_cast<int64_t>(gfx::lut::color_depth::_10)},
+			};
+			for (auto kv : els) {
+				obs_property_list_add_int(p, D_TRANSLATE(kv.first), kv.second);
+			}
+		}
 	}
 
 	return pr;
