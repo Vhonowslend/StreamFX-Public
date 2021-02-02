@@ -80,7 +80,11 @@ streamfx::ui::handler::handler()
 
 	  _about_action(), _about_dialog(),
 
-	  _translator(), _updater()
+	  _translator()
+#ifdef ENABLE_UPDATER
+	  ,
+	  _updater()
+#endif
 {
 	obs_frontend_add_event_callback(frontend_event_handler, this);
 }
@@ -169,7 +173,10 @@ void streamfx::ui::handler::on_obs_loaded()
 	}
 
 	// Let the Updater start its work.
+
+#ifdef ENABLE_UPDATER
 	this->_updater->obs_ready();
+#endif
 }
 
 void streamfx::ui::handler::on_obs_exit()
