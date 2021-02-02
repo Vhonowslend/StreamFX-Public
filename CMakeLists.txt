@@ -970,6 +970,7 @@ list(APPEND PROJECT_DATA
 	"data/effects/color-conversion.effect"
 	"data/effects/mipgen.effect"
 	"data/effects/pack-unpack.effect"
+	"data/effects/shared.effect"
 	"data/locale/en-US.ini"
 )
 list(APPEND PROJECT_INCLUDE_DIRS
