@@ -1,18 +1,38 @@
-// Parameters
-uniform float4x4 ViewProj;
+#include "shared.effect"
+
+//------------------------------------------------------------------------------
+// Uniforms
+//------------------------------------------------------------------------------
+
+// Texture to which the effect is applied to.
 uniform texture2d image;
+
+// Lift: (rgb + lift.rgb) + lift.a
 uniform float4 pLift;
+
+// Gamma: pow(pow(rgb, gamma.rgb), gamma.a)
 uniform float4 pGamma;
+
+// Gain: mul(rgb, gain.rgb) * gain.a
 uniform float4 pGain;
+
+// Offset: (rgb + offset.rgb) + offset.a
 uniform float4 pOffset;
+
+// Tinting
 uniform int pTintDetection; // 0 = HSV, 1 = HSL, 2 = YUV HD SDR
 uniform int pTintMode; // 0 = Linear, 1 = Exp, 2 = Exp2, 3 = Log, 4 = Log10
 uniform float pTintExponent;
 uniform float3 pTintLow;
 uniform float3 pTintMid;
 uniform float3 pTintHig;
+
+// Color Correction
 uniform float4 pCorrection;
 
+//------------------------------------------------------------------------------
+// Defines
+//------------------------------------------------------------------------------
 #define TINT_DETECTION_HSV				0
 #define TINT_DETECTION_HSL				1
 #define TINT_DETECTION_YUV_SDR			2
@@ -26,146 +46,30 @@ uniform float4 pCorrection;
 #define C_e 2,7182818284590452353602874713527
 #define C_log2_e 1.4426950408889634073599246810019 // Windows calculator: log(e(1)) / log(2)
 
-// Data
-sampler_state def_sampler {
-	Filter    = Point;
-	AddressU  = Clamp;
-	AddressV  = Clamp;
-	MinLOD    = 0;
-	MaxLOD    = 0;
+//------------------------------------------------------------------------------
+// Functionality
+//------------------------------------------------------------------------------
+
+float3 grade_lift(float3 v) { // same as grade_offset?
+	return (v.rgb + pLift.rgb) + pLift.a;
 };
 
-struct VertDataIn {
-	float4 pos : POSITION;
-	float2 uv  : TEXCOORD0;
+float3 grade_gamma(float3 v) {
+	float3 s = sign(v); // Store sign for later use.
+	float3 u = abs(v); // Remove sign
+	u.rgb = pow(pow(u.rgb, pGamma.rgb), pGamma.a);
+	return u * s; // Restore sign.
 };
 
-struct VertDataOut {
-	float4 pos : POSITION;
-	float2 uv  : TEXCOORD0;
+float3 grade_gain(float3 v) {
+	return (v.rgb * pGain.rgb) * pGain.a;
 };
 
-VertDataOut VSDefault(VertDataIn v)
-{
-	VertDataOut ov;
-	ov.pos = mul(float4(v.pos.xyz, 1.0), ViewProj);
-	ov.uv = v.uv;
-	return ov;
-}
+float3 grade_offset(float3 v) {
+	return (v.rgb + pOffset.rgb) + pOffset.a;
+};
 
-// Utility functions -----------------------------------------------------------
-float4 RGBtoYUV(float4 rgba, float3x3 yuv) {
-	return float4(
-		rgba.r * yuv._m00 + rgba.g * yuv._m01 + rgba.b * yuv._m02,
-		rgba.r * yuv._m10 + rgba.g * yuv._m11 + rgba.b * yuv._m12,
-		rgba.r * yuv._m20 + rgba.g * yuv._m21 + rgba.b * yuv._m22,
-		rgba.a
-	) + float4(0,0.5,0.5,0);
-}
-
-float4 YUVtoRGB(float4 yuva, float3x3 yuvi) {
-	yuva.gb -= 0.5;
-	return float4(
-		yuva.r * yuvi._m00 + yuva.g * yuvi._m01 + yuva.b * yuvi._m02,
-		yuva.r * yuvi._m10 + yuva.g * yuvi._m11 + yuva.b * yuvi._m12,
-		yuva.r * yuvi._m20 + yuva.g * yuvi._m21 + yuva.b * yuvi._m22,
-		yuva.a);
-}
-
-float4 RGBtoHSV(float4 RGBA) {
-	const float4 K = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
-	const float e = 1.0e-10;
-	float4 p = lerp(float4(RGBA.bg, K.wz), float4(RGBA.gb, K.xy), step(RGBA.b, RGBA.g));
-	float4 q = lerp(float4(p.xyw, RGBA.r), float4(RGBA.r, p.yzx), step(p.x, RGBA.r));
-	float d = q.x - min(q.w, q.y);
-	return float4(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x, RGBA.a);
-}
-
-float4 HSVtoRGB(float4 HSVA) {
-	const float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-	float4 v = float4(0,0,0,0);
-	v.rgb = HSVA.z * lerp(K.xxx, clamp(abs(frac(HSVA.xxx + K.xyz) * 6.0 - K.www) - K.xxx, 0.0, 1.0), HSVA.y);
-	v.a = HSVA.a;
-	return v;
-}
-
-float4 HSLtoRGB(float4 HSLA) {
-    float3 rgb = clamp(
-		abs(
-			fmod(
-				HSLA.x * 6.0 + float3(0.0, 4.0, 2.0),
-				6.0
-			) - 3.0
-		) - 1.0,
-		0.0,
-		1.0
-	);
-    return float4(HSLA.z + HSLA.y * (rgb - 0.5) * (1.0 - abs(2.0 * HSLA.z - 1.0)), HSLA.a);
-}
-
-float4 RGBtoHSL(float4 RGBA) {
-	float h = 0.0;
-	float s = 0.0;
-	float l = 0.0;
-	float r = RGBA.r;
-	float g = RGBA.g;
-	float b = RGBA.b;
-	float cMin = min( r, min( g, b ) );
-	float cMax = max( r, max( g, b ) );
-
-	l = ( cMax + cMin ) / 2.0;
-	if ( cMax > cMin ) {
-		float cDelta = cMax - cMin;
-        
-		//s = l < .05 ? cDelta / ( cMax + cMin ) : cDelta / ( 2.0 - ( cMax + cMin ) ); Original
-		s = l < .0 ? cDelta / ( cMax + cMin ) : cDelta / ( 2.0 - ( cMax + cMin ) );
-        
-		if ( r == cMax ) {
-			h = ( g - b ) / cDelta;
-		} else if ( g == cMax ) {
-			h = 2.0 + ( b - r ) / cDelta;
-		} else {
-			h = 4.0 + ( r - g ) / cDelta;
-		}
-
-		if ( h < 0.0) {
-			h += 6.0;
-		}
-		h = h / 6.0;
-	}
-	return float4( h, s, l, RGBA.a );
-}
-
-// Actual Code -----------------------------------------------------------------
-float4 Lift(float4 v)
-{
-	v.rgb = pLift.aaa + v.rgb;
-	v.rgb = pLift.rgb + v.rgb;
-	return v;
-}
-
-float4 Gamma(float4 v)
-{
-	v.rgb = pow(pow(v.rgb, pGamma.rgb), pGamma.aaa);
-	return v;
-}
-
-float4 Gain(float4 v)
-{
-	v.rgb *= pGain.rgb;
-	v.rgb *= pGain.a;
-	return v;
-}
-
-float4 Offset(float4 v)
-{
-	v.rgb = pOffset.aaa + v.rgb;
-	v.rgb = pOffset.rgb + v.rgb;
-	return v;
-}
-
-float4 Tint(float4 v)
-{
+float3 grade_tint(float3 v) {
 	float value = 0.;
 	if (pTintDetection == TINT_DETECTION_HSV) { // HSV
 		value = RGBtoHSV(v).z;
@@ -199,29 +103,38 @@ float4 Tint(float4 v)
 	}
 	v.rgb *= tint;
 	return v;
-}
+};
 
-float4 Correction(float4 v)
-{
-	float4 v1 = RGBtoHSV(v);
-	v1.r += pCorrection.r;
-	v1.g *= pCorrection.g;
-	v1.b *= pCorrection.b;
-	float4 v2 = HSVtoRGB(v1);
+float3 grade_colorcorrection(float3 v) {
+	float3 v1 = RGBtoHSV(v);
+	v1.r += pCorrection.r; // Hue Shift
+	v1.g *= pCorrection.g; // Saturation Multiplier
+	v1.b *= pCorrection.b; // Lightness Multiplier
+	float3 v2 = HSVtoRGB(v1);
+
+	// Contrast
 	v2.rgb = ((v2.rgb - 0.5) * max(pCorrection.a, 0)) + 0.5;
-	return v2;
-}
 
-float4 PSColorGrade(VertDataOut v) : TARGET
-{
-	return Correction(Tint(Offset(Gain(Gamma(Lift(image.Sample(def_sampler, v.uv)))))));
-}
+	return v2;
+};
+
+float4 PSDraw(VertexData vtx) : TARGET {
+	float4 v1 = image.Sample(PointClampSampler, vtx.uv);
+	float3 v2 = grade_lift(v1.rgb);
+	float3 v3 = grade_gamma(v2);
+	float3 v4 = grade_gain(v3);
+	float3 v5 = grade_offset(v4);
+	float3 v6 = grade_tint(v5);
+	float3 v7 = grade_colorcorrection(v6);
+	float3 vf = v7;
+	return float4(vf, v1.a);
+};
 
 technique Draw
 {
 	pass
 	{
-		vertex_shader = VSDefault(v);
-		pixel_shader = PSColorGrade(v);		
-	}
-}
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader = PSDraw(vtx);
+	};
+};
