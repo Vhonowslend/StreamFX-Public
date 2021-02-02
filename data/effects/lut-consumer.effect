@@ -1,0 +1,25 @@
+#include "shared.effect"
+#include "lut.effect"
+
+//------------------------------------------------------------------------------
+// Uniforms
+//------------------------------------------------------------------------------
+uniform texture2d image;
+uniform texture2d lut;
+uniform int4   lut_params_0; // [size, grid_size, texture_size, 0]
+uniform float4 lut_params_1; // [inverse_size, inverse_grid_size, inverse_texture_size, half_texel]
+
+//------------------------------------------------------------------------------
+// Functionality
+//------------------------------------------------------------------------------
+float4 PSConsumeLUT(VertexData vtx) : TARGET {
+	float4 c = image.Sample(LinearClampSampler, vtx.uv);
+	return float4(sample_lut2(c.rgb, lut, lut_params_0, lut_params_1), c.a);
+};
+
+technique Draw {
+	pass {
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader  = PSConsumeLUT(vtx);
+	}
+}
