@@ -19,6 +19,9 @@
 
 #pragma once
 #include <vector>
+#include "gfx/lut/gfx-lut-consumer.hpp"
+#include "gfx/lut/gfx-lut-producer.hpp"
+#include "gfx/lut/gfx-lut.hpp"
 #include "obs/gs/gs-mipmapper.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
@@ -44,36 +47,52 @@ namespace streamfx::filter::color_grade {
 	class color_grade_instance : public obs::source_instance {
 		gs::effect _effect;
 
-		// Source
-		std::unique_ptr<gs::rendertarget> _rt_source;
-		std::shared_ptr<gs::texture>      _tex_source;
-		bool                              _source_updated;
+		// User Configuration
+		vec4                  _lift;
+		vec4                  _gamma;
+		vec4                  _gain;
+		vec4                  _offset;
+		detection_mode        _tint_detection;
+		luma_mode             _tint_luma;
+		float_t               _tint_exponent;
+		vec3                  _tint_low;
+		vec3                  _tint_mid;
+		vec3                  _tint_hig;
+		vec4                  _correction;
+		bool                  _lut_enabled;
+		gfx::lut::color_depth _lut_depth;
 
-		// Grading
-		std::unique_ptr<gs::rendertarget> _rt_grade;
-		std::shared_ptr<gs::texture>      _tex_grade;
-		bool                              _grade_updated;
+		// Capture Cache
+		std::shared_ptr<gs::rendertarget> _ccache_rt;
+		std::shared_ptr<gs::texture>      _ccache_texture;
+		bool                              _ccache_fresh;
 
-		// Parameters
-		vec4           _lift;
-		vec4           _gamma;
-		vec4           _gain;
-		vec4           _offset;
-		detection_mode _tint_detection;
-		luma_mode      _tint_luma;
-		float_t        _tint_exponent;
-		vec3           _tint_low;
-		vec3           _tint_mid;
-		vec3           _tint_hig;
-		vec4           _correction;
+		// LUT work flow
+		bool                                _lut_initialized;
+		bool                                _lut_dirty;
+		std::shared_ptr<gfx::lut::producer> _lut_producer;
+		std::shared_ptr<gfx::lut::consumer> _lut_consumer;
+		std::shared_ptr<gs::rendertarget>   _lut_rt;
+		std::shared_ptr<gs::texture>        _lut_texture;
+
+		// Render Cache
+		std::shared_ptr<gs::rendertarget> _cache_rt;
+		std::shared_ptr<gs::texture>      _cache_texture;
+		bool                              _cache_fresh;
 
 		public:
 		color_grade_instance(obs_data_t* data, obs_source_t* self);
 		virtual ~color_grade_instance();
 
+		void allocate_rendertarget(gs_color_format format);
+
 		virtual void load(obs_data_t* data) override;
 		virtual void migrate(obs_data_t* data, uint64_t version) override;
 		virtual void update(obs_data_t* data) override;
+
+		void prepare_effect();
+
+		void rebuild_lut();
 
 		virtual void video_tick(float_t time) override;
 		virtual void video_render(gs_effect_t* effect) override;
