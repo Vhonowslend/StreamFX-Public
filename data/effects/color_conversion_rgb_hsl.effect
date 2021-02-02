@@ -1,0 +1,56 @@
+// This may have odd/incorrect results.
+
+float3 RGBtoHSL(float3 rgb) {
+	float h = 0.0;
+	float s = 0.0;
+	float l = 0.0;
+	float r = rgb.r;
+	float g = rgb.g;
+	float b = rgb.b;
+	float cMin = min( r, min( g, b ) );
+	float cMax = max( r, max( g, b ) );
+
+	l = ( cMax + cMin ) / 2.0;
+	if ( cMax > cMin ) {
+		float cDelta = cMax - cMin;
+        
+		//s = l < .05 ? cDelta / ( cMax + cMin ) : cDelta / ( 2.0 - ( cMax + cMin ) ); Original
+		s = l < .0 ? cDelta / ( cMax + cMin ) : cDelta / ( 2.0 - ( cMax + cMin ) );
+        
+		if ( r == cMax ) {
+			h = ( g - b ) / cDelta;
+		} else if ( g == cMax ) {
+			h = 2.0 + ( b - r ) / cDelta;
+		} else {
+			h = 4.0 + ( r - g ) / cDelta;
+		}
+
+		if ( h < 0.0) {
+			h += 6.0;
+		}
+		h = h / 6.0;
+	}
+	return float3( h, s, l );
+}
+
+float4 RGBAtoHSLA(float4 rgba) {
+	return float4(RGBtoHSL(rgba.rgb), rgba.a);
+}
+
+float3 HSLtoRGB(float3 hsl) {
+    float3 rgb = clamp(
+		abs(
+			fmod(
+				hsl.x * 6.0 + float3(0.0, 4.0, 2.0),
+				6.0
+			) - 3.0
+		) - 1.0,
+		0.0,
+		1.0
+	);
+    return hsl.z + hsl.y * (rgb - 0.5) * (1.0 - abs(2.0 * hsl.z - 1.0));
+};
+
+float4 HSLAtoRGBA(float4 hsla) {
+	return float4(HSLtoRGB(hsla.rgb), hsla.a);
+}

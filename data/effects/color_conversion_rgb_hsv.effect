@@ -1,0 +1,32 @@
+// Adapted from http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl
+
+//#define RGB_HSV_FASTCONDITIONALMOVE
+
+float3 RGBtoHSV(float3 rgb) {
+	const float4 K = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+	const float e = 1.0e-10;
+#ifdef RGB_HSV_FASTCONDITIONALMOVE
+	float4 p = rgb.g < rgb.b ? float4(rgb.bg, K.wz) : float4(rgb.gb, K.xy);
+	float4 q = rgb.r < p.x    ? float4(p.xyw, rgb.r) : float4(rgb.r, p.yzx);
+#else
+	float4 p = lerp(float4(rgb.bg, K.wz), float4(rgb.gb, K.xy), step(rgb.b, rgb.g));
+	float4 q = lerp(float4(p.xyw, rgb.r), float4(rgb.r, p.yzx), step(p.x, rgb.r));
+#endif
+	float d = q.x - min(q.w, q.y);
+	return float3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
+float4 RGBAtoHSVA(float4 rgba) {
+	return float4(RGBtoHSV(rgba.rgb), rgba.a);
+}
+
+float3 HSVtoRGB(float3 hsv) {
+	const float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+	float3 v = float3(0,0,0);
+	v.rgb = hsv.z * lerp(K.xxx, clamp(abs(frac(hsv.xxx + K.xyz) * 6.0 - K.www) - K.xxx, 0.0, 1.0), hsv.y);
+	return v;
+}
+
+float4 HSVAtoRGBA(float4 hsva) {
+	return float4(HSVtoRGB(hsv.rgb), hsva.a);
+}
