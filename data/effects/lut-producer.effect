@@ -1,0 +1,21 @@
+#include "shared.effect"
+#include "lut.effect"
+
+//------------------------------------------------------------------------------
+// Uniforms
+//------------------------------------------------------------------------------
+uniform int4 lut_params_0;
+
+//------------------------------------------------------------------------------
+// Functionality
+//------------------------------------------------------------------------------
+float4 PSProduceLUT(VertexData vtx) : TARGET {
+	return generate_lut2(vtx.uv, lut_params_0);
+};
+
+technique Draw {
+	pass {
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader  = PSProduceLUT(vtx);
+	};
+};

@@ -1,0 +1,129 @@
+sampler_state __LUTSampler {
+	Filter    = Linear;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+};
+
+float4 generate_lut(uint bit_depth, float2 uv) {
+	uint size = pow(2, bit_depth);
+	uint z_size = pow(2, bit_depth / 2);
+	uint container_size = pow(2, bit_depth + (bit_depth / 2));
+
+	uint2 xy = uint2(floor(uv * container_size));
+	uint2 rg = xy % size;
+	uint2 bb = xy / size;
+	
+	return float4(
+		rg.xy / float(size - 1),
+		((bb.y * z_size) + bb.x) / float(size - 1),
+		1.
+	);
+};
+
+float4 generate_lut2(float2 uv, uint4 params0) {
+	uint size = params0.r;
+	uint z_size = params0.g;
+	uint container_size = params0.b;
+
+	uint2 xy = uint2(floor(uv * container_size));
+	uint2 rg = xy % size;
+	uint2 bb = xy / size;
+	
+	return float4(
+		rg.xy / float(size - 1),
+		((bb.y * z_size) + bb.x) / float(size - 1),
+		1.
+	);
+};
+
+float3 sample_lut(float3 color, uint bit_depth, texture2D lut_texture) {
+	uint size = pow(2, bit_depth);
+	uint z_size = pow(2, bit_depth / 2);
+	uint container_size = pow(2, bit_depth + (bit_depth / 2));
+
+	float inverse_size = 1. / size;
+	float inverse_z_size = 1. / z_size;
+	float inverse_container_size = 1. / container_size;
+	float half_texel = inverse_container_size / 2.; // Linear sampling is weird.
+
+	// Due to our LUT not actually being a cube but a plane pretending to be a cube,
+	// we have to do some conversion into the grid structure in order to be successful.
+
+	// 1. Clamp everything to a reasonable range.
+	color = saturate(color);
+
+	// 2. Rescale everything into 0..(size - 1)
+	color *= (size - 1);
+
+	// 3. Convert red and green into initial grid cell UVs.
+	float2 xy_uv = color.xy * inverse_container_size;
+
+	// 4. Figure out the high and low parts for interpolation.
+	uint z_lo = floor(color.z);
+	uint z_hi = z_lo + 1;
+
+	// 5. Figure out the X location of the cell in the grid.
+	uint z_lo_x = z_lo % z_size;
+	uint z_hi_x = z_hi % z_size;
+
+	// 6. Figure out the Y location of the cell in the grid.
+	uint z_lo_y = z_lo / z_size;
+	uint z_hi_y = z_hi / z_size;
+	
+	// 7. Convert the X and Y locations into UV coordinates.
+	float2 z_lo_uv = float2(z_lo_x, z_lo_y) * inverse_z_size;
+	float2 z_hi_uv = float2(z_hi_x, z_hi_y) * inverse_z_size;
+
+	// 8. Sample both low and high points.
+	float3 c_lo = lut_texture.Sample(__LUTSampler, xy_uv + z_lo_uv + half_texel).rgb;
+	float3 c_hi = lut_texture.Sample(__LUTSampler, xy_uv + z_hi_uv + half_texel).rgb;
+
+	// 9. Return an interpolated version based on the fraction of Z.
+	return lerp(c_lo, c_hi, frac(color.z));
+};
+
+float3 sample_lut2(float3 color, texture2D lut_texture, int4 params0, float4 params1) {
+	uint size = params0.r;
+	uint z_size = params0.g;
+	uint container_size = params0.b;
+
+	float inverse_size = params1.r;
+	float inverse_z_size = params1.g;
+	float inverse_container_size = params1.b;
+	float half_texel = params1.a;
+
+	// Due to our LUT not actually being a cube but a plane pretending to be a cube,
+	// we have to do some conversion into the grid structure in order to be successful.
+
+	// 1. Clamp everything to a reasonable range.
+	color = saturate(color);
+
+	// 2. Rescale everything into 0..(size - 1)
+	color *= (size - 1);
+
+	// 3. Convert red and green into initial grid cell UVs.
+	float2 xy_uv = color.xy * inverse_container_size;
+
+	// 4. Figure out the high and low parts for interpolation.
+	uint z_lo = floor(color.z);
+	uint z_hi = z_lo + 1;
+
+	// 5. Figure out the X location of the cell in the grid.
+	uint z_lo_x = z_lo % z_size;
+	uint z_hi_x = z_hi % z_size;
+
+	// 6. Figure out the Y location of the cell in the grid.
+	uint z_lo_y = z_lo / z_size;
+	uint z_hi_y = z_hi / z_size;
+	
+	// 7. Convert the X and Y locations into UV coordinates.
+	float2 z_lo_uv = float2(z_lo_x, z_lo_y) * inverse_z_size;
+	float2 z_hi_uv = float2(z_hi_x, z_hi_y) * inverse_z_size;
+
+	// 8. Sample both low and high points.
+	float3 c_lo = lut_texture.Sample(__LUTSampler, xy_uv + z_lo_uv + half_texel).rgb;
+	float3 c_hi = lut_texture.Sample(__LUTSampler, xy_uv + z_hi_uv + half_texel).rgb;
+
+	// 9. Return an interpolated version based on the fraction of Z.
+	return lerp(c_lo, c_hi, frac(color.z));
+};
