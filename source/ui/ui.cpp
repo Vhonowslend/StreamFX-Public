@@ -71,6 +71,7 @@ bool streamfx::ui::handler::have_shown_about_streamfx(bool shown)
 	}
 }
 
+#ifdef ENABLE_UPDATER
 streamfx::ui::handler::handler()
 	: QObject(), _menu_action(), _menu(),
 
@@ -84,6 +85,21 @@ streamfx::ui::handler::handler()
 {
 	obs_frontend_add_event_callback(frontend_event_handler, this);
 }
+#else
+streamfx::ui::handler::handler()
+	: QObject(), _menu_action(), _menu(),
+
+	  _report_issue(), _request_help(),
+
+	  _link_website(), _link_discord(), _link_github(),
+
+	  _about_action(), _about_dialog(),
+
+	  _translator()
+{
+	obs_frontend_add_event_callback(frontend_event_handler, this);
+}
+#endif
 
 streamfx::ui::handler::~handler()
 {
@@ -169,7 +185,10 @@ void streamfx::ui::handler::on_obs_loaded()
 	}
 
 	// Let the Updater start its work.
+
+#ifdef ENABLE_UPDATER
 	this->_updater->obs_ready();
+#endif
 }
 
 void streamfx::ui::handler::on_obs_exit()
