@@ -60,7 +60,7 @@ if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
 		set(GIT_ERROR)
 
 		execute_process(
-			COMMAND "${GIT}" describe --tags --match "[0-9]*.[0-9]*.[0-9]*" --abbrev=8 HEAD
+			COMMAND "${GIT}" describe --tags --long --match "[0-9]*.[0-9]*.[0-9]*" --abbrev=8 HEAD
 			WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 			RESULT_VARIABLE GIT_RESULT
 			OUTPUT_VARIABLE GIT_OUTPUT
