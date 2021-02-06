@@ -1,0 +1,127 @@
+// Always provided by OBS
+uniform float4x4 ViewProj<
+	bool automatic = true;
+	string name = "View Projection Matrix";
+>;
+// Provided by Stream Effects
+uniform float4 ViewSize<
+	bool automatic = true;
+>;
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+
+uniform float PixelScale<
+	string name = "Scale";
+	string field_type = "slider";
+	float minimum = 1.0;
+	float maximum = 1024.0;
+	float step = 1.0;
+> = 120.0;
+uniform float Range_EndXOffset<
+	string name = "Range End X";
+	string field_type = "slider";
+	float minimum = 0.0;
+	float maximum = 100.0;
+	float step = 1.0;
+	float scale = 1.0;
+> = 100;
+uniform float Range_EndYOffset<
+	string name = "Range End Y";
+	string field_type = "slider";
+	float minimum = 0.0;
+	float maximum = 100.0;
+	float step = 1.0;
+	float scale = 1.0;
+> = 100;
+uniform float Range_StartXOffset<
+	string name = "Range Start X";
+	string field_type = "slider";
+	float minimum = 0.0;
+	float maximum = 100.0;
+	float step = 1.0;
+	float scale = 1.0;
+> = 0;
+uniform float Range_StartYOffset<
+	string name = "Range Start Y";
+	string field_type = "slider";
+	float minimum = 0.0;
+	float maximum = 100.0;
+	float step = 1.0;
+	float scale = 1.0;
+> = 0;
+
+// ---------- Shader Code
+sampler_state def_sampler {
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+	Filter    = Linear;
+};
+
+struct VertData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertData VSDefault(VertData v_in) {
+	VertData vert_out;
+	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv  = v_in.uv;
+	return vert_out;
+}
+
+#define PI		3.1415926f
+#define TAU		6.2831853f
+#define deg30	0.52359877
+
+float2 nearestPixel(float s, float2 st){
+	float h = sin(deg30)*s;
+	float r = cos(deg30)*s;
+
+	float2 sect = st/float2(2.0*r, h+s);
+	float2 sectPxl = fmod(st, float2(2.0*r, h+s));
+	
+	float aSection = fmod(floor(sect.y), 2.0);
+	
+	float2 coord = floor(sect);
+
+	float xoff = fmod(coord.y, 2.0)*r;
+	return float2(coord.x*2.0*r-xoff, coord.y*(h+s))+float2(r*2.0, s);
+}
+
+float4 PSDefault(VertData v_in) : TARGET {
+	float2 coord = v_in.uv * ViewSize.xy;
+	float s = ViewSize.x/PixelScale;
+	float2 nearest = nearestPixel(s, coord);
+	float4 texel = InputA.Sample(def_sampler, nearest / ViewSize.xy);//, -100.0);
+	
+	//**
+	float End_X_Offset = Range_EndXOffset/100;
+	float Start_X_Offset = Range_StartXOffset/100;
+	float End_Y_Offset = Range_EndYOffset/100;
+	float Start_Y_Offset = Range_StartYOffset/100;
+
+	float luminance = (texel.r + texel.g + texel.b)/3.0;
+	float interiorSize = s;
+	float interior = 1.0 - smoothstep(interiorSize-1.0, interiorSize, 1);
+	
+	//**
+	float4 c1;
+	c1 = InputA.Sample(def_sampler, v_in.uv);
+	if ((v_in.uv.x < (End_X_Offset - 0.005)) && (v_in.uv.x > (Start_X_Offset - 0.005)) &&
+	    (v_in.uv.y < (End_Y_Offset - 0.005)) && (v_in.uv.y > (Start_Y_Offset - 0.005)))
+	{
+		c1 = float4(texel.rgb*interior, 1.0);
+	}
+	return c1;
+	//fragColor = float4(nearest, 0.0, 1.0);
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(v_in);
+		pixel_shader  = PSDefault(v_in); 
+	}
+}
