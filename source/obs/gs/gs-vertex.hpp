@@ -19,7 +19,6 @@
 
 #pragma once
 #include "common.hpp"
-#include <xmmintrin.h>
 #include "gs-limits.hpp"
 
 namespace gs {
