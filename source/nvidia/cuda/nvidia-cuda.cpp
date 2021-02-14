@@ -29,19 +29,19 @@
 
 #define CUDA_LOAD_SYMBOL(NAME)                                                            \
 	{                                                                                     \
-		NAME = static_cast<decltype(NAME)>(os_dlsym(_library, #NAME));                    \
+		NAME = reinterpret_cast<decltype(NAME)>(os_dlsym(_library, #NAME));                    \
 		if (!NAME)                                                                        \
 			throw std::runtime_error("Failed to load '" #NAME "' from '" CUDA_NAME "'."); \
 	}
 #define CUDA_LOAD_SYMBOL_V2(NAME)                                                         \
 	{                                                                                     \
-		NAME = static_cast<decltype(NAME)>(os_dlsym(_library, #NAME "_v2"));              \
+		NAME = reinterpret_cast<decltype(NAME)>(os_dlsym(_library, #NAME "_v2"));              \
 		if (!NAME)                                                                        \
 			throw std::runtime_error("Failed to load '" #NAME "' from '" CUDA_NAME "'."); \
 	}
 #define CUDA_LOAD_SYMBOL_EX(NAME, OVERRIDE)                                               \
 	{                                                                                     \
-		NAME = static_cast<decltype(NAME)>(os_dlsym(_library, #OVERRIDE));                \
+		NAME = reinterpret_cast<decltype(NAME)>(os_dlsym(_library, #OVERRIDE));                \
 		if (!NAME)                                                                        \
 			throw std::runtime_error("Failed to load '" #NAME "' from '" CUDA_NAME "'."); \
 	}
