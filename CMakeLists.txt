@@ -1185,7 +1185,7 @@ if(T_CHECK)
 endif()
 
 # Filter/Transform
-is_feature_enabled(FILTER_TRANFORM T_CHECK)
+is_feature_enabled(FILTER_TRANSFORM T_CHECK)
 if(T_CHECK)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/filters/filter-transform.hpp"
