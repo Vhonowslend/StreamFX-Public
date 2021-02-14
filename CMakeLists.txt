@@ -505,9 +505,9 @@ function(is_feature_enabled FEATURE OUTPUT)
 	endif()
 endfunction()
 
-function(set_feature_disabled FEATURE DISABLED)
+macro(set_feature_disabled FEATURE DISABLED)
 	set(${PREFIX}DISABLE_${FEATURE} ${DISABLED} PARENT_SCOPE)
-endfunction()
+endmacro()
 
 # Features
 function(feature_encoder_ffmpeg RESOLVE)
@@ -712,8 +712,9 @@ if(REQUIRE_JSON)
 	endif()
 endif()
 
+# NVIDIA Augmented Reality SDK (Windows)
 set(HAVE_NVIDIA_ARSDK OFF)
-if(REQUIRE_NVIDIA_ARSDK)
+if(REQUIRE_NVIDIA_ARSDK AND D_PLATFORM_WINDOWS)
 	if(EXISTS "${PROJECT_SOURCE_DIR}/third-party/nvidia-arsdk/version.h")
 		set(NVAR_ROOT "${PROJECT_SOURCE_DIR}/third-party/nvidia-arsdk")
 	endif()
@@ -723,8 +724,9 @@ if(REQUIRE_NVIDIA_ARSDK)
 	set(HAVE_NVIDIA_ARSDK ${NVAR_FOUND})
 endif()
 
+# NVIDIA CUDA (Windows)
 set(HAVE_NVIDIA_CUDA OFF)
-if(REQUIRE_NVIDIA_CUDA)
+if(REQUIRE_NVIDIA_CUDA AND D_PLATFORM_WINDOWS)
 	set(HAVE_NVIDIA_CUDA ON)
 endif()
 
