@@ -1515,6 +1515,39 @@ if(T_CHECK AND HAVE_CLANG)
 	)
 endif()
 
+# Apple otool
+if(D_PLATFORM_MAC)
+	# OBS
+	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+		COMMAND install_name_tool ARGS -change "@rpath/libobs.0.dylib" "@executable_path/../Frameworks/libobs.0.dylib" $<TARGET_FILE:${PROJECT_NAME}>
+	)
+	message(STATUS "${LOGPREFIX} Added post-build step for adjusting libobs linking path.")
+
+	# OBS Front-End API
+	if(REQUIRE_OBSFE AND HAVE_OBS_FRONTEND)
+		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+			COMMAND install_name_tool ARGS -change "@rpath/libobs-frontend-api.dylib" "@executable_path/../Frameworks/libobs-frontend-api.dylib" $<TARGET_FILE:${PROJECT_NAME}>
+		)
+		message(STATUS "${LOGPREFIX} Added post-build step for adjusting libobs-frontend-api linking path.")
+	endif()
+
+	# Qt5
+	if(REQUIRE_QT AND HAVE_QT)
+		string(LENGTH "${Qt5_DIR}" T_PATH_LEN)
+		math(EXPR T_PATH_LEN "${T_PATH_LEN} - 10")
+		string(SUBSTRING "${Qt5_DIR}" 0 ${T_PATH_LEN} T_PATH)
+		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+		# - QtCore
+			COMMAND install_name_tool ARGS -change "${T_PATH}/QtCore.framework/Versions/5/QtCore" "@executable_path/../Frameworks/QtCore.framework/Versions/5/QtCore" $<TARGET_FILE:${PROJECT_NAME}>
+		# - QtGui
+			COMMAND install_name_tool ARGS -change "${T_PATH}/QtGui.framework/Versions/5/QtGui" "@executable_path/../Frameworks/QtGui.framework/Versions/5/QtGui" $<TARGET_FILE:${PROJECT_NAME}>
+		# - QtWidgets
+			COMMAND install_name_tool ARGS -change "${T_PATH}/QtWidgets.framework/Versions/5/QtWidgets" "@executable_path/../Frameworks/QtWidgets.framework/Versions/5/QtWidgets" $<TARGET_FILE:${PROJECT_NAME}>
+		)
+		message(STATUS "${LOGPREFIX} Added post-build step for adjusting Qt5 linking path (Found: ${Qt5_DIR} resolved to ${T_PATH}).")
+	endif()
+endif()
+
 ################################################################################
 # Installation
 ################################################################################
