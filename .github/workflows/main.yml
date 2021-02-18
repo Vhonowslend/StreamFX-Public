@@ -38,10 +38,9 @@ jobs:
       CMAKE_SYSTEM_VERSION: ${{ matrix.windows_sdk }}
     steps:
     - name: "Clone Repository"
-      uses: actions/checkout@v1
-    - name: "Clone Submodules"
-      shell: bash
-      run: git submodule update --init --recursive
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
     - name: "Cache: OBS"
       uses: actions/cache@v2
       with:
@@ -68,6 +67,7 @@ jobs:
       shell: bash
       run: |
         cmake -H. -B"build/temp" \
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
           -DCMAKE_INSTALL_PREFIX="build/distrib" \
           -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
           -DPACKAGE_PREFIX="build/package" \
@@ -125,10 +125,9 @@ jobs:
       CXX: ${{ matrix.compiler-cxx }}
     steps:
     - name: "Clone Repository"
-      uses: actions/checkout@v1
-    - name: "Prerequisites: Submodules"
-      shell: bash
-      run: git submodule update --init --recursive
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
     - name: "Prerequisites: Apt-Get"
       shell: bash
       run: |
@@ -154,10 +153,59 @@ jobs:
       shell: bash
       run: |
         cmake -H. -B"build/temp" \
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
           -DCMAKE_INSTALL_PREFIX="build/distrib" \
           -DENABLE_FILTER_NVIDIA_FACE_TRACKING=FALSE \
           -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
           -DPACKAGE_PREFIX="build/package" 
+    - name: "Build Project"
+      shell: bash
+      run: |
+        cmake --build "build/temp" --config RelWithDebInfo --target install
+    - name: "Package Project"
+      shell: bash
+      run: |
+        mkdir build/package
+        cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_7Z
+        cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_ZIP
+    - name: "Upload Artifacts"
+      uses: actions/upload-artifact@v1
+      with:
+        name: ${{ matrix.id }}
+        path: build/package
+  macos:
+    strategy:
+      fail-fast: true
+      matrix: 
+        runner: [ macos-latest ]
+        include:
+          - runner: macos-latest
+            id: macos-10.15
+            target-version: "10.15"
+    name: "MacOS (${{ matrix.target-version }})"
+    runs-on: ${{ matrix.runner }}
+    env:
+      CMAKE_GENERATOR: "Xcode"
+      CMAKE_OSX_DEPLOYMENT_TARGET: "${{ matrix.target-version }}"
+    steps:
+    - name: "Clone Repository"
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: "Prerequisties: Qt"
+      shell: bash
+      run: |
+        brew install qt5
+        ls -lha /usr/local/opt/qt/lib/cmake/Qt5
+    - name: "Configure Project"
+      shell: bash
+      run: |
+        cmake -H. -B"build/temp" \
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          -DCMAKE_INSTALL_PREFIX="build/distrib" \
+          -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
+          -DPACKAGE_PREFIX="build/package" \
+          -DQt5_DIR=/usr/local/opt/qt/lib/cmake/Qt5
     - name: "Build Project"
       shell: bash
       run: |
