@@ -1494,6 +1494,14 @@ if(HAVE_QT)
 	)
 endif()
 
+# MacOS: Disable automatic Code Signing in Xcode
+if(D_PLATFORM_MAC)
+	set_target_properties(${PROJECT_NAME} PROPERTIES
+		XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ""
+		XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO"
+	)
+endif()
+
 ################################################################################
 # Extra Tools
 ################################################################################
