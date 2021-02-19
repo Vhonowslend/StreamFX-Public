@@ -172,12 +172,12 @@ AVColorTransferCharacteristic ffmpeg::tools::obs_to_av_color_transfer_characteri
 {
 	switch (v) {
 	case VIDEO_CS_601:
-		return AVCOL_TRC_LINEAR;
+		return AVCOL_TRC_SMPTE240M;
 	case VIDEO_CS_DEFAULT:
 	case VIDEO_CS_709:
 		return AVCOL_TRC_BT709;
-	case VIDEO_CS_SRGB:
-		return AVCOL_TRC_IEC61966_2_1;
+	case VIDEO_CS_SRGB: // sRGB with Gamma 2.2
+		return AVCOL_TRC_GAMMA22;
 	default:
 		throw std::invalid_argument("Unknown Color Transfer Characteristics");
 	}
