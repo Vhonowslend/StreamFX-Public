@@ -206,16 +206,16 @@
          inkscape:export-ydpi="96" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:16.4439px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0px;text-anchor:middle;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.88092"
-         x="36.337719"
-         y="14.540345"
+         style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;font-size:16.2613px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Heavy';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0px;text-anchor:middle;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.87114"
+         x="36.82481"
+         y="14.378914"
          id="text849"
-         transform="scale(0.8809196,1.1351774)"><tspan
+         transform="scale(0.87113941,1.1479219)"><tspan
            sodipodi:role="line"
            id="tspan847"
-           x="36.337719"
-           y="14.540345"
-           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:16.4439px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.88092">STABLE</tspan></text>
+           x="36.82481"
+           y="14.378914"
+           style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;font-size:16.2613px;font-family:Arial;-inkscape-font-specification:'Arial, Heavy';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.87114">STABLE</tspan></text>
     </g>
     <g
        inkscape:groupmode="layer"

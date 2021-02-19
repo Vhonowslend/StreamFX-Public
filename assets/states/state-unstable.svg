@@ -207,7 +207,7 @@
          inkscape:export-ydpi="96" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.8092px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0px;text-anchor:middle;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.739779"
+         style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;font-size:13.8092px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Heavy';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0px;text-anchor:middle;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.739779;"
          x="43.128117"
          y="12.210678"
          id="text849"
@@ -216,7 +216,7 @@
            id="tspan847"
            x="43.128117"
            y="12.210678"
-           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.8092px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.739779">UNSTABLE</tspan></text>
+           style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;font-size:13.80920023px;font-family:Arial;-inkscape-font-specification:'Arial, Heavy';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.739779;">UNSTABLE</tspan></text>
     </g>
     <g
        inkscape:groupmode="layer"
