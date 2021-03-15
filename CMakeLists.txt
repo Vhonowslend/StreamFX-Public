@@ -906,23 +906,6 @@ if(D_PLATFORM_WINDOWS) # Windows Support
 	LIST(APPEND PROJECT_PRIVATE_GENERATED "${PROJECT_BINARY_DIR}/generated/version.rc")
 
 	if(NOT ${PREFIX}OBS_NATIVE)
-		## Installer (InnoSetup)
-		get_filename_component(ISS_FILES_DIR "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
-		file(TO_NATIVE_PATH "${ISS_FILES_DIR}" ISS_FILES_DIR)
-
-		get_filename_component(ISS_PACKAGE_DIR "${CMAKE_PACKAGE_PREFIX}" ABSOLUTE)
-		file(TO_NATIVE_PATH "${ISS_PACKAGE_DIR}" ISS_PACKAGE_DIR)
-
-		get_filename_component(ISS_SOURCE_DIR "${PROJECT_SOURCE_DIR}" ABSOLUTE)
-		file(TO_NATIVE_PATH "${ISS_SOURCE_DIR}" ISS_SOURCE_DIR)
-
-		get_filename_component(ISS_MSVCHELPER_PATH "${msvc-redist-helper_BUILD_DIR}" ABSOLUTE)
-		file(TO_NATIVE_PATH "${ISS_MSVCHELPER_PATH}" ISS_MSVCHELPER_PATH)
-
-		configure_file(
-			"templates/installer.iss.in"
-			"installer.iss"
-		)
 		list(APPEND PROJECT_TEMPLATES
 			"templates/installer.iss.in"
 		)
@@ -1810,15 +1793,29 @@ if(NOT ${PREFIX}OBS_NATIVE)
 			## Installer (InnoSetup)
 			get_filename_component(ISS_FILES_DIR "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
 			file(TO_NATIVE_PATH "${ISS_FILES_DIR}" ISS_FILES_DIR)
-			get_filename_component(ISS_PACKAGE_DIR "${PACKAGE_PREFIX}" ABSOLUTE)
+
+			get_filename_component(ISS_PACKAGE_DIR "${CMAKE_PACKAGE_PREFIX}" ABSOLUTE)
 			file(TO_NATIVE_PATH "${ISS_PACKAGE_DIR}" ISS_PACKAGE_DIR)
+
 			get_filename_component(ISS_SOURCE_DIR "${PROJECT_SOURCE_DIR}" ABSOLUTE)
 			file(TO_NATIVE_PATH "${ISS_SOURCE_DIR}" ISS_SOURCE_DIR)
+
 			get_filename_component(ISS_MSVCHELPER_PATH "${msvc-redist-helper_BUILD_DIR}" ABSOLUTE)
 			file(TO_NATIVE_PATH "${ISS_MSVCHELPER_PATH}" ISS_MSVCHELPER_PATH)
+
 			configure_file(
 				"templates/installer.iss.in"
-				"${PROJECT_BINARY_DIR}/installer.iss"
+				"installer.iss"
+			)
+		endif()
+
+		# Apple MacOS
+		if(D_PLATFORM_MAC)
+			# .pkg Installer
+			configure_file(
+				"templates/installer.pkgproj.in"
+				"installer.pkgproj"
+				@ONLY
 			)
 		endif()
 	endif()
