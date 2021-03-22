@@ -195,8 +195,7 @@ jobs:
     - name: "Prerequisties: Qt"
       shell: bash
       run: |
-        brew install qt5
-        ls -lha /usr/local/opt/qt/lib/cmake/Qt5
+        brew install qt@5
     - name: "Configure Project"
       shell: bash
       run: |
@@ -205,7 +204,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="build/distrib" \
           -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
           -DPACKAGE_PREFIX="build/package" \
-          -DQt5_DIR=/usr/local/opt/qt/lib/cmake/Qt5
+          -DQt5_DIR=/usr/local/Cellar/qt@5/5.15.2/lib/cmake/Qt5
     - name: "Build Project"
       shell: bash
       run: |
