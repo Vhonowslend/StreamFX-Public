@@ -1,6 +1,6 @@
 name: Build
 
-on: 
+on:
   push:
     tags:
       - '*'
@@ -19,7 +19,7 @@ jobs:
     name: "Windows 64-bit"
     strategy:
       fail-fast: true
-      matrix: 
+      matrix:
         runner: [ windows-2019 ]
         include:
           - runner: windows-2019
@@ -157,7 +157,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="build/distrib" \
           -DENABLE_FILTER_NVIDIA_FACE_TRACKING=FALSE \
           -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
-          -DPACKAGE_PREFIX="build/package" 
+          -DPACKAGE_PREFIX="build/package"
     - name: "Build Project"
       shell: bash
       run: |
@@ -176,7 +176,7 @@ jobs:
   macos:
     strategy:
       fail-fast: true
-      matrix: 
+      matrix:
         runner: [ macos-latest ]
         include:
           - runner: macos-latest
