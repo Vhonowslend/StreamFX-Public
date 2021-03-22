@@ -1,6 +1,9 @@
 name: Validation
 
 on: 
+  push:
+    tags:
+      - '*'
   pull_request:
     branches:
       - '*'
