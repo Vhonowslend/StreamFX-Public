@@ -168,9 +168,9 @@ set(PROJECT_VERSION_STRING ${VERSION_STRING})
 ################################################################################
 
 # Search Paths
-set(CMAKE_MODULE_PATH 
-	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/clang" 
-	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules" 
+set(CMAKE_MODULE_PATH
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/clang"
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cmake"
 )
 
@@ -235,7 +235,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR (WIN32 AND CMAKE_CXX_COMPILER_ID STR
     )
 
 	# Enable most useful warnings.
-	set(DISABLED_WARNINGS 
+	set(DISABLED_WARNINGS
 		"/wd4061" "/wd4100" "/wd4180" "/wd4201" "/wd4464" "/wd4505" "/wd4514"
 		"/wd4571" "/wd4623" "/wd4625" "/wd4626" "/wd4668" "/wd4710" "/wd4774"
 		"/wd4820" "/wd5026" "/wd5027" "/wd5039" "/wd5045" "/wd26812"
@@ -252,11 +252,11 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR (WIN32 AND CMAKE_CXX_COMPILER_ID STR
 	add_compile_options("/MP")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	message(STATUS "Applying custom flags for GNU style build.")
-	
+
 	# Clang/AppleClang/GNU
 	# - Don't export by default. (Temporarily disabled)
 	# - Enable all and extra warnings.
-	
+
 	add_compile_options("-Wall")
 	add_compile_options("-Wextra")
 	# add_compile_options("-fvisibility=hidden")
@@ -273,13 +273,9 @@ endif()
 if(STANDALONE)
 	message(STATUS "${LOGPREFIX} This is a standalone build, please make sure you've followed the instructions.")
 	set(${PREFIX}OBS_NATIVE OFF)
-	if (TARGET obs-frontend-api)
-		set(HAVE_OBS_FRONTEND ON)
-	endif()
 else()
 	message(STATUS "${LOGPREFIX} This is a combined build.")
 	set(${PREFIX}OBS_NATIVE ON)
-	set(HAVE_OBS_FRONTEND ON)
 endif()
 
 ################################################################################
@@ -386,7 +382,7 @@ if(NOT ${PREFIX}OBS_NATIVE)
 			set(OBS_DOWNLOAD_ARCH "arm32")
 		endif()
 	endif()
-	
+
 	# Allow overriding what version we build against.
 	if(${PREFIX}DOWNLOAD_OBS_VERSION)
 		set(_DOWNLOAD_OBS_VERSION ${PREFIX}DOWNLOAD_OBS_VERSION)
@@ -436,7 +432,7 @@ if(NOT ${PREFIX}OBS_NATIVE)
 			set(_DOWNLOAD_OBSDEPS_VERSION "26.0.0")
 			set(_DOWNLOAD_OBSDEPS_HASH "SHA512=2D47E7579DE3FBD88C52BB62C2CA4D649BD958FBAE8E5B01EE263D7583B4D8EEEA8CE13C543BEF110FAC9142891C031973A1BC20AC6EED596E6AB97CCC669D16")
 		endif()
-		
+
 		download_project(
 			PROJ obsdeps
 			URL "https://github.com/Xaymar/obs-studio/releases/download/${_DOWNLOAD_OBSDEPS_VERSION}/dependencies_${OBS_DOWNLOAD_OS}.7z"
@@ -464,7 +460,7 @@ if(D_PLATFORM_WINDOWS AND (NOT ${PREFIX}OBS_NATIVE))
 			${PREFIX}DOWNLOAD_OBSDEPS_VERSION
 			${PREFIX}DOWNLOAD_OBSDEPS_HASH
 		)
-		
+
 		download_project(
 			PROJ qt
 			URL "https://github.com/Xaymar/obs-studio/releases/download/${_DOWNLOAD_OBSDEPS_VERSION}/qt_${_DOWNLOAD_QT_VERSION}_${OBS_DOWNLOAD_OS}.7z"
@@ -647,6 +643,7 @@ feature_frontend(OFF)
 feature_updater(OFF)
 
 # Fulfill Requirements
+#- CURL
 set(HAVE_CURL OFF)
 if(REQUIRE_CURL)
 	if(D_PLATFORM_WINDOWS)
@@ -668,6 +665,7 @@ if(REQUIRE_CURL)
 	set(HAVE_CURL ${CURL_FOUND})
 endif()
 
+#- FFmpeg
 set(HAVE_FFMPEG OFF)
 if(REQUIRE_FFMPEG)
 	if(D_PLATFORM_WINDOWS AND NOT ${PREFIX}OBS_NATIVE)
@@ -679,7 +677,7 @@ if(REQUIRE_FFMPEG)
 				${DepsPath}
 				${DepsPath32}
 				${DepsPath64}
-			
+
 			PATHS
 				/usr/include
 				/usr/local/include
@@ -701,6 +699,7 @@ if(REQUIRE_FFMPEG)
 	set(HAVE_FFMPEG ${FFmpeg_FOUND})
 endif()
 
+#- JSON
 set(HAVE_JSON OFF)
 if(REQUIRE_JSON)
 	if(NOT EXISTS "${PROJECT_SOURCE_DIR}/third-party/nlohmann-json/single_include")
@@ -712,7 +711,7 @@ if(REQUIRE_JSON)
 	endif()
 endif()
 
-# NVIDIA Augmented Reality SDK (Windows)
+#- NVIDIA Augmented Reality SDK (Windows)
 set(HAVE_NVIDIA_ARSDK OFF)
 if(REQUIRE_NVIDIA_ARSDK AND D_PLATFORM_WINDOWS)
 	if(EXISTS "${PROJECT_SOURCE_DIR}/third-party/nvidia-arsdk/version.h")
@@ -724,12 +723,13 @@ if(REQUIRE_NVIDIA_ARSDK AND D_PLATFORM_WINDOWS)
 	set(HAVE_NVIDIA_ARSDK ${NVAR_FOUND})
 endif()
 
-# NVIDIA CUDA (Windows)
+#- NVIDIA CUDA (Windows)
 set(HAVE_NVIDIA_CUDA OFF)
 if(REQUIRE_NVIDIA_CUDA AND D_PLATFORM_WINDOWS)
 	set(HAVE_NVIDIA_CUDA ON)
 endif()
 
+#- OBS Front-End API
 set(HAVE_OBSFE OFF)
 if(REQUIRE_OBSFE)
 	if(${PREFIX}OBS_NATIVE)
@@ -744,9 +744,10 @@ if(REQUIRE_OBSFE)
 	endif()
 endif()
 
+#- Qt5
 set(HAVE_QT OFF)
 if(REQUIRE_QT)
-	find_package(Qt5 
+	find_package(Qt5
 		COMPONENTS Widgets Core REQUIRED
 	)
 	set(HAVE_QT ${Qt5_FOUND})
@@ -820,7 +821,7 @@ if(D_PLATFORM_WINDOWS) # Windows Support
 	)
 	LIST(APPEND PROJECT_TEMPLATES "templates/version.rc.in")
 	LIST(APPEND PROJECT_PRIVATE_GENERATED "${PROJECT_BINARY_DIR}/generated/version.rc")
-	
+
 	if(NOT ${PREFIX}OBS_NATIVE)
 		## Installer (InnoSetup)
 		get_filename_component(ISS_FILES_DIR "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
@@ -999,7 +1000,7 @@ if(T_CHECK)
 		"source/ffmpeg/hwapi/base.cpp"
 		"source/ffmpeg/hwapi/d3d11.hpp"
 		"source/ffmpeg/hwapi/d3d11.cpp"
-	
+
 		# Encoders
 		"source/encoders/encoder-ffmpeg.hpp"
 		"source/encoders/encoder-ffmpeg.cpp"
@@ -1037,7 +1038,7 @@ if(T_CHECK)
 			ENABLE_ENCODER_FFMPEG_AMF
 		)
 	endif()
-	
+
 	# NVENC
 	is_feature_enabled(ENCODER_FFMPEG_NVENC T_CHECK)
 	if(T_CHECK)
@@ -1053,7 +1054,7 @@ if(T_CHECK)
 			ENABLE_ENCODER_FFMPEG_NVENC
 		)
 	endif()
-	
+
 	# ProRES
 	is_feature_enabled(ENCODER_FFMPEG_PRORES T_CHECK)
 	if(T_CHECK)
@@ -1107,7 +1108,7 @@ if(T_CHECK)
 	)
 	list (APPEND PROJECT_PRIVATE_SOURCE
 		"source/filters/filter-color-grade.hpp"
-		"source/filters/filter-color-grade.cpp"	
+		"source/filters/filter-color-grade.cpp"
 	)
 	list(APPEND PROJECT_DEFINITIONS
 		ENABLE_FILTER_COLOR_GRADE
@@ -1283,7 +1284,7 @@ if(T_CHECK)
 	list(APPEND PROJECT_DEFINITIONS
 		ENABLE_FRONTEND
 	)
-	
+
 	is_feature_enabled(UPDATER T_CHECK)
 	if(T_CHECK)
 		list(APPEND PROJECT_UI_SOURCE
@@ -1526,33 +1527,43 @@ endif()
 # Apple otool
 if(D_PLATFORM_MAC)
 	# OBS
+	mac_get_linker_id(TARGET libobs OUTPUT T_OBS_LINK)
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-		COMMAND install_name_tool ARGS -change "@rpath/libobs.0.dylib" "@executable_path/../Frameworks/libobs.0.dylib" $<TARGET_FILE:${PROJECT_NAME}>
+		COMMAND install_name_tool ARGS -change "${T_OBS_LINK}" "@executable_path/../Frameworks/libobs.0.dylib" $<TARGET_FILE:${PROJECT_NAME}>
 	)
 	message(STATUS "${LOGPREFIX} Added post-build step for adjusting libobs linking path.")
 
 	# OBS Front-End API
-	if(REQUIRE_OBSFE AND HAVE_OBS_FRONTEND)
+	if(REQUIRE_OBSFE AND HAVE_OBSFE)
+		mac_get_linker_id(TARGET obs-frontend-api OUTPUT T_OBSFE_LINK)
 		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-			COMMAND install_name_tool ARGS -change "@rpath/libobs-frontend-api.dylib" "@executable_path/../Frameworks/libobs-frontend-api.dylib" $<TARGET_FILE:${PROJECT_NAME}>
+			COMMAND install_name_tool ARGS -change "${T_OBSFE_LINK}" "@executable_path/../Frameworks/libobs-frontend-api.dylib" $<TARGET_FILE:${PROJECT_NAME}>
 		)
 		message(STATUS "${LOGPREFIX} Added post-build step for adjusting libobs-frontend-api linking path.")
 	endif()
 
 	# Qt5
 	if(REQUIRE_QT AND HAVE_QT)
-		string(LENGTH "${Qt5_DIR}" T_PATH_LEN)
-		math(EXPR T_PATH_LEN "${T_PATH_LEN} - 10")
-		string(SUBSTRING "${Qt5_DIR}" 0 ${T_PATH_LEN} T_PATH)
+		# Figure out the linker location for Qt5::Core
+		mac_get_linker_id(TARGET Qt5::Core OUTPUT T_QT5CORE_LINK)
+
+		# Figure out the linker location for Qt5::Gui
+		mac_get_linker_id(TARGET Qt5::Gui OUTPUT T_QT5GUI_LINK)
+
+		# Figure out the linker location for Qt5::Widsgets
+		mac_get_linker_id(TARGET Qt5::Widgets OUTPUT T_QT5WIDGETS_LINK)
+
 		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 		# - QtCore
-			COMMAND install_name_tool ARGS -change "${T_PATH}/QtCore.framework/Versions/5/QtCore" "@executable_path/../Frameworks/QtCore.framework/Versions/5/QtCore" $<TARGET_FILE:${PROJECT_NAME}>
+			COMMAND install_name_tool ARGS -change "${T_QT5CORE_LINK}" "@executable_path/../Frameworks/QtCore.framework/Versions/5/QtCore" $<TARGET_FILE:${PROJECT_NAME}>
 		# - QtGui
-			COMMAND install_name_tool ARGS -change "${T_PATH}/QtGui.framework/Versions/5/QtGui" "@executable_path/../Frameworks/QtGui.framework/Versions/5/QtGui" $<TARGET_FILE:${PROJECT_NAME}>
+			COMMAND install_name_tool ARGS -change "${T_QT5GUI_LINK}" "@executable_path/../Frameworks/QtGui.framework/Versions/5/QtGui" $<TARGET_FILE:${PROJECT_NAME}>
 		# - QtWidgets
-			COMMAND install_name_tool ARGS -change "${T_PATH}/QtWidgets.framework/Versions/5/QtWidgets" "@executable_path/../Frameworks/QtWidgets.framework/Versions/5/QtWidgets" $<TARGET_FILE:${PROJECT_NAME}>
+			COMMAND install_name_tool ARGS -change "${T_QT5WIDGETS_LINK}" "@executable_path/../Frameworks/QtWidgets.framework/Versions/5/QtWidgets" $<TARGET_FILE:${PROJECT_NAME}>
 		)
-		message(STATUS "${LOGPREFIX} Added post-build step for adjusting Qt5 linking path (Found: ${Qt5_DIR} resolved to ${T_PATH}).")
+		message(STATUS "${LOGPREFIX} Added post-build step for adjusting Qt5::Core linking path (Found: ${Qt5_DIR} resolved to ${T_QT5CORE_LINK}).")
+		message(STATUS "${LOGPREFIX} Added post-build step for adjusting Qt5::Gui linking path (Found: ${Qt5_DIR} resolved to ${T_QT5GUI_LINK}).")
+		message(STATUS "${LOGPREFIX} Added post-build step for adjusting Qt5::Widgets linking path (Found: ${Qt5_DIR} resolved to ${T_QT5WIDGETS_LINK}).")
 	endif()
 endif()
 
