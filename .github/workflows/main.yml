@@ -256,6 +256,16 @@ jobs:
         mkdir build/package
         cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_7Z
         cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_ZIP
+    - name: 'Packages: Install'
+      shell: bash
+      run: |
+        curl -L -O http://s.sudre.free.fr/Software/files/Packages.dmg
+        sudo hdiutil attach ./Packages.dmg
+        sudo installer -pkg /Volumes/Packages\ 1.2.9/Install\ Packages.pkg -target /
+    - name: "Packages: Package"
+      shell: bash
+      run: |
+        packagesbuild ./build/temp/installer.pkgproj
     - name: "Artifacts"
       uses: actions/upload-artifact@v1
       with:
