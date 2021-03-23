@@ -204,7 +204,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="build/distrib" \
           -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
           -DPACKAGE_PREFIX="build/package" \
-          -DQt5_DIR=/usr/local/Cellar/qt@5/5.15.2/lib/cmake/Qt5
+          -DQt5_DIR=$(brew --prefix)/Cellar/qt@5/5.15.2/lib/cmake/Qt5
     - name: "Build Project"
       shell: bash
       run: |
