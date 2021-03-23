@@ -37,33 +37,36 @@ jobs:
       CMAKE_GENERATOR_TOOLSET: "host=x64"
       CMAKE_SYSTEM_VERSION: ${{ matrix.windows_sdk }}
     steps:
-    - name: "Clone Repository"
+    - name: "Clone"
       uses: actions/checkout@v2
       with:
         submodules: recursive
-    - name: "Cache: OBS"
+        fetch-depth: 0
+    - name: "libobs: Cache"
       uses: actions/cache@v2
       with:
-        path: "build/temp/libobs-download/libobs-download-prefix/src/libobs.7z"
-        key: ${{ matrix.id }}-${{ env.DOWNLOAD_OBS_VERSION }}-${{ env.DOWNLOAD_OBS_HASH_64 }}
-    - name: "Cache: OBS Dependencies"
+        path: |
+          build/temp/libobs-download
+        key: libobs-${{ matrix.id }}-${{ env.DOWNLOAD_OBS_VERSION }}-${{ env.DOWNLOAD_OBS_HASH_64 }}-${{ secrets.CACHE_VERSION }}
+    - name: "obsdeps: Cache"
       uses: actions/cache@v2
       with:
-        path: "build/temp/obsdeps-download/obsdeps-download-prefix/src/obsdeps.7z"
-        key: ${{ matrix.id }}-${{ env.DOWNLOAD_OBSDEPS_VERSION }}-${{ env.DOWNLOAD_OBSDEPS_HASH }}
-    - name: "Cache: Qt"
+        path: |
+          build/temp/obsdeps-download
+        key: obsdeps-${{ matrix.id }}-${{ env.DOWNLOAD_OBSDEPS_VERSION }}-${{ env.DOWNLOAD_OBSDEPS_HASH }}-${{ secrets.CACHE_VERSION }}
+    - name: "qt: Cache"
       uses: actions/cache@v2
       id: cache-qt
       with:
         path: "../Qt"
-        key: ${{ matrix.id }}-${{ env.QT_VERSION }}
-    - name: "Prerequisites: Qt"
+        key: ${{ matrix.id }}-${{ env.QT_VERSION }}-${{ secrets.CACHE_VERSION }}
+    - name: "qt: Install"
       if: "steps.cache-qt.outputs.cache-hit != true"
       shell: bash
       run: |
         curl -L "https://github.com/Xaymar/obs-studio/releases/download/26.1.0/qt_${QT_VERSION}_windows_64.7z" -o qt.7z
         7z x -o../Qt/ qt.7z
-    - name: "Configure Project"
+    - name: "StreamFX: Configure"
       shell: bash
       run: |
         cmake -H. -B"build/temp" \
@@ -72,24 +75,24 @@ jobs:
           -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
           -DPACKAGE_PREFIX="build/package" \
           -DQt5_DIR="${PWD}/../Qt/msvc2019_64/lib/cmake/Qt5/"
-    - name: "Build Project"
+    - name: "StreamFX: Build"
       shell: bash
       run: |
         cmake --build "build/temp" --config RelWithDebInfo --target INSTALL
-    - name: "Package Project"
+    - name: "StreamFX: Package (Install Prerequisites)"
+      run: |
+        curl "-kL" "https://cdn.xaymar.com/ci/innosetup-6.0.3.exe" "-f" "--retry" "5" "-o" "inno.exe"
+        .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
+    - name: "StreamFX: Package"
       shell: bash
       run: |
         mkdir build/package
         cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_7Z
         cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_ZIP
-    - name: "Package Installer (Prereqs)"
+    - name: "StreamFX: Package Installer"
       run: |
-        curl "-kL" "https://cdn.xaymar.com/ci/innosetup-6.0.3.exe" "-f" "--retry" "5" "-o" "inno.exe"
-        .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
-    - name: "Package Installer (Compile)"
-      run: |
-        & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' /Qp ".\build\temp\installer.iss"
-    - name: "Upload Artifacts"
+        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /Qp ".\build\temp\installer.iss"
+    - name: "Artifacts"
       uses: actions/upload-artifact@v1
       with:
         name: ${{ matrix.id }}
@@ -124,10 +127,11 @@ jobs:
       CC: ${{ matrix.compiler }}
       CXX: ${{ matrix.compiler-cxx }}
     steps:
-    - name: "Clone Repository"
+    - name: "Clone"
       uses: actions/checkout@v2
       with:
         submodules: recursive
+        fetch-depth: 0
     - name: "Prerequisites: Apt-Get"
       shell: bash
       run: |
@@ -144,12 +148,13 @@ jobs:
           ${{ matrix.packages }} \
           checkinstall pkg-config
         ${{ matrix.extra_command }}
-    - name: "Cache: OBS"
+    - name: "libobs: Cache"
       uses: actions/cache@v2
       with:
-        path: "build/temp/libobs-download/libobs-download-prefix/src/libobs.7z"
-        key: ${{ matrix.id }}-${{ env.DOWNLOAD_OBS_VERSION }}-${{ env.DOWNLOAD_OBS_HASH_64 }}
-    - name: "Configure Project"
+        path: |
+          build/temp/libobs-download
+        key: libobs-${{ matrix.id }}-${{ env.DOWNLOAD_OBS_VERSION }}-${{ env.DOWNLOAD_OBS_HASH_64 }}${{ secrets.CACHE_VERSION }}
+    - name: "StreamFX: Configure"
       shell: bash
       run: |
         cmake -H. -B"build/temp" \
@@ -158,17 +163,17 @@ jobs:
           -DENABLE_FILTER_NVIDIA_FACE_TRACKING=FALSE \
           -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
           -DPACKAGE_PREFIX="build/package"
-    - name: "Build Project"
+    - name: "StreamFX: Build"
       shell: bash
       run: |
         cmake --build "build/temp" --config RelWithDebInfo --target install
-    - name: "Package Project"
+    - name: "StreamFX: Package"
       shell: bash
       run: |
         mkdir build/package
         cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_7Z
         cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_ZIP
-    - name: "Upload Artifacts"
+    - name: "Artifacts"
       uses: actions/upload-artifact@v1
       with:
         name: ${{ matrix.id }}
@@ -188,15 +193,36 @@ jobs:
       CMAKE_GENERATOR: "Xcode"
       CMAKE_OSX_DEPLOYMENT_TARGET: "${{ matrix.target-version }}"
     steps:
-    - name: "Clone Repository"
+    - name: "Clone"
       uses: actions/checkout@v2
       with:
         submodules: recursive
-    - name: "Prerequisties: Qt"
+        fetch-depth: 0
+    - name: "libobs: Cache"
+      uses: actions/cache@v2
+      with:
+        path: |
+          build/temp/libobs-download
+        key: libobs-${{ matrix.id }}-${{ secrets.CACHE_VERSION }}
+    - name: "obsdeps: Cache"
+      uses: actions/cache@v2
+      with:
+        path: |
+          build/temp/obsdeps-download
+        key: obsdeps-${{ matrix.id }}-${{ secrets.CACHE_VERSION }}
+    - name: "qt: Cache"
+      uses: actions/cache@v2
+      id: qt-cache
+      with:
+        path: |
+          /usr/local/Cellar/qt@5
+        key: qt-${{ matrix.id }}-${{ secrets.CACHE_VERSION }}
+    - name: "qt: 5.15.2"
+      if: "steps.qt-cache.outputs.cache-hit != 'true'"
       shell: bash
       run: |
         brew install qt@5
-    - name: "Configure Project"
+    - name: "StreamFX: Configure"
       shell: bash
       run: |
         cmake -H. -B"build/temp" \
@@ -205,17 +231,17 @@ jobs:
           -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
           -DPACKAGE_PREFIX="build/package" \
           -DQt5_DIR=$(brew --prefix)/Cellar/qt@5/5.15.2/lib/cmake/Qt5
-    - name: "Build Project"
+    - name: "StreamFX: Build"
       shell: bash
       run: |
         cmake --build "build/temp" --config RelWithDebInfo --target install
-    - name: "Package Project"
+    - name: "StreamFX: Package"
       shell: bash
       run: |
         mkdir build/package
         cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_7Z
         cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_ZIP
-    - name: "Upload Artifacts"
+    - name: "Artifacts"
       uses: actions/upload-artifact@v1
       with:
         name: ${{ matrix.id }}
