@@ -203,11 +203,15 @@ endif()
 set(D_PLATFORM_INSTR ${ARCH_INST})
 if(ARCH_INST STREQUAL "x86")
 	set(D_PLATFORM_INSTR_X86 ON)
+	set(D_PLATFORM_ARCH_X86 ON)
 elseif(ARCH_INST STREQUAL "ARM")
 	set(D_PLATFORM_INSTR_ARM ON)
+	set(D_PLATFORM_ARCH_ARM ON)
 elseif(ARCH_INST STREQUAL "IA64")
 	set(D_PLATFORM_INSTR_ITANIUM ON)
+	set(D_PLATFORM_ARCH_ITANIUM ON)
 endif()
+set(D_PLATFORM_ARCH ${ARCH_INST})
 
 # Bitness
 set(D_PLATFORM_BITS ${ARCH_BITS})
@@ -322,7 +326,7 @@ if(STANDALONE)
 	endif()
 
 	set(PACKAGE_PREFIX "${CMAKE_BINARY_DIR}" CACHE PATH "Where to place the packages?")
-	set(PACKAGE_NAME "{PROJECT_NAME}" CACHE STRING "What should the package be called?")
+	set(PACKAGE_NAME "${PROJECT_NAME}" CACHE STRING "What should the package be called?")
 	set(PACKAGE_SUFFIX "" CACHE STRING "Any suffix for the package name? (Defaults to the current version string)")
 endif()
 
@@ -341,66 +345,60 @@ endif()
 
 if(NOT ${PREFIX}OBS_NATIVE)
 	# Options
-	set(${PREFIX}DOWNLOAD_OBS_VERSION "" CACHE STRING "(Optional) OBS Studio version to build against.")
-	set(${PREFIX}DOWNLOAD_OBS_HASH_32 "" CACHE STRING "")
-	set(${PREFIX}DOWNLOAD_OBS_HASH_64 "" CACHE STRING "")
+	set(${PREFIX}DOWNLOAD_OBS_URL "" CACHE STRING "(Optional) URL of prebuilt libOBS archive to download.")
+	set(${PREFIX}DOWNLOAD_OBS_HASH "" CACHE STRING "(Optional) The hash for the libOBS archive.")
 	mark_as_advanced(
-		${PREFIX}DOWNLOAD_OBS_VERSION
-		${PREFIX}DOWNLOAD_OBS_HASH_32
-		${PREFIX}DOWNLOAD_OBS_HASH_64
+		${PREFIX}DOWNLOAD_OBS_URL
+		${PREFIX}DOWNLOAD_OBS_HASH
 	)
 
-	# Operating System
-	set(OBS_DOWNLOAD_OS "unknown")
-	if (D_PLATFORM_WINDOWS)
-		set(OBS_DOWNLOAD_OS "windows")
-	elseif(D_PLATFORM_LINUX)
-		set(OBS_DOWNLOAD_OS "ubuntu")
-	elseif(D_PLATFORM_MAC)
-		set(OBS_DOWNLOAD_OS "macos")
-	endif()
-
-	# Bitness
-	set(OBS_DOWNLOAD_BITS 0)
-	if(D_PLATFORM_BITS EQUAL 32)
-		set(OBS_DOWNLOAD_BITS 32)
-	else()
-		set(OBS_DOWNLOAD_BITS 64)
-	endif()
-
-	# OBS Architecture String
-	if(D_PLATFORM_INSTR_X86)
-		if(D_PLATFORM_BITS EQUAL 64)
-			set(OBS_DOWNLOAD_ARCH "x64")
-		else()
-			set(OBS_DOWNLOAD_ARCH "x86")
-		endif()
-	elseif(D_PLATFORM_INSTR_ARM)
-		if(D_PLATFORM_BITS EQUAL 64)
-			set(OBS_DOWNLOAD_ARCH "arm64")
-		else()
-			set(OBS_DOWNLOAD_ARCH "arm32")
-		endif()
-	endif()
-
 	# Allow overriding what version we build against.
-	if(${PREFIX}DOWNLOAD_OBS_VERSION)
-		set(_DOWNLOAD_OBS_VERSION ${PREFIX}DOWNLOAD_OBS_VERSION)
-		set(_DOWNLOAD_OBS_HASH_32 ${PREFIX}DOWNLOAD_OBS_HASH_32)
-		set(_DOWNLOAD_OBS_HASH_64 ${PREFIX}DOWNLOAD_OBS_HASH_64)
+	if(${PREFIX}DOWNLOAD_OBS_URL)
+		set(_DOWNLOAD_OBS_URL "${${PREFIX}DOWNLOAD_OBS_URL}")
+		set(_DOWNLOAD_OBS_HASH "${${PREFIX}DOWNLOAD_OBS_HASH}")
 	else()
-		set(_DOWNLOAD_OBS_VERSION "26.0.2-ci")
-		if(D_PLATFORM_WINDOWS)
-			set(_DOWNLOAD_OBS_HASH_32 "SHA512=468A999ECC8C826683E208B8758FBAE2FD3C9C034A73A147F6BE0F40B6E0AF0B0C9A99DFCB8D3A856206A26FC45F5F0A3B1FF781949B3EF68B765FECEB5CEB55")
-			set(_DOWNLOAD_OBS_HASH_64 "SHA512=571B4196DF5CFBD3A8E113C97C7890000C490DDF1C6747529DE0F06063F928E7488095775919017104DE7A693CCF51A7A82BD04BCE62D6B3F0ED1F74A5F32B32")
+		set(_DOWNLOAD_OBS_VERSION "26.1.0-ci")
+		if (D_PLATFORM_WINDOWS)
+			if (D_PLATFORM_ARCH_X86)
+				set(_DOWNLOAD_OBS_URL "https://github.com/Xaymar/obs-studio/releases/download/${_DOWNLOAD_OBS_VERSION}/obs-studio-x64-0.0.0.0-windows-${D_PLATFORM_BITS}.7z")
+				if (D_PLATFORM_BITS EQUAL 64)
+					set(_DOWNLOAD_OBS_HASH "SHA256=EA9EE4CCEC0A19605C0768F1F4C21391A919CF0886F7A7CC94D63A95402CFD9B")
+				else()
+					message(FATAL_ERROR "${LOGPREFIX} Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+					return()
+				endif()
+			else()
+				message(FATAL_ERROR "${LOGPREFIX} Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+				return()
+			endif()
 		elseif(D_PLATFORM_LINUX)
-			set(_DOWNLOAD_OBS_HASH_32 "")
-			set(_DOWNLOAD_OBS_HASH_64 "SHA512=62EAD42890CEF953806F5780ED37304D6BD110F65D3ED83A88ADA462B0A0E46E9DEE477A76D456C444102EBA4F9F9A9EAAA299DCFDB2872233E2B35F775CCD0D")
+			if (D_PLATFORM_ARCH_X86)
+				set(_DOWNLOAD_OBS_URL "https://github.com/Xaymar/obs-studio/releases/download/${_DOWNLOAD_OBS_VERSION}/obs-studio-x64-0.0.0.0-ubuntu-${D_PLATFORM_BITS}.7z")
+				if (D_PLATFORM_BITS EQUAL 64)
+					set(_DOWNLOAD_OBS_HASH "SHA256=2B2793CDD0C3F5940924665022E31A76C10E34174073BF7B221325C11E764DF5")
+				else()
+					message(FATAL_ERROR "${LOGPREFIX} Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+					return()
+				endif()
+			else()
+				message(FATAL_ERROR "${LOGPREFIX} Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+				return()
+			endif()
 		elseif(D_PLATFORM_MAC)
-			set(_DOWNLOAD_OBS_HASH_32 "")
-			set(_DOWNLOAD_OBS_HASH_64 "SHA512=2A7E312666FAABF539740DAD8E30788DEB5882BE8D2FF062848741FD6F8C2077FB237CFB399634BC9C3DE38CF78B3043B1EAE92D833CE6A8B32F5E1EB92D6618")
+			if (D_PLATFORM_ARCH_X86)
+				set(_DOWNLOAD_OBS_URL "https://github.com/Xaymar/obs-studio/releases/download/${_DOWNLOAD_OBS_VERSION}/obs-studio-x64-0.0.0.0-macos-${D_PLATFORM_BITS}.7z")
+				if (D_PLATFORM_BITS EQUAL 64)
+					set(_DOWNLOAD_OBS_HASH "SHA256=34ABD3E574C62DA4E026E5DE271B93AB5151927E564F77264A59456F6ABCBDD0")
+				else()
+					message(FATAL_ERROR "${LOGPREFIX} Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+					return()
+				endif()
+			else()
+				message(FATAL_ERROR "${LOGPREFIX} Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+				return()
+			endif()
 		else()
-			message(FATAL_ERROR "No prebuilt packages available for this operating system.")
+			message(FATAL_ERROR "${LOGPREFIX} Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
 			return()
 		endif()
 	endif()
@@ -408,41 +406,80 @@ if(NOT ${PREFIX}OBS_NATIVE)
 	# Download libOBS
 	download_project(
 		PROJ libobs
-		URL "https://github.com/Xaymar/obs-studio/releases/download/${_DOWNLOAD_OBS_VERSION}/obs-studio-${OBS_DOWNLOAD_ARCH}-0.0.0.0-${OBS_DOWNLOAD_OS}-${OBS_DOWNLOAD_BITS}.7z"
-		URL_HASH "${_DOWNLOAD_OBS_HASH_${BITS}}"
-		DOWNLOAD_NAME "libobs.7z"
+		URL "${_DOWNLOAD_OBS_URL}"
+		URL_HASH "${_DOWNLOAD_OBS_HASH}"
 		DOWNLOAD_NO_PROGRESS OFF
 		UPDATE_DISCONNECTED OFF
 	)
 
 	include("${libobs_SOURCE_DIR}/cmake/LibObs/LibObsConfig.cmake")
+endif()
 
-	if(D_PLATFORM_WINDOWS)
-		set(${PREFIX}DOWNLOAD_OBSDEPS_VERSION "" CACHE STRING "(Optional) OBS Studio dependencies version to build against.")
-		set(${PREFIX}DOWNLOAD_OBSDEPS_HASH "" CACHE STRING "")
-		mark_as_advanced(
-			${PREFIX}DOWNLOAD_OBSDEPS_VERSION
-			${PREFIX}DOWNLOAD_OBSDEPS_HASH
-		)
+################################################################################
+# Standalone Build: OBS Studio Dependencies
+################################################################################
 
-		if(${PREFIX}DOWNLOAD_OBSDEPS_VERSION)
-			set(_DOWNLOAD_OBSDEPS_VERSION ${PREFIX}DOWNLOAD_OBSDEPS_VERSION)
-			set(_DOWNLOAD_OBSDEPS_HASH ${PREFIX}DOWNLOAD_OBSDEPS_HASH)
-		else()
-			set(_DOWNLOAD_OBSDEPS_VERSION "26.0.0")
-			set(_DOWNLOAD_OBSDEPS_HASH "SHA512=2D47E7579DE3FBD88C52BB62C2CA4D649BD958FBAE8E5B01EE263D7583B4D8EEEA8CE13C543BEF110FAC9142891C031973A1BC20AC6EED596E6AB97CCC669D16")
-		endif()
+if(STANDALONE AND NOT D_PLATFORM_LINUX)
+	# Options
+	set(${PREFIX}DOWNLOAD_OBSDEPS_URL "" CACHE STRING "(Optional) URL of prebuilt libOBS archive to download.")
+	set(${PREFIX}DOWNLOAD_OBSDEPS_HASH "" CACHE STRING "(Optional) The hash for the libOBS archive.")
+	mark_as_advanced(
+		${PREFIX}DOWNLOAD_OBSDEPS_URL
+		${PREFIX}DOWNLOAD_OBSDEPS_HASH
+	)
 
-		download_project(
-			PROJ obsdeps
-			URL "https://github.com/Xaymar/obs-studio/releases/download/${_DOWNLOAD_OBSDEPS_VERSION}/dependencies_${OBS_DOWNLOAD_OS}.7z"
-			URL_HASH "${_DOWNLOAD_OBSDEPS_HASH}"
-			DOWNLOAD_NAME "obsdeps.7z"
-			DOWNLOAD_NO_PROGRESS OFF
-			UPDATE_DISCONNECTED OFF
-		)
+	# Allow overriding what version we build against.
+	if(${PREFIX}DOWNLOAD_OBSDEPS_URL)
+		set(_DOWNLOAD_OBSDEPS_URL "${${PREFIX}DOWNLOAD_OBSDEPS_URL}")
+		set(_DOWNLOAD_OBSDEPS_HASH "${${PREFIX}DOWNLOAD_OBSDEPS_HASH}")
 	else()
-		message(STATUS "${LOGPREFIX} Please make sure that you have installed all required packages to build StreamFX.")
+		if (D_PLATFORM_WINDOWS)
+			if (D_PLATFORM_ARCH_X86)
+				set(_DOWNLOAD_OBSDEPS_URL "https://github.com/Xaymar/obs-studio/releases/download/26.1.0/deps_windows_x86.7z")
+				if (D_PLATFORM_BITS EQUAL 64)
+					set(_DOWNLOAD_OBSDEPS_HASH "SHA256=F5F8F5A53FDB26FF8F4D24811CA0FEA891B3A0C8477515B886129669A81D37C2")
+				elseif (D_PLATFORM_BITS EQUAL 32)
+					set(_DOWNLOAD_OBSDEPS_HASH "SHA256=F5F8F5A53FDB26FF8F4D24811CA0FEA891B3A0C8477515B886129669A81D37C2")
+				else()
+					message(FATAL_ERROR "${LOGPREFIX} Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+					return()
+				endif()
+			else()
+				message(FATAL_ERROR "${LOGPREFIX} Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+				return()
+			endif()
+		elseif(D_PLATFORM_MAC)
+			if (D_PLATFORM_ARCH_X86)
+				set(_DOWNLOAD_OBSDEPS_URL "https://github.com/Xaymar/obs-studio/releases/download/26.1.0/deps_macos_x86.tar.gz")
+				if (D_PLATFORM_BITS EQUAL 64)
+					set(_DOWNLOAD_OBSDEPS_HASH "SHA256=B316DD7802E0DEAE2BD43F52D4C8BD52EF893D203B90148C2AB851A00AA733FF")
+				else()
+					message(FATAL_ERROR "${LOGPREFIX} Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+					return()
+				endif()
+			else()
+				message(FATAL_ERROR "${LOGPREFIX} Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+				return()
+			endif()
+		else()
+			message(FATAL_ERROR "${LOGPREFIX} Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+			return()
+		endif()
+	endif()
+
+	# Download libOBS
+	download_project(
+		PROJ obsdeps
+		URL "${_DOWNLOAD_OBSDEPS_URL}"
+		URL_HASH "${_DOWNLOAD_OBSDEPS_HASH}"
+		DOWNLOAD_NO_PROGRESS OFF
+		UPDATE_DISCONNECTED OFF
+	)
+
+	if (D_PLATFORM_WINDOWS)
+		set(_OBSDEPS_PATH "${obsdeps_SOURCE_DIR}/win${D_PLATFORM_BITS}")
+	elseif(D_PLATFORM_MAC)
+		set(_OBSDEPS_PATH "${obsdeps_SOURCE_DIR}/obsdeps")
 	endif()
 endif()
 
@@ -450,32 +487,76 @@ endif()
 # Standalone Build: Qt v5.x
 ################################################################################
 
-if(D_PLATFORM_WINDOWS AND (NOT ${PREFIX}OBS_NATIVE))
+if(STANDALONE AND NOT D_PLATFORM_LINUX)
 	set(${PREFIX}DOWNLOAD_QT OFF CACHE BOOL "Download Qt?")
 
 	if(${PREFIX}DOWNLOAD_QT)
-		set(${PREFIX}DOWNLOAD_QT_VERSION "" CACHE STRING "(Optional) Qt Version to build against.")
+		set(${PREFIX}DOWNLOAD_QT_URL "" CACHE STRING "")
 		set(${PREFIX}DOWNLOAD_QT_HASH "" CACHE STRING "")
 		mark_as_advanced(
-			${PREFIX}DOWNLOAD_OBSDEPS_VERSION
-			${PREFIX}DOWNLOAD_OBSDEPS_HASH
+			${PREFIX}DOWNLOAD_QT_URL
+			${PREFIX}DOWNLOAD_QT_HASH
 		)
+
+		# Allow overriding what version we build against.
+		if(${PREFIX}DOWNLOAD_QT_URL)
+			set(_DOWNLOAD_QT_URL "${${PREFIX}DOWNLOAD_QT_URL}")
+			set(_DOWNLOAD_QT_HASH "${${PREFIX}DOWNLOAD_QT_HASH}")
+		else()
+			if (D_PLATFORM_WINDOWS)
+				if (D_PLATFORM_ARCH_X86)
+					if (D_PLATFORM_BITS EQUAL 64)
+						set(_DOWNLOAD_QT_URL "https://github.com/Xaymar/obs-studio/releases/download/26.1.0/qt_5.15.2_windows_64.7z")
+						set(_DOWNLOAD_QT_HASH "SHA256=109B9C21EF165B0C46DFAA9AD23124F2070ED4D74207C4AFB308183CB8D43BDD")
+					elseif (D_PLATFORM_BITS EQUAL 32)
+						set(_DOWNLOAD_QT_URL "https://github.com/Xaymar/obs-studio/releases/download/26.1.0/qt_5.15.2_windows_32.7z")
+						set(_DOWNLOAD_QT_HASH "SHA256=372E4FBF2A15DD4FDA955A07334D8B8AC6802990148C9CB4E766C90205F8F570")
+					else()
+						message(FATAL_ERROR "${LOGPREFIX} Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+						return()
+					endif()
+				else()
+					message(FATAL_ERROR "${LOGPREFIX} Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+					return()
+				endif()
+			elseif(D_PLATFORM_MAC)
+				if (D_PLATFORM_ARCH_X86)
+					set(_DOWNLOAD_QT_URL "https://github.com/obsproject/obs-deps/releases/download/2020-12-22/macos-qt-5.15.2-2020-12-22.tar.gz")
+					if (D_PLATFORM_BITS EQUAL 64)
+						set(_DOWNLOAD_QT_HASH "SHA256=5BA0BC722F54391FE27508D6DB57EC63BDA22DAD890F5960145C731C1BB837ED")
+					else()
+						message(FATAL_ERROR "${LOGPREFIX} Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+						return()
+					endif()
+				else()
+					message(FATAL_ERROR "${LOGPREFIX} Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+					return()
+				endif()
+			else()
+				message(FATAL_ERROR "${LOGPREFIX} Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+				return()
+			endif()
+		endif()
 
 		download_project(
 			PROJ qt
-			URL "https://github.com/Xaymar/obs-studio/releases/download/${_DOWNLOAD_OBSDEPS_VERSION}/qt_${_DOWNLOAD_QT_VERSION}_${OBS_DOWNLOAD_OS}.7z"
+			URL "${_DOWNLOAD_QT_URL}"
 			URL_HASH "${_DOWNLOAD_QT_HASH}"
-			DOWNLOAD_NAME "qt.7z"
-			DOWNLOAD_NO_PROGRESS ON
-			UPDATE_DISCONNECTED ON
-			QUIET
+			DOWNLOAD_NO_PROGRESS OFF
+			UPDATE_DISCONNECTED OFF
 		)
 
 		set(Qt5_DIR "${qt_SOURCE_DIR}" CACHE STRING "Path to Qt5")
-		if("${BITS}" STREQUAL "32")
-			CacheSet(Qt5_DIR "${qt_SOURCE_DIR}/msvc2017/lib/cmake/Qt5/")
-		else()
-			CacheSet(Qt5_DIR "${qt_SOURCE_DIR}/msvc2017_64/lib/cmake/Qt5/")
+		if (D_PLATFORM_WINDOWS)
+			if (D_PLATFORM_ARCH_X86)
+				if (D_PLATFORM_BITS EQUAL 64)
+					CacheSet(Qt5_DIR "${qt_SOURCE_DIR}/lib/cmake/Qt5")
+				elseif (D_PLATFORM_BITS EQUAL 32)
+					CacheSet(Qt5_DIR "${qt_SOURCE_DIR}/lib/cmake/Qt5")
+				endif()
+			endif()
+		elseif(D_PLATFORM_MAC)
+			CacheSet(Qt5_DIR "${qt_SOURCE_DIR}/lib/cmake/Qt5")
 		endif()
 	endif()
 endif()
@@ -651,8 +732,8 @@ if(REQUIRE_CURL)
 			set(CURL_LIBRARIES "${CURL_LIB}")
 			set(CURL_INCLUDE_DIRS "${CURL_INCLUDE_DIR}")
 		else()
-			set(CURL_LIBRARIES "${obsdeps_SOURCE_DIR}/win${D_PLATFORM_BITS}/bin/libcurl.lib")
-			set(CURL_INCLUDE_DIRS "${obsdeps_SOURCE_DIR}/win${D_PLATFORM_BITS}/include")
+			set(CURL_LIBRARIES "${_OBSDEPS_PATH}/bin/libcurl.lib")
+			set(CURL_INCLUDE_DIRS "${_OBSDEPS_PATH}/include")
 		endif()
 		set(CURL_LIBRARY_DEBUG ${CURL_LIBRARIES})
 		set(CURL_LIBRARY_RELEASE ${CURL_LIBRARIES})
@@ -673,7 +754,7 @@ if(REQUIRE_FFMPEG)
 			FFmpegPath "libavcodec/avcodec.h"
 			HINTS
 				${OBS_DEPENDENCIES_DIR}
-				${obsdeps_SOURCE_DIR}
+				${_OBSDEPS_PATH}
 				${DepsPath}
 				${DepsPath32}
 				${DepsPath64}

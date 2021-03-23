@@ -11,8 +11,9 @@ on:
       - '*'
 
 env:
-  DOWNLOAD_OBS_VERSION: "26.0.2-ci"
-  DOWNLOAD_OBSDEPS_VERSION: "26.1.0"
+  QT_VERSION: "5.15.2"
+  OBS_VERSION: "26.1.0-ci"
+  OBSDEPS_VERSION: "26.1.0"
 
 jobs:
   windows:
@@ -29,9 +30,6 @@ jobs:
             cmake_generator_platform: "x64"
     runs-on: ${{ matrix.runner }}
     env:
-      QT_VERSION: "5.15.2"
-      DOWNLOAD_OBS_HASH_64: "SHA512=571B4196DF5CFBD3A8E113C97C7890000C490DDF1C6747529DE0F06063F928E7488095775919017104DE7A693CCF51A7A82BD04BCE62D6B3F0ED1F74A5F32B32"
-      DOWNLOAD_OBSDEPS_HASH: "SHA512=2D47E7579DE3FBD88C52BB62C2CA4D649BD958FBAE8E5B01EE263D7583B4D8EEEA8CE13C543BEF110FAC9142891C031973A1BC20AC6EED596E6AB97CCC669D16"
       CMAKE_GENERATOR: ${{ matrix.cmake_generator }}
       CMAKE_GENERATOR_PLATFORM: ${{ matrix.cmake_generator_platform }}
       CMAKE_GENERATOR_TOOLSET: "host=x64"
@@ -47,25 +45,25 @@ jobs:
       with:
         path: |
           build/temp/libobs-download
-        key: libobs-${{ matrix.id }}-${{ env.DOWNLOAD_OBS_VERSION }}-${{ env.DOWNLOAD_OBS_HASH_64 }}-${{ secrets.CACHE_VERSION }}
+          build/temp/libobs-build
+          build/temp/libobs-src
+        key: libobs-${{ matrix.id }}-${{ env.OBS_VERSION }}-${{ env.DOWNLOAD_OBS_HASH }}-${{ secrets.CACHE_VERSION }}
     - name: "obsdeps: Cache"
       uses: actions/cache@v2
       with:
         path: |
           build/temp/obsdeps-download
-        key: obsdeps-${{ matrix.id }}-${{ env.DOWNLOAD_OBSDEPS_VERSION }}-${{ env.DOWNLOAD_OBSDEPS_HASH }}-${{ secrets.CACHE_VERSION }}
+          build/temp/obsdeps-build
+          build/temp/obsdeps-src
+        key: obsdeps-${{ matrix.id }}-${{ env.OBSDEPS_VERSION }}-${{ env.DOWNLOAD_OBSDEPS_HASH }}-${{ secrets.CACHE_VERSION }}
     - name: "qt: Cache"
       uses: actions/cache@v2
-      id: cache-qt
       with:
-        path: "../Qt"
-        key: ${{ matrix.id }}-${{ env.QT_VERSION }}-${{ secrets.CACHE_VERSION }}
-    - name: "qt: Install"
-      if: "steps.cache-qt.outputs.cache-hit != true"
-      shell: bash
-      run: |
-        curl -L "https://github.com/Xaymar/obs-studio/releases/download/26.1.0/qt_${QT_VERSION}_windows_64.7z" -o qt.7z
-        7z x -o../Qt/ qt.7z
+        path: |
+          build/temp/qt-download
+          build/temp/qt-build
+          build/temp/qt-src
+        key: qt-${{ matrix.id }}-${{ env.OBSDEPS_VERSION }}-${{ env.QT_VERSION }}-${{ secrets.CACHE_VERSION }}
     - name: "StreamFX: Configure"
       shell: bash
       run: |
@@ -74,7 +72,13 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="build/distrib" \
           -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
           -DPACKAGE_PREFIX="build/package" \
-          -DQt5_DIR="${PWD}/../Qt/msvc2019_64/lib/cmake/Qt5/"
+          -DDOWNLOAD_QT=ON \
+          -DDOWNLOAD_OBS_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBS_VERSION }}/obs-studio-x64-0.0.0.0-windows-64.7z" \
+          -DDOWNLOAD_OBS_HASH="SHA256=EA9EE4CCEC0A19605C0768F1F4C21391A919CF0886F7A7CC94D63A95402CFD9B" \
+          -DDOWNLOAD_OBSDEPS_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBSDEPS_VERSION }}/deps_windows_x86.7z" \
+          -DDOWNLOAD_OBSDEPS_HASH="SHA256=F5F8F5A53FDB26FF8F4D24811CA0FEA891B3A0C8477515B886129669A81D37C2" \
+          -DDOWNLOAD_QT_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBSDEPS_VERSION }}/qt_${{ env.QT_VERSION }}_windows_64.7z" \
+          -DDOWNLOAD_QT_HASH="SHA256=109B9C21EF165B0C46DFAA9AD23124F2070ED4D74207C4AFB308183CB8D43BDD"
     - name: "StreamFX: Build"
       shell: bash
       run: |
@@ -122,10 +126,9 @@ jobs:
             id: ubuntu-20.04-clang
     runs-on: ${{ matrix.runner }}
     env:
-      DOWNLOAD_OBS_HASH_64: "SHA512=62EAD42890CEF953806F5780ED37304D6BD110F65D3ED83A88ADA462B0A0E46E9DEE477A76D456C444102EBA4F9F9A9EAAA299DCFDB2872233E2B35F775CCD0D"
-      CMAKE_GENERATOR: "Ninja"
       CC: ${{ matrix.compiler }}
       CXX: ${{ matrix.compiler-cxx }}
+      CMAKE_GENERATOR: "Ninja"
     steps:
     - name: "Clone"
       uses: actions/checkout@v2
@@ -153,7 +156,9 @@ jobs:
       with:
         path: |
           build/temp/libobs-download
-        key: libobs-${{ matrix.id }}-${{ env.DOWNLOAD_OBS_VERSION }}-${{ env.DOWNLOAD_OBS_HASH_64 }}${{ secrets.CACHE_VERSION }}
+          build/temp/libobs-build
+          build/temp/libobs-src
+        key: libobs-${{ matrix.id }}-${{ env.OBS_VERSION }}-${{ env.DOWNLOAD_OBS_HASH }}-${{ secrets.CACHE_VERSION }}
     - name: "StreamFX: Configure"
       shell: bash
       run: |
@@ -162,7 +167,9 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="build/distrib" \
           -DENABLE_FILTER_NVIDIA_FACE_TRACKING=FALSE \
           -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
-          -DPACKAGE_PREFIX="build/package"
+          -DPACKAGE_PREFIX="build/package" \
+          -DDOWNLOAD_OBS_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBS_VERSION }}/obs-studio-x64-0.0.0.0-ubuntu-64.7z" \
+          -DDOWNLOAD_OBS_HASH="SHA256=2B2793CDD0C3F5940924665022E31A76C10E34174073BF7B221325C11E764DF5"
     - name: "StreamFX: Build"
       shell: bash
       run: |
@@ -203,21 +210,25 @@ jobs:
       with:
         path: |
           build/temp/libobs-download
-        key: libobs-${{ matrix.id }}-${{ secrets.CACHE_VERSION }}
+          build/temp/libobs-build
+          build/temp/libobs-src
+        key: libobs-${{ matrix.id }}-${{ env.OBS_VERSION }}-${{ env.DOWNLOAD_OBS_HASH }}-${{ secrets.CACHE_VERSION }}
     - name: "obsdeps: Cache"
       uses: actions/cache@v2
       with:
         path: |
           build/temp/obsdeps-download
-        key: obsdeps-${{ matrix.id }}-${{ secrets.CACHE_VERSION }}
+          build/temp/obsdeps-build
+          build/temp/obsdeps-src
+        key: obsdeps-${{ matrix.id }}-${{ env.OBSDEPS_VERSION }}-${{ env.DOWNLOAD_OBSDEPS_HASH }}-${{ secrets.CACHE_VERSION }}
     - name: "qt: Cache"
       uses: actions/cache@v2
       id: qt-cache
       with:
         path: |
           /usr/local/Cellar/qt@5
-        key: qt-${{ matrix.id }}-${{ secrets.CACHE_VERSION }}
-    - name: "qt: 5.15.2"
+        key: qt-${{ matrix.id }}-${{ env.QT_VERSION }}-${{ secrets.CACHE_VERSION }}
+    - name: "qt: Install"
       if: "steps.qt-cache.outputs.cache-hit != 'true'"
       shell: bash
       run: |
@@ -230,7 +241,11 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="build/distrib" \
           -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
           -DPACKAGE_PREFIX="build/package" \
-          -DQt5_DIR=$(brew --prefix)/Cellar/qt@5/5.15.2/lib/cmake/Qt5
+          -DQt5_DIR=$(brew --prefix)/Cellar/qt@5/${{ env.QT_VERSION }}/lib/cmake/Qt5 \
+          -DDOWNLOAD_OBS_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBS_VERSION }}/obs-studio-x64-0.0.0.0-macos-64.7z" \
+          -DDOWNLOAD_OBS_HASH="SHA256=34ABD3E574C62DA4E026E5DE271B93AB5151927E564F77264A59456F6ABCBDD0" \
+          -DDOWNLOAD_OBSDEPS_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBSDEPS_VERSION }}/deps_macos_x86.tar.gz" \
+          -DDOWNLOAD_OBSDEPS_HASH="SHA256=B316DD7802E0DEAE2BD43F52D4C8BD52EF893D203B90148C2AB851A00AA733FF"
     - name: "StreamFX: Build"
       shell: bash
       run: |
