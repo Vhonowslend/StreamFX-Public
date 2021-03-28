@@ -321,7 +321,7 @@ void color_grade_instance::video_tick(float)
 	_cache_fresh  = false;
 }
 
-void color_grade_instance::video_render(gs_effect_t*)
+void color_grade_instance::video_render(gs_effect_t* shader)
 {
 	// Grab initial values.
 	obs_source_t* parent = obs_filter_get_parent(_self);
@@ -329,6 +329,7 @@ void color_grade_instance::video_render(gs_effect_t*)
 	uint32_t      width  = obs_source_get_base_width(target);
 	uint32_t      height = obs_source_get_base_height(target);
 	vec4          blank  = vec4{0, 0, 0, 0};
+	shader               = shader ? shader : obs_get_base_effect(OBS_EFFECT_DEFAULT);
 
 	// Skip filter if anything is wrong.
 	if (!parent || !target || !width || !height) {
@@ -525,8 +526,6 @@ void color_grade_instance::video_render(gs_effect_t*)
 #ifdef ENABLE_PROFILING
 		gs::debug_marker gdm{gs::debug_color_cache_render, "Draw Cache"};
 #endif
-		auto shader = obs_get_base_effect(OBS_EFFECT_DEFAULT);
-
 		// Revert GPU status to what OBS Studio expects.
 		gs_enable_depth_test(false);
 		gs_enable_color(true, true, true, true);
@@ -545,7 +544,7 @@ color_grade_factory::color_grade_factory()
 {
 	_info.id           = PREFIX "filter-color-grade";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
-	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
+	_info.output_flags = OBS_SOURCE_VIDEO;
 
 	set_resolution_enabled(false);
 	finish_setup();
