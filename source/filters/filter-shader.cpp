@@ -126,7 +126,7 @@ void shader_instance::video_render(gs_effect_t* effect)
 
 			_fx->prepare_render();
 			_fx->set_input_a(_rt->get_texture());
-			_fx->render();
+			_fx->render(effect);
 		}
 	} catch (const std::exception& ex) {
 		obs_source_skip_video_filter(_self);
@@ -148,7 +148,7 @@ shader_factory::shader_factory()
 {
 	_info.id           = PREFIX "filter-shader";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
-	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
+	_info.output_flags = OBS_SOURCE_VIDEO;
 
 	set_activity_tracking_enabled(true);
 	finish_setup();
