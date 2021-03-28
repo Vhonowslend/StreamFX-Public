@@ -112,7 +112,7 @@ namespace gfx {
 
 			void prepare_render();
 
-			void render();
+			void render(gs_effect* effect);
 
 			public:
 			void set_size(uint32_t w, uint32_t h);
