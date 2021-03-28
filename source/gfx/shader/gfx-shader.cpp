@@ -508,10 +508,13 @@ void gfx::shader::shader::prepare_render()
 	return;
 }
 
-void gfx::shader::shader::render()
+void gfx::shader::shader::render(gs_effect* effect)
 {
 	if (!_shader)
 		return;
+
+	if (!effect)
+		effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
 
 	if (!_rt_up_to_date) {
 		auto op   = _rt->render(width(), height());
@@ -534,9 +537,8 @@ void gfx::shader::shader::render()
 		_rt_up_to_date = true;
 	}
 
-	gs_effect_set_texture(gs_effect_get_param_by_name(obs_get_base_effect(OBS_EFFECT_DEFAULT), "image"),
-						  _rt->get_texture()->get_object());
-	while (gs_effect_loop(obs_get_base_effect(OBS_EFFECT_DEFAULT), "Draw")) {
+	gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), _rt->get_texture()->get_object());
+	while (gs_effect_loop(effect, "Draw")) {
 		gs_draw_sprite(nullptr, 0, width(), height());
 	}
 }
