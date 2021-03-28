@@ -328,6 +328,7 @@ void color_grade_instance::video_render(gs_effect_t*)
 	obs_source_t* target = obs_filter_get_target(_self);
 	uint32_t      width  = obs_source_get_base_width(target);
 	uint32_t      height = obs_source_get_base_height(target);
+	vec4          blank  = vec4{0, 0, 0, 0};
 
 	// Skip filter if anything is wrong.
 	if (!parent || !target || !width || !height) {
@@ -343,10 +344,11 @@ void color_grade_instance::video_render(gs_effect_t*)
 	// - We can skip the original capture and reduce the overall impact of this.
 
 	// 1. Capture the filter/source rendered above this.
-	if (!_ccache_fresh) {
+	if (!_ccache_fresh || !_ccache_texture) {
 #ifdef ENABLE_PROFILING
 		gs::debug_marker gdmp{gs::debug_color_cache, "Cache '%s'", obs_source_get_name(target)};
 #endif
+		// If the input cache render target doesn't exist, create it.
 		if (!_ccache_rt) {
 			_ccache_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 		}
@@ -355,27 +357,63 @@ void color_grade_instance::video_render(gs_effect_t*)
 			auto op = _ccache_rt->render(width, height);
 			gs_ortho(0, static_cast<float_t>(width), 0, static_cast<float_t>(height), 0, 1);
 
+			// Blank out the input cache.
+			gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &blank, 0., 0);
+
+			// Begin rendering the actual input source.
 			obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING);
+
+			// Enable all colors for rendering.
+			gs_enable_color(true, true, true, true);
+
+			// Prevent blending with existing content, even if it is cleared.
+			gs_blend_state_push();
+			gs_enable_blending(false);
+			gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
+
+			// Disable depth testing.
+			gs_enable_depth_test(false);
+
+			// Disable stencil testing.
+			gs_enable_stencil_test(false);
+
+			// Disable culling.
+			gs_set_cull_mode(GS_NEITHER);
+
+			// End rendering the actual input source.
 			obs_source_process_filter_end(_self, obs_get_base_effect(OBS_EFFECT_DEFAULT), width, height);
+
+			// Restore original blend mode.
+			gs_blend_state_pop();
 		}
 
+		// Try and retrieve the input cache as a texture for later use.
 		_ccache_rt->get_texture(_ccache_texture);
 		if (!_ccache_texture) {
 			throw std::runtime_error("Failed to cache original source.");
 		}
 
+		// Mark the input cache as valid.
 		_ccache_fresh = true;
 	}
 
 	// 2. Apply one of the two rendering methods (LUT or Direct).
-	if (_lut_initialized && _lut_enabled) {
+	if (_lut_initialized && _lut_enabled) { // Try to apply with the LUT based method.
 		try {
 #ifdef ENABLE_PROFILING
 			gs::debug_marker gdm{gs::debug_color_convert, "LUT Rendering"};
 #endif
+			// If the LUT was changed, rebuild the LUT first.
 			if (_lut_dirty) {
 				rebuild_lut();
+
+				// Mark the cache as invalid, since the LUT has been changed.
 				_cache_fresh = false;
+			}
+
+			// Reallocate the rendertarget if necessary.
+			if (_cache_rt->get_color_format() != GS_RGBA) {
+				allocate_rendertarget(GS_RGBA);
 			}
 
 			if (!_cache_fresh) {
@@ -383,17 +421,44 @@ void color_grade_instance::video_render(gs_effect_t*)
 					auto op = _cache_rt->render(width, height);
 					gs_ortho(0, 1., 0, 1., 0, 1);
 
+					// Blank out the input cache.
+					gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &blank, 0., 0);
+
+					// Enable all colors for rendering.
+					gs_enable_color(true, true, true, true);
+
+					// Prevent blending with existing content, even if it is cleared.
+					gs_blend_state_push();
+					gs_enable_blending(false);
+					gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
+
+					// Disable depth testing.
+					gs_enable_depth_test(false);
+
+					// Disable stencil testing.
+					gs_enable_stencil_test(false);
+
+					// Disable culling.
+					gs_set_cull_mode(GS_NEITHER);
+
 					auto effect = _lut_consumer->prepare(_lut_depth, _lut_texture);
 					effect->get_parameter("image").set_texture(_ccache_texture);
 					while (gs_effect_loop(effect->get_object(), "Draw")) {
 						streamfx::gs_draw_fullscreen_tri();
 					}
+
+					// Restore original blend mode.
+					gs_blend_state_pop();
 				}
 
+				// Try and retrieve the render cache as a texture.
 				_cache_rt->get_texture(_cache_texture);
+
+				// Mark the render cache as valid.
 				_cache_fresh = true;
 			}
 		} catch (std::exception const& ex) {
+			// If anything happened, revert to direct rendering.
 			_lut_rt.reset();
 			_lut_texture.reset();
 			_lut_enabled = false;
@@ -411,18 +476,46 @@ void color_grade_instance::video_render(gs_effect_t*)
 
 		{ // Render the source to the cache.
 			auto op = _cache_rt->render(width, height);
-			gs_ortho(0, static_cast<float_t>(width), 0, static_cast<float_t>(height), 0, 1);
-			// TODO: Check if clearing things is required.
+			gs_ortho(0, 1, 0, 1, 0, 1);
 
 			prepare_effect();
-			obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING);
-			obs_source_process_filter_end(_self, _effect.get_object(), width, height);
+
+			// Blank out the input cache.
+			gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &blank, 0., 0);
+
+			// Enable all colors for rendering.
+			gs_enable_color(true, true, true, true);
+
+			// Prevent blending with existing content, even if it is cleared.
+			gs_blend_state_push();
+			gs_enable_blending(false);
+			gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
+
+			// Disable depth testing.
+			gs_enable_depth_test(false);
+
+			// Disable stencil testing.
+			gs_enable_stencil_test(false);
+
+			// Disable culling.
+			gs_set_cull_mode(GS_NEITHER);
+
+			// Render the effect.
+			_effect.get_parameter("image").set_texture(_ccache_texture);
+			while (gs_effect_loop(_effect.get_object(), "Draw")) {
+				streamfx::gs_draw_fullscreen_tri();
+			}
+
+			// Restore original blend mode.
+			gs_blend_state_pop();
 		}
 
+		// Try and retrieve the render cache as a texture.
 		_cache_rt->get_texture(_cache_texture);
+
+		// Mark the render cache as valid.
 		_cache_fresh = true;
 	}
-
 	if (!_cache_texture) {
 		throw std::runtime_error("Failed to cache processed source.");
 	}
@@ -434,7 +527,12 @@ void color_grade_instance::video_render(gs_effect_t*)
 #endif
 		auto shader = obs_get_base_effect(OBS_EFFECT_DEFAULT);
 
+		// Revert GPU status to what OBS Studio expects.
 		gs_enable_depth_test(false);
+		gs_enable_color(true, true, true, true);
+		gs_set_cull_mode(GS_NEITHER);
+
+		// Draw the render cache.
 		while (gs_effect_loop(shader, "Draw")) {
 			gs_effect_set_texture(gs_effect_get_param_by_name(shader, "image"),
 								  _cache_texture ? _cache_texture->get_object() : nullptr);
