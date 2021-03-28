@@ -118,7 +118,7 @@ displacement_factory::displacement_factory()
 {
 	_info.id           = PREFIX "filter-displacement";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
-	_info.output_flags = OBS_SOURCE_VIDEO;
+	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
 
 	set_resolution_enabled(false);
 	finish_setup();
