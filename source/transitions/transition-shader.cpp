@@ -97,7 +97,7 @@ void shader_instance::transition_render(gs_texture_t* a, gs_texture_t* b, float_
 	_fx->set_transition_time(t);
 	_fx->set_transition_size(cx, cy);
 	_fx->prepare_render();
-	_fx->render();
+	_fx->render(nullptr);
 }
 
 bool shader_instance::audio_render(uint64_t* ts_out, obs_source_audio_mix* audio_output, uint32_t mixers,
