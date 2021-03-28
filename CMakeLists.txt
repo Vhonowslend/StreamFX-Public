@@ -904,12 +904,6 @@ if(D_PLATFORM_WINDOWS) # Windows Support
 	)
 	LIST(APPEND PROJECT_TEMPLATES "templates/version.rc.in")
 	LIST(APPEND PROJECT_PRIVATE_GENERATED "${PROJECT_BINARY_DIR}/generated/version.rc")
-
-	if(NOT ${PREFIX}OBS_NATIVE)
-		list(APPEND PROJECT_TEMPLATES
-			"templates/installer.iss.in"
-		)
-	endif()
 endif()
 
 # Minimum Dependencies
@@ -1794,7 +1788,7 @@ if(NOT ${PREFIX}OBS_NATIVE)
 			get_filename_component(ISS_FILES_DIR "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
 			file(TO_NATIVE_PATH "${ISS_FILES_DIR}" ISS_FILES_DIR)
 
-			get_filename_component(ISS_PACKAGE_DIR "${CMAKE_PACKAGE_PREFIX}" ABSOLUTE)
+			get_filename_component(ISS_PACKAGE_DIR "${PACKAGE_PREFIX}" ABSOLUTE)
 			file(TO_NATIVE_PATH "${ISS_PACKAGE_DIR}" ISS_PACKAGE_DIR)
 
 			get_filename_component(ISS_SOURCE_DIR "${PROJECT_SOURCE_DIR}" ABSOLUTE)
