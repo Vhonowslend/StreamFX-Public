@@ -476,10 +476,10 @@ obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* d
 			std::string buf = std::string(ST_CHANNEL_INPUT) + "." + pri_ch + "." + sec_ch;
 			p = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0,
 												0.01);
-			_translation_cache.push_back(translate_string(D_TRANSLATE(D_DESC(ST_CHANNEL_INPUT)), D_TRANSLATE(sec_ch),
-														  D_TRANSLATE(pri_ch), D_TRANSLATE(sec_ch), D_TRANSLATE(pri_ch),
-														  D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch),
-														  D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch)));
+			_translation_cache.push_back(
+				translate_string(D_TRANSLATE(D_DESC(ST_CHANNEL_INPUT)), D_TRANSLATE(sec_ch), D_TRANSLATE(pri_ch),
+								 D_TRANSLATE(sec_ch), D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch),
+								 D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch)));
 			obs_property_set_long_description(p, _translation_cache.back().c_str());
 		}
 
