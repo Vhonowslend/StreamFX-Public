@@ -86,13 +86,13 @@ float3 grade_tint(float3 v) {
 
 	if (pTintMode == TINT_MODE_LINEAR) { // Linear
 	} else if (pTintMode == TINT_MODE_EXP) { // Exp
-		value = 1.0 - exp2(value * pTintExponent * -C_log2_e);		
+		value = 1.0 - exp2(value * pTintExponent * -C_log2_e);
 	} else if (pTintMode == TINT_MODE_EXP2) { // Exp2
 		value = 1.0 - exp2(value * value * pTintExponent * pTintExponent * -C_log2_e);
 	} else if (pTintMode == TINT_MODE_LOG) { // Log
 		value = (log2(value) + 2.) / 2.333333;
 	} else if (pTintMode == TINT_MODE_LOG10) { // Log10
-		value = (log10(value) + 1.) / 2.;		
+		value = (m_log10(value) + 1.) / 2.;
 	}
 
 	float3 tint = float3(0,0,0);
