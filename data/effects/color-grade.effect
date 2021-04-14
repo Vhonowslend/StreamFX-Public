@@ -50,8 +50,10 @@ uniform float4 pCorrection;
 // Functionality
 //------------------------------------------------------------------------------
 
-float3 grade_lift(float3 v) { // same as grade_offset?
-	return (v.rgb + pLift.rgb) + pLift.a;
+float3 grade_lift(float3 v) {
+	float3 multiplier1 = float3(1., 1., 1.) - pLift.rgb;
+	float3 multiplier2 = float3(1., 1., 1.) - pLift.aaa;
+	return float3(1., 1., 1.) - ((float3(1., 1., 1.) - v) * multiplier1 * multiplier2);
 };
 
 float3 grade_gamma(float3 v) {
