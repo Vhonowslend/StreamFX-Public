@@ -55,10 +55,7 @@ float3 grade_lift(float3 v) { // same as grade_offset?
 };
 
 float3 grade_gamma(float3 v) {
-	float3 s = sign(v); // Store sign for later use.
-	float3 u = abs(v); // Remove sign
-	u.rgb = pow(pow(u.rgb, pGamma.rgb), pGamma.a);
-	return u * s; // Restore sign.
+	return pow(abs(v), pGamma.rgb * pGamma.a) * sign(v);
 };
 
 float3 grade_gain(float3 v) {
@@ -112,22 +109,30 @@ float3 grade_colorcorrection(float3 v) {
 	v1.b *= pCorrection.b; // Lightness Multiplier
 	float3 v2 = HSVtoRGB(v1);
 
-	// Contrast
-	v2.rgb = ((v2.rgb - 0.5) * max(pCorrection.a, 0)) + 0.5;
 
 	return v2;
 };
 
+float3 grade_contrast(float3 v) {
+	v -= .5;
+	v *= pCorrection.a;
+	v += .5;
+	return v;
+}
+
 float4 PSDraw(VertexData vtx) : TARGET {
-	float4 v1 = image.Sample(PointClampSampler, vtx.uv);
-	float3 v2 = grade_lift(v1.rgb);
-	float3 v3 = grade_gamma(v2);
-	float3 v4 = grade_gain(v3);
-	float3 v5 = grade_offset(v4);
-	float3 v6 = grade_tint(v5);
-	float3 v7 = grade_colorcorrection(v6);
-	float3 vf = v7;
-	return float4(vf, v1.a);
+	float4 vo = image.Sample(PointClampSampler, vtx.uv);
+	float3 v = vo.rgb;
+
+	v = grade_lift(v);
+	v = grade_gamma(v);
+	v = grade_gain(v);
+	v = grade_offset(v);
+	v = grade_tint(v);
+	v = grade_colorcorrection(v);
+	v = grade_contrast(v);
+
+	return float4(v, vo.a);
 };
 
 technique Draw
