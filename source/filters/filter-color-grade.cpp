@@ -605,10 +605,10 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 		obs_properties_t* grp = obs_properties_create();
 		obs_properties_add_group(pr, ST_LIFT, D_TRANSLATE(ST_LIFT), OBS_GROUP_NORMAL, grp);
 
-		obs_properties_add_float_slider(grp, ST_LIFT_(RED), D_TRANSLATE(ST_LIFT_(RED)), -1000.0, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_LIFT_(GREEN), D_TRANSLATE(ST_LIFT_(GREEN)), -1000.0, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_LIFT_(BLUE), D_TRANSLATE(ST_LIFT_(BLUE)), -1000.0, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_LIFT_(ALL), D_TRANSLATE(ST_LIFT_(ALL)), -1000.0, 1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_LIFT_(RED), D_TRANSLATE(ST_LIFT_(RED)), -1000.0, 100., 0.01);
+		obs_properties_add_float_slider(grp, ST_LIFT_(GREEN), D_TRANSLATE(ST_LIFT_(GREEN)), -1000.0, 100., 0.01);
+		obs_properties_add_float_slider(grp, ST_LIFT_(BLUE), D_TRANSLATE(ST_LIFT_(BLUE)), -1000.0, 100., 0.01);
+		obs_properties_add_float_slider(grp, ST_LIFT_(ALL), D_TRANSLATE(ST_LIFT_(ALL)), -1000.0, 100., 0.01);
 	}
 
 	{
@@ -625,10 +625,10 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 		obs_properties_t* grp = obs_properties_create();
 		obs_properties_add_group(pr, ST_GAIN, D_TRANSLATE(ST_GAIN), OBS_GROUP_NORMAL, grp);
 
-		obs_properties_add_float_slider(grp, ST_GAIN_(RED), D_TRANSLATE(ST_GAIN_(RED)), 0.01, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_GAIN_(GREEN), D_TRANSLATE(ST_GAIN_(GREEN)), 0.01, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_GAIN_(BLUE), D_TRANSLATE(ST_GAIN_(BLUE)), 0.01, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_GAIN_(ALL), D_TRANSLATE(ST_GAIN_(ALL)), 0.01, 1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_GAIN_(RED), D_TRANSLATE(ST_GAIN_(RED)), -1000., 1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_GAIN_(GREEN), D_TRANSLATE(ST_GAIN_(GREEN)), -1000., 1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_GAIN_(BLUE), D_TRANSLATE(ST_GAIN_(BLUE)), -1000., 1000.0, 0.01);
+		obs_properties_add_float_slider(grp, ST_GAIN_(ALL), D_TRANSLATE(ST_GAIN_(ALL)), -1000., 1000.0, 0.01);
 	}
 
 	{
