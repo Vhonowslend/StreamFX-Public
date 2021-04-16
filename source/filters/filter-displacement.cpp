@@ -151,19 +151,10 @@ obs_properties_t* displacement_factory::get_properties2(displacement_instance* d
 		path = streamfx::data_file_path("examples/normal-maps/neutral.png").u8string();
 	}
 
-	{
-		auto p = obs_properties_add_path(pr, ST_FILE, D_TRANSLATE(ST_FILE), obs_path_type::OBS_PATH_FILE,
-										 D_TRANSLATE(S_FILEFILTERS_TEXTURE), path.c_str());
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_FILE)));
-	}
-	{
-		auto p = obs_properties_add_float(pr, ST_SCALE, D_TRANSLATE(ST_SCALE), -10000000.0, 10000000.0, 0.01);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SCALE)));
-	}
-	{
-		auto p = obs_properties_add_float_slider(pr, ST_SCALE_TYPE, D_TRANSLATE(ST_SCALE_TYPE), 0.0, 100.0, 0.01);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SCALE_TYPE)));
-	}
+	obs_properties_add_path(pr, ST_FILE, D_TRANSLATE(ST_FILE), obs_path_type::OBS_PATH_FILE,
+							D_TRANSLATE(S_FILEFILTERS_TEXTURE), path.c_str());
+	obs_properties_add_float(pr, ST_SCALE, D_TRANSLATE(ST_SCALE), -10000000.0, 10000000.0, 0.01);
+	obs_properties_add_float_slider(pr, ST_SCALE_TYPE, D_TRANSLATE(ST_SCALE_TYPE), 0.0, 100.0, 0.01);
 
 	return pr;
 }

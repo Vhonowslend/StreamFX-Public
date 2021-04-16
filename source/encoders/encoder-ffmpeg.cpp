@@ -1017,6 +1017,13 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 {
 	obs_properties_t* props = obs_properties_create();
 
+#ifdef ENABLE_FRONTEND
+	{
+		obs_properties_add_button2(props, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN),
+								   streamfx::encoder::ffmpeg::ffmpeg_factory::on_manual_open, this);
+	}
+#endif
+
 	if (data) {
 		data->get_properties(props);
 	}
@@ -1035,7 +1042,6 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 		{ // Key-Frame Interval Type
 			auto p = obs_properties_add_list(grp, KEY_KEYFRAMES_INTERVALTYPE, D_TRANSLATE(ST_KEYFRAMES_INTERVALTYPE),
 											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_KEYFRAMES_INTERVALTYPE)));
 			obs_property_set_modified_callback(p, modified_keyframes);
 			obs_property_list_add_int(p, D_TRANSLATE(ST_KEYFRAMES_INTERVALTYPE_(Seconds)), 0);
 			obs_property_list_add_int(p, D_TRANSLATE(ST_KEYFRAMES_INTERVALTYPE_(Frames)), 1);
@@ -1043,13 +1049,11 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 		{ // Key-Frame Interval Seconds
 			auto p = obs_properties_add_float(grp, KEY_KEYFRAMES_INTERVAL_SECONDS, D_TRANSLATE(ST_KEYFRAMES_INTERVAL),
 											  0.00, std::numeric_limits<int16_t>::max(), 0.01);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_KEYFRAMES_INTERVAL)));
 			obs_property_float_set_suffix(p, " seconds");
 		}
 		{ // Key-Frame Interval Frames
 			auto p = obs_properties_add_int(grp, KEY_KEYFRAMES_INTERVAL_FRAMES, D_TRANSLATE(ST_KEYFRAMES_INTERVAL), 0,
 											std::numeric_limits<int32_t>::max(), 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_KEYFRAMES_INTERVAL)));
 			obs_property_int_set_suffix(p, " frames");
 		}
 	}
@@ -1065,25 +1069,21 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 		{ // Custom Settings
 			auto p = obs_properties_add_text(grp, KEY_FFMPEG_CUSTOMSETTINGS, D_TRANSLATE(ST_FFMPEG_CUSTOMSETTINGS),
 											 obs_text_type::OBS_TEXT_DEFAULT);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_FFMPEG_CUSTOMSETTINGS)));
 		}
 
 		if (_handler && _handler->is_hardware_encoder(this)) {
 			auto p = obs_properties_add_int(grp, KEY_FFMPEG_GPU, D_TRANSLATE(ST_FFMPEG_GPU), -1,
 											std::numeric_limits<uint8_t>::max(), 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_FFMPEG_GPU)));
 		}
 
 		if (_handler && _handler->has_threading_support(this)) {
 			auto p = obs_properties_add_int_slider(grp, KEY_FFMPEG_THREADS, D_TRANSLATE(ST_FFMPEG_THREADS), 0,
 												   static_cast<int64_t>(std::thread::hardware_concurrency() * 2), 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_FFMPEG_THREADS)));
 		}
 
 		if (_handler && _handler->has_pixel_format_support(this)) {
 			auto p = obs_properties_add_list(grp, KEY_FFMPEG_COLORFORMAT, D_TRANSLATE(ST_FFMPEG_COLORFORMAT),
 											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_FFMPEG_COLORFORMAT)));
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), static_cast<int64_t>(AV_PIX_FMT_NONE));
 			for (auto ptr = _avcodec->pix_fmts; *ptr != AV_PIX_FMT_NONE; ptr++) {
 				obs_property_list_add_int(p, ::ffmpeg::tools::get_pixel_format_name(*ptr), static_cast<int64_t>(*ptr));
@@ -1094,7 +1094,6 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 			auto p =
 				obs_properties_add_list(grp, KEY_FFMPEG_STANDARDCOMPLIANCE, D_TRANSLATE(ST_FFMPEG_STANDARDCOMPLIANCE),
 										OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_FFMPEG_STANDARDCOMPLIANCE)));
 			obs_property_list_add_int(p, D_TRANSLATE(ST_FFMPEG_STANDARDCOMPLIANCE ".VeryStrict"),
 									  FF_COMPLIANCE_VERY_STRICT);
 			obs_property_list_add_int(p, D_TRANSLATE(ST_FFMPEG_STANDARDCOMPLIANCE ".Strict"), FF_COMPLIANCE_STRICT);
@@ -1108,6 +1107,15 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 
 	return props;
 }
+
+#ifdef ENABLE_FRONTEND
+bool ffmpeg_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
+{
+	ffmpeg_factory* ptr = static_cast<ffmpeg_factory*>(data);
+	streamfx::open_url(ptr->_handler->get_help_url(ptr->_avcodec));
+	return false;
+}
+#endif
 
 const AVCodec* ffmpeg_factory::get_avcodec()
 {

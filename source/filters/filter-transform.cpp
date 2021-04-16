@@ -65,6 +65,8 @@
 
 using namespace streamfx::filter::transform;
 
+static constexpr std::string_view HELP_URL = "https://github.com/Xaymar/obs-StreamFX/wiki/Filter-3D-Transform";
+
 static const float_t farZ  = 2097152.0f; // 2 pow 21
 static const float_t nearZ = 1.0f / farZ;
 
@@ -499,6 +501,13 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 {
 	obs_properties_t* pr = obs_properties_create();
 
+#ifdef ENABLE_FRONTEND
+	{
+		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN),
+								   streamfx::filter::transform::transform_factory::on_manual_open, nullptr);
+	}
+#endif
+
 	// Camera
 	{
 		auto grp = obs_properties_create();
@@ -506,7 +515,6 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 		{ // Projection Mode
 			auto p = obs_properties_add_list(grp, ST_CAMERA, D_TRANSLATE(ST_CAMERA), OBS_COMBO_TYPE_LIST,
 											 OBS_COMBO_FORMAT_INT);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_CAMERA)));
 			obs_property_list_add_int(p, D_TRANSLATE(ST_CAMERA_ORTHOGRAPHIC),
 									  static_cast<int64_t>(CameraMode::Orthographic));
 			obs_property_list_add_int(p, D_TRANSLATE(ST_CAMERA_PERSPECTIVE),
@@ -516,7 +524,6 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 		{ // Field Of View
 			auto p = obs_properties_add_float_slider(grp, ST_CAMERA_FIELDOFVIEW, D_TRANSLATE(ST_CAMERA_FIELDOFVIEW),
 													 1.0, 179.0, 0.01);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_CAMERA_FIELDOFVIEW)));
 		}
 
 		obs_properties_add_group(pr, ST_CAMERA, D_TRANSLATE(ST_CAMERA), OBS_GROUP_NORMAL, grp);
@@ -530,7 +537,6 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 		for (auto opt : opts) {
 			auto p = obs_properties_add_float(grp, opt, D_TRANSLATE(opt), std::numeric_limits<float_t>::lowest(),
 											  std::numeric_limits<float_t>::max(), 0.01);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_POSITION)));
 		}
 
 		obs_properties_add_group(pr, ST_POSITION, D_TRANSLATE(ST_POSITION), OBS_GROUP_NORMAL, grp);
@@ -542,7 +548,6 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 			const char* opts[] = {ST_ROTATION_X, ST_ROTATION_Y, ST_ROTATION_Z};
 			for (auto opt : opts) {
 				auto p = obs_properties_add_float_slider(grp, opt, D_TRANSLATE(opt), -180.0, 180.0, 0.01);
-				obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_ROTATION)));
 				obs_property_float_set_suffix(p, "° Deg");
 			}
 		}
@@ -555,7 +560,6 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 		const char* opts[] = {ST_SCALE_X, ST_SCALE_Y};
 		for (auto opt : opts) {
 			auto p = obs_properties_add_float_slider(grp, opt, D_TRANSLATE(opt), -1000, 1000, 0.01);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SCALE)));
 			obs_property_float_set_suffix(p, "%");
 		}
 
@@ -567,7 +571,6 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 		const char* opts[] = {ST_SHEAR_X, ST_SHEAR_Y};
 		for (auto opt : opts) {
 			auto p = obs_properties_add_float_slider(grp, opt, D_TRANSLATE(opt), -200.0, 200.0, 0.01);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHEAR)));
 			obs_property_float_set_suffix(p, "%");
 		}
 
@@ -580,13 +583,11 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 
 		{ // Mipmapping
 			auto p = obs_properties_add_bool(grp, ST_MIPMAPPING, D_TRANSLATE(ST_MIPMAPPING));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_MIPMAPPING)));
 		}
 
 		{ // Order
 			auto p = obs_properties_add_list(grp, ST_ROTATION_ORDER, D_TRANSLATE(ST_ROTATION_ORDER),
 											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_ROTATION_ORDER)));
 			obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_XYZ), RotationOrder::XYZ);
 			obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_XZY), RotationOrder::XZY);
 			obs_property_list_add_int(p, D_TRANSLATE(ST_ROTATION_ORDER_YXZ), RotationOrder::YXZ);
@@ -598,6 +599,14 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 
 	return pr;
 }
+
+#ifdef ENABLE_FRONTEND
+bool transform_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
+{
+	streamfx::open_url(HELP_URL);
+	return false;
+}
+#endif
 
 std::shared_ptr<transform_factory> _filter_transform_factory_instance = nullptr;
 

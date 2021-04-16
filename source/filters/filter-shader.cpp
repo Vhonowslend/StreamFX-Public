@@ -26,6 +26,9 @@
 
 using namespace streamfx::filter::shader;
 
+static constexpr std::string_view HELP_URL =
+	"https://github.com/Xaymar/obs-StreamFX/wiki/Source-Filter-Transition-Shader";
+
 shader_instance::shader_instance(obs_data_t* data, obs_source_t* self) : obs::source_instance(data, self)
 {
 	_fx = std::make_shared<gfx::shader::shader>(self, gfx::shader::shader_mode::Filter);
@@ -172,12 +175,27 @@ obs_properties_t* shader_factory::get_properties2(shader::shader_instance* data)
 	auto pr = obs_properties_create();
 	obs_properties_set_param(pr, data, nullptr);
 
+#ifdef ENABLE_FRONTEND
+	{
+		auto p = obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN),
+											streamfx::filter::shader::shader_factory::on_manual_open, nullptr);
+	}
+#endif
+
 	if (data) {
 		reinterpret_cast<shader_instance*>(data)->properties(pr);
 	}
 
 	return pr;
 }
+
+#ifdef ENABLE_FRONTEND
+bool shader_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
+{
+	streamfx::open_url(HELP_URL);
+	return false;
+}
+#endif
 
 std::shared_ptr<shader_factory> _filter_shader_factory_instance = nullptr;
 

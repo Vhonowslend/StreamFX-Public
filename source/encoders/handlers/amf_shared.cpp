@@ -190,7 +190,6 @@ void amf::get_properties_pre(obs_properties_t* props, const AVCodec* codec)
 {
 	auto p = obs_properties_add_list(props, ST_KEY_PRESET, D_TRANSLATE(ST_I18N_PRESET), OBS_COMBO_TYPE_LIST,
 									 OBS_COMBO_FORMAT_INT);
-	obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_I18N_PRESET)));
 	for (auto kv : presets) {
 		obs_property_list_add_int(p, D_TRANSLATE(kv.second.c_str()), static_cast<int64_t>(kv.first));
 	}
@@ -205,24 +204,16 @@ void amf::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		{
 			auto p = obs_properties_add_list(grp, ST_KEY_RATECONTROL_MODE, D_TRANSLATE(ST_I18N_RATECONTROL_MODE),
 											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_I18N_RATECONTROL_MODE)));
 			obs_property_set_modified_callback(p, modified_ratecontrol);
 			for (auto kv : ratecontrolmodes) {
 				obs_property_list_add_int(p, D_TRANSLATE(kv.second.c_str()), static_cast<int64_t>(kv.first));
 			}
 		}
 
-		{
-			auto p = util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_LOOKAHEAD,
-													   D_TRANSLATE(ST_I18N_RATECONTROL_LOOKAHEAD));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_I18N_RATECONTROL_LOOKAHEAD)));
-		}
-
-		{
-			auto p = util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_FRAMESKIPPING,
-													   D_TRANSLATE(ST_I18N_RATECONTROL_FRAMESKIPPING));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_I18N_RATECONTROL_FRAMESKIPPING)));
-		}
+		util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_LOOKAHEAD,
+										  D_TRANSLATE(ST_I18N_RATECONTROL_LOOKAHEAD));
+		util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_FRAMESKIPPING,
+										  D_TRANSLATE(ST_I18N_RATECONTROL_FRAMESKIPPING));
 	}
 
 	{
@@ -248,7 +239,6 @@ void amf::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 			auto p = obs_properties_add_int(grp, ST_KEY_RATECONTROL_LIMITS_BUFFERSIZE,
 											D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS_BUFFERSIZE), 0,
 											std::numeric_limits<std::int32_t>::max(), 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_I18N_RATECONTROL_LIMITS_BUFFERSIZE)));
 			obs_property_int_set_suffix(p, " kbit");
 		}
 	}
@@ -258,21 +248,12 @@ void amf::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		obs_properties_add_group(props, ST_I18N_RATECONTROL_QP, D_TRANSLATE(ST_I18N_RATECONTROL_QP), OBS_GROUP_NORMAL,
 								 grp);
 
-		{
-			auto p = obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_I, D_TRANSLATE(ST_I18N_RATECONTROL_QP_I),
-												   -1, 51, 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_I18N_RATECONTROL_QP_I)));
-		}
-		{
-			auto p = obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_P, D_TRANSLATE(ST_I18N_RATECONTROL_QP_P),
-												   -1, 51, 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_I18N_RATECONTROL_QP_P)));
-		}
+		obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_I, D_TRANSLATE(ST_I18N_RATECONTROL_QP_I), -1, 51, 1);
+		obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_P, D_TRANSLATE(ST_I18N_RATECONTROL_QP_P), -1, 51, 1);
 
 		if (std::string_view("amf_h264") == codec->name) {
-			auto p = obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_B, D_TRANSLATE(ST_I18N_RATECONTROL_QP_B),
-												   -1, 51, 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_I18N_RATECONTROL_QP_B)));
+			obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_B, D_TRANSLATE(ST_I18N_RATECONTROL_QP_B), -1, 51,
+										  1);
 		}
 	}
 
@@ -283,39 +264,20 @@ void amf::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		{
 			auto p =
 				obs_properties_add_int_slider(grp, ST_KEY_OTHER_BFRAMES, D_TRANSLATE(ST_I18N_OTHER_BFRAMES), -1, 4, 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_I18N_OTHER_BFRAMES)));
 			obs_property_int_set_suffix(p, " frames");
 		}
 
-		{
-			auto p = util::obs_properties_add_tristate(grp, ST_KEY_OTHER_BFRAMEREFERENCES,
-													   D_TRANSLATE(ST_I18N_OTHER_BFRAMEREFERENCES));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_I18N_OTHER_BFRAMEREFERENCES)));
-		}
-
+		util::obs_properties_add_tristate(grp, ST_KEY_OTHER_BFRAMEREFERENCES,
+										  D_TRANSLATE(ST_I18N_OTHER_BFRAMEREFERENCES));
 		{
 			auto p = obs_properties_add_int_slider(grp, ST_KEY_OTHER_REFERENCEFRAMES,
 												   D_TRANSLATE(ST_I18N_OTHER_REFERENCEFRAMES), -1, 16, 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_I18N_OTHER_REFERENCEFRAMES)));
 			obs_property_int_set_suffix(p, " frames");
 		}
-
-		{
-			auto p =
-				util::obs_properties_add_tristate(grp, ST_KEY_OTHER_ENFORCEHRD, D_TRANSLATE(ST_I18N_OTHER_ENFORCEHRD));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_I18N_OTHER_ENFORCEHRD)));
-		}
-
-		{
-			auto p = util::obs_properties_add_tristate(grp, ST_KEY_OTHER_VBAQ, D_TRANSLATE(ST_I18N_OTHER_VBAQ));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_I18N_OTHER_VBAQ)));
-		}
-
-		{
-			auto p = util::obs_properties_add_tristate(grp, ST_KEY_OTHER_ACCESSUNITDELIMITER,
-													   D_TRANSLATE(ST_I18N_OTHER_ACCESSUNITDELIMITER));
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_I18N_OTHER_ACCESSUNITDELIMITER)));
-		}
+		util::obs_properties_add_tristate(grp, ST_KEY_OTHER_ENFORCEHRD, D_TRANSLATE(ST_I18N_OTHER_ENFORCEHRD));
+		util::obs_properties_add_tristate(grp, ST_KEY_OTHER_VBAQ, D_TRANSLATE(ST_I18N_OTHER_VBAQ));
+		util::obs_properties_add_tristate(grp, ST_KEY_OTHER_ACCESSUNITDELIMITER,
+										  D_TRANSLATE(ST_I18N_OTHER_ACCESSUNITDELIMITER));
 	}
 }
 
