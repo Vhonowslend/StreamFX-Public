@@ -294,3 +294,11 @@ std::filesystem::path streamfx::config_file_path(std::string_view file)
 		throw std::runtime_error("obs_module_get_config_path returned nullptr");
 	}
 }
+
+#ifdef ENABLE_FRONTEND
+bool streamfx::open_url(std::string_view url)
+{
+	QUrl qurl = QString::fromUtf8(url.data());
+	return QDesktopServices::openUrl(qurl);
+}
+#endif
