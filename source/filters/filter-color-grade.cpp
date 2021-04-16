@@ -35,7 +35,6 @@
 #endif
 
 #define ST "Filter.ColorGrade"
-#define ST_TOOL ST ".Tool"
 #define ST_LIFT ST ".Lift"
 #define ST_LIFT_(x) ST_LIFT "." D_VSTR(x)
 #define ST_GAMMA ST ".Gamma"
@@ -560,7 +559,6 @@ const char* color_grade_factory::get_name()
 
 void color_grade_factory::get_defaults2(obs_data_t* data)
 {
-	obs_data_set_default_string(data, ST_TOOL, ST_CORRECTION);
 	obs_data_set_default_double(data, ST_LIFT_(RED), 0);
 	obs_data_set_default_double(data, ST_LIFT_(GREEN), 0);
 	obs_data_set_default_double(data, ST_LIFT_(BLUE), 0);
@@ -605,79 +603,181 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 		obs_properties_t* grp = obs_properties_create();
 		obs_properties_add_group(pr, ST_LIFT, D_TRANSLATE(ST_LIFT), OBS_GROUP_NORMAL, grp);
 
-		obs_properties_add_float_slider(grp, ST_LIFT_(RED), D_TRANSLATE(ST_LIFT_(RED)), -1000.0, 100., 0.01);
-		obs_properties_add_float_slider(grp, ST_LIFT_(GREEN), D_TRANSLATE(ST_LIFT_(GREEN)), -1000.0, 100., 0.01);
-		obs_properties_add_float_slider(grp, ST_LIFT_(BLUE), D_TRANSLATE(ST_LIFT_(BLUE)), -1000.0, 100., 0.01);
-		obs_properties_add_float_slider(grp, ST_LIFT_(ALL), D_TRANSLATE(ST_LIFT_(ALL)), -1000.0, 100., 0.01);
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_LIFT_(RED), D_TRANSLATE(ST_LIFT_(RED)), -1000., 100., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p =
+				obs_properties_add_float_slider(grp, ST_LIFT_(GREEN), D_TRANSLATE(ST_LIFT_(GREEN)), -1000., 100., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p =
+				obs_properties_add_float_slider(grp, ST_LIFT_(BLUE), D_TRANSLATE(ST_LIFT_(BLUE)), -1000., 100., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_LIFT_(ALL), D_TRANSLATE(ST_LIFT_(ALL)), -1000., 100., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
 	}
 
 	{
 		obs_properties_t* grp = obs_properties_create();
 		obs_properties_add_group(pr, ST_GAMMA, D_TRANSLATE(ST_GAMMA), OBS_GROUP_NORMAL, grp);
 
-		obs_properties_add_float_slider(grp, ST_GAMMA_(RED), D_TRANSLATE(ST_GAMMA_(RED)), -1000.0, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_GAMMA_(GREEN), D_TRANSLATE(ST_GAMMA_(GREEN)), -1000.0, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_GAMMA_(BLUE), D_TRANSLATE(ST_GAMMA_(BLUE)), -1000.0, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_GAMMA_(ALL), D_TRANSLATE(ST_GAMMA_(ALL)), -1000.0, 1000.0, 0.01);
+		{
+			auto p =
+				obs_properties_add_float_slider(grp, ST_GAMMA_(RED), D_TRANSLATE(ST_GAMMA_(RED)), -1000., 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_GAMMA_(GREEN), D_TRANSLATE(ST_GAMMA_(GREEN)), -1000.,
+													 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p =
+				obs_properties_add_float_slider(grp, ST_GAMMA_(BLUE), D_TRANSLATE(ST_GAMMA_(BLUE)), -1000., 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p =
+				obs_properties_add_float_slider(grp, ST_GAMMA_(ALL), D_TRANSLATE(ST_GAMMA_(ALL)), -1000., 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
 	}
 
 	{
 		obs_properties_t* grp = obs_properties_create();
 		obs_properties_add_group(pr, ST_GAIN, D_TRANSLATE(ST_GAIN), OBS_GROUP_NORMAL, grp);
 
-		obs_properties_add_float_slider(grp, ST_GAIN_(RED), D_TRANSLATE(ST_GAIN_(RED)), -1000., 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_GAIN_(GREEN), D_TRANSLATE(ST_GAIN_(GREEN)), -1000., 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_GAIN_(BLUE), D_TRANSLATE(ST_GAIN_(BLUE)), -1000., 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_GAIN_(ALL), D_TRANSLATE(ST_GAIN_(ALL)), -1000., 1000.0, 0.01);
+		{
+			auto p =
+				obs_properties_add_float_slider(grp, ST_GAIN_(RED), D_TRANSLATE(ST_GAIN_(RED)), -1000., 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p =
+				obs_properties_add_float_slider(grp, ST_GAIN_(GREEN), D_TRANSLATE(ST_GAIN_(GREEN)), -1000., 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p =
+				obs_properties_add_float_slider(grp, ST_GAIN_(BLUE), D_TRANSLATE(ST_GAIN_(BLUE)), -1000., 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p =
+				obs_properties_add_float_slider(grp, ST_GAIN_(ALL), D_TRANSLATE(ST_GAIN_(ALL)), -1000., 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
 	}
 
 	{
 		obs_properties_t* grp = obs_properties_create();
 		obs_properties_add_group(pr, ST_OFFSET, D_TRANSLATE(ST_OFFSET), OBS_GROUP_NORMAL, grp);
 
-		obs_properties_add_float_slider(grp, ST_OFFSET_(RED), D_TRANSLATE(ST_OFFSET_(RED)), -1000.0, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_OFFSET_(GREEN), D_TRANSLATE(ST_OFFSET_(GREEN)), -1000.0, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_OFFSET_(BLUE), D_TRANSLATE(ST_OFFSET_(BLUE)), -1000.0, 1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_OFFSET_(ALL), D_TRANSLATE(ST_OFFSET_(ALL)), -1000.0, 1000.0, 0.01);
+		{
+			auto p =
+				obs_properties_add_float_slider(grp, ST_OFFSET_(RED), D_TRANSLATE(ST_OFFSET_(RED)), -1000., 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_OFFSET_(GREEN), D_TRANSLATE(ST_OFFSET_(GREEN)), -1000.,
+													 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_OFFSET_(BLUE), D_TRANSLATE(ST_OFFSET_(BLUE)), -1000.,
+													 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p =
+				obs_properties_add_float_slider(grp, ST_OFFSET_(ALL), D_TRANSLATE(ST_OFFSET_(ALL)), -1000., 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
 	}
 
 	{
 		obs_properties_t* grp = obs_properties_create();
 		obs_properties_add_group(pr, ST_TINT, D_TRANSLATE(ST_TINT), OBS_GROUP_NORMAL, grp);
 
-		obs_properties_add_float_slider(grp, ST_TINT_(TONE_LOW, RED), D_TRANSLATE(ST_TINT_(TONE_LOW, RED)), 0, 1000.0,
-										0.01);
-		obs_properties_add_float_slider(grp, ST_TINT_(TONE_LOW, GREEN), D_TRANSLATE(ST_TINT_(TONE_LOW, GREEN)), 0,
-										1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_TINT_(TONE_LOW, BLUE), D_TRANSLATE(ST_TINT_(TONE_LOW, BLUE)), 0, 1000.0,
-										0.01);
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_TINT_(TONE_LOW, RED), D_TRANSLATE(ST_TINT_(TONE_LOW, RED)),
+													 0, 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_TINT_(TONE_LOW, GREEN),
+													 D_TRANSLATE(ST_TINT_(TONE_LOW, GREEN)), 0, 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_TINT_(TONE_LOW, BLUE),
+													 D_TRANSLATE(ST_TINT_(TONE_LOW, BLUE)), 0, 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
 
-		obs_properties_add_float_slider(grp, ST_TINT_(TONE_MID, RED), D_TRANSLATE(ST_TINT_(TONE_MID, RED)), 0, 1000.0,
-										0.01);
-		obs_properties_add_float_slider(grp, ST_TINT_(TONE_MID, GREEN), D_TRANSLATE(ST_TINT_(TONE_MID, GREEN)), 0,
-										1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_TINT_(TONE_MID, BLUE), D_TRANSLATE(ST_TINT_(TONE_MID, BLUE)), 0, 1000.0,
-										0.01);
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_TINT_(TONE_MID, RED), D_TRANSLATE(ST_TINT_(TONE_MID, RED)),
+													 0, 1000., 0.01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_TINT_(TONE_MID, GREEN),
+													 D_TRANSLATE(ST_TINT_(TONE_MID, GREEN)), 0, 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_TINT_(TONE_MID, BLUE),
+													 D_TRANSLATE(ST_TINT_(TONE_MID, BLUE)), 0, 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
 
-		obs_properties_add_float_slider(grp, ST_TINT_(TONE_HIGH, RED), D_TRANSLATE(ST_TINT_(TONE_HIGH, RED)), 0, 1000.0,
-										0.01);
-		obs_properties_add_float_slider(grp, ST_TINT_(TONE_HIGH, GREEN), D_TRANSLATE(ST_TINT_(TONE_HIGH, GREEN)), 0,
-										1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_TINT_(TONE_HIGH, BLUE), D_TRANSLATE(ST_TINT_(TONE_HIGH, BLUE)), 0,
-										1000.0, 0.01);
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_TINT_(TONE_HIGH, RED),
+													 D_TRANSLATE(ST_TINT_(TONE_HIGH, RED)), 0, 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_TINT_(TONE_HIGH, GREEN),
+													 D_TRANSLATE(ST_TINT_(TONE_HIGH, GREEN)), 0, 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_TINT_(TONE_HIGH, BLUE),
+													 D_TRANSLATE(ST_TINT_(TONE_HIGH, BLUE)), 0, 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
 	}
 
 	{
 		obs_properties_t* grp = obs_properties_create();
 		obs_properties_add_group(pr, ST_CORRECTION, D_TRANSLATE(ST_CORRECTION), OBS_GROUP_NORMAL, grp);
 
-		obs_properties_add_float_slider(grp, ST_CORRECTION_(HUE), D_TRANSLATE(ST_CORRECTION_(HUE)), -180, 180.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_CORRECTION_(SATURATION), D_TRANSLATE(ST_CORRECTION_(SATURATION)), 0.0,
-										1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_CORRECTION_(LIGHTNESS), D_TRANSLATE(ST_CORRECTION_(LIGHTNESS)), 0.0,
-										1000.0, 0.01);
-		obs_properties_add_float_slider(grp, ST_CORRECTION_(CONTRAST), D_TRANSLATE(ST_CORRECTION_(CONTRAST)), 0.0,
-										1000.0, 0.01);
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_CORRECTION_(HUE), D_TRANSLATE(ST_CORRECTION_(HUE)), -180.,
+													 180., .01);
+			obs_property_float_set_suffix(p, " °");
+		}
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_CORRECTION_(SATURATION),
+													 D_TRANSLATE(ST_CORRECTION_(SATURATION)), 0., 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_CORRECTION_(LIGHTNESS),
+													 D_TRANSLATE(ST_CORRECTION_(LIGHTNESS)), 0., 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_CORRECTION_(CONTRAST),
+													 D_TRANSLATE(ST_CORRECTION_(CONTRAST)), 0., 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
 	}
 
 	{
@@ -709,7 +809,7 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 			}
 		}
 
-		obs_properties_add_float_slider(grp, ST_TINT_EXPONENT, D_TRANSLATE(ST_TINT_EXPONENT), 0., 10., 0.01);
+		obs_properties_add_float_slider(grp, ST_TINT_EXPONENT, D_TRANSLATE(ST_TINT_EXPONENT), 0., 10., .01);
 
 		{
 			auto p = obs_properties_add_list(grp, ST_RENDERMODE, D_TRANSLATE(ST_RENDERMODE), OBS_COMBO_TYPE_LIST,
