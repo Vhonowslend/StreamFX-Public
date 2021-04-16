@@ -84,6 +84,8 @@
 
 using namespace streamfx::filter::color_grade;
 
+static constexpr std::string_view HELP_URL = "https://github.com/Xaymar/obs-StreamFX/wiki/Filter-Color-Grade";
+
 // TODO: Figure out a way to merge _lut_rt, _lut_texture, _rt_source, _rt_grad, _tex_source, _tex_grade, _source_updated and _grade_updated.
 // Seriously this is too much GPU space wasted on unused trash.
 
@@ -601,6 +603,13 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 {
 	obs_properties_t* pr = obs_properties_create();
 
+#ifdef ENABLE_FRONTEND
+	{
+		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN),
+								   streamfx::filter::color_grade::color_grade_factory::on_manual_open, nullptr);
+	}
+#endif
+
 	{
 		obs_properties_t* grp = obs_properties_create();
 		obs_properties_add_group(pr, ST_LIFT, D_TRANSLATE(ST_LIFT), OBS_GROUP_NORMAL, grp);
@@ -714,7 +723,6 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 		{
 			auto p = obs_properties_add_list(grp, ST_RENDERMODE, D_TRANSLATE(ST_RENDERMODE), OBS_COMBO_TYPE_LIST,
 											 OBS_COMBO_FORMAT_INT);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_RENDERMODE)));
 			std::pair<const char*, int64_t> els[] = {
 				{S_STATE_AUTOMATIC, -1},
 				{ST_RENDERMODE_DIRECT, 0},
@@ -732,6 +740,14 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 
 	return pr;
 }
+
+#ifdef ENABLE_FRONTEND
+bool color_grade_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
+{
+	streamfx::open_url(HELP_URL);
+	return false;
+}
+#endif
 
 std::shared_ptr<color_grade_factory> _color_grade_factory_instance = nullptr;
 

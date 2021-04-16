@@ -40,6 +40,11 @@ namespace streamfx::encoder::ffmpeg::handler {
 
 		virtual void get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context, bool hw_encode);
 
+		virtual std::string_view get_help_url(const AVCodec* codec) override
+		{
+			return "https://github.com/Xaymar/obs-StreamFX/wiki/Encoder-FFmpeg-NVENC";
+		};
+
 		public /*support tests*/:
 		virtual bool has_keyframe_support(ffmpeg_factory* instance);
 

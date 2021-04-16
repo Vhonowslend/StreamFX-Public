@@ -24,7 +24,8 @@
 #define PREFIX "streamfx-"
 
 #define D_TRANSLATE(x) obs_module_text(x)
-#define D_DESC(x) x ".Description"
+
+#define S_MANUAL_OPEN "Manual.Open"
 
 #define S_FILEFILTERS_IMAGE "*.png *.webp *.tga *.tiff *.jpeg *.jpg *.bmp"
 #define S_FILEFILTERS_TEXTURE S_FILEFILTERS_IMAGE " *.dds"

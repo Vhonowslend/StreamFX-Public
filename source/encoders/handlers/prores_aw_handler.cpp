@@ -86,7 +86,6 @@ void prores_aw_handler::get_properties(obs_properties_t* props, const AVCodec* c
 	if (!context) {
 		auto p = obs_properties_add_list(props, P_PRORES_PROFILE, D_TRANSLATE(P_PRORES_PROFILE), OBS_COMBO_TYPE_LIST,
 										 OBS_COMBO_FORMAT_INT);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(P_PRORES_PROFILE)));
 		for (auto ptr = codec->profiles; ptr->profile != FF_PROFILE_UNKNOWN; ptr++) {
 			obs_property_list_add_int(p, profile_to_name(ptr), static_cast<int64_t>(ptr->profile));
 		}

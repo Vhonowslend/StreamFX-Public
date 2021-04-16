@@ -48,6 +48,8 @@
 
 using namespace streamfx::source::mirror;
 
+static constexpr std::string_view HELP_URL = "https://github.com/Xaymar/obs-StreamFX/wiki/Source-Mirror";
+
 mirror_audio_data::mirror_audio_data(const audio_data* audio, speaker_layout layout)
 {
 	// Build a clone of a packet.
@@ -313,10 +315,16 @@ obs_properties_t* mirror_factory::get_properties2(mirror_instance* data)
 	obs_properties_t* pr = obs_properties_create();
 	obs_property_t*   p  = nullptr;
 
+#ifdef ENABLE_FRONTEND
+	{
+		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN),
+								   streamfx::source::mirror::mirror_factory::on_manual_open, nullptr);
+	}
+#endif
+
 	{
 		p = obs_properties_add_list(pr, ST_SOURCE, D_TRANSLATE(ST_SOURCE), OBS_COMBO_TYPE_LIST,
 									OBS_COMBO_FORMAT_STRING);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SOURCE)));
 		obs_property_set_modified_callback(p, modified_properties);
 
 		obs_property_list_add_string(p, "", "");
@@ -340,7 +348,6 @@ obs_properties_t* mirror_factory::get_properties2(mirror_instance* data)
 
 	{
 		p = obs_properties_add_bool(pr, ST_SOURCE_AUDIO, D_TRANSLATE(ST_SOURCE_AUDIO));
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SOURCE_AUDIO)));
 		obs_property_set_modified_callback(p, modified_properties);
 	}
 
@@ -362,11 +369,18 @@ obs_properties_t* mirror_factory::get_properties2(mirror_instance* data)
 								  static_cast<int64_t>(SPEAKERS_5POINT1));
 		obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(FullSurround)),
 								  static_cast<int64_t>(SPEAKERS_7POINT1));
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SOURCE_AUDIO_LAYOUT)));
 	}
 
 	return pr;
 }
+
+#ifdef ENABLE_FRONTEND
+bool mirror_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
+{
+	streamfx::open_url(HELP_URL);
+	return false;
+}
+#endif
 
 std::shared_ptr<mirror_factory> _source_mirror_factory_instance;
 

@@ -125,6 +125,10 @@ namespace streamfx::filter::blur {
 
 		std::string translate_string(const char* format, ...);
 
+#ifdef ENABLE_FRONTEND
+		static bool on_manual_open(obs_properties_t* props, obs_property_t* property, void* data);
+#endif
+
 		public: // Singleton
 		static void initialize();
 
