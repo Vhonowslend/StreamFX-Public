@@ -145,6 +145,10 @@ namespace streamfx::encoder::ffmpeg {
 
 		obs_properties_t* get_properties2(instance_t* data) override;
 
+#ifdef ENABLE_FRONTEND
+		static bool on_manual_open(obs_properties_t* props, obs_property_t* property, void* data);
+#endif
+
 		public:
 		const AVCodec* get_avcodec();
 

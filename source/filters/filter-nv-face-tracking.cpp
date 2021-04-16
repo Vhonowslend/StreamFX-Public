@@ -658,12 +658,10 @@ obs_properties_t* face_tracking_factory::get_properties2(face_tracking_instance*
 		{
 			auto p =
 				obs_properties_add_float_slider(grp, SK_ROI_STABILITY, D_TRANSLATE(ST_ROI_STABILITY), 0, 100.0, 0.01);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_ROI_STABILITY)));
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
 			auto p = obs_properties_add_float_slider(grp, SK_ROI_ZOOM, D_TRANSLATE(ST_ROI_ZOOM), 0, 200.0, 0.01);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_ROI_ZOOM)));
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
@@ -673,13 +671,11 @@ obs_properties_t* face_tracking_factory::get_properties2(face_tracking_instance*
 			{
 				auto p = obs_properties_add_float_slider(grp2, SK_ROI_OFFSET_X, D_TRANSLATE(ST_ROI_OFFSET_X), -50.0,
 														 50.0, 0.01);
-				obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_ROI_OFFSET_X)));
 				obs_property_float_set_suffix(p, " %");
 			}
 			{
 				auto p = obs_properties_add_float_slider(grp2, SK_ROI_OFFSET_Y, D_TRANSLATE(ST_ROI_OFFSET_Y), -50.0,
 														 50.0, 0.01);
-				obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_ROI_OFFSET_Y)));
 				obs_property_float_set_suffix(p, " %");
 			}
 		}

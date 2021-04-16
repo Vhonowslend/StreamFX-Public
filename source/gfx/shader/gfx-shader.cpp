@@ -206,12 +206,10 @@ void gfx::shader::shader::properties(obs_properties_t* pr)
 			}
 			auto p = obs_properties_add_path(grp, ST_SHADER_FILE, D_TRANSLATE(ST_SHADER_FILE), OBS_PATH_FILE, "*.*",
 											 path.c_str());
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_FILE)));
 		}
 		{
 			auto p = obs_properties_add_list(grp, ST_SHADER_TECHNIQUE, D_TRANSLATE(ST_SHADER_TECHNIQUE),
 											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_TECHNIQUE)));
 		}
 
 		{
@@ -230,19 +228,16 @@ void gfx::shader::shader::properties(obs_properties_t* pr)
 			{
 				auto p = obs_properties_add_text(grp2, ST_SHADER_SIZE_WIDTH, D_TRANSLATE(ST_SHADER_SIZE_WIDTH),
 												 OBS_TEXT_DEFAULT);
-				obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_SIZE)));
 			}
 			{
 				auto p = obs_properties_add_text(grp2, ST_SHADER_SIZE_HEIGHT, D_TRANSLATE(ST_SHADER_SIZE_HEIGHT),
 												 OBS_TEXT_DEFAULT);
-				obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_SIZE)));
 			}
 		}
 
 		{
 			auto p = obs_properties_add_int_slider(grp, ST_SHADER_SEED, D_TRANSLATE(ST_SHADER_SEED),
 												   std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), 1);
-			obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_SHADER_SEED)));
 		}
 	}
 	{

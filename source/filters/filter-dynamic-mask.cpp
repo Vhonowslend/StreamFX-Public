@@ -43,6 +43,8 @@
 
 using namespace streamfx::filter::dynamic_mask;
 
+static constexpr std::string_view HELP_URL = "https://github.com/Xaymar/obs-StreamFX/wiki/Filter-Dynamic-Mask";
+
 static std::pair<channel, const char*> channel_translations[] = {
 	{channel::Red, S_CHANNEL_RED},
 	{channel::Green, S_CHANNEL_GREEN},
@@ -431,10 +433,16 @@ obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* d
 
 	_translation_cache.clear();
 
+#ifdef ENABLE_FRONTEND
+	{
+		obs_properties_add_button2(props, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN),
+								   streamfx::filter::dynamic_mask::dynamic_mask_factory::on_manual_open, nullptr);
+	}
+#endif
+
 	{ // Input
 		p = obs_properties_add_list(props, ST_INPUT, D_TRANSLATE(ST_INPUT), OBS_COMBO_TYPE_LIST,
 									OBS_COMBO_FORMAT_STRING);
-		obs_property_set_long_description(p, D_TRANSLATE(D_DESC(ST_INPUT)));
 		obs_property_list_add_string(p, "", "");
 		obs::source_tracker::get()->enumerate(
 			[&p](std::string name, obs_source_t*) {
@@ -463,10 +471,6 @@ obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* d
 			std::string buf = std::string(ST_CHANNEL_VALUE) + "." + pri_ch;
 			p = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0,
 												0.01);
-			_translation_cache.push_back(translate_string(D_TRANSLATE(D_DESC(ST_CHANNEL_VALUE)), D_TRANSLATE(pri_ch),
-														  D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch),
-														  D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch),
-														  D_TRANSLATE(pri_ch)));
 			obs_property_set_long_description(p, _translation_cache.back().c_str());
 		}
 
@@ -476,10 +480,6 @@ obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* d
 			std::string buf = std::string(ST_CHANNEL_INPUT) + "." + pri_ch + "." + sec_ch;
 			p = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0,
 												0.01);
-			_translation_cache.push_back(translate_string(D_TRANSLATE(D_DESC(ST_CHANNEL_INPUT)), D_TRANSLATE(sec_ch),
-														  D_TRANSLATE(pri_ch), D_TRANSLATE(sec_ch), D_TRANSLATE(pri_ch),
-														  D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch),
-														  D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch)));
 			obs_property_set_long_description(p, _translation_cache.back().c_str());
 		}
 
@@ -488,10 +488,6 @@ obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* d
 			std::string buf = std::string(ST_CHANNEL_MULTIPLIER) + "." + pri_ch;
 			p = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0,
 												0.01);
-			_translation_cache.push_back(translate_string(D_TRANSLATE(D_DESC(ST_CHANNEL_MULTIPLIER)),
-														  D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch),
-														  D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch),
-														  D_TRANSLATE(pri_ch), D_TRANSLATE(pri_ch)));
 			obs_property_set_long_description(p, _translation_cache.back().c_str());
 		}
 
@@ -515,6 +511,14 @@ std::string dynamic_mask_factory::translate_string(const char* format, ...)
 	va_end(vargs);
 	return std::string(buffer.data(), buffer.data() + len);
 }
+
+#ifdef ENABLE_FRONTEND
+bool dynamic_mask_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
+{
+	streamfx::open_url(HELP_URL);
+	return false;
+}
+#endif
 
 std::shared_ptr<dynamic_mask_factory> _filter_dynamic_mask_factory_instance = nullptr;
 
