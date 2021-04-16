@@ -28,4 +28,8 @@ namespace streamfx {
 
 	std::filesystem::path data_file_path(std::string_view file);
 	std::filesystem::path config_file_path(std::string_view file);
+
+#ifdef ENABLE_FRONTEND
+	bool open_url(std::string_view url);
+#endif
 } // namespace streamfx
