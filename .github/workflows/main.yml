@@ -95,7 +95,7 @@ jobs:
         cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_ZIP
     - name: "StreamFX: Package Installer"
       run: |
-        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /Qp ".\build\temp\installer.iss"
+        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 ".\build\temp\installer.iss"
     - name: "Artifacts"
       uses: actions/upload-artifact@v1
       with:
