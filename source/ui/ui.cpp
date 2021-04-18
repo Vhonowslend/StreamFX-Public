@@ -158,12 +158,20 @@ void streamfx::ui::handler::on_obs_loaded()
 		connect(_about_action, &QAction::triggered, this, &streamfx::ui::handler::on_action_about);
 	}
 
-	// Add an actual Menu entry.
-	QMainWindow* main_widget = reinterpret_cast<QMainWindow*>(obs_frontend_get_main_window());
-	_menu_action             = new QAction(main_widget);
-	_menu_action->setMenu(_menu);
-	_menu_action->setText(QString::fromUtf8(D_TRANSLATE(_i18n_menu.data())));
-	main_widget->menuBar()->addAction(_menu_action);
+	{ // Add an actual Menu entry.
+		QMainWindow* main_widget = reinterpret_cast<QMainWindow*>(obs_frontend_get_main_window());
+		_menu_action             = new QAction(main_widget);
+		_menu_action->setMenu(_menu);
+		_menu_action->setText(QString::fromUtf8(D_TRANSLATE(_i18n_menu.data())));
+
+		// For unknown reasons, the "About StreamFX" menu replaces the OBS about menu.
+		QList<QMenu*> obs_menus = main_widget->menuBar()->findChildren<QMenu*>(QString(), Qt::FindDirectChildrenOnly);
+		if (QMenu* help_menu = obs_menus.at(1); help_menu) {
+			main_widget->menuBar()->insertAction(help_menu->menuAction(), _menu_action);
+		} else {
+			main_widget->menuBar()->addAction(_menu_action);
+		}
+	}
 
 	// Show the 'About StreamFX' dialog if that has not happened yet.
 	if (!have_shown_about_streamfx()) {
