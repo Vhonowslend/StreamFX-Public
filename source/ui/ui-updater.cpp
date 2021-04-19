@@ -136,20 +136,25 @@ streamfx::ui::updater::updater(QMenu* menu)
 
 		// Check for Updates
 		_cfu = menu->addAction(QString::fromUtf8(D_TRANSLATE(D_I18N_MENU_CHECKFORUPDATES)));
+		_cfu->setMenuRole(QAction::NoRole);
 		connect(_cfu, &QAction::triggered, this, &streamfx::ui::updater::on_cfu_triggered);
 
 		// Automatically check for Updates
 		_cfu_auto = menu->addAction(QString::fromUtf8(D_TRANSLATE(D_I18N_MENU_CHECKFORUPDATES_AUTOMATICALLY)));
+		_cfu_auto->setMenuRole(QAction::NoRole);
 		_cfu_auto->setCheckable(true);
 		connect(_cfu_auto, &QAction::toggled, this, &streamfx::ui::updater::on_cfu_auto_toggled);
 
 		// Update Channel
 		_channel_menu = menu->addMenu(QString::fromUtf8(D_TRANSLATE(D_I18N_MENU_CHANNEL)));
+		_channel_menu->menuAction()->setMenuRole(QAction::NoRole);
 
 		_channel_stable = _channel_menu->addAction(QString::fromUtf8(D_TRANSLATE(D_I18N_MENU_CHANNEL_RELEASE)));
+		_channel_stable->setMenuRole(QAction::NoRole);
 		_channel_stable->setCheckable(true);
 
 		_channel_preview = _channel_menu->addAction(QString::fromUtf8(D_TRANSLATE(D_I18N_MENU_CHANNEL_TESTING)));
+		_channel_preview->setMenuRole(QAction::NoRole);
 		_channel_preview->setCheckable(true);
 
 		_channel_group = new QActionGroup(_channel_menu);

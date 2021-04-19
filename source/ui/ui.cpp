@@ -126,24 +126,29 @@ void streamfx::ui::handler::on_obs_loaded()
 
 		// Report an Issue
 		_report_issue = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_report_issue.data())));
+		_report_issue->setMenuRole(QAction::NoRole);
 		connect(_report_issue, &QAction::triggered, this, &streamfx::ui::handler::on_action_report_issue);
 
 		// Request help
 		_request_help = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_request_help.data())));
+		_request_help->setMenuRole(QAction::NoRole);
 		connect(_request_help, &QAction::triggered, this, &streamfx::ui::handler::on_action_request_help);
 
 		_menu->addSeparator();
 
 		// Website
 		_link_website = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_website.data())));
+		_link_website->setMenuRole(QAction::NoRole);
 		connect(_link_website, &QAction::triggered, this, &streamfx::ui::handler::on_action_website);
 
 		// Discord
 		_link_discord = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_discord.data())));
+		_link_discord->setMenuRole(QAction::NoRole);
 		connect(_link_discord, &QAction::triggered, this, &streamfx::ui::handler::on_action_discord);
 
 		// Github
 		_link_github = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_github.data())));
+		_link_github->setMenuRole(QAction::NoRole);
 		connect(_link_github, &QAction::triggered, this, &streamfx::ui::handler::on_action_github);
 
 		// Create the updater.
@@ -155,12 +160,14 @@ void streamfx::ui::handler::on_obs_loaded()
 
 		// About
 		_about_action = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_about.data())));
+		_about_action->setMenuRole(QAction::NoRole);
 		connect(_about_action, &QAction::triggered, this, &streamfx::ui::handler::on_action_about);
 	}
 
 	{ // Add an actual Menu entry.
 		QMainWindow* main_widget = reinterpret_cast<QMainWindow*>(obs_frontend_get_main_window());
 		_menu_action             = new QAction(main_widget);
+		_menu_action->setMenuRole(QAction::NoRole);
 		_menu_action->setMenu(_menu);
 		_menu_action->setText(QString::fromUtf8(D_TRANSLATE(_i18n_menu.data())));
 
