@@ -47,32 +47,13 @@ namespace streamfx::ui {
 			GITHUB_SUPPORTER,
 			TWITCH_SUPPORTER,
 			CREATOR,
-
-		};
-		enum class link_type : int32_t {
-			NONE,
-			GENERIC,
-
-			// Social Links
-			SOCIAL_TWITCH = 2000,
-			SOCIAL_YOUTUBE,
-			SOCIAL_DISCORD,
-			SOCIAL_TWITTER,
-			SOCIAL_FACEBOOK,
 		};
 
 		struct entry {
 			std::string          name;
 			ui::about::role_type role;
 			std::string          role_custom;
-
-			ui::about::link_type link1_type;
-			std::string          link1_address;
-			std::string          link1_text;
-
-			ui::about::link_type link2_type;
-			std::string          link2_address;
-			std::string          link2_text;
+			std::string          link;
 		};
 
 		public:

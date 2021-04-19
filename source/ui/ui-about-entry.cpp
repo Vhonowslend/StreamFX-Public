@@ -28,8 +28,7 @@ constexpr std::string_view i18n_role_supporter_github  = "UI.About.Role.Supporte
 constexpr std::string_view i18n_role_supporter_twitch  = "UI.About.Role.Supporter.Twitch";
 constexpr std::string_view i18n_role_creator           = "UI.About.Role.Creator";
 
-streamfx::ui::about_entry::about_entry(QWidget* parent, streamfx::ui::about::entry& entry)
-	: QWidget(parent), _last_click(std::chrono::high_resolution_clock::now()), _link1_url(), _link2_url()
+streamfx::ui::about_entry::about_entry(QWidget* parent, streamfx::ui::about::entry& entry) : QWidget(parent), _link()
 {
 	setupUi(this);
 
@@ -74,61 +73,20 @@ streamfx::ui::about_entry::about_entry(QWidget* parent, streamfx::ui::about::ent
 		break;
 	}
 
-	std::tuple<streamfx::ui::about::link_type, std::string, std::string, QPushButton*, QUrl&> els[]{
-		{entry.link1_type, entry.link1_address, entry.link1_text, link1, _link1_url},
-		{entry.link2_type, entry.link2_address, entry.link2_text, link2, _link2_url},
-	};
-	for (auto el : els) {
-		switch (std::get<0>(el)) {
-		case streamfx::ui::about::link_type::NONE:
-			std::get<3>(el)->setHidden(true);
-			break;
-		case streamfx::ui::about::link_type::GENERIC:
-			std::get<3>(el)->setIcon(QIcon(":/linktype/generic"));
-			break;
-		case streamfx::ui::about::link_type::SOCIAL_TWITCH:
-			std::get<3>(el)->setIcon(QIcon(":/linktype/twitch"));
-			break;
-		case streamfx::ui::about::link_type::SOCIAL_YOUTUBE:
-			std::get<3>(el)->setIcon(QIcon(":/linktype/youtube"));
-			break;
-		case streamfx::ui::about::link_type::SOCIAL_DISCORD:
-			std::get<3>(el)->setIcon(QIcon(":/linktype/discord"));
-			break;
-		case streamfx::ui::about::link_type::SOCIAL_TWITTER:
-			std::get<3>(el)->setIcon(QIcon(":/linktype/twitter"));
-			break;
-		case streamfx::ui::about::link_type::SOCIAL_FACEBOOK:
-			std::get<3>(el)->setIcon(QIcon(":/linktype/facebook"));
-			break;
-		default:
-			break;
-		}
-		std::get<3>(el)->setText(QString::fromUtf8(std::get<2>(el).c_str()));
-		std::get<4>(el).setUrl(QString::fromStdString(std::get<1>(el)));
+	if (!entry.link.empty()) {
+		this->setCursor(Qt::PointingHandCursor);
+		_link = QUrl(QString::fromUtf8(entry.link.c_str()));
 	}
-	connect(link1, &QPushButton::pressed, this, &streamfx::ui::about_entry::on_link1_clicked);
-	connect(link2, &QPushButton::pressed, this, &streamfx::ui::about_entry::on_link2_clicked);
-
-	// Don't free up space when hidden.
-	/*if (!(link1->isVisible() || link2->isVisible())) {
-		QSizePolicy qsp = link1->sizePolicy();
-		qsp.setRetainSizeWhenHidden(true);
-		link1->setSizePolicy(qsp);
-	}*/
 }
 
 streamfx::ui::about_entry::~about_entry() {}
 
-void streamfx::ui::about_entry::on_link1_clicked()
+void streamfx::ui::about_entry::mousePressEvent(QMouseEvent* event)
 {
-	// FIXME! Button clicks twice?
-	for (size_t attempt = 0; (attempt < 10) && (!QDesktopServices::openUrl(_link1_url)); attempt++) {
-	}
-}
+	if (_link.isEmpty())
+		return;
 
-void streamfx::ui::about_entry::on_link2_clicked()
-{
-	for (size_t attempt = 0; (attempt < 10) && (!QDesktopServices::openUrl(_link2_url)); attempt++) {
+	if (event->button() == Qt::LeftButton) {
+		QDesktopServices::openUrl(_link);
 	}
 }
