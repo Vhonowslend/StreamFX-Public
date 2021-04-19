@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: OBS Studio Support
+    url: https://obsproject.com/help
+    about: Unsure if your Issue fits the StreamFX plugin? Consider the OBS Studio Support instead!
+  - name: StreamFX Community Support
+    url: https://s.xaymar.com/streamfx-dc
+    about: Please ask and answer questions here.
