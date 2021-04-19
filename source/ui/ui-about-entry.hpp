@@ -26,6 +26,7 @@
 #pragma warning(push)
 #pragma warning(disable : 4251 4365 4371 4619 4946)
 #endif
+#include <QMouseEvent>
 #include "ui_about-entry.h"
 #ifdef _MSC_VER
 #pragma warning(pop)
@@ -36,16 +37,13 @@ namespace streamfx::ui {
 		Q_OBJECT
 
 		private:
-		std::chrono::high_resolution_clock::time_point _last_click;
-		QUrl                                           _link1_url;
-		QUrl                                           _link2_url;
+		QUrl _link;
 
 		public:
 		about_entry(QWidget* parent, ui::about::entry& entry);
 		~about_entry();
 
-		public slots:
-		void on_link1_clicked();
-		void on_link2_clicked();
+		protected:
+		virtual void mousePressEvent(QMouseEvent* event) override;
 	};
 } // namespace streamfx::ui
