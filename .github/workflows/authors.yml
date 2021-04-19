@@ -1,0 +1,30 @@
+name: Refresh
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  update-authors:
+    runs-on: ubuntu-latest
+    name: "Update Authors"
+    steps:
+    - name: "Checkout"
+      uses: actions/checkout@v2
+    - name: "Generate Authors file"
+      shell: bash
+      env:
+        CROWDIN_PROJECTID: "343435"
+        CROWDIN_TOKEN: ${{ secrets.AUTH_TOKEN_CROWDIN }}
+        GITHUB_TOKEN: ${{ secrets.AUTH_TOKEN_GITHUB }}
+      run: |
+        git checkout -b authors
+        pushd ./tools > /dev/null
+        npm install
+        node ./generate-contributors.js "${{ github.workspace }}/AUTHORS.md" "${{ github.workspace }}/data/thanks.json"
+        popd /dev/null
+        git add .
+        git commit -a -m="project: Generate contributor attribution files"
+        git push -f
