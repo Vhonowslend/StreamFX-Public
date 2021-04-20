@@ -143,11 +143,11 @@ AVColorRange tools::obs_to_av_color_range(video_range_type v)
 AVColorSpace tools::obs_to_av_color_space(video_colorspace v)
 {
 	switch (v) {
-	case VIDEO_CS_601:
-		return AVCOL_SPC_BT470BG;
+	case VIDEO_CS_601: // BT.601
+		return AVCOL_SPC_SMPTE170M;
 	case VIDEO_CS_DEFAULT:
-	case VIDEO_CS_709:
-	case VIDEO_CS_SRGB:
+	case VIDEO_CS_709:  // BT.709
+	case VIDEO_CS_SRGB: // sRGB
 		return AVCOL_SPC_BT709;
 	default:
 		throw std::invalid_argument("Unknown Color Space");
@@ -157,11 +157,11 @@ AVColorSpace tools::obs_to_av_color_space(video_colorspace v)
 AVColorPrimaries ffmpeg::tools::obs_to_av_color_primary(video_colorspace v)
 {
 	switch (v) {
-	case VIDEO_CS_601:
-		return AVCOL_PRI_BT470BG;
+	case VIDEO_CS_601: // BT.601
+		return AVCOL_PRI_SMPTE170M;
 	case VIDEO_CS_DEFAULT:
-	case VIDEO_CS_709:
-	case VIDEO_CS_SRGB:
+	case VIDEO_CS_709:  // BT.709
+	case VIDEO_CS_SRGB: // sRGB
 		return AVCOL_PRI_BT709;
 	default:
 		throw std::invalid_argument("Unknown Color Primaries");
@@ -171,13 +171,13 @@ AVColorPrimaries ffmpeg::tools::obs_to_av_color_primary(video_colorspace v)
 AVColorTransferCharacteristic ffmpeg::tools::obs_to_av_color_transfer_characteristics(video_colorspace v)
 {
 	switch (v) {
-	case VIDEO_CS_601:
-		return AVCOL_TRC_SMPTE240M;
+	case VIDEO_CS_601: // BT.601
+		return AVCOL_TRC_SMPTE170M;
 	case VIDEO_CS_DEFAULT:
-	case VIDEO_CS_709:
+	case VIDEO_CS_709: // BT.709
 		return AVCOL_TRC_BT709;
-	case VIDEO_CS_SRGB: // sRGB with Gamma 2.2
-		return AVCOL_TRC_GAMMA22;
+	case VIDEO_CS_SRGB: // sRGB with IEC 61966-2-1
+		return AVCOL_TRC_IEC61966_2_1;
 	default:
 		throw std::invalid_argument("Unknown Color Transfer Characteristics");
 	}
