@@ -76,11 +76,13 @@ static const std::list<streamfx::ui::about::entry> _entries = {
 	streamfx::ui::about::entry{"", streamfx::ui::about::role_type::THANKYOU, "", ""},
 
 	// Translators
+	// - TODO
 
 	// Separator
 	streamfx::ui::about::entry{"", streamfx::ui::about::role_type::THANKYOU, "", ""},
 
 	// Supporters
+	// - TODO
 
 	// Separator
 	streamfx::ui::about::entry{"", streamfx::ui::about::role_type::THANKYOU, "", ""},
