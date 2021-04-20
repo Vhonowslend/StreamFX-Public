@@ -19,14 +19,12 @@
 
 #include "ui-about-entry.hpp"
 
-constexpr std::string_view i18n_role_contributor       = "UI.About.Role.Contributor";
-constexpr std::string_view i18n_role_translator        = "UI.About.Role.Translator";
-constexpr std::string_view i18n_role_family            = "UI.About.Role.Family";
-constexpr std::string_view i18n_role_friend            = "UI.About.Role.Friend";
-constexpr std::string_view i18n_role_supporter_patreon = "UI.About.Role.Supporter.Patreon";
-constexpr std::string_view i18n_role_supporter_github  = "UI.About.Role.Supporter.Github";
-constexpr std::string_view i18n_role_supporter_twitch  = "UI.About.Role.Supporter.Twitch";
-constexpr std::string_view i18n_role_creator           = "UI.About.Role.Creator";
+constexpr std::string_view i18n_role_contributor = "UI.About.Role.Contributor";
+constexpr std::string_view i18n_role_translator  = "UI.About.Role.Translator";
+constexpr std::string_view i18n_role_family      = "UI.About.Role.Family";
+constexpr std::string_view i18n_role_friend      = "UI.About.Role.Friend";
+constexpr std::string_view i18n_role_supporter   = "UI.About.Role.Supporter";
+constexpr std::string_view i18n_role_creator     = "UI.About.Role.Creator";
 
 streamfx::ui::about_entry::about_entry(QWidget* parent, streamfx::ui::about::entry& entry) : QWidget(parent), _link()
 {
@@ -43,28 +41,8 @@ streamfx::ui::about_entry::about_entry(QWidget* parent, streamfx::ui::about::ent
 	case streamfx::ui::about::role_type::TRANSLATOR:
 		title->setText(D_TRANSLATE(i18n_role_translator.data()));
 		break;
-	case streamfx::ui::about::role_type::FAMILY: {
-		const char*       txt = D_TRANSLATE(i18n_role_family.data());
-		std::vector<char> buf(2048);
-		snprintf(buf.data(), buf.size(), txt, entry.role_custom.c_str());
-		title->setText(QString::fromUtf8(buf.data()));
-		break;
-	}
-	case streamfx::ui::about::role_type::FRIEND: {
-		const char*       txt = D_TRANSLATE(i18n_role_friend.data());
-		std::vector<char> buf(2048);
-		snprintf(buf.data(), buf.size(), txt, entry.role_custom.c_str());
-		title->setText(QString::fromUtf8(buf.data()));
-		break;
-	}
-	case streamfx::ui::about::role_type::PATREON_SUPPORTER:
-		title->setText(D_TRANSLATE(i18n_role_supporter_patreon.data()));
-		break;
-	case streamfx::ui::about::role_type::GITHUB_SUPPORTER:
-		title->setText(D_TRANSLATE(i18n_role_supporter_github.data()));
-		break;
-	case streamfx::ui::about::role_type::TWITCH_SUPPORTER:
-		title->setText(D_TRANSLATE(i18n_role_supporter_twitch.data()));
+	case streamfx::ui::about::role_type::SUPPORTER:
+		title->setText(D_TRANSLATE(i18n_role_supporter.data()));
 		break;
 	case streamfx::ui::about::role_type::CREATOR:
 		title->setText(D_TRANSLATE(i18n_role_creator.data()));
