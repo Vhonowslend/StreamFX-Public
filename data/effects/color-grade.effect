@@ -75,11 +75,11 @@ float3 grade_tint(float3 v) {
 	} else if (pTintDetection == TINT_DETECTION_HSL) { // HSL
 		value = RGBtoHSL(v).z;
 	} else if (pTintDetection == TINT_DETECTION_YUV_SDR) { // YUV HD SDR
-		const float3x3 mYUV709n = { // Normalized
+		const float3x3 mYUV709n = float3x3( // Normalized
 			0.2126, 0.7152, 0.0722,
 			-0.1145721060573399, -0.3854278939426601, 0.5,
 			0.5, -0.4541529083058166, -0.0458470916941834
-		};
+		);
 		value = RGBtoYUV(v, mYUV709n).r;
 	}
 
@@ -110,8 +110,6 @@ float3 grade_colorcorrection(float3 v) {
 	v1.g *= pCorrection.g; // Saturation Multiplier
 	v1.b *= pCorrection.b; // Lightness Multiplier
 	float3 v2 = HSVtoRGB(v1);
-
-
 	return v2;
 };
 
