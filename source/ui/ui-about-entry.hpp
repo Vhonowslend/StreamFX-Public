@@ -40,7 +40,7 @@ namespace streamfx::ui {
 		QUrl _link;
 
 		public:
-		about_entry(QWidget* parent, ui::about::entry& entry);
+		about_entry(QWidget* parent, const ui::about::entry& entry);
 		~about_entry();
 
 		protected:

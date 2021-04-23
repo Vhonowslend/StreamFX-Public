@@ -44,7 +44,7 @@ static const std::vector<std::string_view> _thankyous = {
 	":/thankyou/thankyou_fox",
 };
 
-static const std::list<streamfx::ui::about::entry> _entries = {
+static const streamfx::ui::about::entry _entries[] = {
 	// Contributers
 	// - 2021
 	streamfx::ui::about::entry{"Michael \"Xaymar\" Dirks", streamfx::ui::about::role_type::CONTRIBUTOR, "",
@@ -71,9 +71,6 @@ static const std::list<streamfx::ui::about::entry> _entries = {
 							   "https://github.com/Vainock"},
 	streamfx::ui::about::entry{"wwj402", streamfx::ui::about::role_type::CONTRIBUTOR, "", "https://github.com/wwj402"},
 	// - 2018
-
-	// Separator
-	streamfx::ui::about::entry{"", streamfx::ui::about::role_type::THANKYOU, "", ""},
 
 	// Translators
 	// - TODO
@@ -114,7 +111,7 @@ streamfx::ui::about::about() : QDialog(reinterpret_cast<QWidget*>(obs_frontend_g
 	bool         column_selector = false;
 	size_t       row_selector    = 0;
 	QGridLayout* content_layout  = dynamic_cast<QGridLayout*>(content->layout());
-	for (auto entry : _entries) {
+	for (const auto& entry : _entries) {
 		if (entry.role == role_type::SPACER) {
 			row_selector += 2;
 			column_selector = 0;
