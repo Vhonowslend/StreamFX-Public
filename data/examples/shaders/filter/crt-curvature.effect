@@ -1,32 +1,45 @@
-// Always provided by OBS
-uniform float4x4 ViewProj<
-	bool automatic = true;
-	string name = "View Projection Matrix";
->;
+// Copyright 2021 Michael Fabian Dirks <info@xaymar.com>
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice,
+//    this list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//    this list of conditions and the following disclaimer in the documentation
+//    and/or other materials provided with the distribution.
+// 3. Neither the name of the copyright holder nor the names of its contributors
+//    may be used to endorse or promote products derived from this software
+//    without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 
-// Provided by Stream Effects
-uniform float4 Time<
-	bool automatic = true;
-	string name = "Time Array";
-	string description = "A float4 value containing the total time, rendering time and the time since the last tick. The last value is a random number between 0 and 1.";
->;
-uniform float4x4 Random<
-	bool automatic = true;
-	string name = "Random Array";
-	string description = "A float4x4 value containing random values between 0 and 1";
->;
-uniform texture2d InputA<
-	bool automatic = true;
->;
+#define IS_FILTER
+#include "../base.effect"
 
+//------------------------------------------------------------------------------
+// Uniforms
+//------------------------------------------------------------------------------
 uniform float _0_strength<
 	string name = "Strength";
+	string suffix = " %";
 	string field_type = "slider";
 	float minimum = 0.;
-	float maximum = 100.;
+	float maximum = 200.;
 	float step = 0.01;
 	float scale = 0.01;
 > = 33.33;
+
 uniform float4 _1_border<
 	string name = "Border Color";
 	string field_type = "slider";
@@ -34,66 +47,74 @@ uniform float4 _1_border<
 	float4 maximum = {100., 100., 100., 100.};
 	float4 step = {0.01, 0.01, 0.01, 0.01};
 	float4 scale = {0.01, 0.01, 0.01, 0.01};
-> = {0., 0., 0., 0.};
+> = {0., 0., 0., 100.};
+
 uniform float _2_feathering<
 	string name = "Feathering";
+	string suffix = " %";
 	string field_type = "slider";
-	float minimum = 0.01;
+	float minimum = 0.00;
 	float maximum = 100.;
 	float step = 0.01;
 	float scale = 0.01;
 > = 33.33;
 
-#define PI		3.1415926f
-#define TwoPI	6.2831853f
-#define HalfPI	1.5707963f
+//------------------------------------------------------------------------------
+// Technique: Combined Curvature
+//------------------------------------------------------------------------------
+float4 CombinedCurvature(VertexInformation vtx) : TARGET {
+	const float2 center = float2(0.5, 0.5);
 
-// ---------- Shader Code
-sampler_state def_sampler {
-	AddressU  = Clamp;
-	AddressV  = Clamp;
-	Filter    = Linear;
-};
+	// 1. Offset the texture coordinates towards the center.
+	float2 cc = vtx.texcoord0.xy - center;
 
-struct VertData {
-	float4 pos : POSITION;
-	float2 uv  : TEXCOORD0;
-};
-
-VertData VSDefault(VertData v_in) {
-	VertData vert_out;
-	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
-	vert_out.uv  = v_in.uv;
-	return vert_out;
-}
-
-float4 PSDefault(VertData v_in) : TARGET {
-	float2 center = {0.5, 0.5};
-
-	float2 cc = v_in.uv - center;
+	// 2. Calculate the "distance" towards the edge by taking the dot product and multiplying it.
 	float dist = dot(cc, cc) * _0_strength;
-	float2 bentUV = v_in.uv + cc * (1.0 + dist) * dist;
 
+	// 3. Then use this to offset towards the center to create a curved look.
+	float2 bentUV = vtx.texcoord0.xy + cc * (1.0 + dist) * dist;
+
+	// 4. Check if the new generated UVs fall outside of the allowed area.
 	if ((bentUV.x <= 0. || bentUV.x >= 1.) || (bentUV.y <= 0. || bentUV.y >= 1.)) {
+		// If yes, return the configured border color.
 		return _1_border;
 	}
 
-	// Calculate border distance from texel center by ignoring the sign bit and normalizing the distance to 0..1.
-	float2 borderDistance = (center - abs(bentUV - center)) / center;
-	float2 borderArea = center * _2_feathering;
+	// 5. Does the user want a smooth transition towards the border?
+	if (_2_feathering >= .01) {
+		float2 borderArea = center * _2_feathering;
 
-	// Now apply a modifier so that we only get the border area.
-	borderDistance = (min(borderDistance - center * _2_feathering, 0) + borderArea) / borderArea;
-	float borderFade = sin(borderDistance.x * HalfPI) * sin(borderDistance.y * HalfPI);
+		// 1. Calculate how far away we are from the center.
+		float2 borderDistance = (center - abs(bentUV - center)) / center;
 
-	return lerp(_1_border, InputA.Sample(def_sampler, bentUV), borderFade);
+		// 2. Convert the calculated value into a useful distance.
+		borderDistance = (min(borderDistance - center * _2_feathering, 0) + borderArea) / borderArea;
+
+		// 3. Convert the distance into a proper fade value.
+		float borderFade = sin(borderDistance.x * PIb2) * sin(borderDistance.y * PIb2);
+
+		// 4. Return the mix of original and border color.
+		return lerp(_1_border, InputA.Sample(LinearClampSampler, bentUV), borderFade);
+	} else {
+		// Return the original color.
+		return InputA.Sample(LinearClampSampler, bentUV);
+	}
 }
 
 technique Draw
 {
 	pass
 	{
-		vertex_shader = VSDefault(v_in);
-		pixel_shader  = PSDefault(v_in); 
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader  = CombinedCurvature(vtx);
+	}
+}
+
+technique Combined
+{
+	pass
+	{
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader  = CombinedCurvature(vtx);
 	}
 }
