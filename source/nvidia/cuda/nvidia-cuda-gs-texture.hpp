@@ -35,10 +35,13 @@ namespace nvidia::cuda {
 		std::shared_ptr<nvidia::cuda::stream> _stream;
 
 		public:
-		gstexture(std::shared_ptr<gs::texture> texture);
 		~gstexture();
+		gstexture(std::shared_ptr<gs::texture> texture);
 
 		array_t map(std::shared_ptr<nvidia::cuda::stream> stream);
 		void    unmap();
+
+		std::shared_ptr<gs::texture>        get_texture();
+		::nvidia::cuda::graphics_resource_t get();
 	};
 } // namespace nvidia::cuda
