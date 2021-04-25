@@ -948,6 +948,8 @@ if(HAVE_NVIDIA_CUDA)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/nvidia/cuda/nvidia-cuda.hpp"
 		"source/nvidia/cuda/nvidia-cuda.cpp"
+		"source/nvidia/cuda/nvidia-cuda-obs.hpp"
+		"source/nvidia/cuda/nvidia-cuda-obs.cpp"
 		"source/nvidia/cuda/nvidia-cuda-context.hpp"
 		"source/nvidia/cuda/nvidia-cuda-context.cpp"
 		"source/nvidia/cuda/nvidia-cuda-gs-texture.hpp"
