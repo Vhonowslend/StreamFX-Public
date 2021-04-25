@@ -131,3 +131,13 @@ void nvidia::cuda::gstexture::unmap()
 	_pointer   = nullptr;
 	_stream.reset();
 }
+
+std::shared_ptr<gs::texture> nvidia::cuda::gstexture::get_texture()
+{
+	return _texture;
+}
+
+::nvidia::cuda::graphics_resource_t nvidia::cuda::gstexture::get()
+{
+	return _resource;
+}
