@@ -31,6 +31,7 @@
 #include "nvidia/cuda/nvidia-cuda-context.hpp"
 #include "nvidia/cuda/nvidia-cuda-gs-texture.hpp"
 #include "nvidia/cuda/nvidia-cuda-memory.hpp"
+#include "nvidia/cuda/nvidia-cuda-obs.hpp"
 #include "nvidia/cuda/nvidia-cuda-stream.hpp"
 #include "nvidia/cuda/nvidia-cuda.hpp"
 
@@ -62,9 +63,8 @@ namespace streamfx::filter::nvidia {
 		} _values;
 
 		// Nvidia CUDA interop
-		std::shared_ptr<::nvidia::cuda::cuda>    _cuda;
-		std::shared_ptr<::nvidia::cuda::context> _cuda_ctx;
-		std::shared_ptr<::nvidia::cuda::stream>  _cuda_stream;
+		std::shared_ptr<::nvidia::cuda::obs>    _cuda;
+		std::shared_ptr<::nvidia::cuda::stream> _cuda_stream;
 
 		// Nvidia AR interop
 		std::shared_ptr<::nvidia::ar::ar>          _ar_library;
@@ -129,9 +129,8 @@ namespace streamfx::filter::nvidia {
 
 	class face_tracking_factory
 		: public obs::source_factory<filter::nvidia::face_tracking_factory, filter::nvidia::face_tracking_instance> {
-		std::shared_ptr<::nvidia::cuda::cuda>    _cuda;
-		std::shared_ptr<::nvidia::cuda::context> _cuda_ctx;
-		std::shared_ptr<::nvidia::ar::ar>        _ar;
+		std::shared_ptr<::nvidia::cuda::obs> _cuda;
+		std::shared_ptr<::nvidia::ar::ar>    _ar;
 
 		public:
 		face_tracking_factory();
@@ -142,10 +141,6 @@ namespace streamfx::filter::nvidia {
 		virtual void get_defaults2(obs_data_t* data) override;
 
 		virtual obs_properties_t* get_properties2(filter::nvidia::face_tracking_instance* data) override;
-
-		std::shared_ptr<::nvidia::cuda::cuda> get_cuda();
-
-		std::shared_ptr<::nvidia::cuda::context> get_cuda_context();
 
 		std::shared_ptr<::nvidia::ar::ar> get_ar();
 
