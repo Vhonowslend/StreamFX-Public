@@ -129,3 +129,7 @@ VertexInformation DefaultVertexShader(VertexInformation vtx) {
 	vtx.position = mul(float4(vtx.position.xyz, 1.0), ViewProj);
 	return vtx;
 };
+
+bool is_float_equal(float a, float b) {
+	return (abs(a - b) <= .00001);
+}

@@ -1,35 +1,44 @@
-// Always provided by OBS
-uniform float4x4 ViewProj<
-	bool automatic = true;
-	string name = "View Projection Matrix";
->;
+// Copyright 2021 Michael Fabian Dirks <info@xaymar.com>
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice,
+//    this list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//    this list of conditions and the following disclaimer in the documentation
+//    and/or other materials provided with the distribution.
+// 3. Neither the name of the copyright holder nor the names of its contributors
+//    may be used to endorse or promote products derived from this software
+//    without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 
-// Provided by Stream Effects
-uniform float4 Time<
-	bool automatic = true;
-	string name = "Time Array";
-	string description = "A float4 value containing the total time, rendering time and the time since the last tick. The last value is a random number between 0 and 1.";
->;
-uniform float4x4 Random<
-	bool automatic = true;
-	string name = "Random Array";
-	string description = "A float4x4 value containing random values between 0 and 1";
->;
-uniform float4 ViewSize<
-	bool automatic = true;
->;
-uniform texture2d InputA<
-	bool automatic = true;
->;
+#define IS_FILTER
+#include "../base.effect"
 
+//------------------------------------------------------------------------------
+// Uniforms
+//------------------------------------------------------------------------------
 uniform float _0_Strength<
-	string name = "Strength";
+	string name = "Rollbar Strength";
 	string field_type = "slider";
 	float minimum = 0.;
 	float maximum = 100.;
 	float step = 0.01;
 	float scale = 0.01;
 > = 100.0;
+
 uniform int _1_Scanlines<
 	string name = "Scanlines";
 	string field_type = "slider";
@@ -39,16 +48,18 @@ uniform int _1_Scanlines<
 > = 525;
 
 uniform float2 _1_Intensity<
-	string name = "Intensity Limits";
+	string name = "Scanline Brightness Min/Max";
 	string field_type = "slider";
 	float2 minimum = {0., 0.};
-	float2 maximum = {100., 100.};
+	float2 maximum = {200., 200.};
 	float2 step = {0.01, 0.01};
 	float2 scale = {0.01, 0.01};
 > = {95.0, 100.0};
+
 uniform bool _2_EnableBleed<
-	string name = "Enable NTSC Bleeding";
+	string name = "Enable Color Bleeding";
 > = true;
+
 uniform float _3_ScanlineSize<
 	string name = "Scanline Scaling";
 	string field_type = "slider";
@@ -57,6 +68,7 @@ uniform float _3_ScanlineSize<
 	float step = 0.01;
 	float scale = 0.01;
 > = 100.0;
+
 uniform float _4_Speed<
 	string name = "Timescale";
 	string field_type = "slider";
@@ -66,71 +78,67 @@ uniform float _4_Speed<
 	float scale = 0.01;
 > = 60.0;
 
+//------------------------------------------------------------------------------
+// Technique: Version 1.0
+//------------------------------------------------------------------------------
+float4 Version1_0(VertexInformation vtx) : TARGET {
+	float2 uv = vtx.texcoord0.xy;
 
-#define PI		3.1415926f
-#define TwoPI	6.2831853f
-#define HalfPI	1.5707963f
-
-// ---------- Shader Code
-sampler_state def_sampler {
-	AddressU  = Clamp;
-	AddressV  = Clamp;
-	Filter    = Linear;
-};
-
-struct VertData {
-	float4 pos : POSITION;
-	float2 uv  : TEXCOORD0;
-};
-
-VertData VSDefault(VertData v_in) {
-	VertData vert_out;
-	vert_out.pos = mul(float4(v_in.pos.xyz, 1.0), ViewProj);
-	vert_out.uv  = v_in.uv;
-	return vert_out;
-}
-
-float4 PSDefault(VertData v_in) : TARGET {
-	float2 uv = v_in.uv;
+	// 1. Calculate our current time offset based on the provided speed.
 	float time_offset = Time.y * _4_Speed;
 
-	// Scanline stuff.
-	uint scanline_index = floor(fmod((uv.y + time_offset), 1.) * _1_Scanlines);
-	uint scanline_intensity = scanline_index % 2;
+	// 2. Sample the original input.
+	float4 rgb = InputA.Sample(LinearClampSampler, uv);
 
-	// Calculate final color;
-	float4 rgb = InputA.Sample(def_sampler, uv);
+	// 3. If the user requested Scan Lines...
+	if (!is_float_equal(_1_Intensity.x, _1_Intensity.y)) {
+		// 1. Calculate the vertical index of the line.
+		uint scanline_index = uint(floor(fmod((uv.y + time_offset), 1.) * _1_Scanlines));
 
-	// Bleeding
-	if (_2_EnableBleed) {
-		// Not true bleeding, missing some gaussian blur.
-		float offset = float(scanline_intensity) * 0.0005;
+		// 2. Map it back into a useful range.
+		uint scanline_intensity = scanline_index % 2;
 
-		float colorShift = 0.001;
-		float r = InputA.Sample(def_sampler, uv + offset + colorShift).r;
-		float g = InputA.Sample(def_sampler, uv + offset - colorShift).g;
-		float b = rgb.b;
+		// 3. Calculate the multiplier based on the index.
+		float slmul = scanline_intensity == 0 ? _1_Intensity.x : _1_Intensity.y;
 
-		rgb.rgb = float3(r, g, b); // g * 0.99?
+		// 4. Does the user want naive CRT bleeding?
+		if (_2_EnableBleed) {
+			// Very naive bleeding, but it gets the effect across.
+			float offset = float(scanline_intensity) * 0.0005;
+			float colorShift = 0.001;
+			float r = InputA.Sample(LinearClampSampler, uv + offset + colorShift).r;
+			float g = InputA.Sample(LinearClampSampler, uv + offset - colorShift).g;
+			float b = rgb.b;
+			rgb.rgb = float3(r, g, b); // g * 0.99?
+		}
+
+		// 4. Apply the multiplier.
+		rgb.rgb *= slmul;
+	} else {
+		rgb.rgb *= _1_Intensity.x;
 	}
-	
-	// Intensity;
-	rgb.rgb *= clamp(float(scanline_intensity), _1_Intensity.x, _1_Intensity.y);
 
-	// rollbar
-	const float rollbar_cycle_length = 5.;
-	float rollbar_cycle = Time.y + fmod(Time.z, rollbar_cycle_length);
-	float rollbar = sin((uv.y + rollbar_cycle / rollbar_cycle_length) * TwoPI);	
-	rgb.rgb = lerp(rgb, rgb + (rollbar * 0.1), _0_Strength);
+	// 4. Does the user want the rollbar effect?
+	if (is_float_equal(_0_Strength, .01) || (_0_Strength > 0.01)) {
+		const float rollbar_cycle_length = 5.;
+		float rollbar_cycle = Time.y + fmod(Time.z, rollbar_cycle_length);
+		float rollbar = sin((uv.y + rollbar_cycle / rollbar_cycle_length) * TAU);
+		rgb.rgb = lerp(rgb.rgb, rgb.rgb + (rollbar * 0.1), _0_Strength);
+	}
 
 	return rgb;
 }
 
-technique Draw
-{
-	pass
-	{
-		vertex_shader = VSDefault(v_in);
-		pixel_shader  = PSDefault(v_in); 
+technique Draw {
+	pass {
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader  = Version1_0(vtx);
+	}
+}
+
+technique V1_0 {
+	pass {
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader  = Version1_0(vtx);
 	}
 }
