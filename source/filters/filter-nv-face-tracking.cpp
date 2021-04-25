@@ -53,8 +53,7 @@ face_tracking_instance::face_tracking_instance(obs_data_t* settings, obs_source_
 
 	  _geometry(), _filters(), _values(),
 
-	  _cuda(face_tracking_factory::get()->get_cuda()), _cuda_ctx(face_tracking_factory::get()->get_cuda_context()),
-	  _cuda_stream(),
+	  _cuda(::nvidia::cuda::obs::get()), _cuda_stream(),
 
 	  _ar_library(face_tracking_factory::get()->get_ar()), _ar_loaded(false), _ar_feature(), _ar_is_tracking(false),
 	  _ar_bboxes_confidence(), _ar_bboxes_data(), _ar_bboxes(), _ar_texture(), _ar_texture_cuda_fresh(false),
@@ -76,7 +75,7 @@ face_tracking_instance::face_tracking_instance(obs_data_t* settings, obs_source_
 		auto gctx    = gs::context{};
 		_rt          = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 		_geometry    = std::make_shared<gs::vertex_buffer>(uint32_t(4), uint8_t(1));
-		auto cctx    = std::make_shared<::nvidia::cuda::context_stack>(_cuda_ctx);
+		auto cctx    = _cuda->get_context()->enter();
 		_cuda_stream = std::make_shared<::nvidia::cuda::stream>(::nvidia::cuda::stream_flags::NON_BLOCKING, 0);
 	}
 
@@ -138,7 +137,7 @@ void face_tracking_instance::async_initialize(std::shared_ptr<void> ptr)
 
 		// Update the current CUDA context for working.
 		gs::context gctx;
-		auto        cctx = std::make_shared<::nvidia::cuda::context_stack>(_cuda_ctx);
+		auto        cctx = _cuda->get_context()->enter();
 
 		// Create Face Detection feature.
 		{
@@ -266,7 +265,7 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 		gs::context gctx{};
 
 		// Update the current CUDA context for working.
-		auto cctx = std::make_shared<::nvidia::cuda::context_stack>(_cuda_ctx);
+		auto cctx = _cuda->get_context()->enter();
 
 		// Refresh any now broken buffers.
 		if (!_ar_texture_cuda_fresh) {
@@ -291,7 +290,7 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 									 NVCV_INTERLEAVED, NVCV_CUDA, 0);
 
 			// Synchronize Streams.
-			_cuda->cuStreamSynchronize(_cuda_stream->get());
+			_cuda_stream->synchronize();
 
 			// Finally set the input object.
 			if (NvCV_Status res = _ar_library->set_object(_ar_feature.get(), NvAR_Parameter_Input(Image),
@@ -327,7 +326,7 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 			mc.width_in_bytes  = static_cast<size_t>(_ar_image.pitch);
 			mc.height          = _ar_image.height;
 
-			if (::nvidia::cuda::result res = _cuda->cuMemcpy2DAsync(&mc, _cuda_stream->get());
+			if (::nvidia::cuda::result res = _cuda->get_cuda()->cuMemcpy2DAsync(&mc, _cuda_stream->get());
 				res != ::nvidia::cuda::result::SUCCESS) {
 				DLOG_ERROR("<%s> Failed to prepare buffers for tracking.", obs_source_get_name(_self));
 				return;
@@ -347,8 +346,8 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 			}
 
 			// Synchronize Streams.
-			_cuda->cuStreamSynchronize(_cuda_stream->get());
-			_cuda->cuCtxSynchronize();
+			_cuda_stream->synchronize();
+			_cuda->get_context()->synchronize();
 		}
 
 		{ // Track any faces.
@@ -604,23 +603,10 @@ bool face_tracking_instance::button_profile(obs_properties_t* props, obs_propert
 face_tracking_factory::face_tracking_factory()
 {
 	// Try and load CUDA.
-	_cuda = ::nvidia::cuda::cuda::get();
+	_cuda = ::nvidia::cuda::obs::get();
 
 	// Try and load AR.
 	_ar = std::make_shared<::nvidia::ar::ar>();
-
-	// Initialize CUDA
-	{
-		auto gctx = gs::context{};
-#ifdef WIN32
-		if (gs_get_device_type() == GS_DEVICE_DIRECT3D_11) {
-			_cuda_ctx = std::make_shared<::nvidia::cuda::context>(reinterpret_cast<ID3D11Device*>(gs_get_device_obj()));
-		}
-#endif
-		if (gs_get_device_type() == GS_DEVICE_OPENGL) {
-			throw std::runtime_error("OpenGL not supported.");
-		}
-	}
 
 	// Info
 	_info.id           = PREFIX "filter-nvidia-face-tracking";
@@ -691,16 +677,6 @@ obs_properties_t* face_tracking_factory::get_properties2(face_tracking_instance*
 #endif
 
 	return pr;
-}
-
-std::shared_ptr<::nvidia::cuda::cuda> face_tracking_factory::get_cuda()
-{
-	return _cuda;
-}
-
-std::shared_ptr<::nvidia::cuda::context> face_tracking_factory::get_cuda_context()
-{
-	return _cuda_ctx;
 }
 
 std::shared_ptr<::nvidia::ar::ar> face_tracking_factory::get_ar()
