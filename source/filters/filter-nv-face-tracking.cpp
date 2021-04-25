@@ -21,7 +21,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <util/platform.h>
-#include "nvidia/cuda/nvidia-cuda-context-stack.hpp"
+#include "nvidia/cuda/nvidia-cuda-context.hpp"
 #include "obs/gs/gs-helper.hpp"
 #include "obs/obs-tools.hpp"
 
@@ -76,8 +76,8 @@ face_tracking_instance::face_tracking_instance(obs_data_t* settings, obs_source_
 		auto gctx    = gs::context{};
 		_rt          = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 		_geometry    = std::make_shared<gs::vertex_buffer>(uint32_t(4), uint8_t(1));
-		auto cctx    = std::make_shared<::nvidia::cuda::context_stack>(_cuda, _cuda_ctx);
-		_cuda_stream = std::make_shared<::nvidia::cuda::stream>(_cuda, ::nvidia::cuda::stream_flags::NON_BLOCKING, 0);
+		auto cctx    = std::make_shared<::nvidia::cuda::context_stack>(_cuda_ctx);
+		_cuda_stream = std::make_shared<::nvidia::cuda::stream>(::nvidia::cuda::stream_flags::NON_BLOCKING, 0);
 	}
 
 	{ // Asynchronously load Face Tracking.
@@ -138,7 +138,7 @@ void face_tracking_instance::async_initialize(std::shared_ptr<void> ptr)
 
 		// Update the current CUDA context for working.
 		gs::context gctx;
-		auto        cctx = std::make_shared<::nvidia::cuda::context_stack>(_cuda, _cuda_ctx);
+		auto        cctx = std::make_shared<::nvidia::cuda::context_stack>(_cuda_ctx);
 
 		// Create Face Detection feature.
 		{
@@ -266,7 +266,7 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 		gs::context gctx{};
 
 		// Update the current CUDA context for working.
-		auto cctx = std::make_shared<::nvidia::cuda::context_stack>(_cuda, _cuda_ctx);
+		auto cctx = std::make_shared<::nvidia::cuda::context_stack>(_cuda_ctx);
 
 		// Refresh any now broken buffers.
 		if (!_ar_texture_cuda_fresh) {
@@ -277,8 +277,8 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 #endif
 			// Assign new texture and allocate new memory.
 			std::size_t pitch    = _ar_texture->get_width() * 4ul;
-			_ar_texture_cuda     = std::make_shared<::nvidia::cuda::gstexture>(_cuda, _ar_texture);
-			_ar_texture_cuda_mem = std::make_shared<::nvidia::cuda::memory>(_cuda, pitch * _ar_texture->get_height());
+			_ar_texture_cuda     = std::make_shared<::nvidia::cuda::gstexture>(_ar_texture);
+			_ar_texture_cuda_mem = std::make_shared<::nvidia::cuda::memory>(pitch * _ar_texture->get_height());
 			_ar_library->image_init(&_ar_image, static_cast<unsigned int>(_ar_texture->get_width()),
 									static_cast<unsigned int>(_ar_texture->get_height()), static_cast<int>(pitch),
 									reinterpret_cast<void*>(_ar_texture_cuda_mem->get()), NVCV_RGBA, NVCV_U8,
@@ -614,8 +614,7 @@ face_tracking_factory::face_tracking_factory()
 		auto gctx = gs::context{};
 #ifdef WIN32
 		if (gs_get_device_type() == GS_DEVICE_DIRECT3D_11) {
-			_cuda_ctx =
-				std::make_shared<::nvidia::cuda::context>(_cuda, reinterpret_cast<ID3D11Device*>(gs_get_device_obj()));
+			_cuda_ctx = std::make_shared<::nvidia::cuda::context>(reinterpret_cast<ID3D11Device*>(gs_get_device_obj()));
 		}
 #endif
 		if (gs_get_device_type() == GS_DEVICE_OPENGL) {
