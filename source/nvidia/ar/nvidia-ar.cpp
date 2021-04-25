@@ -118,7 +118,8 @@ NvCV_Status nvidia::ar::ar::image_transfer(const NvCVImage* src, NvCVImage* dst,
 
 NvCV_Status nvidia::ar::ar::image_composite(const NvCVImage* src, const NvCVImage* mat, NvCVImage* dst)
 {
-	return NvCVImage_Composite(src, mat, dst);
+	//return NvCVImage_Composite(src, mat, dst);
+	throw std::runtime_error("Not implemented.");
 }
 
 NvCV_Status nvidia::ar::ar::image_composite_over_constant(const NvCVImage* src, const NvCVImage* mat,
