@@ -29,6 +29,8 @@ namespace gs {
 			None,
 			Dynamic,
 			BuildMipMaps,
+			Shared,
+			GlobalShared,
 		};
 
 		protected:
