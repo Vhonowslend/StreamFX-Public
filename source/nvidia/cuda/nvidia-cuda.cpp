@@ -238,6 +238,13 @@ nvidia::cuda::cuda::cuda() : _library()
 	cuInit(0);
 }
 
+int32_t nvidia::cuda::cuda::version()
+{
+	int32_t v = 0;
+	cuDriverGetVersion(&v);
+	return v;
+}
+
 std::shared_ptr<nvidia::cuda::cuda> nvidia::cuda::cuda::get()
 {
 	static std::weak_ptr<nvidia::cuda::cuda> instance;
