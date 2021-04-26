@@ -308,7 +308,7 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 #ifdef ENABLE_PROFILING
 			auto prof = _profile_ar_copy->track();
 #endif
-			::nvidia::cuda::memcpy2d_t mc;
+			::nvidia::cuda::memcpy2d_v2_t mc;
 			mc.src_x_in_bytes  = 0;
 			mc.src_y           = 0;
 			mc.src_memory_type = ::nvidia::cuda::memory_type::ARRAY;

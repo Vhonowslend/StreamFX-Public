@@ -47,17 +47,37 @@
 		if (!NAME)                                                                        \
 			throw std::runtime_error("Failed to load '" #NAME "' from '" CUDA_NAME "'."); \
 	}
+#define CUDA_LOAD_SYMBOL_OPT(NAME)                                              \
+	{                                                                           \
+		NAME = reinterpret_cast<decltype(NAME)>(_library->load_symbol(#NAME));  \
+		if (!NAME)                                                              \
+			D_LOG_WARNING("Loading of optional symbol '" #NAME "' failed.", 0); \
+	}
+
+#define CUDA_LOAD_SYMBOL_EX(NAME, OVERRIDE)                                               \
+	{                                                                                     \
+		NAME = reinterpret_cast<decltype(NAME)>(_library->load_symbol(#OVERRIDE));        \
+		if (!NAME)                                                                        \
+			throw std::runtime_error("Failed to load '" #NAME "' from '" CUDA_NAME "'."); \
+	}
+#define CUDA_LOAD_SYMBOL_OPT_EX(NAME, OVERRIDE)                                    \
+	{                                                                              \
+		NAME = reinterpret_cast<decltype(NAME)>(_library->load_symbol(#OVERRIDE)); \
+		if (!NAME)                                                                 \
+			D_LOG_WARNING("Loading of optional symbol '" #NAME "' failed.", 0);    \
+	}
+
 #define CUDA_LOAD_SYMBOL_V2(NAME)                                                         \
 	{                                                                                     \
 		NAME = reinterpret_cast<decltype(NAME)>(_library->load_symbol(#NAME "_v2"));      \
 		if (!NAME)                                                                        \
 			throw std::runtime_error("Failed to load '" #NAME "' from '" CUDA_NAME "'."); \
 	}
-#define CUDA_LOAD_SYMBOL_EX(NAME, OVERRIDE)                                               \
-	{                                                                                     \
-		NAME = reinterpret_cast<decltype(NAME)>(_library->load_symbol(#OVERRIDE));        \
-		if (!NAME)                                                                        \
-			throw std::runtime_error("Failed to load '" #NAME "' from '" CUDA_NAME "'."); \
+#define CUDA_LOAD_SYMBOL_OPT_V2(NAME)                                                \
+	{                                                                                \
+		NAME = reinterpret_cast<decltype(NAME)>(_library->load_symbol(#NAME "_v2")); \
+		if (!NAME)                                                                   \
+			D_LOG_WARNING("Loading of optional symbol '" #NAME "' failed.", 0);      \
 	}
 
 nvidia::cuda::cuda::~cuda()
@@ -67,74 +87,21 @@ nvidia::cuda::cuda::~cuda()
 
 nvidia::cuda::cuda::cuda() : _library()
 {
+	int32_t cuda_version = 0;
+
 	D_LOG_DEBUG("Initialization... (Addr: 0x%" PRIuPTR ")", this);
 
 	_library = util::library::load(std::string_view(CUDA_NAME));
 
-	// Initialization
-	CUDA_LOAD_SYMBOL(cuInit);
+	{ // 1. Load critical initialization functions.
+		// Initialization
+		CUDA_LOAD_SYMBOL(cuInit);
 
-	// Version Management
-	CUDA_LOAD_SYMBOL(cuDriverGetVersion);
+		// Version Management
+		CUDA_LOAD_SYMBOL(cuDriverGetVersion);
+	}
 
-	// Primary Context Management
-	CUDA_LOAD_SYMBOL(cuDevicePrimaryCtxRetain);
-	CUDA_LOAD_SYMBOL_V2(cuDevicePrimaryCtxRelease);
-	CUDA_LOAD_SYMBOL_V2(cuDevicePrimaryCtxSetFlags);
-
-	// Context Management
-	CUDA_LOAD_SYMBOL_V2(cuCtxCreate);
-	CUDA_LOAD_SYMBOL_V2(cuCtxDestroy);
-	CUDA_LOAD_SYMBOL(cuCtxGetCurrent);
-	CUDA_LOAD_SYMBOL(cuCtxGetStreamPriorityRange);
-	CUDA_LOAD_SYMBOL_V2(cuCtxPopCurrent);
-	CUDA_LOAD_SYMBOL_V2(cuCtxPushCurrent);
-	CUDA_LOAD_SYMBOL(cuCtxSetCurrent);
-	CUDA_LOAD_SYMBOL(cuCtxSynchronize);
-
-	// Memory Management
-	CUDA_LOAD_SYMBOL_V2(cuArrayGetDescriptor);
-	CUDA_LOAD_SYMBOL_V2(cuMemAlloc);
-	CUDA_LOAD_SYMBOL_V2(cuMemAllocPitch);
-	CUDA_LOAD_SYMBOL_V2(cuMemFree);
-	CUDA_LOAD_SYMBOL_V2(cuMemHostGetDevicePointer);
-	CUDA_LOAD_SYMBOL(cuMemcpy);
-	CUDA_LOAD_SYMBOL_V2(cuMemcpy2D);
-	CUDA_LOAD_SYMBOL_V2(cuMemcpy2DAsync);
-	CUDA_LOAD_SYMBOL_V2(cuMemcpyAtoA);
-	CUDA_LOAD_SYMBOL_V2(cuMemcpyAtoD);
-	CUDA_LOAD_SYMBOL_V2(cuMemcpyAtoH);
-	CUDA_LOAD_SYMBOL_V2(cuMemcpyAtoHAsync);
-	CUDA_LOAD_SYMBOL_V2(cuMemcpyDtoA);
-	CUDA_LOAD_SYMBOL_V2(cuMemcpyDtoD);
-	CUDA_LOAD_SYMBOL_V2(cuMemcpyDtoH);
-	CUDA_LOAD_SYMBOL_V2(cuMemcpyDtoHAsync);
-	CUDA_LOAD_SYMBOL_V2(cuMemcpyHtoA);
-	CUDA_LOAD_SYMBOL_V2(cuMemcpyHtoAAsync);
-	CUDA_LOAD_SYMBOL_V2(cuMemcpyHtoD);
-	CUDA_LOAD_SYMBOL_V2(cuMemcpyHtoDAsync);
-
-	// Stream Managment
-	CUDA_LOAD_SYMBOL(cuStreamCreate);
-	CUDA_LOAD_SYMBOL(cuStreamCreateWithPriority);
-	CUDA_LOAD_SYMBOL_V2(cuStreamDestroy);
-	CUDA_LOAD_SYMBOL(cuStreamSynchronize);
-
-	// Graphics Interoperability
-	CUDA_LOAD_SYMBOL(cuGraphicsMapResources);
-	CUDA_LOAD_SYMBOL(cuGraphicsSubResourceGetMappedArray);
-	CUDA_LOAD_SYMBOL(cuGraphicsUnmapResources);
-	CUDA_LOAD_SYMBOL(cuGraphicsUnregisterResource);
-
-#ifdef WIN32
-	// Direct3D11 Interopability
-	CUDA_LOAD_SYMBOL(cuD3D11GetDevice);
-	CUDA_LOAD_SYMBOL(cuGraphicsD3D11RegisterResource);
-#endif
-
-	// Log found CUDA version.
-	{
-		int32_t cuda_version = 0;
+	{ // 2. Get the CUDA Driver version and log it.
 		if (cuDriverGetVersion(&cuda_version) == result::SUCCESS) {
 			int32_t major = cuda_version / 1000;
 			int32_t minor = (cuda_version % 1000) / 10;
@@ -143,6 +110,128 @@ nvidia::cuda::cuda::cuda() : _library()
 		} else {
 			D_LOG_WARNING("Failed to query NVIDIA CUDA Driver for version.", 0);
 		}
+	}
+
+	{ // 3. Load remaining functions.
+		// Device Management
+		// - Not yet needed.
+
+		// Primary Context Management
+		CUDA_LOAD_SYMBOL(cuDevicePrimaryCtxRetain);
+		CUDA_LOAD_SYMBOL_V2(cuDevicePrimaryCtxRelease);
+		CUDA_LOAD_SYMBOL_OPT_V2(cuDevicePrimaryCtxSetFlags);
+
+		// Context Management
+		CUDA_LOAD_SYMBOL_V2(cuCtxCreate);
+		CUDA_LOAD_SYMBOL_V2(cuCtxDestroy);
+		CUDA_LOAD_SYMBOL_V2(cuCtxPushCurrent);
+		CUDA_LOAD_SYMBOL_V2(cuCtxPopCurrent);
+		CUDA_LOAD_SYMBOL_OPT(cuCtxGetCurrent);
+		CUDA_LOAD_SYMBOL_OPT(cuCtxSetCurrent);
+		CUDA_LOAD_SYMBOL(cuCtxGetStreamPriorityRange);
+		CUDA_LOAD_SYMBOL(cuCtxSynchronize);
+
+		// Module Management
+		// - Not yet needed.
+
+		// Memory Management
+		CUDA_LOAD_SYMBOL_V2(cuMemAlloc);
+		CUDA_LOAD_SYMBOL_V2(cuMemAllocPitch);
+		CUDA_LOAD_SYMBOL_V2(cuMemFree);
+		CUDA_LOAD_SYMBOL(cuMemcpy);
+		CUDA_LOAD_SYMBOL_V2(cuMemcpy2D);
+		CUDA_LOAD_SYMBOL_V2(cuMemcpy2DAsync);
+		CUDA_LOAD_SYMBOL_OPT_V2(cuArrayGetDescriptor);
+		CUDA_LOAD_SYMBOL_OPT_V2(cuMemcpyAtoA);
+		CUDA_LOAD_SYMBOL_OPT_V2(cuMemcpyAtoD);
+		CUDA_LOAD_SYMBOL_OPT_V2(cuMemcpyAtoH);
+		CUDA_LOAD_SYMBOL_OPT_V2(cuMemcpyAtoHAsync);
+		CUDA_LOAD_SYMBOL_OPT_V2(cuMemcpyDtoA);
+		CUDA_LOAD_SYMBOL_OPT_V2(cuMemcpyDtoD);
+		CUDA_LOAD_SYMBOL_OPT_V2(cuMemcpyDtoH);
+		CUDA_LOAD_SYMBOL_OPT_V2(cuMemcpyDtoHAsync);
+		CUDA_LOAD_SYMBOL_OPT_V2(cuMemcpyHtoA);
+		CUDA_LOAD_SYMBOL_OPT_V2(cuMemcpyHtoAAsync);
+		CUDA_LOAD_SYMBOL_OPT_V2(cuMemcpyHtoD);
+		CUDA_LOAD_SYMBOL_OPT_V2(cuMemcpyHtoDAsync);
+		CUDA_LOAD_SYMBOL_OPT_V2(cuMemHostGetDevicePointer);
+
+		// Virtual Memory Management
+		// - Not yet needed.
+
+		// Stream Ordered Memory Allocator
+		// - Not yet needed.
+
+		// Unified Addressing
+		// - Not yet needed.
+
+		// Stream Management
+		CUDA_LOAD_SYMBOL(cuStreamCreate);
+		CUDA_LOAD_SYMBOL_V2(cuStreamDestroy);
+		CUDA_LOAD_SYMBOL(cuStreamSynchronize);
+		CUDA_LOAD_SYMBOL_OPT(cuStreamCreateWithPriority);
+		CUDA_LOAD_SYMBOL_OPT(cuStreamGetPriority);
+
+		// Event Management
+		// - Not yet needed.
+
+		// External Resource Interoperability (CUDA 11.1+)
+		// - Not yet needed.
+
+		// Stream Memory Operations
+		// - Not yet needed.
+
+		// Execution Control
+		// - Not yet needed.
+
+		// Graph Management
+		// - Not yet needed.
+
+		// Occupancy
+		// - Not yet needed.
+
+		// Texture Object Management
+		// - Not yet needed.
+
+		// Surface Object Management
+		// - Not yet needed.
+
+		// Peer Context Memory Access
+		// - Not yet needed.
+
+		// Graphics Interoperability
+		CUDA_LOAD_SYMBOL(cuGraphicsMapResources);
+		CUDA_LOAD_SYMBOL(cuGraphicsSubResourceGetMappedArray);
+		CUDA_LOAD_SYMBOL(cuGraphicsUnmapResources);
+		CUDA_LOAD_SYMBOL(cuGraphicsUnregisterResource);
+
+		// Driver Entry Point Access
+		// - Not yet needed.
+
+		// Profiler Control
+		// - Not yet needed.
+
+		// OpenGL Interoperability
+		// - Not yet needed.
+
+		// VDPAU Interoperability
+		// - Not yet needed.
+
+		// EGL Interoperability
+		// - Not yet needed.
+
+#ifdef WIN32
+		// Direct3D9 Interoperability
+		// - Not yet needed.
+
+		// Direct3D10 Interoperability
+		CUDA_LOAD_SYMBOL(cuD3D10GetDevice);
+		CUDA_LOAD_SYMBOL_OPT(cuGraphicsD3D10RegisterResource);
+
+		// Direct3D11 Interoperability
+		CUDA_LOAD_SYMBOL(cuD3D11GetDevice);
+		CUDA_LOAD_SYMBOL_OPT(cuGraphicsD3D11RegisterResource);
+#endif
 	}
 
 	// Initialize CUDA
