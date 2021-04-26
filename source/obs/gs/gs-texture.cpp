@@ -26,10 +26,14 @@
 static uint32_t decode_flags(gs::texture::flags texture_flags)
 {
 	uint32_t flags = 0;
-	if (exact(texture_flags, gs::texture::flags::Dynamic))
+	if (has(texture_flags, gs::texture::flags::Dynamic))
 		flags |= GS_DYNAMIC;
-	if (exact(texture_flags, gs::texture::flags::BuildMipMaps))
+	if (has(texture_flags, gs::texture::flags::BuildMipMaps))
 		flags |= GS_BUILD_MIPMAPS;
+	if (has(texture_flags, gs::texture::flags::Shared))
+		flags |= GS_SHARED_TEX;
+	if (has(texture_flags, gs::texture::flags::GlobalShared))
+		flags |= GS_SHARED_KM_TEX;
 	return flags;
 }
 
