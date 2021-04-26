@@ -54,6 +54,13 @@ typename std::enable_if<enable_bitmask_operators<Enum>::enable, bool>::type exac
 	return static_cast<underlying>(lhs) == static_cast<underlying>(rhs);
 }
 
+template<typename Enum>
+typename std::enable_if<enable_bitmask_operators<Enum>::enable, bool>::type has(Enum lhs, Enum rhs)
+{
+	using underlying = typename std::underlying_type<Enum>::type;
+	return (lhs & rhs) == rhs;
+}
+
 #define P_ENABLE_BITMASK_OPERATORS(x)    \
 	template<>                           \
 	struct enable_bitmask_operators<x> { \
