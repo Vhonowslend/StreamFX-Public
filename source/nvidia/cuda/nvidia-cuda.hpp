@@ -19,6 +19,7 @@
 
 #pragma once
 #include <cstddef>
+#include <tuple>
 #include "util/util-bitmask.hpp"
 #include "util/util-library.hpp"
 
@@ -180,6 +181,8 @@ namespace nvidia::cuda {
 		public:
 		~cuda();
 		cuda();
+
+		int32_t version();
 
 		public:
 		// Initialization
