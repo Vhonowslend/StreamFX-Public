@@ -132,6 +132,19 @@ nvidia::cuda::cuda::cuda() : _library()
 	CUDA_LOAD_SYMBOL(cuGraphicsD3D11RegisterResource);
 #endif
 
+	// Log found CUDA version.
+	{
+		int32_t cuda_version = 0;
+		if (cuDriverGetVersion(&cuda_version) == result::SUCCESS) {
+			int32_t major = cuda_version / 1000;
+			int32_t minor = (cuda_version % 1000) / 10;
+			int32_t patch = (cuda_version % 10);
+			D_LOG_INFO("Driver reported CUDA version: %" PRId32 ".%" PRId32 ".%" PRId32, major, minor, patch);
+		} else {
+			D_LOG_WARNING("Failed to query NVIDIA CUDA Driver for version.", 0);
+		}
+	}
+
 	// Initialize CUDA
 	cuInit(0);
 }
