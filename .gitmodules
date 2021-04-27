@@ -10,3 +10,6 @@
 [submodule "third-party/msvc-redist-helper"]
 	path = third-party/msvc-redist-helper
 	url = https://github.com/Xaymar/msvc-redist-helper.git
+[submodule "third-party/nvidia-maxine-vfx-sdk"]
+	path = third-party/nvidia-maxine-vfx-sdk
+	url = https://github.com/NVIDIA/MAXINE-VFX-SDK.git
