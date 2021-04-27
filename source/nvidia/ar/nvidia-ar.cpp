@@ -28,6 +28,11 @@
 #endif
 
 #include <nvARProxy.cpp>
+#define nvGetProcAddress nvGetProcAddressCV
+#define nvFreeLibrary nvFreeLibraryCV
+#include <nvCVImageProxy.cpp>
+#undef nvGetProcAddress
+#undef nvFreeLibrary
 
 nvidia::ar::ar::ar()
 {
