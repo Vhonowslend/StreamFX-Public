@@ -73,7 +73,7 @@ face_tracking_instance::face_tracking_instance(obs_data_t* settings, obs_source_
 
 	{ // Create render target, vertex buffer, and CUDA stream.
 		auto gctx    = gs::context{};
-		_rt          = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+		_rt          = std::make_shared<gs::rendertarget>(GS_RGBA_UNORM, GS_ZS_NONE);
 		_geometry    = std::make_shared<gs::vertex_buffer>(uint32_t(4), uint8_t(1));
 		auto cctx    = _cuda->get_context()->enter();
 		_cuda_stream = std::make_shared<::nvidia::cuda::stream>(::nvidia::cuda::stream_flags::NON_BLOCKING, 0);
@@ -231,7 +231,7 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 			auto             prof = _profile_capture_realloc->track();
 			gs::debug_marker marker{gs::debug_color_allocate, "Reallocate GPU Buffer"};
 #endif
-			_ar_texture = std::make_shared<gs::texture>(_size.first, _size.second, GS_RGBA, uint32_t(1), nullptr,
+			_ar_texture = std::make_shared<gs::texture>(_size.first, _size.second, GS_RGBA_UNORM, uint32_t(1), nullptr,
 														gs::texture::flags::None);
 			_ar_texture_cuda_fresh = false;
 		}
@@ -278,16 +278,25 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 			std::size_t pitch    = _ar_texture->get_width() * 4ul;
 			_ar_texture_cuda     = std::make_shared<::nvidia::cuda::gstexture>(_ar_texture);
 			_ar_texture_cuda_mem = std::make_shared<::nvidia::cuda::memory>(pitch * _ar_texture->get_height());
-			_ar_library->image_init(&_ar_image, static_cast<unsigned int>(_ar_texture->get_width()),
-									static_cast<unsigned int>(_ar_texture->get_height()), static_cast<int>(pitch),
-									reinterpret_cast<void*>(_ar_texture_cuda_mem->get()), NVCV_RGBA, NVCV_U8,
-									NVCV_INTERLEAVED, NVCV_CUDA);
+			if (auto res = _ar_library->image_init(&_ar_image, static_cast<unsigned int>(_ar_texture->get_width()),
+												   static_cast<unsigned int>(_ar_texture->get_height()),
+												   static_cast<int>(pitch),
+												   reinterpret_cast<void*>(_ar_texture_cuda_mem->get()), NVCV_RGBA,
+												   NVCV_U8, NVCV_INTERLEAVED, NVCV_CUDA);
+				res != NVCV_SUCCESS) {
+				DLOG_ERROR("<%s> Failed to allocate image for tracking.", obs_source_get_name(_self));
+				return;
+			}
 
 			// Reallocate transposed buffer.
 			_ar_library->image_dealloc(&_ar_image_temp);
 			_ar_library->image_dealloc(&_ar_image_bgr);
-			_ar_library->image_alloc(&_ar_image_bgr, _ar_image.width, _ar_image.height, NVCV_BGR, NVCV_U8,
-									 NVCV_INTERLEAVED, NVCV_CUDA, 0);
+			if (auto res = _ar_library->image_alloc(&_ar_image_bgr, _ar_image.width, _ar_image.height, NVCV_BGR,
+													NVCV_U8, NVCV_INTERLEAVED, NVCV_CUDA, 0);
+				res != NVCV_SUCCESS) {
+				DLOG_ERROR("<%s> Failed to allocate image for color conversion.", obs_source_get_name(_self));
+				return;
+			}
 
 			// Synchronize Streams.
 			_cuda_stream->synchronize();
@@ -514,7 +523,7 @@ void face_tracking_instance::video_tick(float_t seconds)
 	_rt_is_fresh = false;
 }
 
-void face_tracking_instance::video_render(gs_effect_t* effect)
+void face_tracking_instance::video_render(gs_effect_t*)
 {
 	obs_source_t* filter_parent  = obs_filter_get_parent(_self);
 	obs_source_t* filter_target  = obs_filter_get_target(_self);
@@ -540,7 +549,7 @@ void face_tracking_instance::video_render(gs_effect_t* effect)
 			gs::debug_marker gdm{gs::debug_color_cache, "Cache"};
 #endif
 
-			if (obs_source_process_filter_begin(_self, _rt->get_color_format(), OBS_ALLOW_DIRECT_RENDERING)) {
+			if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
 				auto op  = _rt->render(_size.first, _size.second);
 				vec4 clr = {0., 0., 0., 0.};
 
@@ -548,8 +557,10 @@ void face_tracking_instance::video_render(gs_effect_t* effect)
 				gs_clear(GS_CLEAR_COLOR, &clr, 0., 0);
 				gs_enable_color(true, true, true, true);
 				gs_enable_blending(false);
-
+				auto old_fbsrgb = gs_framebuffer_srgb_enabled();
+				gs_enable_framebuffer_srgb(gs_get_linear_srgb());
 				obs_source_process_filter_tech_end(_self, default_effect, 1, 1, "Draw");
+				gs_enable_framebuffer_srgb(old_fbsrgb);
 			} else {
 				obs_source_skip_video_filter(_self);
 				return;
@@ -567,10 +578,9 @@ void face_tracking_instance::video_render(gs_effect_t* effect)
 		gs::debug_marker gdm{gs::debug_color_render, "Render"};
 #endif
 
-		gs_effect_set_texture(gs_effect_get_param_by_name(effect ? effect : default_effect, "image"),
-							  _rt->get_texture()->get_object());
+		gs_effect_set_texture(gs_effect_get_param_by_name(default_effect, "image"), _rt->get_texture()->get_object());
 		gs_load_vertexbuffer(_geometry->update(false));
-		while (gs_effect_loop(effect ? effect : default_effect, "Draw")) {
+		while (gs_effect_loop(default_effect, "Draw")) {
 			gs_draw(gs_draw_mode::GS_TRISTRIP, 0, 0);
 		}
 		gs_load_vertexbuffer(nullptr);
@@ -611,7 +621,7 @@ face_tracking_factory::face_tracking_factory()
 	// Info
 	_info.id           = PREFIX "filter-nvidia-face-tracking";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
-	_info.output_flags = OBS_SOURCE_VIDEO;
+	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
 
 	set_resolution_enabled(false);
 	finish_setup();
