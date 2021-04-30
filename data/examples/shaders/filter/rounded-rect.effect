@@ -1,0 +1,109 @@
+// Copyright 2021 Carlos Baraza
+//
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
+// THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+#define IS_FILTER
+#include "../base.effect"
+
+//------------------------------------------------------------------------------
+// Uniforms
+//------------------------------------------------------------------------------
+uniform int _0_corner_radius<
+	string name = "Corner Radius";
+	string suffix = " px";
+	string field_type = "input";
+	int minimum = 0;
+	int maximum = 2000;
+	int step = 10;
+	int scale = 1;
+> = 40;
+
+uniform float4 _1_border<
+	string name = "Border Color";
+	string field_type = "slider";
+	float4 minimum = {0., 0., 0., 0.};
+	float4 maximum = {100., 100., 100., 100.};
+	float4 step = {0.01, 0.01, 0.01, 0.01};
+	float4 scale = {0.01, 0.01, 0.01, 0.01};
+> = {0., 0., 0., 100.};
+
+uniform int _2_border_thickness<
+	string name = "Border Thickness";
+	string suffix = " px";
+	string field_type = "input";
+	int minimum = 0;
+	int maximum = 300;
+	int step = 1;
+	int scale = 1;
+> = 5;
+
+
+//------------------------------------------------------------------------------
+// Technique: Rounded Rect
+//------------------------------------------------------------------------------
+
+float4 RoundedRect(VertexInformation vtx) : TARGET {
+	float2 uv = vtx.texcoord0.xy;
+	int corner_radius = _0_corner_radius;
+
+	// Fold the input horizontally and vertically so all corners fall into the same quadrant
+	float2 mirrored_tex_coord = float2(0.5, 0.5) - abs(uv - float2(0.5, 0.5));
+	float4 rgb = InputA.Sample(LinearClampSampler, uv);
+	float2 pixel_position = float2(
+		mirrored_tex_coord.x * ViewSize.x,
+		mirrored_tex_coord.y * ViewSize.y
+	);
+
+	// Handle rounded corner
+	float pixel_distance_from_center = distance(
+		pixel_position,
+		float2(corner_radius, corner_radius)
+	);
+	bool is_in_corner = (pixel_position.x < corner_radius) && (pixel_position.y < corner_radius);
+	bool is_within_radius = pixel_distance_from_center <= corner_radius;
+
+	// Handle border
+	bool is_within_edge_border = !is_in_corner && (
+		(pixel_position.x <= _2_border_thickness) ||
+		(pixel_position.y <= _2_border_thickness)
+	);
+	bool is_within_corner_border = is_in_corner && (
+		(pixel_distance_from_center < corner_radius) &&
+		(pixel_distance_from_center > (corner_radius - _2_border_thickness))
+	);
+	if (is_within_edge_border || is_within_corner_border) {
+		return rgb + _1_border;
+	}
+
+	// Handle corners and return transparent color
+	if (is_in_corner && !is_within_radius) {
+		return float4(0,0,0,0);
+	}
+
+	return rgb;
+}
+
+technique RoundedRect
+{
+	pass
+	{
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader  = RoundedRect(vtx);
+	}
+}
