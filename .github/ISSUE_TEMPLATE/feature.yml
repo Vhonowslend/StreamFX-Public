@@ -1,0 +1,30 @@
+---
+name: "Suggest an Enhancment to a Feature or a new Feature"
+description: ""
+labels: ["type:enhancement", "status:help-wanted"]
+body:
+- type: textarea
+  attributes:
+    label: "Explain the Feature/Enhancement"
+    description: "Describe the feature or enhancement in as much detail as possible, leave nothing out. If you think images or example videos help describe the Feature/Enhancement, include them."
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: "What makes this feature/enhancement useful for StreamFX and its users?"
+    description: "Why should this feature/enhancement become part of the StreamFX plugin, instead of becoming or remaining a third-party plug-in? What benefits do other users of StreamFX get from this?"
+  validations:
+    required: true
+- type: checkboxes
+  attributes:
+    label:
+    description:
+    options:
+      - label: "A bounty is offered for the implementation of this Feature/Enhancement."
+        description: "Are you offering a reward for the complete implementation of this Feature/Enhancement according to the description provided?"
+      - label: "There is no other way to currently do this in StreamFX or OBS Studio."
+        description: "Is this a(n) feature/enhancement that can't be done through any other way, such as other plugins or existing features?"
+- type: textarea
+  attributes:
+    label: "Any additional Information we need to know?"
+    description: ""
