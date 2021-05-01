@@ -41,6 +41,9 @@
 #ifdef ENABLE_FILTER_COLOR_GRADE
 #include "filters/filter-color-grade.hpp"
 #endif
+#ifdef ENABLE_FILTER_DENOISING
+#include "filters/filter-denoising.hpp"
+#endif
 #ifdef ENABLE_FILTER_DISPLACEMENT
 #include "filters/filter-displacement.hpp"
 #endif
@@ -149,6 +152,9 @@ try {
 #ifdef ENABLE_FILTER_COLOR_GRADE
 		streamfx::filter::color_grade::color_grade_factory::initialize();
 #endif
+#ifdef ENABLE_FILTER_DENOISING
+		streamfx::filter::denoising::denoising_factory::initialize();
+#endif
 #ifdef ENABLE_FILTER_DISPLACEMENT
 		streamfx::filter::displacement::displacement_factory::initialize();
 #endif
@@ -237,6 +243,9 @@ try {
 #endif
 #ifdef ENABLE_FILTER_COLOR_GRADE
 		streamfx::filter::color_grade::color_grade_factory::finalize();
+#endif
+#ifdef ENABLE_FILTER_DENOISING
+		streamfx::filter::denoising::denoising_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_DISPLACEMENT
 		streamfx::filter::displacement::displacement_factory::finalize();
