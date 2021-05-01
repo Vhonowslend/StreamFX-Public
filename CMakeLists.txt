@@ -822,6 +822,23 @@ if(REQUIRE_NVIDIA_ARSDK AND D_PLATFORM_WINDOWS)
 	set(HAVE_NVIDIA_ARSDK ${NVAR_FOUND})
 endif()
 
+#- NVIDIA Video Effects SDK
+set(HAVE_NVIDIA_VFX_SDK OFF)
+if(REQUIRE_NVIDIA_VFX_SDK AND D_PLATFORM_WINDOWS)
+	if(EXISTS "${PROJECT_SOURCE_DIR}/third-party/nvidia-maxine-vfx-sdk/version.h")
+		set(HAVE_NVIDIA_VFX_SDK ON)
+	endif()
+
+	if(NOT TARGET NVIDIA::VFX)
+		add_library(NVIDIA::VFX IMPORTED INTERFACE)
+		target_include_directories(nvARProxy
+			INTERFACE
+				"${PROJECT_SOURCE_DIR}/third-party/nvidia-maxine-vfx-sdk/nvvfx/include/"
+				"${PROJECT_SOURCE_DIR}/third-party/nvidia-maxine-vfx-sdk/nvvfx/source/"
+		)
+	endif()
+endif()
+
 #- NVIDIA CUDA (Windows)
 set(HAVE_NVIDIA_CUDA OFF)
 if(REQUIRE_NVIDIA_CUDA AND D_PLATFORM_WINDOWS)
@@ -960,7 +977,7 @@ if(HAVE_NVIDIA_ARSDK)
 	)
 endif()
 
-if(HAVE_NVIDIA_ARSDK)
+if(HAVE_NVIDIA_ARSDK OR HAVE_NVIDIA_VFX_SDK)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/nvidia/cv/nvidia-cv.hpp"
 		"source/nvidia/cv/nvidia-cv.cpp"
@@ -968,6 +985,16 @@ if(HAVE_NVIDIA_ARSDK)
 		"source/nvidia/cv/nvidia-cv-image.cpp"
 		"source/nvidia/cv/nvidia-cv-texture.hpp"
 		"source/nvidia/cv/nvidia-cv-texture.cpp"
+	)
+endif()
+
+if(HAVE_NVIDIA_VFX_SDK)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/nvidia/vfx/nvidia-vfx.hpp"
+		"source/nvidia/vfx/nvidia-vfx.cpp"
+	)
+	list(APPEND PROJECT_LIBRARIES
+		NVIDIA::VFX
 	)
 endif()
 
