@@ -960,6 +960,13 @@ if(HAVE_NVIDIA_ARSDK)
 	)
 endif()
 
+if(HAVE_NVIDIA_ARSDK)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/nvidia/cv/nvidia-cv.hpp"
+		"source/nvidia/cv/nvidia-cv.cpp"
+	)
+endif()
+
 if(HAVE_NVIDIA_CUDA)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/nvidia/cuda/nvidia-cuda.hpp"
