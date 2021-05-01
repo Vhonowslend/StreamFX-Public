@@ -299,6 +299,8 @@ set(${PREFIX}ENABLE_ENCODER_AOM_AV1 ON CACHE BOOL "Enable AOM AV1 Encoder.")
 ## Filters
 set(${PREFIX}ENABLE_FILTER_BLUR ON CACHE BOOL "Enable Blur Filter")
 set(${PREFIX}ENABLE_FILTER_COLOR_GRADE ON CACHE BOOL "Enable Color Grade Filter")
+set(${PREFIX}ENABLE_FILTER_DENOISING ON CACHE BOOL "Enable Denoising filter")
+set(${PREFIX}ENABLE_FILTER_DENOISING_NVIDIA ON CACHE BOOL "Enable NVIDIA provider(s) for Denoising Filter")
 set(${PREFIX}ENABLE_FILTER_DISPLACEMENT ON CACHE BOOL "Enable Displacement Filter")
 set(${PREFIX}ENABLE_FILTER_DYNAMIC_MASK ON CACHE BOOL "Enable Dynamic Mask Filter")
 set(${PREFIX}ENABLE_FILTER_NVIDIA_FACE_TRACKING ON CACHE BOOL "Enable NVIDIA Face Tracking Filter")
@@ -657,6 +659,26 @@ function(feature_filter_color_grade RESOLVE)
 	is_feature_enabled(FILTER_COLOR_GRADE T_CHECK)
 endfunction()
 
+function(feature_filter_denoising RESOLVE)
+	is_feature_enabled(FILTER_DENOISING T_CHECK)
+	if(RESOLVE AND T_CHECK)
+		# Verify that the requirements for the providers are available
+		if(NOT HAVE_NVIDIA_VFX_SDK)
+			message(WARNING "${LOGPREFIX}: 'NVIDIA Video Effects SDK' is missing. Disabling NVIDIA provider...")
+			set_feature_disabled(FILTER_DENOISING_NVIDIA ON)
+		endif()
+
+		# Verify that we have at least one provider for Video Denoising.
+		is_feature_enabled(FILTER_DENOISING_NVIDIA T_CHECK_NVIDIA)
+		if (NOT T_CHECK_NVIDIA)
+			message(WARNING "${LOGPREFIX}: Denoising has no available providers. Disabling...")
+			set_feature_disabled(FILTER_DENOISING ON)
+		endif()
+	elseif(T_CHECK)
+		set(REQUIRE_NVIDIA_VFX_SDK ON PARENT_SCOPE)
+	endif()
+endfunction()
+
 function(feature_filter_displacement RESOLVE)
 	is_feature_enabled(FILTER_DISPLACEMENT T_CHECK)
 endfunction()
@@ -765,6 +787,7 @@ feature_encoder_ffmpeg(OFF)
 feature_encoder_aom_av1(OFF)
 feature_filter_blur(OFF)
 feature_filter_color_grade(OFF)
+feature_filter_denoising(OFF)
 feature_filter_displacement(OFF)
 feature_filter_dynamic_mask(OFF)
 feature_filter_nvidia_face_tracking(OFF)
@@ -920,6 +943,7 @@ feature_encoder_ffmpeg(ON)
 feature_encoder_aom_av1(ON)
 feature_filter_blur(ON)
 feature_filter_color_grade(ON)
+feature_filter_denoising(ON)
 feature_filter_displacement(ON)
 feature_filter_dynamic_mask(ON)
 feature_filter_nvidia_face_tracking(ON)
@@ -1040,6 +1064,8 @@ if(HAVE_NVIDIA_VFX_SDK)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/nvidia/vfx/nvidia-vfx.hpp"
 		"source/nvidia/vfx/nvidia-vfx.cpp"
+		"source/nvidia/vfx/nvidia-vfx-denoising.hpp"
+		"source/nvidia/vfx/nvidia-vfx-denoising.cpp"
 		"source/nvidia/vfx/nvidia-vfx-effect.hpp"
 		"source/nvidia/vfx/nvidia-vfx-effect.cpp"
 		"source/nvidia/vfx/nvidia-vfx-superresolution.hpp"
@@ -1388,6 +1414,24 @@ if(T_CHECK)
 	list(APPEND PROJECT_DEFINITIONS
 		ENABLE_FILTER_TRANSFORM
 	)
+endif()
+
+# Filter/Video Denoising
+is_feature_enabled(FILTER_DENOISING T_CHECK)
+if(T_CHECK)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/filters/filter-denoising.hpp"
+		"source/filters/filter-denoising.cpp"
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_FILTER_DENOISING
+	)
+	is_feature_enabled(FILTER_DENOISING_NVIDIA T_CHECK)
+	if (T_CHECK)
+		list(APPEND PROJECT_DEFINITIONS
+			ENABLE_FILTER_DENOISING_NVIDIA
+		)
+	endif()
 endif()
 
 # Filter/Video Super-Resolution
