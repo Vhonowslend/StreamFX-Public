@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "filter-upscaling.hpp"
+#include "filter-denoising.hpp"
 #include <algorithm>
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
@@ -31,57 +31,52 @@
 #define D_LOG_INFO(x, ...) P_LOG_INFO(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
 #define D_LOG_DEBUG(x, ...) P_LOG_DEBUG(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
 #else
-#define ST_PREFIX "<filter::video_superresolution> "
+#define ST_PREFIX "<filter::video_denoising> "
 #define D_LOG_ERROR(...) P_LOG_ERROR(ST_PREFIX __VA_ARGS__)
 #define D_LOG_WARNING(...) P_LOG_WARN(ST_PREFIX __VA_ARGS__)
 #define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
 #define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
 #endif
 
-#define ST_I18N "Filter.Upscaling"
+#define ST_I18N "Filter.Denoising"
 #define ST_KEY_PROVIDER "Provider"
 #define ST_I18N_PROVIDER ST_I18N "." ST_KEY_PROVIDER
-#define ST_I18N_PROVIDER_NVIDIA_SUPERRES ST_I18N_PROVIDER ".NVIDIA.VideoSuperResolution"
+#define ST_I18N_PROVIDER_NVIDIA_DENOISING ST_I18N_PROVIDER ".NVIDIA.Denoising"
 
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-#define ST_KEY_NVIDIA_SUPERRES "NVIDIA.SuperRes"
-#define ST_I18N_NVIDIA_SUPERRES ST_I18N "." ST_KEY_NVIDIA_SUPERRES
-#define ST_KEY_NVIDIA_SUPERRES_STRENGTH "NVIDIA.SuperRes.Strength"
-#define ST_I18N_NVIDIA_SUPERRES_STRENGTH ST_I18N "." ST_KEY_NVIDIA_SUPERRES_STRENGTH
-#define ST_I18N_NVIDIA_SUPERRES_STRENGTH_WEAK ST_I18N_NVIDIA_SUPERRES_STRENGTH ".Weak"
-#define ST_I18N_NVIDIA_SUPERRES_STRENGTH_STRONG ST_I18N_NVIDIA_SUPERRES_STRENGTH ".Strong"
-#define ST_KEY_NVIDIA_SUPERRES_SCALE "NVIDIA.SuperRes.Scale"
-#define ST_I18N_NVIDIA_SUPERRES_SCALE ST_I18N "." ST_KEY_NVIDIA_SUPERRES_SCALE
+#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+#define ST_KEY_NVIDIA_DENOISING "NVIDIA.Denoising"
+#define ST_I18N_NVIDIA_DENOISING ST_I18N "." ST_KEY_NVIDIA_DENOISING
+#define ST_KEY_NVIDIA_DENOISING_STRENGTH "NVIDIA.Denoising.Strength"
+#define ST_I18N_NVIDIA_DENOISING_STRENGTH ST_I18N "." ST_KEY_NVIDIA_DENOISING_STRENGTH
+#define ST_I18N_NVIDIA_DENOISING_STRENGTH_WEAK ST_I18N_NVIDIA_DENOISING_STRENGTH ".Weak"
+#define ST_I18N_NVIDIA_DENOISING_STRENGTH_STRONG ST_I18N_NVIDIA_DENOISING_STRENGTH ".Strong"
 #endif
 
-using streamfx::filter::upscaling::upscaling_factory;
-using streamfx::filter::upscaling::upscaling_instance;
-using streamfx::filter::upscaling::upscaling_provider;
+using streamfx::filter::denoising::denoising_factory;
+using streamfx::filter::denoising::denoising_instance;
+using streamfx::filter::denoising::denoising_provider;
 
-static constexpr std::string_view HELP_URL = "https://github.com/Xaymar/obs-StreamFX/wiki/Filter-Upscaling";
+static constexpr std::string_view HELP_URL = "https://github.com/Xaymar/obs-StreamFX/wiki/Filter-Denoising";
 
-/** Priority of providers for automatic selection if more than one is available.
- * 
- */
-static upscaling_provider provider_priority[] = {
-	upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION,
+static denoising_provider provider_priority[] = {
+	denoising_provider::NVIDIA_DENOISING,
 };
 
-const char* streamfx::filter::upscaling::cstring(upscaling_provider provider)
+const char* streamfx::filter::denoising::cstring(denoising_provider provider)
 {
 	switch (provider) {
-	case upscaling_provider::INVALID:
+	case denoising_provider::INVALID:
 		return "N/A";
-	case upscaling_provider::AUTOMATIC:
+	case denoising_provider::AUTOMATIC:
 		return D_TRANSLATE(S_STATE_AUTOMATIC);
-	case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
-		return D_TRANSLATE(ST_I18N_PROVIDER_NVIDIA_SUPERRES);
+	case denoising_provider::NVIDIA_DENOISING:
+		return D_TRANSLATE(ST_I18N_PROVIDER_NVIDIA_DENOISING);
 	default:
 		throw std::runtime_error("Missing Conversion Entry");
 	}
 }
 
-std::string streamfx::filter::upscaling::string(upscaling_provider provider)
+std::string streamfx::filter::denoising::string(denoising_provider provider)
 {
 	return cstring(provider);
 }
@@ -89,11 +84,11 @@ std::string streamfx::filter::upscaling::string(upscaling_provider provider)
 //------------------------------------------------------------------------------
 // Instance
 //------------------------------------------------------------------------------
-upscaling_instance::upscaling_instance(obs_data_t* data, obs_source_t* self)
+denoising_instance::denoising_instance(obs_data_t* data, obs_source_t* self)
 	: obs::source_instance(data, self),
 
-	  _in_size(1, 1), _out_size(1, 1), _provider_ready(false), _provider(upscaling_provider::INVALID), _provider_lock(),
-	  _provider_task(), _input(), _output(), _dirty(false)
+	  _size(1, 1), _provider_ready(false), _provider(denoising_provider::INVALID), _provider_lock(), _provider_task(),
+	  _input(), _output()
 {
 	{
 		::streamfx::obs::gs::context gctx;
@@ -109,14 +104,14 @@ upscaling_instance::upscaling_instance(obs_data_t* data, obs_source_t* self)
 	}
 }
 
-upscaling_instance::~upscaling_instance()
+denoising_instance::~denoising_instance()
 {
 	// TODO: Make this asynchronous.
 	std::unique_lock<std::mutex> ul(_provider_lock);
 	switch (_provider) {
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-	case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
-		nvvfxsr_unload();
+#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+	case denoising_provider::NVIDIA_DENOISING:
+		nvvfx_denoising_unload();
 		break;
 #endif
 	default:
@@ -124,19 +119,19 @@ upscaling_instance::~upscaling_instance()
 	}
 }
 
-void upscaling_instance::load(obs_data_t* data)
+void denoising_instance::load(obs_data_t* data)
 {
 	update(data);
 }
 
-void upscaling_instance::migrate(obs_data_t* data, uint64_t version) {}
+void denoising_instance::migrate(obs_data_t* data, uint64_t version) {}
 
-void upscaling_instance::update(obs_data_t* data)
+void denoising_instance::update(obs_data_t* data)
 {
 	// Check if the user changed which Denoising provider we use.
-	upscaling_provider provider = static_cast<upscaling_provider>(obs_data_get_int(data, ST_KEY_PROVIDER));
-	if (provider == upscaling_provider::AUTOMATIC) {
-		provider = upscaling_factory::get()->find_ideal_provider();
+	denoising_provider provider = static_cast<denoising_provider>(obs_data_get_int(data, ST_KEY_PROVIDER));
+	if (provider == denoising_provider::AUTOMATIC) {
+		provider = denoising_factory::get()->find_ideal_provider();
 	}
 
 	// Check if the provider was changed, and if so switch.
@@ -150,8 +145,8 @@ void upscaling_instance::update(obs_data_t* data)
 
 		switch (_provider) {
 #ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-		case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
-			nvvfxsr_update(data);
+		case denoising_provider::NVIDIA_DENOISING:
+			nvvfx_denoising_update(data);
 			break;
 #endif
 		default:
@@ -160,12 +155,12 @@ void upscaling_instance::update(obs_data_t* data)
 	}
 }
 
-void streamfx::filter::upscaling::upscaling_instance::properties(obs_properties_t* properties)
+void streamfx::filter::denoising::denoising_instance::properties(obs_properties_t* properties)
 {
 	switch (_provider_ui) {
 #ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-	case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
-		nvvfxsr_properties(properties);
+	case denoising_provider::NVIDIA_DENOISING:
+		nvvfx_denoising_properties(properties);
 		break;
 #endif
 	default:
@@ -173,23 +168,22 @@ void streamfx::filter::upscaling::upscaling_instance::properties(obs_properties_
 	}
 }
 
-uint32_t streamfx::filter::upscaling::upscaling_instance::get_width()
+uint32_t streamfx::filter::denoising::denoising_instance::get_width()
 {
-	return std::max<uint32_t>(_out_size.first, 1);
+	return std::max<uint32_t>(_size.first, 1);
 }
 
-uint32_t streamfx::filter::upscaling::upscaling_instance::get_height()
+uint32_t streamfx::filter::denoising::denoising_instance::get_height()
 {
-	return std::max<uint32_t>(_out_size.second, 1);
+	return std::max<uint32_t>(_size.second, 1);
 }
 
-void upscaling_instance::video_tick(float_t time)
+void denoising_instance::video_tick(float_t time)
 {
 	auto target = obs_filter_get_target(_self);
 	auto width  = obs_source_get_base_width(target);
 	auto height = obs_source_get_base_height(target);
-	_in_size    = {width, height};
-	_out_size   = _in_size;
+	_size       = {width, height};
 
 	// Allow the provider to restrict the size.
 	if (target && _provider_ready) {
@@ -197,8 +191,8 @@ void upscaling_instance::video_tick(float_t time)
 
 		switch (_provider) {
 #ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-		case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
-			nvvfxsr_size();
+		case denoising_provider::NVIDIA_DENOISING:
+			nvvfx_denoising_size();
 			break;
 #endif
 		default:
@@ -209,7 +203,7 @@ void upscaling_instance::video_tick(float_t time)
 	_dirty = true;
 }
 
-void upscaling_instance::video_render(gs_effect_t* effect)
+void denoising_instance::video_render(gs_effect_t* effect)
 {
 	auto parent = obs_filter_get_parent(_self);
 	auto target = obs_filter_get_target(_self);
@@ -231,11 +225,77 @@ void upscaling_instance::video_render(gs_effect_t* effect)
 	}
 
 #ifdef ENABLE_PROFILING
-	::streamfx::obs::gs::debug_marker profiler0{::streamfx::obs::gs::debug_color_source,
-												"StreamFX Video Super-Resolution"};
+	::streamfx::obs::gs::debug_marker profiler0{::streamfx::obs::gs::debug_color_source, "StreamFX Denoising"};
 	::streamfx::obs::gs::debug_marker profiler0_0{::streamfx::obs::gs::debug_color_gray, "'%s' on '%s'",
 												  obs_source_get_name(_self), obs_source_get_name(parent)};
 #endif
+
+	if (_dirty) { // Lock the provider from being changed.
+		std::unique_lock<std::mutex> ul(_provider_lock);
+
+		{ // Allow the provider to restrict the size.
+			switch (_provider) {
+#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+			case denoising_provider::NVIDIA_DENOISING:
+				nvvfx_denoising_size();
+				break;
+#endif
+			default:
+				_size = {width, height};
+				break;
+			}
+		}
+
+		// Capture the input.
+		if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
+			auto op = _input->render(width, height);
+
+			// Clear the buffer
+			gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &blank, 0, 0);
+
+			// Set GPU state
+			gs_blend_state_push();
+			gs_enable_color(true, true, true, true);
+			gs_enable_blending(false);
+			gs_enable_depth_test(false);
+			gs_enable_stencil_test(false);
+			gs_set_cull_mode(GS_NEITHER);
+
+			// Render
+			bool srgb = gs_framebuffer_srgb_enabled();
+			gs_enable_framebuffer_srgb(gs_get_linear_srgb());
+			obs_source_process_filter_end(_self, obs_get_base_effect(OBS_EFFECT_DEFAULT), width, height);
+			gs_enable_framebuffer_srgb(srgb);
+
+			// Reset GPU state
+			gs_blend_state_pop();
+		} else {
+			obs_source_skip_video_filter(_self);
+			return;
+		}
+
+		// Process the captured input with the provider.
+		{
+			switch (_provider) {
+#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+			case denoising_provider::NVIDIA_DENOISING:
+				nvvfx_denoising_process();
+				break;
+#endif
+			default:
+				_output = nullptr;
+				break;
+			}
+
+			if (!_output) {
+				D_LOG_ERROR("Provider '%s' did not return a result.", cstring(_provider));
+				obs_source_skip_video_filter(_self);
+				return;
+			}
+		}
+
+		// Unlock the provider, as we are no longer doing critical work with it.
+	}
 
 	if (_dirty) {
 		// Lock the provider from being changed.
@@ -246,7 +306,7 @@ void upscaling_instance::video_render(gs_effect_t* effect)
 			::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_capture, "Capture"};
 #endif
 			if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
-				auto op = _input->render(_in_size.first, _in_size.second);
+				auto op = _input->render(_size.first, _size.second);
 
 				// Matrix
 				gs_matrix_push();
@@ -284,8 +344,8 @@ void upscaling_instance::video_render(gs_effect_t* effect)
 #endif
 			switch (_provider) {
 #ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-			case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
-				nvvfxsr_process();
+			case denoising_provider::NVIDIA_DENOISING:
+				nvvfx_denoising_process();
 				break;
 #endif
 			default:
@@ -312,16 +372,16 @@ void upscaling_instance::video_render(gs_effect_t* effect)
 #endif
 		gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), _output->get_object());
 		while (gs_effect_loop(effect, "Draw")) {
-			gs_draw_sprite(nullptr, 0, _out_size.first, _out_size.second);
+			gs_draw_sprite(nullptr, 0, _size.first, _size.second);
 		}
 	}
 }
 
 struct switch_provider_data_t {
-	upscaling_provider provider;
+	denoising_provider provider;
 };
 
-void streamfx::filter::upscaling::upscaling_instance::switch_provider(upscaling_provider provider)
+void streamfx::filter::denoising::denoising_instance::switch_provider(denoising_provider provider)
 {
 	std::unique_lock<std::mutex> ul(_provider_lock);
 
@@ -350,10 +410,10 @@ void streamfx::filter::upscaling::upscaling_instance::switch_provider(upscaling_
 
 	// 3. Then spawn a new task to switch provider.
 	_provider_task = streamfx::threadpool()->push(
-		std::bind(&upscaling_instance::task_switch_provider, this, std::placeholders::_1), spd);
+		std::bind(&denoising_instance::task_switch_provider, this, std::placeholders::_1), spd);
 }
 
-void streamfx::filter::upscaling::upscaling_instance::task_switch_provider(util::threadpool_data_t data)
+void streamfx::filter::denoising::denoising_instance::task_switch_provider(util::threadpool_data_t data)
 {
 	std::shared_ptr<switch_provider_data_t> spd = std::static_pointer_cast<switch_provider_data_t>(data);
 
@@ -366,9 +426,9 @@ void streamfx::filter::upscaling::upscaling_instance::task_switch_provider(util:
 	try {
 		// 3. Unload the previous provider.
 		switch (spd->provider) {
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-		case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
-			nvvfxsr_unload();
+#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+		case denoising_provider::NVIDIA_DENOISING:
+			nvvfx_denoising_unload();
 			break;
 #endif
 		default:
@@ -377,14 +437,9 @@ void streamfx::filter::upscaling::upscaling_instance::task_switch_provider(util:
 
 		// 4. Load the new provider.
 		switch (_provider) {
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-		case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
-			nvvfxsr_load();
-			{
-				auto data = obs_source_get_settings(_self);
-				nvvfxsr_update(data);
-				obs_data_release(data);
-			}
+#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+		case denoising_provider::NVIDIA_DENOISING:
+			nvvfx_denoising_load();
 			break;
 #endif
 		default:
@@ -395,7 +450,6 @@ void streamfx::filter::upscaling::upscaling_instance::task_switch_provider(util:
 		D_LOG_INFO("Instance '%s' switched provider from '%s' to '%s'.", obs_source_get_name(_self),
 				   cstring(spd->provider), cstring(_provider));
 
-		// 5. Set the new provider as valid.
 		_provider_ready = true;
 	} catch (std::exception const& ex) {
 		// Log information.
@@ -403,28 +457,27 @@ void streamfx::filter::upscaling::upscaling_instance::task_switch_provider(util:
 	}
 }
 
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-void streamfx::filter::upscaling::upscaling_instance::nvvfxsr_load()
+#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+void streamfx::filter::denoising::denoising_instance::nvvfx_denoising_load()
 {
-	_nvidia_fx = std::make_shared<::streamfx::nvidia::vfx::superresolution>();
+	_nvidia_fx = std::make_shared<::streamfx::nvidia::vfx::denoising>();
 }
 
-void streamfx::filter::upscaling::upscaling_instance::nvvfxsr_unload()
+void streamfx::filter::denoising::denoising_instance::nvvfx_denoising_unload()
 {
 	_nvidia_fx.reset();
 }
 
-void streamfx::filter::upscaling::upscaling_instance::nvvfxsr_size()
+void streamfx::filter::denoising::denoising_instance::nvvfx_denoising_size()
 {
 	if (!_nvidia_fx) {
 		return;
 	}
 
-	auto in_size = _in_size;
-	_nvidia_fx->size(in_size, _in_size, _out_size);
+	_nvidia_fx->size(_size);
 }
 
-void streamfx::filter::upscaling::upscaling_instance::nvvfxsr_process()
+void streamfx::filter::denoising::denoising_instance::nvvfx_denoising_process()
 {
 	if (!_nvidia_fx) {
 		_output = _input->get_texture();
@@ -434,35 +487,28 @@ void streamfx::filter::upscaling::upscaling_instance::nvvfxsr_process()
 	_output = _nvidia_fx->process(_input->get_texture());
 }
 
-void streamfx::filter::upscaling::upscaling_instance::nvvfxsr_properties(obs_properties_t* props)
+void streamfx::filter::denoising::denoising_instance::nvvfx_denoising_properties(obs_properties_t* props)
 {
 	obs_properties_t* grp = obs_properties_create();
-	obs_properties_add_group(props, ST_KEY_NVIDIA_SUPERRES, D_TRANSLATE(ST_I18N_NVIDIA_SUPERRES), OBS_GROUP_NORMAL,
+	obs_properties_add_group(props, ST_KEY_NVIDIA_DENOISING, D_TRANSLATE(ST_I18N_NVIDIA_DENOISING), OBS_GROUP_NORMAL,
 							 grp);
 
 	{
-		auto p =
-			obs_properties_add_list(grp, ST_KEY_NVIDIA_SUPERRES_STRENGTH, D_TRANSLATE(ST_I18N_NVIDIA_SUPERRES_STRENGTH),
-									OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_NVIDIA_SUPERRES_STRENGTH_WEAK), 0);
-		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_NVIDIA_SUPERRES_STRENGTH_STRONG), 1);
-	}
-
-	{
-		auto p = obs_properties_add_float_slider(grp, ST_KEY_NVIDIA_SUPERRES_SCALE,
-												 D_TRANSLATE(ST_I18N_NVIDIA_SUPERRES_SCALE), 100.00, 400.00, .01);
-		obs_property_float_set_suffix(p, " %");
+		auto p = obs_properties_add_list(grp, ST_KEY_NVIDIA_DENOISING_STRENGTH,
+										 D_TRANSLATE(ST_I18N_NVIDIA_DENOISING_STRENGTH), OBS_COMBO_TYPE_LIST,
+										 OBS_COMBO_FORMAT_INT);
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_NVIDIA_DENOISING_STRENGTH_WEAK), 0);
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_NVIDIA_DENOISING_STRENGTH_STRONG), 1);
 	}
 }
 
-void streamfx::filter::upscaling::upscaling_instance::nvvfxsr_update(obs_data_t* data)
+void streamfx::filter::denoising::denoising_instance::nvvfx_denoising_update(obs_data_t* data)
 {
 	if (!_nvidia_fx)
 		return;
 
 	_nvidia_fx->set_strength(
-		static_cast<float>(obs_data_get_int(data, ST_KEY_NVIDIA_SUPERRES_STRENGTH) == 0 ? 0. : 1.));
-	_nvidia_fx->set_scale(static_cast<float>(obs_data_get_double(data, ST_KEY_NVIDIA_SUPERRES_SCALE) / 100.));
+		static_cast<float>(obs_data_get_int(data, ST_KEY_NVIDIA_DENOISING_STRENGTH) == 0 ? 0. : 1.));
 }
 
 #endif
@@ -470,14 +516,14 @@ void streamfx::filter::upscaling::upscaling_instance::nvvfxsr_update(obs_data_t*
 //------------------------------------------------------------------------------
 // Factory
 //------------------------------------------------------------------------------
-upscaling_factory::~upscaling_factory() {}
+denoising_factory::~denoising_factory() {}
 
-upscaling_factory::upscaling_factory()
+denoising_factory::denoising_factory()
 {
 	bool any_available = false;
 
 	// 1. Try and load any configured providers.
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_FILTER_DENOISING_NVIDIA
 	try {
 		// Load CVImage and Video Effects SDK.
 		_nvcuda           = ::streamfx::nvidia::cuda::obs::get();
@@ -490,43 +536,42 @@ upscaling_factory::upscaling_factory()
 		_nvvfx.reset();
 		_nvcvi.reset();
 		_nvcuda.reset();
-		D_LOG_WARNING("Failed to make NVIDIA Super-Resolution available due to error: %s", ex.what());
+		D_LOG_WARNING("Failed to make NVIDIA providers available due to error: %s", ex.what());
 	} catch (...) {
 		_nvidia_available = false;
 		_nvvfx.reset();
 		_nvcvi.reset();
 		_nvcuda.reset();
-		D_LOG_WARNING("Failed to make NVIDIA Super-Resolution available.", nullptr);
+		D_LOG_WARNING("Failed to make NVIDIA providers available with unknown error.", nullptr);
 	}
 #endif
 
 	// 2. Check if any of them managed to load at all.
 	if (!any_available) {
-		D_LOG_ERROR("All supported Super-Resolution providers failed to initialize, disabling effect.", 0);
+		D_LOG_ERROR("All supported providers failed to initialize, disabling effect.", 0);
 		return;
 	}
 
 	// 3. In any other case, register the filter!
-	_info.id           = S_PREFIX "filter-video-superresolution";
+	_info.id           = S_PREFIX "filter-video-denoising";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
-	_info.output_flags = OBS_SOURCE_VIDEO /*| OBS_SOURCE_SRGB*/;
+	_info.output_flags = OBS_SOURCE_VIDEO;
 
 	set_resolution_enabled(true);
 	finish_setup();
 }
 
-const char* upscaling_factory::get_name()
+const char* denoising_factory::get_name()
 {
 	return D_TRANSLATE(ST_I18N);
 }
 
-void upscaling_factory::get_defaults2(obs_data_t* data)
+void denoising_factory::get_defaults2(obs_data_t* data)
 {
-	obs_data_set_default_int(data, ST_KEY_PROVIDER, static_cast<int64_t>(upscaling_provider::AUTOMATIC));
+	obs_data_set_default_int(data, ST_KEY_PROVIDER, static_cast<int64_t>(denoising_provider::AUTOMATIC));
 
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-	obs_data_set_default_double(data, ST_KEY_NVIDIA_SUPERRES_SCALE, 150.);
-	obs_data_set_default_double(data, ST_KEY_NVIDIA_SUPERRES_STRENGTH, 0.);
+#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+	obs_data_set_default_double(data, ST_KEY_NVIDIA_DENOISING_STRENGTH, 1.);
 #endif
 }
 
@@ -541,13 +586,13 @@ try {
 	return false;
 }
 
-obs_properties_t* upscaling_factory::get_properties2(upscaling_instance* data)
+obs_properties_t* denoising_factory::get_properties2(denoising_instance* data)
 {
 	obs_properties_t* pr = obs_properties_create();
 
 #ifdef ENABLE_FRONTEND
 	{
-		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), upscaling_factory::on_manual_open,
+		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), denoising_factory::on_manual_open,
 								   nullptr);
 	}
 #endif
@@ -565,9 +610,9 @@ obs_properties_t* upscaling_factory::get_properties2(upscaling_instance* data)
 											 OBS_COMBO_FORMAT_INT);
 			obs_property_set_modified_callback(p, modified_provider);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC),
-									  static_cast<int64_t>(upscaling_provider::AUTOMATIC));
-			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_PROVIDER_NVIDIA_SUPERRES),
-									  static_cast<int64_t>(upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION));
+									  static_cast<int64_t>(denoising_provider::AUTOMATIC));
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_PROVIDER_NVIDIA_DENOISING),
+									  static_cast<int64_t>(denoising_provider::NVIDIA_DENOISING));
 		}
 	}
 
@@ -575,24 +620,18 @@ obs_properties_t* upscaling_factory::get_properties2(upscaling_instance* data)
 }
 
 #ifdef ENABLE_FRONTEND
-bool upscaling_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
-try {
+bool denoising_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
+{
 	streamfx::open_url(HELP_URL);
-	return false;
-} catch (const std::exception& ex) {
-	D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
-	return false;
-} catch (...) {
-	D_LOG_ERROR("Failed to open manual due to unknown error.", "");
 	return false;
 }
 #endif
 
-bool streamfx::filter::upscaling::upscaling_factory::is_provider_available(upscaling_provider provider)
+bool streamfx::filter::denoising::denoising_factory::is_provider_available(denoising_provider provider)
 {
 	switch (provider) {
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-	case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+	case denoising_provider::NVIDIA_DENOISING:
 		return _nvidia_available;
 #endif
 	default:
@@ -600,35 +639,35 @@ bool streamfx::filter::upscaling::upscaling_factory::is_provider_available(upsca
 	}
 }
 
-upscaling_provider streamfx::filter::upscaling::upscaling_factory::find_ideal_provider()
+denoising_provider streamfx::filter::denoising::denoising_factory::find_ideal_provider()
 {
 	for (auto v : provider_priority) {
-		if (upscaling_factory::get()->is_provider_available(v)) {
+		if (is_provider_available(v)) {
 			return v;
 			break;
 		}
 	}
-	return upscaling_provider::AUTOMATIC;
+	return denoising_provider::AUTOMATIC;
 }
 
-std::shared_ptr<upscaling_factory> _video_superresolution_factory_instance = nullptr;
+std::shared_ptr<denoising_factory> _video_denoising_factory_instance = nullptr;
 
-void upscaling_factory::initialize()
+void denoising_factory::initialize()
 try {
-	if (!_video_superresolution_factory_instance)
-		_video_superresolution_factory_instance = std::make_shared<upscaling_factory>();
+	if (!_video_denoising_factory_instance)
+		_video_denoising_factory_instance = std::make_shared<denoising_factory>();
 } catch (const std::exception& ex) {
 	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
 } catch (...) {
 	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
 }
 
-void upscaling_factory::finalize()
+void denoising_factory::finalize()
 {
-	_video_superresolution_factory_instance.reset();
+	_video_denoising_factory_instance.reset();
 }
 
-std::shared_ptr<upscaling_factory> upscaling_factory::get()
+std::shared_ptr<denoising_factory> denoising_factory::get()
 {
-	return _video_superresolution_factory_instance;
+	return _video_denoising_factory_instance;
 }
