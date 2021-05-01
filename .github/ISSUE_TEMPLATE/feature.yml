@@ -1,6 +1,6 @@
 ---
 name: "Suggest an Enhancment to a Feature or a new Feature"
-description: ""
+description: "Is there something that StreamFX is lacking or you'd like to see in OBS Studio?"
 labels: ["type:enhancement", "status:help-wanted"]
 body:
 - type: textarea
@@ -25,4 +25,3 @@ body:
 - type: textarea
   attributes:
     label: "Any additional Information we need to know?"
-    description: ""

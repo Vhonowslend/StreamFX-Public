@@ -14,7 +14,7 @@ body:
       - "Linux (like Arch Linux)"
       - "Linux (like FreeBSD)"
       - "(Other)"
-  validation:
+  validations:
     required: true
 - type: dropdown
   attributes:
@@ -26,7 +26,7 @@ body:
       - "26.0"
       - "25.0"
       - "(Other)"
-  validation:
+  validations:
     required: true
 - type: dropdown
   attributes:
