@@ -1005,6 +1005,8 @@ list(APPEND PROJECT_PRIVATE_SOURCE
 	"source/util/util-library.hpp"
 	"source/util/util-logging.cpp"
 	"source/util/util-logging.hpp"
+	"source/util/util-platform.hpp"
+	"source/util/util-platform.cpp"
 	"source/util/util-threadpool.cpp"
 	"source/util/util-threadpool.hpp"
 	"source/gfx/gfx-source-texture.hpp"
