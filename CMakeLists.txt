@@ -964,6 +964,8 @@ if(HAVE_NVIDIA_ARSDK)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/nvidia/cv/nvidia-cv.hpp"
 		"source/nvidia/cv/nvidia-cv.cpp"
+		"source/nvidia/cv/nvidia-cv-image.hpp"
+		"source/nvidia/cv/nvidia-cv-image.cpp"
 	)
 endif()
 
