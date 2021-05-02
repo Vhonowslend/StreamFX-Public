@@ -966,6 +966,8 @@ if(HAVE_NVIDIA_ARSDK)
 		"source/nvidia/cv/nvidia-cv.cpp"
 		"source/nvidia/cv/nvidia-cv-image.hpp"
 		"source/nvidia/cv/nvidia-cv-image.cpp"
+		"source/nvidia/cv/nvidia-cv-texture.hpp"
+		"source/nvidia/cv/nvidia-cv-texture.cpp"
 	)
 endif()
 
