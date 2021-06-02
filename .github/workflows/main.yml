@@ -12,7 +12,8 @@ on:
 
 env:
   QT_VERSION: "5.15.2"
-  OBS_VERSION: "27.0.0-rc2-ci"
+  OBS_VERSION: "27.0.0-ci"
+  OBSDEPS_VERSION: "27.0.0"
 
 jobs:
   windows:
@@ -33,7 +34,6 @@ jobs:
       CMAKE_GENERATOR_PLATFORM: ${{ matrix.cmake_generator_platform }}
       CMAKE_GENERATOR_TOOLSET: "host=x64"
       CMAKE_SYSTEM_VERSION: ${{ matrix.windows_sdk }}
-      OBSDEPS_VERSION: "26.1.0"
     steps:
     - name: "Clone"
       uses: actions/checkout@v2
@@ -73,11 +73,11 @@ jobs:
           -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
           -DPACKAGE_PREFIX="build/package" \
           -DDOWNLOAD_QT=ON \
-          -DDOWNLOAD_OBS_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBS_VERSION }}/obs-studio-x64-0.0.0.0-windows-64.7z" \
-          -DDOWNLOAD_OBS_HASH="SHA256=0D5A1E208ECF90B2ADD8895941D95E2D403538E17CBBC9A6FF4246953662A98F" \
-          -DDOWNLOAD_OBSDEPS_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBSDEPS_VERSION }}/deps_windows_x86.7z" \
-          -DDOWNLOAD_OBSDEPS_HASH="SHA256=F5F8F5A53FDB26FF8F4D24811CA0FEA891B3A0C8477515B886129669A81D37C2" \
-          -DDOWNLOAD_QT_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBSDEPS_VERSION }}/qt_${{ env.QT_VERSION }}_windows_64.7z" \
+          -DDOWNLOAD_OBS_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBS_VERSION }}/obs-studio-x64-0.0.0.0-windows-x86-64.7z" \
+          -DDOWNLOAD_OBS_HASH="SHA256=EBF9853C8A553E16ECBCA22523F401E6CF1EB2E8DA93F1493FEF41D65BD06633" \
+          -DDOWNLOAD_OBSDEPS_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBSDEPS_VERSION }}/deps-windows-x86.7z" \
+          -DDOWNLOAD_OBSDEPS_HASH="SHA256=B4AED165016F0B64A7E8B256CCC12EAF8AF087F61B0B239B9D3D00277485B5B5" \
+          -DDOWNLOAD_QT_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBSDEPS_VERSION }}/qt-${{ env.QT_VERSION }}-windows-x86-64.7z" \
           -DDOWNLOAD_QT_HASH="SHA256=109B9C21EF165B0C46DFAA9AD23124F2070ED4D74207C4AFB308183CB8D43BDD"
     - name: "StreamFX: Build"
       shell: bash
@@ -168,8 +168,8 @@ jobs:
           -DENABLE_FILTER_NVIDIA_FACE_TRACKING=FALSE \
           -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
           -DPACKAGE_PREFIX="build/package" \
-          -DDOWNLOAD_OBS_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBS_VERSION }}/obs-studio-x64-0.0.0.0-ubuntu-64.7z" \
-          -DDOWNLOAD_OBS_HASH="SHA256=0AA62167EC8B6E2161EDD2E3A5C66190C4A416551288EC7F847D8612AF98D090"
+          -DDOWNLOAD_OBS_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBS_VERSION }}/obs-studio-x64-0.0.0.0-ubuntu-x86-64.7z" \
+          -DDOWNLOAD_OBS_HASH="SHA256=0AF6C7262C37D80C24CB18523A851FD765C04E766D8EB0F4AC0F6E75D13A035F"
     - name: "StreamFX: Build"
       shell: bash
       run: |
@@ -242,9 +242,9 @@ jobs:
           -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
           -DPACKAGE_PREFIX="build/package" \
           -DQt5_DIR=$(brew --prefix)/Cellar/qt@5/${{ env.QT_VERSION }}/lib/cmake/Qt5 \
-          -DDOWNLOAD_OBS_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBS_VERSION }}/obs-studio-x64-0.0.0.0-macos-64.7z" \
-          -DDOWNLOAD_OBS_HASH="SHA256=A87AA77FEEB451C5768647CFBE6E64230DB75FE2CD4AF899390C6D5B7199C832" \
-          -DDOWNLOAD_OBSDEPS_URL="https://github.com/obsproject/obs-deps/releases/download/2021-03-25/macos-deps-x86_64-2021-03-25.tar.gz" \
+          -DDOWNLOAD_OBS_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBS_VERSION }}/obs-studio-x64-0.0.0.0-macos-x86-64.7z" \
+          -DDOWNLOAD_OBS_HASH="SHA256=F15BC4CA8EB3F581A94372759CFE554E30D202B604B541445A5756B878E4E799" \
+          -DDOWNLOAD_OBSDEPS_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBSDEPS_VERSION }}/deps-macos-x86_64-2021-03-25.tar.gz" \
           -DDOWNLOAD_OBSDEPS_HASH="SHA256=1C409374BCAB9D5CEEAFC121AA327E13AB222096718AF62F2648302DF62898D6"
     - name: "StreamFX: Build"
       shell: bash
