@@ -85,7 +85,7 @@ jobs:
         cmake --build "build/temp" --config RelWithDebInfo --target INSTALL
     - name: "StreamFX: Package (Install Prerequisites)"
       run: |
-        curl "-kL" "https://cdn.xaymar.com/ci/innosetup-6.0.3.exe" "-f" "--retry" "5" "-o" "inno.exe"
+        curl "-kL" "https://cdn.xaymar.com/ci/innosetup-6.1.2.exe" "-f" "--retry" "5" "-o" "inno.exe"
         .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
     - name: "StreamFX: Package"
       shell: bash
