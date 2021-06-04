@@ -25,17 +25,18 @@
 #include "obs/gs/gs-helper.hpp"
 #include "obs/obs-tools.hpp"
 
-#define ST "Filter.Nvidia.FaceTracking"
-#define ST_ROI "Filter.Nvidia.FaceTracking.ROI"
-#define ST_ROI_ZOOM "Filter.Nvidia.FaceTracking.ROI.Zoom"
-#define SK_ROI_ZOOM "ROI.Zoom"
-#define ST_ROI_OFFSET "Filter.Nvidia.FaceTracking.ROI.Offset"
-#define ST_ROI_OFFSET_X "Filter.Nvidia.FaceTracking.ROI.Offset.X"
-#define SK_ROI_OFFSET_X "ROI.Offset.X"
-#define ST_ROI_OFFSET_Y "Filter.Nvidia.FaceTracking.ROI.Offset.Y"
-#define SK_ROI_OFFSET_Y "ROI.Offset.Y"
-#define ST_ROI_STABILITY "Filter.Nvidia.FaceTracking.ROI.Stability"
-#define SK_ROI_STABILITY "ROI.Stability"
+#define ST_I18N "Filter.NVIDIA.FaceTracking"
+#define ST_I18N_ROI ST_I18N ".ROI"
+#define ST_I18N_ROI_ZOOM ST_I18N_ROI ".Zoom"
+#define ST_I18N_ROI_OFFSET ST_I18N_ROI ".ROI.Offset"
+#define ST_I18N_ROI_OFFSET_X ST_I18N_ROI_OFFSET ".X"
+#define ST_I18N_ROI_OFFSET_Y ST_I18N_ROI_OFFSET ".Y"
+#define ST_I18N_ROI_STABILITY ST_I18N_ROI ".Stability"
+
+#define ST_KEY_ROI_ZOOM "ROI.Zoom"
+#define ST_KEY_ROI_OFFSET_X "ROI.Offset.X"
+#define ST_KEY_ROI_OFFSET_Y "ROI.Offset.Y"
+#define ST_KEY_ROI_STABILITY "ROI.Stability"
 
 using namespace streamfx::filter::nvidia;
 
@@ -486,10 +487,10 @@ void face_tracking_instance::migrate(obs_data_t* data, uint64_t version) {}
 
 void face_tracking_instance::update(obs_data_t* data)
 {
-	_cfg_zoom          = obs_data_get_double(data, SK_ROI_ZOOM) / 100.0;
-	_cfg_offset.first  = obs_data_get_double(data, SK_ROI_OFFSET_X) / 100.0;
-	_cfg_offset.second = obs_data_get_double(data, SK_ROI_OFFSET_Y) / 100.0;
-	_cfg_stability     = obs_data_get_double(data, SK_ROI_STABILITY) / 100.0;
+	_cfg_zoom          = obs_data_get_double(data, ST_KEY_ROI_ZOOM) / 100.0;
+	_cfg_offset.first  = obs_data_get_double(data, ST_KEY_ROI_OFFSET_X) / 100.0;
+	_cfg_offset.second = obs_data_get_double(data, ST_KEY_ROI_OFFSET_Y) / 100.0;
+	_cfg_stability     = obs_data_get_double(data, ST_KEY_ROI_STABILITY) / 100.0;
 
 	// Refresh the Region Of Interest
 	refresh_region_of_interest();
@@ -632,15 +633,15 @@ face_tracking_factory::~face_tracking_factory() {}
 
 const char* face_tracking_factory::get_name()
 {
-	return D_TRANSLATE(ST);
+	return D_TRANSLATE(ST_I18N);
 }
 
 void face_tracking_factory::get_defaults2(obs_data_t* data)
 {
-	obs_data_set_default_double(data, SK_ROI_ZOOM, 50.0);
-	obs_data_set_default_double(data, SK_ROI_OFFSET_X, 0.0);
-	obs_data_set_default_double(data, SK_ROI_OFFSET_Y, -15.0);
-	obs_data_set_default_double(data, SK_ROI_STABILITY, 50.0);
+	obs_data_set_default_double(data, ST_KEY_ROI_ZOOM, 50.0);
+	obs_data_set_default_double(data, ST_KEY_ROI_OFFSET_X, 0.0);
+	obs_data_set_default_double(data, ST_KEY_ROI_OFFSET_Y, -15.0);
+	obs_data_set_default_double(data, ST_KEY_ROI_STABILITY, 50.0);
 }
 
 obs_properties_t* face_tracking_factory::get_properties2(face_tracking_instance* data)
@@ -649,28 +650,29 @@ obs_properties_t* face_tracking_factory::get_properties2(face_tracking_instance*
 
 	{
 		auto grp = obs_properties_create();
-		obs_properties_add_group(pr, ST_ROI, D_TRANSLATE(ST_ROI), OBS_GROUP_NORMAL, grp);
+		obs_properties_add_group(pr, ST_I18N_ROI, D_TRANSLATE(ST_I18N_ROI), OBS_GROUP_NORMAL, grp);
 		{
-			auto p =
-				obs_properties_add_float_slider(grp, SK_ROI_STABILITY, D_TRANSLATE(ST_ROI_STABILITY), 0, 100.0, 0.01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_ROI_STABILITY, D_TRANSLATE(ST_I18N_ROI_STABILITY), 0,
+													 100.0, 0.01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, SK_ROI_ZOOM, D_TRANSLATE(ST_ROI_ZOOM), 0, 200.0, 0.01);
+			auto p =
+				obs_properties_add_float_slider(grp, ST_KEY_ROI_ZOOM, D_TRANSLATE(ST_I18N_ROI_ZOOM), 0, 200.0, 0.01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
 			auto grp2 = obs_properties_create();
-			obs_properties_add_group(grp, ST_ROI_OFFSET, D_TRANSLATE(ST_ROI_OFFSET), OBS_GROUP_NORMAL, grp2);
+			obs_properties_add_group(grp, ST_I18N_ROI_OFFSET, D_TRANSLATE(ST_I18N_ROI_OFFSET), OBS_GROUP_NORMAL, grp2);
 
 			{
-				auto p = obs_properties_add_float_slider(grp2, SK_ROI_OFFSET_X, D_TRANSLATE(ST_ROI_OFFSET_X), -50.0,
-														 50.0, 0.01);
+				auto p = obs_properties_add_float_slider(grp2, ST_KEY_ROI_OFFSET_X, D_TRANSLATE(ST_I18N_ROI_OFFSET_X),
+														 -50.0, 50.0, 0.01);
 				obs_property_float_set_suffix(p, " %");
 			}
 			{
-				auto p = obs_properties_add_float_slider(grp2, SK_ROI_OFFSET_Y, D_TRANSLATE(ST_ROI_OFFSET_Y), -50.0,
-														 50.0, 0.01);
+				auto p = obs_properties_add_float_slider(grp2, ST_KEY_ROI_OFFSET_Y, D_TRANSLATE(ST_I18N_ROI_OFFSET_Y),
+														 -50.0, 50.0, 0.01);
 				obs_property_float_set_suffix(p, " %");
 			}
 		}
