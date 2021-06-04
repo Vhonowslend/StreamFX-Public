@@ -691,7 +691,7 @@ void nvenc::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* conte
 {
 	using namespace ::ffmpeg;
 
-	DLOG_INFO("[%s]   Nvidia NVENC:", codec->name);
+	DLOG_INFO("[%s]   NVIDIA NVENC:", codec->name);
 	tools::print_av_option_string2(context, "preset", "    Preset",
 								   [](int64_t v, std::string_view o) { return std::string(o); });
 	tools::print_av_option_string2(context, "rc", "    Rate Control",
