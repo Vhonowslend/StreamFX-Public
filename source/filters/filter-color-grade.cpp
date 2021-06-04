@@ -34,52 +34,74 @@
 #pragma warning(pop)
 #endif
 
-#define ST "Filter.ColorGrade"
-#define ST_LIFT ST ".Lift"
-#define ST_LIFT_(x) ST_LIFT "." D_VSTR(x)
-#define ST_GAMMA ST ".Gamma"
-#define ST_GAMMA_(x) ST_GAMMA "." D_VSTR(x)
-#define ST_GAIN ST ".Gain"
-#define ST_GAIN_(x) ST_GAIN "." D_VSTR(x)
-#define ST_OFFSET ST ".Offset"
-#define ST_OFFSET_(x) ST_OFFSET "." D_VSTR(x)
-#define ST_TINT ST ".Tint"
-#define ST_TINT_DETECTION ST_TINT ".Detection"
-#define ST_TINT_DETECTION_(x) ST_TINT_DETECTION "." D_VSTR(x)
-#define ST_TINT_MODE ST_TINT ".Mode"
-#define ST_TINT_MODE_(x) ST_TINT_MODE "." D_VSTR(x)
-#define ST_TINT_EXPONENT ST_TINT ".Exponent"
-#define ST_TINT_(x, y) ST_TINT "." D_VSTR(x) "." D_VSTR(y)
-#define ST_CORRECTION ST ".Correction"
-#define ST_CORRECTION_(x) ST_CORRECTION "." D_VSTR(x)
+#define ST_I18N "Filter.ColorGrade"
+// Lift
+#define ST_KEY_LIFT "Filter.ColorGrade.Lift"
+#define ST_I18N_LIFT ST_I18N ".Lift"
+#define ST_KEY_LIFT_(x) ST_KEY_LIFT "." x
+#define ST_I18N_LIFT_(x) ST_I18N_LIFT "." x
+// Gamma
+#define ST_KEY_GAMMA "Filter.ColorGrade.Gamma"
+#define ST_I18N_GAMMA ST_I18N ".Gamma"
+#define ST_KEY_GAMMA_(x) ST_KEY_GAMMA "." x
+#define ST_I18N_GAMMA_(x) ST_I18N_GAMMA "." x
+// Gain
+#define ST_KEY_GAIN "Filter.ColorGrade.Gain"
+#define ST_I18N_GAIN ST_I18N ".Gain"
+#define ST_KEY_GAIN_(x) ST_KEY_GAIN "." x
+#define ST_I18N_GAIN_(x) ST_I18N_GAIN "." x
+// Offset
+#define ST_KEY_OFFSET "Filter.ColorGrade.Offset"
+#define ST_I18N_OFFSET ST_I18N ".Offset"
+#define ST_KEY_OFFSET_(x) ST_KEY_OFFSET "." x
+#define ST_I18N_OFFSET_(x) ST_I18N_OFFSET "." x
+// Tint
+#define ST_KEY_TINT "Filter.ColorGrade.Tint"
+#define ST_I18N_TINT ST_I18N ".Tint"
+#define ST_KEY_TINT_DETECTION ST_KEY_TINT ".Detection"
+#define ST_I18N_TINT_DETECTION ST_I18N_TINT ".Detection"
+#define ST_I18N_TINT_DETECTION_(x) ST_I18N_TINT_DETECTION "." x
+#define ST_KEY_TINT_MODE ST_KEY_TINT ".Mode"
+#define ST_I18N_TINT_MODE ST_I18N_TINT ".Mode"
+#define ST_I18N_TINT_MODE_(x) ST_I18N_TINT_MODE "." x
+#define ST_KEY_TINT_EXPONENT ST_KEY_TINT ".Exponent"
+#define ST_I18N_TINT_EXPONENT ST_I18N_TINT ".Exponent"
+#define ST_KEY_TINT_(x, y) ST_KEY_TINT "." x "." y
+#define ST_I18N_TINT_(x, y) ST_I18N_TINT "." x "." y
+// Color Correction
+#define ST_KEY_CORRECTION "Filter.ColorGrade.Correction"
+#define ST_KEY_CORRECTION_(x) ST_KEY_CORRECTION "." x
+#define ST_I18N_CORRECTION ST_I18N ".Correction"
+#define ST_I18N_CORRECTION_(x) ST_I18N_CORRECTION "." x
+// Render Mode
+#define ST_KEY_RENDERMODE "Filter.ColorGrade.RenderMode"
+#define ST_I18N_RENDERMODE ST_I18N ".RenderMode"
+#define ST_I18N_RENDERMODE_DIRECT ST_I18N_RENDERMODE ".Direct"
+#define ST_I18N_RENDERMODE_LUT_2BIT ST_I18N_RENDERMODE ".LUT.2Bit"
+#define ST_I18N_RENDERMODE_LUT_4BIT ST_I18N_RENDERMODE ".LUT.4Bit"
+#define ST_I18N_RENDERMODE_LUT_6BIT ST_I18N_RENDERMODE ".LUT.6Bit"
+#define ST_I18N_RENDERMODE_LUT_8BIT ST_I18N_RENDERMODE ".LUT.8Bit"
+#define ST_I18N_RENDERMODE_LUT_10BIT ST_I18N_RENDERMODE ".LUT.10Bit"
 
-#define ST_RENDERMODE ST ".RenderMode"
-#define ST_RENDERMODE_DIRECT ST_RENDERMODE ".Direct"
-#define ST_RENDERMODE_LUT_2BIT ST_RENDERMODE ".LUT.2Bit"
-#define ST_RENDERMODE_LUT_4BIT ST_RENDERMODE ".LUT.4Bit"
-#define ST_RENDERMODE_LUT_6BIT ST_RENDERMODE ".LUT.6Bit"
-#define ST_RENDERMODE_LUT_8BIT ST_RENDERMODE ".LUT.8Bit"
-#define ST_RENDERMODE_LUT_10BIT ST_RENDERMODE ".LUT.10Bit"
-
-#define RED Red
-#define GREEN Green
-#define BLUE Blue
-#define ALL All
-#define HUE Hue
-#define SATURATION Saturation
-#define LIGHTNESS Lightness
-#define CONTRAST Contrast
-#define TONE_LOW Shadow
-#define TONE_MID Midtone
-#define TONE_HIGH Highlight
-#define DETECTION_HSV HSV
-#define DETECTION_HSL HSL
-#define DETECTION_YUV_SDR YUV.SDR
-#define MODE_LINEAR Linear
-#define MODE_EXP Exp
-#define MODE_EXP2 Exp2
-#define MODE_LOG Log
-#define MODE_LOG10 Log10
+#define ST_RED "Red"
+#define ST_GREEN "Green"
+#define ST_BLUE "Blue"
+#define ST_ALL "All"
+#define ST_HUE "Hue"
+#define ST_SATURATION "Saturation"
+#define ST_LIGHTNESS "Lightness"
+#define ST_CONTRAST "Contrast"
+#define ST_TONE_LOW "Shadow"
+#define ST_TONE_MID "Midtone"
+#define ST_TONE_HIGH "Highlight"
+#define ST_DETECTION_HSV "HSV"
+#define ST_DETECTION_HSL "HSL"
+#define ST_DETECTION_YUV_SDR "YUV.SDR"
+#define ST_MODE_LINEAR "Linear"
+#define ST_MODE_EXP "Exp"
+#define ST_MODE_EXP2 "Exp2"
+#define ST_MODE_LOG "Log"
+#define ST_MODE_LOG10 "Log10"
 
 using namespace streamfx::filter::color_grade;
 
@@ -161,41 +183,41 @@ void color_grade_instance::migrate(obs_data_t* data, uint64_t version) {}
 
 void color_grade_instance::update(obs_data_t* data)
 {
-	_lift.x         = static_cast<float_t>(obs_data_get_double(data, ST_LIFT_(RED)) / 100.0);
-	_lift.y         = static_cast<float_t>(obs_data_get_double(data, ST_LIFT_(GREEN)) / 100.0);
-	_lift.z         = static_cast<float_t>(obs_data_get_double(data, ST_LIFT_(BLUE)) / 100.0);
-	_lift.w         = static_cast<float_t>(obs_data_get_double(data, ST_LIFT_(ALL)) / 100.0);
-	_gamma.x        = fix_gamma_value(obs_data_get_double(data, ST_GAMMA_(RED)) / 100.0);
-	_gamma.y        = fix_gamma_value(obs_data_get_double(data, ST_GAMMA_(GREEN)) / 100.0);
-	_gamma.z        = fix_gamma_value(obs_data_get_double(data, ST_GAMMA_(BLUE)) / 100.0);
-	_gamma.w        = fix_gamma_value(obs_data_get_double(data, ST_GAMMA_(ALL)) / 100.0);
-	_gain.x         = static_cast<float_t>(obs_data_get_double(data, ST_GAIN_(RED)) / 100.0);
-	_gain.y         = static_cast<float_t>(obs_data_get_double(data, ST_GAIN_(GREEN)) / 100.0);
-	_gain.z         = static_cast<float_t>(obs_data_get_double(data, ST_GAIN_(BLUE)) / 100.0);
-	_gain.w         = static_cast<float_t>(obs_data_get_double(data, ST_GAIN_(ALL)) / 100.0);
-	_offset.x       = static_cast<float_t>(obs_data_get_double(data, ST_OFFSET_(RED)) / 100.0);
-	_offset.y       = static_cast<float_t>(obs_data_get_double(data, ST_OFFSET_(GREEN)) / 100.0);
-	_offset.z       = static_cast<float_t>(obs_data_get_double(data, ST_OFFSET_(BLUE)) / 100.0);
-	_offset.w       = static_cast<float_t>(obs_data_get_double(data, ST_OFFSET_(ALL)) / 100.0);
-	_tint_detection = static_cast<detection_mode>(obs_data_get_int(data, ST_TINT_DETECTION));
-	_tint_luma      = static_cast<luma_mode>(obs_data_get_int(data, ST_TINT_MODE));
-	_tint_exponent  = static_cast<float_t>(obs_data_get_double(data, ST_TINT_EXPONENT));
-	_tint_low.x     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_LOW, RED)) / 100.0);
-	_tint_low.y     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_LOW, GREEN)) / 100.0);
-	_tint_low.z     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_LOW, BLUE)) / 100.0);
-	_tint_mid.x     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_MID, RED)) / 100.0);
-	_tint_mid.y     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_MID, GREEN)) / 100.0);
-	_tint_mid.z     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_MID, BLUE)) / 100.0);
-	_tint_hig.x     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_HIGH, RED)) / 100.0);
-	_tint_hig.y     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_HIGH, GREEN)) / 100.0);
-	_tint_hig.z     = static_cast<float_t>(obs_data_get_double(data, ST_TINT_(TONE_HIGH, BLUE)) / 100.0);
-	_correction.x   = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(HUE)) / 360.0);
-	_correction.y   = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(SATURATION)) / 100.0);
-	_correction.z   = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(LIGHTNESS)) / 100.0);
-	_correction.w   = static_cast<float_t>(obs_data_get_double(data, ST_CORRECTION_(CONTRAST)) / 100.0);
+	_lift.x         = static_cast<float_t>(obs_data_get_double(data, ST_KEY_LIFT_(ST_RED)) / 100.0);
+	_lift.y         = static_cast<float_t>(obs_data_get_double(data, ST_KEY_LIFT_(ST_GREEN)) / 100.0);
+	_lift.z         = static_cast<float_t>(obs_data_get_double(data, ST_KEY_LIFT_(ST_BLUE)) / 100.0);
+	_lift.w         = static_cast<float_t>(obs_data_get_double(data, ST_KEY_LIFT_(ST_ALL)) / 100.0);
+	_gamma.x        = fix_gamma_value(obs_data_get_double(data, ST_KEY_GAMMA_(ST_RED)) / 100.0);
+	_gamma.y        = fix_gamma_value(obs_data_get_double(data, ST_KEY_GAMMA_(ST_GREEN)) / 100.0);
+	_gamma.z        = fix_gamma_value(obs_data_get_double(data, ST_KEY_GAMMA_(ST_BLUE)) / 100.0);
+	_gamma.w        = fix_gamma_value(obs_data_get_double(data, ST_KEY_GAMMA_(ST_ALL)) / 100.0);
+	_gain.x         = static_cast<float_t>(obs_data_get_double(data, ST_KEY_GAIN_(ST_RED)) / 100.0);
+	_gain.y         = static_cast<float_t>(obs_data_get_double(data, ST_KEY_GAIN_(ST_GREEN)) / 100.0);
+	_gain.z         = static_cast<float_t>(obs_data_get_double(data, ST_KEY_GAIN_(ST_BLUE)) / 100.0);
+	_gain.w         = static_cast<float_t>(obs_data_get_double(data, ST_KEY_GAIN_(ST_ALL)) / 100.0);
+	_offset.x       = static_cast<float_t>(obs_data_get_double(data, ST_KEY_OFFSET_(ST_RED)) / 100.0);
+	_offset.y       = static_cast<float_t>(obs_data_get_double(data, ST_KEY_OFFSET_(ST_GREEN)) / 100.0);
+	_offset.z       = static_cast<float_t>(obs_data_get_double(data, ST_KEY_OFFSET_(ST_BLUE)) / 100.0);
+	_offset.w       = static_cast<float_t>(obs_data_get_double(data, ST_KEY_OFFSET_(ST_ALL)) / 100.0);
+	_tint_detection = static_cast<detection_mode>(obs_data_get_int(data, ST_KEY_TINT_DETECTION));
+	_tint_luma      = static_cast<luma_mode>(obs_data_get_int(data, ST_KEY_TINT_MODE));
+	_tint_exponent  = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_EXPONENT));
+	_tint_low.x     = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_LOW, ST_RED)) / 100.0);
+	_tint_low.y     = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_LOW, ST_GREEN)) / 100.0);
+	_tint_low.z     = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_LOW, ST_BLUE)) / 100.0);
+	_tint_mid.x     = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_MID, ST_RED)) / 100.0);
+	_tint_mid.y     = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_MID, ST_GREEN)) / 100.0);
+	_tint_mid.z     = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_MID, ST_BLUE)) / 100.0);
+	_tint_hig.x     = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_HIGH, ST_RED)) / 100.0);
+	_tint_hig.y     = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_HIGH, ST_GREEN)) / 100.0);
+	_tint_hig.z     = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_HIGH, ST_BLUE)) / 100.0);
+	_correction.x   = static_cast<float_t>(obs_data_get_double(data, ST_KEY_CORRECTION_(ST_HUE)) / 360.0);
+	_correction.y   = static_cast<float_t>(obs_data_get_double(data, ST_KEY_CORRECTION_(ST_SATURATION)) / 100.0);
+	_correction.z   = static_cast<float_t>(obs_data_get_double(data, ST_KEY_CORRECTION_(ST_LIGHTNESS)) / 100.0);
+	_correction.w   = static_cast<float_t>(obs_data_get_double(data, ST_KEY_CORRECTION_(ST_CONTRAST)) / 100.0);
 
 	{
-		int64_t v = obs_data_get_int(data, ST_RENDERMODE);
+		int64_t v = obs_data_get_int(data, ST_KEY_RENDERMODE);
 
 		// LUT status depends on selected option.
 		_lut_enabled = v != 0; // 0 (Direct)
@@ -556,45 +578,45 @@ color_grade_factory::~color_grade_factory() {}
 
 const char* color_grade_factory::get_name()
 {
-	return D_TRANSLATE(ST);
+	return D_TRANSLATE(ST_I18N);
 }
 
 void color_grade_factory::get_defaults2(obs_data_t* data)
 {
-	obs_data_set_default_double(data, ST_LIFT_(RED), 0);
-	obs_data_set_default_double(data, ST_LIFT_(GREEN), 0);
-	obs_data_set_default_double(data, ST_LIFT_(BLUE), 0);
-	obs_data_set_default_double(data, ST_LIFT_(ALL), 0);
-	obs_data_set_default_double(data, ST_GAMMA_(RED), 0);
-	obs_data_set_default_double(data, ST_GAMMA_(GREEN), 0);
-	obs_data_set_default_double(data, ST_GAMMA_(BLUE), 0);
-	obs_data_set_default_double(data, ST_GAMMA_(ALL), 0);
-	obs_data_set_default_double(data, ST_GAIN_(RED), 100.0);
-	obs_data_set_default_double(data, ST_GAIN_(GREEN), 100.0);
-	obs_data_set_default_double(data, ST_GAIN_(BLUE), 100.0);
-	obs_data_set_default_double(data, ST_GAIN_(ALL), 100.0);
-	obs_data_set_default_double(data, ST_OFFSET_(RED), 0.0);
-	obs_data_set_default_double(data, ST_OFFSET_(GREEN), 0.0);
-	obs_data_set_default_double(data, ST_OFFSET_(BLUE), 0.0);
-	obs_data_set_default_double(data, ST_OFFSET_(ALL), 0.0);
-	obs_data_set_default_int(data, ST_TINT_MODE, static_cast<int64_t>(luma_mode::Linear));
-	obs_data_set_default_int(data, ST_TINT_DETECTION, static_cast<int64_t>(detection_mode::YUV_SDR));
-	obs_data_set_default_double(data, ST_TINT_EXPONENT, 1.5);
-	obs_data_set_default_double(data, ST_TINT_(TONE_LOW, RED), 100.0);
-	obs_data_set_default_double(data, ST_TINT_(TONE_LOW, GREEN), 100.0);
-	obs_data_set_default_double(data, ST_TINT_(TONE_LOW, BLUE), 100.0);
-	obs_data_set_default_double(data, ST_TINT_(TONE_MID, RED), 100.0);
-	obs_data_set_default_double(data, ST_TINT_(TONE_MID, GREEN), 100.0);
-	obs_data_set_default_double(data, ST_TINT_(TONE_MID, BLUE), 100.0);
-	obs_data_set_default_double(data, ST_TINT_(TONE_HIGH, RED), 100.0);
-	obs_data_set_default_double(data, ST_TINT_(TONE_HIGH, GREEN), 100.0);
-	obs_data_set_default_double(data, ST_TINT_(TONE_HIGH, BLUE), 100.0);
-	obs_data_set_default_double(data, ST_CORRECTION_(HUE), 0.0);
-	obs_data_set_default_double(data, ST_CORRECTION_(SATURATION), 100.0);
-	obs_data_set_default_double(data, ST_CORRECTION_(LIGHTNESS), 100.0);
-	obs_data_set_default_double(data, ST_CORRECTION_(CONTRAST), 100.0);
+	obs_data_set_default_double(data, ST_KEY_LIFT_(ST_RED), 0);
+	obs_data_set_default_double(data, ST_KEY_LIFT_(ST_GREEN), 0);
+	obs_data_set_default_double(data, ST_KEY_LIFT_(ST_BLUE), 0);
+	obs_data_set_default_double(data, ST_KEY_LIFT_(ST_ALL), 0);
+	obs_data_set_default_double(data, ST_KEY_GAMMA_(ST_RED), 0);
+	obs_data_set_default_double(data, ST_KEY_GAMMA_(ST_GREEN), 0);
+	obs_data_set_default_double(data, ST_KEY_GAMMA_(ST_BLUE), 0);
+	obs_data_set_default_double(data, ST_KEY_GAMMA_(ST_ALL), 0);
+	obs_data_set_default_double(data, ST_KEY_GAIN_(ST_RED), 100.0);
+	obs_data_set_default_double(data, ST_KEY_GAIN_(ST_GREEN), 100.0);
+	obs_data_set_default_double(data, ST_KEY_GAIN_(ST_BLUE), 100.0);
+	obs_data_set_default_double(data, ST_KEY_GAIN_(ST_ALL), 100.0);
+	obs_data_set_default_double(data, ST_KEY_OFFSET_(ST_RED), 0.0);
+	obs_data_set_default_double(data, ST_KEY_OFFSET_(ST_GREEN), 0.0);
+	obs_data_set_default_double(data, ST_KEY_OFFSET_(ST_BLUE), 0.0);
+	obs_data_set_default_double(data, ST_KEY_OFFSET_(ST_ALL), 0.0);
+	obs_data_set_default_int(data, ST_KEY_TINT_MODE, static_cast<int64_t>(luma_mode::Linear));
+	obs_data_set_default_int(data, ST_KEY_TINT_DETECTION, static_cast<int64_t>(detection_mode::YUV_SDR));
+	obs_data_set_default_double(data, ST_KEY_TINT_EXPONENT, 1.5);
+	obs_data_set_default_double(data, ST_KEY_TINT_(ST_TONE_LOW, ST_RED), 100.0);
+	obs_data_set_default_double(data, ST_KEY_TINT_(ST_TONE_LOW, ST_GREEN), 100.0);
+	obs_data_set_default_double(data, ST_KEY_TINT_(ST_TONE_LOW, ST_BLUE), 100.0);
+	obs_data_set_default_double(data, ST_KEY_TINT_(ST_TONE_MID, ST_RED), 100.0);
+	obs_data_set_default_double(data, ST_KEY_TINT_(ST_TONE_MID, ST_GREEN), 100.0);
+	obs_data_set_default_double(data, ST_KEY_TINT_(ST_TONE_MID, ST_BLUE), 100.0);
+	obs_data_set_default_double(data, ST_KEY_TINT_(ST_TONE_HIGH, ST_RED), 100.0);
+	obs_data_set_default_double(data, ST_KEY_TINT_(ST_TONE_HIGH, ST_GREEN), 100.0);
+	obs_data_set_default_double(data, ST_KEY_TINT_(ST_TONE_HIGH, ST_BLUE), 100.0);
+	obs_data_set_default_double(data, ST_KEY_CORRECTION_(ST_HUE), 0.0);
+	obs_data_set_default_double(data, ST_KEY_CORRECTION_(ST_SATURATION), 100.0);
+	obs_data_set_default_double(data, ST_KEY_CORRECTION_(ST_LIGHTNESS), 100.0);
+	obs_data_set_default_double(data, ST_KEY_CORRECTION_(ST_CONTRAST), 100.0);
 
-	obs_data_set_default_int(data, ST_RENDERMODE, -1);
+	obs_data_set_default_int(data, ST_KEY_RENDERMODE, -1);
 }
 
 obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* data)
@@ -610,181 +632,183 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 
 	{
 		obs_properties_t* grp = obs_properties_create();
-		obs_properties_add_group(pr, ST_LIFT, D_TRANSLATE(ST_LIFT), OBS_GROUP_NORMAL, grp);
+		obs_properties_add_group(pr, ST_KEY_LIFT, D_TRANSLATE(ST_I18N_LIFT), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_LIFT_(RED), D_TRANSLATE(ST_LIFT_(RED)), -1000., 100., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_LIFT_(ST_RED), D_TRANSLATE(ST_I18N_LIFT_(ST_RED)),
+													 -1000., 100., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p =
-				obs_properties_add_float_slider(grp, ST_LIFT_(GREEN), D_TRANSLATE(ST_LIFT_(GREEN)), -1000., 100., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_LIFT_(ST_GREEN), D_TRANSLATE(ST_I18N_LIFT_(ST_GREEN)),
+													 -1000., 100., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p =
-				obs_properties_add_float_slider(grp, ST_LIFT_(BLUE), D_TRANSLATE(ST_LIFT_(BLUE)), -1000., 100., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_LIFT_(ST_BLUE), D_TRANSLATE(ST_I18N_LIFT_(ST_BLUE)),
+													 -1000., 100., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_LIFT_(ALL), D_TRANSLATE(ST_LIFT_(ALL)), -1000., 100., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_LIFT_(ST_ALL), D_TRANSLATE(ST_I18N_LIFT_(ST_ALL)),
+													 -1000., 100., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 	}
 
 	{
 		obs_properties_t* grp = obs_properties_create();
-		obs_properties_add_group(pr, ST_GAMMA, D_TRANSLATE(ST_GAMMA), OBS_GROUP_NORMAL, grp);
+		obs_properties_add_group(pr, ST_KEY_GAMMA, D_TRANSLATE(ST_I18N_GAMMA), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p =
-				obs_properties_add_float_slider(grp, ST_GAMMA_(RED), D_TRANSLATE(ST_GAMMA_(RED)), -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAMMA_(ST_RED), D_TRANSLATE(ST_I18N_GAMMA_(ST_RED)),
+													 -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_GAMMA_(GREEN), D_TRANSLATE(ST_GAMMA_(GREEN)), -1000.,
-													 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAMMA_(ST_GREEN),
+													 D_TRANSLATE(ST_I18N_GAMMA_(ST_GREEN)), -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p =
-				obs_properties_add_float_slider(grp, ST_GAMMA_(BLUE), D_TRANSLATE(ST_GAMMA_(BLUE)), -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAMMA_(ST_BLUE), D_TRANSLATE(ST_I18N_GAMMA_(ST_BLUE)),
+													 -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p =
-				obs_properties_add_float_slider(grp, ST_GAMMA_(ALL), D_TRANSLATE(ST_GAMMA_(ALL)), -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAMMA_(ST_ALL), D_TRANSLATE(ST_I18N_GAMMA_(ST_ALL)),
+													 -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 	}
 
 	{
 		obs_properties_t* grp = obs_properties_create();
-		obs_properties_add_group(pr, ST_GAIN, D_TRANSLATE(ST_GAIN), OBS_GROUP_NORMAL, grp);
+		obs_properties_add_group(pr, ST_KEY_GAIN, D_TRANSLATE(ST_I18N_GAIN), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p =
-				obs_properties_add_float_slider(grp, ST_GAIN_(RED), D_TRANSLATE(ST_GAIN_(RED)), -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAIN_(ST_RED), D_TRANSLATE(ST_I18N_GAIN_(ST_RED)),
+													 -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p =
-				obs_properties_add_float_slider(grp, ST_GAIN_(GREEN), D_TRANSLATE(ST_GAIN_(GREEN)), -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAIN_(ST_GREEN), D_TRANSLATE(ST_I18N_GAIN_(ST_GREEN)),
+													 -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p =
-				obs_properties_add_float_slider(grp, ST_GAIN_(BLUE), D_TRANSLATE(ST_GAIN_(BLUE)), -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAIN_(ST_BLUE), D_TRANSLATE(ST_I18N_GAIN_(ST_BLUE)),
+													 -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p =
-				obs_properties_add_float_slider(grp, ST_GAIN_(ALL), D_TRANSLATE(ST_GAIN_(ALL)), -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAIN_(ST_ALL), D_TRANSLATE(ST_I18N_GAIN_(ST_ALL)),
+													 -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 	}
 
 	{
 		obs_properties_t* grp = obs_properties_create();
-		obs_properties_add_group(pr, ST_OFFSET, D_TRANSLATE(ST_OFFSET), OBS_GROUP_NORMAL, grp);
+		obs_properties_add_group(pr, ST_KEY_OFFSET, D_TRANSLATE(ST_I18N_OFFSET), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p =
-				obs_properties_add_float_slider(grp, ST_OFFSET_(RED), D_TRANSLATE(ST_OFFSET_(RED)), -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_OFFSET_(ST_RED), D_TRANSLATE(ST_I18N_OFFSET_(ST_RED)),
+													 -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_OFFSET_(GREEN), D_TRANSLATE(ST_OFFSET_(GREEN)), -1000.,
-													 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_OFFSET_(ST_GREEN),
+													 D_TRANSLATE(ST_I18N_OFFSET_(ST_GREEN)), -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_OFFSET_(BLUE), D_TRANSLATE(ST_OFFSET_(BLUE)), -1000.,
-													 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_OFFSET_(ST_BLUE),
+													 D_TRANSLATE(ST_I18N_OFFSET_(ST_BLUE)), -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p =
-				obs_properties_add_float_slider(grp, ST_OFFSET_(ALL), D_TRANSLATE(ST_OFFSET_(ALL)), -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_OFFSET_(ST_ALL), D_TRANSLATE(ST_I18N_OFFSET_(ST_ALL)),
+													 -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 	}
 
 	{
 		obs_properties_t* grp = obs_properties_create();
-		obs_properties_add_group(pr, ST_TINT, D_TRANSLATE(ST_TINT), OBS_GROUP_NORMAL, grp);
+		obs_properties_add_group(pr, ST_KEY_TINT, D_TRANSLATE(ST_I18N_TINT), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_TINT_(TONE_LOW, RED), D_TRANSLATE(ST_TINT_(TONE_LOW, RED)),
-													 0, 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_LOW, ST_RED),
+													 D_TRANSLATE(ST_I18N_TINT_(ST_TONE_LOW, ST_RED)), 0, 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_TINT_(TONE_LOW, GREEN),
-													 D_TRANSLATE(ST_TINT_(TONE_LOW, GREEN)), 0, 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_LOW, ST_GREEN),
+													 D_TRANSLATE(ST_I18N_TINT_(ST_TONE_LOW, ST_GREEN)), 0, 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_TINT_(TONE_LOW, BLUE),
-													 D_TRANSLATE(ST_TINT_(TONE_LOW, BLUE)), 0, 1000., .01);
-			obs_property_float_set_suffix(p, " %");
-		}
-
-		{
-			auto p = obs_properties_add_float_slider(grp, ST_TINT_(TONE_MID, RED), D_TRANSLATE(ST_TINT_(TONE_MID, RED)),
-													 0, 1000., 0.01);
-			obs_property_float_set_suffix(p, " %");
-		}
-		{
-			auto p = obs_properties_add_float_slider(grp, ST_TINT_(TONE_MID, GREEN),
-													 D_TRANSLATE(ST_TINT_(TONE_MID, GREEN)), 0, 1000., .01);
-			obs_property_float_set_suffix(p, " %");
-		}
-		{
-			auto p = obs_properties_add_float_slider(grp, ST_TINT_(TONE_MID, BLUE),
-													 D_TRANSLATE(ST_TINT_(TONE_MID, BLUE)), 0, 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_LOW, ST_BLUE),
+													 D_TRANSLATE(ST_I18N_TINT_(ST_TONE_LOW, ST_BLUE)), 0, 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_TINT_(TONE_HIGH, RED),
-													 D_TRANSLATE(ST_TINT_(TONE_HIGH, RED)), 0, 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_MID, ST_RED),
+													 D_TRANSLATE(ST_I18N_TINT_(ST_TONE_MID, ST_RED)), 0, 1000., 0.01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_TINT_(TONE_HIGH, GREEN),
-													 D_TRANSLATE(ST_TINT_(TONE_HIGH, GREEN)), 0, 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_MID, ST_GREEN),
+													 D_TRANSLATE(ST_I18N_TINT_(ST_TONE_MID, ST_GREEN)), 0, 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_TINT_(TONE_HIGH, BLUE),
-													 D_TRANSLATE(ST_TINT_(TONE_HIGH, BLUE)), 0, 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_MID, ST_BLUE),
+													 D_TRANSLATE(ST_I18N_TINT_(ST_TONE_MID, ST_BLUE)), 0, 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_HIGH, ST_RED),
+													 D_TRANSLATE(ST_I18N_TINT_(ST_TONE_HIGH, ST_RED)), 0, 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_HIGH, ST_GREEN),
+													 D_TRANSLATE(ST_I18N_TINT_(ST_TONE_HIGH, ST_GREEN)), 0, 1000., .01);
+			obs_property_float_set_suffix(p, " %");
+		}
+		{
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_HIGH, ST_BLUE),
+													 D_TRANSLATE(ST_I18N_TINT_(ST_TONE_HIGH, ST_BLUE)), 0, 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 	}
 
 	{
 		obs_properties_t* grp = obs_properties_create();
-		obs_properties_add_group(pr, ST_CORRECTION, D_TRANSLATE(ST_CORRECTION), OBS_GROUP_NORMAL, grp);
+		obs_properties_add_group(pr, ST_KEY_CORRECTION, D_TRANSLATE(ST_I18N_CORRECTION), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_CORRECTION_(HUE), D_TRANSLATE(ST_CORRECTION_(HUE)), -180.,
-													 180., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_CORRECTION_(ST_HUE),
+													 D_TRANSLATE(ST_I18N_CORRECTION_(ST_HUE)), -180., 180., .01);
 			obs_property_float_set_suffix(p, " °");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_CORRECTION_(SATURATION),
-													 D_TRANSLATE(ST_CORRECTION_(SATURATION)), 0., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_CORRECTION_(ST_SATURATION),
+													 D_TRANSLATE(ST_I18N_CORRECTION_(ST_SATURATION)), 0., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_CORRECTION_(LIGHTNESS),
-													 D_TRANSLATE(ST_CORRECTION_(LIGHTNESS)), 0., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_CORRECTION_(ST_LIGHTNESS),
+													 D_TRANSLATE(ST_I18N_CORRECTION_(ST_LIGHTNESS)), 0., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_CORRECTION_(CONTRAST),
-													 D_TRANSLATE(ST_CORRECTION_(CONTRAST)), 0., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_CORRECTION_(ST_CONTRAST),
+													 D_TRANSLATE(ST_I18N_CORRECTION_(ST_CONTRAST)), 0., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 	}
@@ -794,42 +818,42 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 		obs_properties_add_group(pr, S_ADVANCED, D_TRANSLATE(S_ADVANCED), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_list(grp, ST_TINT_MODE, D_TRANSLATE(ST_TINT_MODE), OBS_COMBO_TYPE_LIST,
+			auto p = obs_properties_add_list(grp, ST_KEY_TINT_MODE, D_TRANSLATE(ST_I18N_TINT_MODE), OBS_COMBO_TYPE_LIST,
 											 OBS_COMBO_FORMAT_INT);
-			std::pair<const char*, luma_mode> els[] = {{ST_TINT_MODE_(MODE_LINEAR), luma_mode::Linear},
-													   {ST_TINT_MODE_(MODE_EXP), luma_mode::Exp},
-													   {ST_TINT_MODE_(MODE_EXP2), luma_mode::Exp2},
-													   {ST_TINT_MODE_(MODE_LOG), luma_mode::Log},
-													   {ST_TINT_MODE_(MODE_LOG10), luma_mode::Log10}};
+			std::pair<const char*, luma_mode> els[] = {{ST_I18N_TINT_MODE_(ST_MODE_LINEAR), luma_mode::Linear},
+													   {ST_I18N_TINT_MODE_(ST_MODE_EXP), luma_mode::Exp},
+													   {ST_I18N_TINT_MODE_(ST_MODE_EXP2), luma_mode::Exp2},
+													   {ST_I18N_TINT_MODE_(ST_MODE_LOG), luma_mode::Log},
+													   {ST_I18N_TINT_MODE_(ST_MODE_LOG10), luma_mode::Log10}};
 			for (auto kv : els) {
 				obs_property_list_add_int(p, D_TRANSLATE(kv.first), static_cast<int64_t>(kv.second));
 			}
 		}
 
 		{
-			auto p = obs_properties_add_list(grp, ST_TINT_DETECTION, D_TRANSLATE(ST_TINT_DETECTION),
+			auto p = obs_properties_add_list(grp, ST_KEY_TINT_DETECTION, D_TRANSLATE(ST_I18N_TINT_DETECTION),
 											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			std::pair<const char*, detection_mode> els[] = {
-				{ST_TINT_DETECTION_(DETECTION_HSV), detection_mode::HSV},
-				{ST_TINT_DETECTION_(DETECTION_HSL), detection_mode::HSL},
-				{ST_TINT_DETECTION_(DETECTION_YUV_SDR), detection_mode::YUV_SDR}};
+				{ST_I18N_TINT_DETECTION_(ST_DETECTION_HSV), detection_mode::HSV},
+				{ST_I18N_TINT_DETECTION_(ST_DETECTION_HSL), detection_mode::HSL},
+				{ST_I18N_TINT_DETECTION_(ST_DETECTION_YUV_SDR), detection_mode::YUV_SDR}};
 			for (auto kv : els) {
 				obs_property_list_add_int(p, D_TRANSLATE(kv.first), static_cast<int64_t>(kv.second));
 			}
 		}
 
-		obs_properties_add_float_slider(grp, ST_TINT_EXPONENT, D_TRANSLATE(ST_TINT_EXPONENT), 0., 10., .01);
+		obs_properties_add_float_slider(grp, ST_KEY_TINT_EXPONENT, D_TRANSLATE(ST_I18N_TINT_EXPONENT), 0., 10., .01);
 
 		{
-			auto p = obs_properties_add_list(grp, ST_RENDERMODE, D_TRANSLATE(ST_RENDERMODE), OBS_COMBO_TYPE_LIST,
-											 OBS_COMBO_FORMAT_INT);
+			auto p = obs_properties_add_list(grp, ST_KEY_RENDERMODE, D_TRANSLATE(ST_I18N_RENDERMODE),
+											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			std::pair<const char*, int64_t> els[] = {
 				{S_STATE_AUTOMATIC, -1},
-				{ST_RENDERMODE_DIRECT, 0},
-				{ST_RENDERMODE_LUT_2BIT, static_cast<int64_t>(gfx::lut::color_depth::_2)},
-				{ST_RENDERMODE_LUT_4BIT, static_cast<int64_t>(gfx::lut::color_depth::_4)},
-				{ST_RENDERMODE_LUT_6BIT, static_cast<int64_t>(gfx::lut::color_depth::_6)},
-				{ST_RENDERMODE_LUT_8BIT, static_cast<int64_t>(gfx::lut::color_depth::_8)},
+				{ST_I18N_RENDERMODE_DIRECT, 0},
+				{ST_I18N_RENDERMODE_LUT_2BIT, static_cast<int64_t>(gfx::lut::color_depth::_2)},
+				{ST_I18N_RENDERMODE_LUT_4BIT, static_cast<int64_t>(gfx::lut::color_depth::_4)},
+				{ST_I18N_RENDERMODE_LUT_6BIT, static_cast<int64_t>(gfx::lut::color_depth::_6)},
+				{ST_I18N_RENDERMODE_LUT_8BIT, static_cast<int64_t>(gfx::lut::color_depth::_8)},
 				//{ST_RENDERMODE_LUT_10BIT, static_cast<int64_t>(gfx::lut::color_depth::_10)},
 			};
 			for (auto kv : els) {
