@@ -37,7 +37,7 @@
 nvidia::ar::ar::ar()
 {
 	if (!getNvARLib())
-		throw std::runtime_error("Failed to load Nvidia AR SDK runtime.");
+		throw std::runtime_error("Failed to load NVIDIA AR SDK runtime.");
 }
 
 nvidia::ar::ar::~ar() {}
