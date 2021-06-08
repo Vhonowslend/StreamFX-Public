@@ -32,7 +32,7 @@
 #pragma warning(pop)
 #endif
 
-#define CUDA_DEFINE_FUNCTION(name, ...)                     \
+#define P_CUDA_DEFINE_FUNCTION(name, ...)                   \
 	private:                                                \
 	typedef ::nvidia::cuda::result (*t##name)(__VA_ARGS__); \
                                                             \
@@ -186,55 +186,57 @@ namespace nvidia::cuda {
 
 		public:
 		// Initialization
-		CUDA_DEFINE_FUNCTION(cuInit, int32_t flags);
+		P_CUDA_DEFINE_FUNCTION(cuInit, int32_t flags);
 
 		// Version Management
-		CUDA_DEFINE_FUNCTION(cuDriverGetVersion, int32_t* driverVersion);
+		P_CUDA_DEFINE_FUNCTION(cuDriverGetVersion, int32_t* driverVersion);
 
 		// Device Management
 		// - Not yet needed.
 
 		// Primary Context Management
-		CUDA_DEFINE_FUNCTION(cuDevicePrimaryCtxRelease, device_t device);
-		CUDA_DEFINE_FUNCTION(cuDevicePrimaryCtxRetain, context_t* ctx, device_t device);
-		CUDA_DEFINE_FUNCTION(cuDevicePrimaryCtxSetFlags, device_t device, context_flags flags);
+		P_CUDA_DEFINE_FUNCTION(cuDevicePrimaryCtxRelease, device_t device);
+		P_CUDA_DEFINE_FUNCTION(cuDevicePrimaryCtxRetain, context_t* ctx, device_t device);
+		P_CUDA_DEFINE_FUNCTION(cuDevicePrimaryCtxSetFlags, device_t device, context_flags flags);
 
 		// Context Management
-		CUDA_DEFINE_FUNCTION(cuCtxCreate, context_t* ctx, context_flags flags, device_t device);
-		CUDA_DEFINE_FUNCTION(cuCtxDestroy, context_t ctx);
-		CUDA_DEFINE_FUNCTION(cuCtxGetCurrent, context_t* ctx);
-		CUDA_DEFINE_FUNCTION(cuCtxGetStreamPriorityRange, int32_t* lowestPriority, int32_t* highestPriority);
-		CUDA_DEFINE_FUNCTION(cuCtxPopCurrent, context_t* ctx);
-		CUDA_DEFINE_FUNCTION(cuCtxPushCurrent, context_t ctx);
-		CUDA_DEFINE_FUNCTION(cuCtxSetCurrent, context_t ctx);
-		CUDA_DEFINE_FUNCTION(cuCtxSynchronize);
+		P_CUDA_DEFINE_FUNCTION(cuCtxCreate, context_t* ctx, context_flags flags, device_t device);
+		P_CUDA_DEFINE_FUNCTION(cuCtxDestroy, context_t ctx);
+		P_CUDA_DEFINE_FUNCTION(cuCtxGetCurrent, context_t* ctx);
+		P_CUDA_DEFINE_FUNCTION(cuCtxGetStreamPriorityRange, int32_t* lowestPriority, int32_t* highestPriority);
+		P_CUDA_DEFINE_FUNCTION(cuCtxPopCurrent, context_t* ctx);
+		P_CUDA_DEFINE_FUNCTION(cuCtxPushCurrent, context_t ctx);
+		P_CUDA_DEFINE_FUNCTION(cuCtxSetCurrent, context_t ctx);
+		P_CUDA_DEFINE_FUNCTION(cuCtxSynchronize);
 
 		// Module Management
 		// - Not yet needed.
 
 		// Memory Management
-		CUDA_DEFINE_FUNCTION(cuArrayGetDescriptor, array_descriptor_v2_t* pArrayDescripter, array_t array);
-		CUDA_DEFINE_FUNCTION(cuMemAlloc, device_ptr_t* ptr, std::size_t bytes);
-		CUDA_DEFINE_FUNCTION(cuMemAllocPitch, device_ptr_t* ptr, std::size_t* pitch, std::size_t width_in_bytes,
-							 std::size_t height, uint32_t element_size_bytes);
-		CUDA_DEFINE_FUNCTION(cuMemFree, device_ptr_t ptr);
-		CUDA_DEFINE_FUNCTION(cuMemHostGetDevicePointer, device_ptr_t* devptr, void* ptr, uint32_t flags);
-		CUDA_DEFINE_FUNCTION(cuMemcpy, device_ptr_t dst, device_ptr_t src, std::size_t bytes);
-		CUDA_DEFINE_FUNCTION(cuMemcpy2D, const memcpy2d_v2_t* copy);
-		CUDA_DEFINE_FUNCTION(cuMemcpy2DAsync, const memcpy2d_v2_t* copy, stream_t stream);
-		CUDA_DEFINE_FUNCTION(cuMemcpyAtoA, array_t dst, std::size_t dstOffset, array_t src, std::size_t srcOffset,
-							 std::size_t byteCount);
-		CUDA_DEFINE_FUNCTION(cuMemcpyAtoD, device_ptr_t dst, array_t src, std::size_t srcOffset, std::size_t byteCount);
-		CUDA_DEFINE_FUNCTION(cuMemcpyAtoH, void* dst, array_t src, std::size_t srcOffset, std::size_t byteCount);
-		CUDA_DEFINE_FUNCTION(cuMemcpyAtoHAsync, void* dst, array_t src, std::size_t srcOffset, std::size_t byteCount);
-		CUDA_DEFINE_FUNCTION(cuMemcpyDtoA, array_t dst, std::size_t dstOffset, device_ptr_t src, std::size_t byteCount);
-		CUDA_DEFINE_FUNCTION(cuMemcpyDtoD, device_ptr_t dst, array_t srcArray, std::size_t byteCount);
-		CUDA_DEFINE_FUNCTION(cuMemcpyDtoH, void* dst, array_t src, std::size_t byteCount);
-		CUDA_DEFINE_FUNCTION(cuMemcpyDtoHAsync, void* dst, array_t src, std::size_t byteCount);
-		CUDA_DEFINE_FUNCTION(cuMemcpyHtoA, array_t dst, std::size_t dstOffset, void* src, std::size_t byteCount);
-		CUDA_DEFINE_FUNCTION(cuMemcpyHtoAAsync, array_t dst, std::size_t dstOffset, void* src, std::size_t byteCount);
-		CUDA_DEFINE_FUNCTION(cuMemcpyHtoD, device_ptr_t dst, void* src, std::size_t byteCount);
-		CUDA_DEFINE_FUNCTION(cuMemcpyHtoDAsync, device_ptr_t dst, void* src, std::size_t byteCount);
+		P_CUDA_DEFINE_FUNCTION(cuArrayGetDescriptor, array_descriptor_v2_t* pArrayDescripter, array_t array);
+		P_CUDA_DEFINE_FUNCTION(cuMemAlloc, device_ptr_t* ptr, std::size_t bytes);
+		P_CUDA_DEFINE_FUNCTION(cuMemAllocPitch, device_ptr_t* ptr, std::size_t* pitch, std::size_t width_in_bytes,
+							   std::size_t height, uint32_t element_size_bytes);
+		P_CUDA_DEFINE_FUNCTION(cuMemFree, device_ptr_t ptr);
+		P_CUDA_DEFINE_FUNCTION(cuMemHostGetDevicePointer, device_ptr_t* devptr, void* ptr, uint32_t flags);
+		P_CUDA_DEFINE_FUNCTION(cuMemcpy, device_ptr_t dst, device_ptr_t src, std::size_t bytes);
+		P_CUDA_DEFINE_FUNCTION(cuMemcpy2D, const memcpy2d_v2_t* copy);
+		P_CUDA_DEFINE_FUNCTION(cuMemcpy2DAsync, const memcpy2d_v2_t* copy, stream_t stream);
+		P_CUDA_DEFINE_FUNCTION(cuMemcpyAtoA, array_t dst, std::size_t dstOffset, array_t src, std::size_t srcOffset,
+							   std::size_t byteCount);
+		P_CUDA_DEFINE_FUNCTION(cuMemcpyAtoD, device_ptr_t dst, array_t src, std::size_t srcOffset,
+							   std::size_t byteCount);
+		P_CUDA_DEFINE_FUNCTION(cuMemcpyAtoH, void* dst, array_t src, std::size_t srcOffset, std::size_t byteCount);
+		P_CUDA_DEFINE_FUNCTION(cuMemcpyAtoHAsync, void* dst, array_t src, std::size_t srcOffset, std::size_t byteCount);
+		P_CUDA_DEFINE_FUNCTION(cuMemcpyDtoA, array_t dst, std::size_t dstOffset, device_ptr_t src,
+							   std::size_t byteCount);
+		P_CUDA_DEFINE_FUNCTION(cuMemcpyDtoD, device_ptr_t dst, array_t srcArray, std::size_t byteCount);
+		P_CUDA_DEFINE_FUNCTION(cuMemcpyDtoH, void* dst, array_t src, std::size_t byteCount);
+		P_CUDA_DEFINE_FUNCTION(cuMemcpyDtoHAsync, void* dst, array_t src, std::size_t byteCount);
+		P_CUDA_DEFINE_FUNCTION(cuMemcpyHtoA, array_t dst, std::size_t dstOffset, void* src, std::size_t byteCount);
+		P_CUDA_DEFINE_FUNCTION(cuMemcpyHtoAAsync, array_t dst, std::size_t dstOffset, void* src, std::size_t byteCount);
+		P_CUDA_DEFINE_FUNCTION(cuMemcpyHtoD, device_ptr_t dst, void* src, std::size_t byteCount);
+		P_CUDA_DEFINE_FUNCTION(cuMemcpyHtoDAsync, device_ptr_t dst, void* src, std::size_t byteCount);
 
 		// Virtual Memory Management
 		// - Not yet needed.
@@ -246,11 +248,11 @@ namespace nvidia::cuda {
 		// - Not yet needed.
 
 		// Stream Managment
-		CUDA_DEFINE_FUNCTION(cuStreamCreate, stream_t* stream, stream_flags flags);
-		CUDA_DEFINE_FUNCTION(cuStreamCreateWithPriority, stream_t* stream, stream_flags flags, int32_t priority);
-		CUDA_DEFINE_FUNCTION(cuStreamDestroy, stream_t stream);
-		CUDA_DEFINE_FUNCTION(cuStreamSynchronize, stream_t stream);
-		CUDA_DEFINE_FUNCTION(cuStreamGetPriority, stream_t stream, int32_t* priority);
+		P_CUDA_DEFINE_FUNCTION(cuStreamCreate, stream_t* stream, stream_flags flags);
+		P_CUDA_DEFINE_FUNCTION(cuStreamCreateWithPriority, stream_t* stream, stream_flags flags, int32_t priority);
+		P_CUDA_DEFINE_FUNCTION(cuStreamDestroy, stream_t stream);
+		P_CUDA_DEFINE_FUNCTION(cuStreamSynchronize, stream_t stream);
+		P_CUDA_DEFINE_FUNCTION(cuStreamGetPriority, stream_t stream, int32_t* priority);
 
 		// Event Management
 		// - Not yet needed.
@@ -280,11 +282,12 @@ namespace nvidia::cuda {
 		// - Not yet needed.
 
 		// Graphics Interoperability
-		CUDA_DEFINE_FUNCTION(cuGraphicsMapResources, uint32_t count, graphics_resource_t* resources, stream_t stream);
-		CUDA_DEFINE_FUNCTION(cuGraphicsSubResourceGetMappedArray, array_t* array, graphics_resource_t resource,
-							 uint32_t index, uint32_t level);
-		CUDA_DEFINE_FUNCTION(cuGraphicsUnmapResources, uint32_t count, graphics_resource_t* resources, stream_t stream);
-		CUDA_DEFINE_FUNCTION(cuGraphicsUnregisterResource, graphics_resource_t resource);
+		P_CUDA_DEFINE_FUNCTION(cuGraphicsMapResources, uint32_t count, graphics_resource_t* resources, stream_t stream);
+		P_CUDA_DEFINE_FUNCTION(cuGraphicsSubResourceGetMappedArray, array_t* array, graphics_resource_t resource,
+							   uint32_t index, uint32_t level);
+		P_CUDA_DEFINE_FUNCTION(cuGraphicsUnmapResources, uint32_t count, graphics_resource_t* resources,
+							   stream_t stream);
+		P_CUDA_DEFINE_FUNCTION(cuGraphicsUnregisterResource, graphics_resource_t resource);
 
 		// Driver Entry Point Access
 		// - Not yet needed.
@@ -306,14 +309,14 @@ namespace nvidia::cuda {
 		// - Not yet needed.
 
 		// Direct3D10 Interoperability
-		CUDA_DEFINE_FUNCTION(cuD3D10GetDevice, device_t* device, IDXGIAdapter* adapter);
-		CUDA_DEFINE_FUNCTION(cuGraphicsD3D10RegisterResource, graphics_resource_t* resource,
-							 ID3D10Resource* d3dresource, uint32_t flags);
+		P_CUDA_DEFINE_FUNCTION(cuD3D10GetDevice, device_t* device, IDXGIAdapter* adapter);
+		P_CUDA_DEFINE_FUNCTION(cuGraphicsD3D10RegisterResource, graphics_resource_t* resource,
+							   ID3D10Resource* d3dresource, uint32_t flags);
 
 		// Direct3D11 Interoperability
-		CUDA_DEFINE_FUNCTION(cuD3D11GetDevice, device_t* device, IDXGIAdapter* adapter);
-		CUDA_DEFINE_FUNCTION(cuGraphicsD3D11RegisterResource, graphics_resource_t* resource,
-							 ID3D11Resource* d3dresource, uint32_t flags);
+		P_CUDA_DEFINE_FUNCTION(cuD3D11GetDevice, device_t* device, IDXGIAdapter* adapter);
+		P_CUDA_DEFINE_FUNCTION(cuGraphicsD3D11RegisterResource, graphics_resource_t* resource,
+							   ID3D11Resource* d3dresource, uint32_t flags);
 #endif
 		public:
 		static std::shared_ptr<::nvidia::cuda::cuda> get();
