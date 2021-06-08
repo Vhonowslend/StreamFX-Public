@@ -33,13 +33,18 @@
 // - Green Mask Output
 // - Alpha Mask Output
 
-#define ST "Filter.DynamicMask"
+#define ST_I18N "Filter.DynamicMask"
 
-#define ST_INPUT "Filter.DynamicMask.Input"
-#define ST_CHANNEL "Filter.DynamicMask.Channel"
-#define ST_CHANNEL_VALUE "Filter.DynamicMask.Channel.Value"
-#define ST_CHANNEL_MULTIPLIER "Filter.DynamicMask.Channel.Multiplier"
-#define ST_CHANNEL_INPUT "Filter.DynamicMask.Channel.Input"
+#define ST_I18N_INPUT "Filter.DynamicMask.Input"
+#define ST_KEY_INPUT "Filter.DynamicMask.Input"
+#define ST_I18N_CHANNEL "Filter.DynamicMask.Channel"
+#define ST_KEY_CHANNEL "Filter.DynamicMask.Channel"
+#define ST_I18N_CHANNEL_VALUE "Filter.DynamicMask.Channel.Value"
+#define ST_KEY_CHANNEL_VALUE "Filter.DynamicMask.Channel.Value"
+#define ST_I18N_CHANNEL_MULTIPLIER "Filter.DynamicMask.Channel.Multiplier"
+#define ST_KEY_CHANNEL_MULTIPLIER "Filter.DynamicMask.Channel.Multiplier"
+#define ST_I18N_CHANNEL_INPUT "Filter.DynamicMask.Channel.Input"
+#define ST_KEY_CHANNEL_INPUT "Filter.DynamicMask.Channel.Input"
 
 using namespace streamfx::filter::dynamic_mask;
 
@@ -82,7 +87,7 @@ void dynamic_mask_instance::update(obs_data_t* settings)
 {
 	// Update source.
 	try {
-		auto input   = std::make_shared<obs::deprecated_source>(obs_data_get_string(settings, ST_INPUT));
+		auto input   = std::make_shared<obs::deprecated_source>(obs_data_get_string(settings, ST_KEY_INPUT));
 		auto gctx    = streamfx::obs::gs::context();
 		auto capture = std::make_shared<streamfx::gfx::source_texture>(input, _self);
 
@@ -116,11 +121,11 @@ void dynamic_mask_instance::update(obs_data_t* settings)
 			}
 		}
 
-		std::string chv_key = std::string(ST_CHANNEL_VALUE) + "." + kv1.second;
+		std::string chv_key = std::string(ST_KEY_CHANNEL_VALUE) + "." + kv1.second;
 		found->second.value = static_cast<float_t>(obs_data_get_double(settings, chv_key.c_str()));
 		_precalc.base.ptr[static_cast<size_t>(kv1.first)] = found->second.value;
 
-		std::string chm_key = std::string(ST_CHANNEL_MULTIPLIER) + "." + kv1.second;
+		std::string chm_key = std::string(ST_KEY_CHANNEL_MULTIPLIER) + "." + kv1.second;
 		found->second.scale = static_cast<float_t>(obs_data_get_double(settings, chm_key.c_str()));
 		_precalc.scale.ptr[static_cast<size_t>(kv1.first)] = found->second.scale;
 
@@ -143,7 +148,7 @@ void dynamic_mask_instance::update(obs_data_t* settings)
 		}
 
 		for (auto kv2 : channel_translations) {
-			std::string ab_key = std::string(ST_CHANNEL_INPUT) + "." + kv1.second + "." + kv2.second;
+			std::string ab_key = std::string(ST_KEY_CHANNEL_INPUT) + "." + kv1.second + "." + kv2.second;
 			found->second.values.ptr[static_cast<size_t>(kv2.first)] =
 				static_cast<float_t>(obs_data_get_double(settings, ab_key.c_str()));
 			ch->ptr[static_cast<size_t>(kv2.first)] = found->second.values.ptr[static_cast<size_t>(kv2.first)];
@@ -154,7 +159,7 @@ void dynamic_mask_instance::update(obs_data_t* settings)
 void dynamic_mask_instance::save(obs_data_t* settings)
 {
 	if (_input) {
-		obs_data_set_string(settings, ST_INPUT, obs_source_get_name(_input->get()));
+		obs_data_set_string(settings, ST_KEY_INPUT, obs_source_get_name(_input->get()));
 	}
 
 	for (auto kv1 : channel_translations) {
@@ -168,14 +173,14 @@ void dynamic_mask_instance::save(obs_data_t* settings)
 			}
 		}
 
-		std::string chv_key = std::string(ST_CHANNEL_VALUE) + "." + kv1.second;
+		std::string chv_key = std::string(ST_KEY_CHANNEL_VALUE) + "." + kv1.second;
 		obs_data_set_double(settings, chv_key.c_str(), static_cast<double_t>(found->second.value));
 
-		std::string chm_key = std::string(ST_CHANNEL_MULTIPLIER) + "." + kv1.second;
+		std::string chm_key = std::string(ST_KEY_CHANNEL_MULTIPLIER) + "." + kv1.second;
 		obs_data_set_double(settings, chm_key.c_str(), static_cast<double_t>(found->second.scale));
 
 		for (auto kv2 : channel_translations) {
-			std::string ab_key = std::string(ST_CHANNEL_INPUT) + "." + kv1.second + "." + kv2.second;
+			std::string ab_key = std::string(ST_KEY_CHANNEL_INPUT) + "." + kv1.second + "." + kv2.second;
 			obs_data_set_double(settings, ab_key.c_str(),
 								static_cast<double_t>(found->second.values.ptr[static_cast<size_t>(kv2.first)]));
 		}
@@ -185,7 +190,7 @@ void dynamic_mask_instance::save(obs_data_t* settings)
 void dynamic_mask_instance::input_renamed(obs::deprecated_source*, std::string old_name, std::string new_name)
 {
 	obs_data_t* settings = obs_source_get_settings(_self);
-	obs_data_set_string(settings, ST_INPUT, new_name.c_str());
+	obs_data_set_string(settings, ST_KEY_INPUT, new_name.c_str());
 	obs_source_update(_self, settings);
 }
 
@@ -410,18 +415,18 @@ dynamic_mask_factory::~dynamic_mask_factory() {}
 
 const char* dynamic_mask_factory::get_name()
 {
-	return D_TRANSLATE(ST);
+	return D_TRANSLATE(ST_I18N);
 }
 
 void dynamic_mask_factory::get_defaults2(obs_data_t* data)
 {
-	obs_data_set_default_int(data, ST_CHANNEL, static_cast<int64_t>(channel::Red));
+	obs_data_set_default_int(data, ST_KEY_CHANNEL, static_cast<int64_t>(channel::Red));
 	for (auto kv : channel_translations) {
-		obs_data_set_default_double(data, (std::string(ST_CHANNEL_VALUE) + "." + kv.second).c_str(), 1.0);
-		obs_data_set_default_double(data, (std::string(ST_CHANNEL_MULTIPLIER) + "." + kv.second).c_str(), 1.0);
+		obs_data_set_default_double(data, (std::string(ST_KEY_CHANNEL_VALUE) + "." + kv.second).c_str(), 1.0);
+		obs_data_set_default_double(data, (std::string(ST_KEY_CHANNEL_MULTIPLIER) + "." + kv.second).c_str(), 1.0);
 		for (auto kv2 : channel_translations) {
 			obs_data_set_default_double(
-				data, (std::string(ST_CHANNEL_INPUT) + "." + kv.second + "." + kv2.second).c_str(), 0.0);
+				data, (std::string(ST_KEY_CHANNEL_INPUT) + "." + kv.second + "." + kv2.second).c_str(), 0.0);
 		}
 	}
 }
@@ -441,7 +446,7 @@ obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* d
 #endif
 
 	{ // Input
-		p = obs_properties_add_list(props, ST_INPUT, D_TRANSLATE(ST_INPUT), OBS_COMBO_TYPE_LIST,
+		p = obs_properties_add_list(props, ST_KEY_INPUT, D_TRANSLATE(ST_I18N_INPUT), OBS_COMBO_TYPE_LIST,
 									OBS_COMBO_FORMAT_STRING);
 		obs_property_list_add_string(p, "", "");
 		obs::source_tracker::get()->enumerate(
@@ -467,8 +472,8 @@ obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* d
 		auto grp = obs_properties_create();
 
 		{
-			_translation_cache.push_back(translate_string(D_TRANSLATE(ST_CHANNEL_VALUE), D_TRANSLATE(pri_ch)));
-			std::string buf = std::string(ST_CHANNEL_VALUE) + "." + pri_ch;
+			_translation_cache.push_back(translate_string(D_TRANSLATE(ST_I18N_CHANNEL_VALUE), D_TRANSLATE(pri_ch)));
+			std::string buf = std::string(ST_KEY_CHANNEL_VALUE) + "." + pri_ch;
 			p = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0,
 												0.01);
 			obs_property_set_long_description(p, _translation_cache.back().c_str());
@@ -476,24 +481,25 @@ obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* d
 
 		const char* sec_chs[] = {S_CHANNEL_RED, S_CHANNEL_GREEN, S_CHANNEL_BLUE, S_CHANNEL_ALPHA};
 		for (auto sec_ch : sec_chs) {
-			_translation_cache.push_back(translate_string(D_TRANSLATE(ST_CHANNEL_INPUT), D_TRANSLATE(sec_ch)));
-			std::string buf = std::string(ST_CHANNEL_INPUT) + "." + pri_ch + "." + sec_ch;
+			_translation_cache.push_back(translate_string(D_TRANSLATE(ST_I18N_CHANNEL_INPUT), D_TRANSLATE(sec_ch)));
+			std::string buf = std::string(ST_KEY_CHANNEL_INPUT) + "." + pri_ch + "." + sec_ch;
 			p = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0,
 												0.01);
 			obs_property_set_long_description(p, _translation_cache.back().c_str());
 		}
 
 		{
-			_translation_cache.push_back(translate_string(D_TRANSLATE(ST_CHANNEL_MULTIPLIER), D_TRANSLATE(pri_ch)));
-			std::string buf = std::string(ST_CHANNEL_MULTIPLIER) + "." + pri_ch;
+			_translation_cache.push_back(
+				translate_string(D_TRANSLATE(ST_I18N_CHANNEL_MULTIPLIER), D_TRANSLATE(pri_ch)));
+			std::string buf = std::string(ST_KEY_CHANNEL_MULTIPLIER) + "." + pri_ch;
 			p = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0,
 												0.01);
 			obs_property_set_long_description(p, _translation_cache.back().c_str());
 		}
 
 		{
-			_translation_cache.push_back(translate_string(D_TRANSLATE(ST_CHANNEL), D_TRANSLATE(pri_ch)));
-			std::string buf = std::string(ST_CHANNEL) + "." + pri_ch;
+			_translation_cache.push_back(translate_string(D_TRANSLATE(ST_I18N_CHANNEL), D_TRANSLATE(pri_ch)));
+			std::string buf = std::string(ST_KEY_CHANNEL) + "." + pri_ch;
 			obs_properties_add_group(props, buf.c_str(), _translation_cache.back().c_str(),
 									 obs_group_type::OBS_GROUP_NORMAL, grp);
 		}
