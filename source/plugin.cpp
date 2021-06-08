@@ -73,8 +73,8 @@
 //static std::shared_ptr<streamfx::updater> _updater;
 #endif
 
-static std::shared_ptr<util::threadpool>  _threadpool;
-static std::shared_ptr<gs::vertex_buffer> _gs_fstri_vb;
+static std::shared_ptr<streamfx::util::threadpool> _threadpool;
+static std::shared_ptr<gs::vertex_buffer>          _gs_fstri_vb;
 
 MODULE_EXPORT bool obs_module_load(void)
 try {
@@ -84,7 +84,7 @@ try {
 	streamfx::configuration::initialize();
 
 	// Initialize global Thread Pool.
-	_threadpool = std::make_shared<util::threadpool>();
+	_threadpool = std::make_shared<streamfx::util::threadpool>();
 
 	// Initialize Source Tracker
 	obs::source_tracker::initialize();
@@ -260,7 +260,7 @@ try {
 	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-std::shared_ptr<util::threadpool> streamfx::threadpool()
+std::shared_ptr<streamfx::util::threadpool> streamfx::threadpool()
 {
 	return _threadpool;
 }

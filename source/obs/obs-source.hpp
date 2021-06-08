@@ -89,49 +89,49 @@ namespace obs {
 		public: // Events
 		struct {
 			// Destroy and Remove
-			util::event<obs::deprecated_source*> destroy;
-			util::event<obs::deprecated_source*> remove;
+			streamfx::util::event<obs::deprecated_source*> destroy;
+			streamfx::util::event<obs::deprecated_source*> remove;
 
 			// Saving, Loading and Update
-			util::event<obs::deprecated_source*> save;
-			util::event<obs::deprecated_source*> load;
-			util::event<obs::deprecated_source*> update_properties;
+			streamfx::util::event<obs::deprecated_source*> save;
+			streamfx::util::event<obs::deprecated_source*> load;
+			streamfx::util::event<obs::deprecated_source*> update_properties;
 
 			// Activate, Deactivate
-			util::event<obs::deprecated_source*> activate;
-			util::event<obs::deprecated_source*> deactivate;
+			streamfx::util::event<obs::deprecated_source*> activate;
+			streamfx::util::event<obs::deprecated_source*> deactivate;
 
 			// Show Hide
-			util::event<obs::deprecated_source*> show;
-			util::event<obs::deprecated_source*> hide;
+			streamfx::util::event<obs::deprecated_source*> show;
+			streamfx::util::event<obs::deprecated_source*> hide;
 
 			// Other
-			util::event<obs::deprecated_source*, bool>                     enable;
-			util::event<obs::deprecated_source*, std::string, std::string> rename;
-			util::event<obs::deprecated_source*, long long>                update_flags;
+			streamfx::util::event<obs::deprecated_source*, bool>                     enable;
+			streamfx::util::event<obs::deprecated_source*, std::string, std::string> rename;
+			streamfx::util::event<obs::deprecated_source*, long long>                update_flags;
 
 			// Hotkeys (PtM, PtT)
-			util::event<obs::deprecated_source*, bool>      push_to_mute_changed;
-			util::event<obs::deprecated_source*, long long> push_to_mute_delay;
-			util::event<obs::deprecated_source*, bool>      push_to_talk_changed;
-			util::event<obs::deprecated_source*, long long> push_to_talk_delay;
+			streamfx::util::event<obs::deprecated_source*, bool>      push_to_mute_changed;
+			streamfx::util::event<obs::deprecated_source*, long long> push_to_mute_delay;
+			streamfx::util::event<obs::deprecated_source*, bool>      push_to_talk_changed;
+			streamfx::util::event<obs::deprecated_source*, long long> push_to_talk_delay;
 
 			// Audio
-			util::event<obs::deprecated_source*, bool>                    mute;
-			util::event<obs::deprecated_source*, double&>                 volume;
-			util::event<obs::deprecated_source*, long long&>              audio_sync;
-			util::event<obs::deprecated_source*, long long&>              audio_mixers;
-			util::event<obs::deprecated_source*, const audio_data*, bool> audio;
+			streamfx::util::event<obs::deprecated_source*, bool>                    mute;
+			streamfx::util::event<obs::deprecated_source*, double&>                 volume;
+			streamfx::util::event<obs::deprecated_source*, long long&>              audio_sync;
+			streamfx::util::event<obs::deprecated_source*, long long&>              audio_mixers;
+			streamfx::util::event<obs::deprecated_source*, const audio_data*, bool> audio;
 
 			// Filters
-			util::event<obs::deprecated_source*, obs_source_t*> filter_add;
-			util::event<obs::deprecated_source*, obs_source_t*> filter_remove;
-			util::event<obs::deprecated_source*>                reorder_filters;
+			streamfx::util::event<obs::deprecated_source*, obs_source_t*> filter_add;
+			streamfx::util::event<obs::deprecated_source*, obs_source_t*> filter_remove;
+			streamfx::util::event<obs::deprecated_source*>                reorder_filters;
 
 			// Transition
-			util::event<obs::deprecated_source*> transition_start;
-			util::event<obs::deprecated_source*> transition_video_stop;
-			util::event<obs::deprecated_source*> transition_stop;
+			streamfx::util::event<obs::deprecated_source*> transition_start;
+			streamfx::util::event<obs::deprecated_source*> transition_video_stop;
+			streamfx::util::event<obs::deprecated_source*> transition_stop;
 		} events;
 	};
 } // namespace obs

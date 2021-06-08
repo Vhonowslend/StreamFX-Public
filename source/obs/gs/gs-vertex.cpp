@@ -23,7 +23,8 @@
 gs::vertex::vertex()
 	: position(nullptr), normal(nullptr), tangent(nullptr), color(nullptr), _has_store(true), _store(nullptr)
 {
-	_store = util::malloc_aligned(16, sizeof(vec3) * 3 + sizeof(uint32_t) + sizeof(vec4) * MAXIMUM_UVW_LAYERS);
+	_store =
+		streamfx::util::malloc_aligned(16, sizeof(vec3) * 3 + sizeof(uint32_t) + sizeof(vec4) * MAXIMUM_UVW_LAYERS);
 
 	std::size_t offset = 0;
 
@@ -48,7 +49,7 @@ gs::vertex::vertex()
 gs::vertex::~vertex()
 {
 	if (_has_store) {
-		util::free_aligned(_store);
+		streamfx::util::free_aligned(_store);
 	}
 }
 

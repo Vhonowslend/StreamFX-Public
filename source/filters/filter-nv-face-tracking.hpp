@@ -52,8 +52,8 @@ namespace streamfx::filter::nvidia {
 		// Operational Data
 		std::shared_ptr<gs::vertex_buffer> _geometry;
 		struct {
-			util::math::kalman1D<double_t> center[2];
-			util::math::kalman1D<double_t> size[2];
+			streamfx::util::math::kalman1D<double_t> center[2];
+			streamfx::util::math::kalman1D<double_t> size[2];
 		} _filters;
 		struct {
 			std::mutex lock;
@@ -84,19 +84,19 @@ namespace streamfx::filter::nvidia {
 		NvCVImage                                  _ar_image_temp;
 
 		// Tasks
-		std::shared_ptr<::util::threadpool::task> _async_initialize;
-		std::shared_ptr<::util::threadpool::task> _async_track;
+		std::shared_ptr<::streamfx::util::threadpool::task> _async_initialize;
+		std::shared_ptr<::streamfx::util::threadpool::task> _async_track;
 
 #ifdef ENABLE_PROFILING
 		// Profiling
-		std::shared_ptr<util::profiler> _profile_capture;
-		std::shared_ptr<util::profiler> _profile_capture_realloc;
-		std::shared_ptr<util::profiler> _profile_capture_copy;
-		std::shared_ptr<util::profiler> _profile_ar_realloc;
-		std::shared_ptr<util::profiler> _profile_ar_copy;
-		std::shared_ptr<util::profiler> _profile_ar_transfer;
-		std::shared_ptr<util::profiler> _profile_ar_run;
-		std::shared_ptr<util::profiler> _profile_ar_calc;
+		std::shared_ptr<streamfx::util::profiler> _profile_capture;
+		std::shared_ptr<streamfx::util::profiler> _profile_capture_realloc;
+		std::shared_ptr<streamfx::util::profiler> _profile_capture_copy;
+		std::shared_ptr<streamfx::util::profiler> _profile_ar_realloc;
+		std::shared_ptr<streamfx::util::profiler> _profile_ar_copy;
+		std::shared_ptr<streamfx::util::profiler> _profile_ar_transfer;
+		std::shared_ptr<streamfx::util::profiler> _profile_ar_run;
+		std::shared_ptr<streamfx::util::profiler> _profile_ar_calc;
 #endif
 
 		public:

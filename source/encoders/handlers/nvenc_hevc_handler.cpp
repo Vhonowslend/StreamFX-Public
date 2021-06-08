@@ -154,7 +154,7 @@ void nvenc_hevc_handler::get_encoder_properties(obs_properties_t* props, const A
 
 	{
 		obs_properties_t* grp = props;
-		if (!util::are_property_groups_broken()) {
+		if (!streamfx::util::are_property_groups_broken()) {
 			grp = obs_properties_create();
 			obs_properties_add_group(props, S_CODEC_HEVC, D_TRANSLATE(S_CODEC_HEVC), OBS_GROUP_NORMAL, grp);
 		}
