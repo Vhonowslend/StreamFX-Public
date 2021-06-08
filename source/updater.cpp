@@ -178,7 +178,7 @@ bool streamfx::update_info::is_newer(update_info& other)
 	return true;
 }
 
-void streamfx::updater::task(util::threadpool_data_t)
+void streamfx::updater::task(streamfx::util::threadpool_data_t)
 try {
 	{
 		std::vector<char> buffer;
@@ -227,8 +227,8 @@ void streamfx::updater::task_query(std::vector<char>& buffer)
 {
 	static constexpr std::string_view ST_API_URL = "https://api.github.com/repos/Xaymar/obs-StreamFX/releases";
 
-	util::curl curl;
-	size_t     buffer_offset = 0;
+	streamfx::util::curl curl;
+	size_t               buffer_offset = 0;
 
 	// Set headers (User-Agent is needed so Github can contact us!).
 	curl.set_header("User-Agent", "StreamFX Updater v" STREAMFX_VERSION_STRING);

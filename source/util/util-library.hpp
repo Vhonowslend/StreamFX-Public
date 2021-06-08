@@ -23,7 +23,7 @@
 #include <memory>
 #include <string_view>
 
-namespace util {
+namespace streamfx::util {
 	class library {
 		void* _library;
 
@@ -33,8 +33,8 @@ namespace util {
 
 		void* load_symbol(std::string_view name);
 
-		static std::shared_ptr<::util::library> load(std::filesystem::path file);
+		static std::shared_ptr<::streamfx::util::library> load(std::filesystem::path file);
 
-		static std::shared_ptr<::util::library> load(std::string_view name);
+		static std::shared_ptr<::streamfx::util::library> load(std::string_view name);
 	};
-} // namespace util
+} // namespace streamfx::util

@@ -23,7 +23,7 @@
 #include <list>
 #include <mutex>
 
-namespace util {
+namespace streamfx::util {
 	template<typename... _args>
 	class event {
 		std::list<std::function<void(_args...)>> _listeners;
@@ -171,4 +171,4 @@ namespace util {
 			this->_cb_clear = cb;
 		}
 	};
-} // namespace util
+} // namespace streamfx::util

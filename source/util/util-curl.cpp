@@ -21,7 +21,8 @@
 #include "util-curl.hpp"
 #include <sstream>
 
-int32_t util::curl::debug_helper(CURL* handle, curl_infotype type, char* data, size_t size, util::curl* self)
+int32_t streamfx::util::curl::debug_helper(CURL* handle, curl_infotype type, char* data, size_t size,
+										   streamfx::util::curl* self)
 {
 	if (self->_debug_callback) {
 		self->_debug_callback(handle, type, data, size);
@@ -65,7 +66,7 @@ int32_t util::curl::debug_helper(CURL* handle, curl_infotype type, char* data, s
 	return 0;
 }
 
-size_t util::curl::read_helper(void* ptr, size_t size, size_t count, util::curl* self)
+size_t streamfx::util::curl::read_helper(void* ptr, size_t size, size_t count, streamfx::util::curl* self)
 {
 	if (self->_read_callback) {
 		return self->_read_callback(ptr, size, count);
@@ -74,7 +75,7 @@ size_t util::curl::read_helper(void* ptr, size_t size, size_t count, util::curl*
 	}
 }
 
-size_t util::curl::write_helper(void* ptr, size_t size, size_t count, util::curl* self)
+size_t streamfx::util::curl::write_helper(void* ptr, size_t size, size_t count, streamfx::util::curl* self)
 {
 	if (self->_write_callback) {
 		return self->_write_callback(ptr, size, count);
@@ -83,7 +84,8 @@ size_t util::curl::write_helper(void* ptr, size_t size, size_t count, util::curl
 	}
 }
 
-int32_t util::curl::xferinfo_callback(util::curl* self, curl_off_t dlt, curl_off_t dln, curl_off_t ult, curl_off_t uln)
+int32_t streamfx::util::curl::xferinfo_callback(streamfx::util::curl* self, curl_off_t dlt, curl_off_t dln,
+												curl_off_t ult, curl_off_t uln)
 {
 	if (self->_xferinfo_callback) {
 		return self->_xferinfo_callback(static_cast<uint64_t>(dlt), static_cast<uint64_t>(dln),
@@ -93,7 +95,7 @@ int32_t util::curl::xferinfo_callback(util::curl* self, curl_off_t dlt, curl_off
 	}
 }
 
-util::curl::curl() : _curl(), _read_callback(), _write_callback(), _headers()
+streamfx::util::curl::curl() : _curl(), _read_callback(), _write_callback(), _headers()
 {
 	_curl = curl_easy_init();
 	set_read_callback(nullptr);
@@ -112,22 +114,22 @@ util::curl::curl() : _curl(), _read_callback(), _write_callback(), _headers()
 #endif
 }
 
-util::curl::~curl()
+streamfx::util::curl::~curl()
 {
 	curl_easy_cleanup(_curl);
 }
 
-void util::curl::clear_headers()
+void streamfx::util::curl::clear_headers()
 {
 	_headers.clear();
 }
 
-void util::curl::clear_header(std::string header)
+void streamfx::util::curl::clear_header(std::string header)
 {
 	_headers.erase(header);
 }
 
-void util::curl::set_header(std::string header, std::string value)
+void streamfx::util::curl::set_header(std::string header, std::string value)
 {
 	_headers.insert_or_assign(header, value);
 }
@@ -137,7 +139,7 @@ size_t perform_get_kv_size(std::string a, std::string b)
 	return a.size() + 2 + b.size() + 1;
 };
 
-CURLcode util::curl::perform()
+CURLcode streamfx::util::curl::perform()
 {
 	std::vector<char>  buffer;
 	struct curl_slist* headers = nullptr;
@@ -177,12 +179,12 @@ CURLcode util::curl::perform()
 	return res;
 }
 
-void util::curl::reset()
+void streamfx::util::curl::reset()
 {
 	curl_easy_reset(_curl);
 }
 
-CURLcode util::curl::set_read_callback(curl_io_callback_t cb)
+CURLcode streamfx::util::curl::set_read_callback(curl_io_callback_t cb)
 {
 	_read_callback = cb;
 	if (CURLcode res = curl_easy_setopt(_curl, CURLOPT_READDATA, this); res != CURLE_OK)
@@ -190,7 +192,7 @@ CURLcode util::curl::set_read_callback(curl_io_callback_t cb)
 	return curl_easy_setopt(_curl, CURLOPT_READFUNCTION, &read_helper);
 }
 
-CURLcode util::curl::set_write_callback(curl_io_callback_t cb)
+CURLcode streamfx::util::curl::set_write_callback(curl_io_callback_t cb)
 {
 	_write_callback = cb;
 	if (CURLcode res = curl_easy_setopt(_curl, CURLOPT_WRITEDATA, this); res != CURLE_OK)
@@ -198,7 +200,7 @@ CURLcode util::curl::set_write_callback(curl_io_callback_t cb)
 	return curl_easy_setopt(_curl, CURLOPT_WRITEFUNCTION, &write_helper);
 }
 
-CURLcode util::curl::set_xferinfo_callback(curl_xferinfo_callback_t cb)
+CURLcode streamfx::util::curl::set_xferinfo_callback(curl_xferinfo_callback_t cb)
 {
 	_xferinfo_callback = cb;
 	if (CURLcode res = curl_easy_setopt(_curl, CURLOPT_XFERINFODATA, this); res != CURLE_OK)
@@ -206,7 +208,7 @@ CURLcode util::curl::set_xferinfo_callback(curl_xferinfo_callback_t cb)
 	return curl_easy_setopt(_curl, CURLOPT_XFERINFOFUNCTION, &xferinfo_callback);
 }
 
-CURLcode util::curl::set_debug_callback(curl_debug_callback_t cb)
+CURLcode streamfx::util::curl::set_debug_callback(curl_debug_callback_t cb)
 {
 	_debug_callback = cb;
 	if (CURLcode res = curl_easy_setopt(_curl, CURLOPT_DEBUGDATA, this); res != CURLE_OK)

@@ -84,7 +84,7 @@ const char* obs_module_recursive_text(const char* to_translate, std::size_t dept
 	}
 }
 
-obs_property_t* util::obs_properties_add_tristate(obs_properties_t* props, const char* name, const char* desc)
+obs_property_t* streamfx::util::obs_properties_add_tristate(obs_properties_t* props, const char* name, const char* desc)
 {
 	obs_property_t* p = obs_properties_add_list(props, name, desc, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), -1);
@@ -93,67 +93,67 @@ obs_property_t* util::obs_properties_add_tristate(obs_properties_t* props, const
 	return p;
 }
 
-void* util::vec2a::operator new(std::size_t count)
+void* streamfx::util::vec2a::operator new(std::size_t count)
 {
-	return util::malloc_aligned(16, count);
+	return streamfx::util::malloc_aligned(16, count);
 }
 
-void* util::vec2a::operator new[](std::size_t count)
+void* streamfx::util::vec2a::operator new[](std::size_t count)
 {
-	return util::malloc_aligned(16, count);
+	return streamfx::util::malloc_aligned(16, count);
 }
 
-void util::vec2a::operator delete(void* p)
+void streamfx::util::vec2a::operator delete(void* p)
 {
-	util::free_aligned(p);
+	streamfx::util::free_aligned(p);
 }
 
-void util::vec2a::operator delete[](void* p)
+void streamfx::util::vec2a::operator delete[](void* p)
 {
-	util::free_aligned(p);
+	streamfx::util::free_aligned(p);
 }
 
-void* util::vec3a::operator new(std::size_t count)
+void* streamfx::util::vec3a::operator new(std::size_t count)
 {
-	return util::malloc_aligned(16, count);
+	return streamfx::util::malloc_aligned(16, count);
 }
 
-void* util::vec3a::operator new[](std::size_t count)
+void* streamfx::util::vec3a::operator new[](std::size_t count)
 {
-	return util::malloc_aligned(16, count);
+	return streamfx::util::malloc_aligned(16, count);
 }
 
-void util::vec3a::operator delete(void* p)
+void streamfx::util::vec3a::operator delete(void* p)
 {
-	util::free_aligned(p);
+	streamfx::util::free_aligned(p);
 }
 
-void util::vec3a::operator delete[](void* p)
+void streamfx::util::vec3a::operator delete[](void* p)
 {
-	util::free_aligned(p);
+	streamfx::util::free_aligned(p);
 }
 
-void* util::vec4a::operator new(std::size_t count)
+void* streamfx::util::vec4a::operator new(std::size_t count)
 {
-	return util::malloc_aligned(16, count);
+	return streamfx::util::malloc_aligned(16, count);
 }
 
-void* util::vec4a::operator new[](std::size_t count)
+void* streamfx::util::vec4a::operator new[](std::size_t count)
 {
-	return util::malloc_aligned(16, count);
+	return streamfx::util::malloc_aligned(16, count);
 }
 
-void util::vec4a::operator delete(void* p)
+void streamfx::util::vec4a::operator delete(void* p)
 {
-	util::free_aligned(p);
+	streamfx::util::free_aligned(p);
 }
 
-void util::vec4a::operator delete[](void* p)
+void streamfx::util::vec4a::operator delete[](void* p)
 {
-	util::free_aligned(p);
+	streamfx::util::free_aligned(p);
 }
 
-std::pair<int64_t, int64_t> util::size_from_string(std::string text, bool allowSquare)
+std::pair<int64_t, int64_t> streamfx::util::size_from_string(std::string text, bool allowSquare)
 {
 	int64_t width, height;
 
@@ -193,7 +193,7 @@ std::pair<int64_t, int64_t> util::size_from_string(std::string text, bool allowS
 	return {width, height};
 }
 
-void* util::malloc_aligned(std::size_t align, std::size_t size)
+void* streamfx::util::malloc_aligned(std::size_t align, std::size_t size)
 {
 #ifdef USE_MSC_ALLOC
 	return _aligned_malloc(size, align);
@@ -217,7 +217,7 @@ void* util::malloc_aligned(std::size_t align, std::size_t size)
 #endif
 }
 
-void util::free_aligned(void* mem)
+void streamfx::util::free_aligned(void* mem)
 {
 #ifdef USE_MSC_ALLOC
 	_aligned_free(mem);

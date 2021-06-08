@@ -89,10 +89,10 @@ transform_instance::transform_instance(obs_data_t* data, obs_source_t* context)
 	_source_rt     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	_vertex_buffer = std::make_shared<gs::vertex_buffer>(uint32_t(4u), uint8_t(1u));
 
-	_position = std::make_unique<util::vec3a>();
-	_rotation = std::make_unique<util::vec3a>();
-	_scale    = std::make_unique<util::vec3a>();
-	_shear    = std::make_unique<util::vec3a>();
+	_position = std::make_unique<streamfx::util::vec3a>();
+	_rotation = std::make_unique<streamfx::util::vec3a>();
+	_scale    = std::make_unique<streamfx::util::vec3a>();
+	_shear    = std::make_unique<streamfx::util::vec3a>();
 
 	vec3_set(_position.get(), 0, 0, 0);
 	vec3_set(_rotation.get(), 0, 0, 0);
@@ -298,18 +298,19 @@ void transform_instance::video_render(gs_effect_t* effect)
 	if (_mipmap_enabled) {
 		double_t aspect  = double_t(base_width) / double_t(base_height);
 		double_t aspect2 = 1.0 / aspect;
-		cache_width = std::clamp(uint32_t(pow(2, util::math::get_power_of_two_exponent_ceil(cache_width))), 1u, 16384u);
-		cache_height =
-			std::clamp(uint32_t(pow(2, util::math::get_power_of_two_exponent_ceil(cache_height))), 1u, 16384u);
+		cache_width =
+			std::clamp(uint32_t(pow(2, streamfx::util::math::get_power_of_two_exponent_ceil(cache_width))), 1u, 16384u);
+		cache_height = std::clamp(uint32_t(pow(2, streamfx::util::math::get_power_of_two_exponent_ceil(cache_height))),
+								  1u, 16384u);
 
 		if (aspect > 1.0) {
 			cache_height = std::clamp(
-				uint32_t(pow(2, util::math::get_power_of_two_exponent_ceil(uint64_t(cache_width * aspect2)))), 1u,
-				16384u);
+				uint32_t(pow(2, streamfx::util::math::get_power_of_two_exponent_ceil(uint64_t(cache_width * aspect2)))),
+				1u, 16384u);
 		} else if (aspect < 1.0) {
 			cache_width = std::clamp(
-				uint32_t(pow(2, util::math::get_power_of_two_exponent_ceil(uint64_t(cache_height * aspect)))), 1u,
-				16384u);
+				uint32_t(pow(2, streamfx::util::math::get_power_of_two_exponent_ceil(uint64_t(cache_height * aspect)))),
+				1u, 16384u);
 		}
 	}
 
@@ -364,8 +365,8 @@ void transform_instance::video_render(gs_effect_t* effect)
 			gs::debug_marker gdr{gs::debug_color_allocate, "Allocate Mipmapped Texture"};
 #endif
 
-			std::size_t mip_levels = std::max(util::math::get_power_of_two_exponent_ceil(cache_width),
-											  util::math::get_power_of_two_exponent_ceil(cache_height));
+			std::size_t mip_levels = std::max(streamfx::util::math::get_power_of_two_exponent_ceil(cache_width),
+											  streamfx::util::math::get_power_of_two_exponent_ceil(cache_height));
 			_mipmap_texture =
 				std::make_shared<gs::texture>(cache_width, cache_height, GS_RGBA, static_cast<uint32_t>(mip_levels),
 											  nullptr, gs::texture::flags::None);

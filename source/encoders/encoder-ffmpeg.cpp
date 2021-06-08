@@ -1038,7 +1038,7 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 	if (_handler && _handler->has_keyframe_support(this)) {
 		// Key-Frame Options
 		obs_properties_t* grp = props;
-		if (!util::are_property_groups_broken()) {
+		if (!streamfx::util::are_property_groups_broken()) {
 			grp = obs_properties_create();
 			obs_properties_add_group(props, ST_I18N_KEYFRAMES, D_TRANSLATE(ST_I18N_KEYFRAMES), OBS_GROUP_NORMAL, grp);
 		}
@@ -1067,7 +1067,7 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 
 	{
 		obs_properties_t* grp = props;
-		if (!util::are_property_groups_broken()) {
+		if (!streamfx::util::are_property_groups_broken()) {
 			auto prs = obs_properties_create();
 			obs_properties_add_group(props, ST_I18N_FFMPEG, D_TRANSLATE(ST_I18N_FFMPEG), OBS_GROUP_NORMAL, prs);
 			grp = prs;
