@@ -23,7 +23,7 @@
 #include <map>
 #include <mutex>
 
-namespace obs {
+namespace streamfx::obs {
 	class source_tracker {
 		std::map<std::string, std::shared_ptr<obs_weak_source_t>> _sources;
 		std::mutex                                                _lock;
@@ -33,9 +33,9 @@ namespace obs {
 		static void source_rename_handler(void* ptr, calldata_t* data) noexcept;
 
 		public: // Singleton
-		static void                                 initialize();
-		static void                                 finalize();
-		static std::shared_ptr<obs::source_tracker> get();
+		static void                                           initialize();
+		static void                                           finalize();
+		static std::shared_ptr<streamfx::obs::source_tracker> get();
 
 		public:
 		source_tracker();
@@ -69,4 +69,4 @@ namespace obs {
 		static bool filter_transitions(std::string name, obs_source_t* source);
 		static bool filter_scenes(std::string name, obs_source_t* source);
 	};
-} // namespace obs
+} // namespace streamfx::obs

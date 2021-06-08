@@ -20,7 +20,7 @@
 #pragma once
 #include "common.hpp"
 
-namespace obs {
+namespace streamfx::obs {
 	namespace tools {
 		bool scene_contains_source(obs_scene_t* scene, obs_source_t* source);
 
@@ -96,4 +96,4 @@ namespace obs {
 	{
 		obs_data_release(v);
 	}
-} // namespace obs
+} // namespace streamfx::obs
