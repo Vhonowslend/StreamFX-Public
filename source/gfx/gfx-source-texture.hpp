@@ -22,7 +22,7 @@
 #include "obs/gs/gs-texture.hpp"
 #include "obs/obs-source.hpp"
 
-namespace gfx {
+namespace streamfx::gfx {
 	class source_texture {
 		std::shared_ptr<streamfx::obs::deprecated_source> _parent;
 		std::shared_ptr<streamfx::obs::deprecated_source> _child;
@@ -92,4 +92,4 @@ namespace gfx {
 			return factory_instance;
 		}
 	};
-} // namespace gfx
+} // namespace streamfx::gfx

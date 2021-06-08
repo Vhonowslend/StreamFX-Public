@@ -19,7 +19,7 @@
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
 
-gfx::source_texture::~source_texture()
+streamfx::gfx::source_texture::~source_texture()
 {
 	if (_child && _parent) {
 		obs_source_remove_active_child(_parent->get(), _child->get());
@@ -29,7 +29,7 @@ gfx::source_texture::~source_texture()
 	_child.reset();
 }
 
-gfx::source_texture::source_texture(obs_source_t* parent)
+streamfx::gfx::source_texture::source_texture(obs_source_t* parent)
 {
 	if (!parent) {
 		throw std::invalid_argument("_parent must not be null");
@@ -38,7 +38,7 @@ gfx::source_texture::source_texture(obs_source_t* parent)
 	_rt     = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
-gfx::source_texture::source_texture(obs_source_t* _source, obs_source_t* _parent) : source_texture(_parent)
+streamfx::gfx::source_texture::source_texture(obs_source_t* _source, obs_source_t* _parent) : source_texture(_parent)
 {
 	if (!_source) {
 		throw std::invalid_argument("source must not be null");
@@ -49,7 +49,7 @@ gfx::source_texture::source_texture(obs_source_t* _source, obs_source_t* _parent
 	_child = std::make_shared<streamfx::obs::deprecated_source>(_source, true, true);
 }
 
-gfx::source_texture::source_texture(const char* _name, obs_source_t* _parent) : source_texture(_parent)
+streamfx::gfx::source_texture::source_texture(const char* _name, obs_source_t* _parent) : source_texture(_parent)
 {
 	if (!_name) {
 		throw std::invalid_argument("name must not be null");
@@ -60,11 +60,12 @@ gfx::source_texture::source_texture(const char* _name, obs_source_t* _parent) : 
 	}
 }
 
-gfx::source_texture::source_texture(std::string _name, obs_source_t* _parent) : source_texture(_name.c_str(), _parent)
+streamfx::gfx::source_texture::source_texture(std::string _name, obs_source_t* _parent)
+	: source_texture(_name.c_str(), _parent)
 {}
 
-gfx::source_texture::source_texture(std::shared_ptr<streamfx::obs::deprecated_source> pchild,
-									std::shared_ptr<streamfx::obs::deprecated_source> pparent)
+streamfx::gfx::source_texture::source_texture(std::shared_ptr<streamfx::obs::deprecated_source> pchild,
+											  std::shared_ptr<streamfx::obs::deprecated_source> pparent)
 {
 	if (!pchild) {
 		throw std::invalid_argument("_child must not be null");
@@ -80,11 +81,12 @@ gfx::source_texture::source_texture(std::shared_ptr<streamfx::obs::deprecated_so
 	this->_rt     = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
-gfx::source_texture::source_texture(std::shared_ptr<streamfx::obs::deprecated_source> _child, obs_source_t* _parent)
+streamfx::gfx::source_texture::source_texture(std::shared_ptr<streamfx::obs::deprecated_source> _child,
+											  obs_source_t*                                     _parent)
 	: source_texture(_child, std::make_shared<streamfx::obs::deprecated_source>(_parent, false, false))
 {}
 
-obs_source_t* gfx::source_texture::get_object()
+obs_source_t* streamfx::gfx::source_texture::get_object()
 {
 	if (_child) {
 		return _child->get();
@@ -92,12 +94,12 @@ obs_source_t* gfx::source_texture::get_object()
 	return nullptr;
 }
 
-obs_source_t* gfx::source_texture::get_parent()
+obs_source_t* streamfx::gfx::source_texture::get_parent()
 {
 	return _parent->get();
 }
 
-void gfx::source_texture::clear()
+void streamfx::gfx::source_texture::clear()
 {
 	if (_child && _parent) {
 		obs_source_remove_active_child(_parent->get(), _child->get());
@@ -106,7 +108,7 @@ void gfx::source_texture::clear()
 	_child.reset();
 }
 
-std::shared_ptr<streamfx::obs::gs::texture> gfx::source_texture::render(std::size_t width, std::size_t height)
+std::shared_ptr<streamfx::obs::gs::texture> streamfx::gfx::source_texture::render(std::size_t width, std::size_t height)
 {
 	if ((width == 0) || (width >= 16384)) {
 		throw std::runtime_error("Width too large or too small.");

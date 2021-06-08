@@ -25,15 +25,15 @@
 #include "obs/gs/gs-effect.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 
-namespace gfx::lut {
+namespace streamfx::gfx::lut {
 	class producer {
-		std::shared_ptr<gfx::lut::data>                  _data;
+		std::shared_ptr<streamfx::gfx::lut::data>        _data;
 		std::shared_ptr<streamfx::obs::gs::rendertarget> _rt;
 
 		public:
 		producer();
 		~producer();
 
-		std::shared_ptr<streamfx::obs::gs::texture> produce(gfx::lut::color_depth depth);
+		std::shared_ptr<streamfx::obs::gs::texture> produce(streamfx::gfx::lut::color_depth depth);
 	};
-} // namespace gfx::lut
+} // namespace streamfx::gfx::lut

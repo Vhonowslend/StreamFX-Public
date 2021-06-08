@@ -60,7 +60,7 @@ inline bool get_annotation_float(streamfx::obs::gs::effect_parameter param, std:
 	return false;
 }
 
-gfx::shader::basic_field_type gfx::shader::get_field_type_from_string(std::string v)
+streamfx::gfx::shader::basic_field_type streamfx::gfx::shader::get_field_type_from_string(std::string v)
 {
 	std::map<std::string, basic_field_type> matches = {
 		{"input", basic_field_type::Input},
@@ -76,7 +76,7 @@ gfx::shader::basic_field_type gfx::shader::get_field_type_from_string(std::strin
 	return basic_field_type::Input;
 }
 
-gfx::shader::basic_parameter::basic_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
+streamfx::gfx::shader::basic_parameter::basic_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
 	: parameter(param, prefix), _field_type(basic_field_type::Input), _suffix(), _keys(), _names(), _min(), _max(),
 	  _step(), _values()
 {
@@ -153,14 +153,15 @@ gfx::shader::basic_parameter::basic_parameter(streamfx::obs::gs::effect_paramete
 	}
 }
 
-gfx::shader::basic_parameter::~basic_parameter() {}
+streamfx::gfx::shader::basic_parameter::~basic_parameter() {}
 
-void gfx::shader::basic_parameter::load_parameter_data(streamfx::obs::gs::effect_parameter parameter, basic_data& data)
+void streamfx::gfx::shader::basic_parameter::load_parameter_data(streamfx::obs::gs::effect_parameter parameter,
+																 basic_data&                         data)
 {
 	parameter.get_default_value(&data.i32, 1);
 }
 
-gfx::shader::bool_parameter::bool_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
+streamfx::gfx::shader::bool_parameter::bool_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
 	: basic_parameter(param, prefix)
 {
 	_min.resize(0);
@@ -171,9 +172,9 @@ gfx::shader::bool_parameter::bool_parameter(streamfx::obs::gs::effect_parameter 
 	_data.resize(get_size(), 1);
 }
 
-gfx::shader::bool_parameter::~bool_parameter() {}
+streamfx::gfx::shader::bool_parameter::~bool_parameter() {}
 
-void gfx::shader::bool_parameter::defaults(obs_data_t* settings)
+void streamfx::gfx::shader::bool_parameter::defaults(obs_data_t* settings)
 {
 	// TODO: Support for bool[]
 	if (get_size() == 1) {
@@ -181,7 +182,7 @@ void gfx::shader::bool_parameter::defaults(obs_data_t* settings)
 	}
 }
 
-void gfx::shader::bool_parameter::properties(obs_properties_t* props, obs_data_t* settings)
+void streamfx::gfx::shader::bool_parameter::properties(obs_properties_t* props, obs_data_t* settings)
 {
 	if (!is_visible())
 		return;
@@ -197,7 +198,7 @@ void gfx::shader::bool_parameter::properties(obs_properties_t* props, obs_data_t
 	}
 }
 
-void gfx::shader::bool_parameter::update(obs_data_t* settings)
+void streamfx::gfx::shader::bool_parameter::update(obs_data_t* settings)
 {
 	if (is_automatic())
 		return;
@@ -208,12 +209,12 @@ void gfx::shader::bool_parameter::update(obs_data_t* settings)
 	}
 }
 
-void gfx::shader::bool_parameter::assign()
+void streamfx::gfx::shader::bool_parameter::assign()
 {
 	get_parameter().set_value(_data.data(), _data.size());
 }
 
-gfx::shader::float_parameter::float_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
+streamfx::gfx::shader::float_parameter::float_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
 	: basic_parameter(param, prefix)
 {
 	_data.resize(get_size());
@@ -249,9 +250,9 @@ gfx::shader::float_parameter::float_parameter(streamfx::obs::gs::effect_paramete
 	}
 }
 
-gfx::shader::float_parameter::~float_parameter() {}
+streamfx::gfx::shader::float_parameter::~float_parameter() {}
 
-void gfx::shader::float_parameter::defaults(obs_data_t* settings)
+void streamfx::gfx::shader::float_parameter::defaults(obs_data_t* settings)
 {
 	std::vector<float_t> defaults;
 	defaults.resize(get_size());
@@ -262,27 +263,28 @@ void gfx::shader::float_parameter::defaults(obs_data_t* settings)
 	}
 }
 
-static inline obs_property_t* build_float_property(gfx::shader::basic_field_type ft, obs_properties_t* props,
+static inline obs_property_t* build_float_property(streamfx::gfx::shader::basic_field_type ft, obs_properties_t* props,
 												   const char* key, const char* name, float_t min, float_t max,
-												   float_t step, std::list<gfx::shader::basic_enum_data> edata)
+												   float_t                                           step,
+												   std::list<streamfx::gfx::shader::basic_enum_data> edata)
 {
 	switch (ft) {
-	case gfx::shader::basic_field_type::Enum: {
+	case streamfx::gfx::shader::basic_field_type::Enum: {
 		auto p = obs_properties_add_list(props, key, name, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_FLOAT);
 		for (auto& el : edata) {
 			obs_property_list_add_float(p, el.name.c_str(), el.data.f32);
 		}
 		return p;
 	}
-	case gfx::shader::basic_field_type::Slider:
+	case streamfx::gfx::shader::basic_field_type::Slider:
 		return obs_properties_add_float_slider(props, key, name, min, max, step);
 	default:
-	case gfx::shader::basic_field_type::Input:
+	case streamfx::gfx::shader::basic_field_type::Input:
 		return obs_properties_add_float(props, key, name, min, max, step);
 	}
 }
 
-void gfx::shader::float_parameter::properties(obs_properties_t* props, obs_data_t* settings)
+void streamfx::gfx::shader::float_parameter::properties(obs_properties_t* props, obs_data_t* settings)
 {
 	if (!is_visible())
 		return;
@@ -305,41 +307,41 @@ void gfx::shader::float_parameter::properties(obs_properties_t* props, obs_data_
 	}
 }
 
-void gfx::shader::float_parameter::update(obs_data_t* settings)
+void streamfx::gfx::shader::float_parameter::update(obs_data_t* settings)
 {
 	for (std::size_t idx = 0; idx < get_size(); idx++) {
 		_data[idx].f32 = static_cast<float_t>(obs_data_get_double(settings, key_at(idx).data())) * _scale[idx].f32;
 	}
 }
 
-void gfx::shader::float_parameter::assign()
+void streamfx::gfx::shader::float_parameter::assign()
 {
 	if (is_automatic())
 		return;
 
 	get_parameter().set_value(_data.data(), get_size());
 }
-static inline obs_property_t* build_int_property(gfx::shader::basic_field_type ft, obs_properties_t* props,
+static inline obs_property_t* build_int_property(streamfx::gfx::shader::basic_field_type ft, obs_properties_t* props,
 												 const char* key, const char* name, int32_t min, int32_t max,
-												 int32_t step, std::list<gfx::shader::basic_enum_data> edata)
+												 int32_t step, std::list<streamfx::gfx::shader::basic_enum_data> edata)
 {
 	switch (ft) {
-	case gfx::shader::basic_field_type::Enum: {
+	case streamfx::gfx::shader::basic_field_type::Enum: {
 		auto p = obs_properties_add_list(props, key, name, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 		for (auto& el : edata) {
 			obs_property_list_add_int(p, el.name.c_str(), el.data.i32);
 		}
 		return p;
 	}
-	case gfx::shader::basic_field_type::Slider:
+	case streamfx::gfx::shader::basic_field_type::Slider:
 		return obs_properties_add_int_slider(props, key, name, min, max, step);
 	default:
-	case gfx::shader::basic_field_type::Input:
+	case streamfx::gfx::shader::basic_field_type::Input:
 		return obs_properties_add_int(props, key, name, min, max, step);
 	}
 }
 
-gfx::shader::int_parameter::int_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
+streamfx::gfx::shader::int_parameter::int_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
 	: basic_parameter(param, prefix)
 {
 	_data.resize(get_size());
@@ -375,9 +377,9 @@ gfx::shader::int_parameter::int_parameter(streamfx::obs::gs::effect_parameter pa
 	}
 }
 
-gfx::shader::int_parameter::~int_parameter() {}
+streamfx::gfx::shader::int_parameter::~int_parameter() {}
 
-void gfx::shader::int_parameter::defaults(obs_data_t* settings)
+void streamfx::gfx::shader::int_parameter::defaults(obs_data_t* settings)
 {
 	std::vector<int32_t> defaults;
 	defaults.resize(get_size());
@@ -387,7 +389,7 @@ void gfx::shader::int_parameter::defaults(obs_data_t* settings)
 	}
 }
 
-void gfx::shader::int_parameter::properties(obs_properties_t* props, obs_data_t* settings)
+void streamfx::gfx::shader::int_parameter::properties(obs_properties_t* props, obs_data_t* settings)
 {
 	if (!is_visible())
 		return;
@@ -410,14 +412,14 @@ void gfx::shader::int_parameter::properties(obs_properties_t* props, obs_data_t*
 	}
 }
 
-void gfx::shader::int_parameter::update(obs_data_t* settings)
+void streamfx::gfx::shader::int_parameter::update(obs_data_t* settings)
 {
 	for (std::size_t idx = 0; idx < get_size(); idx++) {
 		_data[idx].i32 = static_cast<int32_t>(obs_data_get_int(settings, key_at(idx).data()) * _scale[idx].i32);
 	}
 }
 
-void gfx::shader::int_parameter::assign()
+void streamfx::gfx::shader::int_parameter::assign()
 {
 	if (is_automatic())
 		return;

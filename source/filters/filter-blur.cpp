@@ -81,26 +81,26 @@ using namespace streamfx::filter::blur;
 static constexpr std::string_view HELP_URL = "https://github.com/Xaymar/obs-StreamFX/wiki/Filter-Blur";
 
 struct local_blur_type_t {
-	std::function<::gfx::blur::ifactory&()> fn;
-	const char*                             name;
+	std::function<::streamfx::gfx::blur::ifactory&()> fn;
+	const char*                                       name;
 };
 struct local_blur_subtype_t {
-	::gfx::blur::type type;
-	const char*       name;
+	::streamfx::gfx::blur::type type;
+	const char*                 name;
 };
 
 static std::map<std::string, local_blur_type_t> list_of_types = {
-	{"box", {&::gfx::blur::box_factory::get, S_BLUR_TYPE_BOX}},
-	{"box_linear", {&::gfx::blur::box_linear_factory::get, S_BLUR_TYPE_BOX_LINEAR}},
-	{"gaussian", {&::gfx::blur::gaussian_factory::get, S_BLUR_TYPE_GAUSSIAN}},
-	{"gaussian_linear", {&::gfx::blur::gaussian_linear_factory::get, S_BLUR_TYPE_GAUSSIAN_LINEAR}},
-	{"dual_filtering", {&::gfx::blur::dual_filtering_factory::get, S_BLUR_TYPE_DUALFILTERING}},
+	{"box", {&::streamfx::gfx::blur::box_factory::get, S_BLUR_TYPE_BOX}},
+	{"box_linear", {&::streamfx::gfx::blur::box_linear_factory::get, S_BLUR_TYPE_BOX_LINEAR}},
+	{"gaussian", {&::streamfx::gfx::blur::gaussian_factory::get, S_BLUR_TYPE_GAUSSIAN}},
+	{"gaussian_linear", {&::streamfx::gfx::blur::gaussian_linear_factory::get, S_BLUR_TYPE_GAUSSIAN_LINEAR}},
+	{"dual_filtering", {&::streamfx::gfx::blur::dual_filtering_factory::get, S_BLUR_TYPE_DUALFILTERING}},
 };
 static std::map<std::string, local_blur_subtype_t> list_of_subtypes = {
-	{"area", {::gfx::blur::type::Area, S_BLUR_SUBTYPE_AREA}},
-	{"directional", {::gfx::blur::type::Directional, S_BLUR_SUBTYPE_DIRECTIONAL}},
-	{"rotational", {::gfx::blur::type::Rotational, S_BLUR_SUBTYPE_ROTATIONAL}},
-	{"zoom", {::gfx::blur::type::Zoom, S_BLUR_SUBTYPE_ZOOM}},
+	{"area", {::streamfx::gfx::blur::type::Area, S_BLUR_SUBTYPE_AREA}},
+	{"directional", {::streamfx::gfx::blur::type::Directional, S_BLUR_SUBTYPE_DIRECTIONAL}},
+	{"rotational", {::streamfx::gfx::blur::type::Rotational, S_BLUR_SUBTYPE_ROTATIONAL}},
+	{"zoom", {::streamfx::gfx::blur::type::Zoom, S_BLUR_SUBTYPE_ZOOM}},
 };
 
 blur_instance::blur_instance(obs_data_t* settings, obs_source_t* self)
@@ -313,13 +313,14 @@ void blur_instance::video_tick(float)
 		} else {
 			_blur->set_step_scale(1.0, 1.0);
 		}
-		if ((_blur->get_type() == ::gfx::blur::type::Directional)
-			|| (_blur->get_type() == ::gfx::blur::type::Rotational)) {
-			auto obj = std::dynamic_pointer_cast<::gfx::blur::base_angle>(_blur);
+		if ((_blur->get_type() == ::streamfx::gfx::blur::type::Directional)
+			|| (_blur->get_type() == ::streamfx::gfx::blur::type::Rotational)) {
+			auto obj = std::dynamic_pointer_cast<::streamfx::gfx::blur::base_angle>(_blur);
 			obj->set_angle(_blur_angle);
 		}
-		if ((_blur->get_type() == ::gfx::blur::type::Zoom) || (_blur->get_type() == ::gfx::blur::type::Rotational)) {
-			auto obj = std::dynamic_pointer_cast<::gfx::blur::base_center>(_blur);
+		if ((_blur->get_type() == ::streamfx::gfx::blur::type::Zoom)
+			|| (_blur->get_type() == ::streamfx::gfx::blur::type::Rotational)) {
+			auto obj = std::dynamic_pointer_cast<::streamfx::gfx::blur::base_center>(_blur);
 			obj->set_center(_blur_center.first, _blur_center.second);
 		}
 	}
@@ -338,7 +339,7 @@ void blur_instance::video_tick(float)
 	} else if (_mask.type == mask_type::Source) {
 		if (_mask.source.name_old != _mask.source.name) {
 			try {
-				_mask.source.source_texture = std::make_shared<gfx::source_texture>(_mask.source.name, _self);
+				_mask.source.source_texture = std::make_shared<streamfx::gfx::source_texture>(_mask.source.name, _self);
 				_mask.source.is_scene = (obs_scene_from_source(_mask.source.source_texture->get_object()) != nullptr);
 				_mask.source.name_old = _mask.source.name;
 			} catch (...) {
@@ -672,10 +673,10 @@ try {
 
 	// Blur Sub-Type
 	{
-		bool has_angle_support = (subtype_found->second.type == ::gfx::blur::type::Directional)
-								 || (subtype_found->second.type == ::gfx::blur::type::Rotational);
-		bool has_center_support = (subtype_found->second.type == ::gfx::blur::type::Rotational)
-								  || (subtype_found->second.type == ::gfx::blur::type::Zoom);
+		bool has_angle_support = (subtype_found->second.type == ::streamfx::gfx::blur::type::Directional)
+								 || (subtype_found->second.type == ::streamfx::gfx::blur::type::Rotational);
+		bool has_center_support = (subtype_found->second.type == ::streamfx::gfx::blur::type::Rotational)
+								  || (subtype_found->second.type == ::streamfx::gfx::blur::type::Zoom);
 		bool has_stepscale_support = type_found->second.fn().is_step_scale_supported(subtype_found->second.type);
 		bool show_scaling          = obs_data_get_bool(settings, ST_STEPSCALE) && has_stepscale_support;
 
@@ -711,7 +712,7 @@ try {
 	}
 
 	{ // Masking
-		using namespace ::gfx::blur;
+		using namespace ::streamfx::gfx::blur;
 		bool      show_mask   = obs_data_get_bool(settings, ST_MASK);
 		mask_type mtype       = static_cast<mask_type>(obs_data_get_int(settings, ST_MASK_TYPE));
 		bool      show_region = (mtype == mask_type::Region) && show_mask;

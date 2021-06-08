@@ -48,9 +48,9 @@
 //   7: 3 Iteration (8x), Arm Size 8, Offset Scale 1.0
 //   ...
 
-#define MAX_LEVELS 16
+#define ST_MAX_LEVELS 16
 
-gfx::blur::dual_filtering_data::dual_filtering_data()
+streamfx::gfx::blur::dual_filtering_data::dual_filtering_data()
 {
 	auto gctx = streamfx::obs::gs::context();
 	try {
@@ -61,129 +61,130 @@ gfx::blur::dual_filtering_data::dual_filtering_data()
 	}
 }
 
-gfx::blur::dual_filtering_data::~dual_filtering_data()
+streamfx::gfx::blur::dual_filtering_data::~dual_filtering_data()
 {
 	auto gctx = streamfx::obs::gs::context();
 	_effect.reset();
 }
 
-streamfx::obs::gs::effect gfx::blur::dual_filtering_data::get_effect()
+streamfx::obs::gs::effect streamfx::gfx::blur::dual_filtering_data::get_effect()
 {
 	return _effect;
 }
 
-gfx::blur::dual_filtering_factory::dual_filtering_factory() {}
+streamfx::gfx::blur::dual_filtering_factory::dual_filtering_factory() {}
 
-gfx::blur::dual_filtering_factory::~dual_filtering_factory() {}
+streamfx::gfx::blur::dual_filtering_factory::~dual_filtering_factory() {}
 
-bool gfx::blur::dual_filtering_factory::is_type_supported(::gfx::blur::type type)
+bool streamfx::gfx::blur::dual_filtering_factory::is_type_supported(::streamfx::gfx::blur::type type)
 {
 	switch (type) {
-	case ::gfx::blur::type::Area:
+	case ::streamfx::gfx::blur::type::Area:
 		return true;
 	default:
 		return false;
 	}
 }
 
-std::shared_ptr<::gfx::blur::base> gfx::blur::dual_filtering_factory::create(::gfx::blur::type type)
+std::shared_ptr<::streamfx::gfx::blur::base>
+	streamfx::gfx::blur::dual_filtering_factory::create(::streamfx::gfx::blur::type type)
 {
 	switch (type) {
-	case ::gfx::blur::type::Area:
-		return std::make_shared<::gfx::blur::dual_filtering>();
+	case ::streamfx::gfx::blur::type::Area:
+		return std::make_shared<::streamfx::gfx::blur::dual_filtering>();
 	default:
 		throw std::runtime_error("Invalid type.");
 	}
 }
 
-double_t gfx::blur::dual_filtering_factory::get_min_size(::gfx::blur::type)
+double_t streamfx::gfx::blur::dual_filtering_factory::get_min_size(::streamfx::gfx::blur::type)
 {
 	return double_t(1.);
 }
 
-double_t gfx::blur::dual_filtering_factory::get_step_size(::gfx::blur::type)
+double_t streamfx::gfx::blur::dual_filtering_factory::get_step_size(::streamfx::gfx::blur::type)
 {
 	return double_t(1.);
 }
 
-double_t gfx::blur::dual_filtering_factory::get_max_size(::gfx::blur::type)
+double_t streamfx::gfx::blur::dual_filtering_factory::get_max_size(::streamfx::gfx::blur::type)
 {
-	return double_t(MAX_LEVELS);
+	return double_t(ST_MAX_LEVELS);
 }
 
-double_t gfx::blur::dual_filtering_factory::get_min_angle(::gfx::blur::type)
-{
-	return double_t(0);
-}
-
-double_t gfx::blur::dual_filtering_factory::get_step_angle(::gfx::blur::type)
+double_t streamfx::gfx::blur::dual_filtering_factory::get_min_angle(::streamfx::gfx::blur::type)
 {
 	return double_t(0);
 }
 
-double_t gfx::blur::dual_filtering_factory::get_max_angle(::gfx::blur::type)
+double_t streamfx::gfx::blur::dual_filtering_factory::get_step_angle(::streamfx::gfx::blur::type)
 {
 	return double_t(0);
 }
 
-bool gfx::blur::dual_filtering_factory::is_step_scale_supported(::gfx::blur::type)
+double_t streamfx::gfx::blur::dual_filtering_factory::get_max_angle(::streamfx::gfx::blur::type)
+{
+	return double_t(0);
+}
+
+bool streamfx::gfx::blur::dual_filtering_factory::is_step_scale_supported(::streamfx::gfx::blur::type)
 {
 	return false;
 }
 
-double_t gfx::blur::dual_filtering_factory::get_min_step_scale_x(::gfx::blur::type)
+double_t streamfx::gfx::blur::dual_filtering_factory::get_min_step_scale_x(::streamfx::gfx::blur::type)
 {
 	return double_t(0);
 }
 
-double_t gfx::blur::dual_filtering_factory::get_step_step_scale_x(::gfx::blur::type)
+double_t streamfx::gfx::blur::dual_filtering_factory::get_step_step_scale_x(::streamfx::gfx::blur::type)
 {
 	return double_t(0);
 }
 
-double_t gfx::blur::dual_filtering_factory::get_max_step_scale_x(::gfx::blur::type)
+double_t streamfx::gfx::blur::dual_filtering_factory::get_max_step_scale_x(::streamfx::gfx::blur::type)
 {
 	return double_t(0);
 }
 
-double_t gfx::blur::dual_filtering_factory::get_min_step_scale_y(::gfx::blur::type)
+double_t streamfx::gfx::blur::dual_filtering_factory::get_min_step_scale_y(::streamfx::gfx::blur::type)
 {
 	return double_t(0);
 }
 
-double_t gfx::blur::dual_filtering_factory::get_step_step_scale_y(::gfx::blur::type)
+double_t streamfx::gfx::blur::dual_filtering_factory::get_step_step_scale_y(::streamfx::gfx::blur::type)
 {
 	return double_t(0);
 }
 
-double_t gfx::blur::dual_filtering_factory::get_max_step_scale_y(::gfx::blur::type)
+double_t streamfx::gfx::blur::dual_filtering_factory::get_max_step_scale_y(::streamfx::gfx::blur::type)
 {
 	return double_t(0);
 }
 
-std::shared_ptr<::gfx::blur::dual_filtering_data> gfx::blur::dual_filtering_factory::data()
+std::shared_ptr<::streamfx::gfx::blur::dual_filtering_data> streamfx::gfx::blur::dual_filtering_factory::data()
 {
-	std::unique_lock<std::mutex>                      ulock(_data_lock);
-	std::shared_ptr<::gfx::blur::dual_filtering_data> data = _data.lock();
+	std::unique_lock<std::mutex>                                ulock(_data_lock);
+	std::shared_ptr<::streamfx::gfx::blur::dual_filtering_data> data = _data.lock();
 	if (!data) {
-		data  = std::make_shared<::gfx::blur::dual_filtering_data>();
+		data  = std::make_shared<::streamfx::gfx::blur::dual_filtering_data>();
 		_data = data;
 	}
 	return data;
 }
 
-::gfx::blur::dual_filtering_factory& gfx::blur::dual_filtering_factory::get()
+::streamfx::gfx::blur::dual_filtering_factory& streamfx::gfx::blur::dual_filtering_factory::get()
 {
-	static ::gfx::blur::dual_filtering_factory instance;
+	static ::streamfx::gfx::blur::dual_filtering_factory instance;
 	return instance;
 }
 
-gfx::blur::dual_filtering::dual_filtering()
-	: _data(::gfx::blur::dual_filtering_factory::get().data()), _size(0), _size_iterations(0)
+streamfx::gfx::blur::dual_filtering::dual_filtering()
+	: _data(::streamfx::gfx::blur::dual_filtering_factory::get().data()), _size(0), _size_iterations(0)
 {
 	auto gctx = streamfx::obs::gs::context();
-	_rts.resize(MAX_LEVELS + 1);
-	for (std::size_t n = 0; n <= MAX_LEVELS; n++) {
+	_rts.resize(ST_MAX_LEVELS + 1);
+	for (std::size_t n = 0; n <= ST_MAX_LEVELS; n++) {
 		gs_color_format cf = GS_RGBA;
 #if 0
 		cf = GS_RGBA16F;
@@ -194,37 +195,37 @@ gfx::blur::dual_filtering::dual_filtering()
 	}
 }
 
-gfx::blur::dual_filtering::~dual_filtering() {}
+streamfx::gfx::blur::dual_filtering::~dual_filtering() {}
 
-void gfx::blur::dual_filtering::set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture)
+void streamfx::gfx::blur::dual_filtering::set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture)
 {
 	_input_texture = texture;
 }
 
-::gfx::blur::type gfx::blur::dual_filtering::get_type()
+::streamfx::gfx::blur::type streamfx::gfx::blur::dual_filtering::get_type()
 {
-	return ::gfx::blur::type::Area;
+	return ::streamfx::gfx::blur::type::Area;
 }
 
-double_t gfx::blur::dual_filtering::get_size()
+double_t streamfx::gfx::blur::dual_filtering::get_size()
 {
 	return _size;
 }
 
-void gfx::blur::dual_filtering::set_size(double_t width)
+void streamfx::gfx::blur::dual_filtering::set_size(double_t width)
 {
 	_size            = width;
 	_size_iterations = size_t(round(width));
-	if (_size_iterations >= MAX_LEVELS) {
-		_size_iterations = MAX_LEVELS;
+	if (_size_iterations >= ST_MAX_LEVELS) {
+		_size_iterations = ST_MAX_LEVELS;
 	}
 }
 
-void gfx::blur::dual_filtering::set_step_scale(double_t, double_t) {}
+void streamfx::gfx::blur::dual_filtering::set_step_scale(double_t, double_t) {}
 
-void gfx::blur::dual_filtering::get_step_scale(double_t&, double_t&) {}
+void streamfx::gfx::blur::dual_filtering::get_step_scale(double_t&, double_t&) {}
 
-std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::dual_filtering::render()
+std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::dual_filtering::render()
 {
 	auto gctx = streamfx::obs::gs::context();
 
@@ -327,7 +328,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::dual_filtering::render(
 	return _rts[0]->get_texture();
 }
 
-std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::dual_filtering::get()
+std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::dual_filtering::get()
 {
 	return _rts[0]->get_texture();
 }

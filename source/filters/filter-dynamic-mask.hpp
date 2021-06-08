@@ -40,12 +40,12 @@ namespace streamfx::filter::dynamic_mask {
 		std::shared_ptr<streamfx::obs::gs::rendertarget> _filter_rt;
 		std::shared_ptr<streamfx::obs::gs::texture>      _filter_texture;
 
-		bool                                        _have_input_texture;
-		std::shared_ptr<obs::deprecated_source>     _input;
-		std::shared_ptr<gfx::source_texture>        _input_capture;
-		std::shared_ptr<streamfx::obs::gs::texture> _input_texture;
-		std::shared_ptr<obs::tools::visible_source> _input_vs;
-		std::shared_ptr<obs::tools::active_source>  _input_ac;
+		bool                                           _have_input_texture;
+		std::shared_ptr<obs::deprecated_source>        _input;
+		std::shared_ptr<streamfx::gfx::source_texture> _input_capture;
+		std::shared_ptr<streamfx::obs::gs::texture>    _input_texture;
+		std::shared_ptr<obs::tools::visible_source>    _input_vs;
+		std::shared_ptr<obs::tools::active_source>     _input_ac;
 
 		bool                                             _have_final_texture;
 		std::shared_ptr<streamfx::obs::gs::rendertarget> _final_rt;

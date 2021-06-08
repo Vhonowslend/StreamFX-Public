@@ -33,29 +33,29 @@
 //  function first goes up at the point, and then once we pass the critical point
 //  will go down again and it is not handled well. This is a pretty basic
 //  approximation anyway at the moment.
-#define MAX_KERNEL_SIZE 128
-#define MAX_BLUR_SIZE (MAX_KERNEL_SIZE - 1)
-#define SEARCH_DENSITY double_t(1. / 500.)
-#define SEARCH_THRESHOLD double_t(1. / (MAX_KERNEL_SIZE * 5))
-#define SEARCH_EXTENSION 1
-#define SEARCH_RANGE MAX_KERNEL_SIZE * 2
+#define ST_MAX_KERNEL_SIZE 128
+#define ST_MAX_BLUR_SIZE (ST_MAX_KERNEL_SIZE - 1)
+#define ST_SEARCH_DENSITY double_t(1. / 500.)
+#define ST_SEARCH_THRESHOLD double_t(1. / (ST_MAX_KERNEL_SIZE * 5))
+#define ST_SEARCH_EXTENSION 1
+#define ST_SEARCH_RANGE ST_MAX_KERNEL_SIZE * 2
 
-gfx::blur::gaussian_linear_data::gaussian_linear_data()
+streamfx::gfx::blur::gaussian_linear_data::gaussian_linear_data()
 {
 	auto gctx = streamfx::obs::gs::context();
 	_effect =
 		streamfx::obs::gs::effect::create(streamfx::data_file_path("effects/blur/gaussian-linear.effect").u8string());
 
 	// Precalculate Kernels
-	for (std::size_t kernel_size = 1; kernel_size <= MAX_BLUR_SIZE; kernel_size++) {
-		std::vector<double_t> kernel_math(MAX_KERNEL_SIZE);
-		std::vector<float_t>  kernel_data(MAX_KERNEL_SIZE);
+	for (std::size_t kernel_size = 1; kernel_size <= ST_MAX_BLUR_SIZE; kernel_size++) {
+		std::vector<double_t> kernel_math(ST_MAX_KERNEL_SIZE);
+		std::vector<float_t>  kernel_data(ST_MAX_KERNEL_SIZE);
 		double_t              actual_width = 1.;
 
 		// Find actual kernel width.
-		for (double_t h = SEARCH_DENSITY; h < SEARCH_RANGE; h += SEARCH_DENSITY) {
-			if (streamfx::util::math::gaussian<double_t>(double_t(kernel_size + SEARCH_EXTENSION), h)
-				> SEARCH_THRESHOLD) {
+		for (double_t h = ST_SEARCH_DENSITY; h < ST_SEARCH_RANGE; h += ST_SEARCH_DENSITY) {
+			if (streamfx::util::math::gaussian<double_t>(double_t(kernel_size + ST_SEARCH_EXTENSION), h)
+				> ST_SEARCH_THRESHOLD) {
 				actual_width = h;
 				break;
 			}
@@ -78,158 +78,159 @@ gfx::blur::gaussian_linear_data::gaussian_linear_data()
 	}
 }
 
-gfx::blur::gaussian_linear_data::~gaussian_linear_data()
+streamfx::gfx::blur::gaussian_linear_data::~gaussian_linear_data()
 {
 	_effect.reset();
 }
 
-streamfx::obs::gs::effect gfx::blur::gaussian_linear_data::get_effect()
+streamfx::obs::gs::effect streamfx::gfx::blur::gaussian_linear_data::get_effect()
 {
 	return _effect;
 }
 
-std::vector<float_t> const& gfx::blur::gaussian_linear_data::get_kernel(std::size_t width)
+std::vector<float_t> const& streamfx::gfx::blur::gaussian_linear_data::get_kernel(std::size_t width)
 {
 	if (width < 1)
 		width = 1;
-	if (width > MAX_BLUR_SIZE)
-		width = MAX_BLUR_SIZE;
+	if (width > ST_MAX_BLUR_SIZE)
+		width = ST_MAX_BLUR_SIZE;
 	width -= 1;
 	return _kernels[width];
 }
 
-gfx::blur::gaussian_linear_factory::gaussian_linear_factory() {}
+streamfx::gfx::blur::gaussian_linear_factory::gaussian_linear_factory() {}
 
-gfx::blur::gaussian_linear_factory::~gaussian_linear_factory() {}
+streamfx::gfx::blur::gaussian_linear_factory::~gaussian_linear_factory() {}
 
-bool gfx::blur::gaussian_linear_factory::is_type_supported(::gfx::blur::type v)
+bool streamfx::gfx::blur::gaussian_linear_factory::is_type_supported(::streamfx::gfx::blur::type v)
 {
 	switch (v) {
-	case ::gfx::blur::type::Area:
+	case ::streamfx::gfx::blur::type::Area:
 		return true;
-	case ::gfx::blur::type::Directional:
+	case ::streamfx::gfx::blur::type::Directional:
 		return true;
 	default:
 		return false;
 	}
 }
 
-std::shared_ptr<::gfx::blur::base> gfx::blur::gaussian_linear_factory::create(::gfx::blur::type v)
+std::shared_ptr<::streamfx::gfx::blur::base>
+	streamfx::gfx::blur::gaussian_linear_factory::create(::streamfx::gfx::blur::type v)
 {
 	switch (v) {
-	case ::gfx::blur::type::Area:
-		return std::make_shared<::gfx::blur::gaussian_linear>();
-	case ::gfx::blur::type::Directional:
-		return std::static_pointer_cast<::gfx::blur::gaussian_linear>(
-			std::make_shared<::gfx::blur::gaussian_linear_directional>());
+	case ::streamfx::gfx::blur::type::Area:
+		return std::make_shared<::streamfx::gfx::blur::gaussian_linear>();
+	case ::streamfx::gfx::blur::type::Directional:
+		return std::static_pointer_cast<::streamfx::gfx::blur::gaussian_linear>(
+			std::make_shared<::streamfx::gfx::blur::gaussian_linear_directional>());
 	default:
 		throw std::runtime_error("Invalid type.");
 	}
 }
 
-double_t gfx::blur::gaussian_linear_factory::get_min_size(::gfx::blur::type)
+double_t streamfx::gfx::blur::gaussian_linear_factory::get_min_size(::streamfx::gfx::blur::type)
 {
 	return double_t(1.0);
 }
 
-double_t gfx::blur::gaussian_linear_factory::get_step_size(::gfx::blur::type)
+double_t streamfx::gfx::blur::gaussian_linear_factory::get_step_size(::streamfx::gfx::blur::type)
 {
 	return double_t(1.0);
 }
 
-double_t gfx::blur::gaussian_linear_factory::get_max_size(::gfx::blur::type)
+double_t streamfx::gfx::blur::gaussian_linear_factory::get_max_size(::streamfx::gfx::blur::type)
 {
-	return double_t(MAX_BLUR_SIZE);
+	return double_t(ST_MAX_BLUR_SIZE);
 }
 
-double_t gfx::blur::gaussian_linear_factory::get_min_angle(::gfx::blur::type v)
+double_t streamfx::gfx::blur::gaussian_linear_factory::get_min_angle(::streamfx::gfx::blur::type v)
 {
 	switch (v) {
-	case ::gfx::blur::type::Directional:
-	case ::gfx::blur::type::Rotational:
+	case ::streamfx::gfx::blur::type::Directional:
+	case ::streamfx::gfx::blur::type::Rotational:
 		return -180.0;
 	default:
 		return 0;
 	}
 }
 
-double_t gfx::blur::gaussian_linear_factory::get_step_angle(::gfx::blur::type)
+double_t streamfx::gfx::blur::gaussian_linear_factory::get_step_angle(::streamfx::gfx::blur::type)
 {
 	return double_t(0.01);
 }
 
-double_t gfx::blur::gaussian_linear_factory::get_max_angle(::gfx::blur::type v)
+double_t streamfx::gfx::blur::gaussian_linear_factory::get_max_angle(::streamfx::gfx::blur::type v)
 {
 	switch (v) {
-	case ::gfx::blur::type::Directional:
-	case ::gfx::blur::type::Rotational:
+	case ::streamfx::gfx::blur::type::Directional:
+	case ::streamfx::gfx::blur::type::Rotational:
 		return 180.0;
 	default:
 		return 0;
 	}
 }
 
-bool gfx::blur::gaussian_linear_factory::is_step_scale_supported(::gfx::blur::type v)
+bool streamfx::gfx::blur::gaussian_linear_factory::is_step_scale_supported(::streamfx::gfx::blur::type v)
 {
 	switch (v) {
-	case ::gfx::blur::type::Area:
-	case ::gfx::blur::type::Zoom:
-	case ::gfx::blur::type::Directional:
+	case ::streamfx::gfx::blur::type::Area:
+	case ::streamfx::gfx::blur::type::Zoom:
+	case ::streamfx::gfx::blur::type::Directional:
 		return true;
 	default:
 		return false;
 	}
 }
 
-double_t gfx::blur::gaussian_linear_factory::get_min_step_scale_x(::gfx::blur::type)
+double_t streamfx::gfx::blur::gaussian_linear_factory::get_min_step_scale_x(::streamfx::gfx::blur::type)
 {
 	return double_t(0.01);
 }
 
-double_t gfx::blur::gaussian_linear_factory::get_step_step_scale_x(::gfx::blur::type)
+double_t streamfx::gfx::blur::gaussian_linear_factory::get_step_step_scale_x(::streamfx::gfx::blur::type)
 {
 	return double_t(0.01);
 }
 
-double_t gfx::blur::gaussian_linear_factory::get_max_step_scale_x(::gfx::blur::type)
+double_t streamfx::gfx::blur::gaussian_linear_factory::get_max_step_scale_x(::streamfx::gfx::blur::type)
 {
 	return double_t(1000.0);
 }
 
-double_t gfx::blur::gaussian_linear_factory::get_min_step_scale_y(::gfx::blur::type)
+double_t streamfx::gfx::blur::gaussian_linear_factory::get_min_step_scale_y(::streamfx::gfx::blur::type)
 {
 	return double_t(0.01);
 }
 
-double_t gfx::blur::gaussian_linear_factory::get_step_step_scale_y(::gfx::blur::type)
+double_t streamfx::gfx::blur::gaussian_linear_factory::get_step_step_scale_y(::streamfx::gfx::blur::type)
 {
 	return double_t(0.01);
 }
 
-double_t gfx::blur::gaussian_linear_factory::get_max_step_scale_y(::gfx::blur::type)
+double_t streamfx::gfx::blur::gaussian_linear_factory::get_max_step_scale_y(::streamfx::gfx::blur::type)
 {
 	return double_t(1000.0);
 }
 
-std::shared_ptr<::gfx::blur::gaussian_linear_data> gfx::blur::gaussian_linear_factory::data()
+std::shared_ptr<::streamfx::gfx::blur::gaussian_linear_data> streamfx::gfx::blur::gaussian_linear_factory::data()
 {
-	std::unique_lock<std::mutex>                       ulock(_data_lock);
-	std::shared_ptr<::gfx::blur::gaussian_linear_data> data = _data.lock();
+	std::unique_lock<std::mutex>                                 ulock(_data_lock);
+	std::shared_ptr<::streamfx::gfx::blur::gaussian_linear_data> data = _data.lock();
 	if (!data) {
-		data  = std::make_shared<::gfx::blur::gaussian_linear_data>();
+		data  = std::make_shared<::streamfx::gfx::blur::gaussian_linear_data>();
 		_data = data;
 	}
 	return data;
 }
 
-::gfx::blur::gaussian_linear_factory& gfx::blur::gaussian_linear_factory::get()
+::streamfx::gfx::blur::gaussian_linear_factory& streamfx::gfx::blur::gaussian_linear_factory::get()
 {
-	static ::gfx::blur::gaussian_linear_factory instance;
+	static ::streamfx::gfx::blur::gaussian_linear_factory instance;
 	return instance;
 }
 
-gfx::blur::gaussian_linear::gaussian_linear()
-	: _data(::gfx::blur::gaussian_linear_factory::get().data()), _size(1.), _step_scale({1., 1.})
+streamfx::gfx::blur::gaussian_linear::gaussian_linear()
+	: _data(::streamfx::gfx::blur::gaussian_linear_factory::get().data()), _size(1.), _step_scale({1., 1.})
 {
 	auto gctx = streamfx::obs::gs::context();
 
@@ -237,55 +238,55 @@ gfx::blur::gaussian_linear::gaussian_linear()
 	_rendertarget2 = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
-gfx::blur::gaussian_linear::~gaussian_linear() {}
+streamfx::gfx::blur::gaussian_linear::~gaussian_linear() {}
 
-void gfx::blur::gaussian_linear::set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture)
+void streamfx::gfx::blur::gaussian_linear::set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture)
 {
 	_input_texture = texture;
 }
 
-::gfx::blur::type gfx::blur::gaussian_linear::get_type()
+::streamfx::gfx::blur::type streamfx::gfx::blur::gaussian_linear::get_type()
 {
-	return ::gfx::blur::type::Area;
+	return ::streamfx::gfx::blur::type::Area;
 }
 
-double_t gfx::blur::gaussian_linear::get_size()
+double_t streamfx::gfx::blur::gaussian_linear::get_size()
 {
 	return _size;
 }
 
-void gfx::blur::gaussian_linear::set_size(double_t width)
+void streamfx::gfx::blur::gaussian_linear::set_size(double_t width)
 {
 	if (width < 1.)
 		width = 1.;
-	if (width > MAX_BLUR_SIZE)
-		width = MAX_BLUR_SIZE;
+	if (width > ST_MAX_BLUR_SIZE)
+		width = ST_MAX_BLUR_SIZE;
 	_size = width;
 }
 
-void gfx::blur::gaussian_linear::set_step_scale(double_t x, double_t y)
+void streamfx::gfx::blur::gaussian_linear::set_step_scale(double_t x, double_t y)
 {
 	_step_scale.first  = x;
 	_step_scale.second = y;
 }
 
-void gfx::blur::gaussian_linear::get_step_scale(double_t& x, double_t& y)
+void streamfx::gfx::blur::gaussian_linear::get_step_scale(double_t& x, double_t& y)
 {
 	x = _step_scale.first;
 	y = _step_scale.second;
 }
 
-double_t gfx::blur::gaussian_linear::get_step_scale_x()
+double_t streamfx::gfx::blur::gaussian_linear::get_step_scale_x()
 {
 	return _step_scale.first;
 }
 
-double_t gfx::blur::gaussian_linear::get_step_scale_y()
+double_t streamfx::gfx::blur::gaussian_linear::get_step_scale_y()
 {
 	return _step_scale.second;
 }
 
-std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::gaussian_linear::render()
+std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_linear::render()
 {
 	auto gctx = streamfx::obs::gs::context();
 
@@ -320,7 +321,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::gaussian_linear::render
 	effect.get_parameter("pImage").set_texture(_input_texture);
 	effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
 	effect.get_parameter("pSize").set_float(float_t(_size));
-	effect.get_parameter("pKernel").set_value(kernel.data(), MAX_KERNEL_SIZE);
+	effect.get_parameter("pKernel").set_value(kernel.data(), ST_MAX_KERNEL_SIZE);
 
 	// First Pass
 	if (_step_scale.first > std::numeric_limits<double_t>::epsilon()) {
@@ -366,31 +367,31 @@ std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::gaussian_linear::render
 	return this->get();
 }
 
-std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::gaussian_linear::get()
+std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_linear::get()
 {
 	return _rendertarget->get_texture();
 }
 
-gfx::blur::gaussian_linear_directional::gaussian_linear_directional() : _angle(0.) {}
+streamfx::gfx::blur::gaussian_linear_directional::gaussian_linear_directional() : _angle(0.) {}
 
-gfx::blur::gaussian_linear_directional::~gaussian_linear_directional() {}
+streamfx::gfx::blur::gaussian_linear_directional::~gaussian_linear_directional() {}
 
-::gfx::blur::type gfx::blur::gaussian_linear_directional::get_type()
+::streamfx::gfx::blur::type streamfx::gfx::blur::gaussian_linear_directional::get_type()
 {
-	return ::gfx::blur::type::Directional;
+	return ::streamfx::gfx::blur::type::Directional;
 }
 
-double_t gfx::blur::gaussian_linear_directional::get_angle()
+double_t streamfx::gfx::blur::gaussian_linear_directional::get_angle()
 {
 	return D_RAD_TO_DEG(_angle);
 }
 
-void gfx::blur::gaussian_linear_directional::set_angle(double_t angle)
+void streamfx::gfx::blur::gaussian_linear_directional::set_angle(double_t angle)
 {
 	_angle = D_DEG_TO_RAD(angle);
 }
 
-std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::gaussian_linear_directional::render()
+std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_linear_directional::render()
 {
 	auto gctx = streamfx::obs::gs::context();
 
@@ -428,7 +429,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::gaussian_linear_directi
 		.set_float2(float_t(1.f / width * cos(_angle)), float_t(1.f / height * sin(_angle)));
 	effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
 	effect.get_parameter("pSize").set_float(float_t(_size));
-	effect.get_parameter("pKernel").set_value(kernel.data(), MAX_KERNEL_SIZE);
+	effect.get_parameter("pKernel").set_value(kernel.data(), ST_MAX_KERNEL_SIZE);
 
 	// First Pass
 	{

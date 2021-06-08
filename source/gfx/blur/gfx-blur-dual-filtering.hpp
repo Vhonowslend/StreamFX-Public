@@ -24,7 +24,7 @@
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
 
-namespace gfx {
+namespace streamfx::gfx {
 	namespace blur {
 		class dual_filtering_data {
 			streamfx::obs::gs::effect _effect;
@@ -36,52 +36,52 @@ namespace gfx {
 			streamfx::obs::gs::effect get_effect();
 		};
 
-		class dual_filtering_factory : public ::gfx::blur::ifactory {
-			std::mutex                                      _data_lock;
-			std::weak_ptr<::gfx::blur::dual_filtering_data> _data;
+		class dual_filtering_factory : public ::streamfx::gfx::blur::ifactory {
+			std::mutex                                                _data_lock;
+			std::weak_ptr<::streamfx::gfx::blur::dual_filtering_data> _data;
 
 			public:
 			dual_filtering_factory();
 			virtual ~dual_filtering_factory() override;
 
-			virtual bool is_type_supported(::gfx::blur::type type) override;
+			virtual bool is_type_supported(::streamfx::gfx::blur::type type) override;
 
-			virtual std::shared_ptr<::gfx::blur::base> create(::gfx::blur::type type) override;
+			virtual std::shared_ptr<::streamfx::gfx::blur::base> create(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_min_size(::gfx::blur::type type) override;
+			virtual double_t get_min_size(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_step_size(::gfx::blur::type type) override;
+			virtual double_t get_step_size(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_max_size(::gfx::blur::type type) override;
+			virtual double_t get_max_size(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_min_angle(::gfx::blur::type type) override;
+			virtual double_t get_min_angle(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_step_angle(::gfx::blur::type type) override;
+			virtual double_t get_step_angle(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_max_angle(::gfx::blur::type type) override;
+			virtual double_t get_max_angle(::streamfx::gfx::blur::type type) override;
 
-			virtual bool is_step_scale_supported(::gfx::blur::type type) override;
+			virtual bool is_step_scale_supported(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_min_step_scale_x(::gfx::blur::type type) override;
+			virtual double_t get_min_step_scale_x(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_step_step_scale_x(::gfx::blur::type type) override;
+			virtual double_t get_step_step_scale_x(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_max_step_scale_x(::gfx::blur::type type) override;
+			virtual double_t get_max_step_scale_x(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_min_step_scale_y(::gfx::blur::type type) override;
+			virtual double_t get_min_step_scale_y(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_step_step_scale_y(::gfx::blur::type type) override;
+			virtual double_t get_step_step_scale_y(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_max_step_scale_y(::gfx::blur::type type) override;
+			virtual double_t get_max_step_scale_y(::streamfx::gfx::blur::type type) override;
 
-			std::shared_ptr<::gfx::blur::dual_filtering_data> data();
+			std::shared_ptr<::streamfx::gfx::blur::dual_filtering_data> data();
 
 			public: // Singleton
-			static ::gfx::blur::dual_filtering_factory& get();
+			static ::streamfx::gfx::blur::dual_filtering_factory& get();
 		};
 
-		class dual_filtering : public ::gfx::blur::base {
-			std::shared_ptr<::gfx::blur::dual_filtering_data> _data;
+		class dual_filtering : public ::streamfx::gfx::blur::base {
+			std::shared_ptr<::streamfx::gfx::blur::dual_filtering_data> _data;
 
 			double_t    _size;
 			std::size_t _size_iterations;
@@ -96,7 +96,7 @@ namespace gfx {
 
 			virtual void set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture) override;
 
-			virtual ::gfx::blur::type get_type() override;
+			virtual ::streamfx::gfx::blur::type get_type() override;
 
 			virtual double_t get_size() override;
 
@@ -111,4 +111,4 @@ namespace gfx {
 			virtual std::shared_ptr<::streamfx::obs::gs::texture> get() override;
 		};
 	} // namespace blur
-} // namespace gfx
+} // namespace streamfx::gfx

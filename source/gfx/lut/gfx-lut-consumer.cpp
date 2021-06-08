@@ -22,17 +22,18 @@
 
 #include "obs/gs/gs-helper.hpp"
 
-gfx::lut::consumer::consumer()
+streamfx::gfx::lut::consumer::consumer()
 {
-	_data = gfx::lut::data::instance();
+	_data = streamfx::gfx::lut::data::instance();
 	if (!_data->consumer_effect())
 		throw std::runtime_error("Unable to get LUT consumer effect.");
 }
 
-gfx::lut::consumer::~consumer() {}
+streamfx::gfx::lut::consumer::~consumer() {}
 
-std::shared_ptr<streamfx::obs::gs::effect> gfx::lut::consumer::prepare(gfx::lut::color_depth depth,
-																	   std::shared_ptr<streamfx::obs::gs::texture> lut)
+std::shared_ptr<streamfx::obs::gs::effect>
+	streamfx::gfx::lut::consumer::prepare(streamfx::gfx::lut::color_depth             depth,
+										  std::shared_ptr<streamfx::obs::gs::texture> lut)
 {
 	auto gctx = streamfx::obs::gs::context();
 
@@ -62,8 +63,9 @@ std::shared_ptr<streamfx::obs::gs::effect> gfx::lut::consumer::prepare(gfx::lut:
 	return effect;
 }
 
-void gfx::lut::consumer::consume(gfx::lut::color_depth depth, std::shared_ptr<streamfx::obs::gs::texture> lut,
-								 std::shared_ptr<streamfx::obs::gs::texture> texture)
+void streamfx::gfx::lut::consumer::consume(streamfx::gfx::lut::color_depth             depth,
+										   std::shared_ptr<streamfx::obs::gs::texture> lut,
+										   std::shared_ptr<streamfx::obs::gs::texture> texture)
 {
 	auto gctx = streamfx::obs::gs::context();
 

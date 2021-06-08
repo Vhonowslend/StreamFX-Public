@@ -20,7 +20,7 @@
 #include <string>
 #include "obs/gs/gs-effect-parameter.hpp"
 
-namespace gfx {
+namespace streamfx::gfx {
 	namespace shader {
 		enum class parameter_type {
 			// Unknown type, could be anything.
@@ -141,4 +141,4 @@ namespace gfx {
 															 std::string                         prefix);
 		};
 	} // namespace shader
-} // namespace gfx
+} // namespace streamfx::gfx

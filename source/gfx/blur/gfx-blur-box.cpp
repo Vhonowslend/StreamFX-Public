@@ -32,9 +32,9 @@
 #pragma warning(pop)
 #endif
 
-#define MAX_BLUR_SIZE 128 // Also change this in box.effect if modified.
+#define ST_MAX_BLUR_SIZE 128 // Also change this in box.effect if modified.
 
-gfx::blur::box_data::box_data()
+streamfx::gfx::blur::box_data::box_data()
 {
 	auto gctx = streamfx::obs::gs::context();
 	try {
@@ -44,211 +44,213 @@ gfx::blur::box_data::box_data()
 	}
 }
 
-gfx::blur::box_data::~box_data()
+streamfx::gfx::blur::box_data::~box_data()
 {
 	auto gctx = streamfx::obs::gs::context();
 	_effect.reset();
 }
 
-streamfx::obs::gs::effect gfx::blur::box_data::get_effect()
+streamfx::obs::gs::effect streamfx::gfx::blur::box_data::get_effect()
 {
 	return _effect;
 }
 
-gfx::blur::box_factory::box_factory() {}
+streamfx::gfx::blur::box_factory::box_factory() {}
 
-gfx::blur::box_factory::~box_factory() {}
+streamfx::gfx::blur::box_factory::~box_factory() {}
 
-bool gfx::blur::box_factory::is_type_supported(::gfx::blur::type type)
+bool streamfx::gfx::blur::box_factory::is_type_supported(::streamfx::gfx::blur::type type)
 {
 	switch (type) {
-	case ::gfx::blur::type::Area:
+	case ::streamfx::gfx::blur::type::Area:
 		return true;
-	case ::gfx::blur::type::Directional:
+	case ::streamfx::gfx::blur::type::Directional:
 		return true;
-	case ::gfx::blur::type::Rotational:
+	case ::streamfx::gfx::blur::type::Rotational:
 		return true;
-	case ::gfx::blur::type::Zoom:
+	case ::streamfx::gfx::blur::type::Zoom:
 		return true;
 	default:
 		return false;
 	}
 }
 
-std::shared_ptr<::gfx::blur::base> gfx::blur::box_factory::create(::gfx::blur::type type)
+std::shared_ptr<::streamfx::gfx::blur::base> streamfx::gfx::blur::box_factory::create(::streamfx::gfx::blur::type type)
 {
 	switch (type) {
-	case ::gfx::blur::type::Area:
-		return std::make_shared<::gfx::blur::box>();
-	case ::gfx::blur::type::Directional:
-		return std::static_pointer_cast<::gfx::blur::box>(std::make_shared<::gfx::blur::box_directional>());
-	case ::gfx::blur::type::Rotational:
-		return std::make_shared<::gfx::blur::box_rotational>();
-	case ::gfx::blur::type::Zoom:
-		return std::make_shared<::gfx::blur::box_zoom>();
+	case ::streamfx::gfx::blur::type::Area:
+		return std::make_shared<::streamfx::gfx::blur::box>();
+	case ::streamfx::gfx::blur::type::Directional:
+		return std::static_pointer_cast<::streamfx::gfx::blur::box>(
+			std::make_shared<::streamfx::gfx::blur::box_directional>());
+	case ::streamfx::gfx::blur::type::Rotational:
+		return std::make_shared<::streamfx::gfx::blur::box_rotational>();
+	case ::streamfx::gfx::blur::type::Zoom:
+		return std::make_shared<::streamfx::gfx::blur::box_zoom>();
 	default:
 		throw std::runtime_error("Invalid type.");
 	}
 }
 
-double_t gfx::blur::box_factory::get_min_size(::gfx::blur::type)
+double_t streamfx::gfx::blur::box_factory::get_min_size(::streamfx::gfx::blur::type)
 {
 	return double_t(1.0);
 }
 
-double_t gfx::blur::box_factory::get_step_size(::gfx::blur::type)
+double_t streamfx::gfx::blur::box_factory::get_step_size(::streamfx::gfx::blur::type)
 {
 	return double_t(1.0);
 }
 
-double_t gfx::blur::box_factory::get_max_size(::gfx::blur::type)
+double_t streamfx::gfx::blur::box_factory::get_max_size(::streamfx::gfx::blur::type)
 {
-	return double_t(MAX_BLUR_SIZE);
+	return double_t(ST_MAX_BLUR_SIZE);
 }
 
-double_t gfx::blur::box_factory::get_min_angle(::gfx::blur::type v)
+double_t streamfx::gfx::blur::box_factory::get_min_angle(::streamfx::gfx::blur::type v)
 {
 	switch (v) {
-	case ::gfx::blur::type::Directional:
-	case ::gfx::blur::type::Rotational:
+	case ::streamfx::gfx::blur::type::Directional:
+	case ::streamfx::gfx::blur::type::Rotational:
 		return -180.0;
 	default:
 		return 0;
 	}
 }
 
-double_t gfx::blur::box_factory::get_step_angle(::gfx::blur::type)
+double_t streamfx::gfx::blur::box_factory::get_step_angle(::streamfx::gfx::blur::type)
 {
 	return double_t(0.01);
 }
 
-double_t gfx::blur::box_factory::get_max_angle(::gfx::blur::type v)
+double_t streamfx::gfx::blur::box_factory::get_max_angle(::streamfx::gfx::blur::type v)
 {
 	switch (v) {
-	case ::gfx::blur::type::Directional:
-	case ::gfx::blur::type::Rotational:
+	case ::streamfx::gfx::blur::type::Directional:
+	case ::streamfx::gfx::blur::type::Rotational:
 		return 180.0;
 	default:
 		return 0;
 	}
 }
 
-bool gfx::blur::box_factory::is_step_scale_supported(::gfx::blur::type v)
+bool streamfx::gfx::blur::box_factory::is_step_scale_supported(::streamfx::gfx::blur::type v)
 {
 	switch (v) {
-	case ::gfx::blur::type::Area:
-	case ::gfx::blur::type::Zoom:
-	case ::gfx::blur::type::Directional:
+	case ::streamfx::gfx::blur::type::Area:
+	case ::streamfx::gfx::blur::type::Zoom:
+	case ::streamfx::gfx::blur::type::Directional:
 		return true;
 	default:
 		return false;
 	}
 }
 
-double_t gfx::blur::box_factory::get_min_step_scale_x(::gfx::blur::type)
+double_t streamfx::gfx::blur::box_factory::get_min_step_scale_x(::streamfx::gfx::blur::type)
 {
 	return double_t(0.01);
 }
 
-double_t gfx::blur::box_factory::get_step_step_scale_x(::gfx::blur::type)
+double_t streamfx::gfx::blur::box_factory::get_step_step_scale_x(::streamfx::gfx::blur::type)
 {
 	return double_t(0.01);
 }
 
-double_t gfx::blur::box_factory::get_max_step_scale_x(::gfx::blur::type)
+double_t streamfx::gfx::blur::box_factory::get_max_step_scale_x(::streamfx::gfx::blur::type)
 {
 	return double_t(1000.0);
 }
 
-double_t gfx::blur::box_factory::get_min_step_scale_y(::gfx::blur::type)
+double_t streamfx::gfx::blur::box_factory::get_min_step_scale_y(::streamfx::gfx::blur::type)
 {
 	return double_t(0.01);
 }
 
-double_t gfx::blur::box_factory::get_step_step_scale_y(::gfx::blur::type)
+double_t streamfx::gfx::blur::box_factory::get_step_step_scale_y(::streamfx::gfx::blur::type)
 {
 	return double_t(0.01);
 }
 
-double_t gfx::blur::box_factory::get_max_step_scale_y(::gfx::blur::type)
+double_t streamfx::gfx::blur::box_factory::get_max_step_scale_y(::streamfx::gfx::blur::type)
 {
 	return double_t(1000.0);
 }
 
-std::shared_ptr<::gfx::blur::box_data> gfx::blur::box_factory::data()
+std::shared_ptr<::streamfx::gfx::blur::box_data> streamfx::gfx::blur::box_factory::data()
 {
-	std::unique_lock<std::mutex>           ulock(_data_lock);
-	std::shared_ptr<::gfx::blur::box_data> data = _data.lock();
+	std::unique_lock<std::mutex>                     ulock(_data_lock);
+	std::shared_ptr<::streamfx::gfx::blur::box_data> data = _data.lock();
 	if (!data) {
-		data  = std::make_shared<::gfx::blur::box_data>();
+		data  = std::make_shared<::streamfx::gfx::blur::box_data>();
 		_data = data;
 	}
 	return data;
 }
 
-::gfx::blur::box_factory& gfx::blur::box_factory::get()
+::streamfx::gfx::blur::box_factory& streamfx::gfx::blur::box_factory::get()
 {
-	static ::gfx::blur::box_factory instance;
+	static ::streamfx::gfx::blur::box_factory instance;
 	return instance;
 }
 
-gfx::blur::box::box() : _data(::gfx::blur::box_factory::get().data()), _size(1.), _step_scale({1., 1.})
+streamfx::gfx::blur::box::box()
+	: _data(::streamfx::gfx::blur::box_factory::get().data()), _size(1.), _step_scale({1., 1.})
 {
 	auto gctx      = streamfx::obs::gs::context();
 	_rendertarget  = std::make_shared<::streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	_rendertarget2 = std::make_shared<::streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
-gfx::blur::box::~box() {}
+streamfx::gfx::blur::box::~box() {}
 
-void gfx::blur::box::set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture)
+void streamfx::gfx::blur::box::set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture)
 {
 	_input_texture = texture;
 }
 
-::gfx::blur::type gfx::blur::box::get_type()
+::streamfx::gfx::blur::type streamfx::gfx::blur::box::get_type()
 {
-	return ::gfx::blur::type::Area;
+	return ::streamfx::gfx::blur::type::Area;
 }
 
-double_t gfx::blur::box::get_size()
+double_t streamfx::gfx::blur::box::get_size()
 {
 	return _size;
 }
 
-void gfx::blur::box::set_size(double_t width)
+void streamfx::gfx::blur::box::set_size(double_t width)
 {
 	_size = width;
 	if (_size < 1.0) {
 		_size = 1.0;
 	}
-	if (_size > MAX_BLUR_SIZE) {
-		_size = MAX_BLUR_SIZE;
+	if (_size > ST_MAX_BLUR_SIZE) {
+		_size = ST_MAX_BLUR_SIZE;
 	}
 }
 
-void gfx::blur::box::set_step_scale(double_t x, double_t y)
+void streamfx::gfx::blur::box::set_step_scale(double_t x, double_t y)
 {
 	_step_scale = {x, y};
 }
 
-void gfx::blur::box::get_step_scale(double_t& x, double_t& y)
+void streamfx::gfx::blur::box::get_step_scale(double_t& x, double_t& y)
 {
 	x = _step_scale.first;
 	y = _step_scale.second;
 }
 
-double_t gfx::blur::box::get_step_scale_x()
+double_t streamfx::gfx::blur::box::get_step_scale_x()
 {
 	return _step_scale.first;
 }
 
-double_t gfx::blur::box::get_step_scale_y()
+double_t streamfx::gfx::blur::box::get_step_scale_y()
 {
 	return _step_scale.second;
 }
 
-std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::box::render()
+std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box::render()
 {
 	auto gctx = streamfx::obs::gs::context();
 
@@ -316,29 +318,29 @@ std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::box::render()
 	return _rendertarget->get_texture();
 }
 
-std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::box::get()
+std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box::get()
 {
 	return _rendertarget->get_texture();
 }
 
-gfx::blur::box_directional::box_directional() : _angle(0) {}
+streamfx::gfx::blur::box_directional::box_directional() : _angle(0) {}
 
-::gfx::blur::type gfx::blur::box_directional::get_type()
+::streamfx::gfx::blur::type streamfx::gfx::blur::box_directional::get_type()
 {
-	return ::gfx::blur::type::Directional;
+	return ::streamfx::gfx::blur::type::Directional;
 }
 
-double_t gfx::blur::box_directional::get_angle()
+double_t streamfx::gfx::blur::box_directional::get_angle()
 {
 	return D_RAD_TO_DEG(_angle);
 }
 
-void gfx::blur::box_directional::set_angle(double_t angle)
+void streamfx::gfx::blur::box_directional::set_angle(double_t angle)
 {
 	_angle = D_DEG_TO_RAD(angle);
 }
 
-std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::box_directional::render()
+std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_directional::render()
 {
 	auto gctx = streamfx::obs::gs::context();
 
@@ -386,34 +388,34 @@ std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::box_directional::render
 	return _rendertarget->get_texture();
 }
 
-::gfx::blur::type gfx::blur::box_rotational::get_type()
+::streamfx::gfx::blur::type streamfx::gfx::blur::box_rotational::get_type()
 {
-	return ::gfx::blur::type::Rotational;
+	return ::streamfx::gfx::blur::type::Rotational;
 }
 
-void gfx::blur::box_rotational::set_center(double_t x, double_t y)
+void streamfx::gfx::blur::box_rotational::set_center(double_t x, double_t y)
 {
 	_center.first  = x;
 	_center.second = y;
 }
 
-void gfx::blur::box_rotational::get_center(double_t& x, double_t& y)
+void streamfx::gfx::blur::box_rotational::get_center(double_t& x, double_t& y)
 {
 	x = _center.first;
 	y = _center.second;
 }
 
-double_t gfx::blur::box_rotational::get_angle()
+double_t streamfx::gfx::blur::box_rotational::get_angle()
 {
 	return D_RAD_TO_DEG(_angle);
 }
 
-void gfx::blur::box_rotational::set_angle(double_t angle)
+void streamfx::gfx::blur::box_rotational::set_angle(double_t angle)
 {
 	_angle = D_DEG_TO_RAD(angle);
 }
 
-std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::box_rotational::render()
+std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_rotational::render()
 {
 	auto gctx = streamfx::obs::gs::context();
 
@@ -462,24 +464,24 @@ std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::box_rotational::render(
 	return _rendertarget->get_texture();
 }
 
-::gfx::blur::type gfx::blur::box_zoom::get_type()
+::streamfx::gfx::blur::type streamfx::gfx::blur::box_zoom::get_type()
 {
-	return ::gfx::blur::type::Zoom;
+	return ::streamfx::gfx::blur::type::Zoom;
 }
 
-void gfx::blur::box_zoom::set_center(double_t x, double_t y)
+void streamfx::gfx::blur::box_zoom::set_center(double_t x, double_t y)
 {
 	_center.first  = x;
 	_center.second = y;
 }
 
-void gfx::blur::box_zoom::get_center(double_t& x, double_t& y)
+void streamfx::gfx::blur::box_zoom::get_center(double_t& x, double_t& y)
 {
 	x = _center.first;
 	y = _center.second;
 }
 
-std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::box_zoom::render()
+std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_zoom::render()
 {
 	auto gctx = streamfx::obs::gs::context();
 

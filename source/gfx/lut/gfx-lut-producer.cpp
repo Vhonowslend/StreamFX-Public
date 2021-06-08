@@ -22,34 +22,34 @@
 
 #include "obs/gs/gs-helper.hpp"
 
-gs_color_format format_from_depth(gfx::lut::color_depth depth)
+gs_color_format format_from_depth(streamfx::gfx::lut::color_depth depth)
 {
 	switch (depth) {
-	case gfx::lut::color_depth::_2:
-	case gfx::lut::color_depth::_4:
-	case gfx::lut::color_depth::_6:
-	case gfx::lut::color_depth::_8:
+	case streamfx::gfx::lut::color_depth::_2:
+	case streamfx::gfx::lut::color_depth::_4:
+	case streamfx::gfx::lut::color_depth::_6:
+	case streamfx::gfx::lut::color_depth::_8:
 		return gs_color_format::GS_RGBA;
-	case gfx::lut::color_depth::_10:
+	case streamfx::gfx::lut::color_depth::_10:
 		return gs_color_format::GS_R10G10B10A2;
-	case gfx::lut::color_depth::_12:
-	case gfx::lut::color_depth::_14:
-	case gfx::lut::color_depth::_16:
+	case streamfx::gfx::lut::color_depth::_12:
+	case streamfx::gfx::lut::color_depth::_14:
+	case streamfx::gfx::lut::color_depth::_16:
 		return gs_color_format::GS_RGBA16;
 	}
 	return GS_RGBA32F;
 }
 
-gfx::lut::producer::producer()
+streamfx::gfx::lut::producer::producer()
 {
-	_data = gfx::lut::data::instance();
+	_data = streamfx::gfx::lut::data::instance();
 	if (!_data->producer_effect())
 		throw std::runtime_error("Unable to get LUT producer effect.");
 }
 
-gfx::lut::producer::~producer() {}
+streamfx::gfx::lut::producer::~producer() {}
 
-std::shared_ptr<streamfx::obs::gs::texture> gfx::lut::producer::produce(gfx::lut::color_depth depth)
+std::shared_ptr<streamfx::obs::gs::texture> streamfx::gfx::lut::producer::produce(streamfx::gfx::lut::color_depth depth)
 {
 	auto gctx = streamfx::obs::gs::context();
 

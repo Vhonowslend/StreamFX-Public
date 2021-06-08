@@ -48,19 +48,19 @@ namespace streamfx::filter::color_grade {
 		streamfx::obs::gs::effect _effect;
 
 		// User Configuration
-		vec4                  _lift;
-		vec4                  _gamma;
-		vec4                  _gain;
-		vec4                  _offset;
-		detection_mode        _tint_detection;
-		luma_mode             _tint_luma;
-		float_t               _tint_exponent;
-		vec3                  _tint_low;
-		vec3                  _tint_mid;
-		vec3                  _tint_hig;
-		vec4                  _correction;
-		bool                  _lut_enabled;
-		gfx::lut::color_depth _lut_depth;
+		vec4                            _lift;
+		vec4                            _gamma;
+		vec4                            _gain;
+		vec4                            _offset;
+		detection_mode                  _tint_detection;
+		luma_mode                       _tint_luma;
+		float_t                         _tint_exponent;
+		vec3                            _tint_low;
+		vec3                            _tint_mid;
+		vec3                            _tint_hig;
+		vec4                            _correction;
+		bool                            _lut_enabled;
+		streamfx::gfx::lut::color_depth _lut_depth;
 
 		// Capture Cache
 		std::shared_ptr<streamfx::obs::gs::rendertarget> _ccache_rt;
@@ -70,8 +70,8 @@ namespace streamfx::filter::color_grade {
 		// LUT work flow
 		bool                                             _lut_initialized;
 		bool                                             _lut_dirty;
-		std::shared_ptr<gfx::lut::producer>              _lut_producer;
-		std::shared_ptr<gfx::lut::consumer>              _lut_consumer;
+		std::shared_ptr<streamfx::gfx::lut::producer>    _lut_producer;
+		std::shared_ptr<streamfx::gfx::lut::consumer>    _lut_consumer;
 		std::shared_ptr<streamfx::obs::gs::rendertarget> _lut_rt;
 		std::shared_ptr<streamfx::obs::gs::texture>      _lut_texture;
 
