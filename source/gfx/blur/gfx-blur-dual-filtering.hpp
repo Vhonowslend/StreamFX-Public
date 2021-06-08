@@ -84,7 +84,7 @@ namespace streamfx::gfx {
 			std::shared_ptr<::streamfx::gfx::blur::dual_filtering_data> _data;
 
 			double_t    _size;
-			std::size_t _size_iterations;
+			std::size_t _iterations;
 
 			std::shared_ptr<streamfx::obs::gs::texture> _input_texture;
 
