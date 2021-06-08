@@ -35,8 +35,8 @@ extern "C" {
 }
 
 // Settings
-#define KEY_PROFILE "H264.Profile"
-#define KEY_LEVEL "H264.Level"
+#define ST_KEY_PROFILE "H264.Profile"
+#define ST_KEY_LEVEL "H264.Level"
 
 using namespace streamfx::encoder::ffmpeg::handler;
 using namespace streamfx::encoder::codec::h264;
@@ -66,8 +66,8 @@ void amf_h264_handler::get_defaults(obs_data_t* settings, const AVCodec* codec, 
 {
 	amf::get_defaults(settings, codec, context);
 
-	obs_data_set_default_int(settings, KEY_PROFILE, static_cast<int64_t>(profile::HIGH));
-	obs_data_set_default_int(settings, KEY_LEVEL, static_cast<int64_t>(level::UNKNOWN));
+	obs_data_set_default_int(settings, ST_KEY_PROFILE, static_cast<int64_t>(profile::HIGH));
+	obs_data_set_default_int(settings, ST_KEY_LEVEL, static_cast<int64_t>(level::UNKNOWN));
 }
 
 bool amf_h264_handler::has_keyframe_support(ffmpeg_factory* instance)
@@ -105,14 +105,14 @@ void amf_h264_handler::update(obs_data_t* settings, const AVCodec* codec, AVCode
 	amf::update(settings, codec, context);
 
 	{
-		auto found = profiles.find(static_cast<profile>(obs_data_get_int(settings, KEY_PROFILE)));
+		auto found = profiles.find(static_cast<profile>(obs_data_get_int(settings, ST_KEY_PROFILE)));
 		if (found != profiles.end()) {
 			av_opt_set(context->priv_data, "profile", found->second.c_str(), 0);
 		}
 	}
 
 	{
-		auto found = levels.find(static_cast<level>(obs_data_get_int(settings, KEY_LEVEL)));
+		auto found = levels.find(static_cast<level>(obs_data_get_int(settings, ST_KEY_LEVEL)));
 		if (found != levels.end()) {
 			av_opt_set(context->priv_data, "level", found->second.c_str(), 0);
 		} else {
@@ -146,7 +146,7 @@ void amf_h264_handler::get_encoder_properties(obs_properties_t* props, const AVC
 		obs_properties_add_group(props, P_H264, D_TRANSLATE(P_H264), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_list(grp, KEY_PROFILE, D_TRANSLATE(P_H264_PROFILE), OBS_COMBO_TYPE_LIST,
+			auto p = obs_properties_add_list(grp, ST_KEY_PROFILE, D_TRANSLATE(P_H264_PROFILE), OBS_COMBO_TYPE_LIST,
 											 OBS_COMBO_FORMAT_INT);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), static_cast<int64_t>(profile::UNKNOWN));
 			for (auto const kv : profiles) {
@@ -155,7 +155,7 @@ void amf_h264_handler::get_encoder_properties(obs_properties_t* props, const AVC
 			}
 		}
 		{
-			auto p = obs_properties_add_list(grp, KEY_LEVEL, D_TRANSLATE(P_H264_LEVEL), OBS_COMBO_TYPE_LIST,
+			auto p = obs_properties_add_list(grp, ST_KEY_LEVEL, D_TRANSLATE(P_H264_LEVEL), OBS_COMBO_TYPE_LIST,
 											 OBS_COMBO_FORMAT_INT);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), static_cast<int64_t>(level::UNKNOWN));
 			for (auto const kv : levels) {
