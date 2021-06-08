@@ -22,48 +22,80 @@
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
 
-#define LOG_PREFIX "<filter-sdf-effects> "
+#define ST_PREFIX "<filter-sdf-effects> "
 
 // Translation Strings
-#define ST "Filter.SDFEffects"
+#define ST_I18N "Filter.SDFEffects"
 
-#define ST_SHADOW_INNER "Filter.SDFEffects.Shadow.Inner"
-#define ST_SHADOW_INNER_RANGE_MINIMUM "Filter.SDFEffects.Shadow.Inner.Range.Minimum"
-#define ST_SHADOW_INNER_RANGE_MAXIMUM "Filter.SDFEffects.Shadow.Inner.Range.Maximum"
-#define ST_SHADOW_INNER_OFFSET_X "Filter.SDFEffects.Shadow.Inner.Offset.X"
-#define ST_SHADOW_INNER_OFFSET_Y "Filter.SDFEffects.Shadow.Inner.Offset.Y"
-#define ST_SHADOW_INNER_COLOR "Filter.SDFEffects.Shadow.Inner.Color"
-#define ST_SHADOW_INNER_ALPHA "Filter.SDFEffects.Shadow.Inner.Alpha"
+#define ST_I18N_SHADOW_INNER "Filter.SDFEffects.Shadow.Inner"
+#define ST_KEY_SHADOW_INNER "Filter.SDFEffects.Shadow.Inner"
+#define ST_I18N_SHADOW_INNER_RANGE_MINIMUM "Filter.SDFEffects.Shadow.Inner.Range.Minimum"
+#define ST_KEY_SHADOW_INNER_RANGE_MINIMUM "Filter.SDFEffects.Shadow.Inner.Range.Minimum"
+#define ST_I18N_SHADOW_INNER_RANGE_MAXIMUM "Filter.SDFEffects.Shadow.Inner.Range.Maximum"
+#define ST_KEY_SHADOW_INNER_RANGE_MAXIMUM "Filter.SDFEffects.Shadow.Inner.Range.Maximum"
+#define ST_I18N_SHADOW_INNER_OFFSET_X "Filter.SDFEffects.Shadow.Inner.Offset.X"
+#define ST_KEY_SHADOW_INNER_OFFSET_X "Filter.SDFEffects.Shadow.Inner.Offset.X"
+#define ST_I18N_SHADOW_INNER_OFFSET_Y "Filter.SDFEffects.Shadow.Inner.Offset.Y"
+#define ST_KEY_SHADOW_INNER_OFFSET_Y "Filter.SDFEffects.Shadow.Inner.Offset.Y"
+#define ST_I18N_SHADOW_INNER_COLOR "Filter.SDFEffects.Shadow.Inner.Color"
+#define ST_KEY_SHADOW_INNER_COLOR "Filter.SDFEffects.Shadow.Inner.Color"
+#define ST_I18N_SHADOW_INNER_ALPHA "Filter.SDFEffects.Shadow.Inner.Alpha"
+#define ST_KEY_SHADOW_INNER_ALPHA "Filter.SDFEffects.Shadow.Inner.Alpha"
 
-#define ST_SHADOW_OUTER "Filter.SDFEffects.Shadow.Outer"
-#define ST_SHADOW_OUTER_RANGE_MINIMUM "Filter.SDFEffects.Shadow.Outer.Range.Minimum"
-#define ST_SHADOW_OUTER_RANGE_MAXIMUM "Filter.SDFEffects.Shadow.Outer.Range.Maximum"
-#define ST_SHADOW_OUTER_OFFSET_X "Filter.SDFEffects.Shadow.Outer.Offset.X"
-#define ST_SHADOW_OUTER_OFFSET_Y "Filter.SDFEffects.Shadow.Outer.Offset.Y"
-#define ST_SHADOW_OUTER_COLOR "Filter.SDFEffects.Shadow.Outer.Color"
-#define ST_SHADOW_OUTER_ALPHA "Filter.SDFEffects.Shadow.Outer.Alpha"
+#define ST_I18N_SHADOW_OUTER "Filter.SDFEffects.Shadow.Outer"
+#define ST_KEY_SHADOW_OUTER "Filter.SDFEffects.Shadow.Outer"
+#define ST_I18N_SHADOW_OUTER_RANGE_MINIMUM "Filter.SDFEffects.Shadow.Outer.Range.Minimum"
+#define ST_KEY_SHADOW_OUTER_RANGE_MINIMUM "Filter.SDFEffects.Shadow.Outer.Range.Minimum"
+#define ST_I18N_SHADOW_OUTER_RANGE_MAXIMUM "Filter.SDFEffects.Shadow.Outer.Range.Maximum"
+#define ST_KEY_SHADOW_OUTER_RANGE_MAXIMUM "Filter.SDFEffects.Shadow.Outer.Range.Maximum"
+#define ST_I18N_SHADOW_OUTER_OFFSET_X "Filter.SDFEffects.Shadow.Outer.Offset.X"
+#define ST_KEY_SHADOW_OUTER_OFFSET_X "Filter.SDFEffects.Shadow.Outer.Offset.X"
+#define ST_I18N_SHADOW_OUTER_OFFSET_Y "Filter.SDFEffects.Shadow.Outer.Offset.Y"
+#define ST_KEY_SHADOW_OUTER_OFFSET_Y "Filter.SDFEffects.Shadow.Outer.Offset.Y"
+#define ST_I18N_SHADOW_OUTER_COLOR "Filter.SDFEffects.Shadow.Outer.Color"
+#define ST_KEY_SHADOW_OUTER_COLOR "Filter.SDFEffects.Shadow.Outer.Color"
+#define ST_I18N_SHADOW_OUTER_ALPHA "Filter.SDFEffects.Shadow.Outer.Alpha"
+#define ST_KEY_SHADOW_OUTER_ALPHA "Filter.SDFEffects.Shadow.Outer.Alpha"
 
-#define ST_GLOW_INNER "Filter.SDFEffects.Glow.Inner"
-#define ST_GLOW_INNER_COLOR "Filter.SDFEffects.Glow.Inner.Color"
-#define ST_GLOW_INNER_ALPHA "Filter.SDFEffects.Glow.Inner.Alpha"
-#define ST_GLOW_INNER_WIDTH "Filter.SDFEffects.Glow.Inner.Width"
-#define ST_GLOW_INNER_SHARPNESS "Filter.SDFEffects.Glow.Inner.Sharpness"
+#define ST_I18N_GLOW_INNER "Filter.SDFEffects.Glow.Inner"
+#define ST_KEY_GLOW_INNER "Filter.SDFEffects.Glow.Inner"
+#define ST_I18N_GLOW_INNER_COLOR "Filter.SDFEffects.Glow.Inner.Color"
+#define ST_KEY_GLOW_INNER_COLOR "Filter.SDFEffects.Glow.Inner.Color"
+#define ST_I18N_GLOW_INNER_ALPHA "Filter.SDFEffects.Glow.Inner.Alpha"
+#define ST_KEY_GLOW_INNER_ALPHA "Filter.SDFEffects.Glow.Inner.Alpha"
+#define ST_I18N_GLOW_INNER_WIDTH "Filter.SDFEffects.Glow.Inner.Width"
+#define ST_KEY_GLOW_INNER_WIDTH "Filter.SDFEffects.Glow.Inner.Width"
+#define ST_I18N_GLOW_INNER_SHARPNESS "Filter.SDFEffects.Glow.Inner.Sharpness"
+#define ST_KEY_GLOW_INNER_SHARPNESS "Filter.SDFEffects.Glow.Inner.Sharpness"
 
-#define ST_GLOW_OUTER "Filter.SDFEffects.Glow.Outer"
-#define ST_GLOW_OUTER_COLOR "Filter.SDFEffects.Glow.Outer.Color"
-#define ST_GLOW_OUTER_ALPHA "Filter.SDFEffects.Glow.Outer.Alpha"
-#define ST_GLOW_OUTER_WIDTH "Filter.SDFEffects.Glow.Outer.Width"
-#define ST_GLOW_OUTER_SHARPNESS "Filter.SDFEffects.Glow.Outer.Sharpness"
+#define ST_I18N_GLOW_OUTER "Filter.SDFEffects.Glow.Outer"
+#define ST_KEY_GLOW_OUTER "Filter.SDFEffects.Glow.Outer"
+#define ST_I18N_GLOW_OUTER_COLOR "Filter.SDFEffects.Glow.Outer.Color"
+#define ST_KEY_GLOW_OUTER_COLOR "Filter.SDFEffects.Glow.Outer.Color"
+#define ST_I18N_GLOW_OUTER_ALPHA "Filter.SDFEffects.Glow.Outer.Alpha"
+#define ST_KEY_GLOW_OUTER_ALPHA "Filter.SDFEffects.Glow.Outer.Alpha"
+#define ST_I18N_GLOW_OUTER_WIDTH "Filter.SDFEffects.Glow.Outer.Width"
+#define ST_KEY_GLOW_OUTER_WIDTH "Filter.SDFEffects.Glow.Outer.Width"
+#define ST_I18N_GLOW_OUTER_SHARPNESS "Filter.SDFEffects.Glow.Outer.Sharpness"
+#define ST_KEY_GLOW_OUTER_SHARPNESS "Filter.SDFEffects.Glow.Outer.Sharpness"
 
-#define ST_OUTLINE "Filter.SDFEffects.Outline"
-#define ST_OUTLINE_COLOR "Filter.SDFEffects.Outline.Color"
-#define ST_OUTLINE_ALPHA "Filter.SDFEffects.Outline.Alpha"
-#define ST_OUTLINE_WIDTH "Filter.SDFEffects.Outline.Width"
-#define ST_OUTLINE_OFFSET "Filter.SDFEffects.Outline.Offset"
-#define ST_OUTLINE_SHARPNESS "Filter.SDFEffects.Outline.Sharpness"
+#define ST_I18N_OUTLINE "Filter.SDFEffects.Outline"
+#define ST_KEY_OUTLINE "Filter.SDFEffects.Outline"
+#define ST_I18N_OUTLINE_COLOR "Filter.SDFEffects.Outline.Color"
+#define ST_KEY_OUTLINE_COLOR "Filter.SDFEffects.Outline.Color"
+#define ST_I18N_OUTLINE_ALPHA "Filter.SDFEffects.Outline.Alpha"
+#define ST_KEY_OUTLINE_ALPHA "Filter.SDFEffects.Outline.Alpha"
+#define ST_I18N_OUTLINE_WIDTH "Filter.SDFEffects.Outline.Width"
+#define ST_KEY_OUTLINE_WIDTH "Filter.SDFEffects.Outline.Width"
+#define ST_I18N_OUTLINE_OFFSET "Filter.SDFEffects.Outline.Offset"
+#define ST_KEY_OUTLINE_OFFSET "Filter.SDFEffects.Outline.Offset"
+#define ST_I18N_OUTLINE_SHARPNESS "Filter.SDFEffects.Outline.Sharpness"
+#define ST_KEY_OUTLINE_SHARPNESS "Filter.SDFEffects.Outline.Sharpness"
 
-#define ST_SDF_SCALE "Filter.SDFEffects.SDF.Scale"
-#define ST_SDF_THRESHOLD "Filter.SDFEffects.SDF.Threshold"
+#define ST_I18N_SDF_SCALE "Filter.SDFEffects.SDF.Scale"
+#define ST_KEY_SDF_SCALE "Filter.SDFEffects.SDF.Scale"
+#define ST_I18N_SDF_THRESHOLD "Filter.SDFEffects.SDF.Threshold"
+#define ST_KEY_SDF_THRESHOLD "Filter.SDFEffects.SDF.Threshold"
 
 using namespace streamfx::filter::sdf_effects;
 
@@ -104,7 +136,7 @@ sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* s
 			try {
 				kv.second = streamfx::obs::gs::effect::create(path);
 			} catch (const std::exception& ex) {
-				DLOG_ERROR(LOG_PREFIX "Failed to load effect '%s' (located at '%s') with error(s): %s", kv.first,
+				DLOG_ERROR(ST_PREFIX "Failed to load effect '%s' (located at '%s') with error(s): %s", kv.first,
 						   path.c_str(), ex.what());
 			}
 		}
@@ -126,8 +158,8 @@ void sdf_effects_instance::update(obs_data_t* data)
 {
 	{
 		_outer_shadow =
-			obs_data_get_bool(data, ST_SHADOW_OUTER)
-			&& (obs_data_get_double(data, ST_SHADOW_OUTER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
+			obs_data_get_bool(data, ST_KEY_SHADOW_OUTER)
+			&& (obs_data_get_double(data, ST_KEY_SHADOW_OUTER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			struct cs {
 				uint8_t r, g, b, a;
@@ -137,22 +169,22 @@ void sdf_effects_instance::update(obs_data_t* data)
 				uint8_t  channel[4];
 				cs       c;
 			};
-			color                 = uint32_t(obs_data_get_int(data, ST_SHADOW_OUTER_COLOR));
+			color                 = uint32_t(obs_data_get_int(data, ST_KEY_SHADOW_OUTER_COLOR));
 			_outer_shadow_color.x = float_t(c.r / 255.0);
 			_outer_shadow_color.y = float_t(c.g / 255.0);
 			_outer_shadow_color.z = float_t(c.b / 255.0);
-			_outer_shadow_color.w = float_t(obs_data_get_double(data, ST_SHADOW_OUTER_ALPHA) / 100.0);
+			_outer_shadow_color.w = float_t(obs_data_get_double(data, ST_KEY_SHADOW_OUTER_ALPHA) / 100.0);
 		}
-		_outer_shadow_range_min = float_t(obs_data_get_double(data, ST_SHADOW_OUTER_RANGE_MINIMUM));
-		_outer_shadow_range_max = float_t(obs_data_get_double(data, ST_SHADOW_OUTER_RANGE_MAXIMUM));
-		_outer_shadow_offset_x  = float_t(obs_data_get_double(data, ST_SHADOW_OUTER_OFFSET_X));
-		_outer_shadow_offset_y  = float_t(obs_data_get_double(data, ST_SHADOW_OUTER_OFFSET_Y));
+		_outer_shadow_range_min = float_t(obs_data_get_double(data, ST_KEY_SHADOW_OUTER_RANGE_MINIMUM));
+		_outer_shadow_range_max = float_t(obs_data_get_double(data, ST_KEY_SHADOW_OUTER_RANGE_MAXIMUM));
+		_outer_shadow_offset_x  = float_t(obs_data_get_double(data, ST_KEY_SHADOW_OUTER_OFFSET_X));
+		_outer_shadow_offset_y  = float_t(obs_data_get_double(data, ST_KEY_SHADOW_OUTER_OFFSET_Y));
 	}
 
 	{
 		_inner_shadow =
-			obs_data_get_bool(data, ST_SHADOW_INNER)
-			&& (obs_data_get_double(data, ST_SHADOW_INNER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
+			obs_data_get_bool(data, ST_KEY_SHADOW_INNER)
+			&& (obs_data_get_double(data, ST_KEY_SHADOW_INNER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			struct cs {
 				uint8_t r, g, b, a;
@@ -162,21 +194,22 @@ void sdf_effects_instance::update(obs_data_t* data)
 				uint8_t  channel[4];
 				cs       c;
 			};
-			color                 = uint32_t(obs_data_get_int(data, ST_SHADOW_INNER_COLOR));
+			color                 = uint32_t(obs_data_get_int(data, ST_KEY_SHADOW_INNER_COLOR));
 			_inner_shadow_color.x = float_t(c.r / 255.0);
 			_inner_shadow_color.y = float_t(c.g / 255.0);
 			_inner_shadow_color.z = float_t(c.b / 255.0);
-			_inner_shadow_color.w = float_t(obs_data_get_double(data, ST_SHADOW_INNER_ALPHA) / 100.0);
+			_inner_shadow_color.w = float_t(obs_data_get_double(data, ST_KEY_SHADOW_INNER_ALPHA) / 100.0);
 		}
-		_inner_shadow_range_min = float_t(obs_data_get_double(data, ST_SHADOW_INNER_RANGE_MINIMUM));
-		_inner_shadow_range_max = float_t(obs_data_get_double(data, ST_SHADOW_INNER_RANGE_MAXIMUM));
-		_inner_shadow_offset_x  = float_t(obs_data_get_double(data, ST_SHADOW_INNER_OFFSET_X));
-		_inner_shadow_offset_y  = float_t(obs_data_get_double(data, ST_SHADOW_INNER_OFFSET_Y));
+		_inner_shadow_range_min = float_t(obs_data_get_double(data, ST_KEY_SHADOW_INNER_RANGE_MINIMUM));
+		_inner_shadow_range_max = float_t(obs_data_get_double(data, ST_KEY_SHADOW_INNER_RANGE_MAXIMUM));
+		_inner_shadow_offset_x  = float_t(obs_data_get_double(data, ST_KEY_SHADOW_INNER_OFFSET_X));
+		_inner_shadow_offset_y  = float_t(obs_data_get_double(data, ST_KEY_SHADOW_INNER_OFFSET_Y));
 	}
 
 	{
-		_outer_glow = obs_data_get_bool(data, ST_GLOW_OUTER)
-					  && (obs_data_get_double(data, ST_GLOW_OUTER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
+		_outer_glow =
+			obs_data_get_bool(data, ST_KEY_GLOW_OUTER)
+			&& (obs_data_get_double(data, ST_KEY_GLOW_OUTER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			struct cs {
 				uint8_t r, g, b, a;
@@ -186,14 +219,14 @@ void sdf_effects_instance::update(obs_data_t* data)
 				uint8_t  channel[4];
 				cs       c;
 			};
-			color               = uint32_t(obs_data_get_int(data, ST_GLOW_OUTER_COLOR));
+			color               = uint32_t(obs_data_get_int(data, ST_KEY_GLOW_OUTER_COLOR));
 			_outer_glow_color.x = float_t(c.r / 255.0);
 			_outer_glow_color.y = float_t(c.g / 255.0);
 			_outer_glow_color.z = float_t(c.b / 255.0);
-			_outer_glow_color.w = float_t(obs_data_get_double(data, ST_GLOW_OUTER_ALPHA) / 100.0);
+			_outer_glow_color.w = float_t(obs_data_get_double(data, ST_KEY_GLOW_OUTER_ALPHA) / 100.0);
 		}
-		_outer_glow_width         = float_t(obs_data_get_double(data, ST_GLOW_OUTER_WIDTH));
-		_outer_glow_sharpness     = float_t(obs_data_get_double(data, ST_GLOW_OUTER_SHARPNESS) / 100.0);
+		_outer_glow_width         = float_t(obs_data_get_double(data, ST_KEY_GLOW_OUTER_WIDTH));
+		_outer_glow_sharpness     = float_t(obs_data_get_double(data, ST_KEY_GLOW_OUTER_SHARPNESS) / 100.0);
 		_outer_glow_sharpness_inv = float_t(1.0f / (1.0f - _outer_glow_sharpness));
 		if (_outer_glow_sharpness >= (1.0f - std::numeric_limits<float_t>::epsilon())) {
 			_outer_glow_sharpness = 1.0f - std::numeric_limits<float_t>::epsilon();
@@ -201,8 +234,9 @@ void sdf_effects_instance::update(obs_data_t* data)
 	}
 
 	{
-		_inner_glow = obs_data_get_bool(data, ST_GLOW_INNER)
-					  && (obs_data_get_double(data, ST_GLOW_INNER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
+		_inner_glow =
+			obs_data_get_bool(data, ST_KEY_GLOW_INNER)
+			&& (obs_data_get_double(data, ST_KEY_GLOW_INNER_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			struct cs {
 				uint8_t r, g, b, a;
@@ -212,14 +246,14 @@ void sdf_effects_instance::update(obs_data_t* data)
 				uint8_t  channel[4];
 				cs       c;
 			};
-			color               = uint32_t(obs_data_get_int(data, ST_GLOW_INNER_COLOR));
+			color               = uint32_t(obs_data_get_int(data, ST_KEY_GLOW_INNER_COLOR));
 			_inner_glow_color.x = float_t(c.r / 255.0);
 			_inner_glow_color.y = float_t(c.g / 255.0);
 			_inner_glow_color.z = float_t(c.b / 255.0);
-			_inner_glow_color.w = float_t(obs_data_get_double(data, ST_GLOW_INNER_ALPHA) / 100.0);
+			_inner_glow_color.w = float_t(obs_data_get_double(data, ST_KEY_GLOW_INNER_ALPHA) / 100.0);
 		}
-		_inner_glow_width         = float_t(obs_data_get_double(data, ST_GLOW_INNER_WIDTH));
-		_inner_glow_sharpness     = float_t(obs_data_get_double(data, ST_GLOW_INNER_SHARPNESS) / 100.0);
+		_inner_glow_width         = float_t(obs_data_get_double(data, ST_KEY_GLOW_INNER_WIDTH));
+		_inner_glow_sharpness     = float_t(obs_data_get_double(data, ST_KEY_GLOW_INNER_SHARPNESS) / 100.0);
 		_inner_glow_sharpness_inv = float_t(1.0f / (1.0f - _inner_glow_sharpness));
 		if (_inner_glow_sharpness >= (1.0f - std::numeric_limits<float_t>::epsilon())) {
 			_inner_glow_sharpness = 1.0f - std::numeric_limits<float_t>::epsilon();
@@ -227,8 +261,8 @@ void sdf_effects_instance::update(obs_data_t* data)
 	}
 
 	{
-		_outline = obs_data_get_bool(data, ST_OUTLINE)
-				   && (obs_data_get_double(data, ST_OUTLINE_ALPHA) >= std::numeric_limits<double_t>::epsilon());
+		_outline = obs_data_get_bool(data, ST_KEY_OUTLINE)
+				   && (obs_data_get_double(data, ST_KEY_OUTLINE_ALPHA) >= std::numeric_limits<double_t>::epsilon());
 		{
 			struct cs {
 				uint8_t r, g, b, a;
@@ -238,23 +272,23 @@ void sdf_effects_instance::update(obs_data_t* data)
 				uint8_t  channel[4];
 				cs       c;
 			};
-			color            = uint32_t(obs_data_get_int(data, ST_OUTLINE_COLOR));
+			color            = uint32_t(obs_data_get_int(data, ST_KEY_OUTLINE_COLOR));
 			_outline_color.x = float_t(c.r / 255.0);
 			_outline_color.y = float_t(c.g / 255.0);
 			_outline_color.z = float_t(c.b / 255.0);
-			_outline_color.w = float_t(obs_data_get_double(data, ST_OUTLINE_ALPHA) / 100.0);
+			_outline_color.w = float_t(obs_data_get_double(data, ST_KEY_OUTLINE_ALPHA) / 100.0);
 		}
-		_outline_width         = float_t(obs_data_get_double(data, ST_OUTLINE_WIDTH));
-		_outline_offset        = float_t(obs_data_get_double(data, ST_OUTLINE_OFFSET));
-		_outline_sharpness     = float_t(obs_data_get_double(data, ST_OUTLINE_SHARPNESS) / 100.0);
+		_outline_width         = float_t(obs_data_get_double(data, ST_KEY_OUTLINE_WIDTH));
+		_outline_offset        = float_t(obs_data_get_double(data, ST_KEY_OUTLINE_OFFSET));
+		_outline_sharpness     = float_t(obs_data_get_double(data, ST_KEY_OUTLINE_SHARPNESS) / 100.0);
 		_outline_sharpness_inv = float_t(1.0f / (1.0f - _outline_sharpness));
 		if (_outline_sharpness >= (1.0f - std::numeric_limits<float_t>::epsilon())) {
 			_outline_sharpness = 1.0f - std::numeric_limits<float_t>::epsilon();
 		}
 	}
 
-	_sdf_scale     = double_t(obs_data_get_double(data, ST_SDF_SCALE) / 100.0);
-	_sdf_threshold = float_t(obs_data_get_double(data, ST_SDF_THRESHOLD) / 100.0);
+	_sdf_scale     = double_t(obs_data_get_double(data, ST_KEY_SDF_SCALE) / 100.0);
+	_sdf_threshold = float_t(obs_data_get_double(data, ST_KEY_SDF_THRESHOLD) / 100.0);
 }
 
 void sdf_effects_instance::video_tick(float_t)
@@ -532,48 +566,48 @@ sdf_effects_factory::~sdf_effects_factory() {}
 
 const char* sdf_effects_factory::get_name()
 {
-	return D_TRANSLATE(ST);
+	return D_TRANSLATE(ST_I18N);
 }
 
 void sdf_effects_factory::get_defaults2(obs_data_t* data)
 {
-	obs_data_set_default_bool(data, ST_SHADOW_OUTER, false);
-	obs_data_set_default_int(data, ST_SHADOW_OUTER_COLOR, 0x00000000);
-	obs_data_set_default_double(data, ST_SHADOW_OUTER_ALPHA, 100.0);
-	obs_data_set_default_double(data, ST_SHADOW_OUTER_RANGE_MINIMUM, 0.0);
-	obs_data_set_default_double(data, ST_SHADOW_OUTER_RANGE_MAXIMUM, 4.0);
-	obs_data_set_default_double(data, ST_SHADOW_OUTER_OFFSET_X, 0.0);
-	obs_data_set_default_double(data, ST_SHADOW_OUTER_OFFSET_Y, 0.0);
+	obs_data_set_default_bool(data, ST_KEY_SHADOW_OUTER, false);
+	obs_data_set_default_int(data, ST_KEY_SHADOW_OUTER_COLOR, 0x00000000);
+	obs_data_set_default_double(data, ST_KEY_SHADOW_OUTER_ALPHA, 100.0);
+	obs_data_set_default_double(data, ST_KEY_SHADOW_OUTER_RANGE_MINIMUM, 0.0);
+	obs_data_set_default_double(data, ST_KEY_SHADOW_OUTER_RANGE_MAXIMUM, 4.0);
+	obs_data_set_default_double(data, ST_KEY_SHADOW_OUTER_OFFSET_X, 0.0);
+	obs_data_set_default_double(data, ST_KEY_SHADOW_OUTER_OFFSET_Y, 0.0);
 
-	obs_data_set_default_bool(data, ST_SHADOW_INNER, false);
-	obs_data_set_default_int(data, ST_SHADOW_INNER_COLOR, 0x00000000);
-	obs_data_set_default_double(data, ST_SHADOW_INNER_ALPHA, 100.0);
-	obs_data_set_default_double(data, ST_SHADOW_INNER_RANGE_MINIMUM, 0.0);
-	obs_data_set_default_double(data, ST_SHADOW_INNER_RANGE_MAXIMUM, 4.0);
-	obs_data_set_default_double(data, ST_SHADOW_INNER_OFFSET_X, 0.0);
-	obs_data_set_default_double(data, ST_SHADOW_INNER_OFFSET_Y, 0.0);
+	obs_data_set_default_bool(data, ST_KEY_SHADOW_INNER, false);
+	obs_data_set_default_int(data, ST_KEY_SHADOW_INNER_COLOR, 0x00000000);
+	obs_data_set_default_double(data, ST_KEY_SHADOW_INNER_ALPHA, 100.0);
+	obs_data_set_default_double(data, ST_KEY_SHADOW_INNER_RANGE_MINIMUM, 0.0);
+	obs_data_set_default_double(data, ST_KEY_SHADOW_INNER_RANGE_MAXIMUM, 4.0);
+	obs_data_set_default_double(data, ST_KEY_SHADOW_INNER_OFFSET_X, 0.0);
+	obs_data_set_default_double(data, ST_KEY_SHADOW_INNER_OFFSET_Y, 0.0);
 
-	obs_data_set_default_bool(data, ST_GLOW_OUTER, false);
-	obs_data_set_default_int(data, ST_GLOW_OUTER_COLOR, 0xFFFFFFFF);
-	obs_data_set_default_double(data, ST_GLOW_OUTER_ALPHA, 100.0);
-	obs_data_set_default_double(data, ST_GLOW_OUTER_WIDTH, 4.0);
-	obs_data_set_default_double(data, ST_GLOW_OUTER_SHARPNESS, 50.0);
+	obs_data_set_default_bool(data, ST_KEY_GLOW_OUTER, false);
+	obs_data_set_default_int(data, ST_KEY_GLOW_OUTER_COLOR, 0xFFFFFFFF);
+	obs_data_set_default_double(data, ST_KEY_GLOW_OUTER_ALPHA, 100.0);
+	obs_data_set_default_double(data, ST_KEY_GLOW_OUTER_WIDTH, 4.0);
+	obs_data_set_default_double(data, ST_KEY_GLOW_OUTER_SHARPNESS, 50.0);
 
-	obs_data_set_default_bool(data, ST_GLOW_INNER, false);
-	obs_data_set_default_int(data, ST_GLOW_INNER_COLOR, 0xFFFFFFFF);
-	obs_data_set_default_double(data, ST_GLOW_INNER_ALPHA, 100.0);
-	obs_data_set_default_double(data, ST_GLOW_INNER_WIDTH, 4.0);
-	obs_data_set_default_double(data, ST_GLOW_INNER_SHARPNESS, 50.0);
+	obs_data_set_default_bool(data, ST_KEY_GLOW_INNER, false);
+	obs_data_set_default_int(data, ST_KEY_GLOW_INNER_COLOR, 0xFFFFFFFF);
+	obs_data_set_default_double(data, ST_KEY_GLOW_INNER_ALPHA, 100.0);
+	obs_data_set_default_double(data, ST_KEY_GLOW_INNER_WIDTH, 4.0);
+	obs_data_set_default_double(data, ST_KEY_GLOW_INNER_SHARPNESS, 50.0);
 
-	obs_data_set_default_bool(data, ST_OUTLINE, false);
-	obs_data_set_default_int(data, ST_OUTLINE_COLOR, 0x00000000);
-	obs_data_set_default_double(data, ST_OUTLINE_ALPHA, 100.0);
-	obs_data_set_default_double(data, ST_OUTLINE_WIDTH, 4.0);
-	obs_data_set_default_double(data, ST_OUTLINE_OFFSET, 0.0);
-	obs_data_set_default_double(data, ST_OUTLINE_SHARPNESS, 50.0);
+	obs_data_set_default_bool(data, ST_KEY_OUTLINE, false);
+	obs_data_set_default_int(data, ST_KEY_OUTLINE_COLOR, 0x00000000);
+	obs_data_set_default_double(data, ST_KEY_OUTLINE_ALPHA, 100.0);
+	obs_data_set_default_double(data, ST_KEY_OUTLINE_WIDTH, 4.0);
+	obs_data_set_default_double(data, ST_KEY_OUTLINE_OFFSET, 0.0);
+	obs_data_set_default_double(data, ST_KEY_OUTLINE_SHARPNESS, 50.0);
 
-	obs_data_set_default_double(data, ST_SDF_SCALE, 100.0);
-	obs_data_set_default_double(data, ST_SDF_THRESHOLD, 50.0);
+	obs_data_set_default_double(data, ST_KEY_SDF_SCALE, 100.0);
+	obs_data_set_default_double(data, ST_KEY_SDF_THRESHOLD, 50.0);
 }
 
 obs_properties_t* sdf_effects_factory::get_properties2(sdf_effects_instance* data)
@@ -590,78 +624,86 @@ obs_properties_t* sdf_effects_factory::get_properties2(sdf_effects_instance* dat
 
 	{ // Shadow Outer
 		auto pr = obs_properties_create();
-		obs_properties_add_group(prs, ST_SHADOW_OUTER, D_TRANSLATE(ST_SHADOW_OUTER), OBS_GROUP_CHECKABLE, pr);
+		obs_properties_add_group(prs, ST_KEY_SHADOW_OUTER, D_TRANSLATE(ST_I18N_SHADOW_OUTER), OBS_GROUP_CHECKABLE, pr);
 
-		obs_properties_add_float_slider(pr, ST_SHADOW_OUTER_RANGE_MINIMUM, D_TRANSLATE(ST_SHADOW_OUTER_RANGE_MINIMUM),
-										-16.0, 16.0, 0.01);
-		obs_properties_add_float_slider(pr, ST_SHADOW_OUTER_RANGE_MAXIMUM, D_TRANSLATE(ST_SHADOW_OUTER_RANGE_MAXIMUM),
-										-16.0, 16.0, 0.01);
-		obs_properties_add_float_slider(pr, ST_SHADOW_OUTER_OFFSET_X, D_TRANSLATE(ST_SHADOW_OUTER_OFFSET_X), -100.0,
-										100.0, 0.01);
-		obs_properties_add_float_slider(pr, ST_SHADOW_OUTER_OFFSET_Y, D_TRANSLATE(ST_SHADOW_OUTER_OFFSET_Y), -100.0,
-										100.0, 0.01);
-		obs_properties_add_color(pr, ST_SHADOW_OUTER_COLOR, D_TRANSLATE(ST_SHADOW_OUTER_COLOR));
-		obs_properties_add_float_slider(pr, ST_SHADOW_OUTER_ALPHA, D_TRANSLATE(ST_SHADOW_OUTER_ALPHA), 0.0, 100.0, 0.1);
+		obs_properties_add_float_slider(pr, ST_KEY_SHADOW_OUTER_RANGE_MINIMUM,
+										D_TRANSLATE(ST_I18N_SHADOW_OUTER_RANGE_MINIMUM), -16.0, 16.0, 0.01);
+		obs_properties_add_float_slider(pr, ST_KEY_SHADOW_OUTER_RANGE_MAXIMUM,
+										D_TRANSLATE(ST_I18N_SHADOW_OUTER_RANGE_MAXIMUM), -16.0, 16.0, 0.01);
+		obs_properties_add_float_slider(pr, ST_KEY_SHADOW_OUTER_OFFSET_X, D_TRANSLATE(ST_I18N_SHADOW_OUTER_OFFSET_X),
+										-100.0, 100.0, 0.01);
+		obs_properties_add_float_slider(pr, ST_KEY_SHADOW_OUTER_OFFSET_Y, D_TRANSLATE(ST_I18N_SHADOW_OUTER_OFFSET_Y),
+										-100.0, 100.0, 0.01);
+		obs_properties_add_color(pr, ST_KEY_SHADOW_OUTER_COLOR, D_TRANSLATE(ST_I18N_SHADOW_OUTER_COLOR));
+		obs_properties_add_float_slider(pr, ST_KEY_SHADOW_OUTER_ALPHA, D_TRANSLATE(ST_I18N_SHADOW_OUTER_ALPHA), 0.0,
+										100.0, 0.1);
 	}
 
 	{ // Shadow Inner
 		auto pr = obs_properties_create();
-		obs_properties_add_group(prs, ST_SHADOW_INNER, D_TRANSLATE(ST_SHADOW_INNER), OBS_GROUP_CHECKABLE, pr);
+		obs_properties_add_group(prs, ST_KEY_SHADOW_INNER, D_TRANSLATE(ST_I18N_SHADOW_INNER), OBS_GROUP_CHECKABLE, pr);
 
-		obs_properties_add_float_slider(pr, ST_SHADOW_INNER_RANGE_MINIMUM, D_TRANSLATE(ST_SHADOW_INNER_RANGE_MINIMUM),
-										-16.0, 16.0, 0.01);
-		obs_properties_add_float_slider(pr, ST_SHADOW_INNER_RANGE_MAXIMUM, D_TRANSLATE(ST_SHADOW_INNER_RANGE_MAXIMUM),
-										-16.0, 16.0, 0.01);
-		obs_properties_add_float_slider(pr, ST_SHADOW_INNER_OFFSET_X, D_TRANSLATE(ST_SHADOW_INNER_OFFSET_X), -100.0,
-										100.0, 0.01);
-		obs_properties_add_float_slider(pr, ST_SHADOW_INNER_OFFSET_Y, D_TRANSLATE(ST_SHADOW_INNER_OFFSET_Y), -100.0,
-										100.0, 0.01);
-		obs_properties_add_color(pr, ST_SHADOW_INNER_COLOR, D_TRANSLATE(ST_SHADOW_INNER_COLOR));
-		obs_properties_add_float_slider(pr, ST_SHADOW_INNER_ALPHA, D_TRANSLATE(ST_SHADOW_INNER_ALPHA), 0.0, 100.0, 0.1);
+		obs_properties_add_float_slider(pr, ST_KEY_SHADOW_INNER_RANGE_MINIMUM,
+										D_TRANSLATE(ST_I18N_SHADOW_INNER_RANGE_MINIMUM), -16.0, 16.0, 0.01);
+		obs_properties_add_float_slider(pr, ST_KEY_SHADOW_INNER_RANGE_MAXIMUM,
+										D_TRANSLATE(ST_I18N_SHADOW_INNER_RANGE_MAXIMUM), -16.0, 16.0, 0.01);
+		obs_properties_add_float_slider(pr, ST_KEY_SHADOW_INNER_OFFSET_X, D_TRANSLATE(ST_I18N_SHADOW_INNER_OFFSET_X),
+										-100.0, 100.0, 0.01);
+		obs_properties_add_float_slider(pr, ST_KEY_SHADOW_INNER_OFFSET_Y, D_TRANSLATE(ST_I18N_SHADOW_INNER_OFFSET_Y),
+										-100.0, 100.0, 0.01);
+		obs_properties_add_color(pr, ST_KEY_SHADOW_INNER_COLOR, D_TRANSLATE(ST_I18N_SHADOW_INNER_COLOR));
+		obs_properties_add_float_slider(pr, ST_KEY_SHADOW_INNER_ALPHA, D_TRANSLATE(ST_I18N_SHADOW_INNER_ALPHA), 0.0,
+										100.0, 0.1);
 	}
 
 	{ // Glow Outer
 		auto pr = obs_properties_create();
-		obs_properties_add_group(prs, ST_GLOW_OUTER, D_TRANSLATE(ST_GLOW_OUTER), OBS_GROUP_CHECKABLE, pr);
+		obs_properties_add_group(prs, ST_KEY_GLOW_OUTER, D_TRANSLATE(ST_I18N_GLOW_OUTER), OBS_GROUP_CHECKABLE, pr);
 
-		obs_properties_add_color(pr, ST_GLOW_OUTER_COLOR, D_TRANSLATE(ST_GLOW_OUTER_COLOR));
-		obs_properties_add_float_slider(pr, ST_GLOW_OUTER_ALPHA, D_TRANSLATE(ST_GLOW_OUTER_ALPHA), 0.0, 100.0, 0.1);
-		obs_properties_add_float_slider(pr, ST_GLOW_OUTER_WIDTH, D_TRANSLATE(ST_GLOW_OUTER_WIDTH), 0.0, 16.0, 0.01);
-		obs_properties_add_float_slider(pr, ST_GLOW_OUTER_SHARPNESS, D_TRANSLATE(ST_GLOW_OUTER_SHARPNESS), 0.00, 100.0,
+		obs_properties_add_color(pr, ST_KEY_GLOW_OUTER_COLOR, D_TRANSLATE(ST_I18N_GLOW_OUTER_COLOR));
+		obs_properties_add_float_slider(pr, ST_KEY_GLOW_OUTER_ALPHA, D_TRANSLATE(ST_I18N_GLOW_OUTER_ALPHA), 0.0, 100.0,
+										0.1);
+		obs_properties_add_float_slider(pr, ST_KEY_GLOW_OUTER_WIDTH, D_TRANSLATE(ST_I18N_GLOW_OUTER_WIDTH), 0.0, 16.0,
 										0.01);
+		obs_properties_add_float_slider(pr, ST_KEY_GLOW_OUTER_SHARPNESS, D_TRANSLATE(ST_I18N_GLOW_OUTER_SHARPNESS),
+										0.00, 100.0, 0.01);
 	}
 
 	{ // Glow Inner
 		auto pr = obs_properties_create();
-		obs_properties_add_group(prs, ST_GLOW_INNER, D_TRANSLATE(ST_GLOW_INNER), OBS_GROUP_CHECKABLE, pr);
+		obs_properties_add_group(prs, ST_KEY_GLOW_INNER, D_TRANSLATE(ST_I18N_GLOW_INNER), OBS_GROUP_CHECKABLE, pr);
 
-		obs_properties_add_color(pr, ST_GLOW_INNER_COLOR, D_TRANSLATE(ST_GLOW_INNER_COLOR));
-		obs_properties_add_float_slider(pr, ST_GLOW_INNER_ALPHA, D_TRANSLATE(ST_GLOW_INNER_ALPHA), 0.0, 100.0, 0.1);
-		obs_properties_add_float_slider(pr, ST_GLOW_INNER_WIDTH, D_TRANSLATE(ST_GLOW_INNER_WIDTH), 0.0, 16.0, 0.01);
-		obs_properties_add_float_slider(pr, ST_GLOW_INNER_SHARPNESS, D_TRANSLATE(ST_GLOW_INNER_SHARPNESS), 0.00, 100.0,
+		obs_properties_add_color(pr, ST_KEY_GLOW_INNER_COLOR, D_TRANSLATE(ST_I18N_GLOW_INNER_COLOR));
+		obs_properties_add_float_slider(pr, ST_KEY_GLOW_INNER_ALPHA, D_TRANSLATE(ST_I18N_GLOW_INNER_ALPHA), 0.0, 100.0,
+										0.1);
+		obs_properties_add_float_slider(pr, ST_KEY_GLOW_INNER_WIDTH, D_TRANSLATE(ST_I18N_GLOW_INNER_WIDTH), 0.0, 16.0,
 										0.01);
+		obs_properties_add_float_slider(pr, ST_KEY_GLOW_INNER_SHARPNESS, D_TRANSLATE(ST_I18N_GLOW_INNER_SHARPNESS),
+										0.00, 100.0, 0.01);
 	}
 
 	{ // Outline
 		auto pr = obs_properties_create();
-		obs_properties_add_group(prs, ST_OUTLINE, D_TRANSLATE(ST_OUTLINE), OBS_GROUP_CHECKABLE, pr);
+		obs_properties_add_group(prs, ST_KEY_OUTLINE, D_TRANSLATE(ST_I18N_OUTLINE), OBS_GROUP_CHECKABLE, pr);
 
-		obs_properties_add_color(pr, ST_OUTLINE_COLOR, D_TRANSLATE(ST_OUTLINE_COLOR));
-		obs_properties_add_float_slider(pr, ST_OUTLINE_ALPHA, D_TRANSLATE(ST_OUTLINE_ALPHA), 0.0, 100.0, 0.1);
+		obs_properties_add_color(pr, ST_KEY_OUTLINE_COLOR, D_TRANSLATE(ST_I18N_OUTLINE_COLOR));
+		obs_properties_add_float_slider(pr, ST_KEY_OUTLINE_ALPHA, D_TRANSLATE(ST_I18N_OUTLINE_ALPHA), 0.0, 100.0, 0.1);
 
-		obs_properties_add_float_slider(pr, ST_OUTLINE_WIDTH, D_TRANSLATE(ST_OUTLINE_WIDTH), 0.0, 16.0, 0.01);
+		obs_properties_add_float_slider(pr, ST_KEY_OUTLINE_WIDTH, D_TRANSLATE(ST_I18N_OUTLINE_WIDTH), 0.0, 16.0, 0.01);
 
-		obs_properties_add_float_slider(pr, ST_OUTLINE_OFFSET, D_TRANSLATE(ST_OUTLINE_OFFSET), -16.0, 16.0, 0.01);
+		obs_properties_add_float_slider(pr, ST_KEY_OUTLINE_OFFSET, D_TRANSLATE(ST_I18N_OUTLINE_OFFSET), -16.0, 16.0,
+										0.01);
 
-		obs_properties_add_float_slider(pr, ST_OUTLINE_SHARPNESS, D_TRANSLATE(ST_OUTLINE_SHARPNESS), 0.00, 100.0, 0.01);
+		obs_properties_add_float_slider(pr, ST_KEY_OUTLINE_SHARPNESS, D_TRANSLATE(ST_I18N_OUTLINE_SHARPNESS), 0.00,
+										100.0, 0.01);
 	}
 
 	{ // Advanced Options
 		auto pr = obs_properties_create();
 		obs_properties_add_group(prs, S_ADVANCED, D_TRANSLATE(S_ADVANCED), OBS_GROUP_NORMAL, pr);
 
-		obs_properties_add_float_slider(pr, ST_SDF_SCALE, D_TRANSLATE(ST_SDF_SCALE), 0.1, 500.0, 0.1);
-		obs_properties_add_float_slider(pr, ST_SDF_THRESHOLD, D_TRANSLATE(ST_SDF_THRESHOLD), 0.0, 100.0, 0.01);
+		obs_properties_add_float_slider(pr, ST_KEY_SDF_SCALE, D_TRANSLATE(ST_I18N_SDF_SCALE), 0.1, 500.0, 0.1);
+		obs_properties_add_float_slider(pr, ST_KEY_SDF_THRESHOLD, D_TRANSLATE(ST_I18N_SDF_THRESHOLD), 0.0, 100.0, 0.01);
 	}
 
 	return prs;
