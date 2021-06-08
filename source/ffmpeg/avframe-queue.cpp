@@ -22,7 +22,7 @@
 #include "avframe-queue.hpp"
 #include "tools.hpp"
 
-using namespace ffmpeg;
+using namespace streamfx::ffmpeg;
 
 std::shared_ptr<AVFrame> avframe_queue::create_frame()
 {

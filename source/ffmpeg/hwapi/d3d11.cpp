@@ -37,7 +37,7 @@ extern "C" {
 #pragma warning(pop)
 }
 
-using namespace ffmpeg::hwapi;
+using namespace streamfx::ffmpeg::hwapi;
 
 d3d11::d3d11() : _dxgi_module(0), _d3d11_module(0)
 {

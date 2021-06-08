@@ -22,7 +22,7 @@
 #include "swscale.hpp"
 #include <stdexcept>
 
-using namespace ffmpeg;
+using namespace streamfx::ffmpeg;
 
 swscale::swscale() {}
 

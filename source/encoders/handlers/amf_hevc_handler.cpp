@@ -138,12 +138,12 @@ void amf_hevc_handler::log_options(obs_data_t* settings, const AVCodec* codec, A
 	amf::log_options(settings, codec, context);
 
 	DLOG_INFO("[%s]     H.265/HEVC:", codec->name);
-	::ffmpeg::tools::print_av_option_string2(context, "profile", "      Profile",
-											 [](int64_t v, std::string_view o) { return std::string(o); });
-	::ffmpeg::tools::print_av_option_string2(context, "level", "      Level",
-											 [](int64_t v, std::string_view o) { return std::string(o); });
-	::ffmpeg::tools::print_av_option_string2(context, "tier", "      Tier",
-											 [](int64_t v, std::string_view o) { return std::string(o); });
+	::streamfx::ffmpeg::tools::print_av_option_string2(context, "profile", "      Profile",
+													   [](int64_t v, std::string_view o) { return std::string(o); });
+	::streamfx::ffmpeg::tools::print_av_option_string2(context, "level", "      Level",
+													   [](int64_t v, std::string_view o) { return std::string(o); });
+	::streamfx::ffmpeg::tools::print_av_option_string2(context, "tier", "      Tier",
+													   [](int64_t v, std::string_view o) { return std::string(o); });
 }
 
 void amf_hevc_handler::get_encoder_properties(obs_properties_t* props, const AVCodec* codec)

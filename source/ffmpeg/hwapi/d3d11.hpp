@@ -34,8 +34,8 @@
 #pragma warning(pop)
 #endif
 
-namespace ffmpeg::hwapi {
-	class d3d11 : public ffmpeg::hwapi::base {
+namespace streamfx::ffmpeg::hwapi {
+	class d3d11 : public streamfx::ffmpeg::hwapi::base {
 		typedef HRESULT(__stdcall* CreateDXGIFactory_t)(REFIID, void**);
 		typedef HRESULT(__stdcall* CreateDXGIFactory1_t)(REFIID, void**);
 		typedef HRESULT(__stdcall* D3D11CreateDevice_t)(IDXGIAdapter*, D3D_DRIVER_TYPE, HMODULE, UINT,
@@ -62,7 +62,7 @@ namespace ffmpeg::hwapi {
 		virtual std::shared_ptr<hwapi::instance> create_from_obs() override;
 	};
 
-	class d3d11_instance : public ffmpeg::hwapi::instance {
+	class d3d11_instance : public streamfx::ffmpeg::hwapi::instance {
 		ATL::CComPtr<ID3D11Device>        _device;
 		ATL::CComPtr<ID3D11DeviceContext> _context;
 
@@ -80,4 +80,4 @@ namespace ffmpeg::hwapi {
 		virtual std::shared_ptr<AVFrame> avframe_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key,
 														  uint64_t* next_lock_key) override;
 	};
-} // namespace ffmpeg::hwapi
+} // namespace streamfx::ffmpeg::hwapi

@@ -102,7 +102,7 @@ void prores_aw_handler::update(obs_data_t* settings, const AVCodec*, AVCodecCont
 void prores_aw_handler::log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context)
 {
 	DLOG_INFO("[%s]   Apple ProRes:", codec->name);
-	::ffmpeg::tools::print_av_option_string(context, "profile", "    Profile", [&codec](int64_t v) {
+	::streamfx::ffmpeg::tools::print_av_option_string(context, "profile", "    Profile", [&codec](int64_t v) {
 		int val = static_cast<int>(v);
 		for (auto ptr = codec->profiles; (ptr->profile != FF_PROFILE_UNKNOWN) && (ptr != nullptr); ptr++) {
 			if (ptr->profile == val) {

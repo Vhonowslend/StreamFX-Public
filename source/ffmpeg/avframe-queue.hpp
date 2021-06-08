@@ -35,7 +35,7 @@ extern "C" {
 #endif
 }
 
-namespace ffmpeg {
+namespace streamfx::ffmpeg {
 	class avframe_queue {
 		std::deque<std::shared_ptr<AVFrame>> _frames;
 		std::mutex                           _lock;
@@ -71,4 +71,4 @@ namespace ffmpeg {
 
 		std::size_t size();
 	};
-} // namespace ffmpeg
+} // namespace streamfx::ffmpeg

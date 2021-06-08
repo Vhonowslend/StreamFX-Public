@@ -36,7 +36,7 @@ extern "C" {
 #endif
 }
 
-namespace ffmpeg::hwapi {
+namespace streamfx::ffmpeg::hwapi {
 	struct device {
 		std::pair<int64_t, int64_t> id;
 		std::string                 name;
@@ -67,4 +67,4 @@ namespace ffmpeg::hwapi {
 
 		virtual std::shared_ptr<hwapi::instance> create_from_obs() = 0;
 	};
-} // namespace ffmpeg::hwapi
+} // namespace streamfx::ffmpeg::hwapi

@@ -35,7 +35,7 @@ extern "C" {
 #endif
 }
 
-namespace ffmpeg {
+namespace streamfx::ffmpeg {
 	class swscale {
 		std::pair<uint32_t, uint32_t> source_size;
 		AVPixelFormat                 source_format     = AV_PIX_FMT_NONE;
@@ -85,4 +85,4 @@ namespace ffmpeg {
 		int32_t convert(const uint8_t* const source_data[], const int source_stride[], int32_t source_row,
 						int32_t source_rows, uint8_t* const target_data[], const int target_stride[]);
 	};
-} // namespace ffmpeg
+} // namespace streamfx::ffmpeg

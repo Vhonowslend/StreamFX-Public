@@ -34,7 +34,7 @@ extern "C" {
 #pragma warning(pop)
 }
 
-using namespace ffmpeg;
+using namespace streamfx::ffmpeg;
 
 const char* tools::get_pixel_format_name(AVPixelFormat v)
 {
@@ -154,7 +154,7 @@ AVColorSpace tools::obs_to_av_color_space(video_colorspace v)
 	}
 }
 
-AVColorPrimaries ffmpeg::tools::obs_to_av_color_primary(video_colorspace v)
+AVColorPrimaries streamfx::ffmpeg::tools::obs_to_av_color_primary(video_colorspace v)
 {
 	switch (v) {
 	case VIDEO_CS_601: // BT.601
@@ -168,7 +168,7 @@ AVColorPrimaries ffmpeg::tools::obs_to_av_color_primary(video_colorspace v)
 	}
 }
 
-AVColorTransferCharacteristic ffmpeg::tools::obs_to_av_color_transfer_characteristics(video_colorspace v)
+AVColorTransferCharacteristic streamfx::ffmpeg::tools::obs_to_av_color_transfer_characteristics(video_colorspace v)
 {
 	switch (v) {
 	case VIDEO_CS_601: // BT.601
@@ -299,7 +299,7 @@ void tools::print_av_option_bool(AVCodecContext* ctx_codec, void* ctx_option, co
 	int64_t v = 0;
 	if (int err = av_opt_get_int(ctx_option, option, AV_OPT_SEARCH_CHILDREN, &v); err != 0) {
 		DLOG_INFO("[%s] %s: <Error: %s>", ctx_codec->codec->name, text.c_str(),
-				  ffmpeg::tools::get_error_description(err));
+				  streamfx::ffmpeg::tools::get_error_description(err));
 	} else {
 		DLOG_INFO("[%s] %s: %s%s", ctx_codec->codec->name, text.c_str(),
 				  (inverse ? v != 0 : v == 0) ? "Disabled" : "Enabled",
@@ -322,7 +322,7 @@ void tools::print_av_option_int(AVCodecContext* ctx_codec, void* ctx_option, con
 			DLOG_INFO("[%s] %s: <Default>", ctx_codec->codec->name, text.c_str());
 		} else {
 			DLOG_INFO("[%s] %s: <Error: %s>", ctx_codec->codec->name, text.c_str(),
-					  ffmpeg::tools::get_error_description(err));
+					  streamfx::ffmpeg::tools::get_error_description(err));
 		}
 	} else {
 		DLOG_INFO("[%s] %s: %" PRId64 " %s%s", ctx_codec->codec->name, text.c_str(), v, suffix.c_str(),
@@ -342,7 +342,7 @@ void tools::print_av_option_string(AVCodecContext* ctx_codec, void* ctx_option, 
 	int64_t v = 0;
 	if (int err = av_opt_get_int(ctx_option, option, AV_OPT_SEARCH_CHILDREN, &v); err != 0) {
 		DLOG_INFO("[%s] %s: <Error: %s>", ctx_codec->codec->name, text.c_str(),
-				  ffmpeg::tools::get_error_description(err));
+				  streamfx::ffmpeg::tools::get_error_description(err));
 	} else {
 		std::string name = "<Unknown>";
 		if (decoder)
