@@ -22,11 +22,11 @@
 #include "obs/obs-tools.hpp"
 #include "plugin.hpp"
 
-static std::shared_ptr<obs::source_tracker> source_tracker_instance;
+static std::shared_ptr<streamfx::obs::source_tracker> source_tracker_instance;
 
-void obs::source_tracker::source_create_handler(void* ptr, calldata_t* data) noexcept
+void streamfx::obs::source_tracker::source_create_handler(void* ptr, calldata_t* data) noexcept
 try {
-	obs::source_tracker* self = reinterpret_cast<obs::source_tracker*>(ptr);
+	streamfx::obs::source_tracker* self = reinterpret_cast<streamfx::obs::source_tracker*>(ptr);
 
 	obs_source_t* target = nullptr;
 	calldata_get_ptr(data, "source", &target);
@@ -47,15 +47,15 @@ try {
 
 	{
 		std::unique_lock<std::mutex> ul(self->_lock);
-		self->_sources.insert({std::string(name), {weak, obs::obs_weak_source_deleter}});
+		self->_sources.insert({std::string(name), {weak, streamfx::obs::obs_weak_source_deleter}});
 	}
 } catch (...) {
 	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source_tracker::source_destroy_handler(void* ptr, calldata_t* data) noexcept
+void streamfx::obs::source_tracker::source_destroy_handler(void* ptr, calldata_t* data) noexcept
 try {
-	obs::source_tracker* self = reinterpret_cast<obs::source_tracker*>(ptr);
+	streamfx::obs::source_tracker* self = reinterpret_cast<streamfx::obs::source_tracker*>(ptr);
 
 	obs_source_t* target = nullptr;
 	calldata_get_ptr(data, "source", &target);
@@ -81,9 +81,9 @@ try {
 	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source_tracker::source_rename_handler(void* ptr, calldata_t* data) noexcept
+void streamfx::obs::source_tracker::source_rename_handler(void* ptr, calldata_t* data) noexcept
 try {
-	obs::source_tracker* self = reinterpret_cast<obs::source_tracker*>(ptr);
+	streamfx::obs::source_tracker* self = reinterpret_cast<streamfx::obs::source_tracker*>(ptr);
 
 	obs_source_t* target    = nullptr;
 	const char*   prev_name = nullptr;
@@ -106,7 +106,7 @@ try {
 			if (!weak) {
 				return;
 			}
-			self->_sources.insert({new_name, {weak, obs::obs_weak_source_deleter}});
+			self->_sources.insert({new_name, {weak, streamfx::obs::obs_weak_source_deleter}});
 			return;
 		}
 
@@ -118,22 +118,22 @@ try {
 	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
-void obs::source_tracker::initialize()
+void streamfx::obs::source_tracker::initialize()
 {
-	source_tracker_instance = std::make_shared<obs::source_tracker>();
+	source_tracker_instance = std::make_shared<streamfx::obs::source_tracker>();
 }
 
-void obs::source_tracker::finalize()
+void streamfx::obs::source_tracker::finalize()
 {
 	source_tracker_instance.reset();
 }
 
-std::shared_ptr<obs::source_tracker> obs::source_tracker::get()
+std::shared_ptr<streamfx::obs::source_tracker> streamfx::obs::source_tracker::get()
 {
 	return source_tracker_instance;
 }
 
-obs::source_tracker::source_tracker()
+streamfx::obs::source_tracker::source_tracker()
 {
 	auto osi = obs_get_signal_handler();
 	signal_handler_connect(osi, "source_create", &source_create_handler, this);
@@ -141,7 +141,7 @@ obs::source_tracker::source_tracker()
 	signal_handler_connect(osi, "source_rename", &source_rename_handler, this);
 }
 
-obs::source_tracker::~source_tracker()
+streamfx::obs::source_tracker::~source_tracker()
 {
 	auto osi = obs_get_signal_handler();
 	if (osi) {
@@ -153,7 +153,7 @@ obs::source_tracker::~source_tracker()
 	this->_sources.clear();
 }
 
-void obs::source_tracker::enumerate(enumerate_cb_t ecb, filter_cb_t fcb)
+void streamfx::obs::source_tracker::enumerate(enumerate_cb_t ecb, filter_cb_t fcb)
 {
 	// Need func-local copy, otherwise we risk corruption if a new source is created or destroyed.
 	decltype(_sources) _clone;
@@ -163,8 +163,8 @@ void obs::source_tracker::enumerate(enumerate_cb_t ecb, filter_cb_t fcb)
 	}
 
 	for (auto kv : _clone) {
-		auto source =
-			std::shared_ptr<obs_source_t>(obs_weak_source_get_source(kv.second.get()), obs::obs_source_deleter);
+		auto source = std::shared_ptr<obs_source_t>(obs_weak_source_get_source(kv.second.get()),
+													streamfx::obs::obs_source_deleter);
 		if (!source) {
 			continue;
 		}
@@ -183,29 +183,29 @@ void obs::source_tracker::enumerate(enumerate_cb_t ecb, filter_cb_t fcb)
 	}
 }
 
-bool obs::source_tracker::filter_sources(std::string, obs_source_t* source)
+bool streamfx::obs::source_tracker::filter_sources(std::string, obs_source_t* source)
 {
 	return (obs_source_get_type(source) != OBS_SOURCE_TYPE_INPUT);
 }
 
-bool obs::source_tracker::filter_audio_sources(std::string, obs_source_t* source)
+bool streamfx::obs::source_tracker::filter_audio_sources(std::string, obs_source_t* source)
 {
 	uint32_t flags = obs_source_get_output_flags(source);
 	return !(flags & OBS_SOURCE_AUDIO) || (obs_source_get_type(source) != OBS_SOURCE_TYPE_INPUT);
 }
 
-bool obs::source_tracker::filter_video_sources(std::string, obs_source_t* source)
+bool streamfx::obs::source_tracker::filter_video_sources(std::string, obs_source_t* source)
 {
 	uint32_t flags = obs_source_get_output_flags(source);
 	return !(flags & OBS_SOURCE_VIDEO) || (obs_source_get_type(source) != OBS_SOURCE_TYPE_INPUT);
 }
 
-bool obs::source_tracker::filter_transitions(std::string, obs_source_t* source)
+bool streamfx::obs::source_tracker::filter_transitions(std::string, obs_source_t* source)
 {
 	return (obs_source_get_type(source) != OBS_SOURCE_TYPE_TRANSITION);
 }
 
-bool obs::source_tracker::filter_scenes(std::string, obs_source_t* source)
+bool streamfx::obs::source_tracker::filter_scenes(std::string, obs_source_t* source)
 {
 	return (obs_source_get_type(source) != OBS_SOURCE_TYPE_SCENE);
 }

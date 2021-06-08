@@ -21,7 +21,7 @@
 #include "common.hpp"
 #include "plugin.hpp"
 
-namespace obs {
+namespace streamfx::obs {
 	template<class _factory, typename _instance>
 	class source_factory {
 		protected:
@@ -640,4 +640,4 @@ namespace obs {
 		}
 	};
 
-} // namespace obs
+} // namespace streamfx::obs
