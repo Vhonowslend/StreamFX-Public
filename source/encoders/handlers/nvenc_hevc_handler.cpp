@@ -35,9 +35,9 @@ extern "C" {
 #pragma warning(pop)
 }
 
-#define KEY_PROFILE "H265.Profile"
-#define KEY_TIER "H265.Tier"
-#define KEY_LEVEL "H265.Level"
+#define ST_KEY_PROFILE "H265.Profile"
+#define ST_KEY_TIER "H265.Tier"
+#define ST_KEY_LEVEL "H265.Level"
 
 using namespace streamfx::encoder::ffmpeg::handler;
 using namespace streamfx::encoder::codec::hevc;
@@ -70,9 +70,9 @@ void nvenc_hevc_handler::get_defaults(obs_data_t* settings, const AVCodec* codec
 {
 	nvenc::get_defaults(settings, codec, context);
 
-	obs_data_set_default_int(settings, KEY_PROFILE, static_cast<int64_t>(profile::MAIN));
-	obs_data_set_default_int(settings, KEY_TIER, static_cast<int64_t>(profile::MAIN));
-	obs_data_set_default_int(settings, KEY_LEVEL, static_cast<int64_t>(level::UNKNOWN));
+	obs_data_set_default_int(settings, ST_KEY_PROFILE, static_cast<int64_t>(profile::MAIN));
+	obs_data_set_default_int(settings, ST_KEY_TIER, static_cast<int64_t>(profile::MAIN));
+	obs_data_set_default_int(settings, ST_KEY_LEVEL, static_cast<int64_t>(level::UNKNOWN));
 }
 
 bool nvenc_hevc_handler::has_keyframe_support(ffmpeg_factory*)
@@ -109,19 +109,19 @@ void nvenc_hevc_handler::update(obs_data_t* settings, const AVCodec* codec, AVCo
 	nvenc::update(settings, codec, context);
 
 	{ // HEVC Options
-		auto found = profiles.find(static_cast<profile>(obs_data_get_int(settings, KEY_PROFILE)));
+		auto found = profiles.find(static_cast<profile>(obs_data_get_int(settings, ST_KEY_PROFILE)));
 		if (found != profiles.end()) {
 			av_opt_set(context->priv_data, "profile", found->second.c_str(), 0);
 		}
 	}
 	{
-		auto found = tiers.find(static_cast<tier>(obs_data_get_int(settings, KEY_TIER)));
+		auto found = tiers.find(static_cast<tier>(obs_data_get_int(settings, ST_KEY_TIER)));
 		if (found != tiers.end()) {
 			av_opt_set(context->priv_data, "tier", found->second.c_str(), 0);
 		}
 	}
 	{
-		auto found = levels.find(static_cast<level>(obs_data_get_int(settings, KEY_LEVEL)));
+		auto found = levels.find(static_cast<level>(obs_data_get_int(settings, ST_KEY_LEVEL)));
 		if (found != levels.end()) {
 			av_opt_set(context->priv_data, "level", found->second.c_str(), 0);
 		} else {
@@ -156,29 +156,29 @@ void nvenc_hevc_handler::get_encoder_properties(obs_properties_t* props, const A
 		obs_properties_t* grp = props;
 		if (!util::are_property_groups_broken()) {
 			grp = obs_properties_create();
-			obs_properties_add_group(props, P_HEVC, D_TRANSLATE(P_HEVC), OBS_GROUP_NORMAL, grp);
+			obs_properties_add_group(props, S_CODEC_HEVC, D_TRANSLATE(S_CODEC_HEVC), OBS_GROUP_NORMAL, grp);
 		}
 
 		{
-			auto p = obs_properties_add_list(grp, KEY_PROFILE, D_TRANSLATE(P_HEVC_PROFILE), OBS_COMBO_TYPE_LIST,
-											 OBS_COMBO_FORMAT_INT);
+			auto p = obs_properties_add_list(grp, ST_KEY_PROFILE, D_TRANSLATE(S_CODEC_HEVC_PROFILE),
+											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), static_cast<int64_t>(profile::UNKNOWN));
 			for (auto const kv : profiles) {
-				std::string trans = std::string(P_HEVC_PROFILE) + "." + kv.second;
+				std::string trans = std::string(S_CODEC_HEVC_PROFILE) + "." + kv.second;
 				obs_property_list_add_int(p, D_TRANSLATE(trans.c_str()), static_cast<int64_t>(kv.first));
 			}
 		}
 		{
-			auto p = obs_properties_add_list(grp, KEY_TIER, D_TRANSLATE(P_HEVC_TIER), OBS_COMBO_TYPE_LIST,
+			auto p = obs_properties_add_list(grp, ST_KEY_TIER, D_TRANSLATE(S_CODEC_HEVC_TIER), OBS_COMBO_TYPE_LIST,
 											 OBS_COMBO_FORMAT_INT);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), static_cast<int64_t>(tier::UNKNOWN));
 			for (auto const kv : tiers) {
-				std::string trans = std::string(P_HEVC_TIER) + "." + kv.second;
+				std::string trans = std::string(S_CODEC_HEVC_TIER) + "." + kv.second;
 				obs_property_list_add_int(p, D_TRANSLATE(trans.c_str()), static_cast<int64_t>(kv.first));
 			}
 		}
 		{
-			auto p = obs_properties_add_list(grp, KEY_LEVEL, D_TRANSLATE(P_HEVC_LEVEL), OBS_COMBO_TYPE_LIST,
+			auto p = obs_properties_add_list(grp, ST_KEY_LEVEL, D_TRANSLATE(S_CODEC_HEVC_LEVEL), OBS_COMBO_TYPE_LIST,
 											 OBS_COMBO_FORMAT_INT);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), static_cast<int64_t>(level::UNKNOWN));
 			for (auto const kv : levels) {

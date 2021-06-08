@@ -42,7 +42,7 @@ void prores_aw_handler::override_colorformat(AVPixelFormat& target_format, obs_d
 			std::pair{profile::AP4H, AV_PIX_FMT_YUV444P10}, std::pair{profile::AP4X, AV_PIX_FMT_YUV444P10},
 		};
 
-	const int64_t profile_id = obs_data_get_int(settings, P_PRORES_PROFILE);
+	const int64_t profile_id = obs_data_get_int(settings, S_CODEC_PRORES_PROFILE);
 	for (auto kv : profile_to_format_map) {
 		if (kv.first == static_cast<profile>(profile_id)) {
 			target_format = kv.second;
@@ -53,7 +53,7 @@ void prores_aw_handler::override_colorformat(AVPixelFormat& target_format, obs_d
 
 void prores_aw_handler::get_defaults(obs_data_t* settings, const AVCodec*, AVCodecContext*, bool)
 {
-	obs_data_set_default_int(settings, P_PRORES_PROFILE, 0);
+	obs_data_set_default_int(settings, S_CODEC_PRORES_PROFILE, 0);
 }
 
 bool prores_aw_handler::has_pixel_format_support(ffmpeg_factory* instance)
@@ -65,17 +65,17 @@ inline const char* profile_to_name(const AVProfile* ptr)
 {
 	switch (static_cast<profile>(ptr->profile)) {
 	case profile::APCO:
-		return D_TRANSLATE(P_PRORES_PROFILE_APCO);
+		return D_TRANSLATE(S_CODEC_PRORES_PROFILE_APCO);
 	case profile::APCS:
-		return D_TRANSLATE(P_PRORES_PROFILE_APCS);
+		return D_TRANSLATE(S_CODEC_PRORES_PROFILE_APCS);
 	case profile::APCN:
-		return D_TRANSLATE(P_PRORES_PROFILE_APCN);
+		return D_TRANSLATE(S_CODEC_PRORES_PROFILE_APCN);
 	case profile::APCH:
-		return D_TRANSLATE(P_PRORES_PROFILE_APCH);
+		return D_TRANSLATE(S_CODEC_PRORES_PROFILE_APCH);
 	case profile::AP4H:
-		return D_TRANSLATE(P_PRORES_PROFILE_AP4H);
+		return D_TRANSLATE(S_CODEC_PRORES_PROFILE_AP4H);
 	case profile::AP4X:
-		return D_TRANSLATE(P_PRORES_PROFILE_AP4X);
+		return D_TRANSLATE(S_CODEC_PRORES_PROFILE_AP4X);
 	default:
 		return ptr->name;
 	}
@@ -84,19 +84,19 @@ inline const char* profile_to_name(const AVProfile* ptr)
 void prores_aw_handler::get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context, bool)
 {
 	if (!context) {
-		auto p = obs_properties_add_list(props, P_PRORES_PROFILE, D_TRANSLATE(P_PRORES_PROFILE), OBS_COMBO_TYPE_LIST,
-										 OBS_COMBO_FORMAT_INT);
+		auto p = obs_properties_add_list(props, S_CODEC_PRORES_PROFILE, D_TRANSLATE(S_CODEC_PRORES_PROFILE),
+										 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 		for (auto ptr = codec->profiles; ptr->profile != FF_PROFILE_UNKNOWN; ptr++) {
 			obs_property_list_add_int(p, profile_to_name(ptr), static_cast<int64_t>(ptr->profile));
 		}
 	} else {
-		obs_property_set_enabled(obs_properties_get(props, P_PRORES_PROFILE), false);
+		obs_property_set_enabled(obs_properties_get(props, S_CODEC_PRORES_PROFILE), false);
 	}
 }
 
 void prores_aw_handler::update(obs_data_t* settings, const AVCodec*, AVCodecContext* context)
 {
-	context->profile = static_cast<int>(obs_data_get_int(settings, P_PRORES_PROFILE));
+	context->profile = static_cast<int>(obs_data_get_int(settings, S_CODEC_PRORES_PROFILE));
 }
 
 void prores_aw_handler::log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context)

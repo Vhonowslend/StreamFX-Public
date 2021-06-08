@@ -23,10 +23,10 @@
 #include "common.hpp"
 
 // Codec: HEVC
-#define P_HEVC "Codec.HEVC"
-#define P_HEVC_PROFILE "Codec.HEVC.Profile"
-#define P_HEVC_TIER "Codec.HEVC.Tier"
-#define P_HEVC_LEVEL "Codec.HEVC.Level"
+#define S_CODEC_HEVC "Codec.HEVC"
+#define S_CODEC_HEVC_PROFILE "Codec.HEVC.Profile"
+#define S_CODEC_HEVC_TIER "Codec.HEVC.Tier"
+#define S_CODEC_HEVC_LEVEL "Codec.HEVC.Level"
 
 namespace streamfx::encoder::codec::hevc {
 	enum class profile {
