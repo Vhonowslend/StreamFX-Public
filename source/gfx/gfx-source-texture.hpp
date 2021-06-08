@@ -24,8 +24,8 @@
 
 namespace gfx {
 	class source_texture {
-		std::shared_ptr<obs::deprecated_source> _parent;
-		std::shared_ptr<obs::deprecated_source> _child;
+		std::shared_ptr<streamfx::obs::deprecated_source> _parent;
+		std::shared_ptr<streamfx::obs::deprecated_source> _child;
 
 		std::shared_ptr<gs::rendertarget> _rt;
 
@@ -37,8 +37,9 @@ namespace gfx {
 		source_texture(const char* name, obs_source_t* parent);
 		source_texture(std::string name, obs_source_t* parent);
 
-		source_texture(std::shared_ptr<obs::deprecated_source> child, std::shared_ptr<obs::deprecated_source> parent);
-		source_texture(std::shared_ptr<obs::deprecated_source> child, obs_source_t* parent);
+		source_texture(std::shared_ptr<streamfx::obs::deprecated_source> child,
+					   std::shared_ptr<streamfx::obs::deprecated_source> parent);
+		source_texture(std::shared_ptr<streamfx::obs::deprecated_source> child, obs_source_t* parent);
 
 		public /*copy*/:
 		source_texture(source_texture const& other) = delete;

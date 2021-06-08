@@ -262,7 +262,7 @@ bool gfx::shader::shader::on_refresh_properties(obs_properties_t* props, obs_pro
 	{ // Clear parameter options.
 		auto grp = obs_property_group_content(obs_properties_get(props, ST_PARAMETERS));
 		for (auto p = obs_properties_first(grp); p != nullptr; p = obs_properties_first(grp)) {
-			obs::tools::obs_properties_remove_by_name(grp, obs_property_name(p));
+			streamfx::obs::tools::obs_properties_remove_by_name(grp, obs_property_name(p));
 		}
 
 		// Rebuild new parameters.
@@ -299,7 +299,7 @@ bool gfx::shader::shader::on_shader_or_technique_modified(obs_properties_t* prop
 		// Clear parameter options.
 		auto grp = obs_property_group_content(obs_properties_get(props, ST_PARAMETERS));
 		for (auto p = obs_properties_first(grp); p != nullptr; p = obs_properties_first(grp)) {
-			obs::tools::obs_properties_remove_by_name(grp, obs_property_name(p));
+			streamfx::obs::tools::obs_properties_remove_by_name(grp, obs_property_name(p));
 		}
 
 		// Rebuild new parameters.

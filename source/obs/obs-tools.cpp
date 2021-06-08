@@ -74,7 +74,7 @@ static bool scs_contains(scs_searchdata& sd, obs_source_t* source)
 	return true;
 }
 
-bool obs::tools::scene_contains_source(obs_scene_t* scene, obs_source_t* source)
+bool streamfx::obs::tools::scene_contains_source(obs_scene_t* scene, obs_source_t* source)
 {
 	scs_searchdata sd;
 	sd.source = source;
@@ -113,7 +113,7 @@ struct _hack_obs_properties {
 };
 }
 
-bool obs::tools::obs_properties_remove_by_name(obs_properties_t* props, const char* name)
+bool streamfx::obs::tools::obs_properties_remove_by_name(obs_properties_t* props, const char* name)
 {
 	// Due to a bug in obs_properties_remove_by_name, calling it on the first or last element of a group corrupts the
 	// obs_properties_t's first and last pointers, which now point at nonsense.
@@ -161,7 +161,7 @@ bool obs::tools::obs_properties_remove_by_name(obs_properties_t* props, const ch
 		}
 
 		if (el_cur->type == OBS_PROPERTY_GROUP) {
-			if (obs::tools::obs_properties_remove_by_name(
+			if (streamfx::obs::tools::obs_properties_remove_by_name(
 					obs_property_group_content(reinterpret_cast<obs_property_t*>(el_cur)), name))
 				return true;
 		}
@@ -170,7 +170,7 @@ bool obs::tools::obs_properties_remove_by_name(obs_properties_t* props, const ch
 	return false;
 }
 
-obs::tools::child_source::child_source(obs_source_t* parent, std::shared_ptr<obs_source_t> child)
+streamfx::obs::tools::child_source::child_source(obs_source_t* parent, std::shared_ptr<obs_source_t> child)
 	: _parent(parent), _child(child)
 {
 	if (!obs_source_add_active_child(_parent, _child.get())) {
@@ -178,12 +178,12 @@ obs::tools::child_source::child_source(obs_source_t* parent, std::shared_ptr<obs
 	}
 }
 
-obs::tools::child_source::~child_source()
+streamfx::obs::tools::child_source::~child_source()
 {
 	obs_source_remove_active_child(_parent, _child.get());
 }
 
-std::shared_ptr<obs_source_t> obs::tools::child_source::get()
+std::shared_ptr<obs_source_t> streamfx::obs::tools::child_source::get()
 {
 	return _child;
 }

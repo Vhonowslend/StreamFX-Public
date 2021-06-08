@@ -87,7 +87,7 @@ try {
 	_threadpool = std::make_shared<streamfx::util::threadpool>();
 
 	// Initialize Source Tracker
-	obs::source_tracker::initialize();
+	streamfx::obs::source_tracker::initialize();
 
 	// GS Stuff
 	{
@@ -242,7 +242,7 @@ try {
 	}
 
 	// Finalize Source Tracker
-	obs::source_tracker::finalize();
+	streamfx::obs::source_tracker::finalize();
 
 	//	// Auto-Updater
 	//#ifdef ENABLE_UPDATER

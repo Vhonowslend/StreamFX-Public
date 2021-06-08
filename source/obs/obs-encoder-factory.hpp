@@ -21,7 +21,7 @@
 #include "common.hpp"
 #include "plugin.hpp"
 
-namespace obs {
+namespace streamfx::obs {
 	template<class _factory, typename _instance>
 	class encoder_factory {
 		public:
@@ -350,4 +350,4 @@ namespace obs {
 		virtual void get_video_info(struct video_scale_info* info) {}
 	};
 
-} // namespace obs
+} // namespace streamfx::obs
