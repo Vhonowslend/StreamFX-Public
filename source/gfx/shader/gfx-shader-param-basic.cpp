@@ -31,7 +31,7 @@ static const std::string_view _annotation_scale           = "scale";
 static const std::string_view _annotation_enum_entry      = "enum_%zu";
 static const std::string_view _annotation_enum_entry_name = "enum_%zu_name";
 
-inline bool get_annotation_string(gs::effect_parameter param, std::string anno_name, std::string& out)
+inline bool get_annotation_string(streamfx::obs::gs::effect_parameter param, std::string anno_name, std::string& out)
 {
 	if (!param)
 		return false;
@@ -46,7 +46,7 @@ inline bool get_annotation_string(gs::effect_parameter param, std::string anno_n
 	return false;
 }
 
-inline bool get_annotation_float(gs::effect_parameter param, std::string anno_name, float_t& out)
+inline bool get_annotation_float(streamfx::obs::gs::effect_parameter param, std::string anno_name, float_t& out)
 {
 	if (!param) {
 		return false;
@@ -76,7 +76,7 @@ gfx::shader::basic_field_type gfx::shader::get_field_type_from_string(std::strin
 	return basic_field_type::Input;
 }
 
-gfx::shader::basic_parameter::basic_parameter(gs::effect_parameter param, std::string prefix)
+gfx::shader::basic_parameter::basic_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
 	: parameter(param, prefix), _field_type(basic_field_type::Input), _suffix(), _keys(), _names(), _min(), _max(),
 	  _step(), _values()
 {
@@ -111,7 +111,7 @@ gfx::shader::basic_parameter::basic_parameter(gs::effect_parameter param, std::s
 
 	// Read Suffix Data
 	if (auto anno = get_parameter().get_annotation(_annotation_suffix); anno) {
-		if (anno.get_type() == gs::effect_parameter::type::String)
+		if (anno.get_type() == streamfx::obs::gs::effect_parameter::type::String)
 			_suffix = anno.get_default_string();
 	}
 
@@ -135,7 +135,7 @@ gfx::shader::basic_parameter::basic_parameter(gs::effect_parameter param, std::s
 
 				load_parameter_data(eanno, entry.data);
 				if (auto nanno = get_parameter().get_annotation(key_name);
-					nanno && (nanno.get_type() == gs::effect_parameter::type::String)) {
+					nanno && (nanno.get_type() == streamfx::obs::gs::effect_parameter::type::String)) {
 					entry.name = nanno.get_default_string();
 				} else {
 					entry.name = "Unnamed Entry";
@@ -155,12 +155,12 @@ gfx::shader::basic_parameter::basic_parameter(gs::effect_parameter param, std::s
 
 gfx::shader::basic_parameter::~basic_parameter() {}
 
-void gfx::shader::basic_parameter::load_parameter_data(gs::effect_parameter parameter, basic_data& data)
+void gfx::shader::basic_parameter::load_parameter_data(streamfx::obs::gs::effect_parameter parameter, basic_data& data)
 {
 	parameter.get_default_value(&data.i32, 1);
 }
 
-gfx::shader::bool_parameter::bool_parameter(gs::effect_parameter param, std::string prefix)
+gfx::shader::bool_parameter::bool_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
 	: basic_parameter(param, prefix)
 {
 	_min.resize(0);
@@ -213,7 +213,7 @@ void gfx::shader::bool_parameter::assign()
 	get_parameter().set_value(_data.data(), _data.size());
 }
 
-gfx::shader::float_parameter::float_parameter(gs::effect_parameter param, std::string prefix)
+gfx::shader::float_parameter::float_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
 	: basic_parameter(param, prefix)
 {
 	_data.resize(get_size());
@@ -339,7 +339,7 @@ static inline obs_property_t* build_int_property(gfx::shader::basic_field_type f
 	}
 }
 
-gfx::shader::int_parameter::int_parameter(gs::effect_parameter param, std::string prefix)
+gfx::shader::int_parameter::int_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
 	: basic_parameter(param, prefix)
 {
 	_data.resize(get_size());

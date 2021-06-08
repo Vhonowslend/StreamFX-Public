@@ -32,46 +32,47 @@ extern "C" {
 #endif
 }
 
-gs::effect_technique::effect_technique(gs_technique_t* technique, std::shared_ptr<gs_effect_t> parent) : _parent(parent)
+streamfx::obs::gs::effect_technique::effect_technique(gs_technique_t* technique, std::shared_ptr<gs_effect_t> parent)
+	: _parent(parent)
 {
 	reset(technique, [](void*) {});
 }
 
-gs::effect_technique::~effect_technique() {}
+streamfx::obs::gs::effect_technique::~effect_technique() {}
 
-std::string gs::effect_technique::name()
+std::string streamfx::obs::gs::effect_technique::name()
 {
 	const char* name_c   = get()->name;
 	std::size_t name_len = strnlen(name_c, 256);
 	return name_c ? std::string(name_c, name_c + name_len) : std::string();
 }
 
-std::size_t gs::effect_technique::count_passes()
+std::size_t streamfx::obs::gs::effect_technique::count_passes()
 {
 	return static_cast<size_t>(get()->passes.num);
 }
 
-gs::effect_pass gs::effect_technique::get_pass(std::size_t idx)
+streamfx::obs::gs::effect_pass streamfx::obs::gs::effect_technique::get_pass(std::size_t idx)
 {
 	if (idx >= get()->passes.num) {
 		return nullptr;
 	}
 
-	return gs::effect_pass(get()->passes.array + idx, *this);
+	return streamfx::obs::gs::effect_pass(get()->passes.array + idx, *this);
 }
 
-gs::effect_pass gs::effect_technique::get_pass(std::string name)
+streamfx::obs::gs::effect_pass streamfx::obs::gs::effect_technique::get_pass(std::string name)
 {
 	for (std::size_t idx = 0; idx < get()->passes.num; idx++) {
 		auto ptr = get()->passes.array + idx;
 		if (strcmp(ptr->name, name.c_str()) == 0)
-			return gs::effect_pass(ptr, *this);
+			return streamfx::obs::gs::effect_pass(ptr, *this);
 	}
 
 	return nullptr;
 }
 
-bool gs::effect_technique::has_pass(std::string name)
+bool streamfx::obs::gs::effect_technique::has_pass(std::string name)
 {
 	if (get_pass(name) != nullptr)
 		return true;

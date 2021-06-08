@@ -20,7 +20,7 @@
 #pragma once
 #include "common.hpp"
 
-namespace gs {
+namespace streamfx::obs::gs {
 	class texture {
 		public:
 		enum class type : uint8_t { Normal, Volume, Cube };
@@ -52,7 +52,7 @@ namespace gs {
 		 * \param texture_flags Texture Flags
 		 */
 		texture(uint32_t width, uint32_t height, gs_color_format format, uint32_t mip_levels, const uint8_t** mip_data,
-				gs::texture::flags texture_flags);
+				streamfx::obs::gs::texture::flags texture_flags);
 
 		/*!
 		 * \brief Create a 3D Texture
@@ -66,7 +66,7 @@ namespace gs {
 		 * \param texture_flags Texture Flags
 		 */
 		texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_format format, uint32_t mip_levels,
-				const uint8_t** mip_data, gs::texture::flags texture_flags);
+				const uint8_t** mip_data, streamfx::obs::gs::texture::flags texture_flags);
 
 		/*!
 		 * \brief Create a Cube Texture
@@ -78,7 +78,7 @@ namespace gs {
 		 * \param texture_flags Texture Flags
 		 */
 		texture(uint32_t size, gs_color_format format, uint32_t mip_levels, const uint8_t** mip_data,
-				gs::texture::flags texture_flags);
+				streamfx::obs::gs::texture::flags texture_flags);
 
 		/*!
 		* \brief Load a texture from a file
@@ -107,10 +107,10 @@ namespace gs {
 
 		uint32_t get_depth();
 
-		gs::texture::type get_type();
+		streamfx::obs::gs::texture::type get_type();
 
 		gs_color_format get_color_format();
 	};
-} // namespace gs
+} // namespace streamfx::obs::gs
 
-P_ENABLE_BITMASK_OPERATORS(gs::texture::flags)
+P_ENABLE_BITMASK_OPERATORS(streamfx::obs::gs::texture::flags)

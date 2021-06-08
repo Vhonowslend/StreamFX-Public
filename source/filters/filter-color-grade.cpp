@@ -131,7 +131,7 @@ color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self)
 		throw std::runtime_error("Failed to load color grade effect.");
 	} else {
 		try {
-			_effect = gs::effect::create(path.u8string());
+			_effect = streamfx::obs::gs::effect::create(path.u8string());
 		} catch (std::exception const& ex) {
 			DLOG_ERROR(LOCAL_PREFIX "Failed to load effect '%s': %s", path.u8string().c_str(), ex.what());
 			throw;
@@ -162,7 +162,7 @@ color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self)
 
 void color_grade_instance::allocate_rendertarget(gs_color_format format)
 {
-	_cache_rt = std::make_unique<gs::rendertarget>(format, GS_ZS_NONE);
+	_cache_rt = std::make_unique<streamfx::obs::gs::rendertarget>(format, GS_ZS_NONE);
 }
 
 float_t fix_gamma_value(double_t v)
@@ -287,7 +287,7 @@ void color_grade_instance::prepare_effect()
 void color_grade_instance::rebuild_lut()
 {
 #ifdef ENABLE_PROFILING
-	gs::debug_marker gdm{gs::debug_color_cache, "Rebuild LUT"};
+	streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_cache, "Rebuild LUT"};
 #endif
 
 	// Generate a fresh LUT texture.
@@ -298,7 +298,7 @@ void color_grade_instance::rebuild_lut()
 		// Check if we have a render target to work with and if it's the correct format.
 		if (!_lut_rt || (lut_texture->get_color_format() != _lut_rt->get_color_format())) {
 			// Create a new render target with new format.
-			_lut_rt = std::make_unique<gs::rendertarget>(lut_texture->get_color_format(), GS_ZS_NONE);
+			_lut_rt = std::make_unique<streamfx::obs::gs::rendertarget>(lut_texture->get_color_format(), GS_ZS_NONE);
 		}
 
 		// Prepare our color grade effect.
@@ -361,7 +361,8 @@ void color_grade_instance::video_render(gs_effect_t* shader)
 	}
 
 #ifdef ENABLE_PROFILING
-	gs::debug_marker gdmp{gs::debug_color_source, "Color Grading '%s'", obs_source_get_name(_self)};
+	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Color Grading '%s'",
+										 obs_source_get_name(_self)};
 #endif
 
 	// TODO: Optimize this once (https://github.com/obsproject/obs-studio/pull/4199) is merged.
@@ -370,11 +371,12 @@ void color_grade_instance::video_render(gs_effect_t* shader)
 	// 1. Capture the filter/source rendered above this.
 	if (!_ccache_fresh || !_ccache_texture) {
 #ifdef ENABLE_PROFILING
-		gs::debug_marker gdmp{gs::debug_color_cache, "Cache '%s'", obs_source_get_name(target)};
+		streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_cache, "Cache '%s'",
+											 obs_source_get_name(target)};
 #endif
 		// If the input cache render target doesn't exist, create it.
 		if (!_ccache_rt) {
-			_ccache_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+			_ccache_rt = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 		}
 
 		{
@@ -425,7 +427,7 @@ void color_grade_instance::video_render(gs_effect_t* shader)
 	if (_lut_initialized && _lut_enabled) { // Try to apply with the LUT based method.
 		try {
 #ifdef ENABLE_PROFILING
-			gs::debug_marker gdm{gs::debug_color_convert, "LUT Rendering"};
+			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert, "LUT Rendering"};
 #endif
 			// If the LUT was changed, rebuild the LUT first.
 			if (_lut_dirty) {
@@ -491,7 +493,7 @@ void color_grade_instance::video_render(gs_effect_t* shader)
 	}
 	if ((!_lut_initialized || !_lut_enabled) && !_cache_fresh) {
 #ifdef ENABLE_PROFILING
-		gs::debug_marker gdm{gs::debug_color_convert, "Direct Rendering"};
+		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert, "Direct Rendering"};
 #endif
 		// Reallocate the rendertarget if necessary.
 		if (_cache_rt->get_color_format() != GS_RGBA) {
@@ -547,7 +549,7 @@ void color_grade_instance::video_render(gs_effect_t* shader)
 	// 3. Render the output cache.
 	{
 #ifdef ENABLE_PROFILING
-		gs::debug_marker gdm{gs::debug_color_cache_render, "Draw Cache"};
+		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_cache_render, "Draw Cache"};
 #endif
 		// Revert GPU status to what OBS Studio expects.
 		gs_enable_depth_test(false);

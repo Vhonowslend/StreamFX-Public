@@ -28,25 +28,25 @@
 
 namespace streamfx::filter::sdf_effects {
 	class sdf_effects_instance : public obs::source_instance {
-		gs::effect _sdf_producer_effect;
-		gs::effect _sdf_consumer_effect;
+		streamfx::obs::gs::effect _sdf_producer_effect;
+		streamfx::obs::gs::effect _sdf_consumer_effect;
 
 		// Input
-		std::shared_ptr<gs::rendertarget> _source_rt;
-		std::shared_ptr<gs::texture>      _source_texture;
-		bool                              _source_rendered;
+		std::shared_ptr<streamfx::obs::gs::rendertarget> _source_rt;
+		std::shared_ptr<streamfx::obs::gs::texture>      _source_texture;
+		bool                                             _source_rendered;
 
 		// Distance Field
-		std::shared_ptr<gs::rendertarget> _sdf_write;
-		std::shared_ptr<gs::rendertarget> _sdf_read;
-		std::shared_ptr<gs::texture>      _sdf_texture;
-		double_t                          _sdf_scale;
-		float_t                           _sdf_threshold;
+		std::shared_ptr<streamfx::obs::gs::rendertarget> _sdf_write;
+		std::shared_ptr<streamfx::obs::gs::rendertarget> _sdf_read;
+		std::shared_ptr<streamfx::obs::gs::texture>      _sdf_texture;
+		double_t                                         _sdf_scale;
+		float_t                                          _sdf_threshold;
 
 		// Effects
-		bool                              _output_rendered;
-		std::shared_ptr<gs::texture>      _output_texture;
-		std::shared_ptr<gs::rendertarget> _output_rt;
+		bool                                             _output_rendered;
+		std::shared_ptr<streamfx::obs::gs::texture>      _output_texture;
+		std::shared_ptr<streamfx::obs::gs::rendertarget> _output_rt;
 		/// Inner Shadow
 		bool    _inner_shadow;
 		vec4    _inner_shadow_color;

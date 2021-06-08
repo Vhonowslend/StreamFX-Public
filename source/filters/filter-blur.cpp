@@ -107,17 +107,17 @@ blur_instance::blur_instance(obs_data_t* settings, obs_source_t* self)
 	: obs::source_instance(settings, self), _source_rendered(false), _output_rendered(false)
 {
 	{
-		auto gctx = gs::context();
+		auto gctx = streamfx::obs::gs::context();
 
 		// Create RenderTargets
-		this->_source_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-		this->_output_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+		this->_source_rt = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+		this->_output_rt = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 
 		// Load Effects
 		{
 			auto file = streamfx::data_file_path("effects/mask.effect").string();
 			try {
-				_effect_mask = gs::effect::create(file);
+				_effect_mask = streamfx::obs::gs::effect::create(file);
 			} catch (std::runtime_error& ex) {
 				DLOG_ERROR("<filter-blur> Loading effect '%s' failed with error(s): %s", file.c_str(), ex.what());
 			}
@@ -129,7 +129,7 @@ blur_instance::blur_instance(obs_data_t* settings, obs_source_t* self)
 
 blur_instance::~blur_instance() {}
 
-bool blur_instance::apply_mask_parameters(gs::effect effect, gs_texture_t* original_texture,
+bool blur_instance::apply_mask_parameters(streamfx::obs::gs::effect effect, gs_texture_t* original_texture,
 										  gs_texture_t* blurred_texture)
 {
 	if (effect.has_parameter("image_orig")) {
@@ -328,7 +328,7 @@ void blur_instance::video_tick(float)
 	if (_mask.type == mask_type::Image) {
 		if (_mask.image.path_old != _mask.image.path) {
 			try {
-				_mask.image.texture  = std::make_shared<gs::texture>(_mask.image.path);
+				_mask.image.texture  = std::make_shared<streamfx::obs::gs::texture>(_mask.image.path);
 				_mask.image.path_old = _mask.image.path;
 			} catch (...) {
 				DLOG_ERROR("<filter-blur> Instance '%s' failed to load image '%s'.", obs_source_get_name(_self),
@@ -367,14 +367,15 @@ void blur_instance::video_render(gs_effect_t* effect)
 	}
 
 #ifdef ENABLE_PROFILING
-	gs::debug_marker gdmp{gs::debug_color_source, "Blur '%s'", obs_source_get_name(_self)};
+	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Blur '%s'",
+										 obs_source_get_name(_self)};
 #endif
 
 	if (!_source_rendered) {
 		// Source To Texture
 		{
 #ifdef ENABLE_PROFILING
-			gs::debug_marker gdm{gs::debug_color_cache, "Cache"};
+			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_cache, "Cache"};
 #endif
 
 			if (obs_source_process_filter_begin(this->_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
@@ -424,7 +425,7 @@ void blur_instance::video_render(gs_effect_t* effect)
 	if (!_output_rendered) {
 		{
 #ifdef ENABLE_PROFILING
-			gs::debug_marker gdm{gs::debug_color_convert, "Blur"};
+			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert, "Blur"};
 #endif
 
 			_blur->set_input(_source_texture);
@@ -434,7 +435,7 @@ void blur_instance::video_render(gs_effect_t* effect)
 		// Mask
 		if (_mask.enabled) {
 #ifdef ENABLE_PROFILING
-			gs::debug_marker gdm{gs::debug_color_convert, "Mask"};
+			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert, "Mask"};
 #endif
 
 			gs_blend_state_push();
@@ -492,8 +493,8 @@ void blur_instance::video_render(gs_effect_t* effect)
 				}
 
 #ifdef ENABLE_PROFILING
-				gs::debug_marker gdm{gs::debug_color_capture, "Capture '%s'",
-									 obs_source_get_name(_mask.source.source_texture->get_object())};
+				streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_capture, "Capture '%s'",
+													obs_source_get_name(_mask.source.source_texture->get_object())};
 #endif
 
 				this->_mask.source.texture = this->_mask.source.source_texture->render(source_width, source_height);
@@ -528,7 +529,7 @@ void blur_instance::video_render(gs_effect_t* effect)
 	// Draw source
 	{
 #ifdef ENABLE_PROFILING
-		gs::debug_marker gdm{gs::debug_color_render, "Render"};
+		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_render, "Render"};
 #endif
 
 		// It is important that we do not modify the blend state here, as it is set correctly by OBS

@@ -83,7 +83,8 @@ void shader_instance::video_render(gs_effect_t* effect)
 	}
 
 #ifdef ENABLE_PROFILING
-	gs::debug_marker gdmp{gs::debug_color_source, "Shader Source '%s'", obs_source_get_name(_self)};
+	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Shader Source '%s'",
+										 obs_source_get_name(_self)};
 #endif
 
 	_fx->prepare_render();
