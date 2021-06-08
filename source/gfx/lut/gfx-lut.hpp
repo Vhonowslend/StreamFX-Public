@@ -25,8 +25,8 @@
 
 namespace gfx::lut {
 	class data {
-		std::shared_ptr<gs::effect> _producer_effect;
-		std::shared_ptr<gs::effect> _consumer_effect;
+		std::shared_ptr<streamfx::obs::gs::effect> _producer_effect;
+		std::shared_ptr<streamfx::obs::gs::effect> _consumer_effect;
 
 		public:
 		static std::shared_ptr<data> instance();
@@ -37,12 +37,12 @@ namespace gfx::lut {
 		public:
 		~data();
 
-		inline std::shared_ptr<gs::effect> producer_effect()
+		inline std::shared_ptr<streamfx::obs::gs::effect> producer_effect()
 		{
 			return _producer_effect;
 		};
 
-		inline std::shared_ptr<gs::effect> consumer_effect()
+		inline std::shared_ptr<streamfx::obs::gs::effect> consumer_effect()
 		{
 			return _consumer_effect;
 		};

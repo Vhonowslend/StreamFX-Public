@@ -22,7 +22,7 @@
 #include <vector>
 #include "plugin.hpp"
 
-namespace gs {
+namespace streamfx::obs::gs {
 	class context {
 		public:
 		inline context()
@@ -87,4 +87,4 @@ namespace gs {
 		}
 	};
 #endif
-} // namespace gs
+} // namespace streamfx::obs::gs

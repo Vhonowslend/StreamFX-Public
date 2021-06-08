@@ -36,9 +36,10 @@
 
 gfx::blur::box_linear_data::box_linear_data()
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 	try {
-		_effect = gs::effect::create(streamfx::data_file_path("effects/blur/box-linear.effect").u8string());
+		_effect =
+			streamfx::obs::gs::effect::create(streamfx::data_file_path("effects/blur/box-linear.effect").u8string());
 	} catch (...) {
 		DLOG_ERROR("<gfx::blur::box_linear> Failed to load _effect.");
 	}
@@ -46,11 +47,11 @@ gfx::blur::box_linear_data::box_linear_data()
 
 gfx::blur::box_linear_data::~box_linear_data()
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 	_effect.reset();
 }
 
-gs::effect gfx::blur::box_linear_data::get_effect()
+streamfx::obs::gs::effect gfx::blur::box_linear_data::get_effect()
 {
 	return _effect;
 }
@@ -187,13 +188,13 @@ std::shared_ptr<::gfx::blur::box_linear_data> gfx::blur::box_linear_factory::dat
 gfx::blur::box_linear::box_linear()
 	: _data(::gfx::blur::box_linear_factory::get().data()), _size(1.), _step_scale({1., 1.})
 {
-	_rendertarget  = std::make_shared<::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	_rendertarget2 = std::make_shared<::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_rendertarget  = std::make_shared<::streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_rendertarget2 = std::make_shared<::streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
 gfx::blur::box_linear::~box_linear() {}
 
-void gfx::blur::box_linear::set_input(std::shared_ptr<::gs::texture> texture)
+void gfx::blur::box_linear::set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture)
 {
 	_input_texture = texture;
 }
@@ -240,12 +241,12 @@ double_t gfx::blur::box_linear::get_step_scale_y()
 	return _step_scale.second;
 }
 
-std::shared_ptr<::gs::texture> gfx::blur::box_linear::render()
+std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::box_linear::render()
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 
 #ifdef ENABLE_PROFILING
-	auto gdmp = gs::debug_marker(gs::debug_color_azure_radiance, "Box Linear Blur");
+	auto gdmp = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Box Linear Blur");
 #endif
 
 	float_t width  = float_t(_input_texture->get_width());
@@ -265,7 +266,7 @@ std::shared_ptr<::gs::texture> gfx::blur::box_linear::render()
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
 	// Two Pass Blur
-	gs::effect effect = _data->get_effect();
+	streamfx::obs::gs::effect effect = _data->get_effect();
 	if (effect) {
 		// Pass 1
 		effect.get_parameter("pImage").set_texture(_input_texture);
@@ -276,7 +277,7 @@ std::shared_ptr<::gs::texture> gfx::blur::box_linear::render()
 
 		{
 #ifdef ENABLE_PROFILING
-			auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Horizontal");
+			auto gdm = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Horizontal");
 #endif
 
 			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
@@ -292,7 +293,7 @@ std::shared_ptr<::gs::texture> gfx::blur::box_linear::render()
 
 		{
 #ifdef ENABLE_PROFILING
-			auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Vertical");
+			auto gdm = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Vertical");
 #endif
 
 			auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
@@ -308,7 +309,7 @@ std::shared_ptr<::gs::texture> gfx::blur::box_linear::render()
 	return _rendertarget->get_texture();
 }
 
-std::shared_ptr<::gs::texture> gfx::blur::box_linear::get()
+std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::box_linear::get()
 {
 	return _rendertarget->get_texture();
 }
@@ -330,12 +331,13 @@ void gfx::blur::box_linear_directional::set_angle(double_t angle)
 	_angle = D_DEG_TO_RAD(angle);
 }
 
-std::shared_ptr<::gs::texture> gfx::blur::box_linear_directional::render()
+std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::box_linear_directional::render()
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 
 #ifdef ENABLE_PROFILING
-	auto gdmp = gs::debug_marker(gs::debug_color_azure_radiance, "Box Linear Directional Blur");
+	auto gdmp =
+		streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Box Linear Directional Blur");
 #endif
 
 	float_t width  = float_t(_input_texture->get_width());
@@ -355,7 +357,7 @@ std::shared_ptr<::gs::texture> gfx::blur::box_linear_directional::render()
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
 	// One Pass Blur
-	gs::effect effect = _data->get_effect();
+	streamfx::obs::gs::effect effect = _data->get_effect();
 	if (effect) {
 		effect.get_parameter("pImage").set_texture(_input_texture);
 		effect.get_parameter("pImageTexel")

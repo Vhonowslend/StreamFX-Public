@@ -31,9 +31,10 @@ gfx::lut::consumer::consumer()
 
 gfx::lut::consumer::~consumer() {}
 
-std::shared_ptr<gs::effect> gfx::lut::consumer::prepare(gfx::lut::color_depth depth, std::shared_ptr<gs::texture> lut)
+std::shared_ptr<streamfx::obs::gs::effect> gfx::lut::consumer::prepare(gfx::lut::color_depth depth,
+																	   std::shared_ptr<streamfx::obs::gs::texture> lut)
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 
 	auto effect = _data->consumer_effect();
 
@@ -42,11 +43,11 @@ std::shared_ptr<gs::effect> gfx::lut::consumer::prepare(gfx::lut::color_depth de
 	int32_t grid_size      = static_cast<int32_t>(pow(2l, (idepth / 2)));
 	int32_t container_size = static_cast<int32_t>(pow(2l, (idepth + (idepth / 2))));
 
-	if (gs::effect_parameter efp = effect->get_parameter("lut_params_0"); efp) {
+	if (streamfx::obs::gs::effect_parameter efp = effect->get_parameter("lut_params_0"); efp) {
 		efp.set_int4(size, grid_size, container_size, 0l);
 	}
 
-	if (gs::effect_parameter efp = effect->get_parameter("lut_params_1"); efp) {
+	if (streamfx::obs::gs::effect_parameter efp = effect->get_parameter("lut_params_1"); efp) {
 		float inverse_size           = 1.f / static_cast<float>(size);
 		float inverse_z_size         = 1.f / static_cast<float>(grid_size);
 		float inverse_container_size = 1.f / static_cast<float>(container_size);
@@ -54,21 +55,21 @@ std::shared_ptr<gs::effect> gfx::lut::consumer::prepare(gfx::lut::color_depth de
 		efp.set_float4(inverse_size, inverse_z_size, inverse_container_size, half_texel);
 	}
 
-	if (gs::effect_parameter efp = effect->get_parameter("lut"); efp) {
+	if (streamfx::obs::gs::effect_parameter efp = effect->get_parameter("lut"); efp) {
 		efp.set_texture(lut);
 	}
 
 	return effect;
 }
 
-void gfx::lut::consumer::consume(gfx::lut::color_depth depth, std::shared_ptr<gs::texture> lut,
-								 std::shared_ptr<gs::texture> texture)
+void gfx::lut::consumer::consume(gfx::lut::color_depth depth, std::shared_ptr<streamfx::obs::gs::texture> lut,
+								 std::shared_ptr<streamfx::obs::gs::texture> texture)
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 
 	auto effect = prepare(depth, lut);
 
-	if (gs::effect_parameter efp = effect->get_parameter("image"); efp) {
+	if (streamfx::obs::gs::effect_parameter efp = effect->get_parameter("image"); efp) {
 		efp.set_texture(texture->get_object());
 	}
 

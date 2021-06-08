@@ -40,17 +40,17 @@ namespace streamfx::filter::blur {
 
 	class blur_instance : public obs::source_instance {
 		// Effects
-		gs::effect _effect_mask;
+		streamfx::obs::gs::effect _effect_mask;
 
 		// Input
-		std::shared_ptr<gs::rendertarget> _source_rt;
-		std::shared_ptr<gs::texture>      _source_texture;
-		bool                              _source_rendered;
+		std::shared_ptr<streamfx::obs::gs::rendertarget> _source_rt;
+		std::shared_ptr<streamfx::obs::gs::texture>      _source_texture;
+		bool                                             _source_rendered;
 
 		// Rendering
-		std::shared_ptr<gs::texture>      _output_texture;
-		std::shared_ptr<gs::rendertarget> _output_rt;
-		bool                              _output_rendered;
+		std::shared_ptr<streamfx::obs::gs::texture>      _output_texture;
+		std::shared_ptr<streamfx::obs::gs::rendertarget> _output_rt;
+		bool                                             _output_rendered;
 
 		// Blur
 		std::shared_ptr<::gfx::blur::base> _blur;
@@ -74,16 +74,16 @@ namespace streamfx::filter::blur {
 				bool    invert;
 			} region;
 			struct {
-				std::string                  path;
-				std::string                  path_old;
-				std::shared_ptr<gs::texture> texture;
+				std::string                                 path;
+				std::string                                 path_old;
+				std::shared_ptr<streamfx::obs::gs::texture> texture;
 			} image;
 			struct {
-				std::string                          name_old;
-				std::string                          name;
-				bool                                 is_scene;
-				std::shared_ptr<gfx::source_texture> source_texture;
-				std::shared_ptr<gs::texture>         texture;
+				std::string                                 name_old;
+				std::string                                 name;
+				bool                                        is_scene;
+				std::shared_ptr<gfx::source_texture>        source_texture;
+				std::shared_ptr<streamfx::obs::gs::texture> texture;
 			} source;
 			struct {
 				float_t r;
@@ -107,7 +107,8 @@ namespace streamfx::filter::blur {
 		virtual void video_render(gs_effect_t* effect) override;
 
 		private:
-		bool apply_mask_parameters(gs::effect effect, gs_texture_t* original_texture, gs_texture_t* blurred_texture);
+		bool apply_mask_parameters(streamfx::obs::gs::effect effect, gs_texture_t* original_texture,
+								   gs_texture_t* blurred_texture);
 	};
 
 	class blur_factory : public obs::source_factory<filter::blur::blur_factory, filter::blur::blur_instance> {

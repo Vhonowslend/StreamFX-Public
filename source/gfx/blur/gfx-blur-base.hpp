@@ -33,7 +33,7 @@ namespace gfx {
 			public:
 			virtual ~base() {}
 
-			virtual void set_input(std::shared_ptr<::gs::texture> texture) = 0;
+			virtual void set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture) = 0;
 
 			virtual ::gfx::blur::type get_type() = 0;
 
@@ -53,9 +53,9 @@ namespace gfx {
 
 			virtual double_t get_step_scale_y();
 
-			virtual std::shared_ptr<::gs::texture> render() = 0;
+			virtual std::shared_ptr<::streamfx::obs::gs::texture> render() = 0;
 
-			virtual std::shared_ptr<::gs::texture> get() = 0;
+			virtual std::shared_ptr<::streamfx::obs::gs::texture> get() = 0;
 		};
 
 		class base_angle {

@@ -43,8 +43,8 @@
 
 gfx::blur::gaussian_data::gaussian_data()
 {
-	auto gctx = gs::context();
-	_effect   = gs::effect::create(streamfx::data_file_path("effects/blur/gaussian.effect").u8string());
+	auto gctx = streamfx::obs::gs::context();
+	_effect   = streamfx::obs::gs::effect::create(streamfx::data_file_path("effects/blur/gaussian.effect").u8string());
 
 	// Precalculate Kernels
 	for (std::size_t kernel_size = 1; kernel_size <= MAX_BLUR_SIZE; kernel_size++) {
@@ -80,11 +80,11 @@ gfx::blur::gaussian_data::gaussian_data()
 
 gfx::blur::gaussian_data::~gaussian_data()
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 	_effect.reset();
 }
 
-gs::effect gfx::blur::gaussian_data::get_effect()
+streamfx::obs::gs::effect gfx::blur::gaussian_data::get_effect()
 {
 	return _effect;
 }
@@ -238,14 +238,14 @@ std::shared_ptr<::gfx::blur::gaussian_data> gfx::blur::gaussian_factory::data()
 
 gfx::blur::gaussian::gaussian() : _data(::gfx::blur::gaussian_factory::get().data()), _size(1.), _step_scale({1., 1.})
 {
-	auto gctx      = gs::context();
-	_rendertarget  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	_rendertarget2 = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	auto gctx      = streamfx::obs::gs::context();
+	_rendertarget  = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_rendertarget2 = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
 gfx::blur::gaussian::~gaussian() {}
 
-void gfx::blur::gaussian::set_input(std::shared_ptr<::gs::texture> texture)
+void gfx::blur::gaussian::set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture)
 {
 	_input_texture = texture;
 }
@@ -291,16 +291,16 @@ double_t gfx::blur::gaussian::get_step_scale_y()
 	return _step_scale.second;
 }
 
-std::shared_ptr<::gs::texture> gfx::blur::gaussian::render()
+std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::gaussian::render()
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 
 #ifdef ENABLE_PROFILING
-	auto gdmp = gs::debug_marker(gs::debug_color_azure_radiance, "Gaussian Blur");
+	auto gdmp = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Gaussian Blur");
 #endif
 
-	gs::effect effect = _data->get_effect();
-	auto       kernel = _data->get_kernel(size_t(_size));
+	streamfx::obs::gs::effect effect = _data->get_effect();
+	auto                      kernel = _data->get_kernel(size_t(_size));
 
 	if (!effect || ((_step_scale.first + _step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
 		return _input_texture;
@@ -334,7 +334,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian::render()
 
 		{
 #ifdef ENABLE_PROFILING
-			auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Horizontal");
+			auto gdm = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Horizontal");
 #endif
 
 			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
@@ -354,7 +354,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian::render()
 
 		{
 #ifdef ENABLE_PROFILING
-			auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Vertical");
+			auto gdm = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Vertical");
 #endif
 
 			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
@@ -372,7 +372,7 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian::render()
 	return this->get();
 }
 
-std::shared_ptr<::gs::texture> gfx::blur::gaussian::get()
+std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::gaussian::get()
 {
 	return _rendertarget->get_texture();
 }
@@ -396,16 +396,17 @@ void gfx::blur::gaussian_directional::set_angle(double_t angle)
 	m_angle = D_DEG_TO_RAD(angle);
 }
 
-std::shared_ptr<::gs::texture> gfx::blur::gaussian_directional::render()
+std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::gaussian_directional::render()
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 
 #ifdef ENABLE_PROFILING
-	auto gdmp = gs::debug_marker(gs::debug_color_azure_radiance, "Gaussian Directional Blur");
+	auto gdmp =
+		streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Gaussian Directional Blur");
 #endif
 
-	gs::effect effect = _data->get_effect();
-	auto       kernel = _data->get_kernel(size_t(_size));
+	streamfx::obs::gs::effect effect = _data->get_effect();
+	auto                      kernel = _data->get_kernel(size_t(_size));
 
 	if (!effect || ((_step_scale.first + _step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
 		return _input_texture;
@@ -454,16 +455,17 @@ std::shared_ptr<::gs::texture> gfx::blur::gaussian_directional::render()
 	return ::gfx::blur::type::Rotational;
 }
 
-std::shared_ptr<::gs::texture> gfx::blur::gaussian_rotational::render()
+std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::gaussian_rotational::render()
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 
 #ifdef ENABLE_PROFILING
-	auto gdmp = gs::debug_marker(gs::debug_color_azure_radiance, "Gaussian Rotational Blur");
+	auto gdmp =
+		streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Gaussian Rotational Blur");
 #endif
 
-	gs::effect effect = _data->get_effect();
-	auto       kernel = _data->get_kernel(size_t(_size));
+	streamfx::obs::gs::effect effect = _data->get_effect();
+	auto                      kernel = _data->get_kernel(size_t(_size));
 
 	if (!effect || ((_step_scale.first + _step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
 		return _input_texture;
@@ -535,16 +537,16 @@ void gfx::blur::gaussian_rotational::set_angle(double_t angle)
 	return ::gfx::blur::type::Zoom;
 }
 
-std::shared_ptr<::gs::texture> gfx::blur::gaussian_zoom::render()
+std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::gaussian_zoom::render()
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 
 #ifdef ENABLE_PROFILING
-	auto gdmp = gs::debug_marker(gs::debug_color_azure_radiance, "Gaussian Zoom Blur");
+	auto gdmp = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Gaussian Zoom Blur");
 #endif
 
-	gs::effect effect = _data->get_effect();
-	auto       kernel = _data->get_kernel(size_t(_size));
+	streamfx::obs::gs::effect effect = _data->get_effect();
+	auto                      kernel = _data->get_kernel(size_t(_size));
 
 	if (!effect || ((_step_scale.first + _step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
 		return _input_texture;

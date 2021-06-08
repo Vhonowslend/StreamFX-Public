@@ -33,37 +33,39 @@ extern "C" {
 #endif
 }
 
-gs::effect_parameter::effect_parameter() : _effect_parent(nullptr), _pass_parent(nullptr), _param_parent(nullptr)
+streamfx::obs::gs::effect_parameter::effect_parameter()
+	: _effect_parent(nullptr), _pass_parent(nullptr), _param_parent(nullptr)
 {
 	reset();
 }
 
-gs::effect_parameter::effect_parameter(gs_eparam_t* param)
+streamfx::obs::gs::effect_parameter::effect_parameter(gs_eparam_t* param)
 	: _effect_parent(nullptr), _pass_parent(nullptr), _param_parent(nullptr)
 {
 	reset(param, [](void*) {});
 }
 
-gs::effect_parameter::effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_effect_t> parent)
+streamfx::obs::gs::effect_parameter::effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_effect_t> parent)
 	: effect_parameter(param)
 {
 	_effect_parent = parent;
 }
 
-gs::effect_parameter::effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_epass_t> parent) : effect_parameter(param)
+streamfx::obs::gs::effect_parameter::effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_epass_t> parent)
+	: effect_parameter(param)
 {
 	_pass_parent = parent;
 }
 
-gs::effect_parameter::effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_eparam_t> parent)
+streamfx::obs::gs::effect_parameter::effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_eparam_t> parent)
 	: effect_parameter(param)
 {
 	_param_parent = parent;
 }
 
-gs::effect_parameter::~effect_parameter() {}
+streamfx::obs::gs::effect_parameter::~effect_parameter() {}
 
-gs::effect_parameter::effect_parameter(const effect_parameter& rhs)
+streamfx::obs::gs::effect_parameter::effect_parameter(const effect_parameter& rhs)
 {
 	reset(rhs.get(), [](void*) {});
 	_effect_parent = rhs._effect_parent;
@@ -71,7 +73,7 @@ gs::effect_parameter::effect_parameter(const effect_parameter& rhs)
 	_param_parent  = rhs._param_parent;
 }
 
-gs::effect_parameter& gs::effect_parameter::operator=(const effect_parameter& rhs)
+streamfx::obs::gs::effect_parameter& streamfx::obs::gs::effect_parameter::operator=(const effect_parameter& rhs)
 {
 	reset(rhs.get(), [](void*) {});
 	_effect_parent = rhs._effect_parent;
@@ -80,7 +82,7 @@ gs::effect_parameter& gs::effect_parameter::operator=(const effect_parameter& rh
 	return *this;
 }
 
-gs::effect_parameter::effect_parameter(effect_parameter&& rhs) noexcept
+streamfx::obs::gs::effect_parameter::effect_parameter(effect_parameter&& rhs) noexcept
 try {
 	reset(rhs.get(), [](gs_eparam_t*) {});
 	_effect_parent = rhs._effect_parent;
@@ -94,7 +96,7 @@ try {
 } catch (...) {
 }
 
-gs::effect_parameter& gs::effect_parameter::operator=(effect_parameter&& rhs) noexcept
+streamfx::obs::gs::effect_parameter& streamfx::obs::gs::effect_parameter::operator=(effect_parameter&& rhs) noexcept
 try {
 	reset(rhs.get(), [](gs_eparam_t*) {});
 	_effect_parent = rhs._effect_parent;
@@ -111,12 +113,12 @@ try {
 	return *this;
 }
 
-std::string_view gs::effect_parameter::get_name()
+std::string_view streamfx::obs::gs::effect_parameter::get_name()
 {
 	return std::string_view{get()->name};
 }
 
-gs::effect_parameter::type gs::effect_parameter::get_type()
+streamfx::obs::gs::effect_parameter::type streamfx::obs::gs::effect_parameter::get_type()
 {
 	switch (get()->type) {
 	case GS_SHADER_PARAM_BOOL:
@@ -149,12 +151,12 @@ gs::effect_parameter::type gs::effect_parameter::get_type()
 	}
 }
 
-inline std::size_t gs::effect_parameter::count_annotations()
+inline std::size_t streamfx::obs::gs::effect_parameter::count_annotations()
 {
 	return gs_param_get_num_annotations(get());
 }
 
-gs::effect_parameter gs::effect_parameter::get_annotation(std::size_t idx)
+streamfx::obs::gs::effect_parameter streamfx::obs::gs::effect_parameter::get_annotation(std::size_t idx)
 {
 	if (idx >= get()->annotations.num) {
 		return nullptr;
@@ -163,19 +165,19 @@ gs::effect_parameter gs::effect_parameter::get_annotation(std::size_t idx)
 	return effect_parameter(get()->annotations.array + idx, *this);
 }
 
-gs::effect_parameter gs::effect_parameter::get_annotation(const std::string_view name)
+streamfx::obs::gs::effect_parameter streamfx::obs::gs::effect_parameter::get_annotation(const std::string_view name)
 {
 	for (std::size_t idx = 0; idx < get()->annotations.num; idx++) {
 		auto ptr = get()->annotations.array + idx;
 		if (name == std::string_view{ptr->name}) {
-			return gs::effect_parameter(ptr, *this);
+			return streamfx::obs::gs::effect_parameter(ptr, *this);
 		}
 	}
 
 	return nullptr;
 }
 
-bool gs::effect_parameter::has_annotation(const std::string_view name)
+bool streamfx::obs::gs::effect_parameter::has_annotation(const std::string_view name)
 {
 	auto eprm = get_annotation(name);
 	if (eprm)
@@ -183,7 +185,7 @@ bool gs::effect_parameter::has_annotation(const std::string_view name)
 	return false;
 }
 
-bool gs::effect_parameter::has_annotation(const std::string_view name, effect_parameter::type type)
+bool streamfx::obs::gs::effect_parameter::has_annotation(const std::string_view name, effect_parameter::type type)
 {
 	auto eprm = get_annotation(name);
 	if (eprm)
@@ -191,14 +193,14 @@ bool gs::effect_parameter::has_annotation(const std::string_view name, effect_pa
 	return false;
 }
 
-void gs::effect_parameter::set_bool(bool v)
+void streamfx::obs::gs::effect_parameter::set_bool(bool v)
 {
 	if (get_type() != type::Boolean)
 		throw std::bad_cast();
 	gs_effect_set_bool(get(), v);
 }
 
-void gs::effect_parameter::get_bool(bool& v)
+void streamfx::obs::gs::effect_parameter::get_bool(bool& v)
 {
 	if (get_type() != type::Boolean)
 		throw std::bad_cast();
@@ -211,7 +213,7 @@ void gs::effect_parameter::get_bool(bool& v)
 	}
 }
 
-void gs::effect_parameter::get_default_bool(bool& v)
+void streamfx::obs::gs::effect_parameter::get_default_bool(bool& v)
 {
 	if (get_type() != type::Boolean)
 		throw std::bad_cast();
@@ -224,21 +226,21 @@ void gs::effect_parameter::get_default_bool(bool& v)
 	}
 }
 
-void gs::effect_parameter::set_bool_array(bool v[], std::size_t sz)
+void streamfx::obs::gs::effect_parameter::set_bool_array(bool v[], std::size_t sz)
 {
 	if (get_type() != type::Boolean)
 		throw std::bad_cast();
 	gs_effect_set_val(get(), v, sz);
 }
 
-void gs::effect_parameter::set_float(float_t x)
+void streamfx::obs::gs::effect_parameter::set_float(float_t x)
 {
 	if (get_type() != type::Float)
 		throw std::bad_cast();
 	gs_effect_set_float(get(), x);
 }
 
-void gs::effect_parameter::get_float(float_t& x)
+void streamfx::obs::gs::effect_parameter::get_float(float_t& x)
 {
 	if (get_type() != type::Float)
 		throw std::bad_cast();
@@ -251,7 +253,7 @@ void gs::effect_parameter::get_float(float_t& x)
 	}
 }
 
-void gs::effect_parameter::get_default_float(float_t& x)
+void streamfx::obs::gs::effect_parameter::get_default_float(float_t& x)
 {
 	if (get_type() != type::Float)
 		throw std::bad_cast();
@@ -264,24 +266,24 @@ void gs::effect_parameter::get_default_float(float_t& x)
 	}
 }
 
-void gs::effect_parameter::set_float2(vec2 const& v)
+void streamfx::obs::gs::effect_parameter::set_float2(vec2 const& v)
 {
 	if (get_type() != type::Float2)
 		throw std::bad_cast();
 	gs_effect_set_vec2(get(), &v);
 }
 
-void gs::effect_parameter::get_float2(vec2& v)
+void streamfx::obs::gs::effect_parameter::get_float2(vec2& v)
 {
 	get_float2(v.x, v.y);
 }
 
-void gs::effect_parameter::get_default_float2(vec2& v)
+void streamfx::obs::gs::effect_parameter::get_default_float2(vec2& v)
 {
 	get_default_float2(v.x, v.y);
 }
 
-void gs::effect_parameter::set_float2(float_t x, float_t y)
+void streamfx::obs::gs::effect_parameter::set_float2(float_t x, float_t y)
 {
 	vec2 data;
 	data.x = x;
@@ -289,7 +291,7 @@ void gs::effect_parameter::set_float2(float_t x, float_t y)
 	set_float2(data);
 }
 
-void gs::effect_parameter::get_float2(float_t& x, float_t& y)
+void streamfx::obs::gs::effect_parameter::get_float2(float_t& x, float_t& y)
 {
 	if (get_type() != type::Float2)
 		throw std::bad_cast();
@@ -303,7 +305,7 @@ void gs::effect_parameter::get_float2(float_t& x, float_t& y)
 	}
 }
 
-void gs::effect_parameter::get_default_float2(float_t& x, float_t& y)
+void streamfx::obs::gs::effect_parameter::get_default_float2(float_t& x, float_t& y)
 {
 	if (get_type() != type::Float2)
 		throw std::bad_cast();
@@ -317,24 +319,24 @@ void gs::effect_parameter::get_default_float2(float_t& x, float_t& y)
 	}
 }
 
-void gs::effect_parameter::set_float3(vec3 const& v)
+void streamfx::obs::gs::effect_parameter::set_float3(vec3 const& v)
 {
 	if (get_type() != type::Float3)
 		throw std::bad_cast();
 	gs_effect_set_vec3(get(), &v);
 }
 
-void gs::effect_parameter::get_float3(vec3& v)
+void streamfx::obs::gs::effect_parameter::get_float3(vec3& v)
 {
 	get_float3(v.x, v.y, v.z);
 }
 
-void gs::effect_parameter::get_default_float3(vec3& v)
+void streamfx::obs::gs::effect_parameter::get_default_float3(vec3& v)
 {
 	get_default_float3(v.x, v.y, v.z);
 }
 
-void gs::effect_parameter::set_float3(float_t x, float_t y, float_t z)
+void streamfx::obs::gs::effect_parameter::set_float3(float_t x, float_t y, float_t z)
 {
 	if (get_type() != type::Float3)
 		throw std::bad_cast();
@@ -342,7 +344,7 @@ void gs::effect_parameter::set_float3(float_t x, float_t y, float_t z)
 	gs_effect_set_vec3(get(), &v);
 }
 
-void gs::effect_parameter::get_float3(float_t& x, float_t& y, float_t& z)
+void streamfx::obs::gs::effect_parameter::get_float3(float_t& x, float_t& y, float_t& z)
 {
 	if (get_type() != type::Float3)
 		throw std::bad_cast();
@@ -357,7 +359,7 @@ void gs::effect_parameter::get_float3(float_t& x, float_t& y, float_t& z)
 	}
 }
 
-void gs::effect_parameter::get_default_float3(float_t& x, float_t& y, float_t& z)
+void streamfx::obs::gs::effect_parameter::get_default_float3(float_t& x, float_t& y, float_t& z)
 {
 	if (get_type() != type::Float3)
 		throw std::bad_cast();
@@ -372,24 +374,24 @@ void gs::effect_parameter::get_default_float3(float_t& x, float_t& y, float_t& z
 	}
 }
 
-void gs::effect_parameter::set_float4(vec4 const& v)
+void streamfx::obs::gs::effect_parameter::set_float4(vec4 const& v)
 {
 	if (get_type() != type::Float4)
 		throw std::bad_cast();
 	gs_effect_set_vec4(get(), &v);
 }
 
-void gs::effect_parameter::get_float4(vec4& v)
+void streamfx::obs::gs::effect_parameter::get_float4(vec4& v)
 {
 	get_float4(v.x, v.y, v.z, v.w);
 }
 
-void gs::effect_parameter::get_default_float4(vec4& v)
+void streamfx::obs::gs::effect_parameter::get_default_float4(vec4& v)
 {
 	get_default_float4(v.x, v.y, v.z, v.w);
 }
 
-void gs::effect_parameter::set_float4(float_t x, float_t y, float_t z, float_t w)
+void streamfx::obs::gs::effect_parameter::set_float4(float_t x, float_t y, float_t z, float_t w)
 {
 	if (get_type() != type::Float4)
 		throw std::bad_cast();
@@ -397,7 +399,7 @@ void gs::effect_parameter::set_float4(float_t x, float_t y, float_t z, float_t w
 	gs_effect_set_vec4(get(), &v);
 }
 
-void gs::effect_parameter::get_float4(float_t& x, float_t& y, float_t& z, float_t& w)
+void streamfx::obs::gs::effect_parameter::get_float4(float_t& x, float_t& y, float_t& z, float_t& w)
 {
 	if (get_type() != type::Float4)
 		throw std::bad_cast();
@@ -413,7 +415,7 @@ void gs::effect_parameter::get_float4(float_t& x, float_t& y, float_t& z, float_
 	}
 }
 
-void gs::effect_parameter::get_default_float4(float_t& x, float_t& y, float_t& z, float_t& w)
+void streamfx::obs::gs::effect_parameter::get_default_float4(float_t& x, float_t& y, float_t& z, float_t& w)
 {
 	if (get_type() != type::Float4)
 		throw std::bad_cast();
@@ -429,14 +431,14 @@ void gs::effect_parameter::get_default_float4(float_t& x, float_t& y, float_t& z
 	}
 }
 
-void gs::effect_parameter::set_int(int32_t x)
+void streamfx::obs::gs::effect_parameter::set_int(int32_t x)
 {
 	if ((get_type() != type::Integer) && (get_type() != type::Unknown))
 		throw std::bad_cast();
 	gs_effect_set_int(get(), x);
 }
 
-void gs::effect_parameter::get_int(int32_t& x)
+void streamfx::obs::gs::effect_parameter::get_int(int32_t& x)
 {
 	if ((get_type() != type::Integer) && (get_type() != type::Unknown))
 		throw std::bad_cast();
@@ -449,7 +451,7 @@ void gs::effect_parameter::get_int(int32_t& x)
 	}
 }
 
-void gs::effect_parameter::get_default_int(int32_t& x)
+void streamfx::obs::gs::effect_parameter::get_default_int(int32_t& x)
 {
 	if ((get_type() != type::Integer) && (get_type() != type::Unknown))
 		throw std::bad_cast();
@@ -462,7 +464,7 @@ void gs::effect_parameter::get_default_int(int32_t& x)
 	}
 }
 
-void gs::effect_parameter::set_int2(int32_t x, int32_t y)
+void streamfx::obs::gs::effect_parameter::set_int2(int32_t x, int32_t y)
 {
 	if ((get_type() != type::Integer2) && (get_type() != type::Unknown))
 		throw std::bad_cast();
@@ -470,7 +472,7 @@ void gs::effect_parameter::set_int2(int32_t x, int32_t y)
 	gs_effect_set_val(get(), v, sizeof(int) * 2);
 }
 
-void gs::effect_parameter::get_int2(int32_t& x, int32_t& y)
+void streamfx::obs::gs::effect_parameter::get_int2(int32_t& x, int32_t& y)
 {
 	if ((get_type() != type::Integer2) && (get_type() != type::Unknown))
 		throw std::bad_cast();
@@ -484,7 +486,7 @@ void gs::effect_parameter::get_int2(int32_t& x, int32_t& y)
 	}
 }
 
-void gs::effect_parameter::get_default_int2(int32_t& x, int32_t& y)
+void streamfx::obs::gs::effect_parameter::get_default_int2(int32_t& x, int32_t& y)
 {
 	if ((get_type() != type::Integer2) && (get_type() != type::Unknown))
 		throw std::bad_cast();
@@ -498,7 +500,7 @@ void gs::effect_parameter::get_default_int2(int32_t& x, int32_t& y)
 	}
 }
 
-void gs::effect_parameter::set_int3(int32_t x, int32_t y, int32_t z)
+void streamfx::obs::gs::effect_parameter::set_int3(int32_t x, int32_t y, int32_t z)
 {
 	if ((get_type() != type::Integer3) && (get_type() != type::Unknown))
 		throw std::bad_cast();
@@ -506,7 +508,7 @@ void gs::effect_parameter::set_int3(int32_t x, int32_t y, int32_t z)
 	gs_effect_set_val(get(), v, sizeof(int) * 3);
 }
 
-void gs::effect_parameter::get_int3(int32_t& x, int32_t& y, int32_t& z)
+void streamfx::obs::gs::effect_parameter::get_int3(int32_t& x, int32_t& y, int32_t& z)
 {
 	if ((get_type() != type::Integer3) && (get_type() != type::Unknown))
 		throw std::bad_cast();
@@ -521,7 +523,7 @@ void gs::effect_parameter::get_int3(int32_t& x, int32_t& y, int32_t& z)
 	}
 }
 
-void gs::effect_parameter::get_default_int3(int32_t& x, int32_t& y, int32_t& z)
+void streamfx::obs::gs::effect_parameter::get_default_int3(int32_t& x, int32_t& y, int32_t& z)
 {
 	if ((get_type() != type::Integer3) && (get_type() != type::Unknown))
 		throw std::bad_cast();
@@ -536,7 +538,7 @@ void gs::effect_parameter::get_default_int3(int32_t& x, int32_t& y, int32_t& z)
 	}
 }
 
-void gs::effect_parameter::set_int4(int32_t x, int32_t y, int32_t z, int32_t w)
+void streamfx::obs::gs::effect_parameter::set_int4(int32_t x, int32_t y, int32_t z, int32_t w)
 {
 	if ((get_type() != type::Integer4) && (get_type() != type::Unknown))
 		throw std::bad_cast();
@@ -544,7 +546,7 @@ void gs::effect_parameter::set_int4(int32_t x, int32_t y, int32_t z, int32_t w)
 	gs_effect_set_val(get(), v, sizeof(int) * 4);
 }
 
-void gs::effect_parameter::get_int4(int32_t& x, int32_t& y, int32_t& z, int32_t& w)
+void streamfx::obs::gs::effect_parameter::get_int4(int32_t& x, int32_t& y, int32_t& z, int32_t& w)
 {
 	if ((get_type() != type::Integer4) && (get_type() != type::Unknown))
 		throw std::bad_cast();
@@ -560,7 +562,7 @@ void gs::effect_parameter::get_int4(int32_t& x, int32_t& y, int32_t& z, int32_t&
 	}
 }
 
-void gs::effect_parameter::get_default_int4(int32_t& x, int32_t& y, int32_t& z, int32_t& w)
+void streamfx::obs::gs::effect_parameter::get_default_int4(int32_t& x, int32_t& y, int32_t& z, int32_t& w)
 {
 	if ((get_type() != type::Integer4) && (get_type() != type::Unknown))
 		throw std::bad_cast();
@@ -576,14 +578,14 @@ void gs::effect_parameter::get_default_int4(int32_t& x, int32_t& y, int32_t& z, 
 	}
 }
 
-void gs::effect_parameter::set_matrix(matrix4 const& v)
+void streamfx::obs::gs::effect_parameter::set_matrix(matrix4 const& v)
 {
 	if (get_type() != type::Matrix)
 		throw std::bad_cast();
 	gs_effect_set_matrix4(get(), &v);
 }
 
-void gs::effect_parameter::get_matrix(matrix4& v)
+void streamfx::obs::gs::effect_parameter::get_matrix(matrix4& v)
 {
 	if (get_type() != type::Matrix)
 		throw std::bad_cast();
@@ -614,7 +616,7 @@ void gs::effect_parameter::get_matrix(matrix4& v)
 	}
 }
 
-void gs::effect_parameter::get_default_matrix(matrix4& v)
+void streamfx::obs::gs::effect_parameter::get_default_matrix(matrix4& v)
 {
 	if (get_type() != type::Matrix)
 		throw std::bad_cast();
@@ -645,42 +647,42 @@ void gs::effect_parameter::get_default_matrix(matrix4& v)
 	}
 }
 
-void gs::effect_parameter::set_texture(std::shared_ptr<gs::texture> v)
+void streamfx::obs::gs::effect_parameter::set_texture(std::shared_ptr<streamfx::obs::gs::texture> v)
 {
 	if (get_type() != type::Texture)
 		throw std::bad_cast();
 	gs_effect_set_texture(get(), v->get_object());
 }
 
-void gs::effect_parameter::set_texture(gs_texture_t* v)
+void streamfx::obs::gs::effect_parameter::set_texture(gs_texture_t* v)
 {
 	if (get_type() != type::Texture)
 		throw std::bad_cast();
 	gs_effect_set_texture(get(), v);
 }
 
-void gs::effect_parameter::set_sampler(std::shared_ptr<gs::sampler> v)
+void streamfx::obs::gs::effect_parameter::set_sampler(std::shared_ptr<streamfx::obs::gs::sampler> v)
 {
 	if (get_type() != type::Texture)
 		throw std::bad_cast();
 	gs_effect_set_next_sampler(get(), v->get_object());
 }
 
-void gs::effect_parameter::set_sampler(gs_sampler_state* v)
+void streamfx::obs::gs::effect_parameter::set_sampler(gs_sampler_state* v)
 {
 	if (get_type() != type::Texture)
 		throw std::bad_cast();
 	gs_effect_set_next_sampler(get(), v);
 }
 
-void gs::effect_parameter::set_string(std::string const& v)
+void streamfx::obs::gs::effect_parameter::set_string(std::string const& v)
 {
 	if (get_type() != type::String)
 		throw std::bad_cast();
 	gs_effect_set_val(get(), v.c_str(), v.length());
 }
 
-void gs::effect_parameter::get_string(std::string& v)
+void streamfx::obs::gs::effect_parameter::get_string(std::string& v)
 {
 	if (get_type() != type::String)
 		throw std::bad_cast();
@@ -694,7 +696,7 @@ void gs::effect_parameter::get_string(std::string& v)
 	}
 }
 
-void gs::effect_parameter::get_default_string(std::string& v)
+void streamfx::obs::gs::effect_parameter::get_default_string(std::string& v)
 {
 	if (get_type() != type::String)
 		throw std::bad_cast();

@@ -32,7 +32,7 @@ static constexpr std::string_view HELP_URL =
 shader_instance::shader_instance(obs_data_t* data, obs_source_t* self) : obs::source_instance(data, self)
 {
 	_fx = std::make_shared<gfx::shader::shader>(self, gfx::shader::shader_mode::Filter);
-	_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_rt = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 
 	update(data);
 }
@@ -89,13 +89,14 @@ void shader_instance::video_render(gs_effect_t* effect)
 		}
 
 #ifdef ENABLE_PROFILING
-		gs::debug_marker gdmp{gs::debug_color_source, "Shader Filter '%s' on '%s'", obs_source_get_name(_self),
-							  obs_source_get_name(obs_filter_get_parent(_self))};
+		streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Shader Filter '%s' on '%s'",
+											 obs_source_get_name(_self),
+											 obs_source_get_name(obs_filter_get_parent(_self))};
 #endif
 
 		{
 #ifdef ENABLE_PROFILING
-			gs::debug_marker gdm{gs::debug_color_source, "Cache"};
+			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_source, "Cache"};
 #endif
 
 			auto op = _rt->render(_fx->base_width(), _fx->base_height());
@@ -124,7 +125,7 @@ void shader_instance::video_render(gs_effect_t* effect)
 
 		{
 #ifdef ENABLE_PROFILING
-			gs::debug_marker gdm{gs::debug_color_render, "Render"};
+			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_render, "Render"};
 #endif
 
 			_fx->prepare_render();

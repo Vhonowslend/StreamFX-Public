@@ -24,7 +24,7 @@
 #include "gs-effect-parameter.hpp"
 #include "gs-effect-technique.hpp"
 
-namespace gs {
+namespace streamfx::obs::gs {
 	class effect : public std::shared_ptr<gs_effect_t> {
 		public:
 		effect(){};
@@ -32,16 +32,16 @@ namespace gs {
 		effect(std::filesystem::path file);
 		~effect();
 
-		std::size_t          count_techniques();
-		gs::effect_technique get_technique(std::size_t idx);
-		gs::effect_technique get_technique(const std::string& name);
-		bool                 has_technique(const std::string& name);
+		std::size_t                         count_techniques();
+		streamfx::obs::gs::effect_technique get_technique(std::size_t idx);
+		streamfx::obs::gs::effect_technique get_technique(const std::string& name);
+		bool                                has_technique(const std::string& name);
 
-		std::size_t          count_parameters();
-		gs::effect_parameter get_parameter(std::size_t idx);
-		gs::effect_parameter get_parameter(const std::string& name);
-		bool                 has_parameter(const std::string& name);
-		bool                 has_parameter(const std::string& name, effect_parameter::type type);
+		std::size_t                         count_parameters();
+		streamfx::obs::gs::effect_parameter get_parameter(std::size_t idx);
+		streamfx::obs::gs::effect_parameter get_parameter(const std::string& name);
+		bool                                has_parameter(const std::string& name);
+		bool                                has_parameter(const std::string& name, effect_parameter::type type);
 
 		public /* Legacy Support */:
 		inline gs_effect_t* get_object()
@@ -49,14 +49,14 @@ namespace gs {
 			return get();
 		}
 
-		static gs::effect create(const std::string& file)
+		static streamfx::obs::gs::effect create(const std::string& file)
 		{
-			return gs::effect(file);
+			return streamfx::obs::gs::effect(file);
 		};
 
-		static gs::effect create(const std::string& code, const std::string& name)
+		static streamfx::obs::gs::effect create(const std::string& code, const std::string& name)
 		{
-			return gs::effect(code, name);
+			return streamfx::obs::gs::effect(code, name);
 		};
 	};
-} // namespace gs
+} // namespace streamfx::obs::gs

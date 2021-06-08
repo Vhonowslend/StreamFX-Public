@@ -85,9 +85,9 @@ transform_instance::transform_instance(obs_data_t* data, obs_source_t* context)
 	: obs::source_instance(data, context), _cache_rendered(), _mipmap_enabled(), _source_rendered(), _source_size(),
 	  _update_mesh(), _rotation_order(), _camera_orthographic(), _camera_fov()
 {
-	_cache_rt      = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	_source_rt     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	_vertex_buffer = std::make_shared<gs::vertex_buffer>(uint32_t(4u), uint8_t(1u));
+	_cache_rt      = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_source_rt     = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_vertex_buffer = std::make_shared<streamfx::obs::gs::vertex_buffer>(uint32_t(4u), uint8_t(1u));
 
 	_position = std::make_unique<streamfx::util::vec3a>();
 	_rotation = std::make_unique<streamfx::util::vec3a>();
@@ -288,8 +288,8 @@ void transform_instance::video_render(gs_effect_t* effect)
 	}
 
 #ifdef ENABLE_PROFILING
-	gs::debug_marker gdmp{gs::debug_color_source, "3D Transform '%s' on '%s'", obs_source_get_name(_self),
-						  obs_source_get_name(obs_filter_get_parent(_self))};
+	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "3D Transform '%s' on '%s'",
+										 obs_source_get_name(_self), obs_source_get_name(obs_filter_get_parent(_self))};
 #endif
 
 	uint32_t cache_width  = base_width;
@@ -316,7 +316,7 @@ void transform_instance::video_render(gs_effect_t* effect)
 
 	if (!_cache_rendered) {
 #ifdef ENABLE_PROFILING
-		gs::debug_marker gdm{gs::debug_color_cache, "Cache"};
+		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_cache, "Cache"};
 #endif
 
 		auto op = _cache_rt->render(cache_width, cache_height);
@@ -356,20 +356,20 @@ void transform_instance::video_render(gs_effect_t* effect)
 
 	if (_mipmap_enabled) {
 #ifdef ENABLE_PROFILING
-		gs::debug_marker gdm{gs::debug_color_convert, "Mipmap"};
+		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert, "Mipmap"};
 #endif
 
 		if (!_mipmap_texture || (_mipmap_texture->get_width() != cache_width)
 			|| (_mipmap_texture->get_height() != cache_height)) {
 #ifdef ENABLE_PROFILING
-			gs::debug_marker gdr{gs::debug_color_allocate, "Allocate Mipmapped Texture"};
+			streamfx::obs::gs::debug_marker gdr{streamfx::obs::gs::debug_color_allocate, "Allocate Mipmapped Texture"};
 #endif
 
 			std::size_t mip_levels = std::max(streamfx::util::math::get_power_of_two_exponent_ceil(cache_width),
 											  streamfx::util::math::get_power_of_two_exponent_ceil(cache_height));
-			_mipmap_texture =
-				std::make_shared<gs::texture>(cache_width, cache_height, GS_RGBA, static_cast<uint32_t>(mip_levels),
-											  nullptr, gs::texture::flags::None);
+			_mipmap_texture        = std::make_shared<streamfx::obs::gs::texture>(cache_width, cache_height, GS_RGBA,
+                                                                           static_cast<uint32_t>(mip_levels), nullptr,
+                                                                           streamfx::obs::gs::texture::flags::None);
 		}
 		_mipmapper.rebuild(_cache_texture, _mipmap_texture);
 
@@ -382,7 +382,7 @@ void transform_instance::video_render(gs_effect_t* effect)
 
 	{
 #ifdef ENABLE_PROFILING
-		gs::debug_marker gdm{gs::debug_color_convert, "Transform"};
+		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert, "Transform"};
 #endif
 
 		auto op = _source_rt->render(base_width, base_height);
@@ -430,7 +430,7 @@ void transform_instance::video_render(gs_effect_t* effect)
 
 	{
 #ifdef ENABLE_PROFILING
-		gs::debug_marker gdm{gs::debug_color_render, "Render"};
+		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_render, "Render"};
 #endif
 
 		gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), _source_texture->get_object());

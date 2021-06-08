@@ -39,15 +39,15 @@ namespace gfx {
 			Sampler
 		};
 
-		parameter_type get_type_from_effect_type(gs::effect_parameter::type type);
+		parameter_type get_type_from_effect_type(streamfx::obs::gs::effect_parameter::type type);
 
-		std::size_t get_length_from_effect_type(gs::effect_parameter::type type);
+		std::size_t get_length_from_effect_type(streamfx::obs::gs::effect_parameter::type type);
 
 		parameter_type get_type_from_string(std::string v);
 
 		class parameter {
 			// Parameter used for all functionality.
-			gs::effect_parameter _param;
+			streamfx::obs::gs::effect_parameter _param;
 
 			// Real type of the parameter (libobs gets it wrong often).
 			parameter_type _type;
@@ -68,7 +68,7 @@ namespace gfx {
 			std::string _description;
 
 			protected:
-			parameter(gs::effect_parameter param, std::string key_prefix);
+			parameter(streamfx::obs::gs::effect_parameter param, std::string key_prefix);
 			virtual ~parameter(){};
 
 			public:
@@ -81,7 +81,7 @@ namespace gfx {
 			virtual void assign();
 
 			public:
-			inline gs::effect_parameter get_parameter()
+			inline streamfx::obs::gs::effect_parameter get_parameter()
 			{
 				return _param;
 			}
@@ -137,7 +137,8 @@ namespace gfx {
 			}
 
 			public:
-			static std::shared_ptr<parameter> make_parameter(gs::effect_parameter param, std::string prefix);
+			static std::shared_ptr<parameter> make_parameter(streamfx::obs::gs::effect_parameter param,
+															 std::string                         prefix);
 		};
 	} // namespace shader
 } // namespace gfx

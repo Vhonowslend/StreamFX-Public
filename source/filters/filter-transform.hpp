@@ -29,30 +29,30 @@
 namespace streamfx::filter::transform {
 	class transform_instance : public obs::source_instance {
 		// Cache
-		bool                              _cache_rendered;
-		std::shared_ptr<gs::rendertarget> _cache_rt;
-		std::shared_ptr<gs::texture>      _cache_texture;
+		bool                                             _cache_rendered;
+		std::shared_ptr<streamfx::obs::gs::rendertarget> _cache_rt;
+		std::shared_ptr<streamfx::obs::gs::texture>      _cache_texture;
 
 		// Mip-mapping
-		bool                         _mipmap_enabled;
-		bool                         _mipmap_rendered;
-		gs::mipmapper                _mipmapper;
-		std::shared_ptr<gs::texture> _mipmap_texture;
+		bool                                        _mipmap_enabled;
+		bool                                        _mipmap_rendered;
+		streamfx::obs::gs::mipmapper                _mipmapper;
+		std::shared_ptr<streamfx::obs::gs::texture> _mipmap_texture;
 
 		// Input
-		bool                              _source_rendered;
-		std::pair<uint32_t, uint32_t>     _source_size;
-		std::shared_ptr<gs::rendertarget> _source_rt;
-		std::shared_ptr<gs::texture>      _source_texture;
+		bool                                             _source_rendered;
+		std::pair<uint32_t, uint32_t>                    _source_size;
+		std::shared_ptr<streamfx::obs::gs::rendertarget> _source_rt;
+		std::shared_ptr<streamfx::obs::gs::texture>      _source_texture;
 
 		// Mesh
-		bool                                   _update_mesh;
-		std::shared_ptr<gs::vertex_buffer>     _vertex_buffer;
-		uint32_t                               _rotation_order;
-		std::unique_ptr<streamfx::util::vec3a> _position;
-		std::unique_ptr<streamfx::util::vec3a> _rotation;
-		std::unique_ptr<streamfx::util::vec3a> _scale;
-		std::unique_ptr<streamfx::util::vec3a> _shear;
+		bool                                              _update_mesh;
+		std::shared_ptr<streamfx::obs::gs::vertex_buffer> _vertex_buffer;
+		uint32_t                                          _rotation_order;
+		std::unique_ptr<streamfx::util::vec3a>            _position;
+		std::unique_ptr<streamfx::util::vec3a>            _rotation;
+		std::unique_ptr<streamfx::util::vec3a>            _scale;
+		std::unique_ptr<streamfx::util::vec3a>            _shear;
 
 		// Camera
 		bool    _camera_orthographic;

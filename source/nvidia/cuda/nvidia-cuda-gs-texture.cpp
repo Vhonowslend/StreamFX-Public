@@ -43,7 +43,7 @@ nvidia::cuda::gstexture::~gstexture()
 	_cuda->cuGraphicsUnregisterResource(_resource);
 }
 
-nvidia::cuda::gstexture::gstexture(std::shared_ptr<gs::texture> texture)
+nvidia::cuda::gstexture::gstexture(std::shared_ptr<streamfx::obs::gs::texture> texture)
 	: _cuda(::nvidia::cuda::cuda::get()), _texture(texture), _resource(), _is_mapped(false), _pointer()
 {
 	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
@@ -51,8 +51,8 @@ nvidia::cuda::gstexture::gstexture(std::shared_ptr<gs::texture> texture)
 	if (!texture)
 		throw std::invalid_argument("texture");
 
-	gs::context gctx;
-	int         dev_type = gs_get_device_type();
+	streamfx::obs::gs::context gctx;
+	int                        dev_type = gs_get_device_type();
 
 	if (dev_type == GS_DEVICE_OPENGL) {
 		// ToDo
@@ -61,12 +61,12 @@ nvidia::cuda::gstexture::gstexture(std::shared_ptr<gs::texture> texture)
 	if (dev_type == GS_DEVICE_DIRECT3D_11) {
 		ID3D11Resource* resource = nullptr;
 		switch (_texture->get_type()) {
-		case gs::texture::type::Cube:
-		case gs::texture::type::Normal: {
+		case streamfx::obs::gs::texture::type::Cube:
+		case streamfx::obs::gs::texture::type::Normal: {
 			resource = static_cast<ID3D11Resource*>(gs_texture_get_obj(_texture->get_object()));
 			break;
 		}
-		case gs::texture::type::Volume: {
+		case streamfx::obs::gs::texture::type::Volume: {
 			resource = static_cast<ID3D11Resource*>(gs_texture_get_obj(_texture->get_object()));
 			break;
 		}
@@ -132,7 +132,7 @@ void nvidia::cuda::gstexture::unmap()
 	_stream.reset();
 }
 
-std::shared_ptr<gs::texture> nvidia::cuda::gstexture::get_texture()
+std::shared_ptr<streamfx::obs::gs::texture> nvidia::cuda::gstexture::get_texture()
 {
 	return _texture;
 }
