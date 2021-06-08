@@ -23,10 +23,13 @@
 #include <sys/stat.h>
 #include "obs/gs/gs-helper.hpp"
 
-#define ST "Filter.Displacement"
-#define ST_FILE "Filter.Displacement.File"
-#define ST_SCALE "Filter.Displacement.Scale"
-#define ST_SCALE_TYPE "Filter.Displacement.Scale.Type"
+#define ST_I18N "Filter.Displacement"
+#define ST_I18N_FILE "Filter.Displacement.File"
+#define ST_KEY_FILE "Filter.Displacement.File"
+#define ST_I18N_SCALE "Filter.Displacement.Scale"
+#define ST_KEY_SCALE "Filter.Displacement.Scale"
+#define ST_I18N_SCALE_TYPE "Filter.Displacement.Scale.Type"
+#define ST_KEY_SCALE_TYPE "Filter.Displacement.Scale.Type"
 
 using namespace streamfx::filter::displacement;
 
@@ -52,8 +55,8 @@ void displacement_instance::migrate(obs_data_t* data, uint64_t version)
 {
 	switch (version & STREAMFX_MASK_COMPAT) {
 	case 0:
-		obs_data_set_double(data, ST_SCALE, obs_data_get_double(data, "Filter.Displacement.Scale") * 0.5);
-		obs_data_set_double(data, ST_SCALE_TYPE, obs_data_get_double(data, "Filter.Displacement.Ratio") * 100.0);
+		obs_data_set_double(data, ST_KEY_SCALE, obs_data_get_double(data, "Filter.Displacement.Scale") * 0.5);
+		obs_data_set_double(data, ST_KEY_SCALE_TYPE, obs_data_get_double(data, "Filter.Displacement.Ratio") * 100.0);
 		obs_data_unset_user_value(data, "Filter.Displacement.Ratio");
 	case STREAMFX_MAKE_VERSION(0, 8, 0, 0):
 		break;
@@ -62,10 +65,10 @@ void displacement_instance::migrate(obs_data_t* data, uint64_t version)
 
 void displacement_instance::update(obs_data_t* settings)
 {
-	_scale[0] = _scale[1] = static_cast<float_t>(obs_data_get_double(settings, ST_SCALE));
-	_scale_type           = static_cast<float_t>(obs_data_get_double(settings, ST_SCALE_TYPE) / 100.0);
+	_scale[0] = _scale[1] = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_SCALE));
+	_scale_type           = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_SCALE_TYPE) / 100.0);
 
-	std::string new_file = obs_data_get_string(settings, ST_FILE);
+	std::string new_file = obs_data_get_string(settings, ST_KEY_FILE);
 	if (new_file != _texture_file) {
 		try {
 			_texture      = std::make_shared<streamfx::obs::gs::texture>(new_file);
@@ -129,15 +132,15 @@ displacement_factory::~displacement_factory() {}
 
 const char* displacement_factory::get_name()
 {
-	return D_TRANSLATE(ST);
+	return D_TRANSLATE(ST_I18N);
 }
 
 void displacement_factory::get_defaults2(obs_data_t* data)
 {
-	obs_data_set_default_string(data, ST_FILE,
+	obs_data_set_default_string(data, ST_KEY_FILE,
 								streamfx::data_file_path("examples/normal-maps/neutral.png").u8string().c_str());
-	obs_data_set_default_double(data, ST_SCALE, 0.0);
-	obs_data_set_default_double(data, ST_SCALE_TYPE, 0.0);
+	obs_data_set_default_double(data, ST_KEY_SCALE, 0.0);
+	obs_data_set_default_double(data, ST_KEY_SCALE_TYPE, 0.0);
 }
 
 obs_properties_t* displacement_factory::get_properties2(displacement_instance* data)
@@ -151,10 +154,10 @@ obs_properties_t* displacement_factory::get_properties2(displacement_instance* d
 		path = streamfx::data_file_path("examples/normal-maps/neutral.png").u8string();
 	}
 
-	obs_properties_add_path(pr, ST_FILE, D_TRANSLATE(ST_FILE), obs_path_type::OBS_PATH_FILE,
+	obs_properties_add_path(pr, ST_KEY_FILE, D_TRANSLATE(ST_I18N_FILE), obs_path_type::OBS_PATH_FILE,
 							D_TRANSLATE(S_FILEFILTERS_TEXTURE), path.c_str());
-	obs_properties_add_float(pr, ST_SCALE, D_TRANSLATE(ST_SCALE), -10000000.0, 10000000.0, 0.01);
-	obs_properties_add_float_slider(pr, ST_SCALE_TYPE, D_TRANSLATE(ST_SCALE_TYPE), 0.0, 100.0, 0.01);
+	obs_properties_add_float(pr, ST_KEY_SCALE, D_TRANSLATE(ST_I18N_SCALE), -10000000.0, 10000000.0, 0.01);
+	obs_properties_add_float_slider(pr, ST_KEY_SCALE_TYPE, D_TRANSLATE(ST_I18N_SCALE_TYPE), 0.0, 100.0, 0.01);
 
 	return pr;
 }
