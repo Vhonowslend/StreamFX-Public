@@ -21,7 +21,7 @@
 #include "common.hpp"
 #include "util/util-event.hpp"
 
-namespace obs {
+namespace streamfx::obs {
 	template<typename T>
 	class signal_handler_base {
 		protected:
@@ -91,4 +91,4 @@ namespace obs {
 		streamfx::util::event<std::shared_ptr<obs_source_t>, const struct audio_data*, bool> event;
 	};
 
-} // namespace obs
+} // namespace streamfx::obs

@@ -359,7 +359,8 @@ obs_properties_t* mirror_factory::get_properties2(mirror_instance* data)
 									OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(Unknown)),
 								  static_cast<int64_t>(SPEAKERS_UNKNOWN));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(Mono)), static_cast<int64_t>(SPEAKERS_MONO));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(Mono)),
+								  static_cast<int64_t>(SPEAKERS_MONO));
 		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(Stereo)),
 								  static_cast<int64_t>(SPEAKERS_STEREO));
 		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(StereoLFE)),
