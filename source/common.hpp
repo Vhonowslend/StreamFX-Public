@@ -90,7 +90,7 @@ extern "C" {
 
 // Common Global defines
 /// Logging
-#define DLOG_(level, ...) blog(level, "[" PLUGIN_NAME "] " __VA_ARGS__)
+#define DLOG_(level, ...) blog(level, "[" S_PLUGIN_NAME "] " __VA_ARGS__)
 #define DLOG_ERROR(...) DLOG_(LOG_ERROR, __VA_ARGS__)
 #define DLOG_WARNING(...) DLOG_(LOG_WARNING, __VA_ARGS__)
 #define DLOG_INFO(...) DLOG_(LOG_INFO, __VA_ARGS__)

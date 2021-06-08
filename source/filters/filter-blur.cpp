@@ -560,7 +560,7 @@ void blur_instance::video_render(gs_effect_t* effect)
 
 blur_factory::blur_factory()
 {
-	_info.id           = PREFIX "filter-blur";
+	_info.id           = S_PREFIX "filter-blur";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO;
 
