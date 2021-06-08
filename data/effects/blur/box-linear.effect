@@ -65,20 +65,19 @@ struct VertDataIn {
 struct VertDataOut {
 	float4 pos  : POSITION;
 	float2 uv   : TEXCOORD0;
-	bool is_odd : TEXCOORD1;
 };
 
 VertDataOut VSDefault(VertDataIn vtx) {
 	VertDataOut vert_out;
 	vert_out.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
 	vert_out.uv  = vtx.uv;
-	vert_out.is_odd = ((int(round(pSize)) % 2) == 1);
 	return vert_out;
 }
 
 // Blur 1 Dimensional
 float4 PSBlur1D(VertDataOut vtx) : TARGET {
 	float4 final = pImage.Sample(linearSampler, vtx.uv);
+	bool is_odd = ((int(round(pSize)) % 2) == 1);
 
 	// y = yes, s = skip, b = break
 	// Size-> | 1| 2| 3| 4| 5| 6| 7|
@@ -104,7 +103,7 @@ float4 PSBlur1D(VertDataOut vtx) : TARGET {
 		final += pImage.Sample(linearSampler, vtx.uv + nstep) * 2.;
 		final += pImage.Sample(linearSampler, vtx.uv - nstep) * 2.;
 	}
-	if (vtx.is_odd) {
+	if (is_odd) {
 		float2 nstep = (pImageTexel * pStepScale) * pSize;
 		final += pImage.Sample(linearSampler, vtx.uv + nstep);
 		final += pImage.Sample(linearSampler, vtx.uv - nstep);
