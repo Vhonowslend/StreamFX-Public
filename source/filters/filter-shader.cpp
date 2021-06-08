@@ -31,7 +31,7 @@ static constexpr std::string_view HELP_URL =
 
 shader_instance::shader_instance(obs_data_t* data, obs_source_t* self) : obs::source_instance(data, self)
 {
-	_fx = std::make_shared<gfx::shader::shader>(self, gfx::shader::shader_mode::Filter);
+	_fx = std::make_shared<streamfx::gfx::shader::shader>(self, streamfx::gfx::shader::shader_mode::Filter);
 	_rt = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 
 	update(data);
@@ -168,7 +168,7 @@ const char* shader_factory::get_name()
 
 void shader_factory::get_defaults2(obs_data_t* data)
 {
-	gfx::shader::shader::defaults(data);
+	streamfx::gfx::shader::shader::defaults(data);
 }
 
 obs_properties_t* shader_factory::get_properties2(shader::shader_instance* data)

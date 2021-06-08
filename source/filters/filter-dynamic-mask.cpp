@@ -84,7 +84,7 @@ void dynamic_mask_instance::update(obs_data_t* settings)
 	try {
 		auto input   = std::make_shared<obs::deprecated_source>(obs_data_get_string(settings, ST_INPUT));
 		auto gctx    = streamfx::obs::gs::context();
-		auto capture = std::make_shared<gfx::source_texture>(input, _self);
+		auto capture = std::make_shared<streamfx::gfx::source_texture>(input, _self);
 
 		input->events.rename += std::bind(&dynamic_mask_instance::input_renamed, this, std::placeholders::_1,
 										  std::placeholders::_2, std::placeholders::_3);

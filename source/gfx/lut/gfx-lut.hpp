@@ -23,7 +23,7 @@
 
 #include "obs/gs/gs-effect.hpp"
 
-namespace gfx::lut {
+namespace streamfx::gfx::lut {
 	class data {
 		std::shared_ptr<streamfx::obs::gs::effect> _producer_effect;
 		std::shared_ptr<streamfx::obs::gs::effect> _consumer_effect;
@@ -59,4 +59,4 @@ namespace gfx::lut {
 		_14     = 14,
 		_16     = 16,
 	};
-} // namespace gfx::lut
+} // namespace streamfx::gfx::lut

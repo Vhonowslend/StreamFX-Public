@@ -19,7 +19,7 @@
 #include "common.hpp"
 #include "obs/gs/gs-texture.hpp"
 
-namespace gfx {
+namespace streamfx::gfx {
 	namespace blur {
 		enum class type : int64_t {
 			Invalid = -1,
@@ -35,7 +35,7 @@ namespace gfx {
 
 			virtual void set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture) = 0;
 
-			virtual ::gfx::blur::type get_type() = 0;
+			virtual ::streamfx::gfx::blur::type get_type() = 0;
 
 			virtual double_t get_size() = 0;
 
@@ -88,35 +88,35 @@ namespace gfx {
 			public:
 			virtual ~ifactory() {}
 
-			virtual bool is_type_supported(::gfx::blur::type type) = 0;
+			virtual bool is_type_supported(::streamfx::gfx::blur::type type) = 0;
 
-			virtual std::shared_ptr<::gfx::blur::base> create(::gfx::blur::type type) = 0;
+			virtual std::shared_ptr<::streamfx::gfx::blur::base> create(::streamfx::gfx::blur::type type) = 0;
 
-			virtual double_t get_min_size(::gfx::blur::type type) = 0;
+			virtual double_t get_min_size(::streamfx::gfx::blur::type type) = 0;
 
-			virtual double_t get_step_size(::gfx::blur::type type) = 0;
+			virtual double_t get_step_size(::streamfx::gfx::blur::type type) = 0;
 
-			virtual double_t get_max_size(::gfx::blur::type type) = 0;
+			virtual double_t get_max_size(::streamfx::gfx::blur::type type) = 0;
 
-			virtual double_t get_min_angle(::gfx::blur::type type) = 0;
+			virtual double_t get_min_angle(::streamfx::gfx::blur::type type) = 0;
 
-			virtual double_t get_step_angle(::gfx::blur::type type) = 0;
+			virtual double_t get_step_angle(::streamfx::gfx::blur::type type) = 0;
 
-			virtual double_t get_max_angle(::gfx::blur::type type) = 0;
+			virtual double_t get_max_angle(::streamfx::gfx::blur::type type) = 0;
 
-			virtual bool is_step_scale_supported(::gfx::blur::type type) = 0;
+			virtual bool is_step_scale_supported(::streamfx::gfx::blur::type type) = 0;
 
-			virtual double_t get_min_step_scale_x(::gfx::blur::type type) = 0;
+			virtual double_t get_min_step_scale_x(::streamfx::gfx::blur::type type) = 0;
 
-			virtual double_t get_step_step_scale_x(::gfx::blur::type type) = 0;
+			virtual double_t get_step_step_scale_x(::streamfx::gfx::blur::type type) = 0;
 
-			virtual double_t get_max_step_scale_x(::gfx::blur::type type) = 0;
+			virtual double_t get_max_step_scale_x(::streamfx::gfx::blur::type type) = 0;
 
-			virtual double_t get_min_step_scale_y(::gfx::blur::type type) = 0;
+			virtual double_t get_min_step_scale_y(::streamfx::gfx::blur::type type) = 0;
 
-			virtual double_t get_step_step_scale_y(::gfx::blur::type type) = 0;
+			virtual double_t get_step_step_scale_y(::streamfx::gfx::blur::type type) = 0;
 
-			virtual double_t get_max_step_scale_y(::gfx::blur::type type) = 0;
+			virtual double_t get_max_step_scale_y(::streamfx::gfx::blur::type type) = 0;
 		};
 	} // namespace blur
-} // namespace gfx
+} // namespace streamfx::gfx

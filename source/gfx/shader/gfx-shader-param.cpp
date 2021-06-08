@@ -20,17 +20,18 @@
 #include <sstream>
 #include "gfx-shader-param-basic.hpp"
 
-#define ANNO_ORDER "order"
-#define ANNO_VISIBILITY "visible"
-#define ANNO_AUTOMATIC "automatic"
-#define ANNO_NAME "name"
-#define ANNO_DESCRIPTION "description"
-#define ANNO_TYPE "type"
-#define ANNO_SIZE "size"
+#define ST_ANNO_ORDER "order"
+#define ST_ANNO_VISIBILITY "visible"
+#define ST_ANNO_AUTOMATIC "automatic"
+#define ST_ANNO_NAME "name"
+#define ST_ANNO_DESCRIPTION "description"
+#define ST_ANNO_TYPE "type"
+#define ST_ANNO_SIZE "size"
 
 typedef streamfx::obs::gs::effect_parameter::type eptype;
 
-gfx::shader::parameter_type gfx::shader::get_type_from_effect_type(streamfx::obs::gs::effect_parameter::type type)
+streamfx::gfx::shader::parameter_type
+	streamfx::gfx::shader::get_type_from_effect_type(streamfx::obs::gs::effect_parameter::type type)
 {
 	switch (type) {
 	case eptype::Boolean:
@@ -55,7 +56,7 @@ gfx::shader::parameter_type gfx::shader::get_type_from_effect_type(streamfx::obs
 	}
 }
 
-std::size_t gfx::shader::get_length_from_effect_type(streamfx::obs::gs::effect_parameter::type type)
+std::size_t streamfx::gfx::shader::get_length_from_effect_type(streamfx::obs::gs::effect_parameter::type type)
 {
 	switch (type) {
 	default:
@@ -82,7 +83,7 @@ std::size_t gfx::shader::get_length_from_effect_type(streamfx::obs::gs::effect_p
 	}
 }
 
-gfx::shader::parameter_type gfx::shader::get_type_from_string(std::string v)
+streamfx::gfx::shader::parameter_type streamfx::gfx::shader::get_type_from_string(std::string v)
 {
 	if ((v == "bool") || (v == "boolean")) {
 		return parameter_type::Boolean;
@@ -110,7 +111,7 @@ gfx::shader::parameter_type gfx::shader::get_type_from_string(std::string v)
 	throw std::invalid_argument("Invalid parameter type string.");
 }
 
-gfx::shader::parameter::parameter(streamfx::obs::gs::effect_parameter param, std::string key_prefix)
+streamfx::gfx::shader::parameter::parameter(streamfx::obs::gs::effect_parameter param, std::string key_prefix)
 	: _param(param), _order(0), _key(_param.get_name()), _visible(true), _automatic(false), _name(_key), _description()
 {
 	{
@@ -120,46 +121,46 @@ gfx::shader::parameter::parameter(streamfx::obs::gs::effect_parameter param, std
 	}
 
 	// Read Order
-	if (auto anno = _param.get_annotation(ANNO_VISIBILITY); anno) {
+	if (auto anno = _param.get_annotation(ST_ANNO_VISIBILITY); anno) {
 		_visible = anno.get_default_bool();
 	}
-	if (auto anno = _param.get_annotation(ANNO_AUTOMATIC); anno) {
+	if (auto anno = _param.get_annotation(ST_ANNO_AUTOMATIC); anno) {
 		_automatic = anno.get_default_bool();
 	}
 
 	// Read Order
-	if (auto anno = _param.get_annotation(ANNO_ORDER); anno) {
+	if (auto anno = _param.get_annotation(ST_ANNO_ORDER); anno) {
 		_order = anno.get_default_int();
 	}
 
 	// Read Name
-	if (auto anno = _param.get_annotation(ANNO_NAME); anno) {
+	if (auto anno = _param.get_annotation(ST_ANNO_NAME); anno) {
 		if (std::string v = anno.get_default_string(); v.length() > 0) {
 			_name = v;
 		} else {
-			throw std::out_of_range("'" ANNO_NAME "' annotation has zero length.");
+			throw std::out_of_range("'" ST_ANNO_NAME "' annotation has zero length.");
 		}
 	}
 
 	// Read Description
-	if (auto anno = _param.get_annotation(ANNO_DESCRIPTION); anno) {
+	if (auto anno = _param.get_annotation(ST_ANNO_DESCRIPTION); anno) {
 		if (std::string v = anno.get_default_string(); v.length() > 0) {
 			_description = v;
 		} else {
-			throw std::out_of_range("'" ANNO_DESCRIPTION "' annotation has zero length.");
+			throw std::out_of_range("'" ST_ANNO_DESCRIPTION "' annotation has zero length.");
 		}
 	}
 
 	// Read Type override.
 	_type = get_type_from_effect_type(_param.get_type());
-	if (auto anno = _param.get_annotation(ANNO_TYPE); anno) {
+	if (auto anno = _param.get_annotation(ST_ANNO_TYPE); anno) {
 		// We have a type override.
 		_type = get_type_from_string(anno.get_default_string());
 	}
 
 	// Read Size override.
 	_size = get_length_from_effect_type(_param.get_type());
-	if (auto anno = _param.get_annotation(ANNO_SIZE); anno) {
+	if (auto anno = _param.get_annotation(ST_ANNO_SIZE); anno) {
 		std::size_t ov = static_cast<size_t>(anno.get_default_int());
 		if (ov > 0)
 			_size = ov;
@@ -167,34 +168,34 @@ gfx::shader::parameter::parameter(streamfx::obs::gs::effect_parameter param, std
 	_size = std::clamp<size_t>(_size, size_t{1}, size_t{32});
 }
 
-void gfx::shader::parameter::defaults(obs_data_t* settings) {}
+void streamfx::gfx::shader::parameter::defaults(obs_data_t* settings) {}
 
-void gfx::shader::parameter::properties(obs_properties_t* props, obs_data_t* settings) {}
+void streamfx::gfx::shader::parameter::properties(obs_properties_t* props, obs_data_t* settings) {}
 
-void gfx::shader::parameter::update(obs_data_t* settings) {}
+void streamfx::gfx::shader::parameter::update(obs_data_t* settings) {}
 
-void gfx::shader::parameter::assign() {}
+void streamfx::gfx::shader::parameter::assign() {}
 
-std::shared_ptr<gfx::shader::parameter>
-	gfx::shader::parameter::make_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
+std::shared_ptr<streamfx::gfx::shader::parameter>
+	streamfx::gfx::shader::parameter::make_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
 {
 	if (!param) {
 		throw std::runtime_error("Bad call to make_parameter. This is a bug in the plugin.");
 	}
 
 	parameter_type real_type = get_type_from_effect_type(param.get_type());
-	if (auto anno = param.get_annotation(ANNO_TYPE); anno) {
+	if (auto anno = param.get_annotation(ST_ANNO_TYPE); anno) {
 		// We have a type override.
 		real_type = get_type_from_string(param.get_default_string());
 	}
 
 	switch (real_type) {
 	case parameter_type::Boolean:
-		return std::make_shared<gfx::shader::bool_parameter>(param, prefix);
+		return std::make_shared<streamfx::gfx::shader::bool_parameter>(param, prefix);
 	case parameter_type::Integer:
-		return std::make_shared<gfx::shader::int_parameter>(param, prefix);
+		return std::make_shared<streamfx::gfx::shader::int_parameter>(param, prefix);
 	case parameter_type::Float:
-		return std::make_shared<gfx::shader::float_parameter>(param, prefix);
+		return std::make_shared<streamfx::gfx::shader::float_parameter>(param, prefix);
 	default:
 		return nullptr;
 	}
