@@ -1,18 +1,4 @@
-// Parameters:
-/// OBS Default
-uniform float4x4 ViewProj;
-/// Texture
-uniform texture2d pImage;
-uniform float2 pImageTexel;
-/// Blur
-uniform float pSize;
-uniform float pAngle; 
-uniform float2 pCenter;
-uniform float2 pStepScale;
-/// Gaussian
-uniform float4 pKernel[32];
-
-#define MAX_BLUR_SIZE 128
+#include "common.effect"
 
 // # Linear Optimization
 // While the normal way is to sample every texel in the pSize, linear optimization
@@ -53,41 +39,16 @@ uniform float4 pKernel[32];
 //  faster alternatives than linear sampling with Gaussian Blur, such as
 //  Dual Filtering ("Dual Kawase").
 
-// Sampler
-sampler_state linearSampler {
-	Filter    = Linear;
-	AddressU  = Clamp;
-	AddressV  = Clamp;
-	MinLOD    = 0;
-	MaxLOD    = 0;
-};
+//------------------------------------------------------------------------------
+// Defines
+//------------------------------------------------------------------------------
+#define MAX_BLUR_SIZE 128
 
-// Default Vertex Shader and Data
-struct VertDataIn {
-	float4 pos : POSITION;
-	float2 uv  : TEXCOORD0;
-};
-
-struct VertDataOut {
-	float4 pos  : POSITION;
-	float2 uv   : TEXCOORD0;
-};
-
-VertDataOut VSDefault(VertDataIn vtx) {
-	VertDataOut vert_out;
-	vert_out.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
-	vert_out.uv  = vtx.uv;
-	return vert_out;
-}
-
-// Functions
-float GetKernelAt(int i) {
-	return ((float[4])(pKernel[floor(i/4)]))[i%4];
-}
-
-// Blur 1 Dimensional
-float4 PSBlur1D(VertDataOut vtx) : TARGET {
-	float4 final = pImage.Sample(linearSampler, vtx.uv) * GetKernelAt(0);
+//------------------------------------------------------------------------------
+// Technique: Directional / Area
+//------------------------------------------------------------------------------
+float4 PSBlur1D(VertexInformation vtx) : TARGET {
+	float4 final = pImage.Sample(LinearClampSampler, vtx.uv) * GetKernelAt(0);
 	bool is_odd = ((int(round(pSize)) % 2) == 1);
 		
 	// y = yes, s = skip, b = break
@@ -112,15 +73,15 @@ float4 PSBlur1D(VertDataOut vtx) : TARGET {
 
 		// TODO: Determine better position than 0.5 for gaussian approximation.
 		float2 nstep = (pImageTexel * pStepScale) * (n + 0.5);
-		float kernel = GetKernelAt(n) + GetKernelAt(n + 1);
-		final += pImage.Sample(linearSampler, vtx.uv + nstep) * kernel;
-		final += pImage.Sample(linearSampler, vtx.uv - nstep) * kernel;
+		float kernel = kernelAt(n) + kernelAt(n + 1);
+		final += pImage.Sample(LinearClampSampler, vtx.uv + nstep) * kernel;
+		final += pImage.Sample(LinearClampSampler, vtx.uv - nstep) * kernel;
 	}
 	if (is_odd) {
-		float kernel = GetKernelAt(pSize);
+		float kernel = kernelAt(pSize);
 		float2 nstep = (pImageTexel * pStepScale) * pSize;
-		final += pImage.Sample(linearSampler, vtx.uv + nstep) * kernel;
-		final += pImage.Sample(linearSampler, vtx.uv - nstep) * kernel;
+		final += pImage.Sample(LinearClampSampler, vtx.uv + nstep) * kernel;
+		final += pImage.Sample(LinearClampSampler, vtx.uv - nstep) * kernel;
 	}
 
 	return final;

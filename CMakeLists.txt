@@ -1151,6 +1151,7 @@ is_feature_enabled(FILTER_BLUR T_CHECK)
 if(T_CHECK)
 	list(APPEND PROJECT_DATA
 		"data/effects/mask.effect"
+		"data/effects/blur/common.effect"
 		"data/effects/blur/box.effect"
 		"data/effects/blur/box-linear.effect"
 		"data/effects/blur/dual-filtering.effect"
