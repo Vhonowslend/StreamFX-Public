@@ -911,7 +911,7 @@ ffmpeg_factory::ffmpeg_factory(const AVCodec* codec) : _avcodec(codec)
 	// Generate default identifier.
 	{
 		std::stringstream str;
-		str << PREFIX << _avcodec->name;
+		str << S_PREFIX << _avcodec->name;
 		_id = str.str();
 	}
 

@@ -20,8 +20,8 @@
 #pragma once
 #include "common.hpp"
 
-#define PLUGIN_NAME "StreamFX"
-#define PREFIX "streamfx-"
+#define S_PLUGIN_NAME "StreamFX"
+#define S_PREFIX "streamfx-"
 
 #define D_TRANSLATE(x) obs_module_text(x)
 

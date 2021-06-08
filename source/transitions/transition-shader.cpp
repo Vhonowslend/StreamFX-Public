@@ -123,7 +123,7 @@ void shader_instance::transition_stop()
 
 shader_factory::shader_factory()
 {
-	_info.id           = PREFIX "transition-shader";
+	_info.id           = S_PREFIX "transition-shader";
 	_info.type         = OBS_SOURCE_TYPE_TRANSITION;
 	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
 

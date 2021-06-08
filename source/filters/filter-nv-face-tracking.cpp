@@ -620,7 +620,7 @@ face_tracking_factory::face_tracking_factory()
 	_ar = std::make_shared<::nvidia::ar::ar>();
 
 	// Info
-	_info.id           = PREFIX "filter-nvidia-face-tracking";
+	_info.id           = S_PREFIX "filter-nvidia-face-tracking";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
 

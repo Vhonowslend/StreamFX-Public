@@ -116,7 +116,7 @@ std::string displacement_instance::get_file()
 
 displacement_factory::displacement_factory()
 {
-	_info.id           = PREFIX "filter-displacement";
+	_info.id           = S_PREFIX "filter-displacement";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW | OBS_SOURCE_DEPRECATED | OBS_SOURCE_CAP_DISABLED;
 

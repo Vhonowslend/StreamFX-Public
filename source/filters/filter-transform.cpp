@@ -441,7 +441,7 @@ void transform_instance::video_render(gs_effect_t* effect)
 
 transform_factory::transform_factory()
 {
-	_info.id           = PREFIX "filter-transform";
+	_info.id           = S_PREFIX "filter-transform";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO;
 

@@ -517,7 +517,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 
 sdf_effects_factory::sdf_effects_factory()
 {
-	_info.id           = PREFIX "filter-sdf-effects";
+	_info.id           = S_PREFIX "filter-sdf-effects";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO;
 
