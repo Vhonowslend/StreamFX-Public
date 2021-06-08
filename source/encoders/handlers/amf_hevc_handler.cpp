@@ -152,28 +152,28 @@ void amf_hevc_handler::get_encoder_properties(obs_properties_t* props, const AVC
 
 	{
 		obs_properties_t* grp = obs_properties_create();
-		obs_properties_add_group(props, P_HEVC, D_TRANSLATE(P_HEVC), OBS_GROUP_NORMAL, grp);
+		obs_properties_add_group(props, S_CODEC_HEVC, D_TRANSLATE(S_CODEC_HEVC), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_PROFILE, D_TRANSLATE(P_HEVC_PROFILE), OBS_COMBO_TYPE_LIST,
-											 OBS_COMBO_FORMAT_INT);
+			auto p = obs_properties_add_list(grp, ST_KEY_PROFILE, D_TRANSLATE(S_CODEC_HEVC_PROFILE),
+											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), static_cast<int64_t>(profile::UNKNOWN));
 			for (auto const kv : profiles) {
-				std::string trans = std::string(P_HEVC_PROFILE) + "." + kv.second;
+				std::string trans = std::string(S_CODEC_HEVC_PROFILE) + "." + kv.second;
 				obs_property_list_add_int(p, D_TRANSLATE(trans.c_str()), static_cast<int64_t>(kv.first));
 			}
 		}
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_TIER, D_TRANSLATE(P_HEVC_TIER), OBS_COMBO_TYPE_LIST,
+			auto p = obs_properties_add_list(grp, ST_KEY_TIER, D_TRANSLATE(S_CODEC_HEVC_TIER), OBS_COMBO_TYPE_LIST,
 											 OBS_COMBO_FORMAT_INT);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), static_cast<int64_t>(tier::UNKNOWN));
 			for (auto const kv : tiers) {
-				std::string trans = std::string(P_HEVC_TIER) + "." + kv.second;
+				std::string trans = std::string(S_CODEC_HEVC_TIER) + "." + kv.second;
 				obs_property_list_add_int(p, D_TRANSLATE(trans.c_str()), static_cast<int64_t>(kv.first));
 			}
 		}
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_LEVEL, D_TRANSLATE(P_HEVC_LEVEL), OBS_COMBO_TYPE_LIST,
+			auto p = obs_properties_add_list(grp, ST_KEY_LEVEL, D_TRANSLATE(S_CODEC_HEVC_LEVEL), OBS_COMBO_TYPE_LIST,
 											 OBS_COMBO_FORMAT_INT);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), static_cast<int64_t>(level::UNKNOWN));
 			for (auto const kv : levels) {

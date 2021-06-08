@@ -23,9 +23,9 @@
 #include "common.hpp"
 
 // Codec: H264
-#define P_H264 "Codec.H264"
-#define P_H264_PROFILE "Codec.H264.Profile"
-#define P_H264_LEVEL "Codec.H264.Level"
+#define S_CODEC_H264 "Codec.H264"
+#define S_CODEC_H264_PROFILE "Codec.H264.Profile"
+#define S_CODEC_H264_LEVEL "Codec.H264.Level"
 
 namespace streamfx::encoder::codec::h264 {
 	enum class profile {
