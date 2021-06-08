@@ -27,8 +27,8 @@
 namespace streamfx::gfx {
 	namespace blur {
 		class gaussian_data {
-			streamfx::obs::gs::effect         _effect;
-			std::vector<std::vector<float_t>> _kernels;
+			streamfx::obs::gs::effect            _effect;
+			std::map<size_t, std::vector<float>> _kernels;
 
 			public:
 			gaussian_data();
