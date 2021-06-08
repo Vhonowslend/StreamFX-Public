@@ -36,10 +36,10 @@ void gs::vertex_buffer::initialize(uint32_t capacity, uint8_t layers)
 	_data          = std::make_shared<decltype(_data)::element_type>();
 	_data->num     = _capacity;
 	_data->num_tex = _layers;
-	_data->points = _positions = static_cast<vec3*>(util::malloc_aligned(16, sizeof(vec3) * _capacity));
-	_data->normals = _normals = static_cast<vec3*>(util::malloc_aligned(16, sizeof(vec3) * _capacity));
-	_data->tangents = _tangents = static_cast<vec3*>(util::malloc_aligned(16, sizeof(vec3) * _capacity));
-	_data->colors = _colors = static_cast<uint32_t*>(util::malloc_aligned(16, sizeof(uint32_t) * _capacity));
+	_data->points = _positions = static_cast<vec3*>(streamfx::util::malloc_aligned(16, sizeof(vec3) * _capacity));
+	_data->normals = _normals = static_cast<vec3*>(streamfx::util::malloc_aligned(16, sizeof(vec3) * _capacity));
+	_data->tangents = _tangents = static_cast<vec3*>(streamfx::util::malloc_aligned(16, sizeof(vec3) * _capacity));
+	_data->colors = _colors = static_cast<uint32_t*>(streamfx::util::malloc_aligned(16, sizeof(uint32_t) * _capacity));
 
 	// Clear the allocated memory of any data.
 	memset(_positions, 0, sizeof(vec3) * _capacity);
@@ -51,10 +51,11 @@ void gs::vertex_buffer::initialize(uint32_t capacity, uint8_t layers)
 		_data->tvarray = nullptr;
 	} else {
 		_data->tvarray = _uv_layers =
-			static_cast<gs_tvertarray*>(util::malloc_aligned(16, sizeof(gs_tvertarray) * _layers));
+			static_cast<gs_tvertarray*>(streamfx::util::malloc_aligned(16, sizeof(gs_tvertarray) * _layers));
 		for (uint8_t n = 0; n < _layers; n++) {
-			_uv_layers[n].array = _uvs[n] = static_cast<vec4*>(util::malloc_aligned(16, sizeof(vec4) * _capacity));
-			_uv_layers[n].width           = 4;
+			_uv_layers[n].array = _uvs[n] =
+				static_cast<vec4*>(streamfx::util::malloc_aligned(16, sizeof(vec4) * _capacity));
+			_uv_layers[n].width = 4;
 			memset(_uvs[n], 0, sizeof(vec4) * _capacity);
 		}
 	}
@@ -85,13 +86,13 @@ void gs::vertex_buffer::initialize(uint32_t capacity, uint8_t layers)
 void gs::vertex_buffer::finalize()
 {
 	// Free data
-	util::free_aligned(_positions);
-	util::free_aligned(_normals);
-	util::free_aligned(_tangents);
-	util::free_aligned(_colors);
-	util::free_aligned(_uv_layers);
+	streamfx::util::free_aligned(_positions);
+	streamfx::util::free_aligned(_normals);
+	streamfx::util::free_aligned(_tangents);
+	streamfx::util::free_aligned(_colors);
+	streamfx::util::free_aligned(_uv_layers);
 	for (std::size_t n = 0; n < _layers; n++) {
-		util::free_aligned(_uvs[n]);
+		streamfx::util::free_aligned(_uvs[n]);
 	}
 
 	_buffer.reset();

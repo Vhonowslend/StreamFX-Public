@@ -51,7 +51,7 @@ const char* obs_module_recursive_text(const char* to_translate, std::size_t dept
 #define D_STR(s) #s
 #define D_VSTR(s) D_STR(s)
 
-namespace util {
+namespace streamfx::util {
 	bool inline are_property_groups_broken()
 	{
 		return obs_get_version() < MAKE_SEMANTIC_VERSION(24, 0, 0);
@@ -238,4 +238,4 @@ namespace util {
 	}
 	void* malloc_aligned(std::size_t align, std::size_t size);
 	void  free_aligned(void* mem);
-} // namespace util
+} // namespace streamfx::util

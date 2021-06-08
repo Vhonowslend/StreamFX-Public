@@ -21,7 +21,7 @@
 #include "common.hpp"
 #include <stdarg.h>
 
-void util::logging::log(level lvl, const char* format, ...)
+void streamfx::util::logging::log(level lvl, const char* format, ...)
 {
 	const static std::map<level, int32_t> level_map = {
 		{level::LEVEL_DEBUG, LOG_DEBUG},

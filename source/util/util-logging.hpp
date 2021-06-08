@@ -21,12 +21,12 @@
 #include <cinttypes>
 #include <cstdint>
 
-#define P_LOG(...) util::logging::log(__VA_ARGS__);
-#define P_LOG_ERROR(...) P_LOG(util::logging::level::LEVEL_ERROR, __VA_ARGS__)
-#define P_LOG_WARN(...) P_LOG(util::logging::level::LEVEL_WARN, __VA_ARGS__)
-#define P_LOG_INFO(...) P_LOG(util::logging::level::LEVEL_INFO, __VA_ARGS__)
+#define P_LOG(...) streamfx::util::logging::log(__VA_ARGS__);
+#define P_LOG_ERROR(...) P_LOG(streamfx::util::logging::level::LEVEL_ERROR, __VA_ARGS__)
+#define P_LOG_WARN(...) P_LOG(streamfx::util::logging::level::LEVEL_WARN, __VA_ARGS__)
+#define P_LOG_INFO(...) P_LOG(streamfx::util::logging::level::LEVEL_INFO, __VA_ARGS__)
 #ifdef _DEBUG
-#define P_LOG_DEBUG(...) P_LOG(util::logging::level::LEVEL_DEBUG, __VA_ARGS__)
+#define P_LOG_DEBUG(...) P_LOG(streamfx::util::logging::level::LEVEL_DEBUG, __VA_ARGS__)
 #else
 #define P_LOG_DEBUG(...)
 #endif
@@ -46,7 +46,7 @@
 #define __FUNCTION_NAME__ __func__
 #endif
 
-namespace util::logging {
+namespace streamfx::util::logging {
 	enum class level {
 		LEVEL_DEBUG, // Debug information, which is not necessary to know at runtime.
 		LEVEL_INFO,  // Runtime information, which may or may not be needed for support.
@@ -55,4 +55,4 @@ namespace util::logging {
 	};
 
 	void log(level lvl, const char* format, ...);
-} // namespace util::logging
+} // namespace streamfx::util::logging

@@ -33,7 +33,7 @@
 #include <dlfcn.h>
 #endif
 
-util::library::library(std::filesystem::path file) : _library(nullptr)
+streamfx::util::library::library(std::filesystem::path file) : _library(nullptr)
 {
 #if defined(ST_WINDOWS)
 	SetLastError(ERROR_SUCCESS);
@@ -64,7 +64,7 @@ util::library::library(std::filesystem::path file) : _library(nullptr)
 #endif
 }
 
-util::library::~library()
+streamfx::util::library::~library()
 {
 #if defined(ST_WINDOWS)
 	FreeLibrary(reinterpret_cast<HMODULE>(_library));
@@ -73,7 +73,7 @@ util::library::~library()
 #endif
 }
 
-void* util::library::load_symbol(std::string_view name)
+void* streamfx::util::library::load_symbol(std::string_view name)
 {
 #if defined(ST_WINDOWS)
 	return reinterpret_cast<void*>(GetProcAddress(reinterpret_cast<HMODULE>(_library), name.data()));
@@ -82,9 +82,9 @@ void* util::library::load_symbol(std::string_view name)
 #endif
 }
 
-static std::unordered_map<std::string, std::weak_ptr<::util::library>> libraries;
+static std::unordered_map<std::string, std::weak_ptr<::streamfx::util::library>> libraries;
 
-std::shared_ptr<::util::library> util::library::load(std::filesystem::path file)
+std::shared_ptr<::streamfx::util::library> streamfx::util::library::load(std::filesystem::path file)
 {
 	auto kv = libraries.find(file.u8string());
 	if (kv != libraries.end()) {
@@ -93,13 +93,13 @@ std::shared_ptr<::util::library> util::library::load(std::filesystem::path file)
 		libraries.erase(kv);
 	}
 
-	auto ptr = std::make_shared<::util::library>(file);
+	auto ptr = std::make_shared<::streamfx::util::library>(file);
 	libraries.emplace(file.u8string(), ptr);
 
 	return ptr;
 }
 
-std::shared_ptr<::util::library> util::library::load(std::string_view name)
+std::shared_ptr<::streamfx::util::library> streamfx::util::library::load(std::string_view name)
 {
 	return load(std::filesystem::u8path(name));
 }

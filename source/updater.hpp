@@ -50,8 +50,8 @@ namespace streamfx {
 
 	class updater {
 		// Internal
-		std::mutex                              _lock;
-		std::weak_ptr<::util::threadpool::task> _task;
+		std::mutex                                        _lock;
+		std::weak_ptr<::streamfx::util::threadpool::task> _task;
 
 		// Options
 		std::atomic_bool     _gdpr;
@@ -66,7 +66,7 @@ namespace streamfx {
 		bool        _dirty;
 
 		private:
-		void task(util::threadpool_data_t);
+		void task(streamfx::util::threadpool_data_t);
 		void task_query(std::vector<char>& buffer);
 		void task_parse(std::vector<char>& buffer);
 
@@ -101,12 +101,12 @@ namespace streamfx {
 
 		public:
 		struct _ {
-			util::event<updater&, bool>           gdpr_changed;
-			util::event<updater&, bool>           automation_changed;
-			util::event<updater&, update_channel> channel_changed;
+			streamfx::util::event<updater&, bool>           gdpr_changed;
+			streamfx::util::event<updater&, bool>           automation_changed;
+			streamfx::util::event<updater&, update_channel> channel_changed;
 
-			util::event<updater&, std::string&> error;
-			util::event<updater&>               refreshed;
+			streamfx::util::event<updater&, std::string&> error;
+			streamfx::util::event<updater&>               refreshed;
 		} events;
 
 		public:
