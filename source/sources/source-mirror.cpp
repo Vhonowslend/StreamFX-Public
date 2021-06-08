@@ -40,11 +40,14 @@
 #pragma warning(pop)
 #endif
 
-#define ST "Source.Mirror"
-#define ST_SOURCE ST ".Source"
-#define ST_SOURCE_AUDIO ST_SOURCE ".Audio"
-#define ST_SOURCE_AUDIO_LAYOUT ST_SOURCE_AUDIO ".Layout"
-#define ST_SOURCE_AUDIO_LAYOUT_(x) ST_SOURCE_AUDIO_LAYOUT "." D_VSTR(x)
+#define ST_I18N "Source.Mirror"
+#define ST_I18N_SOURCE ST_I18N ".Source"
+#define ST_KEY_SOURCE "Source.Mirror.Source"
+#define ST_I18N_SOURCE_AUDIO ST_I18N_SOURCE ".Audio"
+#define ST_KEY_SOURCE_AUDIO "Source.Mirror.Audio"
+#define ST_I18N_SOURCE_AUDIO_LAYOUT ST_I18N_SOURCE_AUDIO ".Layout"
+#define ST_KEY_SOURCE_AUDIO_LAYOUT "Source.Mirror.Audio.Layout"
+#define ST_I18N_SOURCE_AUDIO_LAYOUT_(x) ST_I18N_SOURCE_AUDIO_LAYOUT "." D_VSTR(x)
 
 using namespace streamfx::source::mirror;
 
@@ -104,7 +107,7 @@ void mirror_instance::migrate(obs_data_t* data, uint64_t version)
 {
 	switch (version) {
 	case 0:
-		obs_data_set_int(data, ST_SOURCE_AUDIO_LAYOUT, obs_data_get_int(data, "Source.Mirror.Audio.Layout"));
+		obs_data_set_int(data, ST_KEY_SOURCE_AUDIO_LAYOUT, obs_data_get_int(data, "Source.Mirror.Audio.Layout"));
 		obs_data_unset_user_value(data, "Source.Mirror.Audio.Layout");
 	case STREAMFX_VERSION:
 		break;
@@ -114,19 +117,19 @@ void mirror_instance::migrate(obs_data_t* data, uint64_t version)
 void mirror_instance::update(obs_data_t* data)
 {
 	// Audio
-	_audio_enabled = obs_data_get_bool(data, ST_SOURCE_AUDIO);
-	_audio_layout  = static_cast<speaker_layout>(obs_data_get_int(data, ST_SOURCE_AUDIO_LAYOUT));
+	_audio_enabled = obs_data_get_bool(data, ST_KEY_SOURCE_AUDIO);
+	_audio_layout  = static_cast<speaker_layout>(obs_data_get_int(data, ST_KEY_SOURCE_AUDIO_LAYOUT));
 
 	// Acquire new source.
-	acquire(obs_data_get_string(data, ST_SOURCE));
+	acquire(obs_data_get_string(data, ST_KEY_SOURCE));
 }
 
 void mirror_instance::save(obs_data_t* data)
 {
 	if (_source) {
-		obs_data_set_string(data, ST_SOURCE, obs_source_get_name(_source.get()));
+		obs_data_set_string(data, ST_KEY_SOURCE, obs_source_get_name(_source.get()));
 	} else {
-		obs_data_unset_user_value(data, ST_SOURCE);
+		obs_data_unset_user_value(data, ST_KEY_SOURCE);
 	}
 }
 
@@ -288,21 +291,21 @@ mirror_factory::~mirror_factory() {}
 
 const char* mirror_factory::get_name()
 {
-	return D_TRANSLATE(ST);
+	return D_TRANSLATE(ST_I18N);
 }
 
 void mirror_factory::get_defaults2(obs_data_t* data)
 {
-	obs_data_set_default_string(data, ST_SOURCE, "");
-	obs_data_set_default_bool(data, ST_SOURCE_AUDIO, false);
-	obs_data_set_default_int(data, ST_SOURCE_AUDIO_LAYOUT, static_cast<int64_t>(SPEAKERS_UNKNOWN));
+	obs_data_set_default_string(data, ST_KEY_SOURCE, "");
+	obs_data_set_default_bool(data, ST_KEY_SOURCE_AUDIO, false);
+	obs_data_set_default_int(data, ST_KEY_SOURCE_AUDIO_LAYOUT, static_cast<int64_t>(SPEAKERS_UNKNOWN));
 }
 
 static bool modified_properties(obs_properties_t* pr, obs_property_t* p, obs_data_t* data) noexcept
 try {
-	if (obs_properties_get(pr, ST_SOURCE_AUDIO) == p) {
-		bool show = obs_data_get_bool(data, ST_SOURCE_AUDIO);
-		obs_property_set_visible(obs_properties_get(pr, ST_SOURCE_AUDIO_LAYOUT), show);
+	if (obs_properties_get(pr, ST_KEY_SOURCE_AUDIO) == p) {
+		bool show = obs_data_get_bool(data, ST_KEY_SOURCE_AUDIO);
+		obs_property_set_visible(obs_properties_get(pr, ST_KEY_SOURCE_AUDIO_LAYOUT), show);
 		return true;
 	}
 	return false;
@@ -323,7 +326,7 @@ obs_properties_t* mirror_factory::get_properties2(mirror_instance* data)
 #endif
 
 	{
-		p = obs_properties_add_list(pr, ST_SOURCE, D_TRANSLATE(ST_SOURCE), OBS_COMBO_TYPE_LIST,
+		p = obs_properties_add_list(pr, ST_KEY_SOURCE, D_TRANSLATE(ST_I18N_SOURCE), OBS_COMBO_TYPE_LIST,
 									OBS_COMBO_FORMAT_STRING);
 		obs_property_set_modified_callback(p, modified_properties);
 
@@ -347,27 +350,27 @@ obs_properties_t* mirror_factory::get_properties2(mirror_instance* data)
 	}
 
 	{
-		p = obs_properties_add_bool(pr, ST_SOURCE_AUDIO, D_TRANSLATE(ST_SOURCE_AUDIO));
+		p = obs_properties_add_bool(pr, ST_KEY_SOURCE_AUDIO, D_TRANSLATE(ST_I18N_SOURCE_AUDIO));
 		obs_property_set_modified_callback(p, modified_properties);
 	}
 
 	{
-		p = obs_properties_add_list(pr, ST_SOURCE_AUDIO_LAYOUT, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT),
+		p = obs_properties_add_list(pr, ST_KEY_SOURCE_AUDIO_LAYOUT, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT),
 									OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-		obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(Unknown)),
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(Unknown)),
 								  static_cast<int64_t>(SPEAKERS_UNKNOWN));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(Mono)), static_cast<int64_t>(SPEAKERS_MONO));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(Stereo)),
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(Mono)), static_cast<int64_t>(SPEAKERS_MONO));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(Stereo)),
 								  static_cast<int64_t>(SPEAKERS_STEREO));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(StereoLFE)),
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(StereoLFE)),
 								  static_cast<int64_t>(SPEAKERS_2POINT1));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(Quadraphonic)),
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(Quadraphonic)),
 								  static_cast<int64_t>(SPEAKERS_4POINT0));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(QuadraphonicLFE)),
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(QuadraphonicLFE)),
 								  static_cast<int64_t>(SPEAKERS_4POINT1));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(Surround)),
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(Surround)),
 								  static_cast<int64_t>(SPEAKERS_5POINT1));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_SOURCE_AUDIO_LAYOUT_(FullSurround)),
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(FullSurround)),
 								  static_cast<int64_t>(SPEAKERS_7POINT1));
 	}
 
