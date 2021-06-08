@@ -425,7 +425,7 @@ void amf::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* con
 
 void amf::log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context)
 {
-	using namespace ::ffmpeg;
+	using namespace ::streamfx::ffmpeg;
 
 	DLOG_INFO("[%s]   AMD AMF:", codec->name);
 	tools::print_av_option_string2(context, "usage", "    Usage",

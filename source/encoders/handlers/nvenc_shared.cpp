@@ -695,7 +695,7 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 
 void nvenc::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* context)
 {
-	using namespace ::ffmpeg;
+	using namespace ::streamfx::ffmpeg;
 
 	DLOG_INFO("[%s]   NVIDIA NVENC:", codec->name);
 	tools::print_av_option_string2(context, "preset", "    Preset",
