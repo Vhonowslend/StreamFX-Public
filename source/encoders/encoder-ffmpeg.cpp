@@ -59,28 +59,28 @@ extern "C" {
 #endif
 
 // FFmpeg
-#define ST_FFMPEG "FFmpegEncoder"
-#define ST_FFMPEG_SUFFIX ST_FFMPEG ".Suffix"
-#define ST_FFMPEG_CUSTOMSETTINGS "FFmpegEncoder.CustomSettings"
-#define KEY_FFMPEG_CUSTOMSETTINGS "FFmpeg.CustomSettings"
-#define ST_FFMPEG_THREADS "FFmpegEncoder.Threads"
-#define KEY_FFMPEG_THREADS "FFmpeg.Threads"
-#define ST_FFMPEG_COLORFORMAT "FFmpegEncoder.ColorFormat"
-#define KEY_FFMPEG_COLORFORMAT "FFmpeg.ColorFormat"
-#define ST_FFMPEG_STANDARDCOMPLIANCE "FFmpegEncoder.StandardCompliance"
-#define KEY_FFMPEG_STANDARDCOMPLIANCE "FFmpeg.StandardCompliance"
-#define ST_FFMPEG_GPU "FFmpegEncoder.GPU"
-#define KEY_FFMPEG_GPU "FFmpeg.GPU"
+#define ST_I18N_FFMPEG "FFmpegEncoder"
+#define ST_I18N_FFMPEG_SUFFIX ST_I18N_FFMPEG ".Suffix"
+#define ST_I18N_FFMPEG_CUSTOMSETTINGS ST_I18N_FFMPEG ".CustomSettings"
+#define ST_KEY_FFMPEG_CUSTOMSETTINGS "FFmpeg.CustomSettings"
+#define ST_I18N_FFMPEG_THREADS ST_I18N_FFMPEG ".Threads"
+#define ST_KEY_FFMPEG_THREADS "FFmpeg.Threads"
+#define ST_I18N_FFMPEG_COLORFORMAT ST_I18N_FFMPEG ".ColorFormat"
+#define ST_KEY_FFMPEG_COLORFORMAT "FFmpeg.ColorFormat"
+#define ST_I18N_FFMPEG_STANDARDCOMPLIANCE ST_I18N_FFMPEG ".StandardCompliance"
+#define ST_KEY_FFMPEG_STANDARDCOMPLIANCE "FFmpeg.StandardCompliance"
+#define ST_I18N_FFMPEG_GPU ST_I18N_FFMPEG ".GPU"
+#define ST_KEY_FFMPEG_GPU "FFmpeg.GPU"
 
-#define ST_KEYFRAMES "FFmpegEncoder.KeyFrames"
-#define ST_KEYFRAMES_INTERVALTYPE "FFmpegEncoder.KeyFrames.IntervalType"
-#define ST_KEYFRAMES_INTERVALTYPE_(x) "FFmpegEncoder.KeyFrames.IntervalType." D_VSTR(x)
-#define KEY_KEYFRAMES_INTERVALTYPE "KeyFrames.IntervalType"
-#define ST_KEYFRAMES_INTERVAL "FFmpegEncoder.KeyFrames.Interval"
-#define ST_KEYFRAMES_INTERVAL_SECONDS "FFmpegEncoder.KeyFrames.Interval.Seconds"
-#define KEY_KEYFRAMES_INTERVAL_SECONDS "KeyFrames.Interval.Seconds"
-#define ST_KEYFRAMES_INTERVAL_FRAMES "FFmpegEncoder.KeyFrames.Interval.Frames"
-#define KEY_KEYFRAMES_INTERVAL_FRAMES "KeyFrames.Interval.Frames"
+#define ST_I18N_KEYFRAMES ST_I18N_FFMPEG ".KeyFrames"
+#define ST_I18N_KEYFRAMES_INTERVALTYPE ST_I18N_KEYFRAMES ".IntervalType"
+#define ST_I18N_KEYFRAMES_INTERVALTYPE_(x) ST_I18N_KEYFRAMES "." x
+#define ST_KEY_KEYFRAMES_INTERVALTYPE "KeyFrames.IntervalType"
+#define ST_I18N_KEYFRAMES_INTERVAL ST_I18N_KEYFRAMES ".Interval"
+#define ST_I18N_KEYFRAMES_INTERVAL_SECONDS ST_I18N_KEYFRAMES_INTERVAL ".Seconds"
+#define ST_KEY_KEYFRAMES_INTERVAL_SECONDS "KeyFrames.Interval.Seconds"
+#define ST_I18N_KEYFRAMES_INTERVAL_FRAMES ST_I18N_KEYFRAMES_INTERVAL ".Frames"
+#define ST_KEY_KEYFRAMES_INTERVAL_FRAMES "KeyFrames.Interval.Frames"
 
 using namespace streamfx::encoder::ffmpeg;
 using namespace streamfx::encoder::codec;
@@ -105,8 +105,8 @@ ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* self, bool
 	// Initialize GPU Stuff
 	if (is_hw) {
 		// Abort if user specified manual override.
-		if ((static_cast<AVPixelFormat>(obs_data_get_int(settings, KEY_FFMPEG_COLORFORMAT)) != AV_PIX_FMT_NONE)
-			|| (obs_data_get_int(settings, KEY_FFMPEG_GPU) != -1) || (obs_encoder_scaling_enabled(_self))
+		if ((static_cast<AVPixelFormat>(obs_data_get_int(settings, ST_KEY_FFMPEG_COLORFORMAT)) != AV_PIX_FMT_NONE)
+			|| (obs_data_get_int(settings, ST_KEY_FFMPEG_GPU) != -1) || (obs_encoder_scaling_enabled(_self))
 			|| (video_output_get_info(obs_encoder_video(_self))->format != VIDEO_FORMAT_NV12)) {
 			throw std::runtime_error(
 				"Selected settings prevent the use of hardware encoding, falling back to software.");
@@ -182,14 +182,14 @@ void ffmpeg_instance::get_properties(obs_properties_t* props)
 	if (_handler)
 		_handler->get_properties(props, _codec, _context, _handler->is_hardware_encoder(_factory));
 
-	obs_property_set_enabled(obs_properties_get(props, KEY_KEYFRAMES_INTERVALTYPE), false);
-	obs_property_set_enabled(obs_properties_get(props, KEY_KEYFRAMES_INTERVAL_SECONDS), false);
-	obs_property_set_enabled(obs_properties_get(props, KEY_KEYFRAMES_INTERVAL_FRAMES), false);
+	obs_property_set_enabled(obs_properties_get(props, ST_KEY_KEYFRAMES_INTERVALTYPE), false);
+	obs_property_set_enabled(obs_properties_get(props, ST_KEY_KEYFRAMES_INTERVAL_SECONDS), false);
+	obs_property_set_enabled(obs_properties_get(props, ST_KEY_KEYFRAMES_INTERVAL_FRAMES), false);
 
-	obs_property_set_enabled(obs_properties_get(props, KEY_FFMPEG_COLORFORMAT), false);
-	obs_property_set_enabled(obs_properties_get(props, KEY_FFMPEG_THREADS), false);
-	obs_property_set_enabled(obs_properties_get(props, KEY_FFMPEG_STANDARDCOMPLIANCE), false);
-	obs_property_set_enabled(obs_properties_get(props, KEY_FFMPEG_GPU), false);
+	obs_property_set_enabled(obs_properties_get(props, ST_KEY_FFMPEG_COLORFORMAT), false);
+	obs_property_set_enabled(obs_properties_get(props, ST_KEY_FFMPEG_THREADS), false);
+	obs_property_set_enabled(obs_properties_get(props, ST_KEY_FFMPEG_STANDARDCOMPLIANCE), false);
+	obs_property_set_enabled(obs_properties_get(props, ST_KEY_FFMPEG_GPU), false);
 }
 
 void ffmpeg_instance::migrate(obs_data_t* settings, uint64_t version)
@@ -202,7 +202,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 {
 	// FFmpeg Options
 	_context->debug                 = 0;
-	_context->strict_std_compliance = static_cast<int>(obs_data_get_int(settings, KEY_FFMPEG_STANDARDCOMPLIANCE));
+	_context->strict_std_compliance = static_cast<int>(obs_data_get_int(settings, ST_KEY_FFMPEG_STANDARDCOMPLIANCE));
 
 	/// Threading
 	if (!_hwinst) {
@@ -214,7 +214,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 			_context->thread_type |= FF_THREAD_SLICE;
 		}
 		if (_context->thread_type != 0) {
-			int64_t threads = obs_data_get_int(settings, ST_FFMPEG_THREADS);
+			int64_t threads = obs_data_get_int(settings, ST_I18N_FFMPEG_THREADS);
 			if (threads > 0) {
 				_context->thread_count = static_cast<int>(threads);
 			} else {
@@ -231,7 +231,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 
 	// Apply GPU Selection
 	if (!_hwinst && ::ffmpeg::tools::can_hardware_encode(_codec)) {
-		av_opt_set_int(_context, "gpu", (int)obs_data_get_int(settings, KEY_FFMPEG_GPU), AV_OPT_SEARCH_CHILDREN);
+		av_opt_set_int(_context, "gpu", (int)obs_data_get_int(settings, ST_KEY_FFMPEG_GPU), AV_OPT_SEARCH_CHILDREN);
 	}
 
 	// Keyframes
@@ -242,14 +242,14 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 			throw std::runtime_error("obs_get_video_info failed, restart OBS Studio to fix it (hopefully).");
 		}
 
-		int64_t kf_type    = obs_data_get_int(settings, KEY_KEYFRAMES_INTERVALTYPE);
+		int64_t kf_type    = obs_data_get_int(settings, ST_KEY_KEYFRAMES_INTERVALTYPE);
 		bool    is_seconds = (kf_type == 0);
 
 		if (is_seconds) {
-			_context->gop_size = static_cast<int>(obs_data_get_double(settings, KEY_KEYFRAMES_INTERVAL_SECONDS)
+			_context->gop_size = static_cast<int>(obs_data_get_double(settings, ST_KEY_KEYFRAMES_INTERVAL_SECONDS)
 												  * (ovi.fps_num / ovi.fps_den));
 		} else {
-			_context->gop_size = static_cast<int>(obs_data_get_int(settings, KEY_KEYFRAMES_INTERVAL_FRAMES));
+			_context->gop_size = static_cast<int>(obs_data_get_int(settings, ST_KEY_KEYFRAMES_INTERVAL_FRAMES));
 		}
 		_context->keyint_min = _context->gop_size;
 	}
@@ -259,7 +259,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 		_handler->update(settings, _codec, _context);
 
 	{ // FFmpeg Custom Options
-		const char* opts     = obs_data_get_string(settings, KEY_FFMPEG_CUSTOMSETTINGS);
+		const char* opts     = obs_data_get_string(settings, ST_KEY_FFMPEG_CUSTOMSETTINGS);
 		std::size_t opts_len = strnlen(opts, 65535);
 
 		parse_ffmpeg_commandline(std::string{opts, opts + opts_len});
@@ -274,7 +274,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 		DLOG_INFO("[%s] Initializing...", _codec->name);
 		DLOG_INFO("[%s]   FFmpeg:", _codec->name);
 		DLOG_INFO("[%s]     Custom Settings: %s", _codec->name,
-				  obs_data_get_string(settings, KEY_FFMPEG_CUSTOMSETTINGS));
+				  obs_data_get_string(settings, ST_KEY_FFMPEG_CUSTOMSETTINGS));
 		DLOG_INFO("[%s]     Standard Compliance: %s", _codec->name,
 				  ::ffmpeg::tools::get_std_compliance_name(_context->strict_std_compliance));
 		DLOG_INFO("[%s]     Threading: %s (with %i threads)", _codec->name,
@@ -296,7 +296,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 					  ::ffmpeg::tools::get_color_space_name(_scaler.get_target_colorspace()),
 					  _scaler.is_target_full_range() ? "Full" : "Partial");
 			if (!_hwinst)
-				DLOG_INFO("[%s]     On GPU Index: %lli", _codec->name, obs_data_get_int(settings, KEY_FFMPEG_GPU));
+				DLOG_INFO("[%s]     On GPU Index: %lli", _codec->name, obs_data_get_int(settings, ST_KEY_FFMPEG_GPU));
 		}
 		DLOG_INFO("[%s]     Framerate: %" PRId32 "/%" PRId32 " (%f FPS)", _codec->name, _context->time_base.den,
 				  _context->time_base.num,
@@ -423,7 +423,8 @@ void ffmpeg_instance::initialize_sw(obs_data_t* settings)
 
 		// Find a suitable Pixel Format.
 		AVPixelFormat _pixfmt_source = ::ffmpeg::tools::obs_videoformat_to_avpixelformat(voi->format);
-		AVPixelFormat _pixfmt_target = static_cast<AVPixelFormat>(obs_data_get_int(settings, KEY_FFMPEG_COLORFORMAT));
+		AVPixelFormat _pixfmt_target =
+			static_cast<AVPixelFormat>(obs_data_get_int(settings, ST_KEY_FFMPEG_COLORFORMAT));
 		if (_pixfmt_target == AV_PIX_FMT_NONE) {
 			// Find the best conversion format.
 			if (_codec->pix_fmts) {
@@ -919,7 +920,7 @@ ffmpeg_factory::ffmpeg_factory(const AVCodec* codec) : _avcodec(codec)
 		} else {
 			str << _avcodec->name;
 		}
-		str << D_TRANSLATE(ST_FFMPEG_SUFFIX);
+		str << D_TRANSLATE(ST_I18N_FFMPEG_SUFFIX);
 		_name = str.str();
 	}
 
@@ -984,26 +985,26 @@ void ffmpeg_factory::get_defaults2(obs_data_t* settings)
 		_handler->get_defaults(settings, _avcodec, nullptr, _handler->is_hardware_encoder(this));
 
 	if ((_avcodec->capabilities & AV_CODEC_CAP_INTRA_ONLY) == 0) {
-		obs_data_set_default_int(settings, KEY_KEYFRAMES_INTERVALTYPE, 0);
-		obs_data_set_default_double(settings, KEY_KEYFRAMES_INTERVAL_SECONDS, 2.0);
-		obs_data_set_default_int(settings, KEY_KEYFRAMES_INTERVAL_FRAMES, 300);
+		obs_data_set_default_int(settings, ST_KEY_KEYFRAMES_INTERVALTYPE, 0);
+		obs_data_set_default_double(settings, ST_KEY_KEYFRAMES_INTERVAL_SECONDS, 2.0);
+		obs_data_set_default_int(settings, ST_KEY_KEYFRAMES_INTERVAL_FRAMES, 300);
 	}
 
 	{ // Integrated Options
 		// FFmpeg
-		obs_data_set_default_string(settings, KEY_FFMPEG_CUSTOMSETTINGS, "");
-		obs_data_set_default_int(settings, KEY_FFMPEG_COLORFORMAT, static_cast<int64_t>(AV_PIX_FMT_NONE));
-		obs_data_set_default_int(settings, KEY_FFMPEG_THREADS, 0);
-		obs_data_set_default_int(settings, KEY_FFMPEG_GPU, -1);
-		obs_data_set_default_int(settings, KEY_FFMPEG_STANDARDCOMPLIANCE, FF_COMPLIANCE_STRICT);
+		obs_data_set_default_string(settings, ST_KEY_FFMPEG_CUSTOMSETTINGS, "");
+		obs_data_set_default_int(settings, ST_KEY_FFMPEG_COLORFORMAT, static_cast<int64_t>(AV_PIX_FMT_NONE));
+		obs_data_set_default_int(settings, ST_KEY_FFMPEG_THREADS, 0);
+		obs_data_set_default_int(settings, ST_KEY_FFMPEG_GPU, -1);
+		obs_data_set_default_int(settings, ST_KEY_FFMPEG_STANDARDCOMPLIANCE, FF_COMPLIANCE_STRICT);
 	}
 }
 
 static bool modified_keyframes(obs_properties_t* props, obs_property_t*, obs_data_t* settings) noexcept
 try {
-	bool is_seconds = obs_data_get_int(settings, KEY_KEYFRAMES_INTERVALTYPE) == 0;
-	obs_property_set_visible(obs_properties_get(props, KEY_KEYFRAMES_INTERVAL_FRAMES), !is_seconds);
-	obs_property_set_visible(obs_properties_get(props, KEY_KEYFRAMES_INTERVAL_SECONDS), is_seconds);
+	bool is_seconds = obs_data_get_int(settings, ST_KEY_KEYFRAMES_INTERVALTYPE) == 0;
+	obs_property_set_visible(obs_properties_get(props, ST_KEY_KEYFRAMES_INTERVAL_FRAMES), !is_seconds);
+	obs_property_set_visible(obs_properties_get(props, ST_KEY_KEYFRAMES_INTERVAL_SECONDS), is_seconds);
 	return true;
 } catch (const std::exception& ex) {
 	DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
@@ -1036,24 +1037,27 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 		obs_properties_t* grp = props;
 		if (!util::are_property_groups_broken()) {
 			grp = obs_properties_create();
-			obs_properties_add_group(props, ST_KEYFRAMES, D_TRANSLATE(ST_KEYFRAMES), OBS_GROUP_NORMAL, grp);
+			obs_properties_add_group(props, ST_I18N_KEYFRAMES, D_TRANSLATE(ST_I18N_KEYFRAMES), OBS_GROUP_NORMAL, grp);
 		}
 
 		{ // Key-Frame Interval Type
-			auto p = obs_properties_add_list(grp, KEY_KEYFRAMES_INTERVALTYPE, D_TRANSLATE(ST_KEYFRAMES_INTERVALTYPE),
-											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			auto p =
+				obs_properties_add_list(grp, ST_KEY_KEYFRAMES_INTERVALTYPE, D_TRANSLATE(ST_I18N_KEYFRAMES_INTERVALTYPE),
+										OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_set_modified_callback(p, modified_keyframes);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_KEYFRAMES_INTERVALTYPE_(Seconds)), 0);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_KEYFRAMES_INTERVALTYPE_(Frames)), 1);
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_KEYFRAMES_INTERVALTYPE_("Seconds")), 0);
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_KEYFRAMES_INTERVALTYPE_("Frames")), 1);
 		}
 		{ // Key-Frame Interval Seconds
-			auto p = obs_properties_add_float(grp, KEY_KEYFRAMES_INTERVAL_SECONDS, D_TRANSLATE(ST_KEYFRAMES_INTERVAL),
-											  0.00, std::numeric_limits<int16_t>::max(), 0.01);
+			auto p = obs_properties_add_float(grp, ST_KEY_KEYFRAMES_INTERVAL_SECONDS,
+											  D_TRANSLATE(ST_I18N_KEYFRAMES_INTERVAL), 0.00,
+											  std::numeric_limits<int16_t>::max(), 0.01);
 			obs_property_float_set_suffix(p, " seconds");
 		}
 		{ // Key-Frame Interval Frames
-			auto p = obs_properties_add_int(grp, KEY_KEYFRAMES_INTERVAL_FRAMES, D_TRANSLATE(ST_KEYFRAMES_INTERVAL), 0,
-											std::numeric_limits<int32_t>::max(), 1);
+			auto p =
+				obs_properties_add_int(grp, ST_KEY_KEYFRAMES_INTERVAL_FRAMES, D_TRANSLATE(ST_I18N_KEYFRAMES_INTERVAL),
+									   0, std::numeric_limits<int32_t>::max(), 1);
 			obs_property_int_set_suffix(p, " frames");
 		}
 	}
@@ -1062,27 +1066,28 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 		obs_properties_t* grp = props;
 		if (!util::are_property_groups_broken()) {
 			auto prs = obs_properties_create();
-			obs_properties_add_group(props, ST_FFMPEG, D_TRANSLATE(ST_FFMPEG), OBS_GROUP_NORMAL, prs);
+			obs_properties_add_group(props, ST_I18N_FFMPEG, D_TRANSLATE(ST_I18N_FFMPEG), OBS_GROUP_NORMAL, prs);
 			grp = prs;
 		}
 
 		{ // Custom Settings
-			auto p = obs_properties_add_text(grp, KEY_FFMPEG_CUSTOMSETTINGS, D_TRANSLATE(ST_FFMPEG_CUSTOMSETTINGS),
-											 obs_text_type::OBS_TEXT_DEFAULT);
+			auto p =
+				obs_properties_add_text(grp, ST_KEY_FFMPEG_CUSTOMSETTINGS, D_TRANSLATE(ST_I18N_FFMPEG_CUSTOMSETTINGS),
+										obs_text_type::OBS_TEXT_DEFAULT);
 		}
 
 		if (_handler && _handler->is_hardware_encoder(this)) {
-			auto p = obs_properties_add_int(grp, KEY_FFMPEG_GPU, D_TRANSLATE(ST_FFMPEG_GPU), -1,
+			auto p = obs_properties_add_int(grp, ST_KEY_FFMPEG_GPU, D_TRANSLATE(ST_I18N_FFMPEG_GPU), -1,
 											std::numeric_limits<uint8_t>::max(), 1);
 		}
 
 		if (_handler && _handler->has_threading_support(this)) {
-			auto p = obs_properties_add_int_slider(grp, KEY_FFMPEG_THREADS, D_TRANSLATE(ST_FFMPEG_THREADS), 0,
+			auto p = obs_properties_add_int_slider(grp, ST_KEY_FFMPEG_THREADS, D_TRANSLATE(ST_I18N_FFMPEG_THREADS), 0,
 												   static_cast<int64_t>(std::thread::hardware_concurrency() * 2), 1);
 		}
 
 		if (_handler && _handler->has_pixel_format_support(this)) {
-			auto p = obs_properties_add_list(grp, KEY_FFMPEG_COLORFORMAT, D_TRANSLATE(ST_FFMPEG_COLORFORMAT),
+			auto p = obs_properties_add_list(grp, ST_KEY_FFMPEG_COLORFORMAT, D_TRANSLATE(ST_I18N_FFMPEG_COLORFORMAT),
 											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), static_cast<int64_t>(AV_PIX_FMT_NONE));
 			for (auto ptr = _avcodec->pix_fmts; *ptr != AV_PIX_FMT_NONE; ptr++) {
@@ -1091,16 +1096,18 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 		}
 
 		{
-			auto p =
-				obs_properties_add_list(grp, KEY_FFMPEG_STANDARDCOMPLIANCE, D_TRANSLATE(ST_FFMPEG_STANDARDCOMPLIANCE),
-										OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_FFMPEG_STANDARDCOMPLIANCE ".VeryStrict"),
+			auto p = obs_properties_add_list(grp, ST_KEY_FFMPEG_STANDARDCOMPLIANCE,
+											 D_TRANSLATE(ST_I18N_FFMPEG_STANDARDCOMPLIANCE), OBS_COMBO_TYPE_LIST,
+											 OBS_COMBO_FORMAT_INT);
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_FFMPEG_STANDARDCOMPLIANCE ".VeryStrict"),
 									  FF_COMPLIANCE_VERY_STRICT);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_FFMPEG_STANDARDCOMPLIANCE ".Strict"), FF_COMPLIANCE_STRICT);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_FFMPEG_STANDARDCOMPLIANCE ".Normal"), FF_COMPLIANCE_NORMAL);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_FFMPEG_STANDARDCOMPLIANCE ".Unofficial"),
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_FFMPEG_STANDARDCOMPLIANCE ".Strict"),
+									  FF_COMPLIANCE_STRICT);
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_FFMPEG_STANDARDCOMPLIANCE ".Normal"),
+									  FF_COMPLIANCE_NORMAL);
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_FFMPEG_STANDARDCOMPLIANCE ".Unofficial"),
 									  FF_COMPLIANCE_UNOFFICIAL);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_FFMPEG_STANDARDCOMPLIANCE ".Experimental"),
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_FFMPEG_STANDARDCOMPLIANCE ".Experimental"),
 									  FF_COMPLIANCE_EXPERIMENTAL);
 		}
 	};
