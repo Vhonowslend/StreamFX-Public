@@ -33,7 +33,7 @@
 #define ST_SHADER_SEED ST_SHADER ".Seed"
 #define ST_PARAMETERS ST ".Parameters"
 
-gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
+streamfx::gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
 	: _self(self), _mode(mode), _base_width(1), _base_height(1), _active(true),
 
 	  _shader(), _shader_file(), _shader_tech("Draw"), _shader_file_mt(), _shader_file_sz(), _shader_file_tick(0),
@@ -52,9 +52,9 @@ gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
 	}
 }
 
-gfx::shader::shader::~shader() {}
+streamfx::gfx::shader::shader::~shader() {}
 
-bool gfx::shader::shader::is_shader_different(const std::filesystem::path& file)
+bool streamfx::gfx::shader::shader::is_shader_different(const std::filesystem::path& file)
 try {
 	if (std::filesystem::exists(file)) {
 		// Check if the file name differs.
@@ -78,7 +78,7 @@ try {
 	return false;
 }
 
-bool gfx::shader::shader::is_technique_different(const std::string& tech)
+bool streamfx::gfx::shader::shader::is_technique_different(const std::string& tech)
 {
 	// Is the technique different?
 	if (tech != _shader_tech)
@@ -87,8 +87,8 @@ bool gfx::shader::shader::is_technique_different(const std::string& tech)
 	return false;
 }
 
-bool gfx::shader::shader::load_shader(const std::filesystem::path& file, const std::string& tech, bool& shader_dirty,
-									  bool& param_dirty)
+bool streamfx::gfx::shader::shader::load_shader(const std::filesystem::path& file, const std::string& tech,
+												bool& shader_dirty, bool& param_dirty)
 try {
 	if (!std::filesystem::exists(file))
 		return false;
@@ -142,7 +142,7 @@ try {
 				if (fnd != _shader_params.end())
 					continue;
 
-				auto param = gfx::shader::parameter::make_parameter(el, ST_PARAMETERS);
+				auto param = streamfx::gfx::shader::parameter::make_parameter(el, ST_PARAMETERS);
 
 				if (param) {
 					_shader_params.insert_or_assign(el.get_name(), param);
@@ -161,7 +161,7 @@ try {
 				if (fnd != _shader_params.end())
 					continue;
 
-				auto param = gfx::shader::parameter::make_parameter(el, ST_PARAMETERS);
+				auto param = streamfx::gfx::shader::parameter::make_parameter(el, ST_PARAMETERS);
 
 				if (param) {
 					_shader_params.insert_or_assign(el.get_name(), param);
@@ -180,7 +180,7 @@ try {
 	return false;
 }
 
-void gfx::shader::shader::defaults(obs_data_t* data)
+void streamfx::gfx::shader::shader::defaults(obs_data_t* data)
 {
 	obs_data_set_default_string(data, ST_SHADER_FILE, "");
 	obs_data_set_default_string(data, ST_SHADER_TECHNIQUE, "");
@@ -189,7 +189,7 @@ void gfx::shader::shader::defaults(obs_data_t* data)
 	obs_data_set_default_int(data, ST_SHADER_SEED, static_cast<long long>(time(NULL)));
 }
 
-void gfx::shader::shader::properties(obs_properties_t* pr)
+void streamfx::gfx::shader::shader::properties(obs_properties_t* pr)
 {
 	_have_current_params = false;
 
@@ -216,7 +216,7 @@ void gfx::shader::shader::properties(obs_properties_t* pr)
 			obs_properties_add_button2(
 				grp, ST_REFRESH, D_TRANSLATE(ST_REFRESH),
 				[](obs_properties_t* props, obs_property_t* prop, void* priv) {
-					return reinterpret_cast<gfx::shader::shader*>(priv)->on_refresh_properties(props, prop);
+					return reinterpret_cast<streamfx::gfx::shader::shader*>(priv)->on_refresh_properties(props, prop);
 				},
 				this);
 		}
@@ -249,7 +249,7 @@ void gfx::shader::shader::properties(obs_properties_t* pr)
 	on_refresh_properties(pr, nullptr);
 }
 
-bool gfx::shader::shader::on_refresh_properties(obs_properties_t* props, obs_property_t* prop)
+bool streamfx::gfx::shader::shader::on_refresh_properties(obs_properties_t* props, obs_property_t* prop)
 {
 	if (_shader) { // Clear list of techniques and rebuild it.
 		obs_property_t* p_tech_list = obs_properties_get(props, ST_SHADER_TECHNIQUE);
@@ -278,8 +278,8 @@ bool gfx::shader::shader::on_refresh_properties(obs_properties_t* props, obs_pro
 	return true;
 }
 
-bool gfx::shader::shader::on_shader_or_technique_modified(obs_properties_t* props, obs_property_t* prop,
-														  obs_data_t* data)
+bool streamfx::gfx::shader::shader::on_shader_or_technique_modified(obs_properties_t* props, obs_property_t* prop,
+																	obs_data_t* data)
 {
 	bool shader_dirty = false;
 	bool param_dirty  = false;
@@ -314,7 +314,7 @@ bool gfx::shader::shader::on_shader_or_technique_modified(obs_properties_t* prop
 	return shader_dirty || param_dirty || !_have_current_params;
 }
 
-bool gfx::shader::shader::update_shader(obs_data_t* data, bool& shader_dirty, bool& param_dirty)
+bool streamfx::gfx::shader::shader::update_shader(obs_data_t* data, bool& shader_dirty, bool& param_dirty)
 {
 	const char* file_c = obs_data_get_string(data, ST_SHADER_FILE);
 	std::string file   = file_c ? file_c : "";
@@ -324,22 +324,22 @@ bool gfx::shader::shader::update_shader(obs_data_t* data, bool& shader_dirty, bo
 	return load_shader(file, tech, shader_dirty, param_dirty);
 }
 
-inline std::pair<gfx::shader::size_type, double_t> parse_text_as_size(const char* text)
+inline std::pair<streamfx::gfx::shader::size_type, double_t> parse_text_as_size(const char* text)
 {
 	double_t v = 0;
 	if (sscanf(text, "%lf", &v) == 1) {
 		const char* prc_chr = strrchr(text, '%');
 		if (prc_chr && (*prc_chr == '%')) {
-			return {gfx::shader::size_type::Percent, v / 100.0};
+			return {streamfx::gfx::shader::size_type::Percent, v / 100.0};
 		} else {
-			return {gfx::shader::size_type::Pixel, v};
+			return {streamfx::gfx::shader::size_type::Pixel, v};
 		}
 	} else {
-		return {gfx::shader::size_type::Percent, 1.0};
+		return {streamfx::gfx::shader::size_type::Percent, 1.0};
 	}
 }
 
-void gfx::shader::shader::update(obs_data_t* data)
+void streamfx::gfx::shader::shader::update(obs_data_t* data)
 {
 	bool v1, v2;
 	update_shader(data, v1, v2);
@@ -368,7 +368,7 @@ void gfx::shader::shader::update(obs_data_t* data)
 	}
 }
 
-uint32_t gfx::shader::shader::width()
+uint32_t streamfx::gfx::shader::shader::width()
 {
 	switch (_mode) {
 	case shader_mode::Transition:
@@ -392,7 +392,7 @@ uint32_t gfx::shader::shader::width()
 	}
 }
 
-uint32_t gfx::shader::shader::height()
+uint32_t streamfx::gfx::shader::shader::height()
 {
 	switch (_mode) {
 	case shader_mode::Transition:
@@ -416,17 +416,17 @@ uint32_t gfx::shader::shader::height()
 	}
 }
 
-uint32_t gfx::shader::shader::base_width()
+uint32_t streamfx::gfx::shader::shader::base_width()
 {
 	return _base_width;
 }
 
-uint32_t gfx::shader::shader::base_height()
+uint32_t streamfx::gfx::shader::shader::base_height()
 {
 	return _base_height;
 }
 
-bool gfx::shader::shader::tick(float_t time)
+bool streamfx::gfx::shader::shader::tick(float_t time)
 {
 	_shader_file_tick = static_cast<float_t>(static_cast<double_t>(_shader_file_tick) + static_cast<double_t>(time));
 	if (_shader_file_tick >= 1.0f / 3.0f) {
@@ -459,7 +459,7 @@ bool gfx::shader::shader::tick(float_t time)
 	return false;
 }
 
-void gfx::shader::shader::prepare_render()
+void streamfx::gfx::shader::shader::prepare_render()
 {
 	if (!_shader)
 		return;
@@ -503,7 +503,7 @@ void gfx::shader::shader::prepare_render()
 	return;
 }
 
-void gfx::shader::shader::render(gs_effect* effect)
+void streamfx::gfx::shader::shader::render(gs_effect* effect)
 {
 	if (!_shader)
 		return;
@@ -538,13 +538,13 @@ void gfx::shader::shader::render(gs_effect* effect)
 	}
 }
 
-void gfx::shader::shader::set_size(uint32_t w, uint32_t h)
+void streamfx::gfx::shader::shader::set_size(uint32_t w, uint32_t h)
 {
 	_base_width  = w;
 	_base_height = h;
 }
 
-void gfx::shader::shader::set_input_a(std::shared_ptr<streamfx::obs::gs::texture> tex)
+void streamfx::gfx::shader::shader::set_input_a(std::shared_ptr<streamfx::obs::gs::texture> tex)
 {
 	if (!_shader)
 		return;
@@ -564,7 +564,7 @@ void gfx::shader::shader::set_input_a(std::shared_ptr<streamfx::obs::gs::texture
 	}
 }
 
-void gfx::shader::shader::set_input_b(std::shared_ptr<streamfx::obs::gs::texture> tex)
+void streamfx::gfx::shader::shader::set_input_b(std::shared_ptr<streamfx::obs::gs::texture> tex)
 {
 	if (!_shader)
 		return;
@@ -584,7 +584,7 @@ void gfx::shader::shader::set_input_b(std::shared_ptr<streamfx::obs::gs::texture
 	}
 }
 
-void gfx::shader::shader::set_transition_time(float_t t)
+void streamfx::gfx::shader::shader::set_transition_time(float_t t)
 {
 	if (!_shader)
 		return;
@@ -596,7 +596,7 @@ void gfx::shader::shader::set_transition_time(float_t t)
 	}
 }
 
-void gfx::shader::shader::set_transition_size(uint32_t w, uint32_t h)
+void streamfx::gfx::shader::shader::set_transition_size(uint32_t w, uint32_t h)
 {
 	if (!_shader)
 		return;
@@ -607,7 +607,7 @@ void gfx::shader::shader::set_transition_size(uint32_t w, uint32_t h)
 	}
 }
 
-void gfx::shader::shader::set_active(bool active)
+void streamfx::gfx::shader::shader::set_active(bool active)
 {
 	_active = active;
 

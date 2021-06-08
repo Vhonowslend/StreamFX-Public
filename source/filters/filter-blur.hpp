@@ -53,12 +53,12 @@ namespace streamfx::filter::blur {
 		bool                                             _output_rendered;
 
 		// Blur
-		std::shared_ptr<::gfx::blur::base> _blur;
-		double_t                           _blur_size;
-		double_t                           _blur_angle;
-		std::pair<double_t, double_t>      _blur_center;
-		bool                               _blur_step_scaling;
-		std::pair<double_t, double_t>      _blur_step_scale;
+		std::shared_ptr<::streamfx::gfx::blur::base> _blur;
+		double_t                                     _blur_size;
+		double_t                                     _blur_angle;
+		std::pair<double_t, double_t>                _blur_center;
+		bool                                         _blur_step_scaling;
+		std::pair<double_t, double_t>                _blur_step_scale;
 
 		// Masking
 		struct {
@@ -79,11 +79,11 @@ namespace streamfx::filter::blur {
 				std::shared_ptr<streamfx::obs::gs::texture> texture;
 			} image;
 			struct {
-				std::string                                 name_old;
-				std::string                                 name;
-				bool                                        is_scene;
-				std::shared_ptr<gfx::source_texture>        source_texture;
-				std::shared_ptr<streamfx::obs::gs::texture> texture;
+				std::string                                    name_old;
+				std::string                                    name;
+				bool                                           is_scene;
+				std::shared_ptr<streamfx::gfx::source_texture> source_texture;
+				std::shared_ptr<streamfx::obs::gs::texture>    texture;
 			} source;
 			struct {
 				float_t r;

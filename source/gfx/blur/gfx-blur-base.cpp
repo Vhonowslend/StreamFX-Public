@@ -18,48 +18,48 @@
 #include "gfx-blur-base.hpp"
 #include <stdexcept>
 
-void gfx::blur::base::set_step_scale_x(double_t v)
+void streamfx::gfx::blur::base::set_step_scale_x(double_t v)
 {
 	this->set_step_scale(v, this->get_step_scale_y());
 }
 
-void gfx::blur::base::set_step_scale_y(double_t v)
+void streamfx::gfx::blur::base::set_step_scale_y(double_t v)
 {
 	this->set_step_scale(this->get_step_scale_x(), v);
 }
 
-double_t gfx::blur::base::get_step_scale_x()
+double_t streamfx::gfx::blur::base::get_step_scale_x()
 {
 	double_t x, y;
 	this->get_step_scale(x, y);
 	return x;
 }
 
-double_t gfx::blur::base::get_step_scale_y()
+double_t streamfx::gfx::blur::base::get_step_scale_y()
 {
 	double_t x, y;
 	this->get_step_scale(x, y);
 	return y;
 }
 
-void gfx::blur::base_center::set_center_x(double_t v)
+void streamfx::gfx::blur::base_center::set_center_x(double_t v)
 {
 	this->set_center(v, this->get_center_y());
 }
 
-void gfx::blur::base_center::set_center_y(double_t v)
+void streamfx::gfx::blur::base_center::set_center_y(double_t v)
 {
 	this->set_center(this->get_center_x(), v);
 }
 
-double_t gfx::blur::base_center::get_center_x()
+double_t streamfx::gfx::blur::base_center::get_center_x()
 {
 	double_t x, y;
 	this->get_center(x, y);
 	return x;
 }
 
-double_t gfx::blur::base_center::get_center_y()
+double_t streamfx::gfx::blur::base_center::get_center_y()
 {
 	double_t x, y;
 	this->get_center(x, y);

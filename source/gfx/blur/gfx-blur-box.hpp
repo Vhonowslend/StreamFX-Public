@@ -23,7 +23,7 @@
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
 
-namespace gfx {
+namespace streamfx::gfx {
 	namespace blur {
 		class box_data {
 			streamfx::obs::gs::effect _effect;
@@ -35,53 +35,53 @@ namespace gfx {
 			streamfx::obs::gs::effect get_effect();
 		};
 
-		class box_factory : public ::gfx::blur::ifactory {
-			std::mutex                           _data_lock;
-			std::weak_ptr<::gfx::blur::box_data> _data;
+		class box_factory : public ::streamfx::gfx::blur::ifactory {
+			std::mutex                                     _data_lock;
+			std::weak_ptr<::streamfx::gfx::blur::box_data> _data;
 
 			public:
 			box_factory();
 			virtual ~box_factory() override;
 
-			virtual bool is_type_supported(::gfx::blur::type type) override;
+			virtual bool is_type_supported(::streamfx::gfx::blur::type type) override;
 
-			virtual std::shared_ptr<::gfx::blur::base> create(::gfx::blur::type type) override;
+			virtual std::shared_ptr<::streamfx::gfx::blur::base> create(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_min_size(::gfx::blur::type type) override;
+			virtual double_t get_min_size(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_step_size(::gfx::blur::type type) override;
+			virtual double_t get_step_size(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_max_size(::gfx::blur::type type) override;
+			virtual double_t get_max_size(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_min_angle(::gfx::blur::type type) override;
+			virtual double_t get_min_angle(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_step_angle(::gfx::blur::type type) override;
+			virtual double_t get_step_angle(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_max_angle(::gfx::blur::type type) override;
+			virtual double_t get_max_angle(::streamfx::gfx::blur::type type) override;
 
-			virtual bool is_step_scale_supported(::gfx::blur::type type) override;
+			virtual bool is_step_scale_supported(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_min_step_scale_x(::gfx::blur::type type) override;
+			virtual double_t get_min_step_scale_x(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_step_step_scale_x(::gfx::blur::type type) override;
+			virtual double_t get_step_step_scale_x(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_max_step_scale_x(::gfx::blur::type type) override;
+			virtual double_t get_max_step_scale_x(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_min_step_scale_y(::gfx::blur::type type) override;
+			virtual double_t get_min_step_scale_y(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_step_step_scale_y(::gfx::blur::type type) override;
+			virtual double_t get_step_step_scale_y(::streamfx::gfx::blur::type type) override;
 
-			virtual double_t get_max_step_scale_y(::gfx::blur::type type) override;
+			virtual double_t get_max_step_scale_y(::streamfx::gfx::blur::type type) override;
 
-			std::shared_ptr<::gfx::blur::box_data> data();
+			std::shared_ptr<::streamfx::gfx::blur::box_data> data();
 
 			public: // Singleton
-			static ::gfx::blur::box_factory& get();
+			static ::streamfx::gfx::blur::box_factory& get();
 		};
 
-		class box : public ::gfx::blur::base {
+		class box : public ::streamfx::gfx::blur::base {
 			protected:
-			std::shared_ptr<::gfx::blur::box_data> _data;
+			std::shared_ptr<::streamfx::gfx::blur::box_data> _data;
 
 			double_t                                           _size;
 			std::pair<double_t, double_t>                      _step_scale;
@@ -97,7 +97,7 @@ namespace gfx {
 
 			virtual void set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture) override;
 
-			virtual ::gfx::blur::type get_type() override;
+			virtual ::streamfx::gfx::blur::type get_type() override;
 
 			virtual double_t get_size() override;
 			virtual void     set_size(double_t width) override;
@@ -111,13 +111,13 @@ namespace gfx {
 			virtual std::shared_ptr<::streamfx::obs::gs::texture> get() override;
 		};
 
-		class box_directional : public ::gfx::blur::box, public ::gfx::blur::base_angle {
+		class box_directional : public ::streamfx::gfx::blur::box, public ::streamfx::gfx::blur::base_angle {
 			double_t _angle;
 
 			public:
 			box_directional();
 
-			virtual ::gfx::blur::type get_type() override;
+			virtual ::streamfx::gfx::blur::type get_type() override;
 
 			virtual double_t get_angle() override;
 			virtual void     set_angle(double_t angle) override;
@@ -125,14 +125,14 @@ namespace gfx {
 			virtual std::shared_ptr<::streamfx::obs::gs::texture> render() override;
 		};
 
-		class box_rotational : public ::gfx::blur::box,
-							   public ::gfx::blur::base_angle,
-							   public ::gfx::blur::base_center {
+		class box_rotational : public ::streamfx::gfx::blur::box,
+							   public ::streamfx::gfx::blur::base_angle,
+							   public ::streamfx::gfx::blur::base_center {
 			std::pair<double_t, double_t> _center;
 			double_t                      _angle;
 
 			public:
-			virtual ::gfx::blur::type get_type() override;
+			virtual ::streamfx::gfx::blur::type get_type() override;
 
 			virtual void set_center(double_t x, double_t y) override;
 			virtual void get_center(double_t& x, double_t& y) override;
@@ -143,11 +143,11 @@ namespace gfx {
 			virtual std::shared_ptr<::streamfx::obs::gs::texture> render() override;
 		};
 
-		class box_zoom : public ::gfx::blur::box, public ::gfx::blur::base_center {
+		class box_zoom : public ::streamfx::gfx::blur::box, public ::streamfx::gfx::blur::base_center {
 			std::pair<double_t, double_t> _center;
 
 			public:
-			virtual ::gfx::blur::type get_type() override;
+			virtual ::streamfx::gfx::blur::type get_type() override;
 
 			virtual void set_center(double_t x, double_t y) override;
 			virtual void get_center(double_t& x, double_t& y) override;
@@ -155,4 +155,4 @@ namespace gfx {
 			virtual std::shared_ptr<::streamfx::obs::gs::texture> render() override;
 		};
 	} // namespace blur
-} // namespace gfx
+} // namespace streamfx::gfx

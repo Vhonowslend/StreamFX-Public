@@ -25,7 +25,7 @@
 #include "obs/gs/gs-effect.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 
-namespace gfx {
+namespace streamfx::gfx {
 	namespace shader {
 		enum class size_type {
 			Pixel,
@@ -128,4 +128,4 @@ namespace gfx {
 			void set_active(bool active);
 		};
 	} // namespace shader
-} // namespace gfx
+} // namespace streamfx::gfx
