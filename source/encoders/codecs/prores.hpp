@@ -23,14 +23,14 @@
 #include "common.hpp"
 
 // Codec: ProRes
-#define P_PRORES "Codec.ProRes"
-#define P_PRORES_PROFILE "Codec.ProRes.Profile"
-#define P_PRORES_PROFILE_APCS "Codec.ProRes.Profile.APCS"
-#define P_PRORES_PROFILE_APCO "Codec.ProRes.Profile.APCO"
-#define P_PRORES_PROFILE_APCN "Codec.ProRes.Profile.APCN"
-#define P_PRORES_PROFILE_APCH "Codec.ProRes.Profile.APCH"
-#define P_PRORES_PROFILE_AP4H "Codec.ProRes.Profile.AP4H"
-#define P_PRORES_PROFILE_AP4X "Codec.ProRes.Profile.AP4X"
+#define S_CODEC_PRORES "Codec.ProRes"
+#define S_CODEC_PRORES_PROFILE "Codec.ProRes.Profile"
+#define S_CODEC_PRORES_PROFILE_APCS "Codec.ProRes.Profile.APCS"
+#define S_CODEC_PRORES_PROFILE_APCO "Codec.ProRes.Profile.APCO"
+#define S_CODEC_PRORES_PROFILE_APCN "Codec.ProRes.Profile.APCN"
+#define S_CODEC_PRORES_PROFILE_APCH "Codec.ProRes.Profile.APCH"
+#define S_CODEC_PRORES_PROFILE_AP4H "Codec.ProRes.Profile.AP4H"
+#define S_CODEC_PRORES_PROFILE_AP4X "Codec.ProRes.Profile.AP4X"
 
 namespace streamfx::encoder::codec::prores {
 	enum class profile : int32_t {
