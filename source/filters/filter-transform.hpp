@@ -46,13 +46,13 @@ namespace streamfx::filter::transform {
 		std::shared_ptr<gs::texture>      _source_texture;
 
 		// Mesh
-		bool                               _update_mesh;
-		std::shared_ptr<gs::vertex_buffer> _vertex_buffer;
-		uint32_t                           _rotation_order;
-		std::unique_ptr<util::vec3a>       _position;
-		std::unique_ptr<util::vec3a>       _rotation;
-		std::unique_ptr<util::vec3a>       _scale;
-		std::unique_ptr<util::vec3a>       _shear;
+		bool                                   _update_mesh;
+		std::shared_ptr<gs::vertex_buffer>     _vertex_buffer;
+		uint32_t                               _rotation_order;
+		std::unique_ptr<streamfx::util::vec3a> _position;
+		std::unique_ptr<streamfx::util::vec3a> _rotation;
+		std::unique_ptr<streamfx::util::vec3a> _scale;
+		std::unique_ptr<streamfx::util::vec3a> _shear;
 
 		// Camera
 		bool    _camera_orthographic;

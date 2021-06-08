@@ -62,14 +62,14 @@ face_tracking_instance::face_tracking_instance(obs_data_t* settings, obs_source_
 {
 #ifdef ENABLE_PROFILING
 	// Profiling
-	_profile_capture         = util::profiler::create();
-	_profile_capture_realloc = util::profiler::create();
-	_profile_capture_copy    = util::profiler::create();
-	_profile_ar_realloc      = util::profiler::create();
-	_profile_ar_copy         = util::profiler::create();
-	_profile_ar_transfer     = util::profiler::create();
-	_profile_ar_run          = util::profiler::create();
-	_profile_ar_calc         = util::profiler::create();
+	_profile_capture         = streamfx::util::profiler::create();
+	_profile_capture_realloc = streamfx::util::profiler::create();
+	_profile_capture_copy    = streamfx::util::profiler::create();
+	_profile_ar_realloc      = streamfx::util::profiler::create();
+	_profile_ar_copy         = streamfx::util::profiler::create();
+	_profile_ar_transfer     = streamfx::util::profiler::create();
+	_profile_ar_run          = streamfx::util::profiler::create();
+	_profile_ar_calc         = streamfx::util::profiler::create();
 #endif
 
 	{ // Create render target, vertex buffer, and CUDA stream.
@@ -404,7 +404,7 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 			double_t bcy = _ar_bboxes.boxes[0].y + bsy / 2.0;
 
 			// Zoom, Aspect Ratio, Offset
-			bsy = util::math::lerp<double_t>(sy, bsy, _cfg_zoom);
+			bsy = streamfx::util::math::lerp<double_t>(sy, bsy, _cfg_zoom);
 			bsy = std::clamp(bsy, 10 * aspect, static_cast<double_t>(_size.second));
 			bsx = bsy * aspect;
 			bcx += _ar_bboxes.boxes[0].width * _cfg_offset.first;
@@ -469,13 +469,14 @@ void face_tracking_instance::refresh_region_of_interest()
 {
 	std::unique_lock<std::mutex> tlk(_values.lock);
 
-	double_t kalman_q = util::math::lerp<double_t>(1.0, 1e-6, _cfg_stability);
-	double_t kalman_r = util::math::lerp<double_t>(std::numeric_limits<double_t>::epsilon(), 1e+2, _cfg_stability);
+	double_t kalman_q = streamfx::util::math::lerp<double_t>(1.0, 1e-6, _cfg_stability);
+	double_t kalman_r =
+		streamfx::util::math::lerp<double_t>(std::numeric_limits<double_t>::epsilon(), 1e+2, _cfg_stability);
 
-	_filters.center[0] = util::math::kalman1D<double_t>{kalman_q, kalman_r, 1., _values.center[0]};
-	_filters.center[1] = util::math::kalman1D<double_t>{kalman_q, kalman_r, 1., _values.center[1]};
-	_filters.size[0]   = util::math::kalman1D<double_t>{kalman_q, kalman_r, 1., _values.size[0]};
-	_filters.size[1]   = util::math::kalman1D<double_t>{kalman_q, kalman_r, 1., _values.size[1]};
+	_filters.center[0] = streamfx::util::math::kalman1D<double_t>{kalman_q, kalman_r, 1., _values.center[0]};
+	_filters.center[1] = streamfx::util::math::kalman1D<double_t>{kalman_q, kalman_r, 1., _values.center[1]};
+	_filters.size[0]   = streamfx::util::math::kalman1D<double_t>{kalman_q, kalman_r, 1., _values.size[0]};
+	_filters.size[1]   = streamfx::util::math::kalman1D<double_t>{kalman_q, kalman_r, 1., _values.size[1]};
 }
 
 void face_tracking_instance::load(obs_data_t* data)
@@ -593,7 +594,7 @@ bool face_tracking_instance::button_profile(obs_properties_t* props, obs_propert
 {
 	DLOG_INFO("%-22s: %-10s %-10s %-10s %-10s %-10s", "Task", "Total", "Count", "Average", "99.9%ile", "95.0%ile");
 
-	std::pair<std::string, std::shared_ptr<util::profiler>> profilers[]{
+	std::pair<std::string, std::shared_ptr<streamfx::util::profiler>> profilers[]{
 		{"Capture", _profile_capture},   {"Reallocate", _profile_capture_realloc},
 		{"Copy", _profile_capture_copy}, {"AR Reallocate", _profile_ar_realloc},
 		{"AR Copy", _profile_ar_copy},   {"AR Convert", _profile_ar_transfer},

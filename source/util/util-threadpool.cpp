@@ -21,20 +21,21 @@
 #include "common.hpp"
 #include <cstddef>
 
-#define LOCAL_PREFIX "<util::threadpool> "
+#define ST_PREFIX "<util::threadpool> "
 
 // Most Tasks likely wait for IO, so we can use that time for other tasks.
-#define CONCURRENCY_MULTIPLIER 2
+#define ST_CONCURRENCY_MULTIPLIER 2
 
-util::threadpool::threadpool() : _workers(), _worker_stop(false), _worker_idx(0), _tasks(), _tasks_lock(), _tasks_cv()
+streamfx::util::threadpool::threadpool()
+	: _workers(), _worker_stop(false), _worker_idx(0), _tasks(), _tasks_lock(), _tasks_cv()
 {
-	std::size_t concurrency = static_cast<size_t>(std::thread::hardware_concurrency() * CONCURRENCY_MULTIPLIER);
+	std::size_t concurrency = static_cast<size_t>(std::thread::hardware_concurrency() * ST_CONCURRENCY_MULTIPLIER);
 	for (std::size_t n = 0; n < concurrency; n++) {
-		_workers.emplace_back(std::bind(&util::threadpool::work, this));
+		_workers.emplace_back(std::bind(&streamfx::util::threadpool::work, this));
 	}
 }
 
-util::threadpool::~threadpool()
+streamfx::util::threadpool::~threadpool()
 {
 	_worker_stop = true;
 	_tasks_cv.notify_all();
@@ -46,9 +47,10 @@ util::threadpool::~threadpool()
 	}
 }
 
-std::shared_ptr<::util::threadpool::task> util::threadpool::push(threadpool_callback_t fn, threadpool_data_t data)
+std::shared_ptr<::streamfx::util::threadpool::task> streamfx::util::threadpool::push(threadpool_callback_t fn,
+																					 threadpool_data_t     data)
 {
-	auto task = std::make_shared<util::threadpool::task>(fn, data);
+	auto task = std::make_shared<streamfx::util::threadpool::task>(fn, data);
 
 	std::unique_lock<std::mutex> lock(_tasks_lock);
 	_tasks.emplace_back(task);
@@ -57,17 +59,17 @@ std::shared_ptr<::util::threadpool::task> util::threadpool::push(threadpool_call
 	return task;
 }
 
-void util::threadpool::pop(std::shared_ptr<::util::threadpool::task> work)
+void streamfx::util::threadpool::pop(std::shared_ptr<::streamfx::util::threadpool::task> work)
 {
 	if (work) {
 		work->_is_dead.store(true);
 	}
 }
 
-void util::threadpool::work()
+void streamfx::util::threadpool::work()
 {
-	std::shared_ptr<util::threadpool::task> local_work{};
-	uint32_t                                local_number = _worker_idx.fetch_add(1);
+	std::shared_ptr<streamfx::util::threadpool::task> local_work{};
+	uint32_t                                          local_number = _worker_idx.fetch_add(1);
 
 	while (!_worker_stop) {
 		// Wait for more work, or immediately continue if there is still work to do.
@@ -101,13 +103,13 @@ void util::threadpool::work()
 			try {
 				local_work->_callback(local_work->_data);
 			} catch (std::exception const& ex) {
-				DLOG_WARNING(LOCAL_PREFIX "Worker %" PRIx32 " caught exception from task (%" PRIxPTR ", %" PRIxPTR
-										  ") with message: %s",
+				DLOG_WARNING(ST_PREFIX "Worker %" PRIx32 " caught exception from task (%" PRIxPTR ", %" PRIxPTR
+									   ") with message: %s",
 							 local_number, reinterpret_cast<ptrdiff_t>(local_work->_callback.target<void>()),
 							 reinterpret_cast<ptrdiff_t>(local_work->_data.get()), ex.what());
 			} catch (...) {
-				DLOG_WARNING(LOCAL_PREFIX "Worker %" PRIx32 " caught exception of unknown type from task (%" PRIxPTR
-										  ", %" PRIxPTR ").",
+				DLOG_WARNING(ST_PREFIX "Worker %" PRIx32 " caught exception of unknown type from task (%" PRIxPTR
+									   ", %" PRIxPTR ").",
 							 local_number, reinterpret_cast<ptrdiff_t>(local_work->_callback.target<void>()),
 							 reinterpret_cast<ptrdiff_t>(local_work->_data.get()));
 			}
@@ -120,7 +122,8 @@ void util::threadpool::work()
 	_worker_idx.fetch_sub(1);
 }
 
-util::threadpool::task::task() {}
+streamfx::util::threadpool::task::task() {}
 
-util::threadpool::task::task(threadpool_callback_t fn, threadpool_data_t dt) : _is_dead(false), _callback(fn), _data(dt)
+streamfx::util::threadpool::task::task(threadpool_callback_t fn, threadpool_data_t dt)
+	: _is_dead(false), _callback(fn), _data(dt)
 {}

@@ -53,7 +53,8 @@ gfx::blur::gaussian_linear_data::gaussian_linear_data()
 
 		// Find actual kernel width.
 		for (double_t h = SEARCH_DENSITY; h < SEARCH_RANGE; h += SEARCH_DENSITY) {
-			if (util::math::gaussian<double_t>(double_t(kernel_size + SEARCH_EXTENSION), h) > SEARCH_THRESHOLD) {
+			if (streamfx::util::math::gaussian<double_t>(double_t(kernel_size + SEARCH_EXTENSION), h)
+				> SEARCH_THRESHOLD) {
 				actual_width = h;
 				break;
 			}
@@ -62,7 +63,7 @@ gfx::blur::gaussian_linear_data::gaussian_linear_data()
 		// Calculate and normalize
 		double_t sum = 0;
 		for (std::size_t p = 0; p <= kernel_size; p++) {
-			kernel_math[p] = util::math::gaussian<double_t>(double_t(p), actual_width);
+			kernel_math[p] = streamfx::util::math::gaussian<double_t>(double_t(p), actual_width);
 			sum += kernel_math[p] * (p > 0 ? 2 : 1);
 		}
 

@@ -176,7 +176,7 @@ namespace nvidia::cuda {
 	};
 
 	class cuda {
-		std::shared_ptr<util::library> _library;
+		std::shared_ptr<streamfx::util::library> _library;
 
 		public:
 		~cuda();

@@ -28,7 +28,7 @@ namespace obs {
 		std::string _signal;
 
 		public:
-		util::event<T, calldata*> event;
+		streamfx::util::event<T, calldata*> event;
 	};
 
 	template<typename T>
@@ -88,7 +88,7 @@ namespace obs {
 			obs_source_remove_audio_capture_callback(_keepalive.get(), handle_audio, this);
 		}
 
-		util::event<std::shared_ptr<obs_source_t>, const struct audio_data*, bool> event;
+		streamfx::util::event<std::shared_ptr<obs_source_t>, const struct audio_data*, bool> event;
 	};
 
 } // namespace obs

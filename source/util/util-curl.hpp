@@ -33,7 +33,7 @@ extern "C" {
 #include <curl/curl.h>
 }
 
-namespace util {
+namespace streamfx::util {
 	typedef std::function<size_t(void*, size_t, size_t)>                   curl_io_callback_t;
 	typedef std::function<int32_t(uint64_t, uint64_t, uint64_t, uint64_t)> curl_xferinfo_callback_t;
 	typedef std::function<void(CURL*, curl_infotype, char*, size_t)>       curl_debug_callback_t;
@@ -46,10 +46,11 @@ namespace util {
 		curl_debug_callback_t              _debug_callback;
 		std::map<std::string, std::string> _headers;
 
-		static int32_t debug_helper(CURL* handle, curl_infotype type, char* data, size_t size, util::curl* userptr);
-		static size_t  read_helper(void*, size_t, size_t, util::curl*);
-		static size_t  write_helper(void*, size_t, size_t, util::curl*);
-		static int32_t xferinfo_callback(util::curl*, curl_off_t, curl_off_t, curl_off_t, curl_off_t);
+		static int32_t debug_helper(CURL* handle, curl_infotype type, char* data, size_t size,
+									streamfx::util::curl* userptr);
+		static size_t  read_helper(void*, size_t, size_t, streamfx::util::curl*);
+		static size_t  write_helper(void*, size_t, size_t, streamfx::util::curl*);
+		static int32_t xferinfo_callback(streamfx::util::curl*, curl_off_t, curl_off_t, curl_off_t, curl_off_t);
 
 		public:
 		curl();
@@ -126,4 +127,4 @@ namespace util {
 
 		CURLcode set_debug_callback(curl_debug_callback_t cb);
 	};
-} // namespace util
+} // namespace streamfx::util

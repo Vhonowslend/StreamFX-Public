@@ -27,7 +27,7 @@
 #include <stdexcept>
 #include <thread>
 
-namespace util {
+namespace streamfx::util {
 	typedef std::shared_ptr<void>                  threadpool_data_t;
 	typedef std::function<void(threadpool_data_t)> threadpool_callback_t;
 
@@ -43,26 +43,27 @@ namespace util {
 			task();
 			task(threadpool_callback_t callback_function, threadpool_data_t data);
 
-			friend class util::threadpool;
+			friend class streamfx::util::threadpool;
 		};
 
 		private:
-		std::list<std::thread>                               _workers;
-		std::atomic_bool                                     _worker_stop;
-		std::atomic<uint32_t>                                _worker_idx;
-		std::list<std::shared_ptr<::util::threadpool::task>> _tasks;
-		std::mutex                                           _tasks_lock;
-		std::condition_variable                              _tasks_cv;
+		std::list<std::thread>                                         _workers;
+		std::atomic_bool                                               _worker_stop;
+		std::atomic<uint32_t>                                          _worker_idx;
+		std::list<std::shared_ptr<::streamfx::util::threadpool::task>> _tasks;
+		std::mutex                                                     _tasks_lock;
+		std::condition_variable                                        _tasks_cv;
 
 		public:
 		threadpool();
 		~threadpool();
 
-		std::shared_ptr<::util::threadpool::task> push(threadpool_callback_t callback_function, threadpool_data_t data);
+		std::shared_ptr<::streamfx::util::threadpool::task> push(threadpool_callback_t callback_function,
+																 threadpool_data_t     data);
 
-		void pop(std::shared_ptr<::util::threadpool::task> work);
+		void pop(std::shared_ptr<::streamfx::util::threadpool::task> work);
 
 		private:
 		void work();
 	};
-} // namespace util
+} // namespace streamfx::util

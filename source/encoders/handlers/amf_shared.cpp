@@ -117,7 +117,7 @@ bool streamfx::encoder::ffmpeg::handler::amf::is_available()
 #endif
 #endif
 	try {
-		util::library::load(lib_name);
+		streamfx::util::library::load(lib_name);
 		return true;
 	} catch (...) {
 		return false;
@@ -210,10 +210,10 @@ void amf::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 			}
 		}
 
-		util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_LOOKAHEAD,
-										  D_TRANSLATE(ST_I18N_RATECONTROL_LOOKAHEAD));
-		util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_FRAMESKIPPING,
-										  D_TRANSLATE(ST_I18N_RATECONTROL_FRAMESKIPPING));
+		streamfx::util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_LOOKAHEAD,
+													D_TRANSLATE(ST_I18N_RATECONTROL_LOOKAHEAD));
+		streamfx::util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_FRAMESKIPPING,
+													D_TRANSLATE(ST_I18N_RATECONTROL_FRAMESKIPPING));
 	}
 
 	{
@@ -267,17 +267,18 @@ void amf::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 			obs_property_int_set_suffix(p, " frames");
 		}
 
-		util::obs_properties_add_tristate(grp, ST_KEY_OTHER_BFRAMEREFERENCES,
-										  D_TRANSLATE(ST_I18N_OTHER_BFRAMEREFERENCES));
+		streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_BFRAMEREFERENCES,
+													D_TRANSLATE(ST_I18N_OTHER_BFRAMEREFERENCES));
 		{
 			auto p = obs_properties_add_int_slider(grp, ST_KEY_OTHER_REFERENCEFRAMES,
 												   D_TRANSLATE(ST_I18N_OTHER_REFERENCEFRAMES), -1, 16, 1);
 			obs_property_int_set_suffix(p, " frames");
 		}
-		util::obs_properties_add_tristate(grp, ST_KEY_OTHER_ENFORCEHRD, D_TRANSLATE(ST_I18N_OTHER_ENFORCEHRD));
-		util::obs_properties_add_tristate(grp, ST_KEY_OTHER_VBAQ, D_TRANSLATE(ST_I18N_OTHER_VBAQ));
-		util::obs_properties_add_tristate(grp, ST_KEY_OTHER_ACCESSUNITDELIMITER,
-										  D_TRANSLATE(ST_I18N_OTHER_ACCESSUNITDELIMITER));
+		streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_ENFORCEHRD,
+													D_TRANSLATE(ST_I18N_OTHER_ENFORCEHRD));
+		streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_VBAQ, D_TRANSLATE(ST_I18N_OTHER_VBAQ));
+		streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_ACCESSUNITDELIMITER,
+													D_TRANSLATE(ST_I18N_OTHER_ACCESSUNITDELIMITER));
 	}
 }
 
@@ -332,13 +333,13 @@ void amf::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* con
 
 		// Look Ahead (Pre-analysis, single frame lookahead)
 		if (int la = static_cast<int>(obs_data_get_int(settings, ST_KEY_RATECONTROL_LOOKAHEAD));
-			!util::is_tristate_default(la)) {
+			!streamfx::util::is_tristate_default(la)) {
 			av_opt_set_int(context->priv_data, "preanalysis", la, AV_OPT_SEARCH_CHILDREN);
 		}
 
 		// Frame Skipping (Drop frames to maintain bitrate limits)
 		if (int la = static_cast<int>(obs_data_get_int(settings, ST_KEY_RATECONTROL_FRAMESKIPPING));
-			!util::is_tristate_default(la)) {
+			!streamfx::util::is_tristate_default(la)) {
 			if (std::string_view("amf_h264") == codec->name) {
 				av_opt_set_int(context->priv_data, "frame_skipping", la, AV_OPT_SEARCH_CHILDREN);
 			} else {
@@ -397,7 +398,7 @@ void amf::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* con
 				context->max_b_frames = static_cast<int>(bf);
 			}
 			if (int64_t zl = obs_data_get_int(settings, ST_KEY_OTHER_BFRAMEREFERENCES);
-				!util::is_tristate_default(zl)) {
+				!streamfx::util::is_tristate_default(zl)) {
 				av_opt_set_int(context->priv_data, "bf_ref", zl, AV_OPT_SEARCH_CHILDREN);
 			}
 		}
@@ -406,15 +407,16 @@ void amf::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* con
 			context->refs = static_cast<int>(refs);
 		}
 
-		if (int64_t v = obs_data_get_int(settings, ST_KEY_OTHER_ENFORCEHRD); !util::is_tristate_default(v)) {
+		if (int64_t v = obs_data_get_int(settings, ST_KEY_OTHER_ENFORCEHRD); !streamfx::util::is_tristate_default(v)) {
 			av_opt_set_int(context->priv_data, "enforce_hrd", v, AV_OPT_SEARCH_CHILDREN);
 		}
 
-		if (int64_t v = obs_data_get_int(settings, ST_KEY_OTHER_VBAQ); !util::is_tristate_default(v)) {
+		if (int64_t v = obs_data_get_int(settings, ST_KEY_OTHER_VBAQ); !streamfx::util::is_tristate_default(v)) {
 			av_opt_set_int(context->priv_data, "vbaq", v, AV_OPT_SEARCH_CHILDREN);
 		}
 
-		if (int64_t v = obs_data_get_int(settings, ST_KEY_OTHER_ACCESSUNITDELIMITER); !util::is_tristate_default(v)) {
+		if (int64_t v = obs_data_get_int(settings, ST_KEY_OTHER_ACCESSUNITDELIMITER);
+			!streamfx::util::is_tristate_default(v)) {
 			av_opt_set_int(context->priv_data, "aud", v, AV_OPT_SEARCH_CHILDREN);
 		}
 

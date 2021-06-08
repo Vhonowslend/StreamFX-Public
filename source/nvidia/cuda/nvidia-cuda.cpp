@@ -91,7 +91,7 @@ nvidia::cuda::cuda::cuda() : _library()
 
 	D_LOG_DEBUG("Initialization... (Addr: 0x%" PRIuPTR ")", this);
 
-	_library = util::library::load(std::string_view(CUDA_NAME));
+	_library = streamfx::util::library::load(std::string_view(CUDA_NAME));
 
 	{ // 1. Load critical initialization functions.
 		// Initialization

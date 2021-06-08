@@ -162,7 +162,7 @@ bool streamfx::encoder::ffmpeg::handler::nvenc::is_available()
 	std::filesystem::path lib_name = "libnvidia-encode.so.1";
 #endif
 	try {
-		util::library::load(lib_name);
+		streamfx::util::library::load(lib_name);
 		return true;
 	} catch (...) {
 		return false;
@@ -282,7 +282,7 @@ static bool modified_ratecontrol(obs_properties_t* props, obs_property_t*, obs_d
 
 static bool modified_aq(obs_properties_t* props, obs_property_t*, obs_data_t* settings) noexcept
 {
-	bool spatial_aq = util::is_tristate_enabled(obs_data_get_int(settings, ST_KEY_AQ_SPATIAL));
+	bool spatial_aq = streamfx::util::is_tristate_enabled(obs_data_get_int(settings, ST_KEY_AQ_SPATIAL));
 	obs_property_set_visible(obs_properties_get(props, ST_KEY_AQ_STRENGTH), spatial_aq);
 	return true;
 }
@@ -300,7 +300,7 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 {
 	{ // Rate Control
 		obs_properties_t* grp = props;
-		if (!util::are_property_groups_broken()) {
+		if (!streamfx::util::are_property_groups_broken()) {
 			grp = obs_properties_create();
 			obs_properties_add_group(props, ST_I18N_RATECONTROL, D_TRANSLATE(ST_I18N_RATECONTROL), OBS_GROUP_NORMAL,
 									 grp);
@@ -316,8 +316,8 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		}
 
 		{
-			auto p = util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_TWOPASS,
-													   D_TRANSLATE(ST_I18N_RATECONTROL_TWOPASS));
+			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_TWOPASS,
+																 D_TRANSLATE(ST_I18N_RATECONTROL_TWOPASS));
 		}
 
 		{
@@ -328,19 +328,19 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		}
 
 		{
-			auto p = util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_ADAPTIVEI,
-													   D_TRANSLATE(ST_I18N_RATECONTROL_ADAPTIVEI));
+			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_ADAPTIVEI,
+																 D_TRANSLATE(ST_I18N_RATECONTROL_ADAPTIVEI));
 		}
 
 		if (strcmp(codec->name, "h264_nvenc") == 0) {
-			auto p = util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_ADAPTIVEB,
-													   D_TRANSLATE(ST_I18N_RATECONTROL_ADAPTIVEB));
+			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_ADAPTIVEB,
+																 D_TRANSLATE(ST_I18N_RATECONTROL_ADAPTIVEB));
 		}
 	}
 
 	{
 		obs_properties_t* grp = props;
-		if (!util::are_property_groups_broken()) {
+		if (!streamfx::util::are_property_groups_broken()) {
 			grp = obs_properties_create();
 			obs_properties_add_group(props, ST_I18N_RATECONTROL_LIMITS, D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS),
 									 OBS_GROUP_NORMAL, grp);
@@ -375,7 +375,7 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 
 	{
 		obs_properties_t* grp = props;
-		if (!util::are_property_groups_broken()) {
+		if (!streamfx::util::are_property_groups_broken()) {
 			grp = obs_properties_create();
 			obs_properties_add_group(props, ST_I18N_RATECONTROL_QP, D_TRANSLATE(ST_I18N_RATECONTROL_QP),
 									 OBS_GROUP_NORMAL, grp);
@@ -406,13 +406,14 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 
 	{
 		obs_properties_t* grp = props;
-		if (!util::are_property_groups_broken()) {
+		if (!streamfx::util::are_property_groups_broken()) {
 			grp = obs_properties_create();
 			obs_properties_add_group(props, ST_I18N_AQ, D_TRANSLATE(ST_I18N_AQ), OBS_GROUP_NORMAL, grp);
 		}
 
 		{
-			auto p = util::obs_properties_add_tristate(grp, ST_KEY_AQ_SPATIAL, D_TRANSLATE(ST_I18N_AQ_SPATIAL));
+			auto p =
+				streamfx::util::obs_properties_add_tristate(grp, ST_KEY_AQ_SPATIAL, D_TRANSLATE(ST_I18N_AQ_SPATIAL));
 			obs_property_set_modified_callback(p, modified_aq);
 		}
 		{
@@ -420,13 +421,14 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 				obs_properties_add_int_slider(grp, ST_KEY_AQ_STRENGTH, D_TRANSLATE(ST_I18N_AQ_STRENGTH), -1, 15, 1);
 		}
 		{
-			auto p = util::obs_properties_add_tristate(grp, ST_KEY_AQ_TEMPORAL, D_TRANSLATE(ST_I18N_AQ_TEMPORAL));
+			auto p =
+				streamfx::util::obs_properties_add_tristate(grp, ST_KEY_AQ_TEMPORAL, D_TRANSLATE(ST_I18N_AQ_TEMPORAL));
 		}
 	}
 
 	{
 		obs_properties_t* grp = props;
-		if (!util::are_property_groups_broken()) {
+		if (!streamfx::util::are_property_groups_broken()) {
 			grp = obs_properties_create();
 			obs_properties_add_group(props, ST_I18N_OTHER, D_TRANSLATE(ST_I18N_OTHER), OBS_GROUP_NORMAL, grp);
 		}
@@ -451,23 +453,23 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		}
 
 		{
-			auto p = util::obs_properties_add_tristate(grp, ST_KEY_OTHER_ZEROLATENCY,
-													   D_TRANSLATE(ST_I18N_OTHER_ZEROLATENCY));
+			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_ZEROLATENCY,
+																 D_TRANSLATE(ST_I18N_OTHER_ZEROLATENCY));
 		}
 
 		{
-			auto p = util::obs_properties_add_tristate(grp, ST_KEY_OTHER_WEIGHTEDPREDICTION,
-													   D_TRANSLATE(ST_I18N_OTHER_WEIGHTEDPREDICTION));
+			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_WEIGHTEDPREDICTION,
+																 D_TRANSLATE(ST_I18N_OTHER_WEIGHTEDPREDICTION));
 		}
 
 		{
-			auto p = util::obs_properties_add_tristate(grp, ST_KEY_OTHER_NONREFERENCEPFRAMES,
-													   D_TRANSLATE(ST_I18N_OTHER_NONREFERENCEPFRAMES));
+			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_NONREFERENCEPFRAMES,
+																 D_TRANSLATE(ST_I18N_OTHER_NONREFERENCEPFRAMES));
 		}
 
 		{
-			auto p = util::obs_properties_add_tristate(grp, ST_KEY_OTHER_ACCESSUNITDELIMITER,
-													   D_TRANSLATE(ST_I18N_OTHER_ACCESSUNITDELIMITER));
+			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_ACCESSUNITDELIMITER,
+																 D_TRANSLATE(ST_I18N_OTHER_ACCESSUNITDELIMITER));
 		}
 
 		{
@@ -569,13 +571,13 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 
 		// Look Ahead # of Frames
 		int la = static_cast<int>(obs_data_get_int(settings, ST_KEY_RATECONTROL_LOOKAHEAD));
-		if (!util::is_tristate_default(la)) {
+		if (!streamfx::util::is_tristate_default(la)) {
 			av_opt_set_int(context->priv_data, "rc-lookahead", la, AV_OPT_SEARCH_CHILDREN);
 		}
 
 		// Adaptive I-Frames
 		if (int64_t adapt_i = obs_data_get_int(settings, ST_KEY_RATECONTROL_ADAPTIVEI);
-			!util::is_tristate_default(adapt_i) && (la != 0)) {
+			!streamfx::util::is_tristate_default(adapt_i) && (la != 0)) {
 			// no-scenecut is inverted compared to our UI.
 			av_opt_set_int(context->priv_data, "no-scenecut", 1 - adapt_i, AV_OPT_SEARCH_CHILDREN);
 		}
@@ -584,7 +586,7 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		constexpr std::string_view h264_encoder_name = "h264_nvenc";
 		if (h264_encoder_name == codec->name) {
 			if (int64_t adapt_b = obs_data_get_int(settings, ST_KEY_RATECONTROL_ADAPTIVEB);
-				!util::is_tristate_default(adapt_b) && (la != 0)) {
+				!streamfx::util::is_tristate_default(adapt_b) && (la != 0)) {
 				av_opt_set_int(context->priv_data, "b_adapt", adapt_b, AV_OPT_SEARCH_CHILDREN);
 			}
 		}
@@ -647,17 +649,17 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		int64_t taq = obs_data_get_int(settings, ST_KEY_AQ_TEMPORAL);
 
 		if (strcmp(codec->name, "h264_nvenc") == 0) {
-			if (!util::is_tristate_default(saq))
+			if (!streamfx::util::is_tristate_default(saq))
 				av_opt_set_int(context->priv_data, "spatial-aq", saq, AV_OPT_SEARCH_CHILDREN);
-			if (!util::is_tristate_default(taq))
+			if (!streamfx::util::is_tristate_default(taq))
 				av_opt_set_int(context->priv_data, "temporal-aq", taq, AV_OPT_SEARCH_CHILDREN);
 		} else {
-			if (!util::is_tristate_default(saq))
+			if (!streamfx::util::is_tristate_default(saq))
 				av_opt_set_int(context->priv_data, "spatial_aq", saq, AV_OPT_SEARCH_CHILDREN);
-			if (!util::is_tristate_default(taq))
+			if (!streamfx::util::is_tristate_default(taq))
 				av_opt_set_int(context->priv_data, "temporal_aq", taq, AV_OPT_SEARCH_CHILDREN);
 		}
-		if (util::is_tristate_enabled(saq))
+		if (streamfx::util::is_tristate_enabled(saq))
 			if (int64_t aqs = obs_data_get_int(settings, ST_KEY_AQ_STRENGTH); aqs > -1)
 				av_opt_set_int(context->priv_data, "aq-strength", static_cast<int>(aqs), AV_OPT_SEARCH_CHILDREN);
 	}
@@ -666,20 +668,22 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		if (int64_t bf = obs_data_get_int(settings, ST_KEY_OTHER_BFRAMES); bf > -1)
 			context->max_b_frames = static_cast<int>(bf);
 
-		if (int64_t zl = obs_data_get_int(settings, ST_KEY_OTHER_ZEROLATENCY); !util::is_tristate_default(zl))
+		if (int64_t zl = obs_data_get_int(settings, ST_KEY_OTHER_ZEROLATENCY); !streamfx::util::is_tristate_default(zl))
 			av_opt_set_int(context->priv_data, "zerolatency", zl, AV_OPT_SEARCH_CHILDREN);
-		if (int64_t nrp = obs_data_get_int(settings, ST_KEY_OTHER_NONREFERENCEPFRAMES); !util::is_tristate_default(nrp))
+		if (int64_t nrp = obs_data_get_int(settings, ST_KEY_OTHER_NONREFERENCEPFRAMES);
+			!streamfx::util::is_tristate_default(nrp))
 			av_opt_set_int(context->priv_data, "nonref_p", nrp, AV_OPT_SEARCH_CHILDREN);
-		if (int64_t v = obs_data_get_int(settings, ST_KEY_OTHER_ACCESSUNITDELIMITER); !util::is_tristate_default(v))
+		if (int64_t v = obs_data_get_int(settings, ST_KEY_OTHER_ACCESSUNITDELIMITER);
+			!streamfx::util::is_tristate_default(v))
 			av_opt_set_int(context->priv_data, "aud", v, AV_OPT_SEARCH_CHILDREN);
 		if (int64_t v = obs_data_get_int(settings, ST_KEY_OTHER_DECODEDPICTUREBUFFERSIZE); v > -1)
 			av_opt_set_int(context->priv_data, "dpb_size", v, AV_OPT_SEARCH_CHILDREN);
 
 		int64_t wp = obs_data_get_int(settings, ST_KEY_OTHER_WEIGHTEDPREDICTION);
-		if ((context->max_b_frames > 0) && util::is_tristate_enabled(wp)) {
+		if ((context->max_b_frames > 0) && streamfx::util::is_tristate_enabled(wp)) {
 			DLOG_WARNING("[%s] Weighted Prediction disabled because of B-Frames being used.", codec->name);
 			av_opt_set_int(context->priv_data, "weighted_pred", 0, AV_OPT_SEARCH_CHILDREN);
-		} else if (!util::is_tristate_default(wp)) {
+		} else if (!streamfx::util::is_tristate_default(wp)) {
 			av_opt_set_int(context->priv_data, "weighted_pred", wp, AV_OPT_SEARCH_CHILDREN);
 		}
 

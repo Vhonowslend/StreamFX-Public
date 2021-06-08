@@ -146,7 +146,7 @@ void nvenc_h264_handler::get_encoder_properties(obs_properties_t* props, const A
 
 	{
 		obs_properties_t* grp = props;
-		if (!util::are_property_groups_broken()) {
+		if (!streamfx::util::are_property_groups_broken()) {
 			grp = obs_properties_create();
 			obs_properties_add_group(props, S_CODEC_H264, D_TRANSLATE(S_CODEC_H264), OBS_GROUP_NORMAL, grp);
 		}
