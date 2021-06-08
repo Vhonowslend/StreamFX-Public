@@ -34,56 +34,6 @@
 #pragma warning(pop)
 #endif
 
-const char* obs_module_recursive_text(const char* to_translate, std::size_t depth)
-{
-	static std::unordered_map<std::string, std::string> translate_map;
-
-	if (depth == 0) {
-		return obs_module_text(to_translate);
-	}
-
-	std::string key   = to_translate;
-	auto        value = translate_map.find(std::string(key));
-	if (value != translate_map.end()) {
-		return value->second.c_str();
-	} else {
-		std::string       orig = obs_module_text(to_translate);
-		std::stringstream out;
-
-		{
-			std::size_t seq_start = 0, seq_end = 0;
-			bool        seq_got = false;
-
-			for (std::size_t pos = 0; pos <= orig.length(); pos++) {
-				std::string chr = orig.substr(pos, 2);
-				if (chr == "\\@") {
-					if (seq_got) {
-						out << obs_module_recursive_text(orig.substr(seq_start, pos - seq_start).c_str(), (depth - 1));
-						seq_end = pos + 2;
-					} else {
-						out << orig.substr(seq_end, pos - seq_end);
-						seq_start = pos + 2;
-					}
-					seq_got = !seq_got;
-					pos += 1;
-				}
-			}
-			if (seq_end != orig.length()) {
-				out << orig.substr(seq_end, orig.length() - seq_end);
-			}
-
-			translate_map.insert({key, out.str()});
-		}
-
-		auto value = translate_map.find(key);
-		if (value != translate_map.end()) {
-			return value->second.c_str();
-		} else {
-			throw std::runtime_error("Insert into map failed.");
-		}
-	}
-}
-
 obs_property_t* streamfx::util::obs_properties_add_tristate(obs_properties_t* props, const char* name, const char* desc)
 {
 	obs_property_t* p = obs_properties_add_list(props, name, desc, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);

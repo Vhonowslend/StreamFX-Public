@@ -46,8 +46,6 @@ extern "C" {
 #define D_DEG_TO_RAD(x) (x * S_DEG)
 #define D_RAD_TO_DEG(x) (x * S_RAD)
 
-const char* obs_module_recursive_text(const char* to_translate, std::size_t depth = std::numeric_limits<size_t>::max());
-
 #define D_STR(s) #s
 #define D_VSTR(s) D_STR(s)
 
