@@ -27,24 +27,24 @@
 
 using namespace streamfx;
 
-#define LOCAL_PREFIX "<gfx::lut::data> "
+#define ST_PREFIX "<gfx::lut::data> "
 
-std::shared_ptr<gfx::lut::data> gfx::lut::data::instance()
+std::shared_ptr<streamfx::gfx::lut::data> streamfx::gfx::lut::data::instance()
 {
-	static std::weak_ptr<gfx::lut::data> _instance;
-	static std::mutex                    _mutex;
+	static std::weak_ptr<streamfx::gfx::lut::data> _instance;
+	static std::mutex                              _mutex;
 
 	std::lock_guard<std::mutex> lock(_mutex);
 
 	auto reference = _instance.lock();
 	if (!reference) {
-		reference = std::shared_ptr<gfx::lut::data>(new gfx::lut::data());
+		reference = std::shared_ptr<streamfx::gfx::lut::data>(new streamfx::gfx::lut::data());
 		_instance = reference;
 	}
 	return reference;
 }
 
-gfx::lut::data::data() : _producer_effect(), _consumer_effect()
+streamfx::gfx::lut::data::data() : _producer_effect(), _consumer_effect()
 {
 	auto gctx = streamfx::obs::gs::context();
 
@@ -53,7 +53,7 @@ gfx::lut::data::data() : _producer_effect(), _consumer_effect()
 		try {
 			_producer_effect = std::make_shared<streamfx::obs::gs::effect>(lut_producer_path);
 		} catch (std::exception const& ex) {
-			DLOG_ERROR(LOCAL_PREFIX "Loading LUT Producer effect failed: %s", ex.what());
+			DLOG_ERROR(ST_PREFIX "Loading LUT Producer effect failed: %s", ex.what());
 		}
 	}
 
@@ -62,12 +62,12 @@ gfx::lut::data::data() : _producer_effect(), _consumer_effect()
 		try {
 			_consumer_effect = std::make_shared<streamfx::obs::gs::effect>(lut_consumer_path);
 		} catch (std::exception const& ex) {
-			DLOG_ERROR(LOCAL_PREFIX "Loading LUT Consumer effect failed: %s", ex.what());
+			DLOG_ERROR(ST_PREFIX "Loading LUT Consumer effect failed: %s", ex.what());
 		}
 	}
 }
 
-gfx::lut::data::~data()
+streamfx::gfx::lut::data::~data()
 {
 	auto gctx = streamfx::obs::gs::context();
 	_producer_effect.reset();

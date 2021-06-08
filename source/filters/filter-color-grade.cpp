@@ -110,7 +110,7 @@ static constexpr std::string_view HELP_URL = "https://github.com/Xaymar/obs-Stre
 // TODO: Figure out a way to merge _lut_rt, _lut_texture, _rt_source, _rt_grad, _tex_source, _tex_grade, _source_updated and _grade_updated.
 // Seriously this is too much GPU space wasted on unused trash.
 
-#define LOCAL_PREFIX "<filter::color-grade> "
+#define ST_PREFIX "<filter::color-grade> "
 
 color_grade_instance::~color_grade_instance() {}
 
@@ -127,25 +127,24 @@ color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self)
 	// Load the color grading effect.
 	auto path = streamfx::data_file_path("effects/color-grade.effect");
 	if (!std::filesystem::exists(path)) {
-		DLOG_ERROR(LOCAL_PREFIX "Failed to locate effect file '%s'.", path.u8string().c_str());
+		DLOG_ERROR(ST_PREFIX "Failed to locate effect file '%s'.", path.u8string().c_str());
 		throw std::runtime_error("Failed to load color grade effect.");
 	} else {
 		try {
 			_effect = streamfx::obs::gs::effect::create(path.u8string());
 		} catch (std::exception const& ex) {
-			DLOG_ERROR(LOCAL_PREFIX "Failed to load effect '%s': %s", path.u8string().c_str(), ex.what());
+			DLOG_ERROR(ST_PREFIX "Failed to load effect '%s': %s", path.u8string().c_str(), ex.what());
 			throw;
 		}
 	}
 
 	// Initialize LUT work flow.
 	try {
-		_lut_producer    = std::make_shared<gfx::lut::producer>();
-		_lut_consumer    = std::make_shared<gfx::lut::consumer>();
+		_lut_producer    = std::make_shared<streamfx::gfx::lut::producer>();
+		_lut_consumer    = std::make_shared<streamfx::gfx::lut::consumer>();
 		_lut_initialized = true;
 	} catch (std::exception const& ex) {
-		DLOG_WARNING(LOCAL_PREFIX "Failed to initialize LUT rendering, falling back to direct rendering.\n%s",
-					 ex.what());
+		DLOG_WARNING(ST_PREFIX "Failed to initialize LUT rendering, falling back to direct rendering.\n%s", ex.what());
 		_lut_initialized = false;
 	}
 
@@ -153,7 +152,7 @@ color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self)
 	try {
 		allocate_rendertarget(GS_RGBA);
 	} catch (std::exception const& ex) {
-		DLOG_ERROR(LOCAL_PREFIX "Failed to acquire render target for rendering: %s", ex.what());
+		DLOG_ERROR(ST_PREFIX "Failed to acquire render target for rendering: %s", ex.what());
 		throw;
 	}
 
@@ -223,9 +222,9 @@ void color_grade_instance::update(obs_data_t* data)
 		_lut_enabled = v != 0; // 0 (Direct)
 
 		if (v == -1) {
-			_lut_depth = gfx::lut::color_depth::_8;
+			_lut_depth = streamfx::gfx::lut::color_depth::_8;
 		} else if (v > 0) {
-			_lut_depth = static_cast<gfx::lut::color_depth>(v);
+			_lut_depth = static_cast<streamfx::gfx::lut::color_depth>(v);
 		}
 	}
 
@@ -488,7 +487,7 @@ void color_grade_instance::video_render(gs_effect_t* shader)
 			_lut_rt.reset();
 			_lut_texture.reset();
 			_lut_enabled = false;
-			DLOG_WARNING(LOCAL_PREFIX "Reverting to direct rendering due to error: %s", ex.what());
+			DLOG_WARNING(ST_PREFIX "Reverting to direct rendering due to error: %s", ex.what());
 		}
 	}
 	if ((!_lut_initialized || !_lut_enabled) && !_cache_fresh) {
@@ -852,10 +851,10 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 			std::pair<const char*, int64_t> els[] = {
 				{S_STATE_AUTOMATIC, -1},
 				{ST_I18N_RENDERMODE_DIRECT, 0},
-				{ST_I18N_RENDERMODE_LUT_2BIT, static_cast<int64_t>(gfx::lut::color_depth::_2)},
-				{ST_I18N_RENDERMODE_LUT_4BIT, static_cast<int64_t>(gfx::lut::color_depth::_4)},
-				{ST_I18N_RENDERMODE_LUT_6BIT, static_cast<int64_t>(gfx::lut::color_depth::_6)},
-				{ST_I18N_RENDERMODE_LUT_8BIT, static_cast<int64_t>(gfx::lut::color_depth::_8)},
+				{ST_I18N_RENDERMODE_LUT_2BIT, static_cast<int64_t>(streamfx::gfx::lut::color_depth::_2)},
+				{ST_I18N_RENDERMODE_LUT_4BIT, static_cast<int64_t>(streamfx::gfx::lut::color_depth::_4)},
+				{ST_I18N_RENDERMODE_LUT_6BIT, static_cast<int64_t>(streamfx::gfx::lut::color_depth::_6)},
+				{ST_I18N_RENDERMODE_LUT_8BIT, static_cast<int64_t>(streamfx::gfx::lut::color_depth::_8)},
 				//{ST_RENDERMODE_LUT_10BIT, static_cast<int64_t>(gfx::lut::color_depth::_10)},
 			};
 			for (auto kv : els) {

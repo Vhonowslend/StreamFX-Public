@@ -25,18 +25,18 @@
 #include "obs/gs/gs-effect.hpp"
 #include "obs/gs/gs-texture.hpp"
 
-namespace gfx::lut {
+namespace streamfx::gfx::lut {
 	class consumer {
-		std::shared_ptr<gfx::lut::data> _data;
+		std::shared_ptr<streamfx::gfx::lut::data> _data;
 
 		public:
 		consumer();
 		~consumer();
 
-		std::shared_ptr<streamfx::obs::gs::effect> prepare(gfx::lut::color_depth                       depth,
+		std::shared_ptr<streamfx::obs::gs::effect> prepare(streamfx::gfx::lut::color_depth             depth,
 														   std::shared_ptr<streamfx::obs::gs::texture> lut);
 
-		void consume(gfx::lut::color_depth depth, std::shared_ptr<streamfx::obs::gs::texture> lut,
+		void consume(streamfx::gfx::lut::color_depth depth, std::shared_ptr<streamfx::obs::gs::texture> lut,
 					 std::shared_ptr<streamfx::obs::gs::texture> texture);
 	};
-} // namespace gfx::lut
+} // namespace streamfx::gfx::lut

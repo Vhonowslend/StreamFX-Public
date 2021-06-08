@@ -21,7 +21,7 @@
 #include "gfx-shader-param.hpp"
 #include "obs/gs/gs-effect-parameter.hpp"
 
-namespace gfx {
+namespace streamfx::gfx {
 	namespace shader {
 		enum class basic_field_type {
 			Input,
@@ -143,4 +143,4 @@ namespace gfx {
 		};
 
 	} // namespace shader
-} // namespace gfx
+} // namespace streamfx::gfx
