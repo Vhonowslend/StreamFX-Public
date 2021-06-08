@@ -274,7 +274,7 @@ void mirror_instance::audio_output(std::shared_ptr<void> data)
 
 mirror_factory::mirror_factory()
 {
-	_info.id           = PREFIX "source-mirror";
+	_info.id           = S_PREFIX "source-mirror";
 	_info.type         = OBS_SOURCE_TYPE_INPUT;
 	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW | OBS_SOURCE_AUDIO;
 

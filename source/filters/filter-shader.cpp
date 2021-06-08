@@ -149,7 +149,7 @@ void streamfx::filter::shader::shader_instance::deactivate()
 
 shader_factory::shader_factory()
 {
-	_info.id           = PREFIX "filter-shader";
+	_info.id           = S_PREFIX "filter-shader";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO;
 
