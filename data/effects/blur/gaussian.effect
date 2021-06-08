@@ -1,28 +1,42 @@
 #include "common.effect"
 
 //------------------------------------------------------------------------------
+// Uniforms
+//------------------------------------------------------------------------------
+// This shader requires that pSize is the number of samples, not the size of the
+// kernel. That way oversampling can be performed, which is much more accurate than
+
+//------------------------------------------------------------------------------
 // Defines
 //------------------------------------------------------------------------------
-#define MAX_BLUR_SIZE 128
+#define MAX_SAMPLES 128
 
 //------------------------------------------------------------------------------
 // Technique: Directional / Area
 //------------------------------------------------------------------------------
 float4 PSBlur1D(VertexInformation vtx) : TARGET {
-	float4 final = pImage.Sample(LinearClampSampler, vtx.uv) * kernelAt(0);
+	float2 uvstep = pImageTexel * pStepScale;
+	float weights = 0;
 
-	// Loop unrolling is only possible with a fixed known maximum.
-	// Some compilers may unroll up to x iterations, but most will not.
-	for (int n = 1; n <= MAX_BLUR_SIZE; n++) {
-		float2 nstep = (pImageTexel * pStepScale) * n;
-		float kernel = kernelAt(n);
-		final += pImage.Sample(LinearClampSampler, vtx.uv + nstep) * kernel;
-		final += pImage.Sample(LinearClampSampler, vtx.uv - nstep) * kernel;
+	// Move to texel center.
+	vtx.uv.xy += pImageTexel.xy / 2.;
 
-		if (n >= pSize) {
-			break;
-		}
+	// Calculate the actual Gaussian Blur
+	// 1. Sample the center immediately.
+	float kernel = kernelAt(0);
+	weights += kernel;
+	float4 final = pImage.Sample(LinearClampSampler, vtx.uv) * kernel;
+	// 2. Then sample both + and - coordinates in one go to reduce code iterations.
+	for (uint step = 1; (step < pSize) && (step < MAX_SAMPLES); step++) {
+		float2 offset = uvstep * step;
+		kernel = kernelAt(step);
+		weights += kernel * 2;
+
+		final += pImage.Sample(LinearClampSampler, vtx.uv + offset) * kernel;
+		final += pImage.Sample(LinearClampSampler, vtx.uv - offset) * kernel;
 	}
+	// 3. Ensure we always have a total of 1.0, even if the kernel is bad.
+	final /= weights; 
 
 	return final;
 }
@@ -38,22 +52,29 @@ technique Draw {
 // Technique: Rotate
 //------------------------------------------------------------------------------
 float4 PSRotate(VertexInformation vtx) : TARGET {
-	float4 final = pImage.Sample(LinearClampSampler, vtx.uv) * kernelAt(0);
-	
 	float angstep = pAngle * pStepScale.x;
+	float weights = 0.;
 
-	// Loop unrolling is only possible with a fixed known maximum.
-	// Some compilers may unroll up to x iterations, but most will not.
-	for (int n = 1; n <= MAX_BLUR_SIZE; n++) {
-		float kernel = kernelAt(n);
-		final += pImage.Sample(LinearClampSampler, rotateAround(vtx.uv, pCenter, angstep * n)) * kernel;
-		final += pImage.Sample(LinearClampSampler, rotateAround(vtx.uv, pCenter, angstep * -n)) * kernel;
+	// Move to texel center.
+	vtx.uv.xy += pImageTexel.xy / 2.;
 
-		if (n >= pSize) {
-			break;
-		}
+	// Calculate the actual Gaussian Blur
+	// 1. Sample the center immediately.
+	float kernel = kernelAt(0);
+	weights += kernel;
+	float4 final = pImage.Sample(LinearClampSampler, vtx.uv) * kernel;
+	// 2. Then sample both + and - coordinates in one go to reduce code iterations.
+	for (uint step = 1; (step < pSize) && (step < MAX_SAMPLES); step++) {
+		float offset = angstep * step;
+		kernel = kernelAt(step);
+		weights += kernel * 2;
+
+		final += pImage.Sample(LinearClampSampler, rotateAround(vtx.uv, pCenter, offset)) * kernel;
+		final += pImage.Sample(LinearClampSampler, rotateAround(vtx.uv, pCenter, -offset)) * kernel;
 	}
-	
+	// 3. Ensure we always have a total of 1.0, even if the kernel is bad.
+	final /= weights; 
+
 	return final;
 }
 
@@ -68,23 +89,29 @@ technique Rotate {
 // Technique: Zoom
 //------------------------------------------------------------------------------
 float4 PSZoom(VertexInformation vtx) : TARGET {
-	float4 final = pImage.Sample(LinearClampSampler, vtx.uv) * kernelAt(0);
-
-	// step is calculated from the direction relative to the center
 	float2 dir = normalize(vtx.uv - pCenter) * pStepScale * pImageTexel;
 	float dist = distance(vtx.uv, pCenter);
+	float weights = 0.;
 
-	// Loop unrolling is only possible with a fixed known maximum.
-	// Some compilers may unroll up to x iterations, but most will not.
-	for (int n = 1; n <= MAX_BLUR_SIZE; n++) {
-		float kernel = kernelAt(n);
-		final += pImage.Sample(LinearClampSampler, vtx.uv + (dir * n) * dist) * kernel;
-		final += pImage.Sample(LinearClampSampler, vtx.uv - (dir * n) * dist) * kernel;
+	// Move to texel center.
+	vtx.uv.xy += pImageTexel.xy / 2.;
 
-		if (n >= pSize) {
-			break;
-		}
+	// Calculate the actual Gaussian Blur
+	// 1. Sample the center immediately.
+	float kernel = kernelAt(0);
+	weights += kernel;
+	float4 final = pImage.Sample(LinearClampSampler, vtx.uv) * kernel;
+	// 2. Then sample both + and - coordinates in one go to reduce code iterations.
+	for (uint step = 1; (step < pSize) && (step < MAX_SAMPLES); step++) {
+		float2 offset = dir * step * dist;
+		kernel = kernelAt(step);
+		weights += kernel * 2;
+
+		final += pImage.Sample(LinearClampSampler, vtx.uv + offset) * kernel;
+		final += pImage.Sample(LinearClampSampler, vtx.uv - offset) * kernel;
 	}
+	// 3. Ensure we always have a total of 1.0, even if the kernel is bad.
+	final /= weights; 
 
 	return final;
 }

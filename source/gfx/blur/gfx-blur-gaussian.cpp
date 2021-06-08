@@ -16,6 +16,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "gfx-blur-gaussian.hpp"
+#include <algorithm>
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
@@ -30,51 +31,74 @@
 #pragma warning(pop)
 #endif
 
-// FIXME: This breaks when MAX_KERNEL_SIZE is changed, due to the way the Gaussian
-//  function first goes up at the point, and then once we pass the critical point
-//  will go down again and it is not handled well. This is a pretty basic
-//  approximation anyway at the moment.
-#define ST_MAX_KERNEL_SIZE 128
-#define ST_MAX_BLUR_SIZE (ST_MAX_KERNEL_SIZE - 1)
-#define ST_SEARCH_DENSITY double_t(1. / 500.)
-#define ST_SEARCH_THRESHOLD double_t(1. / (ST_MAX_KERNEL_SIZE * 5))
-#define ST_SEARCH_EXTENSION 1
-#define ST_SEARCH_RANGE ST_MAX_KERNEL_SIZE * 2
+// TODO: It may be possible to optimize to run much faster: https://rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/
+
+#define ST_KERNEL_SIZE 128u
+#define ST_OVERSAMPLE_MULTIPLIER 2
+#define ST_MAX_BLUR_SIZE ST_KERNEL_SIZE / ST_OVERSAMPLE_MULTIPLIER
 
 streamfx::gfx::blur::gaussian_data::gaussian_data()
 {
-	auto gctx = streamfx::obs::gs::context();
-	_effect   = streamfx::obs::gs::effect::create(streamfx::data_file_path("effects/blur/gaussian.effect").u8string());
+	using namespace streamfx::util;
 
-	// Precalculate Kernels
-	for (std::size_t kernel_size = 1; kernel_size <= ST_MAX_BLUR_SIZE; kernel_size++) {
-		std::vector<double_t> kernel_math(ST_MAX_KERNEL_SIZE);
-		std::vector<float_t>  kernel_data(ST_MAX_KERNEL_SIZE);
-		double_t              actual_width = 1.;
+	std::vector<double> kernel_dbl(ST_KERNEL_SIZE);
+	std::vector<float>  kernel(ST_KERNEL_SIZE);
 
-		// Find actual kernel width.
-		for (double_t h = ST_SEARCH_DENSITY; h < ST_SEARCH_RANGE; h += ST_SEARCH_DENSITY) {
-			if (streamfx::util::math::gaussian<double_t>(double_t(kernel_size + ST_SEARCH_EXTENSION), h)
-				> ST_SEARCH_THRESHOLD) {
-				actual_width = h;
-				break;
-			}
+	{
+		auto gctx = streamfx::obs::gs::context();
+		_effect =
+			streamfx::obs::gs::effect::create(streamfx::data_file_path("effects/blur/gaussian.effect").u8string());
+	}
+
+	//#define ST_USE_PASCAL_TRIANGLE
+
+	// Pre-calculate Kernel Information for all Kernel sizes
+	for (size_t size = 1; size <= ST_MAX_BLUR_SIZE; size++) {
+#ifdef ST_USE_PASCAL_TRIANGLE
+		// The Pascal Triangle can be used to generate Gaussian Kernels, which is
+		// significantly faster than doing the same task with searching. It is also
+		// much more accurate at the same time, so it is a 2-in-1 solution.
+
+		// Generate the required row and sum.
+		size_t offset   = size;
+		size_t row      = size * 2;
+		auto   triangle = math::pascal_triangle<double>(row);
+		double sum      = pow(2, row);
+
+		// Convert all integers to floats.
+		double accum = 0.;
+		for (size_t idx = offset; idx < std::min<size_t>(triangle.size(), ST_KERNEL_SIZE); idx++) {
+			double v                 = static_cast<double>(triangle[idx]) / sum;
+			kernel_dbl[idx - offset] = v;
+			// Accumulator needed as we end up with float inaccuracies above a certain threshold.
+			accum += v * (idx > offset ? 2 : 1);
 		}
 
-		// Calculate and normalize
-		double_t sum = 0;
-		for (std::size_t p = 0; p <= kernel_size; p++) {
-			kernel_math[p] = streamfx::util::math::gaussian<double_t>(double_t(p), actual_width);
-			sum += kernel_math[p] * (p > 0 ? 2 : 1);
+		// Rescale all values back into useful ranges.
+		accum = 1. / accum;
+		for (size_t idx = offset; idx < ST_KERNEL_SIZE; idx++) {
+			kernel[idx - offset] = kernel_dbl[idx - offset] * accum;
+		}
+#else
+		size_t oversample = size * ST_OVERSAMPLE_MULTIPLIER;
+
+		// Generate initial weights and calculate a total from them.
+		double total = 0.;
+		for (size_t idx = 0; (idx < oversample) && (idx < ST_KERNEL_SIZE); idx++) {
+			kernel_dbl[idx] = math::gaussian<double>(static_cast<double>(idx), static_cast<double>(size));
+			total += kernel_dbl[idx] * (idx > 0 ? 2 : 1);
 		}
 
-		// Normalize to fill the entire 0..1 range over the width.
-		double_t inverse_sum = 1.0 / sum;
-		for (std::size_t p = 0; p <= kernel_size; p++) {
-			kernel_data.at(p) = float_t(kernel_math[p] * inverse_sum);
+		// Scale the weights according to the total gathered, and convert to float.
+		for (size_t idx = 0; (idx < oversample) && (idx < ST_KERNEL_SIZE); idx++) {
+			kernel_dbl[idx] /= total;
+			kernel[idx] = static_cast<float>(kernel_dbl[idx]);
 		}
 
-		_kernels.push_back(std::move(kernel_data));
+#endif
+
+		// Store Kernel
+		_kernels.insert_or_assign(size, kernel);
 	}
 }
 
@@ -91,12 +115,8 @@ streamfx::obs::gs::effect streamfx::gfx::blur::gaussian_data::get_effect()
 
 std::vector<float_t> const& streamfx::gfx::blur::gaussian_data::get_kernel(std::size_t width)
 {
-	if (width < 1)
-		width = 1;
-	if (width > ST_MAX_BLUR_SIZE)
-		width = ST_MAX_BLUR_SIZE;
-	width -= 1;
-	return _kernels[width];
+	width = std::clamp<size_t>(width, 1, ST_MAX_BLUR_SIZE);
+	return _kernels.at(width);
 }
 
 streamfx::gfx::blur::gaussian_factory::gaussian_factory() {}
@@ -303,12 +323,12 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian::ren
 #endif
 
 	streamfx::obs::gs::effect effect = _data->get_effect();
-	auto                      kernel = _data->get_kernel(size_t(_size));
 
 	if (!effect || ((_step_scale.first + _step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
 		return _input_texture;
 	}
 
+	auto    kernel = _data->get_kernel(size_t(_size));
 	float_t width  = float_t(_input_texture->get_width());
 	float_t height = float_t(_input_texture->get_height());
 
@@ -326,13 +346,13 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian::ren
 	gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
-	effect.get_parameter("pImage").set_texture(_input_texture);
 	effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
-	effect.get_parameter("pSize").set_float(float_t(_size));
-	effect.get_parameter("pKernel").set_value(kernel.data(), ST_MAX_KERNEL_SIZE);
+	effect.get_parameter("pSize").set_float(float_t(_size * ST_OVERSAMPLE_MULTIPLIER));
+	effect.get_parameter("pKernel").set_value(kernel.data(), ST_KERNEL_SIZE);
 
 	// First Pass
 	if (_step_scale.first > std::numeric_limits<double_t>::epsilon()) {
+		effect.get_parameter("pImage").set_texture(_input_texture);
 		effect.get_parameter("pImageTexel").set_float2(float_t(1.f / width), 0.f);
 
 		{
@@ -348,11 +368,11 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian::ren
 		}
 
 		std::swap(_rendertarget, _rendertarget2);
-		effect.get_parameter("pImage").set_texture(_rendertarget->get_texture());
 	}
 
 	// Second Pass
 	if (_step_scale.second > std::numeric_limits<double_t>::epsilon()) {
+		effect.get_parameter("pImage").set_texture(_rendertarget->get_texture());
 		effect.get_parameter("pImageTexel").set_float2(0.f, float_t(1.f / height));
 
 		{
@@ -409,12 +429,12 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_dire
 #endif
 
 	streamfx::obs::gs::effect effect = _data->get_effect();
-	auto                      kernel = _data->get_kernel(size_t(_size));
 
 	if (!effect || ((_step_scale.first + _step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
 		return _input_texture;
 	}
 
+	auto    kernel = _data->get_kernel(size_t(_size));
 	float_t width  = float_t(_input_texture->get_width());
 	float_t height = float_t(_input_texture->get_height());
 
@@ -436,10 +456,9 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_dire
 	effect.get_parameter("pImageTexel")
 		.set_float2(float_t(1.f / width * cos(m_angle)), float_t(1.f / height * sin(m_angle)));
 	effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
-	effect.get_parameter("pSize").set_float(float_t(_size));
-	effect.get_parameter("pKernel").set_value(kernel.data(), ST_MAX_KERNEL_SIZE);
+	effect.get_parameter("pSize").set_float(float_t(_size * ST_OVERSAMPLE_MULTIPLIER));
+	effect.get_parameter("pKernel").set_value(kernel.data(), ST_KERNEL_SIZE);
 
-	// First Pass
 	{
 		auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
 		gs_ortho(0, 1., 0, 1., 0, 1.);
@@ -468,12 +487,12 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_rota
 #endif
 
 	streamfx::obs::gs::effect effect = _data->get_effect();
-	auto                      kernel = _data->get_kernel(size_t(_size));
 
 	if (!effect || ((_step_scale.first + _step_scale.second) < std::numeric_limits<double_t>::epsilon())) {
 		return _input_texture;
 	}
 
+	auto    kernel = _data->get_kernel(size_t(_size));
 	float_t width  = float_t(_input_texture->get_width());
 	float_t height = float_t(_input_texture->get_height());
 
@@ -494,10 +513,10 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_rota
 	effect.get_parameter("pImage").set_texture(_input_texture);
 	effect.get_parameter("pImageTexel").set_float2(float_t(1.f / width), float_t(1.f / height));
 	effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
-	effect.get_parameter("pSize").set_float(float_t(_size));
+	effect.get_parameter("pSize").set_float(float_t(_size * ST_OVERSAMPLE_MULTIPLIER));
 	effect.get_parameter("pAngle").set_float(float_t(m_angle / _size));
 	effect.get_parameter("pCenter").set_float2(float_t(m_center.first), float_t(m_center.second));
-	effect.get_parameter("pKernel").set_value(kernel.data(), ST_MAX_KERNEL_SIZE);
+	effect.get_parameter("pKernel").set_value(kernel.data(), ST_KERNEL_SIZE);
 
 	// First Pass
 	{
@@ -577,7 +596,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_zoom
 	effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
 	effect.get_parameter("pSize").set_float(float_t(_size));
 	effect.get_parameter("pCenter").set_float2(float_t(m_center.first), float_t(m_center.second));
-	effect.get_parameter("pKernel").set_value(kernel.data(), ST_MAX_KERNEL_SIZE);
+	effect.get_parameter("pKernel").set_value(kernel.data(), ST_KERNEL_SIZE);
 
 	// First Pass
 	{
