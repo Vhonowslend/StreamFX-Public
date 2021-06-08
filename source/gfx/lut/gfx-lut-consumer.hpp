@@ -33,9 +33,10 @@ namespace gfx::lut {
 		consumer();
 		~consumer();
 
-		std::shared_ptr<gs::effect> prepare(gfx::lut::color_depth depth, std::shared_ptr<gs::texture> lut);
+		std::shared_ptr<streamfx::obs::gs::effect> prepare(gfx::lut::color_depth                       depth,
+														   std::shared_ptr<streamfx::obs::gs::texture> lut);
 
-		void consume(gfx::lut::color_depth depth, std::shared_ptr<gs::texture> lut,
-					 std::shared_ptr<gs::texture> texture);
+		void consume(gfx::lut::color_depth depth, std::shared_ptr<streamfx::obs::gs::texture> lut,
+					 std::shared_ptr<streamfx::obs::gs::texture> texture);
 	};
 } // namespace gfx::lut

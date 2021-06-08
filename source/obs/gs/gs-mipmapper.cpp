@@ -36,16 +36,16 @@
 #endif
 #endif
 
-gs::mipmapper::~mipmapper()
+streamfx::obs::gs::mipmapper::~mipmapper()
 {
 	_vb.reset();
 	_rt.reset();
 	_effect.reset();
 }
 
-gs::mipmapper::mipmapper()
+streamfx::obs::gs::mipmapper::mipmapper()
 {
-	_vb = std::make_unique<gs::vertex_buffer>(uint32_t(3u), uint8_t(1u));
+	_vb = std::make_unique<streamfx::obs::gs::vertex_buffer>(uint32_t(3u), uint8_t(1u));
 
 	{
 		auto vtx        = _vb->at(0);
@@ -71,10 +71,11 @@ gs::mipmapper::mipmapper()
 
 	_vb->update();
 
-	_effect = gs::effect::create(streamfx::data_file_path("effects/mipgen.effect").u8string());
+	_effect = streamfx::obs::gs::effect::create(streamfx::data_file_path("effects/mipgen.effect").u8string());
 }
 
-void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr<gs::texture> target)
+void streamfx::obs::gs::mipmapper::rebuild(std::shared_ptr<streamfx::obs::gs::texture> source,
+										   std::shared_ptr<streamfx::obs::gs::texture> target)
 {
 	{ // Validate arguments and structure.
 		if (!source || !target)
@@ -100,11 +101,11 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 	}
 
 	// Get a unique lock on the graphics context.
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 
 	// Do we need to recreate the render target for a different format?
 	if ((!_rt) || (source->get_color_format() != _rt->get_color_format())) {
-		_rt = std::make_unique<gs::rendertarget>(source->get_color_format(), GS_ZS_NONE);
+		_rt = std::make_unique<streamfx::obs::gs::rendertarget>(source->get_color_format(), GS_ZS_NONE);
 	}
 
 	// Grab API related information.
@@ -125,7 +126,7 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 	}
 
 	// Use different methods for different types of textures.
-	if (source->get_type() == gs::texture::type::Normal) {
+	if (source->get_type() == streamfx::obs::gs::texture::type::Normal) {
 		while (true) {
 			uint32_t width         = source->get_width();
 			uint32_t height        = source->get_height();
@@ -133,7 +134,8 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 
 			{
 #ifdef ENABLE_PROFILING
-				auto cctr = gs::debug_marker(gs::debug_color_azure_radiance, "Mip Level %" PRId64 "", 0);
+				auto cctr = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance,
+															"Mip Level %" PRId64 "", 0);
 #endif
 
 #ifdef _WIN32
@@ -160,7 +162,8 @@ void gs::mipmapper::rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr
 			// Render each mip map level.
 			for (size_t mip = 1; mip < max_mip_level; mip++) {
 #ifdef ENABLE_PROFILING
-				auto cctr = gs::debug_marker(gs::debug_color_azure_radiance, "Mip Level %" PRIuMAX, mip);
+				auto cctr = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance,
+															"Mip Level %" PRIuMAX, mip);
 #endif
 
 				uint32_t cwidth  = std::max<uint32_t>(width >> mip, 1);

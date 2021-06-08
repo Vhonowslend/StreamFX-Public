@@ -21,7 +21,7 @@
 #include "common.hpp"
 #include "gs-effect-pass.hpp"
 
-namespace gs {
+namespace streamfx::obs::gs {
 	class effect_technique : public std::shared_ptr<gs_technique_t> {
 		std::shared_ptr<gs_effect_t> _parent;
 
@@ -31,9 +31,9 @@ namespace gs {
 
 		std::string name();
 
-		std::size_t     count_passes();
-		gs::effect_pass get_pass(std::size_t idx);
-		gs::effect_pass get_pass(std::string name);
-		bool            has_pass(std::string name);
+		std::size_t                    count_passes();
+		streamfx::obs::gs::effect_pass get_pass(std::size_t idx);
+		streamfx::obs::gs::effect_pass get_pass(std::string name);
+		bool                           has_pass(std::string name);
 	};
-} // namespace gs
+} // namespace streamfx::obs::gs

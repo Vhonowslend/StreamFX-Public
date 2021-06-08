@@ -28,9 +28,9 @@
 #define ANNO_TYPE "type"
 #define ANNO_SIZE "size"
 
-typedef gs::effect_parameter::type eptype;
+typedef streamfx::obs::gs::effect_parameter::type eptype;
 
-gfx::shader::parameter_type gfx::shader::get_type_from_effect_type(gs::effect_parameter::type type)
+gfx::shader::parameter_type gfx::shader::get_type_from_effect_type(streamfx::obs::gs::effect_parameter::type type)
 {
 	switch (type) {
 	case eptype::Boolean:
@@ -55,7 +55,7 @@ gfx::shader::parameter_type gfx::shader::get_type_from_effect_type(gs::effect_pa
 	}
 }
 
-std::size_t gfx::shader::get_length_from_effect_type(gs::effect_parameter::type type)
+std::size_t gfx::shader::get_length_from_effect_type(streamfx::obs::gs::effect_parameter::type type)
 {
 	switch (type) {
 	default:
@@ -110,7 +110,7 @@ gfx::shader::parameter_type gfx::shader::get_type_from_string(std::string v)
 	throw std::invalid_argument("Invalid parameter type string.");
 }
 
-gfx::shader::parameter::parameter(gs::effect_parameter param, std::string key_prefix)
+gfx::shader::parameter::parameter(streamfx::obs::gs::effect_parameter param, std::string key_prefix)
 	: _param(param), _order(0), _key(_param.get_name()), _visible(true), _automatic(false), _name(_key), _description()
 {
 	{
@@ -175,8 +175,8 @@ void gfx::shader::parameter::update(obs_data_t* settings) {}
 
 void gfx::shader::parameter::assign() {}
 
-std::shared_ptr<gfx::shader::parameter> gfx::shader::parameter::make_parameter(gs::effect_parameter param,
-																			   std::string          prefix)
+std::shared_ptr<gfx::shader::parameter>
+	gfx::shader::parameter::make_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
 {
 	if (!param) {
 		throw std::runtime_error("Bad call to make_parameter. This is a bug in the plugin.");

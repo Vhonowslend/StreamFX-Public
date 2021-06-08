@@ -27,13 +27,13 @@
 
 namespace gfx::lut {
 	class producer {
-		std::shared_ptr<gfx::lut::data>   _data;
-		std::shared_ptr<gs::rendertarget> _rt;
+		std::shared_ptr<gfx::lut::data>                  _data;
+		std::shared_ptr<streamfx::obs::gs::rendertarget> _rt;
 
 		public:
 		producer();
 		~producer();
 
-		std::shared_ptr<gs::texture> produce(gfx::lut::color_depth depth);
+		std::shared_ptr<streamfx::obs::gs::texture> produce(gfx::lut::color_depth depth);
 	};
 } // namespace gfx::lut

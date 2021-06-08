@@ -38,9 +38,9 @@
 namespace streamfx::filter::nvidia {
 	class face_tracking_instance : public obs::source_instance {
 		// Filter Cache
-		std::pair<uint32_t, uint32_t>     _size;
-		bool                              _rt_is_fresh;
-		std::shared_ptr<gs::rendertarget> _rt;
+		std::pair<uint32_t, uint32_t>                    _size;
+		bool                                             _rt_is_fresh;
+		std::shared_ptr<streamfx::obs::gs::rendertarget> _rt;
 
 		std::mutex _delete_protection;
 
@@ -50,7 +50,7 @@ namespace streamfx::filter::nvidia {
 		double_t                      _cfg_stability;
 
 		// Operational Data
-		std::shared_ptr<gs::vertex_buffer> _geometry;
+		std::shared_ptr<streamfx::obs::gs::vertex_buffer> _geometry;
 		struct {
 			streamfx::util::math::kalman1D<double_t> center[2];
 			streamfx::util::math::kalman1D<double_t> size[2];
@@ -67,21 +67,21 @@ namespace streamfx::filter::nvidia {
 		std::shared_ptr<::nvidia::cuda::stream> _cuda_stream;
 
 		// Nvidia AR interop
-		std::shared_ptr<::nvidia::ar::ar>          _ar_library;
-		std::atomic_bool                           _ar_loaded;
-		std::shared_ptr<nvAR_Feature>              _ar_feature;
-		std::atomic_bool                           _ar_is_tracking;
-		std::mutex                                 _ar_lock;
-		std::vector<float_t>                       _ar_bboxes_confidence;
-		std::vector<NvAR_Rect>                     _ar_bboxes_data;
-		NvAR_BBoxes                                _ar_bboxes;
-		std::shared_ptr<gs::texture>               _ar_texture;
-		bool                                       _ar_texture_cuda_fresh;
-		std::shared_ptr<::nvidia::cuda::gstexture> _ar_texture_cuda;
-		std::shared_ptr<::nvidia::cuda::memory>    _ar_texture_cuda_mem;
-		NvCVImage                                  _ar_image;
-		NvCVImage                                  _ar_image_bgr;
-		NvCVImage                                  _ar_image_temp;
+		std::shared_ptr<::nvidia::ar::ar>           _ar_library;
+		std::atomic_bool                            _ar_loaded;
+		std::shared_ptr<nvAR_Feature>               _ar_feature;
+		std::atomic_bool                            _ar_is_tracking;
+		std::mutex                                  _ar_lock;
+		std::vector<float_t>                        _ar_bboxes_confidence;
+		std::vector<NvAR_Rect>                      _ar_bboxes_data;
+		NvAR_BBoxes                                 _ar_bboxes;
+		std::shared_ptr<streamfx::obs::gs::texture> _ar_texture;
+		bool                                        _ar_texture_cuda_fresh;
+		std::shared_ptr<::nvidia::cuda::gstexture>  _ar_texture_cuda;
+		std::shared_ptr<::nvidia::cuda::memory>     _ar_texture_cuda_mem;
+		NvCVImage                                   _ar_image;
+		NvCVImage                                   _ar_image_bgr;
+		NvCVImage                                   _ar_image_temp;
 
 		// Tasks
 		std::shared_ptr<::streamfx::util::threadpool::task> _async_initialize;

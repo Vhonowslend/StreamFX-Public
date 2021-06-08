@@ -50,7 +50,7 @@ namespace gfx {
 			bool        _active;
 
 			// Shader
-			gs::effect                      _shader;
+			streamfx::obs::gs::effect       _shader;
 			std::filesystem::path           _shader_file;
 			std::string                     _shader_tech;
 			std::filesystem::file_time_type _shader_file_mt;
@@ -74,8 +74,8 @@ namespace gfx {
 			float_t _random_values[16]; // 0..4 Per-Instance-Random, 4..8 Per-Activation-Random 9..15 Per-Frame-Random
 
 			// Rendering
-			bool                              _rt_up_to_date;
-			std::shared_ptr<gs::rendertarget> _rt;
+			bool                                             _rt_up_to_date;
+			std::shared_ptr<streamfx::obs::gs::rendertarget> _rt;
 
 			public:
 			shader(obs_source_t* self, shader_mode mode);
@@ -117,9 +117,9 @@ namespace gfx {
 			public:
 			void set_size(uint32_t w, uint32_t h);
 
-			void set_input_a(std::shared_ptr<gs::texture> tex);
+			void set_input_a(std::shared_ptr<streamfx::obs::gs::texture> tex);
 
-			void set_input_b(std::shared_ptr<gs::texture> tex);
+			void set_input_b(std::shared_ptr<streamfx::obs::gs::texture> tex);
 
 			void set_transition_time(float_t t);
 

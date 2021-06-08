@@ -45,7 +45,7 @@ namespace streamfx::filter::color_grade {
 	};
 
 	class color_grade_instance : public obs::source_instance {
-		gs::effect _effect;
+		streamfx::obs::gs::effect _effect;
 
 		// User Configuration
 		vec4                  _lift;
@@ -63,22 +63,22 @@ namespace streamfx::filter::color_grade {
 		gfx::lut::color_depth _lut_depth;
 
 		// Capture Cache
-		std::shared_ptr<gs::rendertarget> _ccache_rt;
-		std::shared_ptr<gs::texture>      _ccache_texture;
-		bool                              _ccache_fresh;
+		std::shared_ptr<streamfx::obs::gs::rendertarget> _ccache_rt;
+		std::shared_ptr<streamfx::obs::gs::texture>      _ccache_texture;
+		bool                                             _ccache_fresh;
 
 		// LUT work flow
-		bool                                _lut_initialized;
-		bool                                _lut_dirty;
-		std::shared_ptr<gfx::lut::producer> _lut_producer;
-		std::shared_ptr<gfx::lut::consumer> _lut_consumer;
-		std::shared_ptr<gs::rendertarget>   _lut_rt;
-		std::shared_ptr<gs::texture>        _lut_texture;
+		bool                                             _lut_initialized;
+		bool                                             _lut_dirty;
+		std::shared_ptr<gfx::lut::producer>              _lut_producer;
+		std::shared_ptr<gfx::lut::consumer>              _lut_consumer;
+		std::shared_ptr<streamfx::obs::gs::rendertarget> _lut_rt;
+		std::shared_ptr<streamfx::obs::gs::texture>      _lut_texture;
 
 		// Render Cache
-		std::shared_ptr<gs::rendertarget> _cache_rt;
-		std::shared_ptr<gs::texture>      _cache_texture;
-		bool                              _cache_fresh;
+		std::shared_ptr<streamfx::obs::gs::rendertarget> _cache_rt;
+		std::shared_ptr<streamfx::obs::gs::texture>      _cache_texture;
+		bool                                             _cache_fresh;
 
 		public:
 		color_grade_instance(obs_data_t* data, obs_source_t* self);

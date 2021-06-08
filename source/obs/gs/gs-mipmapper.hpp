@@ -36,16 +36,17 @@
  *  resource. Super wasteful, but what else can we actually do?
  */
 
-namespace gs {
+namespace streamfx::obs::gs {
 	class mipmapper {
-		std::unique_ptr<gs::vertex_buffer> _vb;
-		std::unique_ptr<gs::rendertarget>  _rt;
-		gs::effect                         _effect;
+		std::unique_ptr<streamfx::obs::gs::vertex_buffer> _vb;
+		std::unique_ptr<streamfx::obs::gs::rendertarget>  _rt;
+		streamfx::obs::gs::effect                         _effect;
 
 		public:
 		~mipmapper();
 		mipmapper();
 
-		void rebuild(std::shared_ptr<gs::texture> source, std::shared_ptr<gs::texture> target);
+		void rebuild(std::shared_ptr<streamfx::obs::gs::texture> source,
+					 std::shared_ptr<streamfx::obs::gs::texture> target);
 	};
-} // namespace gs
+} // namespace streamfx::obs::gs

@@ -73,8 +73,8 @@
 //static std::shared_ptr<streamfx::updater> _updater;
 #endif
 
-static std::shared_ptr<streamfx::util::threadpool> _threadpool;
-static std::shared_ptr<gs::vertex_buffer>          _gs_fstri_vb;
+static std::shared_ptr<streamfx::util::threadpool>       _threadpool;
+static std::shared_ptr<streamfx::obs::gs::vertex_buffer> _gs_fstri_vb;
 
 MODULE_EXPORT bool obs_module_load(void)
 try {
@@ -91,7 +91,7 @@ try {
 
 	// GS Stuff
 	{
-		_gs_fstri_vb = std::make_shared<gs::vertex_buffer>(uint32_t(3), uint8_t(1));
+		_gs_fstri_vb = std::make_shared<streamfx::obs::gs::vertex_buffer>(uint32_t(3), uint8_t(1));
 		{
 			auto vtx = _gs_fstri_vb->at(0);
 			vec3_set(vtx.position, 0, 0, 0);

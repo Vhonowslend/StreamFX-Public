@@ -34,22 +34,22 @@ namespace streamfx::filter::dynamic_mask {
 	class dynamic_mask_instance : public obs::source_instance {
 		std::map<std::tuple<channel, channel, std::string>, std::string> _translation_map;
 
-		gs::effect _effect;
+		streamfx::obs::gs::effect _effect;
 
-		bool                              _have_filter_texture;
-		std::shared_ptr<gs::rendertarget> _filter_rt;
-		std::shared_ptr<gs::texture>      _filter_texture;
+		bool                                             _have_filter_texture;
+		std::shared_ptr<streamfx::obs::gs::rendertarget> _filter_rt;
+		std::shared_ptr<streamfx::obs::gs::texture>      _filter_texture;
 
 		bool                                        _have_input_texture;
 		std::shared_ptr<obs::deprecated_source>     _input;
 		std::shared_ptr<gfx::source_texture>        _input_capture;
-		std::shared_ptr<gs::texture>                _input_texture;
+		std::shared_ptr<streamfx::obs::gs::texture> _input_texture;
 		std::shared_ptr<obs::tools::visible_source> _input_vs;
 		std::shared_ptr<obs::tools::active_source>  _input_ac;
 
-		bool                              _have_final_texture;
-		std::shared_ptr<gs::rendertarget> _final_rt;
-		std::shared_ptr<gs::texture>      _final_texture;
+		bool                                             _have_final_texture;
+		std::shared_ptr<streamfx::obs::gs::rendertarget> _final_rt;
+		std::shared_ptr<streamfx::obs::gs::texture>      _final_texture;
 
 		struct channel_data {
 			float_t value  = 0.0;

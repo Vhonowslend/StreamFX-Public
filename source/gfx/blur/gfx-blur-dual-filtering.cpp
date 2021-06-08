@@ -52,9 +52,10 @@
 
 gfx::blur::dual_filtering_data::dual_filtering_data()
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 	try {
-		_effect = gs::effect::create(streamfx::data_file_path("effects/blur/dual-filtering.effect").u8string());
+		_effect = streamfx::obs::gs::effect::create(
+			streamfx::data_file_path("effects/blur/dual-filtering.effect").u8string());
 	} catch (...) {
 		DLOG_ERROR("<gfx::blur::box_linear> Failed to load _effect.");
 	}
@@ -62,11 +63,11 @@ gfx::blur::dual_filtering_data::dual_filtering_data()
 
 gfx::blur::dual_filtering_data::~dual_filtering_data()
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 	_effect.reset();
 }
 
-gs::effect gfx::blur::dual_filtering_data::get_effect()
+streamfx::obs::gs::effect gfx::blur::dual_filtering_data::get_effect()
 {
 	return _effect;
 }
@@ -180,7 +181,7 @@ std::shared_ptr<::gfx::blur::dual_filtering_data> gfx::blur::dual_filtering_fact
 gfx::blur::dual_filtering::dual_filtering()
 	: _data(::gfx::blur::dual_filtering_factory::get().data()), _size(0), _size_iterations(0)
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 	_rts.resize(MAX_LEVELS + 1);
 	for (std::size_t n = 0; n <= MAX_LEVELS; n++) {
 		gs_color_format cf = GS_RGBA;
@@ -189,13 +190,13 @@ gfx::blur::dual_filtering::dual_filtering()
 #elif 0
 		cf = GS_RGBA32F;
 #endif
-		_rts[n] = std::make_shared<gs::rendertarget>(cf, GS_ZS_NONE);
+		_rts[n] = std::make_shared<streamfx::obs::gs::rendertarget>(cf, GS_ZS_NONE);
 	}
 }
 
 gfx::blur::dual_filtering::~dual_filtering() {}
 
-void gfx::blur::dual_filtering::set_input(std::shared_ptr<::gs::texture> texture)
+void gfx::blur::dual_filtering::set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture)
 {
 	_input_texture = texture;
 }
@@ -223,12 +224,12 @@ void gfx::blur::dual_filtering::set_step_scale(double_t, double_t) {}
 
 void gfx::blur::dual_filtering::get_step_scale(double_t&, double_t&) {}
 
-std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
+std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::dual_filtering::render()
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 
 #ifdef ENABLE_PROFILING
-	auto gdmp = gs::debug_marker(gs::debug_color_azure_radiance, "Dual-Filtering Blur");
+	auto gdmp = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Dual-Filtering Blur");
 #endif
 
 	auto effect = _data->get_effect();
@@ -257,11 +258,11 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 	// Downsample
 	for (std::size_t n = 1; n <= actual_iterations; n++) {
 #ifdef ENABLE_PROFILING
-		auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Down %" PRIuMAX, n);
+		auto gdm = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Down %" PRIuMAX, n);
 #endif
 
 		// Select Texture
-		std::shared_ptr<gs::texture> tex_cur;
+		std::shared_ptr<streamfx::obs::gs::texture> tex_cur;
 		if (n > 1) {
 			tex_cur = _rts[n - 1]->get_texture();
 		} else { // Idx 0 is a simply considered as a straight copy of the original and not rendered to.
@@ -294,11 +295,11 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 	// Upsample
 	for (std::size_t n = actual_iterations; n > 0; n--) {
 #ifdef ENABLE_PROFILING
-		auto gdm = gs::debug_marker(gs::debug_color_azure_radiance, "Up %" PRIuMAX, n);
+		auto gdm = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Up %" PRIuMAX, n);
 #endif
 
 		// Select Texture
-		std::shared_ptr<gs::texture> tex_in = _rts[n]->get_texture();
+		std::shared_ptr<streamfx::obs::gs::texture> tex_in = _rts[n]->get_texture();
 
 		// Get Size
 		uint32_t iwidth  = width >> n;
@@ -326,7 +327,7 @@ std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::render()
 	return _rts[0]->get_texture();
 }
 
-std::shared_ptr<::gs::texture> gfx::blur::dual_filtering::get()
+std::shared_ptr<::streamfx::obs::gs::texture> gfx::blur::dual_filtering::get()
 {
 	return _rts[0]->get_texture();
 }

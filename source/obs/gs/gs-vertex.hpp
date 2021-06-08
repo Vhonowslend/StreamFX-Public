@@ -21,7 +21,7 @@
 #include "common.hpp"
 #include "gs-limits.hpp"
 
-namespace gs {
+namespace streamfx::obs::gs {
 	struct vertex {
 		vec3*     position;
 		vec3*     normal;
@@ -37,4 +37,4 @@ namespace gs {
 		bool  _has_store;
 		void* _store;
 	};
-} // namespace gs
+} // namespace streamfx::obs::gs

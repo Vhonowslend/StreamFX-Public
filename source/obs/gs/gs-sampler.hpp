@@ -20,7 +20,7 @@
 #pragma once
 #include "common.hpp"
 
-namespace gs {
+namespace streamfx::obs::gs {
 	class sampler {
 		public:
 		sampler();
@@ -55,4 +55,4 @@ namespace gs {
 		gs_sampler_info   _sampler_info;
 		gs_sampler_state* _sampler_state;
 	};
-} // namespace gs
+} // namespace streamfx::obs::gs

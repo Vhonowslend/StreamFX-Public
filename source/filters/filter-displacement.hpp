@@ -24,13 +24,13 @@
 
 namespace streamfx::filter::displacement {
 	class displacement_instance : public obs::source_instance {
-		gs::effect _effect;
+		streamfx::obs::gs::effect _effect;
 
 		// Displacement Map
-		std::shared_ptr<gs::texture> _texture;
-		std::string                  _texture_file;
-		float_t                      _scale[2];
-		float_t                      _scale_type;
+		std::shared_ptr<streamfx::obs::gs::texture> _texture;
+		std::string                                 _texture_file;
+		float_t                                     _scale[2];
+		float_t                                     _scale_type;
 
 		// Cache
 		uint32_t _width;

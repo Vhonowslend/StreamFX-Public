@@ -49,12 +49,12 @@ gfx::lut::producer::producer()
 
 gfx::lut::producer::~producer() {}
 
-std::shared_ptr<gs::texture> gfx::lut::producer::produce(gfx::lut::color_depth depth)
+std::shared_ptr<streamfx::obs::gs::texture> gfx::lut::producer::produce(gfx::lut::color_depth depth)
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 
 	if (!_rt || (_rt->get_color_format() != format_from_depth((depth)))) {
-		_rt = std::make_shared<gs::rendertarget>(format_from_depth(depth), GS_ZS_NONE);
+		_rt = std::make_shared<streamfx::obs::gs::rendertarget>(format_from_depth(depth), GS_ZS_NONE);
 	}
 
 	auto effect = _data->producer_effect();
@@ -74,7 +74,7 @@ std::shared_ptr<gs::texture> gfx::lut::producer::produce(gfx::lut::color_depth d
 		gs_enable_stencil_write(false);
 		gs_ortho(0, 1, 0, 1, 0, 1);
 
-		if (gs::effect_parameter efp = effect->get_parameter("lut_params_0"); efp) {
+		if (streamfx::obs::gs::effect_parameter efp = effect->get_parameter("lut_params_0"); efp) {
 			efp.set_int4(size, grid_size, container_size, 0l);
 		}
 

@@ -22,40 +22,41 @@
 #include "gs-limits.hpp"
 #include "obs/gs/gs-helper.hpp"
 
-gs::index_buffer::index_buffer(uint32_t maximumVertices)
+streamfx::obs::gs::index_buffer::index_buffer(uint32_t maximumVertices)
 {
 	this->reserve(maximumVertices);
-	auto gctx     = gs::context();
+	auto gctx     = streamfx::obs::gs::context();
 	_index_buffer = gs_indexbuffer_create(gs_index_type::GS_UNSIGNED_LONG, this->data(), maximumVertices, GS_DYNAMIC);
 }
 
-gs::index_buffer::index_buffer() : index_buffer(MAXIMUM_VERTICES) {}
+streamfx::obs::gs::index_buffer::index_buffer() : index_buffer(MAXIMUM_VERTICES) {}
 
-gs::index_buffer::index_buffer(index_buffer& other) : index_buffer(static_cast<uint32_t>(other.size()))
+streamfx::obs::gs::index_buffer::index_buffer(index_buffer& other) : index_buffer(static_cast<uint32_t>(other.size()))
 {
 	std::copy(other.begin(), other.end(), this->end());
 }
 
-gs::index_buffer::index_buffer(std::vector<uint32_t>& other) : index_buffer(static_cast<uint32_t>(other.size()))
+streamfx::obs::gs::index_buffer::index_buffer(std::vector<uint32_t>& other)
+	: index_buffer(static_cast<uint32_t>(other.size()))
 {
 	std::copy(other.begin(), other.end(), this->end());
 }
 
-gs::index_buffer::~index_buffer()
+streamfx::obs::gs::index_buffer::~index_buffer()
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 	gs_indexbuffer_destroy(_index_buffer);
 }
 
-gs_indexbuffer_t* gs::index_buffer::get()
+gs_indexbuffer_t* streamfx::obs::gs::index_buffer::get()
 {
 	return get(true);
 }
 
-gs_indexbuffer_t* gs::index_buffer::get(bool refreshGPU)
+gs_indexbuffer_t* streamfx::obs::gs::index_buffer::get(bool refreshGPU)
 {
 	if (refreshGPU) {
-		auto gctx = gs::context();
+		auto gctx = streamfx::obs::gs::context();
 		gs_indexbuffer_flush(_index_buffer);
 	}
 	return _index_buffer;

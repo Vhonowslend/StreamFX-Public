@@ -22,7 +22,7 @@
 #include "gs-limits.hpp"
 #include "gs-vertex.hpp"
 
-namespace gs {
+namespace streamfx::obs::gs {
 	class vertex_buffer {
 		uint32_t _capacity;
 		uint32_t _size;
@@ -121,9 +121,9 @@ namespace gs {
 
 		bool empty();
 
-		const gs::vertex at(uint32_t idx);
+		const streamfx::obs::gs::vertex at(uint32_t idx);
 
-		const gs::vertex operator[](uint32_t const pos);
+		const streamfx::obs::gs::vertex operator[](uint32_t const pos);
 
 		void set_uv_layers(uint8_t layers);
 
@@ -173,4 +173,4 @@ namespace gs {
 
 		gs_vertbuffer_t* update(bool refreshGPU);
 	};
-} // namespace gs
+} // namespace streamfx::obs::gs

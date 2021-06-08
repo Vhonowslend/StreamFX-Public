@@ -27,7 +27,7 @@ namespace gfx {
 		std::shared_ptr<streamfx::obs::deprecated_source> _parent;
 		std::shared_ptr<streamfx::obs::deprecated_source> _child;
 
-		std::shared_ptr<gs::rendertarget> _rt;
+		std::shared_ptr<streamfx::obs::gs::rendertarget> _rt;
 
 		source_texture(obs_source_t* parent);
 
@@ -50,7 +50,7 @@ namespace gfx {
 		source_texture& operator=(source_texture&& other) = delete;
 
 		public:
-		std::shared_ptr<gs::texture> render(std::size_t width, std::size_t height);
+		std::shared_ptr<streamfx::obs::gs::texture> render(std::size_t width, std::size_t height);
 
 		public: // Unsafe Methods
 		void clear();

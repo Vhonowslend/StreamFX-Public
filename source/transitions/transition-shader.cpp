@@ -84,7 +84,8 @@ void shader_instance::video_render(gs_effect_t* effect)
 	}
 
 #ifdef ENABLE_PROFILING
-	gs::debug_marker gdmp{gs::debug_color_source, "Shader Transition '%s'", obs_source_get_name(_self)};
+	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Shader Transition '%s'",
+										 obs_source_get_name(_self)};
 #endif
 
 	obs_transition_video_render(_self,
@@ -95,8 +96,8 @@ void shader_instance::video_render(gs_effect_t* effect)
 
 void shader_instance::transition_render(gs_texture_t* a, gs_texture_t* b, float_t t, uint32_t cx, uint32_t cy)
 {
-	_fx->set_input_a(std::make_shared<::gs::texture>(a, false));
-	_fx->set_input_b(std::make_shared<::gs::texture>(b, false));
+	_fx->set_input_a(std::make_shared<::streamfx::obs::gs::texture>(a, false));
+	_fx->set_input_b(std::make_shared<::streamfx::obs::gs::texture>(b, false));
 	_fx->set_transition_time(t);
 	_fx->set_transition_size(cx, cy);
 	_fx->prepare_render();

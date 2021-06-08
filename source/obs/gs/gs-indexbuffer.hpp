@@ -21,7 +21,7 @@
 #include "common.hpp"
 #include <vector>
 
-namespace gs {
+namespace streamfx::obs::gs {
 	class index_buffer : public std::vector<uint32_t> {
 		public:
 		index_buffer(uint32_t maximumVertices);
@@ -37,4 +37,4 @@ namespace gs {
 		protected:
 		gs_indexbuffer_t* _index_buffer;
 	};
-} // namespace gs
+} // namespace streamfx::obs::gs

@@ -80,28 +80,29 @@ sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* s
 	  _outline_offset(), _outline_sharpness(), _outline_sharpness_inv()
 {
 	{
-		auto gctx        = gs::context();
+		auto gctx        = streamfx::obs::gs::context();
 		vec4 transparent = {0, 0, 0, 0};
 
-		_source_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-		_sdf_write = std::make_shared<gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
-		_sdf_read  = std::make_shared<gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
-		_output_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+		_source_rt = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+		_sdf_write = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
+		_sdf_read  = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA32F, GS_ZS_NONE);
+		_output_rt = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 
-		std::shared_ptr<gs::rendertarget> initialize_rts[] = {_source_rt, _sdf_write, _sdf_read, _output_rt};
+		std::shared_ptr<streamfx::obs::gs::rendertarget> initialize_rts[] = {_source_rt, _sdf_write, _sdf_read,
+																			 _output_rt};
 		for (auto rt : initialize_rts) {
 			auto op = rt->render(1, 1);
 			gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &transparent, 0, 0);
 		}
 
-		std::pair<const char*, gs::effect&> load_arr[] = {
+		std::pair<const char*, streamfx::obs::gs::effect&> load_arr[] = {
 			{"effects/sdf/sdf-producer.effect", _sdf_producer_effect},
 			{"effects/sdf/sdf-consumer.effect", _sdf_consumer_effect},
 		};
 		for (auto& kv : load_arr) {
 			auto path = streamfx::data_file_path(kv.first).u8string();
 			try {
-				kv.second = gs::effect::create(path);
+				kv.second = streamfx::obs::gs::effect::create(path);
 			} catch (const std::exception& ex) {
 				DLOG_ERROR(LOG_PREFIX "Failed to load effect '%s' (located at '%s') with error(s): %s", kv.first,
 						   path.c_str(), ex.what());
@@ -279,11 +280,11 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 	}
 
 #ifdef ENABLE_PROFILING
-	gs::debug_marker gdmp{gs::debug_color_source, "SDF Effects '%s' on '%s'", obs_source_get_name(_self),
-						  obs_source_get_name(obs_filter_get_parent(_self))};
+	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "SDF Effects '%s' on '%s'",
+										 obs_source_get_name(_self), obs_source_get_name(obs_filter_get_parent(_self))};
 #endif
 
-	auto gctx              = gs::context();
+	auto gctx              = streamfx::obs::gs::context();
 	vec4 color_transparent = {0, 0, 0, 0};
 
 	try {
@@ -305,7 +306,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 			// Store input texture.
 			{
 #ifdef ENABLE_PROFILING
-				gs::debug_marker gdm{gs::debug_color_cache, "Cache"};
+				streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_cache, "Cache"};
 #endif
 
 				auto op = _source_rt->render(baseW, baseH);
@@ -347,7 +348,8 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 
 				{
 #ifdef ENABLE_PROFILING
-					gs::debug_marker gdm{gs::debug_color_convert, "Update Distance Field"};
+					streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert,
+														"Update Distance Field"};
 #endif
 
 					auto op = _sdf_write->render(uint32_t(sdfW), uint32_t(sdfH));
@@ -405,7 +407,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 		// Optimized Render path.
 		try {
 #ifdef ENABLE_PROFILING
-			gs::debug_marker gdm{gs::debug_color_convert, "Calculate"};
+			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert, "Calculate"};
 #endif
 
 			auto op = _output_rt->render(baseW, baseH);
@@ -502,7 +504,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 
 	{
 #ifdef ENABLE_PROFILING
-		gs::debug_marker gdm{gs::debug_color_render, "Render"};
+		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_render, "Render"};
 #endif
 
 		gs_eparam_t* ep = gs_effect_get_param_by_name(final_effect, "image");

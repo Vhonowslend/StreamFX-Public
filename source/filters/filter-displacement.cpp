@@ -33,7 +33,7 @@ using namespace streamfx::filter::displacement;
 displacement_instance::displacement_instance(obs_data_t* data, obs_source_t* context)
 	: obs::source_instance(data, context)
 {
-	_effect = gs::effect::create(streamfx::data_file_path("effects/displace.effect").u8string());
+	_effect = streamfx::obs::gs::effect::create(streamfx::data_file_path("effects/displace.effect").u8string());
 
 	update(data);
 }
@@ -68,7 +68,7 @@ void displacement_instance::update(obs_data_t* settings)
 	std::string new_file = obs_data_get_string(settings, ST_FILE);
 	if (new_file != _texture_file) {
 		try {
-			_texture      = std::make_shared<gs::texture>(new_file);
+			_texture      = std::make_shared<streamfx::obs::gs::texture>(new_file);
 			_texture_file = new_file;
 		} catch (...) {
 			_texture.reset();
@@ -90,8 +90,8 @@ void displacement_instance::video_render(gs_effect_t*)
 	}
 
 #ifdef ENABLE_PROFILING
-	gs::debug_marker gdmp{gs::debug_color_source, "Displacement Mapping '%s' on '%s'", obs_source_get_name(_self),
-						  obs_source_get_name(obs_filter_get_parent(_self))};
+	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Displacement Mapping '%s' on '%s'",
+										 obs_source_get_name(_self), obs_source_get_name(obs_filter_get_parent(_self))};
 #endif
 
 	if (!obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {

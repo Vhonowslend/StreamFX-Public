@@ -57,11 +57,11 @@ dynamic_mask_instance::dynamic_mask_instance(obs_data_t* settings, obs_source_t*
 	  _filter_texture(), _have_input_texture(false), _input(), _input_capture(), _input_texture(),
 	  _have_final_texture(false), _final_rt(), _final_texture(), _channels(), _precalc()
 {
-	_filter_rt = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	_final_rt  = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_filter_rt = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_final_rt  = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 
 	try {
-		_effect = gs::effect::create(streamfx::data_file_path("effects/channel-mask.effect").u8string());
+		_effect = streamfx::obs::gs::effect::create(streamfx::data_file_path("effects/channel-mask.effect").u8string());
 	} catch (const std::exception& ex) {
 		DLOG_ERROR("Loading channel mask effect failed with error(s):\n%s", ex.what());
 	}
@@ -83,7 +83,7 @@ void dynamic_mask_instance::update(obs_data_t* settings)
 	// Update source.
 	try {
 		auto input   = std::make_shared<obs::deprecated_source>(obs_data_get_string(settings, ST_INPUT));
-		auto gctx    = gs::context();
+		auto gctx    = streamfx::obs::gs::context();
 		auto capture = std::make_shared<gfx::source_texture>(input, _self);
 
 		input->events.rename += std::bind(&dynamic_mask_instance::input_renamed, this, std::placeholders::_1,
@@ -212,8 +212,8 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 	}
 
 #ifdef ENABLE_PROFILING
-	gs::debug_marker gdmp{gs::debug_color_source, "Dynamic Mask '%s' on '%s'", obs_source_get_name(_self),
-						  obs_source_get_name(obs_filter_get_parent(_self))};
+	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Dynamic Mask '%s' on '%s'",
+										 obs_source_get_name(_self), obs_source_get_name(obs_filter_get_parent(_self))};
 #endif
 
 	gs_effect_t* default_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
@@ -221,7 +221,7 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 	try { // Capture filter and input
 		if (!_have_filter_texture) {
 #ifdef ENABLE_PROFILING
-			gs::debug_marker gdm{gs::debug_color_cache, "Cache"};
+			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_cache, "Cache"};
 #endif
 
 			if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
@@ -257,8 +257,8 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 
 		if (!_have_input_texture) {
 #ifdef ENABLE_PROFILING
-			gs::debug_marker gdm{gs::debug_color_capture, "Capture '%s'",
-								 obs_source_get_name(_input_capture->get_object())};
+			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_capture, "Capture '%s'",
+												obs_source_get_name(_input_capture->get_object())};
 #endif
 
 			_input_texture      = _input_capture->render(_input->width(), _input->height());
@@ -268,7 +268,7 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 		// Draw source
 		if (!_have_final_texture) {
 #ifdef ENABLE_PROFILING
-			gs::debug_marker gdm{gs::debug_color_convert, "Masking"};
+			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert, "Masking"};
 #endif
 
 			{
@@ -325,7 +325,7 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 	// Draw source
 	{
 #ifdef ENABLE_PROFILING
-		gs::debug_marker gdm{gs::debug_color_render, "Render"};
+		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_render, "Render"};
 #endif
 
 		// It is important that we do not modify the blend state here, as it is set correctly by OBS

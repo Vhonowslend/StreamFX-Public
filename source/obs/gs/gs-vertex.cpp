@@ -20,7 +20,7 @@
 #include "gs-vertex.hpp"
 #include <stdexcept>
 
-gs::vertex::vertex()
+streamfx::obs::gs::vertex::vertex()
 	: position(nullptr), normal(nullptr), tangent(nullptr), color(nullptr), _has_store(true), _store(nullptr)
 {
 	_store =
@@ -46,14 +46,14 @@ gs::vertex::vertex()
 	}
 }
 
-gs::vertex::~vertex()
+streamfx::obs::gs::vertex::~vertex()
 {
 	if (_has_store) {
 		streamfx::util::free_aligned(_store);
 	}
 }
 
-gs::vertex::vertex(vec3* p, vec3* n, vec3* t, uint32_t* col, vec4* uvs[MAXIMUM_UVW_LAYERS])
+streamfx::obs::gs::vertex::vertex(vec3* p, vec3* n, vec3* t, uint32_t* col, vec4* uvs[MAXIMUM_UVW_LAYERS])
 	: position(p), normal(n), tangent(t), color(col), _has_store(false)
 {
 	if (uvs != nullptr) {

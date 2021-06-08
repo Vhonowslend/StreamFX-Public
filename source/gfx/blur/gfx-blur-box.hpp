@@ -26,13 +26,13 @@
 namespace gfx {
 	namespace blur {
 		class box_data {
-			gs::effect _effect;
+			streamfx::obs::gs::effect _effect;
 
 			public:
 			box_data();
 			virtual ~box_data();
 
-			gs::effect get_effect();
+			streamfx::obs::gs::effect get_effect();
 		};
 
 		class box_factory : public ::gfx::blur::ifactory {
@@ -83,19 +83,19 @@ namespace gfx {
 			protected:
 			std::shared_ptr<::gfx::blur::box_data> _data;
 
-			double_t                            _size;
-			std::pair<double_t, double_t>       _step_scale;
-			std::shared_ptr<::gs::texture>      _input_texture;
-			std::shared_ptr<::gs::rendertarget> _rendertarget;
+			double_t                                           _size;
+			std::pair<double_t, double_t>                      _step_scale;
+			std::shared_ptr<::streamfx::obs::gs::texture>      _input_texture;
+			std::shared_ptr<::streamfx::obs::gs::rendertarget> _rendertarget;
 
 			private:
-			std::shared_ptr<::gs::rendertarget> _rendertarget2;
+			std::shared_ptr<::streamfx::obs::gs::rendertarget> _rendertarget2;
 
 			public:
 			box();
 			virtual ~box() override;
 
-			virtual void set_input(std::shared_ptr<::gs::texture> texture) override;
+			virtual void set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture) override;
 
 			virtual ::gfx::blur::type get_type() override;
 
@@ -107,8 +107,8 @@ namespace gfx {
 			virtual double_t get_step_scale_x() override;
 			virtual double_t get_step_scale_y() override;
 
-			virtual std::shared_ptr<::gs::texture> render() override;
-			virtual std::shared_ptr<::gs::texture> get() override;
+			virtual std::shared_ptr<::streamfx::obs::gs::texture> render() override;
+			virtual std::shared_ptr<::streamfx::obs::gs::texture> get() override;
 		};
 
 		class box_directional : public ::gfx::blur::box, public ::gfx::blur::base_angle {
@@ -122,7 +122,7 @@ namespace gfx {
 			virtual double_t get_angle() override;
 			virtual void     set_angle(double_t angle) override;
 
-			virtual std::shared_ptr<::gs::texture> render() override;
+			virtual std::shared_ptr<::streamfx::obs::gs::texture> render() override;
 		};
 
 		class box_rotational : public ::gfx::blur::box,
@@ -140,7 +140,7 @@ namespace gfx {
 			virtual double_t get_angle() override;
 			virtual void     set_angle(double_t angle) override;
 
-			virtual std::shared_ptr<::gs::texture> render() override;
+			virtual std::shared_ptr<::streamfx::obs::gs::texture> render() override;
 		};
 
 		class box_zoom : public ::gfx::blur::box, public ::gfx::blur::base_center {
@@ -152,7 +152,7 @@ namespace gfx {
 			virtual void set_center(double_t x, double_t y) override;
 			virtual void get_center(double_t& x, double_t& y) override;
 
-			virtual std::shared_ptr<::gs::texture> render() override;
+			virtual std::shared_ptr<::streamfx::obs::gs::texture> render() override;
 		};
 	} // namespace blur
 } // namespace gfx

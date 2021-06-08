@@ -27,13 +27,13 @@
 namespace gfx {
 	namespace blur {
 		class dual_filtering_data {
-			gs::effect _effect;
+			streamfx::obs::gs::effect _effect;
 
 			public:
 			dual_filtering_data();
 			virtual ~dual_filtering_data();
 
-			gs::effect get_effect();
+			streamfx::obs::gs::effect get_effect();
 		};
 
 		class dual_filtering_factory : public ::gfx::blur::ifactory {
@@ -86,15 +86,15 @@ namespace gfx {
 			double_t    _size;
 			std::size_t _size_iterations;
 
-			std::shared_ptr<gs::texture> _input_texture;
+			std::shared_ptr<streamfx::obs::gs::texture> _input_texture;
 
-			std::vector<std::shared_ptr<gs::rendertarget>> _rts;
+			std::vector<std::shared_ptr<streamfx::obs::gs::rendertarget>> _rts;
 
 			public:
 			dual_filtering();
 			virtual ~dual_filtering() override;
 
-			virtual void set_input(std::shared_ptr<::gs::texture> texture) override;
+			virtual void set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture) override;
 
 			virtual ::gfx::blur::type get_type() override;
 
@@ -106,9 +106,9 @@ namespace gfx {
 
 			virtual void get_step_scale(double_t& x, double_t& y) override;
 
-			virtual std::shared_ptr<::gs::texture> render() override;
+			virtual std::shared_ptr<::streamfx::obs::gs::texture> render() override;
 
-			virtual std::shared_ptr<::gs::texture> get() override;
+			virtual std::shared_ptr<::streamfx::obs::gs::texture> get() override;
 		};
 	} // namespace blur
 } // namespace gfx

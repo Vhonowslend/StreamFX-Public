@@ -143,8 +143,8 @@ void mirror_instance::video_render(gs_effect_t* effect)
 		return;
 
 #ifdef ENABLE_PROFILING
-	gs::debug_marker gdmp{gs::debug_color_source, "Source Mirror '%s' for '%s'", obs_source_get_name(_self),
-						  obs_source_get_name(_source.get())};
+	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Source Mirror '%s' for '%s'",
+										 obs_source_get_name(_self), obs_source_get_name(_source.get())};
 #endif
 
 	_source_size.first  = obs_source_get_width(_source.get());

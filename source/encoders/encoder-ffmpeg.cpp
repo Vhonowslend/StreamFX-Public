@@ -113,7 +113,7 @@ ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* self, bool
 		}
 
 #ifdef WIN32
-		auto gctx = gs::context();
+		auto gctx = streamfx::obs::gs::context();
 		if (gs_get_device_type() == GS_DEVICE_DIRECT3D_11) {
 			_hwapi = std::make_shared<::streamfx::ffmpeg::hwapi::d3d11>();
 		}
@@ -147,7 +147,7 @@ ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* self, bool
 	update(settings);
 
 	// Initialize Encoder
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 	int  res  = avcodec_open2(_context, _codec, NULL);
 	if (res < 0) {
 		throw std::runtime_error(::streamfx::ffmpeg::tools::get_error_description(res));
@@ -156,7 +156,7 @@ ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* self, bool
 
 ffmpeg_instance::~ffmpeg_instance()
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 	if (_context) {
 		// Flush encoders that require it.
 		if ((_codec->capabilities & AV_CODEC_CAP_DELAY) != 0) {
@@ -615,7 +615,7 @@ int ffmpeg_instance::receive_packet(bool* received_packet, struct encoder_packet
 	av_packet_unref(&_packet);
 
 	{
-		auto gctx = gs::context();
+		auto gctx = streamfx::obs::gs::context();
 		res       = avcodec_receive_packet(_context, &_packet);
 	}
 	if (res != 0) {
@@ -680,7 +680,7 @@ int ffmpeg_instance::send_frame(std::shared_ptr<AVFrame> const frame)
 {
 	int res = 0;
 	{
-		auto gctx = gs::context();
+		auto gctx = streamfx::obs::gs::context();
 		res       = avcodec_send_frame(_context, frame.get());
 	}
 	if (res == 0) {

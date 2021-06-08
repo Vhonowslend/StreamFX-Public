@@ -23,22 +23,22 @@
 #include <sys/stat.h>
 #include "obs/gs/gs-helper.hpp"
 
-static uint32_t decode_flags(gs::texture::flags texture_flags)
+static uint32_t decode_flags(streamfx::obs::gs::texture::flags texture_flags)
 {
 	uint32_t flags = 0;
-	if (has(texture_flags, gs::texture::flags::Dynamic))
+	if (has(texture_flags, streamfx::obs::gs::texture::flags::Dynamic))
 		flags |= GS_DYNAMIC;
-	if (has(texture_flags, gs::texture::flags::BuildMipMaps))
+	if (has(texture_flags, streamfx::obs::gs::texture::flags::BuildMipMaps))
 		flags |= GS_BUILD_MIPMAPS;
-	if (has(texture_flags, gs::texture::flags::Shared))
+	if (has(texture_flags, streamfx::obs::gs::texture::flags::Shared))
 		flags |= GS_SHARED_TEX;
-	if (has(texture_flags, gs::texture::flags::GlobalShared))
+	if (has(texture_flags, streamfx::obs::gs::texture::flags::GlobalShared))
 		flags |= GS_SHARED_KM_TEX;
 	return flags;
 }
 
-gs::texture::texture(uint32_t width, uint32_t height, gs_color_format format, uint32_t mip_levels,
-					 const uint8_t** mip_data, gs::texture::flags texture_flags)
+streamfx::obs::gs::texture::texture(uint32_t width, uint32_t height, gs_color_format format, uint32_t mip_levels,
+									const uint8_t** mip_data, streamfx::obs::gs::texture::flags texture_flags)
 {
 	if (width == 0)
 		throw std::logic_error("width must be at least 1");
@@ -54,7 +54,7 @@ gs::texture::texture(uint32_t width, uint32_t height, gs_color_format format, ui
 	}
 
 	{
-		auto gctx = gs::context();
+		auto gctx = streamfx::obs::gs::context();
 		_texture  = gs_texture_create(width, height, format, mip_levels, mip_data, decode_flags(texture_flags));
 	}
 
@@ -64,8 +64,9 @@ gs::texture::texture(uint32_t width, uint32_t height, gs_color_format format, ui
 	_type = type::Normal;
 }
 
-gs::texture::texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_format format, uint32_t mip_levels,
-					 const uint8_t** mip_data, gs::texture::flags texture_flags)
+streamfx::obs::gs::texture::texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_format format,
+									uint32_t mip_levels, const uint8_t** mip_data,
+									streamfx::obs::gs::texture::flags texture_flags)
 {
 	if (width == 0)
 		throw std::logic_error("width must be at least 1");
@@ -86,7 +87,7 @@ gs::texture::texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_f
 	}
 
 	{
-		auto gctx = gs::context();
+		auto gctx = streamfx::obs::gs::context();
 		_texture =
 			gs_voltexture_create(width, height, depth, format, mip_levels, mip_data, decode_flags(texture_flags));
 	}
@@ -97,8 +98,8 @@ gs::texture::texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_f
 	_type = type::Volume;
 }
 
-gs::texture::texture(uint32_t size, gs_color_format format, uint32_t mip_levels, const uint8_t** mip_data,
-					 gs::texture::flags texture_flags)
+streamfx::obs::gs::texture::texture(uint32_t size, gs_color_format format, uint32_t mip_levels,
+									const uint8_t** mip_data, streamfx::obs::gs::texture::flags texture_flags)
 {
 	if (size == 0)
 		throw std::logic_error("size must be at least 1");
@@ -112,7 +113,7 @@ gs::texture::texture(uint32_t size, gs_color_format format, uint32_t mip_levels,
 	}
 
 	{
-		auto gctx = gs::context();
+		auto gctx = streamfx::obs::gs::context();
 		_texture  = gs_cubetexture_create(size, format, mip_levels, mip_data, decode_flags(texture_flags));
 	}
 
@@ -122,23 +123,23 @@ gs::texture::texture(uint32_t size, gs_color_format format, uint32_t mip_levels,
 	_type = type::Cube;
 }
 
-gs::texture::texture(std::string file)
+streamfx::obs::gs::texture::texture(std::string file)
 {
 	struct stat st;
 	if (os_stat(file.c_str(), &st) != 0)
 		throw std::ios_base::failure(file);
 
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 	_texture  = gs_texture_create_from_file(file.c_str());
 
 	if (!_texture)
 		throw std::runtime_error("Failed to load texture.");
 }
 
-gs::texture::~texture()
+streamfx::obs::gs::texture::~texture()
 {
 	if (_is_owner && _texture) {
-		auto gctx = gs::context();
+		auto gctx = streamfx::obs::gs::context();
 		switch (gs_get_texture_type(_texture)) {
 		case GS_TEXTURE_2D:
 			gs_texture_destroy(_texture);
@@ -154,18 +155,18 @@ gs::texture::~texture()
 	_texture = nullptr;
 }
 
-void gs::texture::load(int32_t unit)
+void streamfx::obs::gs::texture::load(int32_t unit)
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 	gs_load_texture(_texture, unit);
 }
 
-gs_texture_t* gs::texture::get_object()
+gs_texture_t* streamfx::obs::gs::texture::get_object()
 {
 	return _texture;
 }
 
-uint32_t gs::texture::get_width()
+uint32_t streamfx::obs::gs::texture::get_width()
 {
 	switch (_type) {
 	case type::Normal:
@@ -178,7 +179,7 @@ uint32_t gs::texture::get_width()
 	return 0;
 }
 
-uint32_t gs::texture::get_height()
+uint32_t streamfx::obs::gs::texture::get_height()
 {
 	switch (_type) {
 	case type::Normal:
@@ -191,7 +192,7 @@ uint32_t gs::texture::get_height()
 	return 0;
 }
 
-uint32_t gs::texture::get_depth()
+uint32_t streamfx::obs::gs::texture::get_depth()
 {
 	switch (_type) {
 	case type::Normal:
@@ -204,12 +205,12 @@ uint32_t gs::texture::get_depth()
 	return 0;
 }
 
-gs::texture::type gs::texture::get_type()
+streamfx::obs::gs::texture::type streamfx::obs::gs::texture::get_type()
 {
 	return _type;
 }
 
-gs_color_format gs::texture::get_color_format()
+gs_color_format streamfx::obs::gs::texture::get_color_format()
 {
 	return gs_texture_get_color_format(_texture);
 }

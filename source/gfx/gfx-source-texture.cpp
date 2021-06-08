@@ -35,7 +35,7 @@ gfx::source_texture::source_texture(obs_source_t* parent)
 		throw std::invalid_argument("_parent must not be null");
 	}
 	_parent = std::make_shared<streamfx::obs::deprecated_source>(parent, false, false);
-	_rt     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_rt     = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
 gfx::source_texture::source_texture(obs_source_t* _source, obs_source_t* _parent) : source_texture(_parent)
@@ -77,7 +77,7 @@ gfx::source_texture::source_texture(std::shared_ptr<streamfx::obs::deprecated_so
 	}
 	this->_child  = pchild;
 	this->_parent = pparent;
-	this->_rt     = std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	this->_rt     = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
 
 gfx::source_texture::source_texture(std::shared_ptr<streamfx::obs::deprecated_source> _child, obs_source_t* _parent)
@@ -106,7 +106,7 @@ void gfx::source_texture::clear()
 	_child.reset();
 }
 
-std::shared_ptr<gs::texture> gfx::source_texture::render(std::size_t width, std::size_t height)
+std::shared_ptr<streamfx::obs::gs::texture> gfx::source_texture::render(std::size_t width, std::size_t height)
 {
 	if ((width == 0) || (width >= 16384)) {
 		throw std::runtime_error("Width too large or too small.");
@@ -120,8 +120,8 @@ std::shared_ptr<gs::texture> gfx::source_texture::render(std::size_t width, std:
 
 	if (_child) {
 #ifdef ENABLE_PROFILING
-		auto cctr =
-			gs::debug_marker(gs::debug_color_capture, "gfx::source_texture '%s'", obs_source_get_name(_child->get()));
+		auto cctr = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_capture, "gfx::source_texture '%s'",
+													obs_source_get_name(_child->get()));
 #endif
 		auto op = _rt->render(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 		vec4 black;
@@ -131,7 +131,7 @@ std::shared_ptr<gs::texture> gfx::source_texture::render(std::size_t width, std:
 		obs_source_video_render(_child->get());
 	}
 
-	std::shared_ptr<gs::texture> tex;
+	std::shared_ptr<streamfx::obs::gs::texture> tex;
 	_rt->get_texture(tex);
 	return tex;
 }
