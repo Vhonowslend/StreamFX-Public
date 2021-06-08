@@ -131,10 +131,10 @@ void amf_h264_handler::log_options(obs_data_t* settings, const AVCodec* codec, A
 	amf::log_options(settings, codec, context);
 
 	DLOG_INFO("[%s]     H.264/AVC:", codec->name);
-	::ffmpeg::tools::print_av_option_string2(context, context->priv_data, "profile", "      Profile",
-											 [](int64_t v, std::string_view o) { return std::string(o); });
-	::ffmpeg::tools::print_av_option_string2(context, context->priv_data, "level", "      Level",
-											 [](int64_t v, std::string_view o) { return std::string(o); });
+	::streamfx::ffmpeg::tools::print_av_option_string2(context, context->priv_data, "profile", "      Profile",
+													   [](int64_t v, std::string_view o) { return std::string(o); });
+	::streamfx::ffmpeg::tools::print_av_option_string2(context, context->priv_data, "level", "      Level",
+													   [](int64_t v, std::string_view o) { return std::string(o); });
 }
 
 void amf_h264_handler::get_encoder_properties(obs_properties_t* props, const AVCodec* codec)

@@ -35,7 +35,7 @@ extern "C" {
 #endif
 }
 
-namespace ffmpeg::tools {
+namespace streamfx::ffmpeg::tools {
 	const char* get_pixel_format_name(AVPixelFormat v);
 
 	const char* get_color_space_name(AVColorSpace v);
@@ -80,4 +80,4 @@ namespace ffmpeg::tools {
 	void print_av_option_string2(AVCodecContext* ctx_codec, void* ctx_option, std::string_view option,
 								 std::string_view text, std::function<std::string(int64_t, std::string_view)> decoder);
 
-} // namespace ffmpeg::tools
+} // namespace streamfx::ffmpeg::tools
