@@ -62,10 +62,10 @@ namespace gfx {
 			std::list<basic_enum_data> _values;
 
 			public:
-			basic_parameter(gs::effect_parameter param, std::string prefix);
+			basic_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix);
 			virtual ~basic_parameter();
 
-			virtual void load_parameter_data(gs::effect_parameter parameter, basic_data& data);
+			virtual void load_parameter_data(streamfx::obs::gs::effect_parameter parameter, basic_data& data);
 
 			public:
 			inline basic_field_type field_type()
@@ -98,7 +98,7 @@ namespace gfx {
 			std::vector<int32_t> _data;
 
 			public:
-			bool_parameter(gs::effect_parameter param, std::string prefix);
+			bool_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix);
 			virtual ~bool_parameter();
 
 			void defaults(obs_data_t* settings) override;
@@ -114,7 +114,7 @@ namespace gfx {
 			std::vector<basic_data> _data;
 
 			public:
-			float_parameter(gs::effect_parameter param, std::string prefix);
+			float_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix);
 			virtual ~float_parameter();
 
 			void defaults(obs_data_t* settings) override;
@@ -130,7 +130,7 @@ namespace gfx {
 			std::vector<basic_data> _data;
 
 			public:
-			int_parameter(gs::effect_parameter param, std::string prefix);
+			int_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix);
 			virtual ~int_parameter();
 
 			void defaults(obs_data_t* settings) override;

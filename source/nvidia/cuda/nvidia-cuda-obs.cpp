@@ -39,7 +39,7 @@ nvidia::cuda::obs::~obs()
 {
 	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
 
-	auto gctx = gs::context{};
+	auto gctx = streamfx::obs::gs::context{};
 	{
 		auto stack = _context->enter();
 		_stream->synchronize();
@@ -53,7 +53,7 @@ nvidia::cuda::obs::obs() : _cuda(::nvidia::cuda::cuda::get()), _context()
 {
 	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
 
-	auto gctx = gs::context{};
+	auto gctx = streamfx::obs::gs::context{};
 
 	// Create Context
 #ifdef WIN32

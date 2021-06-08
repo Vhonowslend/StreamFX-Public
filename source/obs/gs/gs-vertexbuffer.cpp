@@ -21,7 +21,7 @@
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
 
-void gs::vertex_buffer::initialize(uint32_t capacity, uint8_t layers)
+void streamfx::obs::gs::vertex_buffer::initialize(uint32_t capacity, uint8_t layers)
 {
 	finalize();
 
@@ -62,11 +62,11 @@ void gs::vertex_buffer::initialize(uint32_t capacity, uint8_t layers)
 
 	// Allocate actual GPU vertex buffer.
 	{
-		auto gctx = gs::context();
+		auto gctx = streamfx::obs::gs::context();
 		_buffer   = decltype(_buffer)(gs_vertexbuffer_create(_data.get(), GS_DYNAMIC | GS_DUP_BUFFER),
                                     [this](gs_vertbuffer_t* v) {
                                         try {
-                                            auto gctx = gs::context();
+                                            auto gctx = streamfx::obs::gs::context();
                                             gs_vertexbuffer_destroy(v);
                                         } catch (...) {
                                             if (obs_get_version() < MAKE_SEMANTIC_VERSION(26, 0, 0)) {
@@ -83,7 +83,7 @@ void gs::vertex_buffer::initialize(uint32_t capacity, uint8_t layers)
 	}
 }
 
-void gs::vertex_buffer::finalize()
+void streamfx::obs::gs::vertex_buffer::finalize()
 {
 	// Free data
 	streamfx::util::free_aligned(_positions);
@@ -99,12 +99,12 @@ void gs::vertex_buffer::finalize()
 	_data.reset();
 }
 
-gs::vertex_buffer::~vertex_buffer()
+streamfx::obs::gs::vertex_buffer::~vertex_buffer()
 {
 	finalize();
 }
 
-gs::vertex_buffer::vertex_buffer(uint32_t size, uint8_t layers)
+streamfx::obs::gs::vertex_buffer::vertex_buffer(uint32_t size, uint8_t layers)
 	: _capacity(size), _size(size), _layers(layers),
 
 	  _buffer(nullptr), _data(nullptr),
@@ -116,7 +116,7 @@ gs::vertex_buffer::vertex_buffer(uint32_t size, uint8_t layers)
 	initialize(_size, _layers);
 }
 
-gs::vertex_buffer::vertex_buffer(gs_vertbuffer_t* vb)
+streamfx::obs::gs::vertex_buffer::vertex_buffer(gs_vertbuffer_t* vb)
 	: _capacity(0), _size(0), _layers(0),
 
 	  _buffer(nullptr), _data(nullptr),
@@ -125,7 +125,7 @@ gs::vertex_buffer::vertex_buffer(gs_vertbuffer_t* vb)
 
 	  _obs_data(nullptr)
 {
-	auto        gctx = gs::context();
+	auto        gctx = streamfx::obs::gs::context();
 	gs_vb_data* vbd  = gs_vertexbuffer_get_data(vb);
 	if (!vbd)
 		throw std::runtime_error("vertex buffer with no data");
@@ -157,7 +157,8 @@ gs::vertex_buffer::vertex_buffer(gs_vertbuffer_t* vb)
 	}
 }
 
-gs::vertex_buffer::vertex_buffer(vertex_buffer const& other) : vertex_buffer(other._capacity, other._layers)
+streamfx::obs::gs::vertex_buffer::vertex_buffer(vertex_buffer const& other)
+	: vertex_buffer(other._capacity, other._layers)
 { // Copy Constructor
 	memcpy(_positions, other._positions, _capacity * sizeof(vec3));
 	memcpy(_normals, other._normals, _capacity * sizeof(vec3));
@@ -168,7 +169,7 @@ gs::vertex_buffer::vertex_buffer(vertex_buffer const& other) : vertex_buffer(oth
 	}
 }
 
-void gs::vertex_buffer::operator=(vertex_buffer const& other)
+void streamfx::obs::gs::vertex_buffer::operator=(vertex_buffer const& other)
 { // Copy operator
 	initialize(other._capacity, other._layers);
 	_size = other._size;
@@ -184,7 +185,7 @@ void gs::vertex_buffer::operator=(vertex_buffer const& other)
 	}
 }
 
-gs::vertex_buffer::vertex_buffer(vertex_buffer const&& other) noexcept
+streamfx::obs::gs::vertex_buffer::vertex_buffer(vertex_buffer const&& other) noexcept
 { // Move Constructor
 	_capacity  = other._capacity;
 	_size      = other._size;
@@ -202,7 +203,7 @@ gs::vertex_buffer::vertex_buffer(vertex_buffer const&& other) noexcept
 	_obs_data = other._obs_data;
 }
 
-void gs::vertex_buffer::operator=(vertex_buffer const&& other)
+void streamfx::obs::gs::vertex_buffer::operator=(vertex_buffer const&& other)
 { // Move Assignment
 	finalize();
 
@@ -222,7 +223,7 @@ void gs::vertex_buffer::operator=(vertex_buffer const&& other)
 	_obs_data = other._obs_data;
 }
 
-void gs::vertex_buffer::resize(uint32_t size)
+void streamfx::obs::gs::vertex_buffer::resize(uint32_t size)
 {
 	if (size > _capacity) {
 		throw std::out_of_range("size larger than capacity");
@@ -230,70 +231,70 @@ void gs::vertex_buffer::resize(uint32_t size)
 	_size = size;
 }
 
-uint32_t gs::vertex_buffer::size()
+uint32_t streamfx::obs::gs::vertex_buffer::size()
 {
 	return _size;
 }
 
-uint32_t gs::vertex_buffer::capacity()
+uint32_t streamfx::obs::gs::vertex_buffer::capacity()
 {
 	return _capacity;
 }
 
-bool gs::vertex_buffer::empty()
+bool streamfx::obs::gs::vertex_buffer::empty()
 {
 	return _size == 0;
 }
 
-const gs::vertex gs::vertex_buffer::at(uint32_t idx)
+const streamfx::obs::gs::vertex streamfx::obs::gs::vertex_buffer::at(uint32_t idx)
 {
 	if (idx >= _size) {
 		throw std::out_of_range("idx out of range");
 	}
 
-	gs::vertex vtx(&_positions[idx], &_normals[idx], &_tangents[idx], &_colors[idx], nullptr);
+	streamfx::obs::gs::vertex vtx(&_positions[idx], &_normals[idx], &_tangents[idx], &_colors[idx], nullptr);
 	for (std::size_t n = 0; n < _layers; n++) {
 		vtx.uv[n] = &_uvs[n][idx];
 	}
 	return vtx;
 }
 
-const gs::vertex gs::vertex_buffer::operator[](uint32_t const pos)
+const streamfx::obs::gs::vertex streamfx::obs::gs::vertex_buffer::operator[](uint32_t const pos)
 {
 	return at(pos);
 }
 
-void gs::vertex_buffer::set_uv_layers(uint8_t layers)
+void streamfx::obs::gs::vertex_buffer::set_uv_layers(uint8_t layers)
 {
 	_layers = layers;
 }
 
-uint8_t gs::vertex_buffer::get_uv_layers()
+uint8_t streamfx::obs::gs::vertex_buffer::get_uv_layers()
 {
 	return _layers;
 }
 
-vec3* gs::vertex_buffer::get_positions()
+vec3* streamfx::obs::gs::vertex_buffer::get_positions()
 {
 	return _positions;
 }
 
-vec3* gs::vertex_buffer::get_normals()
+vec3* streamfx::obs::gs::vertex_buffer::get_normals()
 {
 	return _normals;
 }
 
-vec3* gs::vertex_buffer::get_tangents()
+vec3* streamfx::obs::gs::vertex_buffer::get_tangents()
 {
 	return _tangents;
 }
 
-uint32_t* gs::vertex_buffer::get_colors()
+uint32_t* streamfx::obs::gs::vertex_buffer::get_colors()
 {
 	return _colors;
 }
 
-vec4* gs::vertex_buffer::get_uv_layer(uint8_t idx)
+vec4* streamfx::obs::gs::vertex_buffer::get_uv_layer(uint8_t idx)
 {
 	if (idx >= _layers) {
 		throw std::out_of_range("idx out of range");
@@ -301,17 +302,17 @@ vec4* gs::vertex_buffer::get_uv_layer(uint8_t idx)
 	return _uvs[idx];
 }
 
-gs_vertbuffer_t* gs::vertex_buffer::update(bool refreshGPU)
+gs_vertbuffer_t* streamfx::obs::gs::vertex_buffer::update(bool refreshGPU)
 {
 	if (refreshGPU) {
-		auto gctx = gs::context();
+		auto gctx = streamfx::obs::gs::context();
 		gs_vertexbuffer_flush_direct(_buffer.get(), _data.get());
 		_obs_data = gs_vertexbuffer_get_data(_buffer.get());
 	}
 	return _buffer.get();
 }
 
-gs_vertbuffer_t* gs::vertex_buffer::update()
+gs_vertbuffer_t* streamfx::obs::gs::vertex_buffer::update()
 {
 	return update(true);
 }

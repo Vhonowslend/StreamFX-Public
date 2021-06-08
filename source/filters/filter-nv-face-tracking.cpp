@@ -73,9 +73,9 @@ face_tracking_instance::face_tracking_instance(obs_data_t* settings, obs_source_
 #endif
 
 	{ // Create render target, vertex buffer, and CUDA stream.
-		auto gctx    = gs::context{};
-		_rt          = std::make_shared<gs::rendertarget>(GS_RGBA_UNORM, GS_ZS_NONE);
-		_geometry    = std::make_shared<gs::vertex_buffer>(uint32_t(4), uint8_t(1));
+		auto gctx    = streamfx::obs::gs::context{};
+		_rt          = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA_UNORM, GS_ZS_NONE);
+		_geometry    = std::make_shared<streamfx::obs::gs::vertex_buffer>(uint32_t(4), uint8_t(1));
 		auto cctx    = _cuda->get_context()->enter();
 		_cuda_stream = std::make_shared<::nvidia::cuda::stream>(::nvidia::cuda::stream_flags::NON_BLOCKING, 0);
 	}
@@ -137,8 +137,8 @@ void face_tracking_instance::async_initialize(std::shared_ptr<void> ptr)
 		}
 
 		// Update the current CUDA context for working.
-		gs::context gctx;
-		auto        cctx = _cuda->get_context()->enter();
+		streamfx::obs::gs::context gctx;
+		auto                       cctx = _cuda->get_context()->enter();
 
 		// Create Face Detection feature.
 		{
@@ -215,7 +215,7 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 			return; // Can't track a new frame right now.
 
 #ifdef ENABLE_PROFILING
-		gs::debug_marker gdm{gs::debug_color_convert, "Start Asynchronous Tracking"};
+		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert, "Start Asynchronous Tracking"};
 #endif
 
 		// Don't push additional tracking frames while processing one.
@@ -229,18 +229,20 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 		// Check if things exist as planned.
 		if (!_ar_texture || (_ar_texture->get_width() != _size.first) || (_ar_texture->get_height() != _size.second)) {
 #ifdef ENABLE_PROFILING
-			auto             prof = _profile_capture_realloc->track();
-			gs::debug_marker marker{gs::debug_color_allocate, "Reallocate GPU Buffer"};
+			auto                            prof = _profile_capture_realloc->track();
+			streamfx::obs::gs::debug_marker marker{streamfx::obs::gs::debug_color_allocate, "Reallocate GPU Buffer"};
 #endif
-			_ar_texture = std::make_shared<gs::texture>(_size.first, _size.second, GS_RGBA_UNORM, uint32_t(1), nullptr,
-														gs::texture::flags::None);
+			_ar_texture =
+				std::make_shared<streamfx::obs::gs::texture>(_size.first, _size.second, GS_RGBA_UNORM, uint32_t(1),
+															 nullptr, streamfx::obs::gs::texture::flags::None);
 			_ar_texture_cuda_fresh = false;
 		}
 
 		{ // Copy texture
 #ifdef ENABLE_PROFILING
-			auto             prof = _profile_capture_copy->track();
-			gs::debug_marker marker{gs::debug_color_copy, "Copy Capture", obs_source_get_name(_self)};
+			auto                            prof = _profile_capture_copy->track();
+			streamfx::obs::gs::debug_marker marker{streamfx::obs::gs::debug_color_copy, "Copy Capture",
+												   obs_source_get_name(_self)};
 #endif
 			gs_copy_texture(_ar_texture->get_object(), _rt->get_texture()->get_object());
 		}
@@ -263,7 +265,7 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 		}
 
 		// Acquire GS context.
-		gs::context gctx{};
+		streamfx::obs::gs::context gctx{};
 
 		// Update the current CUDA context for working.
 		auto cctx = _cuda->get_context()->enter();
@@ -271,9 +273,9 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 		// Refresh any now broken buffers.
 		if (!_ar_texture_cuda_fresh) {
 #ifdef ENABLE_PROFILING
-			auto             prof = _profile_ar_realloc->track();
-			gs::debug_marker marker{gs::debug_color_allocate, "%s: Reallocate CUDA Buffers",
-									obs_source_get_name(_self)};
+			auto                            prof = _profile_ar_realloc->track();
+			streamfx::obs::gs::debug_marker marker{streamfx::obs::gs::debug_color_allocate,
+												   "%s: Reallocate CUDA Buffers", obs_source_get_name(_self)};
 #endif
 			// Assign new texture and allocate new memory.
 			std::size_t pitch    = _ar_texture->get_width() * 4ul;
@@ -537,8 +539,10 @@ void face_tracking_instance::video_render(gs_effect_t*)
 	}
 
 #ifdef ENABLE_PROFILING
-	gs::debug_marker gdmp{gs::debug_color_source, "NVIDIA Face Tracking '%s'...", obs_source_get_name(_self)};
-	gs::debug_marker gdmp2{gs::debug_color_source, "... on '%s'", obs_source_get_name(obs_filter_get_parent(_self))};
+	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "NVIDIA Face Tracking '%s'...",
+										 obs_source_get_name(_self)};
+	streamfx::obs::gs::debug_marker gdmp2{streamfx::obs::gs::debug_color_source, "... on '%s'",
+										  obs_source_get_name(obs_filter_get_parent(_self))};
 #endif
 
 	if (!_rt_is_fresh) { // Capture the filter stack "below" us.
@@ -548,7 +552,7 @@ void face_tracking_instance::video_render(gs_effect_t*)
 
 		{
 #ifdef ENABLE_PROFILING
-			gs::debug_marker gdm{gs::debug_color_cache, "Cache"};
+			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_cache, "Cache"};
 #endif
 
 			if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_NO_DIRECT_RENDERING)) {
@@ -577,7 +581,7 @@ void face_tracking_instance::video_render(gs_effect_t*)
 
 	{ // Draw Texture
 #ifdef ENABLE_PROFILING
-		gs::debug_marker gdm{gs::debug_color_render, "Render"};
+		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_render, "Render"};
 #endif
 
 		gs_effect_set_texture(gs_effect_get_param_by_name(default_effect, "image"), _rt->get_texture()->get_object());

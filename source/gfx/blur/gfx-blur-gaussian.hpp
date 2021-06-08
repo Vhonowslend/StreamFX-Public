@@ -27,14 +27,14 @@
 namespace gfx {
 	namespace blur {
 		class gaussian_data {
-			gs::effect                        _effect;
+			streamfx::obs::gs::effect         _effect;
 			std::vector<std::vector<float_t>> _kernels;
 
 			public:
 			gaussian_data();
 			virtual ~gaussian_data();
 
-			gs::effect get_effect();
+			streamfx::obs::gs::effect get_effect();
 
 			std::vector<float_t> const& get_kernel(std::size_t width);
 		};
@@ -87,19 +87,19 @@ namespace gfx {
 			protected:
 			std::shared_ptr<::gfx::blur::gaussian_data> _data;
 
-			double_t                            _size;
-			std::pair<double_t, double_t>       _step_scale;
-			std::shared_ptr<::gs::texture>      _input_texture;
-			std::shared_ptr<::gs::rendertarget> _rendertarget;
+			double_t                                           _size;
+			std::pair<double_t, double_t>                      _step_scale;
+			std::shared_ptr<::streamfx::obs::gs::texture>      _input_texture;
+			std::shared_ptr<::streamfx::obs::gs::rendertarget> _rendertarget;
 
 			private:
-			std::shared_ptr<::gs::rendertarget> _rendertarget2;
+			std::shared_ptr<::streamfx::obs::gs::rendertarget> _rendertarget2;
 
 			public:
 			gaussian();
 			virtual ~gaussian() override;
 
-			virtual void set_input(std::shared_ptr<::gs::texture> texture) override;
+			virtual void set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture) override;
 
 			virtual ::gfx::blur::type get_type() override;
 
@@ -115,9 +115,9 @@ namespace gfx {
 
 			virtual double_t get_step_scale_y() override;
 
-			virtual std::shared_ptr<::gs::texture> render() override;
+			virtual std::shared_ptr<::streamfx::obs::gs::texture> render() override;
 
-			virtual std::shared_ptr<::gs::texture> get() override;
+			virtual std::shared_ptr<::streamfx::obs::gs::texture> get() override;
 		};
 
 		class gaussian_directional : public ::gfx::blur::gaussian, public ::gfx::blur::base_angle {
@@ -132,7 +132,7 @@ namespace gfx {
 			virtual double_t get_angle() override;
 			virtual void     set_angle(double_t angle) override;
 
-			virtual std::shared_ptr<::gs::texture> render() override;
+			virtual std::shared_ptr<::streamfx::obs::gs::texture> render() override;
 		};
 
 		class gaussian_rotational : public ::gfx::blur::gaussian,
@@ -150,7 +150,7 @@ namespace gfx {
 			virtual double_t get_angle() override;
 			virtual void     set_angle(double_t angle) override;
 
-			virtual std::shared_ptr<::gs::texture> render() override;
+			virtual std::shared_ptr<::streamfx::obs::gs::texture> render() override;
 		};
 
 		class gaussian_zoom : public ::gfx::blur::gaussian, public ::gfx::blur::base_center {
@@ -162,7 +162,7 @@ namespace gfx {
 			virtual void set_center(double_t x, double_t y) override;
 			virtual void get_center(double_t& x, double_t& y) override;
 
-			virtual std::shared_ptr<::gs::texture> render() override;
+			virtual std::shared_ptr<::streamfx::obs::gs::texture> render() override;
 		};
 	} // namespace blur
 } // namespace gfx

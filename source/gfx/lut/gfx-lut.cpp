@@ -46,12 +46,12 @@ std::shared_ptr<gfx::lut::data> gfx::lut::data::instance()
 
 gfx::lut::data::data() : _producer_effect(), _consumer_effect()
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 
 	std::filesystem::path lut_producer_path = streamfx::data_file_path("effects/lut-producer.effect");
 	if (std::filesystem::exists(lut_producer_path)) {
 		try {
-			_producer_effect = std::make_shared<gs::effect>(lut_producer_path);
+			_producer_effect = std::make_shared<streamfx::obs::gs::effect>(lut_producer_path);
 		} catch (std::exception const& ex) {
 			DLOG_ERROR(LOCAL_PREFIX "Loading LUT Producer effect failed: %s", ex.what());
 		}
@@ -60,7 +60,7 @@ gfx::lut::data::data() : _producer_effect(), _consumer_effect()
 	std::filesystem::path lut_consumer_path = streamfx::data_file_path("effects/lut-consumer.effect");
 	if (std::filesystem::exists(lut_consumer_path)) {
 		try {
-			_consumer_effect = std::make_shared<gs::effect>(lut_consumer_path);
+			_consumer_effect = std::make_shared<streamfx::obs::gs::effect>(lut_consumer_path);
 		} catch (std::exception const& ex) {
 			DLOG_ERROR(LOCAL_PREFIX "Loading LUT Consumer effect failed: %s", ex.what());
 		}
@@ -69,7 +69,7 @@ gfx::lut::data::data() : _producer_effect(), _consumer_effect()
 
 gfx::lut::data::~data()
 {
-	auto gctx = gs::context();
+	auto gctx = streamfx::obs::gs::context();
 	_producer_effect.reset();
 	_consumer_effect.reset();
 }

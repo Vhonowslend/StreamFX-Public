@@ -21,7 +21,7 @@
 #include "common.hpp"
 #include "gs-effect-parameter.hpp"
 
-namespace gs {
+namespace streamfx::obs::gs {
 	class effect_pass : public std::shared_ptr<gs_epass_t> {
 		std::shared_ptr<gs_technique_t> _parent;
 
@@ -35,16 +35,16 @@ namespace gs {
 		//gs::shader get_vertex_shader();
 		//
 
-		std::size_t          count_vertex_parameters();
-		gs::effect_parameter get_vertex_parameter(std::size_t idx);
-		gs::effect_parameter get_vertex_parameter(std::string name);
-		bool                 has_vertex_parameter(std::string name);
-		bool                 has_vertex_parameter(std::string name, gs::effect_parameter::type type);
+		std::size_t                         count_vertex_parameters();
+		streamfx::obs::gs::effect_parameter get_vertex_parameter(std::size_t idx);
+		streamfx::obs::gs::effect_parameter get_vertex_parameter(std::string name);
+		bool                                has_vertex_parameter(std::string name);
+		bool has_vertex_parameter(std::string name, streamfx::obs::gs::effect_parameter::type type);
 
-		std::size_t          count_pixel_parameters();
-		gs::effect_parameter get_pixel_parameter(std::size_t idx);
-		gs::effect_parameter get_pixel_parameter(std::string name);
-		bool                 has_pixel_parameter(std::string name);
-		bool                 has_pixel_parameter(std::string name, gs::effect_parameter::type type);
+		std::size_t                         count_pixel_parameters();
+		streamfx::obs::gs::effect_parameter get_pixel_parameter(std::size_t idx);
+		streamfx::obs::gs::effect_parameter get_pixel_parameter(std::string name);
+		bool                                has_pixel_parameter(std::string name);
+		bool has_pixel_parameter(std::string name, streamfx::obs::gs::effect_parameter::type type);
 	};
-} // namespace gs
+} // namespace streamfx::obs::gs

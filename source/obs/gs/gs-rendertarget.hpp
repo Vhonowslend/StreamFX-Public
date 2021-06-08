@@ -21,7 +21,7 @@
 #include "common.hpp"
 #include "gs-texture.hpp"
 
-namespace gs {
+namespace streamfx::obs::gs {
 	class rendertarget_op;
 
 	class rendertarget {
@@ -41,35 +41,35 @@ namespace gs {
 
 		gs_texture_t* get_object();
 
-		std::shared_ptr<gs::texture> get_texture();
+		std::shared_ptr<streamfx::obs::gs::texture> get_texture();
 
-		void get_texture(gs::texture& tex);
+		void get_texture(streamfx::obs::gs::texture& tex);
 
-		void get_texture(std::shared_ptr<gs::texture>& tex);
+		void get_texture(std::shared_ptr<streamfx::obs::gs::texture>& tex);
 
-		void get_texture(std::unique_ptr<gs::texture>& tex);
+		void get_texture(std::unique_ptr<streamfx::obs::gs::texture>& tex);
 
 		gs_color_format get_color_format();
 
 		gs_zstencil_format get_zstencil_format();
 
-		gs::rendertarget_op render(uint32_t width, uint32_t height);
+		streamfx::obs::gs::rendertarget_op render(uint32_t width, uint32_t height);
 	};
 
 	class rendertarget_op {
-		gs::rendertarget* parent;
+		streamfx::obs::gs::rendertarget* parent;
 
 		public:
 		~rendertarget_op();
 
-		rendertarget_op(gs::rendertarget* rt, uint32_t width, uint32_t height);
+		rendertarget_op(streamfx::obs::gs::rendertarget* rt, uint32_t width, uint32_t height);
 
 		// Move Constructor
-		rendertarget_op(gs::rendertarget_op&&);
+		rendertarget_op(streamfx::obs::gs::rendertarget_op&&);
 
 		// Copy Constructor
-		rendertarget_op(const gs::rendertarget_op&) = delete;
+		rendertarget_op(const streamfx::obs::gs::rendertarget_op&) = delete;
 
-		rendertarget_op& operator=(const gs::rendertarget_op& r) = delete;
+		rendertarget_op& operator=(const streamfx::obs::gs::rendertarget_op& r) = delete;
 	};
-} // namespace gs
+} // namespace streamfx::obs::gs

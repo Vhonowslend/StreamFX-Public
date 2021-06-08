@@ -42,7 +42,7 @@ gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
 
 	  _have_current_params(false), _time(0), _time_loop(0), _loops(0), _random(), _random_seed(0),
 
-	  _rt_up_to_date(false), _rt(std::make_shared<gs::rendertarget>(GS_RGBA, GS_ZS_NONE))
+	  _rt_up_to_date(false), _rt(std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE))
 {
 	// Intialize random values.
 	_random.seed(static_cast<unsigned long long>(_random_seed));
@@ -98,7 +98,7 @@ try {
 
 	// Update Shader
 	if (shader_dirty) {
-		_shader           = gs::effect(file);
+		_shader           = streamfx::obs::gs::effect(file);
 		_shader_file_mt   = std::filesystem::last_write_time(file);
 		_shader_file_sz   = std::filesystem::file_size(file);
 		_shader_file      = file;
@@ -470,8 +470,8 @@ void gfx::shader::shader::prepare_render()
 	}
 
 	// float4 Time: (Time in Seconds), (Time in Current Second), (Time in Seconds only), (Random Value)
-	if (gs::effect_parameter el = _shader.get_parameter("Time"); el != nullptr) {
-		if (el.get_type() == gs::effect_parameter::type::Float4) {
+	if (streamfx::obs::gs::effect_parameter el = _shader.get_parameter("Time"); el != nullptr) {
+		if (el.get_type() == streamfx::obs::gs::effect_parameter::type::Float4) {
 			el.set_float4(
 				_time, _time_loop, static_cast<float_t>(_loops),
 				static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max())));
@@ -480,7 +480,7 @@ void gfx::shader::shader::prepare_render()
 
 	// float4 ViewSize: (Width), (Height), (1.0 / Width), (1.0 / Height)
 	if (auto el = _shader.get_parameter("ViewSize"); el != nullptr) {
-		if (el.get_type() == gs::effect_parameter::type::Float4) {
+		if (el.get_type() == streamfx::obs::gs::effect_parameter::type::Float4) {
 			el.set_float4(static_cast<float_t>(width()), static_cast<float_t>(height()),
 						  1.0f / static_cast<float_t>(width()), 1.0f / static_cast<float_t>(height()));
 		}
@@ -488,14 +488,14 @@ void gfx::shader::shader::prepare_render()
 
 	// float4x4 Random: float4[Per-Instance Random], float4[Per-Activation Random], float4x2[Per-Frame Random]
 	if (auto el = _shader.get_parameter("Random"); el != nullptr) {
-		if (el.get_type() == gs::effect_parameter::type::Matrix) {
+		if (el.get_type() == streamfx::obs::gs::effect_parameter::type::Matrix) {
 			el.set_value(_random_values, 16);
 		}
 	}
 
 	// int32 RandomSeed: Seed used for random generation
 	if (auto el = _shader.get_parameter("RandomSeed"); el != nullptr) {
-		if (el.get_type() == gs::effect_parameter::type::Integer) {
+		if (el.get_type() == streamfx::obs::gs::effect_parameter::type::Integer) {
 			el.set_int(_random_seed);
 		}
 	}
@@ -544,7 +544,7 @@ void gfx::shader::shader::set_size(uint32_t w, uint32_t h)
 	_base_height = h;
 }
 
-void gfx::shader::shader::set_input_a(std::shared_ptr<gs::texture> tex)
+void gfx::shader::shader::set_input_a(std::shared_ptr<streamfx::obs::gs::texture> tex)
 {
 	if (!_shader)
 		return;
@@ -555,8 +555,8 @@ void gfx::shader::shader::set_input_a(std::shared_ptr<gs::texture> tex)
 		"tex_a",
 	};
 	for (auto& name : params) {
-		if (gs::effect_parameter el = _shader.get_parameter(name.data()); el != nullptr) {
-			if (el.get_type() == gs::effect_parameter::type::Texture) {
+		if (streamfx::obs::gs::effect_parameter el = _shader.get_parameter(name.data()); el != nullptr) {
+			if (el.get_type() == streamfx::obs::gs::effect_parameter::type::Texture) {
 				el.set_texture(tex);
 				break;
 			}
@@ -564,7 +564,7 @@ void gfx::shader::shader::set_input_a(std::shared_ptr<gs::texture> tex)
 	}
 }
 
-void gfx::shader::shader::set_input_b(std::shared_ptr<gs::texture> tex)
+void gfx::shader::shader::set_input_b(std::shared_ptr<streamfx::obs::gs::texture> tex)
 {
 	if (!_shader)
 		return;
@@ -575,8 +575,8 @@ void gfx::shader::shader::set_input_b(std::shared_ptr<gs::texture> tex)
 		"tex_b",
 	};
 	for (auto& name : params) {
-		if (gs::effect_parameter el = _shader.get_parameter(name.data()); el != nullptr) {
-			if (el.get_type() == gs::effect_parameter::type::Texture) {
+		if (streamfx::obs::gs::effect_parameter el = _shader.get_parameter(name.data()); el != nullptr) {
+			if (el.get_type() == streamfx::obs::gs::effect_parameter::type::Texture) {
 				el.set_texture(tex);
 				break;
 			}
@@ -589,8 +589,8 @@ void gfx::shader::shader::set_transition_time(float_t t)
 	if (!_shader)
 		return;
 
-	if (gs::effect_parameter el = _shader.get_parameter("TransitionTime"); el != nullptr) {
-		if (el.get_type() == gs::effect_parameter::type::Float) {
+	if (streamfx::obs::gs::effect_parameter el = _shader.get_parameter("TransitionTime"); el != nullptr) {
+		if (el.get_type() == streamfx::obs::gs::effect_parameter::type::Float) {
 			el.set_float(t);
 		}
 	}
@@ -600,8 +600,8 @@ void gfx::shader::shader::set_transition_size(uint32_t w, uint32_t h)
 {
 	if (!_shader)
 		return;
-	if (gs::effect_parameter el = _shader.get_parameter("TransitionSize"); el != nullptr) {
-		if (el.get_type() == gs::effect_parameter::type::Integer2) {
+	if (streamfx::obs::gs::effect_parameter el = _shader.get_parameter("TransitionSize"); el != nullptr) {
+		if (el.get_type() == streamfx::obs::gs::effect_parameter::type::Integer2) {
 			el.set_int2(static_cast<int32_t>(w), static_cast<int32_t>(h));
 		}
 	}

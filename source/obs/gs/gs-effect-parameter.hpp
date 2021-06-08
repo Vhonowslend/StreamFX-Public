@@ -22,7 +22,7 @@
 #include "gs-sampler.hpp"
 #include "gs-texture.hpp"
 
-namespace gs {
+namespace streamfx::obs::gs {
 	class effect_parameter : public std::shared_ptr<gs_eparam_t> {
 		std::shared_ptr<gs_effect_t> _effect_parent;
 		std::shared_ptr<gs_epass_t>  _pass_parent;
@@ -189,10 +189,10 @@ namespace gs {
 		void get_matrix(matrix4& v);
 		void get_default_matrix(matrix4& v);
 
-		void set_texture(std::shared_ptr<gs::texture> v);
+		void set_texture(std::shared_ptr<streamfx::obs::gs::texture> v);
 		void set_texture(gs_texture_t* v);
 
-		void set_sampler(std::shared_ptr<gs::sampler> v);
+		void set_sampler(std::shared_ptr<streamfx::obs::gs::sampler> v);
 		void set_sampler(gs_sampler_state* v);
 
 		void set_string(std::string const& v);
@@ -304,4 +304,4 @@ namespace gs {
 			return v;
 		};
 	};
-} // namespace gs
+} // namespace streamfx::obs::gs
