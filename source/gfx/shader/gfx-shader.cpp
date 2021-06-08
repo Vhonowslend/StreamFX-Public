@@ -22,16 +22,25 @@
 #include "obs/obs-tools.hpp"
 #include "plugin.hpp"
 
-#define ST "Shader"
-#define ST_REFRESH ST ".Refresh"
-#define ST_SHADER ST ".Shader"
-#define ST_SHADER_FILE ST_SHADER ".File"
-#define ST_SHADER_TECHNIQUE ST_SHADER ".Technique"
-#define ST_SHADER_SIZE ST_SHADER ".Size"
-#define ST_SHADER_SIZE_WIDTH ST_SHADER_SIZE ".Width"
-#define ST_SHADER_SIZE_HEIGHT ST_SHADER_SIZE ".Height"
-#define ST_SHADER_SEED ST_SHADER ".Seed"
-#define ST_PARAMETERS ST ".Parameters"
+#define ST_I18N "Shader"
+#define ST_I18N_REFRESH ST_I18N ".Refresh"
+#define ST_KEY_REFRESH "Shader.Refresh"
+#define ST_I18N_SHADER ST_I18N ".Shader"
+#define ST_KEY_SHADER "Shader.Shader"
+#define ST_I18N_SHADER_FILE ST_I18N_SHADER ".File"
+#define ST_KEY_SHADER_FILE ST_KEY_SHADER ".File"
+#define ST_I18N_SHADER_TECHNIQUE ST_I18N_SHADER ".Technique"
+#define ST_KEY_SHADER_TECHNIQUE ST_KEY_SHADER ".Technique"
+#define ST_I18N_SHADER_SIZE ST_I18N_SHADER ".Size"
+#define ST_KEY_SHADER_SIZE ST_KEY_SHADER ".Size"
+#define ST_I18N_SHADER_SIZE_WIDTH ST_I18N_SHADER_SIZE ".Width"
+#define ST_KEY_SHADER_SIZE_WIDTH ST_KEY_SHADER_SIZE ".Width"
+#define ST_I18N_SHADER_SIZE_HEIGHT ST_I18N_SHADER_SIZE ".Height"
+#define ST_KEY_SHADER_SIZE_HEIGHT ST_KEY_SHADER_SIZE ".Height"
+#define ST_I18N_SHADER_SEED ST_I18N_SHADER ".Seed"
+#define ST_KEY_SHADER_SEED ST_KEY_SHADER ".Seed"
+#define ST_I18N_PARAMETERS ST_I18N ".Parameters"
+#define ST_KEY_PARAMETERS "Shader.Parameters"
 
 streamfx::gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
 	: _self(self), _mode(mode), _base_width(1), _base_height(1), _active(true),
@@ -123,7 +132,7 @@ try {
 			_shader_tech = _shader.get_technique(0).name();
 
 			// Update source data.
-			obs_data_set_string(settings.get(), ST_SHADER_TECHNIQUE, _shader_tech.c_str());
+			obs_data_set_string(settings.get(), ST_KEY_SHADER_TECHNIQUE, _shader_tech.c_str());
 		}
 
 		// Clear the shader parameters map and rebuild.
@@ -142,7 +151,7 @@ try {
 				if (fnd != _shader_params.end())
 					continue;
 
-				auto param = streamfx::gfx::shader::parameter::make_parameter(el, ST_PARAMETERS);
+				auto param = streamfx::gfx::shader::parameter::make_parameter(el, ST_KEY_PARAMETERS);
 
 				if (param) {
 					_shader_params.insert_or_assign(el.get_name(), param);
@@ -161,7 +170,7 @@ try {
 				if (fnd != _shader_params.end())
 					continue;
 
-				auto param = streamfx::gfx::shader::parameter::make_parameter(el, ST_PARAMETERS);
+				auto param = streamfx::gfx::shader::parameter::make_parameter(el, ST_KEY_PARAMETERS);
 
 				if (param) {
 					_shader_params.insert_or_assign(el.get_name(), param);
@@ -182,11 +191,11 @@ try {
 
 void streamfx::gfx::shader::shader::defaults(obs_data_t* data)
 {
-	obs_data_set_default_string(data, ST_SHADER_FILE, "");
-	obs_data_set_default_string(data, ST_SHADER_TECHNIQUE, "");
-	obs_data_set_default_string(data, ST_SHADER_SIZE_WIDTH, "100.0 %");
-	obs_data_set_default_string(data, ST_SHADER_SIZE_HEIGHT, "100.0 %");
-	obs_data_set_default_int(data, ST_SHADER_SEED, static_cast<long long>(time(NULL)));
+	obs_data_set_default_string(data, ST_KEY_SHADER_FILE, "");
+	obs_data_set_default_string(data, ST_KEY_SHADER_TECHNIQUE, "");
+	obs_data_set_default_string(data, ST_KEY_SHADER_SIZE_WIDTH, "100.0 %");
+	obs_data_set_default_string(data, ST_KEY_SHADER_SIZE_HEIGHT, "100.0 %");
+	obs_data_set_default_int(data, ST_KEY_SHADER_SEED, static_cast<long long>(time(NULL)));
 }
 
 void streamfx::gfx::shader::shader::properties(obs_properties_t* pr)
@@ -195,7 +204,7 @@ void streamfx::gfx::shader::shader::properties(obs_properties_t* pr)
 
 	{
 		auto grp = obs_properties_create();
-		obs_properties_add_group(pr, ST_SHADER, D_TRANSLATE(ST_SHADER), OBS_GROUP_NORMAL, grp);
+		obs_properties_add_group(pr, ST_KEY_SHADER, D_TRANSLATE(ST_I18N_SHADER), OBS_GROUP_NORMAL, grp);
 
 		{
 			std::string path = "";
@@ -204,17 +213,17 @@ void streamfx::gfx::shader::shader::properties(obs_properties_t* pr)
 			} else {
 				path = streamfx::data_file_path("examples/").u8string();
 			}
-			auto p = obs_properties_add_path(grp, ST_SHADER_FILE, D_TRANSLATE(ST_SHADER_FILE), OBS_PATH_FILE, "*.*",
-											 path.c_str());
+			auto p = obs_properties_add_path(grp, ST_KEY_SHADER_FILE, D_TRANSLATE(ST_I18N_SHADER_FILE), OBS_PATH_FILE,
+											 "*.*", path.c_str());
 		}
 		{
-			auto p = obs_properties_add_list(grp, ST_SHADER_TECHNIQUE, D_TRANSLATE(ST_SHADER_TECHNIQUE),
+			auto p = obs_properties_add_list(grp, ST_KEY_SHADER_TECHNIQUE, D_TRANSLATE(ST_I18N_SHADER_TECHNIQUE),
 											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 		}
 
 		{
 			obs_properties_add_button2(
-				grp, ST_REFRESH, D_TRANSLATE(ST_REFRESH),
+				grp, ST_KEY_REFRESH, D_TRANSLATE(ST_I18N_REFRESH),
 				[](obs_properties_t* props, obs_property_t* prop, void* priv) {
 					return reinterpret_cast<streamfx::gfx::shader::shader*>(priv)->on_refresh_properties(props, prop);
 				},
@@ -223,26 +232,26 @@ void streamfx::gfx::shader::shader::properties(obs_properties_t* pr)
 
 		if (_mode != shader_mode::Transition) {
 			auto grp2 = obs_properties_create();
-			obs_properties_add_group(grp, ST_SHADER_SIZE, D_TRANSLATE(ST_SHADER_SIZE), OBS_GROUP_NORMAL, grp2);
+			obs_properties_add_group(grp, ST_KEY_SHADER_SIZE, D_TRANSLATE(ST_I18N_SHADER_SIZE), OBS_GROUP_NORMAL, grp2);
 
 			{
-				auto p = obs_properties_add_text(grp2, ST_SHADER_SIZE_WIDTH, D_TRANSLATE(ST_SHADER_SIZE_WIDTH),
+				auto p = obs_properties_add_text(grp2, ST_KEY_SHADER_SIZE_WIDTH, D_TRANSLATE(ST_I18N_SHADER_SIZE_WIDTH),
 												 OBS_TEXT_DEFAULT);
 			}
 			{
-				auto p = obs_properties_add_text(grp2, ST_SHADER_SIZE_HEIGHT, D_TRANSLATE(ST_SHADER_SIZE_HEIGHT),
-												 OBS_TEXT_DEFAULT);
+				auto p = obs_properties_add_text(grp2, ST_KEY_SHADER_SIZE_HEIGHT,
+												 D_TRANSLATE(ST_I18N_SHADER_SIZE_HEIGHT), OBS_TEXT_DEFAULT);
 			}
 		}
 
 		{
-			auto p = obs_properties_add_int_slider(grp, ST_SHADER_SEED, D_TRANSLATE(ST_SHADER_SEED),
+			auto p = obs_properties_add_int_slider(grp, ST_KEY_SHADER_SEED, D_TRANSLATE(ST_I18N_SHADER_SEED),
 												   std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), 1);
 		}
 	}
 	{
 		auto grp = obs_properties_create();
-		obs_properties_add_group(pr, ST_PARAMETERS, D_TRANSLATE(ST_PARAMETERS), OBS_GROUP_NORMAL, grp);
+		obs_properties_add_group(pr, ST_KEY_PARAMETERS, D_TRANSLATE(ST_I18N_PARAMETERS), OBS_GROUP_NORMAL, grp);
 	}
 
 	// Manually call the refresh.
@@ -252,7 +261,7 @@ void streamfx::gfx::shader::shader::properties(obs_properties_t* pr)
 bool streamfx::gfx::shader::shader::on_refresh_properties(obs_properties_t* props, obs_property_t* prop)
 {
 	if (_shader) { // Clear list of techniques and rebuild it.
-		obs_property_t* p_tech_list = obs_properties_get(props, ST_SHADER_TECHNIQUE);
+		obs_property_t* p_tech_list = obs_properties_get(props, ST_KEY_SHADER_TECHNIQUE);
 		obs_property_list_clear(p_tech_list);
 		for (std::size_t idx = 0; idx < _shader.count_techniques(); idx++) {
 			auto tech = _shader.get_technique(idx);
@@ -260,7 +269,7 @@ bool streamfx::gfx::shader::shader::on_refresh_properties(obs_properties_t* prop
 		}
 	}
 	{ // Clear parameter options.
-		auto grp = obs_property_group_content(obs_properties_get(props, ST_PARAMETERS));
+		auto grp = obs_property_group_content(obs_properties_get(props, ST_KEY_PARAMETERS));
 		for (auto p = obs_properties_first(grp); p != nullptr; p = obs_properties_first(grp)) {
 			streamfx::obs::tools::obs_properties_remove_by_name(grp, obs_property_name(p));
 		}
@@ -288,7 +297,7 @@ bool streamfx::gfx::shader::shader::on_shader_or_technique_modified(obs_properti
 		return false;
 
 	{ // Clear list of techniques and rebuild it.
-		obs_property_t* p_tech_list = obs_properties_get(props, ST_SHADER_TECHNIQUE);
+		obs_property_t* p_tech_list = obs_properties_get(props, ST_KEY_SHADER_TECHNIQUE);
 		obs_property_list_clear(p_tech_list);
 		for (std::size_t idx = 0; idx < _shader.count_techniques(); idx++) {
 			auto tech = _shader.get_technique(idx);
@@ -297,7 +306,7 @@ bool streamfx::gfx::shader::shader::on_shader_or_technique_modified(obs_properti
 	}
 	if (param_dirty || !_have_current_params) {
 		// Clear parameter options.
-		auto grp = obs_property_group_content(obs_properties_get(props, ST_PARAMETERS));
+		auto grp = obs_property_group_content(obs_properties_get(props, ST_KEY_PARAMETERS));
 		for (auto p = obs_properties_first(grp); p != nullptr; p = obs_properties_first(grp)) {
 			streamfx::obs::tools::obs_properties_remove_by_name(grp, obs_property_name(p));
 		}
@@ -316,9 +325,9 @@ bool streamfx::gfx::shader::shader::on_shader_or_technique_modified(obs_properti
 
 bool streamfx::gfx::shader::shader::update_shader(obs_data_t* data, bool& shader_dirty, bool& param_dirty)
 {
-	const char* file_c = obs_data_get_string(data, ST_SHADER_FILE);
+	const char* file_c = obs_data_get_string(data, ST_KEY_SHADER_FILE);
 	std::string file   = file_c ? file_c : "";
-	const char* tech_c = obs_data_get_string(data, ST_SHADER_TECHNIQUE);
+	const char* tech_c = obs_data_get_string(data, ST_KEY_SHADER_TECHNIQUE);
 	std::string tech   = tech_c ? tech_c : "Draw";
 
 	return load_shader(file, tech, shader_dirty, param_dirty);
@@ -345,16 +354,16 @@ void streamfx::gfx::shader::shader::update(obs_data_t* data)
 	update_shader(data, v1, v2);
 
 	{
-		auto sz_x    = parse_text_as_size(obs_data_get_string(data, ST_SHADER_SIZE_WIDTH));
+		auto sz_x    = parse_text_as_size(obs_data_get_string(data, ST_KEY_SHADER_SIZE_WIDTH));
 		_width_type  = sz_x.first;
 		_width_value = std::clamp(sz_x.second, 0.01, 8192.0);
 
-		auto sz_y     = parse_text_as_size(obs_data_get_string(data, ST_SHADER_SIZE_HEIGHT));
+		auto sz_y     = parse_text_as_size(obs_data_get_string(data, ST_KEY_SHADER_SIZE_HEIGHT));
 		_height_type  = sz_y.first;
 		_height_value = std::clamp(sz_y.second, 0.01, 8192.0);
 	}
 
-	if (int32_t seed = static_cast<int32_t>(obs_data_get_int(data, ST_SHADER_SEED)); _random_seed != seed) {
+	if (int32_t seed = static_cast<int32_t>(obs_data_get_int(data, ST_KEY_SHADER_SEED)); _random_seed != seed) {
 		_random_seed = seed;
 		_random.seed(static_cast<unsigned long long>(_random_seed));
 		for (size_t idx = 0; idx < 16; idx++) {
