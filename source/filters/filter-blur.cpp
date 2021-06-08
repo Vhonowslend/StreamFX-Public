@@ -46,35 +46,58 @@
 #endif
 
 // Translation Strings
-#define ST "Filter.Blur"
+#define ST_I18N "Filter.Blur"
 
-#define ST_TYPE "Filter.Blur.Type"
-#define ST_SUBTYPE "Filter.Blur.SubType"
-#define ST_SIZE "Filter.Blur.Size"
-#define ST_ANGLE "Filter.Blur.Angle"
+#define ST_I18N_TYPE "Filter.Blur.Type"
+#define ST_KEY_TYPE "Filter.Blur.Type"
+#define ST_I18N_SUBTYPE "Filter.Blur.SubType"
+#define ST_KEY_SUBTYPE "Filter.Blur.SubType"
+#define ST_I18N_SIZE "Filter.Blur.Size"
+#define ST_KEY_SIZE "Filter.Blur.Size"
+#define ST_I18N_ANGLE "Filter.Blur.Angle"
+#define ST_KEY_ANGLE "Filter.Blur.Angle"
 #define ST_CENTER "Filter.Blur.Center"
-#define ST_CENTER_X "Filter.Blur.Center.X"
-#define ST_CENTER_Y "Filter.Blur.Center.Y"
-#define ST_STEPSCALE "Filter.Blur.StepScale"
-#define ST_STEPSCALE_X "Filter.Blur.StepScale.X"
-#define ST_STEPSCALE_Y "Filter.Blur.StepScale.Y"
-#define ST_MASK "Filter.Blur.Mask"
-#define ST_MASK_TYPE "Filter.Blur.Mask.Type"
-#define ST_MASK_TYPE_REGION "Filter.Blur.Mask.Type.Region"
-#define ST_MASK_TYPE_IMAGE "Filter.Blur.Mask.Type.Image"
-#define ST_MASK_TYPE_SOURCE "Filter.Blur.Mask.Type.Source"
-#define ST_MASK_REGION_LEFT "Filter.Blur.Mask.Region.Left"
-#define ST_MASK_REGION_RIGHT "Filter.Blur.Mask.Region.Right"
-#define ST_MASK_REGION_TOP "Filter.Blur.Mask.Region.Top"
-#define ST_MASK_REGION_BOTTOM "Filter.Blur.Mask.Region.Bottom"
-#define ST_MASK_REGION_FEATHER "Filter.Blur.Mask.Region.Feather"
-#define ST_MASK_REGION_FEATHER_SHIFT "Filter.Blur.Mask.Region.Feather.Shift"
-#define ST_MASK_REGION_INVERT "Filter.Blur.Mask.Region.Invert"
-#define ST_MASK_IMAGE "Filter.Blur.Mask.Image"
-#define ST_MASK_SOURCE "Filter.Blur.Mask.Source"
-#define ST_MASK_COLOR "Filter.Blur.Mask.Color"
-#define ST_MASK_ALPHA "Filter.Blur.Mask.Alpha"
-#define ST_MASK_MULTIPLIER "Filter.Blur.Mask.Multiplier"
+#define ST_I18N_CENTER_X "Filter.Blur.Center.X"
+#define ST_KEY_CENTER_X "Filter.Blur.Center.X"
+#define ST_I18N_CENTER_Y "Filter.Blur.Center.Y"
+#define ST_KEY_CENTER_Y "Filter.Blur.Center.Y"
+#define ST_I18N_STEPSCALE "Filter.Blur.StepScale"
+#define ST_KEY_STEPSCALE "Filter.Blur.StepScale"
+#define ST_I18N_STEPSCALE_X "Filter.Blur.StepScale.X"
+#define ST_KEY_STEPSCALE_X "Filter.Blur.StepScale.X"
+#define ST_I18N_STEPSCALE_Y "Filter.Blur.StepScale.Y"
+#define ST_KEY_STEPSCALE_Y "Filter.Blur.StepScale.Y"
+#define ST_I18N_MASK "Filter.Blur.Mask"
+#define ST_KEY_MASK "Filter.Blur.Mask"
+#define ST_I18N_MASK_TYPE "Filter.Blur.Mask.Type"
+#define ST_KEY_MASK_TYPE "Filter.Blur.Mask.Type"
+#define ST_I18N_MASK_TYPE_REGION "Filter.Blur.Mask.Type.Region"
+#define ST_I18N_MASK_TYPE_IMAGE "Filter.Blur.Mask.Type.Image"
+#define ST_I18N_MASK_TYPE_SOURCE "Filter.Blur.Mask.Type.Source"
+#define ST_I18N_MASK_REGION_LEFT "Filter.Blur.Mask.Region.Left"
+#define ST_KEY_MASK_REGION_LEFT "Filter.Blur.Mask.Region.Left"
+#define ST_I18N_MASK_REGION_RIGHT "Filter.Blur.Mask.Region.Right"
+#define ST_KEY_MASK_REGION_RIGHT "Filter.Blur.Mask.Region.Right"
+#define ST_I18N_MASK_REGION_TOP "Filter.Blur.Mask.Region.Top"
+#define ST_KEY_MASK_REGION_TOP "Filter.Blur.Mask.Region.Top"
+#define ST_I18N_MASK_REGION_BOTTOM "Filter.Blur.Mask.Region.Bottom"
+#define ST_KEY_MASK_REGION_BOTTOM "Filter.Blur.Mask.Region.Bottom"
+#define ST_I18N_MASK_REGION_FEATHER "Filter.Blur.Mask.Region.Feather"
+#define ST_KEY_MASK_REGION_FEATHER "Filter.Blur.Mask.Region.Feather"
+#define ST_I18N_MASK_REGION_FEATHER_SHIFT "Filter.Blur.Mask.Region.Feather.Shift"
+#define ST_KEY_MASK_REGION_FEATHER_SHIFT "Filter.Blur.Mask.Region.Feather.Shift"
+#define ST_I18N_MASK_REGION_INVERT "Filter.Blur.Mask.Region.Invert"
+#define ST_KEY_MASK_REGION_INVERT "Filter.Blur.Mask.Region.Invert"
+#define ST_I18N_MASK_IMAGE "Filter.Blur.Mask.Image"
+#define ST_KEY_MASK_IMAGE "Filter.Blur.Mask.Image"
+#define ST_I18N_MASK_SOURCE "Filter.Blur.Mask.Source"
+#define ST_KEY_MASK_SOURCE "Filter.Blur.Mask.Source"
+#define ST_I18N_MASK_COLOR "Filter.Blur.Mask.Color"
+#define ST_KEY_MASK_COLOR "Filter.Blur.Mask.Color"
+#define ST_I18N_MASK_ALPHA "Filter.Blur.Mask.Alpha"
+#define ST_KEY_MASK_ALPHA "Filter.Blur.Mask.Alpha"
+#define ST_I18N_MASK_MULTIPLIER "Filter.Blur.Mask.Multiplier"
+#define ST_KEY_MASK_MULTIPLIER "Filter.Blur.Mask.Multiplier"
 
 using namespace streamfx::filter::blur;
 
@@ -207,32 +230,32 @@ void blur_instance::migrate(obs_data_t* settings, uint64_t version)
 		/// Blur Type
 		int64_t old_blur = obs_data_get_int(settings, "Filter.Blur.Type");
 		if (old_blur == 0) { // Box
-			obs_data_set_string(settings, ST_TYPE, "box");
+			obs_data_set_string(settings, ST_KEY_TYPE, "box");
 		} else if (old_blur == 1) { // Gaussian
-			obs_data_set_string(settings, ST_TYPE, "gaussian");
+			obs_data_set_string(settings, ST_KEY_TYPE, "gaussian");
 		} else if (old_blur == 2) { // Bilateral, no longer included.
-			obs_data_set_string(settings, ST_TYPE, "box");
+			obs_data_set_string(settings, ST_KEY_TYPE, "box");
 		} else if (old_blur == 3) { // Box Linear
-			obs_data_set_string(settings, ST_TYPE, "box_linear");
+			obs_data_set_string(settings, ST_KEY_TYPE, "box_linear");
 		} else if (old_blur == 4) { // Gaussian Linear
-			obs_data_set_string(settings, ST_TYPE, "gaussian_linear");
+			obs_data_set_string(settings, ST_KEY_TYPE, "gaussian_linear");
 		} else {
-			obs_data_set_string(settings, ST_TYPE, "box");
+			obs_data_set_string(settings, ST_KEY_TYPE, "box");
 		}
 		obs_data_unset_user_value(settings, "Filter.Blur.Type");
 
 		/// Directional Blur
 		bool directional = obs_data_get_bool(settings, "Filter.Blur.Directional");
 		if (directional) {
-			obs_data_set_string(settings, ST_SUBTYPE, "directional");
+			obs_data_set_string(settings, ST_KEY_SUBTYPE, "directional");
 		} else {
-			obs_data_set_string(settings, ST_SUBTYPE, "area");
+			obs_data_set_string(settings, ST_KEY_SUBTYPE, "area");
 		}
 		obs_data_unset_user_value(settings, "Filter.Blur.Directional");
 
 		/// Directional Blur Angle
 		double_t angle = obs_data_get_double(settings, "Filter.Blur.Directional.Angle");
-		obs_data_set_double(settings, ST_ANGLE, angle);
+		obs_data_set_double(settings, ST_KEY_ANGLE, angle);
 		obs_data_unset_user_value(settings, "Filter.Blur.Directional.Angle");
 	}
 }
@@ -240,9 +263,9 @@ void blur_instance::migrate(obs_data_t* settings, uint64_t version)
 void blur_instance::update(obs_data_t* settings)
 {
 	{ // Blur Type
-		const char* blur_type      = obs_data_get_string(settings, ST_TYPE);
-		const char* blur_subtype   = obs_data_get_string(settings, ST_SUBTYPE);
-		const char* last_blur_type = obs_data_get_string(settings, ST_TYPE ".last");
+		const char* blur_type      = obs_data_get_string(settings, ST_KEY_TYPE);
+		const char* blur_subtype   = obs_data_get_string(settings, ST_KEY_SUBTYPE);
+		const char* last_blur_type = obs_data_get_string(settings, ST_KEY_TYPE ".last");
 
 		auto type_found = list_of_types.find(blur_type);
 		if (type_found != list_of_types.end()) {
@@ -258,46 +281,46 @@ void blur_instance::update(obs_data_t* settings)
 	}
 
 	{ // Blur Parameters
-		this->_blur_size          = obs_data_get_double(settings, ST_SIZE);
-		this->_blur_angle         = obs_data_get_double(settings, ST_ANGLE);
-		this->_blur_center.first  = obs_data_get_double(settings, ST_CENTER_X) / 100.0;
-		this->_blur_center.second = obs_data_get_double(settings, ST_CENTER_Y) / 100.0;
+		this->_blur_size          = obs_data_get_double(settings, ST_KEY_SIZE);
+		this->_blur_angle         = obs_data_get_double(settings, ST_KEY_ANGLE);
+		this->_blur_center.first  = obs_data_get_double(settings, ST_KEY_CENTER_X) / 100.0;
+		this->_blur_center.second = obs_data_get_double(settings, ST_KEY_CENTER_Y) / 100.0;
 
 		// Scaling
-		this->_blur_step_scaling      = obs_data_get_bool(settings, ST_STEPSCALE);
-		this->_blur_step_scale.first  = obs_data_get_double(settings, ST_STEPSCALE_X) / 100.0;
-		this->_blur_step_scale.second = obs_data_get_double(settings, ST_STEPSCALE_Y) / 100.0;
+		this->_blur_step_scaling      = obs_data_get_bool(settings, ST_KEY_STEPSCALE);
+		this->_blur_step_scale.first  = obs_data_get_double(settings, ST_KEY_STEPSCALE_X) / 100.0;
+		this->_blur_step_scale.second = obs_data_get_double(settings, ST_KEY_STEPSCALE_Y) / 100.0;
 	}
 
 	{ // Masking
-		_mask.enabled = obs_data_get_bool(settings, ST_MASK);
+		_mask.enabled = obs_data_get_bool(settings, ST_KEY_MASK);
 		if (_mask.enabled) {
-			_mask.type = static_cast<mask_type>(obs_data_get_int(settings, ST_MASK_TYPE));
+			_mask.type = static_cast<mask_type>(obs_data_get_int(settings, ST_KEY_MASK_TYPE));
 			switch (_mask.type) {
 			case mask_type::Region:
-				_mask.region.left    = float_t(obs_data_get_double(settings, ST_MASK_REGION_LEFT) / 100.0);
-				_mask.region.top     = float_t(obs_data_get_double(settings, ST_MASK_REGION_TOP) / 100.0);
-				_mask.region.right   = 1.0f - float_t(obs_data_get_double(settings, ST_MASK_REGION_RIGHT) / 100.0);
-				_mask.region.bottom  = 1.0f - float_t(obs_data_get_double(settings, ST_MASK_REGION_BOTTOM) / 100.0);
-				_mask.region.feather = float_t(obs_data_get_double(settings, ST_MASK_REGION_FEATHER) / 100.0);
+				_mask.region.left    = float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_LEFT) / 100.0);
+				_mask.region.top     = float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_TOP) / 100.0);
+				_mask.region.right   = 1.0f - float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_RIGHT) / 100.0);
+				_mask.region.bottom  = 1.0f - float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_BOTTOM) / 100.0);
+				_mask.region.feather = float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_FEATHER) / 100.0);
 				_mask.region.feather_shift =
-					float_t(obs_data_get_double(settings, ST_MASK_REGION_FEATHER_SHIFT) / 100.0);
-				_mask.region.invert = obs_data_get_bool(settings, ST_MASK_REGION_INVERT);
+					float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_FEATHER_SHIFT) / 100.0);
+				_mask.region.invert = obs_data_get_bool(settings, ST_KEY_MASK_REGION_INVERT);
 				break;
 			case mask_type::Image:
-				_mask.image.path = obs_data_get_string(settings, ST_MASK_IMAGE);
+				_mask.image.path = obs_data_get_string(settings, ST_KEY_MASK_IMAGE);
 				break;
 			case mask_type::Source:
-				_mask.source.name = obs_data_get_string(settings, ST_MASK_SOURCE);
+				_mask.source.name = obs_data_get_string(settings, ST_KEY_MASK_SOURCE);
 				break;
 			}
 			if ((_mask.type == mask_type::Image) || (_mask.type == mask_type::Source)) {
-				uint32_t color   = static_cast<uint32_t>(obs_data_get_int(settings, ST_MASK_COLOR));
+				uint32_t color   = static_cast<uint32_t>(obs_data_get_int(settings, ST_KEY_MASK_COLOR));
 				_mask.color.r    = ((color >> 0) & 0xFF) / 255.0f;
 				_mask.color.g    = ((color >> 8) & 0xFF) / 255.0f;
 				_mask.color.b    = ((color >> 16) & 0xFF) / 255.0f;
-				_mask.color.a    = static_cast<float_t>(obs_data_get_double(settings, ST_MASK_ALPHA));
-				_mask.multiplier = float_t(obs_data_get_double(settings, ST_MASK_MULTIPLIER));
+				_mask.color.a    = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_MASK_ALPHA));
+				_mask.multiplier = float_t(obs_data_get_double(settings, ST_KEY_MASK_MULTIPLIER));
 			}
 		}
 	}
@@ -575,46 +598,46 @@ blur_factory::~blur_factory() {}
 
 const char* blur_factory::get_name()
 {
-	return D_TRANSLATE(ST);
+	return D_TRANSLATE(ST_I18N);
 }
 
 void blur_factory::get_defaults2(obs_data_t* settings)
 {
 	// Type, Subtype
-	obs_data_set_default_string(settings, ST_TYPE, "box");
-	obs_data_set_default_string(settings, ST_SUBTYPE, "area");
+	obs_data_set_default_string(settings, ST_KEY_TYPE, "box");
+	obs_data_set_default_string(settings, ST_KEY_SUBTYPE, "area");
 
 	// Parameters
-	obs_data_set_default_int(settings, ST_SIZE, 5);
-	obs_data_set_default_double(settings, ST_ANGLE, 0.);
-	obs_data_set_default_double(settings, ST_CENTER_X, 50.);
-	obs_data_set_default_double(settings, ST_CENTER_Y, 50.);
-	obs_data_set_default_bool(settings, ST_STEPSCALE, false);
-	obs_data_set_default_double(settings, ST_STEPSCALE_X, 1.);
-	obs_data_set_default_double(settings, ST_STEPSCALE_Y, 1.);
+	obs_data_set_default_int(settings, ST_KEY_SIZE, 5);
+	obs_data_set_default_double(settings, ST_KEY_ANGLE, 0.);
+	obs_data_set_default_double(settings, ST_KEY_CENTER_X, 50.);
+	obs_data_set_default_double(settings, ST_KEY_CENTER_Y, 50.);
+	obs_data_set_default_bool(settings, ST_KEY_STEPSCALE, false);
+	obs_data_set_default_double(settings, ST_KEY_STEPSCALE_X, 1.);
+	obs_data_set_default_double(settings, ST_KEY_STEPSCALE_Y, 1.);
 
 	// Masking
-	obs_data_set_default_bool(settings, ST_MASK, false);
-	obs_data_set_default_int(settings, ST_MASK_TYPE, static_cast<int64_t>(mask_type::Region));
-	obs_data_set_default_double(settings, ST_MASK_REGION_LEFT, 0.0);
-	obs_data_set_default_double(settings, ST_MASK_REGION_RIGHT, 0.0);
-	obs_data_set_default_double(settings, ST_MASK_REGION_TOP, 0.0);
-	obs_data_set_default_double(settings, ST_MASK_REGION_BOTTOM, 0.0);
-	obs_data_set_default_double(settings, ST_MASK_REGION_FEATHER, 0.0);
-	obs_data_set_default_double(settings, ST_MASK_REGION_FEATHER_SHIFT, 0.0);
-	obs_data_set_default_bool(settings, ST_MASK_REGION_INVERT, false);
-	obs_data_set_default_string(settings, ST_MASK_IMAGE, streamfx::data_file_path("white.png").u8string().c_str());
-	obs_data_set_default_string(settings, ST_MASK_SOURCE, "");
-	obs_data_set_default_int(settings, ST_MASK_COLOR, 0xFFFFFFFFull);
-	obs_data_set_default_double(settings, ST_MASK_MULTIPLIER, 1.0);
+	obs_data_set_default_bool(settings, ST_KEY_MASK, false);
+	obs_data_set_default_int(settings, ST_KEY_MASK_TYPE, static_cast<int64_t>(mask_type::Region));
+	obs_data_set_default_double(settings, ST_KEY_MASK_REGION_LEFT, 0.0);
+	obs_data_set_default_double(settings, ST_KEY_MASK_REGION_RIGHT, 0.0);
+	obs_data_set_default_double(settings, ST_KEY_MASK_REGION_TOP, 0.0);
+	obs_data_set_default_double(settings, ST_KEY_MASK_REGION_BOTTOM, 0.0);
+	obs_data_set_default_double(settings, ST_KEY_MASK_REGION_FEATHER, 0.0);
+	obs_data_set_default_double(settings, ST_KEY_MASK_REGION_FEATHER_SHIFT, 0.0);
+	obs_data_set_default_bool(settings, ST_KEY_MASK_REGION_INVERT, false);
+	obs_data_set_default_string(settings, ST_KEY_MASK_IMAGE, streamfx::data_file_path("white.png").u8string().c_str());
+	obs_data_set_default_string(settings, ST_KEY_MASK_SOURCE, "");
+	obs_data_set_default_int(settings, ST_KEY_MASK_COLOR, 0xFFFFFFFFull);
+	obs_data_set_default_double(settings, ST_KEY_MASK_MULTIPLIER, 1.0);
 }
 
 bool modified_properties(void*, obs_properties_t* props, obs_property* prop, obs_data_t* settings) noexcept
 try {
 	obs_property_t* p;
 	const char*     propname = obs_property_name(prop);
-	const char*     vtype    = obs_data_get_string(settings, ST_TYPE);
-	const char*     vsubtype = obs_data_get_string(settings, ST_SUBTYPE);
+	const char*     vtype    = obs_data_get_string(settings, ST_KEY_TYPE);
+	const char*     vsubtype = obs_data_get_string(settings, ST_KEY_SUBTYPE);
 
 	// Find new Type
 	auto type_found = list_of_types.find(vtype);
@@ -629,8 +652,8 @@ try {
 	}
 
 	// Blur Type
-	if (strcmp(propname, ST_TYPE) == 0) {
-		obs_property_t* prop_subtype = obs_properties_get(props, ST_SUBTYPE);
+	if (strcmp(propname, ST_KEY_TYPE) == 0) {
+		obs_property_t* prop_subtype = obs_properties_get(props, ST_KEY_SUBTYPE);
 
 		/// Disable unsupported items.
 		std::size_t subvalue_idx = 0;
@@ -655,7 +678,7 @@ try {
 		if (obs_property_list_item_disabled(prop_subtype, subvalue_idx)) {
 			for (std::size_t idx = 0, edx = obs_property_list_item_count(prop_subtype); idx < edx; idx++) {
 				if (!obs_property_list_item_disabled(prop_subtype, idx)) {
-					obs_data_set_string(settings, ST_SUBTYPE, obs_property_list_item_string(prop_subtype, idx));
+					obs_data_set_string(settings, ST_KEY_SUBTYPE, obs_property_list_item_string(prop_subtype, idx));
 
 					// Find new Subtype
 					auto subtype_found2 = list_of_subtypes.find(vsubtype);
@@ -678,33 +701,33 @@ try {
 		bool has_center_support = (subtype_found->second.type == ::streamfx::gfx::blur::type::Rotational)
 								  || (subtype_found->second.type == ::streamfx::gfx::blur::type::Zoom);
 		bool has_stepscale_support = type_found->second.fn().is_step_scale_supported(subtype_found->second.type);
-		bool show_scaling          = obs_data_get_bool(settings, ST_STEPSCALE) && has_stepscale_support;
+		bool show_scaling          = obs_data_get_bool(settings, ST_KEY_STEPSCALE) && has_stepscale_support;
 
 		/// Size
-		p = obs_properties_get(props, ST_SIZE);
+		p = obs_properties_get(props, ST_KEY_SIZE);
 		obs_property_float_set_limits(p, type_found->second.fn().get_min_size(subtype_found->second.type),
 									  type_found->second.fn().get_max_size(subtype_found->second.type),
 									  type_found->second.fn().get_step_size(subtype_found->second.type));
 
 		/// Angle
-		p = obs_properties_get(props, ST_ANGLE);
+		p = obs_properties_get(props, ST_KEY_ANGLE);
 		obs_property_set_visible(p, has_angle_support);
 		obs_property_float_set_limits(p, type_found->second.fn().get_min_angle(subtype_found->second.type),
 									  type_found->second.fn().get_max_angle(subtype_found->second.type),
 									  type_found->second.fn().get_step_angle(subtype_found->second.type));
 
 		/// Center, Radius
-		obs_property_set_visible(obs_properties_get(props, ST_CENTER_X), has_center_support);
-		obs_property_set_visible(obs_properties_get(props, ST_CENTER_Y), has_center_support);
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_CENTER_X), has_center_support);
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_CENTER_Y), has_center_support);
 
 		/// Step Scaling
-		obs_property_set_visible(obs_properties_get(props, ST_STEPSCALE), has_stepscale_support);
-		p = obs_properties_get(props, ST_STEPSCALE_X);
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_STEPSCALE), has_stepscale_support);
+		p = obs_properties_get(props, ST_KEY_STEPSCALE_X);
 		obs_property_set_visible(p, show_scaling);
 		obs_property_float_set_limits(p, type_found->second.fn().get_min_step_scale_x(subtype_found->second.type),
 									  type_found->second.fn().get_max_step_scale_x(subtype_found->second.type),
 									  type_found->second.fn().get_step_step_scale_x(subtype_found->second.type));
-		p = obs_properties_get(props, ST_STEPSCALE_Y);
+		p = obs_properties_get(props, ST_KEY_STEPSCALE_Y);
 		obs_property_set_visible(p, show_scaling);
 		obs_property_float_set_limits(p, type_found->second.fn().get_min_step_scale_x(subtype_found->second.type),
 									  type_found->second.fn().get_max_step_scale_x(subtype_found->second.type),
@@ -713,24 +736,24 @@ try {
 
 	{ // Masking
 		using namespace ::streamfx::gfx::blur;
-		bool      show_mask   = obs_data_get_bool(settings, ST_MASK);
-		mask_type mtype       = static_cast<mask_type>(obs_data_get_int(settings, ST_MASK_TYPE));
+		bool      show_mask   = obs_data_get_bool(settings, ST_KEY_MASK);
+		mask_type mtype       = static_cast<mask_type>(obs_data_get_int(settings, ST_KEY_MASK_TYPE));
 		bool      show_region = (mtype == mask_type::Region) && show_mask;
 		bool      show_image  = (mtype == mask_type::Image) && show_mask;
 		bool      show_source = (mtype == mask_type::Source) && show_mask;
-		obs_property_set_visible(obs_properties_get(props, ST_MASK_TYPE), show_mask);
-		obs_property_set_visible(obs_properties_get(props, ST_MASK_REGION_LEFT), show_region);
-		obs_property_set_visible(obs_properties_get(props, ST_MASK_REGION_TOP), show_region);
-		obs_property_set_visible(obs_properties_get(props, ST_MASK_REGION_RIGHT), show_region);
-		obs_property_set_visible(obs_properties_get(props, ST_MASK_REGION_BOTTOM), show_region);
-		obs_property_set_visible(obs_properties_get(props, ST_MASK_REGION_FEATHER), show_region);
-		obs_property_set_visible(obs_properties_get(props, ST_MASK_REGION_FEATHER_SHIFT), show_region);
-		obs_property_set_visible(obs_properties_get(props, ST_MASK_REGION_INVERT), show_region);
-		obs_property_set_visible(obs_properties_get(props, ST_MASK_IMAGE), show_image);
-		obs_property_set_visible(obs_properties_get(props, ST_MASK_SOURCE), show_source);
-		obs_property_set_visible(obs_properties_get(props, ST_MASK_COLOR), show_image || show_source);
-		obs_property_set_visible(obs_properties_get(props, ST_MASK_ALPHA), show_image || show_source);
-		obs_property_set_visible(obs_properties_get(props, ST_MASK_MULTIPLIER), show_image || show_source);
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_TYPE), show_mask);
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_LEFT), show_region);
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_TOP), show_region);
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_RIGHT), show_region);
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_BOTTOM), show_region);
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_FEATHER), show_region);
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_FEATHER_SHIFT), show_region);
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_INVERT), show_region);
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_IMAGE), show_image);
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_SOURCE), show_source);
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_COLOR), show_image || show_source);
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_ALPHA), show_image || show_source);
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_MULTIPLIER), show_image || show_source);
 	}
 
 	return true;
@@ -753,7 +776,8 @@ obs_properties_t* blur_factory::get_properties2(blur_instance* data)
 
 	// Blur Type and Sub-Type
 	{
-		p = obs_properties_add_list(pr, ST_TYPE, D_TRANSLATE(ST_TYPE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+		p = obs_properties_add_list(pr, ST_KEY_TYPE, D_TRANSLATE(ST_I18N_TYPE), OBS_COMBO_TYPE_LIST,
+									OBS_COMBO_FORMAT_STRING);
 		obs_property_set_modified_callback2(p, modified_properties, this);
 		obs_property_list_add_string(p, D_TRANSLATE(S_BLUR_TYPE_BOX), "box");
 		obs_property_list_add_string(p, D_TRANSLATE(S_BLUR_TYPE_BOX_LINEAR), "box_linear");
@@ -761,7 +785,7 @@ obs_properties_t* blur_factory::get_properties2(blur_instance* data)
 		obs_property_list_add_string(p, D_TRANSLATE(S_BLUR_TYPE_GAUSSIAN_LINEAR), "gaussian_linear");
 		obs_property_list_add_string(p, D_TRANSLATE(S_BLUR_TYPE_DUALFILTERING), "dual_filtering");
 
-		p = obs_properties_add_list(pr, ST_SUBTYPE, D_TRANSLATE(ST_SUBTYPE), OBS_COMBO_TYPE_LIST,
+		p = obs_properties_add_list(pr, ST_KEY_SUBTYPE, D_TRANSLATE(ST_I18N_SUBTYPE), OBS_COMBO_TYPE_LIST,
 									OBS_COMBO_FORMAT_STRING);
 		obs_property_set_modified_callback2(p, modified_properties, this);
 		obs_property_list_add_string(p, D_TRANSLATE(S_BLUR_SUBTYPE_AREA), "area");
@@ -772,50 +796,53 @@ obs_properties_t* blur_factory::get_properties2(blur_instance* data)
 
 	// Blur Parameters
 	{
-		p = obs_properties_add_float_slider(pr, ST_SIZE, D_TRANSLATE(ST_SIZE), 1, 32767, 1);
-		p = obs_properties_add_float_slider(pr, ST_ANGLE, D_TRANSLATE(ST_ANGLE), -180.0, 180.0, 0.01);
-		p = obs_properties_add_float_slider(pr, ST_CENTER_X, D_TRANSLATE(ST_CENTER_X), 0.00, 100.0, 0.01);
-		p = obs_properties_add_float_slider(pr, ST_CENTER_Y, D_TRANSLATE(ST_CENTER_Y), 0.00, 100.0, 0.01);
+		p = obs_properties_add_float_slider(pr, ST_KEY_SIZE, D_TRANSLATE(ST_I18N_SIZE), 1, 32767, 1);
+		p = obs_properties_add_float_slider(pr, ST_KEY_ANGLE, D_TRANSLATE(ST_I18N_ANGLE), -180.0, 180.0, 0.01);
+		p = obs_properties_add_float_slider(pr, ST_KEY_CENTER_X, D_TRANSLATE(ST_I18N_CENTER_X), 0.00, 100.0, 0.01);
+		p = obs_properties_add_float_slider(pr, ST_KEY_CENTER_Y, D_TRANSLATE(ST_I18N_CENTER_Y), 0.00, 100.0, 0.01);
 
-		p = obs_properties_add_bool(pr, ST_STEPSCALE, D_TRANSLATE(ST_STEPSCALE));
+		p = obs_properties_add_bool(pr, ST_KEY_STEPSCALE, D_TRANSLATE(ST_I18N_STEPSCALE));
 		obs_property_set_modified_callback2(p, modified_properties, this);
-		p = obs_properties_add_float_slider(pr, ST_STEPSCALE_X, D_TRANSLATE(ST_STEPSCALE_X), 0.0, 1000.0, 0.01);
-		p = obs_properties_add_float_slider(pr, ST_STEPSCALE_Y, D_TRANSLATE(ST_STEPSCALE_Y), 0.0, 1000.0, 0.01);
+		p = obs_properties_add_float_slider(pr, ST_KEY_STEPSCALE_X, D_TRANSLATE(ST_I18N_STEPSCALE_X), 0.0, 1000.0,
+											0.01);
+		p = obs_properties_add_float_slider(pr, ST_KEY_STEPSCALE_Y, D_TRANSLATE(ST_I18N_STEPSCALE_Y), 0.0, 1000.0,
+											0.01);
 	}
 
 	// Masking
 	{
-		p = obs_properties_add_bool(pr, ST_MASK, D_TRANSLATE(ST_MASK));
+		p = obs_properties_add_bool(pr, ST_KEY_MASK, D_TRANSLATE(ST_I18N_MASK));
 		obs_property_set_modified_callback2(p, modified_properties, this);
-		p = obs_properties_add_list(pr, ST_MASK_TYPE, D_TRANSLATE(ST_MASK_TYPE), OBS_COMBO_TYPE_LIST,
+		p = obs_properties_add_list(pr, ST_KEY_MASK_TYPE, D_TRANSLATE(ST_I18N_MASK_TYPE), OBS_COMBO_TYPE_LIST,
 									OBS_COMBO_FORMAT_INT);
 		obs_property_set_modified_callback2(p, modified_properties, this);
-		obs_property_list_add_int(p, D_TRANSLATE(ST_MASK_TYPE_REGION), static_cast<int64_t>(mask_type::Region));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_MASK_TYPE_IMAGE), static_cast<int64_t>(mask_type::Image));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_MASK_TYPE_SOURCE), static_cast<int64_t>(mask_type::Source));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_MASK_TYPE_REGION), static_cast<int64_t>(mask_type::Region));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_MASK_TYPE_IMAGE), static_cast<int64_t>(mask_type::Image));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_MASK_TYPE_SOURCE), static_cast<int64_t>(mask_type::Source));
 		/// Region
-		p = obs_properties_add_float_slider(pr, ST_MASK_REGION_LEFT, D_TRANSLATE(ST_MASK_REGION_LEFT), 0.0, 100.0,
-											0.01);
-		p = obs_properties_add_float_slider(pr, ST_MASK_REGION_TOP, D_TRANSLATE(ST_MASK_REGION_TOP), 0.0, 100.0, 0.01);
-		p = obs_properties_add_float_slider(pr, ST_MASK_REGION_RIGHT, D_TRANSLATE(ST_MASK_REGION_RIGHT), 0.0, 100.0,
-											0.01);
-		p = obs_properties_add_float_slider(pr, ST_MASK_REGION_BOTTOM, D_TRANSLATE(ST_MASK_REGION_BOTTOM), 0.0, 100.0,
-											0.01);
-		p = obs_properties_add_float_slider(pr, ST_MASK_REGION_FEATHER, D_TRANSLATE(ST_MASK_REGION_FEATHER), 0.0, 50.0,
-											0.01);
-		p = obs_properties_add_float_slider(pr, ST_MASK_REGION_FEATHER_SHIFT, D_TRANSLATE(ST_MASK_REGION_FEATHER_SHIFT),
-											-100.0, 100.0, 0.01);
-		p = obs_properties_add_bool(pr, ST_MASK_REGION_INVERT, D_TRANSLATE(ST_MASK_REGION_INVERT));
+		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_REGION_LEFT, D_TRANSLATE(ST_I18N_MASK_REGION_LEFT), 0.0,
+											100.0, 0.01);
+		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_REGION_TOP, D_TRANSLATE(ST_I18N_MASK_REGION_TOP), 0.0,
+											100.0, 0.01);
+		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_REGION_RIGHT, D_TRANSLATE(ST_I18N_MASK_REGION_RIGHT), 0.0,
+											100.0, 0.01);
+		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_REGION_BOTTOM, D_TRANSLATE(ST_I18N_MASK_REGION_BOTTOM), 0.0,
+											100.0, 0.01);
+		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_REGION_FEATHER, D_TRANSLATE(ST_I18N_MASK_REGION_FEATHER),
+											0.0, 50.0, 0.01);
+		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_REGION_FEATHER_SHIFT,
+											D_TRANSLATE(ST_I18N_MASK_REGION_FEATHER_SHIFT), -100.0, 100.0, 0.01);
+		p = obs_properties_add_bool(pr, ST_KEY_MASK_REGION_INVERT, D_TRANSLATE(ST_I18N_MASK_REGION_INVERT));
 		/// Image
 		{
 			std::string filter =
 				translate_string("%s (%s);;* (*.*)", D_TRANSLATE(S_FILETYPE_IMAGES), S_FILEFILTERS_TEXTURE);
 			_translation_cache.push_back(filter);
-			p = obs_properties_add_path(pr, ST_MASK_IMAGE, D_TRANSLATE(ST_MASK_IMAGE), OBS_PATH_FILE,
+			p = obs_properties_add_path(pr, ST_KEY_MASK_IMAGE, D_TRANSLATE(ST_I18N_MASK_IMAGE), OBS_PATH_FILE,
 										_translation_cache.back().c_str(), nullptr);
 		}
 		/// Source
-		p = obs_properties_add_list(pr, ST_MASK_SOURCE, D_TRANSLATE(ST_MASK_SOURCE), OBS_COMBO_TYPE_LIST,
+		p = obs_properties_add_list(pr, ST_KEY_MASK_SOURCE, D_TRANSLATE(ST_I18N_MASK_SOURCE), OBS_COMBO_TYPE_LIST,
 									OBS_COMBO_FORMAT_STRING);
 		obs_property_list_add_string(p, "", "");
 		obs::source_tracker::get()->enumerate(
@@ -832,9 +859,10 @@ obs_properties_t* blur_factory::get_properties2(blur_instance* data)
 			obs::source_tracker::filter_scenes);
 
 		/// Shared
-		p = obs_properties_add_color(pr, ST_MASK_COLOR, D_TRANSLATE(ST_MASK_COLOR));
-		p = obs_properties_add_float_slider(pr, ST_MASK_ALPHA, D_TRANSLATE(ST_MASK_ALPHA), 0.0, 100.0, 0.1);
-		p = obs_properties_add_float_slider(pr, ST_MASK_MULTIPLIER, D_TRANSLATE(ST_MASK_MULTIPLIER), 0.0, 10.0, 0.01);
+		p = obs_properties_add_color(pr, ST_KEY_MASK_COLOR, D_TRANSLATE(ST_I18N_MASK_COLOR));
+		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_ALPHA, D_TRANSLATE(ST_I18N_MASK_ALPHA), 0.0, 100.0, 0.1);
+		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_MULTIPLIER, D_TRANSLATE(ST_I18N_MASK_MULTIPLIER), 0.0, 10.0,
+											0.01);
 	}
 
 	return pr;
