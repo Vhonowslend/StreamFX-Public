@@ -22,7 +22,7 @@
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
 
-#define ST "Filter.Shader"
+#define ST_I18N "Filter.Shader"
 
 using namespace streamfx::filter::shader;
 
@@ -163,7 +163,7 @@ shader_factory::~shader_factory() {}
 
 const char* shader_factory::get_name()
 {
-	return D_TRANSLATE(ST);
+	return D_TRANSLATE(ST_I18N);
 }
 
 void shader_factory::get_defaults2(obs_data_t* data)
