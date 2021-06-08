@@ -22,6 +22,7 @@
 #include <cstddef>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 extern "C" {
 #ifdef _MSC_VER
@@ -105,6 +106,19 @@ namespace streamfx::util {
 	std::pair<int64_t, int64_t> size_from_string(std::string text, bool allowSquare = true);
 
 	namespace math {
+		template<typename T>
+		inline T pow(T base, T exp)
+		{
+			T res = 1;
+			while (exp) {
+				if (exp & 1)
+					res *= base;
+				exp >>= 1;
+				base *= base;
+			}
+			return res;
+		}
+
 		// Proven by tests to be the fastest implementation on Intel and AMD CPUs.
 		// Ranking: log10, loop < bitscan < pow
 		// loop and log10 trade blows, usually almost identical.
@@ -165,6 +179,18 @@ namespace streamfx::util {
 		{
 			return (target > (value - std::numeric_limits<T>::epsilon()))
 				   && (target < (value + std::numeric_limits<T>::epsilon()));
+		}
+
+		template<typename T>
+		inline std::vector<T> pascal_triangle(size_t n)
+		{
+			std::vector<T> line;
+			line.push_back(1);
+			for (uint64_t k = 0; k < n; k++) {
+				T v = static_cast<T>(line.at(k) * static_cast<double_t>(n - k) / static_cast<double_t>(k + 1));
+				line.push_back(v);
+			}
+			return line;
 		}
 
 		template<typename T>
