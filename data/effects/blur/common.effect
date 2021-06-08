@@ -37,7 +37,6 @@ uniform float4x4 ViewProj;
 uniform texture2d pImage;
 uniform float2 pImageSize;
 uniform float2 pImageTexel;
-uniform float2 pImageHalfTexel;
 uniform float pSize;
 uniform float pSizeInverseMul;
 uniform float pAngle; 

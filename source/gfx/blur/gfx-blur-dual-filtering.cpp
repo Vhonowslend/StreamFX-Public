@@ -16,6 +16,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "gfx-blur-dual-filtering.hpp"
+#include <algorithm>
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
@@ -180,7 +181,7 @@ std::shared_ptr<::streamfx::gfx::blur::dual_filtering_data> streamfx::gfx::blur:
 }
 
 streamfx::gfx::blur::dual_filtering::dual_filtering()
-	: _data(::streamfx::gfx::blur::dual_filtering_factory::get().data()), _size(0), _size_iterations(0)
+	: _data(::streamfx::gfx::blur::dual_filtering_factory::get().data()), _size(0), _iterations(0)
 {
 	auto gctx = streamfx::obs::gs::context();
 	_rts.resize(ST_MAX_LEVELS + 1);
@@ -214,11 +215,8 @@ double_t streamfx::gfx::blur::dual_filtering::get_size()
 
 void streamfx::gfx::blur::dual_filtering::set_size(double_t width)
 {
-	_size            = width;
-	_size_iterations = size_t(round(width));
-	if (_size_iterations >= ST_MAX_LEVELS) {
-		_size_iterations = ST_MAX_LEVELS;
-	}
+	_size       = width;
+	_iterations = std::clamp<size_t>(static_cast<size_t>(round(width)), 0, ST_MAX_LEVELS);
 }
 
 void streamfx::gfx::blur::dual_filtering::set_step_scale(double_t, double_t) {}
@@ -238,8 +236,6 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::dual_filterin
 		return _input_texture;
 	}
 
-	std::size_t actual_iterations = _size_iterations;
-
 	gs_blend_state_push();
 	gs_reset_blend_state();
 	gs_enable_color(true, true, true, true);
@@ -253,36 +249,36 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::dual_filterin
 	gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
-	uint32_t width  = _input_texture->get_width();
-	uint32_t height = _input_texture->get_height();
+	uint32_t width      = _input_texture->get_width();
+	uint32_t height     = _input_texture->get_height();
+	size_t   iterations = _iterations;
 
 	// Downsample
-	for (std::size_t n = 1; n <= actual_iterations; n++) {
+	for (std::size_t n = 1; n <= iterations; n++) {
 #ifdef ENABLE_PROFILING
 		auto gdm = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Down %" PRIuMAX, n);
 #endif
 
 		// Select Texture
-		std::shared_ptr<streamfx::obs::gs::texture> tex_cur;
+		std::shared_ptr<streamfx::obs::gs::texture> tex;
 		if (n > 1) {
-			tex_cur = _rts[n - 1]->get_texture();
+			tex = _rts[n - 1]->get_texture();
 		} else { // Idx 0 is a simply considered as a straight copy of the original and not rendered to.
-			tex_cur = _input_texture;
+			tex = _input_texture;
 		}
 
 		// Reduce Size
 		uint32_t owidth  = width >> n;
 		uint32_t oheight = height >> n;
-		if ((owidth <= 0) || (oheight <= 0)) {
-			actual_iterations = n - 1;
+		if ((owidth == 0) || (oheight == 0)) {
+			iterations = n - 1;
 			break;
 		}
 
 		// Apply
-		effect.get_parameter("pImage").set_texture(tex_cur);
+		effect.get_parameter("pImage").set_texture(tex);
 		effect.get_parameter("pImageSize").set_float2(float_t(owidth), float_t(oheight));
-		effect.get_parameter("pImageTexel").set_float2(1.0f / owidth, 1.0f / oheight);
-		effect.get_parameter("pImageHalfTexel").set_float2(0.5f / owidth, 0.5f / oheight);
+		effect.get_parameter("pImageTexel").set_float2(0.5f / owidth, 0.5f / oheight);
 
 		{
 			auto op = _rts[n]->render(owidth, oheight);
@@ -294,25 +290,24 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::dual_filterin
 	}
 
 	// Upsample
-	for (std::size_t n = actual_iterations; n > 0; n--) {
+	for (std::size_t n = iterations; n > 0; n--) {
 #ifdef ENABLE_PROFILING
 		auto gdm = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Up %" PRIuMAX, n);
 #endif
 
 		// Select Texture
-		std::shared_ptr<streamfx::obs::gs::texture> tex_in = _rts[n]->get_texture();
+		std::shared_ptr<streamfx::obs::gs::texture> tex = _rts[n]->get_texture();
 
 		// Get Size
-		uint32_t iwidth  = width >> n;
-		uint32_t iheight = height >> n;
+		uint32_t iwidth  = tex->get_width();
+		uint32_t iheight = tex->get_height();
 		uint32_t owidth  = width >> (n - 1);
 		uint32_t oheight = height >> (n - 1);
 
 		// Apply
-		effect.get_parameter("pImage").set_texture(tex_in);
+		effect.get_parameter("pImage").set_texture(tex);
 		effect.get_parameter("pImageSize").set_float2(float_t(iwidth), float_t(iheight));
-		effect.get_parameter("pImageTexel").set_float2(1.0f / iwidth, 1.0f / iheight);
-		effect.get_parameter("pImageHalfTexel").set_float2(0.5f / iwidth, 0.5f / iheight);
+		effect.get_parameter("pImageTexel").set_float2(0.5f / iwidth, 0.5f / iheight);
 
 		{
 			auto op = _rts[n - 1]->render(owidth, oheight);
