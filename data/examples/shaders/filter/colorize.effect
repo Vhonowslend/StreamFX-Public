@@ -1,0 +1,159 @@
+// Copyright 2021 Michael Fabian Dirks <info@xaymar.com>
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice,
+//    this list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//    this list of conditions and the following disclaimer in the documentation
+//    and/or other materials provided with the distribution.
+// 3. Neither the name of the copyright holder nor the names of its contributors
+//    may be used to endorse or promote products derived from this software
+//    without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+
+//------------------------------------------------------------------------------
+// Uniforms
+//------------------------------------------------------------------------------
+uniform float4x4 ViewProj<
+	bool automatic = true;
+>;
+
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+
+uniform float _100_Hue<
+	string name = "Hue";
+	string field_type = "slider";
+	float minimum = 0.;
+	float maximum = 360.;
+	float step = .01;
+	float scale = 0.00277777777777777777777777777778;
+> = 180.;
+uniform float _110_HueBlend<
+	string name = "Hue Blend";
+	string field_type = "slider";
+	float minimum = 0.;
+	float maximum = 100.;
+	float step = .01;
+	float scale = 0.01;
+> = 100.;
+
+uniform float _200_Saturation<
+	string name = "Saturation";
+	string field_type = "slider";
+	float minimum = 0.;
+	float maximum = 100.;
+	float step = .01;
+	float scale = 0.01;
+> = 100.;
+uniform float _210_SaturationBlend<
+	string name = "Saturation Blend";
+	string field_type = "slider";
+	float minimum = 0.;
+	float maximum = 100.;
+	float step = .01;
+	float scale = 0.01;
+> = 0.;
+
+uniform float _300_Value<
+	string name = "Value";
+	string field_type = "slider";
+	float minimum = 0.;
+	float maximum = 100.;
+	float step = .01;
+	float scale = 0.01;
+> = 100.;
+uniform float _310_ValueBlend<
+	string name = "Value Blend";
+	string field_type = "slider";
+	float minimum = 0.;
+	float maximum = 100.;
+	float step = .01;
+	float scale = 0.01;
+> = 0.;
+
+//------------------------------------------------------------------------------
+// Effect
+//------------------------------------------------------------------------------
+
+sampler_state linear_sampler {
+	Filter    = Linear;
+	AddressU  = Repeat;
+	AddressV  = Repeat;
+};
+
+struct VertFragData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+VertFragData VSDefault(VertFragData vtx) {
+	vtx.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
+	return vtx;
+}
+
+// Adapted from http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl
+
+#define RGB_HSV_FASTCONDITIONALMOVE
+
+float3 RGBtoHSV(float3 RGBA) {
+	const float4 K = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+	const float e = 1.0e-10;
+#ifdef RGB_HSV_FASTCONDITIONALMOVE
+	float4 p = RGBA.g < RGBA.b ? float4(RGBA.bg, K.wz) : float4(RGBA.gb, K.xy);
+	float4 q = RGBA.r < p.x    ? float4(p.xyw, RGBA.r) : float4(RGBA.r, p.yzx);
+#else
+	float4 p = lerp(float4(RGBA.bg, K.wz), float4(RGBA.gb, K.xy), step(RGBA.b, RGBA.g));
+	float4 q = lerp(float4(p.xyw, RGBA.r), float4(RGBA.r, p.yzx), step(p.x, RGBA.r));
+#endif
+	float d = q.x - min(q.w, q.y);
+	return float3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
+float4 RGBAtoHSVA(float4 RGBA) {
+	return float4(RGBtoHSV(RGBA.rgb), RGBA.a);
+}
+
+float3 HSVtoRGB(float3 HSVA) {
+	const float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+	float3 v = float3(0,0,0);
+	v = HSVA.z * lerp(K.xxx, clamp(abs(frac(HSVA.xxx + K.xyz) * 6.0 - K.www) - K.xxx, 0.0, 1.0), HSVA.y);
+	return v;
+}
+
+float4 HSVAtoRGBA(float4 HSVA) {
+	return float4(HSVtoRGB(HSVA.rgb), HSVA.a);
+}
+
+float4 PSVersion1(VertFragData vtx) : TARGET {
+	float4 rgba = InputA.Sample(linear_sampler, vtx.uv);
+	float4 hsva = RGBAtoHSVA(rgba);
+	hsva.r = lerp(hsva.r, _100_Hue, _110_HueBlend);
+	hsva.g = lerp(hsva.g, _200_Saturation, _210_SaturationBlend);
+	hsva.b = lerp(hsva.b, _300_Value, _310_ValueBlend);
+
+	return HSVAtoRGBA(hsva);
+};
+
+technique Version1
+{
+	pass
+	{
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSVersion1(vtx);
+	};
+};
