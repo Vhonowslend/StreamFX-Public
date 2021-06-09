@@ -1,0 +1,196 @@
+// Copyright 2021 Michael Fabian Dirks <info@xaymar.com>
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice,
+//    this list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//    this list of conditions and the following disclaimer in the documentation
+//    and/or other materials provided with the distribution.
+// 3. Neither the name of the copyright holder nor the names of its contributors
+//    may be used to endorse or promote products derived from this software
+//    without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+
+// This shader is provided as a learning resource, a far more optimized version
+// is already part of StreamFX as the Blur filter.
+
+//------------------------------------------------------------------------------
+// Defines
+//------------------------------------------------------------------------------
+#define SAMPLE_RANGE 128
+#define BLUR_RANGE 32
+#define TO_RAD(x) (x *  0.017453292)
+#define TO_DEG(x) (x * 57.295779513)
+
+//------------------------------------------------------------------------------
+// Uniforms
+//------------------------------------------------------------------------------
+uniform float4x4 ViewProj<
+	bool automatic = true;
+>;
+
+uniform float4 ViewSize<
+	bool automatic = true;
+>;
+
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+
+uniform int samples<
+	string name = "Samples";
+	string field_type = "slider";
+	int minimum = 0;
+	int maximum = SAMPLE_RANGE;
+	int step = 1;
+> = 8;
+
+uniform float size<
+	string name = "Size";
+	string field_type = "slider";
+	float minimum = 0.;
+	float maximum = BLUR_RANGE;
+	float step = .01;
+	float scale = 1.;
+> = 1.;
+
+uniform float direction<
+	string name = "Direction";
+	string field_type = "slider";
+	float minimum = -180.;
+	float maximum = 180.;
+	float step = .01;
+	float scale = 1.;
+> = 0.;
+
+//------------------------------------------------------------------------------
+// Structures
+//------------------------------------------------------------------------------
+struct VertexInformation {
+	float4 position : POSITION;
+	float4 texcoord0 : TEXCOORD0;
+};
+
+//------------------------------------------------------------------------------
+// Samplers
+//------------------------------------------------------------------------------
+sampler_state LinearClampSampler {
+	Filter    = Point;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+};
+
+//------------------------------------------------------------------------------
+// Functions
+//------------------------------------------------------------------------------
+VertexInformation DefaultVertexShader(VertexInformation vtx) {
+	vtx.position = mul(float4(vtx.position.xyz, 1.0), ViewProj);
+	return vtx;
+};
+
+bool is_equal(float a, float b) {
+	return (abs(a - b) <= .0001);
+}
+
+float gaussian(float x, float o /*, float u = 0*/)
+{
+	// u/µ can be simulated by subtracting that value from x.
+	float two_pi_sqroot = 2.506628274631000502415765284811;
+
+	if (is_equal(0., o)) {
+		return 1.0e24;
+	}
+
+	// g(x) = (1 / o√(2Π)) * e(-(1/2) * ((x-u)/o)²)
+	float left_e      = 1. / (o * two_pi_sqroot);
+	float mid_right_e = ((x /* - u*/) / o);
+	float right_e     = -0.5 * mid_right_e * mid_right_e;
+	float final       = left_e * exp(right_e);
+
+	return final;
+}
+
+//------------------------------------------------------------------------------
+// Technique: NxN
+//------------------------------------------------------------------------------
+float4 PSNxNtap(VertexInformation vtx) : TARGET {
+	vtx.texcoord0.xy += ViewSize.zw / 2.;
+
+	// Calculate the actual step to take.
+	float2 uv_step = ViewSize.zw;
+
+	float4 final = InputA.Sample(LinearClampSampler, vtx.texcoord0.xy) * gaussian(0., size);
+	float totals = gaussian(0., size);
+	for (uint xstep = 1; (xstep < samples) && (xstep < SAMPLE_RANGE); xstep++) {
+		float xkernel = gaussian(float(xstep), size);
+		for (uint ystep = 1; (ystep < samples) && (ystep < SAMPLE_RANGE); ystep++) {
+			float ykernel = gaussian(float(ystep), size);
+			float kernel = xkernel * ykernel;
+
+			totals += kernel * 4.;
+
+			float4 temp = float4(0, 0, 0, 0);
+			temp += InputA.Sample(LinearClampSampler, vtx.texcoord0.xy + float2(uv_step.x * xstep, uv_step.y * ystep));
+			temp += InputA.Sample(LinearClampSampler, vtx.texcoord0.xy + float2(uv_step.x * xstep, -uv_step.y * ystep));
+			temp += InputA.Sample(LinearClampSampler, vtx.texcoord0.xy + float2(-uv_step.x * xstep, uv_step.y * ystep));
+			temp += InputA.Sample(LinearClampSampler, vtx.texcoord0.xy + float2(-uv_step.x * xstep, -uv_step.y * ystep));
+
+			final += temp * kernel;
+		}
+	}
+	final /= totals;
+
+	return final;
+}
+
+technique NxNtap
+{
+	pass
+	{
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader  = PSNxNtap(vtx);
+	}
+}
+
+//------------------------------------------------------------------------------
+// Technique: Separable Directional
+//------------------------------------------------------------------------------
+float4 PSNtap(VertexInformation vtx) : TARGET {
+	// Calculate the actual step to take.
+	float2 uv_step = float2(cos(TO_RAD(direction)), sin(TO_RAD(direction))) * ViewSize.zw;
+
+	float kernel = gaussian(0., size);
+	float4 final = InputA.Sample(LinearClampSampler, vtx.texcoord0.xy) * kernel;
+	float weights = kernel;
+	for (uint step = 1; (step < samples) && (step < SAMPLE_RANGE); step++) {
+		kernel = gaussian(float(step), size);
+		final += InputA.Sample(LinearClampSampler, vtx.texcoord0.xy + uv_step * step) * kernel;
+		final += InputA.Sample(LinearClampSampler, vtx.texcoord0.xy - uv_step * step) * kernel;
+		weights += kernel * 2.;
+	}
+	final /= weights;
+
+	return final;
+}
+
+technique Ntap
+{
+	pass
+	{
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader  = PSNtap(vtx);
+	}
+}
