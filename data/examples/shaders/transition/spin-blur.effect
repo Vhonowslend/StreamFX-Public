@@ -1,0 +1,340 @@
+// Copyright 2021 Michael Fabian Dirks <info@xaymar.com>
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice,
+//    this list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//    this list of conditions and the following disclaimer in the documentation
+//    and/or other materials provided with the distribution.
+// 3. Neither the name of the copyright holder nor the names of its contributors
+//    may be used to endorse or promote products derived from this software
+//    without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+
+//------------------------------------------------------------------------------
+// Configuration
+//------------------------------------------------------------------------------
+#define IS_TRANSITION
+
+//------------------------------------------------------------------------------
+// Defines
+//------------------------------------------------------------------------------
+// Variations of PI/TAU
+#define PI   3.141592653
+#define TAU  6.283185307
+#define PIm2 6.283185307
+#define PIb2 1.570796326
+#define PIb4 0.785398163
+
+// Phi/Φ = Golden Ratio
+#define PHI 1.61803398874989484820459
+
+// e (Eulers Constant)
+#define EULERS_CONSTANT 2,7182818284590452353602874713527
+
+// Degrees <-> Radians Conversion
+#define TO_RAD(x) (x *  0.017453292)
+#define TO_DEG(x) (x * 57.295779513)
+
+//------------------------------------------------------------------------------
+// Uniforms
+//------------------------------------------------------------------------------
+uniform float4x4 ViewProj<
+	bool automatic = true;
+>;
+
+uniform float4 Time<
+	bool automatic = true;
+>;
+
+uniform float4 ViewSize<
+	bool automatic = true;
+>;
+
+// Filter Support
+#ifdef IS_FILTER
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+#endif
+
+// Transition Support
+#ifdef IS_TRANSITION
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+
+uniform texture2d InputB<
+	bool automatic = true;
+>;
+
+uniform float TransitionTime<
+	bool automatic = true;
+>;
+
+uniform int2 TransitionSize<
+	bool automatic = true;
+>;
+#endif
+
+uniform int RandomSeed<
+	bool automatic = true;
+>;
+
+uniform float4x4 Random<
+	bool automatic = true;
+>;
+
+//------------------------------------------------------------------------------
+// Structures
+//------------------------------------------------------------------------------
+struct VertexInformation {
+	float4 position : POSITION;
+	float4 texcoord0 : TEXCOORD0;
+};
+
+//------------------------------------------------------------------------------
+// Samplers
+//------------------------------------------------------------------------------
+sampler_state PointRepeatSampler {
+	Filter    = Point;
+	AddressU  = Repeat;
+	AddressV  = Repeat;
+};
+sampler_state LinearRepeatSampler {
+	Filter    = Linear;
+	AddressU  = Repeat;
+	AddressV  = Repeat;
+};
+
+sampler_state PointMirrorSampler {
+	Filter    = Point;
+	AddressU  = Mirror;
+	AddressV  = Mirror;
+};
+sampler_state LinearMirrorSampler {
+	Filter    = Linear;
+	AddressU  = Mirror;
+	AddressV  = Mirror;
+};
+
+sampler_state PointClampSampler {
+	Filter    = Point;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+};
+sampler_state LinearClampSampler {
+	Filter    = Linear;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+};
+
+//------------------------------------------------------------------------------
+// Functions
+//------------------------------------------------------------------------------
+VertexInformation DefaultVertexShader(VertexInformation vtx) {
+	vtx.position = mul(float4(vtx.position.xyz, 1.0), ViewProj);
+	return vtx;
+};
+
+float2 rotate2d(float2 v, float angle) {
+	float s = sin(angle);
+	float c = cos(angle);
+	float2x2 m = float2x2(c, -s, s, c);
+	return mul(m, v);
+};
+
+//------------------------------------------------------------------------------
+// Options
+//------------------------------------------------------------------------------
+
+uniform float2 _400_Offset<
+	string name = "Rotation Center";
+	string field_type = "slider";
+	string suffix = "%";
+	float2 minimum = {-50., -50.};
+	float2 maximum = {50., 50.};
+	float2 scale = {.01, .01};
+	float2 step = {.01, .01};
+> = {0., 0.};
+
+uniform float _500_Rotation<
+	string name = "Rotation";
+	string field_type = "slider";
+	string suffix = "°";
+	float minimum = -180.;
+	float maximum =  180.;
+	float scale = -1.;
+	float step = .01;
+> = 90.;
+
+uniform float _600_BlurRotation<
+	string name = "Blur Rotation";
+	string field_type = "slider";
+	string suffix = "°";
+	float minimum = -90.;
+	float maximum =  90.;
+	float scale = 1.;
+	float step = .01;
+> = 30.;
+
+uniform float _700_TransitionRange<
+	string name = "Transition Range";
+	string field_type = "slider";
+	string suffix = "%";
+	float minimum = 0.;
+	float maximum = 100.;
+	float scale = .01;
+	float step = .01;
+> = 10.;
+
+uniform int _900_MaximumBlurSamples<
+	string name = "Max. Blur Samples";
+	string description = "The maximum of samples to use for the Blur effect. Higher number looks nicer, but has way higher GPU usage.";
+	string field_type = "slider";
+	string suffix = "";
+	int minimum = 4;
+	int maximum = 128;
+	int scale = 1;
+	int step = 1;
+> = 8;
+
+uniform bool _990_MirrorInsteadOfRepeat<
+	string name = "Mirror instead of Repeat";
+> = true;
+
+//------------------------------------------------------------------------------
+// Effect
+//------------------------------------------------------------------------------
+// Edge is 50% progress
+// Rotates n° forward/backward, then switches to B, then rotates back to zero in the other direction.
+// While rotated, blurs around the same axis.
+// Starts slow, speeds up to 100%, then slows down again. Looks like sine curve.
+
+float2 uv_to_xy(float2 uv) {
+	return ((uv - float2(.5, .5)) + _400_Offset) * TransitionSize.xy;
+}
+
+float2 xy_to_uv(float2 xy) {
+	return ((xy / TransitionSize.xy) - _400_Offset) + float2(.5, .5);
+}
+
+float4 SampleTexture(texture2d tex, float2 uv) {
+	if (_990_MirrorInsteadOfRepeat) {
+		return tex.Sample(LinearMirrorSampler, uv);
+	} else {
+		return tex.Sample(LinearRepeatSampler, uv);
+	}
+}
+
+float4 sample_with_blur(texture2d tex, float2 xy, float max_angle, uint max_steps) {
+	float angle_step = max_angle / float(max_steps);
+
+	float4 final = SampleTexture(tex, xy_to_uv(xy));
+	for (uint step = 1; step <= max_steps; step++) {
+		float angle = angle_step * float(step);
+		float2 xy_p = rotate2d(xy, TO_RAD(angle));
+		float2 xy_n = rotate2d(xy, TO_RAD(-angle));
+
+		final += SampleTexture(tex, xy_to_uv(xy_p));
+		final += SampleTexture(tex, xy_to_uv(xy_n));
+	}
+	final /= (max_steps * 2u + 1u);
+
+	return final;
+}
+
+float4 DefaultPixelShader(VertexInformation vtx) : TARGET {
+	// Precalculate some important information.
+	float2 uv = vtx.texcoord0.xy;
+	// - UV offset towards the "center".
+	float2 uv_offset = ((uv - float2(.5, .5)) + _400_Offset);
+	float2 xy = uv_to_xy(uv);
+	// - Distance to the "center" from the offset coordinates.
+	float distance_to_center = distance(uv_offset, float2(.0, 0.));
+	// - Maximum Blur Angle
+	float max_blur_angle = _600_BlurRotation;
+	max_blur_angle *= sin(distance_to_center * PIb2);
+	max_blur_angle *= cos((TransitionTime * 2. + 1. ) * PI) * .5 + .5;
+	// - Maximum number of samples for blurring.
+	uint max_blur_samples = uint(_900_MaximumBlurSamples); // TODO: Calculate this value?
+
+	// Calculate the angle of the effect, this goes to _500_Rotation over 0-50%,
+	// then goes back in reverse in order to give the illusion of a continuous
+	// motion.
+	float angle_a = sin((TransitionTime * 2.) * PIb2 - PIb2) * _500_Rotation + _500_Rotation;
+	float angle_b = sin((TransitionTime * 2. - 1.) * PIb2) * _500_Rotation - _500_Rotation ;
+
+	// Generate the rotated XY position for sampling.
+	float2 xy_a = rotate2d(xy, TO_RAD(angle_a));
+	float2 xy_b = rotate2d(xy, TO_RAD(angle_b));
+
+	// Calculate the weight of A and B.
+	// - Convert the transition point to a range from -1 to 1.
+	float weight_a = (TransitionTime - .5) * 2.; // We don't actually want this range, but it is easier to work with.
+	// - Offset it by the transition range.
+	weight_a += _700_TransitionRange;
+	// - Divide it by the transition range times two.
+	weight_a /= _700_TransitionRange * 2.;
+	// - Clamp it back to a range from 0 to 1.
+	weight_a = 1. - (cos((clamp(weight_a, 0., 1.) + 1.) * PI) * .5 + .5); // Curve
+	//weight_a = 1. - clamp(weight_a, 0., 1.); // Alternative linear
+	// - The weight for the B side is the one-minus of the A side.
+	float weight_b = 1. - weight_a;
+
+	// Store some immediate information.
+	float4 color_a = float4(0., 0., 0., 0.);
+	float4 color_b = float4(0., 0., 0., 0.);
+
+	// Only sample A and B if they are needed.
+	if (weight_a >= 0.001) {
+		color_a = sample_with_blur(InputA, xy_a, max_blur_angle, max_blur_samples);
+	}
+	if (weight_b >= 0.001) {
+		color_b = sample_with_blur(InputB, xy_b, max_blur_angle, max_blur_samples);
+	}
+
+	// Return a blended color.
+	return lerp(color_a, color_b, weight_b);
+};
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader  = DefaultPixelShader(vtx);
+	};
+};
+
+technique Version1_Normal
+{
+	pass
+	{
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader  = DefaultPixelShader(vtx);
+	};
+};
+
+
+technique Version1_Mirror
+{
+	pass
+	{
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader  = DefaultPixelShader(vtx);
+	};
+};
