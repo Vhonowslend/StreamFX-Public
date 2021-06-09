@@ -1,0 +1,323 @@
+// Copyright 2021 Michael Fabian Dirks <info@xaymar.com>
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice,
+//    this list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//    this list of conditions and the following disclaimer in the documentation
+//    and/or other materials provided with the distribution.
+// 3. Neither the name of the copyright holder nor the names of its contributors
+//    may be used to endorse or promote products derived from this software
+//    without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+
+//------------------------------------------------------------------------------
+// Uniforms
+//------------------------------------------------------------------------------
+uniform float4x4 ViewProj<
+	bool automatic = true;
+>;
+
+uniform float4 ViewSize<
+	bool automatic = true;
+>;
+
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+
+uniform float4 _000_Levels<
+	string name = "Levels";
+	string field_type = "slider";
+	float4 minimum = {0., 0., 0., 0.};
+	float4 maximum = {1024., 1024., 1024., 100.};
+	float4 step = {1., 1., 1., .01};
+	float4 scale = {1., 1., 1., 100.};
+> = {1., 1., 1., 1.};
+
+uniform float4 _100_Offset<
+	string name = "Bias";
+	string field_type = "slider";
+	float4 minimum = {-100., -100., -100., -100.};
+	float4 maximum = {100., 100., 100., 100.};
+	float4 step = {.01, .01, .01, .01};
+	float4 scale = {.005, .005, .005, .005};
+>;
+
+uniform bool _200_PassThroughAlpha<
+	string name = "Alpha Pass Through";
+> = true;
+
+//------------------------------------------------------------------------------
+// Structs
+//------------------------------------------------------------------------------
+struct VertFragData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+//------------------------------------------------------------------------------
+// Samplers
+//------------------------------------------------------------------------------
+sampler_state def_sampler {
+	Filter    = Point;
+	AddressU  = Repeat;
+	AddressV  = Repeat;
+};
+
+//------------------------------------------------------------------------------
+// Functionality
+//------------------------------------------------------------------------------
+VertFragData VSDefault(VertFragData vtx) {
+	vtx.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
+	return vtx;
+};
+
+//------------------------------------------------------------------------------
+// Technique - RGB
+//------------------------------------------------------------------------------
+float4 PSRGB(VertFragData vtx) : TARGET {
+	float4 rgba = InputA.Sample(def_sampler, vtx.uv);
+
+	float4 polar = (round(rgba * _000_Levels - _100_Offset) + _100_Offset) / _000_Levels;
+
+	if (_200_PassThroughAlpha)
+		polar.a = rgba.a;
+
+	return polar;
+};
+
+technique RGB
+{
+	pass
+	{
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSRGB(vtx);
+	};
+};
+
+//------------------------------------------------------------------------------
+// Technique - YUV
+//------------------------------------------------------------------------------
+#define RGB_YUV_709 float3x3( 0.21260,  0.71520,  0.07220,\
+                             -0.11457, -0.38543,  0.50000,\
+                              0.50000, -0.45415, -0.04585)
+#define YUV_709_RGB float3x3( 1.00000,  0.00000,  1.57480,\
+                              1.00000, -0.18732, -0.46812,\
+                              1.00000,  1.85560,  0.00000)
+
+float3 RGBtoYUV(float3 rgb, float3x3 m) {
+	return mul(m, rgb) + float3(0, .5, .5);
+}
+
+float4 RGBAtoYUVA(float4 rgba, float3x3 m) {
+	return float4(RGBtoYUV(rgba.rgb, m), rgba.a);
+}
+
+float3 YUVtoRGB(float3 yuv, float3x3 m) {
+	return mul(m, yuv - float3(0, .5, .5));
+}
+
+float4 YUVAtoRGBA(float4 yuva, float3x3 m) {
+	return float4(YUVtoRGB(yuva.rgb, m), yuva.a);
+}
+
+float4 PSYUV(VertFragData vtx) : TARGET {
+	float4 rgba = InputA.Sample(def_sampler, vtx.uv);
+	float4 yuva = RGBAtoYUVA(rgba, YUV_709_RGB);
+
+	float4 polar = round(yuva * _000_Levels + _100_Offset) / _000_Levels;
+
+	if (_200_PassThroughAlpha)
+		polar.a = rgba.a;
+
+	float4 final = YUVAtoRGBA(polar, RGB_YUV_709);
+	return final;
+};
+
+technique YUV
+{
+	pass
+	{
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSYUV(vtx);
+	};
+};
+
+//------------------------------------------------------------------------------
+// Technique - HSV
+//------------------------------------------------------------------------------
+// Adapted from http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl
+
+#define RGB_HSV_FASTCONDITIONALMOVE
+
+float3 RGBtoHSV(float3 RGBA) {
+	const float4 K = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+	const float e = 1.0e-10;
+#ifdef RGB_HSV_FASTCONDITIONALMOVE
+	float4 p = RGBA.g < RGBA.b ? float4(RGBA.bg, K.wz) : float4(RGBA.gb, K.xy);
+	float4 q = RGBA.r < p.x    ? float4(p.xyw, RGBA.r) : float4(RGBA.r, p.yzx);
+#else
+	float4 p = lerp(float4(RGBA.bg, K.wz), float4(RGBA.gb, K.xy), step(RGBA.b, RGBA.g));
+	float4 q = lerp(float4(p.xyw, RGBA.r), float4(RGBA.r, p.yzx), step(p.x, RGBA.r));
+#endif
+	float d = q.x - min(q.w, q.y);
+	return float3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
+float4 RGBAtoHSVA(float4 RGBA) {
+	return float4(RGBtoHSV(RGBA.rgb), RGBA.a);
+}
+
+float3 HSVtoRGB(float3 HSVA) {
+	const float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+	float3 v = float3(0,0,0);
+	v = HSVA.z * lerp(K.xxx, clamp(abs(frac(HSVA.xxx + K.xyz) * 6.0 - K.www) - K.xxx, 0.0, 1.0), HSVA.y);
+	return v;
+}
+
+float4 HSVAtoRGBA(float4 HSVA) {
+	return float4(HSVtoRGB(HSVA.rgb), HSVA.a);
+}
+
+float4 PSHSV(VertFragData vtx) : TARGET {
+	float4 rgba = InputA.Sample(def_sampler, vtx.uv);
+	float4 hsva = RGBAtoHSVA(rgba);
+
+	float4 polar = round(hsva * _000_Levels + _100_Offset) / _000_Levels;
+	polar = clamp(polar, float4(-1., 0., 0., 0.), float4(2., 1., 1., 1.));
+
+	if (_200_PassThroughAlpha)
+		polar.a = rgba.a;
+
+	float4 final = HSVAtoRGBA(polar);
+	return final;
+};
+
+technique HSV
+{
+	pass
+	{
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSHSV(vtx);
+	};
+};
+
+//------------------------------------------------------------------------------
+// Technique - CIE
+//------------------------------------------------------------------------------
+// XYZ <-> RGB
+float4 RGBtoXYZ( float4 c ) {
+    float3 tmp;
+    tmp.x = ( c.r > 0.04045 ) ? pow( ( c.r + 0.055 ) / 1.055, 2.4 ) : c.r / 12.92;
+    tmp.y = ( c.g > 0.04045 ) ? pow( ( c.g + 0.055 ) / 1.055, 2.4 ) : c.g / 12.92,
+    tmp.z = ( c.b > 0.04045 ) ? pow( ( c.b + 0.055 ) / 1.055, 2.4 ) : c.b / 12.92;
+    const float3x3 mat = float3x3(
+		0.4124, 0.3576, 0.1805,
+        0.2126, 0.7152, 0.0722,
+        0.0193, 0.1192, 0.9505
+	);
+	float3 r = 100.0 * mul(tmp, mat);
+    return float4(r.r, r.g, r.b, c.a);
+}
+
+float4 XYZtoRGB( float4 c ) {
+	const float3x3 mat = float3x3(
+        3.2406, -1.5372, -0.4986,
+        -0.9689, 1.8758, 0.0415,
+        0.0557, -0.2040, 1.0570
+	);
+    float3 v = mul(c.rgb / 100.0, mat);
+    float4 r;
+    r.x = ( v.r > 0.0031308 ) ? (( 1.055 * pow( v.r, ( 1.0 / 2.4 ))) - 0.055 ) : 12.92 * v.r;
+    r.y = ( v.g > 0.0031308 ) ? (( 1.055 * pow( v.g, ( 1.0 / 2.4 ))) - 0.055 ) : 12.92 * v.g;
+    r.z = ( v.b > 0.0031308 ) ? (( 1.055 * pow( v.b, ( 1.0 / 2.4 ))) - 0.055 ) : 12.92 * v.b;
+	r.a = c.a;
+    return r;
+}
+
+// XYZ <-> L*a*b
+float4 XYZtoLAB( float4 c ) {
+    float3 n = c.rgb / float3(95.047, 100, 108.883);
+    float3 v;
+    v.x = ( n.x > 0.008856 ) ? pow( n.x, 1.0 / 3.0 ) : ( 7.787 * n.x ) + ( 16.0 / 116.0 );
+    v.y = ( n.y > 0.008856 ) ? pow( n.y, 1.0 / 3.0 ) : ( 7.787 * n.y ) + ( 16.0 / 116.0 );
+    v.z = ( n.z > 0.008856 ) ? pow( n.z, 1.0 / 3.0 ) : ( 7.787 * n.z ) + ( 16.0 / 116.0 );
+    return float4(
+		( 116.0 * v.y ) - 16.0,
+		500.0 * ( v.x - v.y ),
+		200.0 * ( v.y - v.z ),
+		c.a
+	);
+}
+
+float4 LABtoXYZ( float4 c ) {
+    float fy = ( c.x + 16.0 ) / 116.0;
+    float fx = c.y / 500.0 + fy;
+    float fz = fy - c.z / 200.0;
+    return float4(
+         95.047 * (( fx > 0.206897 ) ? fx * fx * fx : ( fx - 16.0 / 116.0 ) / 7.787),
+        100.000 * (( fy > 0.206897 ) ? fy * fy * fy : ( fy - 16.0 / 116.0 ) / 7.787),
+        108.883 * (( fz > 0.206897 ) ? fz * fz * fz : ( fz - 16.0 / 116.0 ) / 7.787),
+		c.a
+    );
+}
+
+// L*a*b <-> RGB
+float4 RGBtoLAB( float4 c ) {
+    float4 lab = XYZtoLAB(RGBtoXYZ(c));
+    return float4(
+		lab.x / 100.0,
+		0.5 + 0.5 * ( lab.y / 127.0 ),
+		0.5 + 0.5 * ( lab.z / 127.0 ),
+		lab.a
+	);
+}
+
+float4 LABtoRGB( float4 c ) {
+    return XYZtoRGB(
+		LABtoXYZ(
+			float4(
+				100.0 * c.x,
+				2.0 * 127.0 * (c.y - 0.5),
+				2.0 * 127.0 * (c.z - 0.5),
+				c.a
+			)
+		)
+	);
+}
+
+float4 PSLAB(VertFragData vtx) : TARGET {
+	float4 rgba = InputA.Sample(def_sampler, vtx.uv);
+	float4 value = RGBtoLAB(rgba);
+
+	value = round(value * _000_Levels + _100_Offset) / _000_Levels;
+	//polar = clamp(polar, float4(-1., 0., 0., 0.), float4(2., 1., 1., 1.));
+
+	if (_200_PassThroughAlpha)
+		value.a = rgba.a;
+
+	return LABtoRGB(value);
+};
+
+technique LAB
+{
+	pass
+	{
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSLAB(vtx);
+	};
+};
