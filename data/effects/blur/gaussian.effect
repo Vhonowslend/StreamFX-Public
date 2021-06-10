@@ -9,7 +9,7 @@
 //------------------------------------------------------------------------------
 // Defines
 //------------------------------------------------------------------------------
-#define MAX_SAMPLES 128
+#define MAX_SAMPLES 128u
 
 //------------------------------------------------------------------------------
 // Technique: Directional / Area
@@ -23,20 +23,22 @@ float4 PSBlur1D(VertexInformation vtx) : TARGET {
 
 	// Calculate the actual Gaussian Blur
 	// 1. Sample the center immediately.
-	float kernel = kernelAt(0);
+	float kernel = kernelAt(0u);
 	weights += kernel;
 	float4 final = pImage.Sample(LinearClampSampler, vtx.uv) * kernel;
+
 	// 2. Then sample both + and - coordinates in one go to reduce code iterations.
-	for (uint step = 1; (step < pSize) && (step < MAX_SAMPLES); step++) {
-		float2 offset = uvstep * step;
+	for (uint step = 1u; (step < uint(pSize)) && (step < MAX_SAMPLES); step++) {
+		float2 offset = uvstep * float2(step, step);
 		kernel = kernelAt(step);
-		weights += kernel * 2;
+		weights += kernel * 2.;
 
 		final += pImage.Sample(LinearClampSampler, vtx.uv + offset) * kernel;
 		final += pImage.Sample(LinearClampSampler, vtx.uv - offset) * kernel;
 	}
+
 	// 3. Ensure we always have a total of 1.0, even if the kernel is bad.
-	final /= weights; 
+	final /= weights;
 
 	return final;
 }
@@ -60,20 +62,22 @@ float4 PSRotate(VertexInformation vtx) : TARGET {
 
 	// Calculate the actual Gaussian Blur
 	// 1. Sample the center immediately.
-	float kernel = kernelAt(0);
+	float kernel = kernelAt(0u);
 	weights += kernel;
 	float4 final = pImage.Sample(LinearClampSampler, vtx.uv) * kernel;
+
 	// 2. Then sample both + and - coordinates in one go to reduce code iterations.
-	for (uint step = 1; (step < pSize) && (step < MAX_SAMPLES); step++) {
+	for (uint step = 1u; (step < uint(pSize)) && (step < MAX_SAMPLES); step++) {
 		float offset = angstep * step;
 		kernel = kernelAt(step);
-		weights += kernel * 2;
+		weights += kernel * 2.;
 
 		final += pImage.Sample(LinearClampSampler, rotateAround(vtx.uv, pCenter, offset)) * kernel;
 		final += pImage.Sample(LinearClampSampler, rotateAround(vtx.uv, pCenter, -offset)) * kernel;
 	}
+
 	// 3. Ensure we always have a total of 1.0, even if the kernel is bad.
-	final /= weights; 
+	final /= weights;
 
 	return final;
 }
@@ -98,20 +102,22 @@ float4 PSZoom(VertexInformation vtx) : TARGET {
 
 	// Calculate the actual Gaussian Blur
 	// 1. Sample the center immediately.
-	float kernel = kernelAt(0);
+	float kernel = kernelAt(0u);
 	weights += kernel;
 	float4 final = pImage.Sample(LinearClampSampler, vtx.uv) * kernel;
+
 	// 2. Then sample both + and - coordinates in one go to reduce code iterations.
-	for (uint step = 1; (step < pSize) && (step < MAX_SAMPLES); step++) {
+	for (uint step = 1u; (step < uint(pSize)) && (step < MAX_SAMPLES); step++) {
 		float2 offset = dir * step * dist;
 		kernel = kernelAt(step);
-		weights += kernel * 2;
+		weights += kernel * 2.;
 
 		final += pImage.Sample(LinearClampSampler, vtx.uv + offset) * kernel;
 		final += pImage.Sample(LinearClampSampler, vtx.uv - offset) * kernel;
 	}
+
 	// 3. Ensure we always have a total of 1.0, even if the kernel is bad.
-	final /= weights; 
+	final /= weights;
 
 	return final;
 }
