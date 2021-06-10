@@ -81,5 +81,5 @@ float2 rotateAround(float2 pt, float2 cpt, float angle) {
 }
 
 float kernelAt(uint i) {
-	return ((float[4])(pKernel[floor(i/4)]))[i%4];
+	return pKernel[i/4u][i%4u];
 }

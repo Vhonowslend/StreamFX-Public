@@ -37,15 +37,12 @@
 //------------------------------------------------------------------------------
 // Defines
 //------------------------------------------------------------------------------
-#define MAX_BLUR_SIZE 128
+#define MAX_BLUR_SIZE 128u
 
 //------------------------------------------------------------------------------
 // Technique: Directional / Area
 //------------------------------------------------------------------------------
 float4 PSBlur1D(VertexInformation vtx) : TARGET {
-	float4 final = pImage.Sample(LinearClampSampler, vtx.uv);
-	bool is_odd = ((uint(round(pSize)) % 2) == 1);
-
 	// y = yes, s = skip, b = break
 	// Size-> | 1| 2| 3| 4| 5| 6| 7|
 	// -------+--+--+--+--+--+--+--+
@@ -58,19 +55,14 @@ float4 PSBlur1D(VertexInformation vtx) : TARGET {
 	// n=7    |  |  |  |  |  | b| b|
 	// n=8    |  |  |  |  |  |  |  |
 
-	// Loop unrolling is only possible with a fixed known maximum.
-	// Some compilers may unroll up to x iterations, but most will not.
-	for (int n = 1; n <= MAX_BLUR_SIZE; n+=2) {
-		// Different from normal box, early exit instead of late exit.
-		if (n >= pSize) {
-			break;
-		}
-
-		float2 nstep = (pImageTexel * pStepScale) * (n + 0.5);
+	float4 final = pImage.Sample(LinearClampSampler, vtx.uv);
+	for (uint n = 1u; (n < uint(pSize)) && (n < MAX_BLUR_SIZE); n += 2u) {
+		float2 nstep = (pImageTexel * pStepScale) * (float(n) + 0.5);
 		final += pImage.Sample(LinearClampSampler, vtx.uv + nstep) * 2.;
 		final += pImage.Sample(LinearClampSampler, vtx.uv - nstep) * 2.;
 	}
-	if (is_odd) {
+
+	if ((uint(pSize) % 2u) == 1u) {
 		float2 nstep = (pImageTexel * pStepScale) * pSize;
 		final += pImage.Sample(LinearClampSampler, vtx.uv + nstep);
 		final += pImage.Sample(LinearClampSampler, vtx.uv - nstep);
