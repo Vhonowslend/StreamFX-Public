@@ -1,8 +1,8 @@
 ---
-name: "Suggest an Enhancment to a Feature or a new Feature"
-title: "Replace Me Or Have Your Request Closed"
-description: "Is there something that StreamFX is lacking or you'd like to see in OBS Studio?"
-labels: ["type:enhancement", "status:help-wanted"]
+name: "Submit a Feature/Enhancement"
+description: "Implemented a new feature or enhancement and want it to be shipped with StreamFX?"
+title: "Replace Me Or Have Your Pull Request Closed"
+labels: ["type:enhancement", "status:help-wanted", "status:testing-required"]
 body:
 - type: textarea
   attributes:
@@ -12,8 +12,8 @@ body:
     required: true
 - type: textarea
   attributes:
-    label: "What makes this feature/enhancement useful for StreamFX and its users?"
-    description: "Why should this feature/enhancement become part of the StreamFX plugin, instead of becoming or remaining a third-party plug-in? What benefits do other users of StreamFX get from this?"
+    label: "Why is this useful?"
+    description: "Why should this feature/enhancement become part of the StreamFX plugin? What benefits do other users of StreamFX get from this?"
   validations:
     required: true
 - type: checkboxes
@@ -21,7 +21,8 @@ body:
     label: "Checklist"
     description: "Check all that apply."
     options:
-      - label: "I am offering a monetary bounty/reward for the implementation of this Feature/Enhancement."
+      - label: "I will become the maintainer for this part of code."
+      - label: "I have tested this code on all supported Platforms."
       - label: "There is no other way to currently do this in StreamFX or OBS Studio."
 - type: textarea
   attributes:

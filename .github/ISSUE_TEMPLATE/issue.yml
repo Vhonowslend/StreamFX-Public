@@ -1,5 +1,5 @@
 name: "Report a Bug/Crash/Freeze"
-title: "[BUG] (Replace this part including the brackets)"
+title: "Replace Me Or Have Your Report Closed"
 description: "Encountered a problem, a bug or a crash?"
 labels: ["type:bug", "status:help-wanted"]
 body:
