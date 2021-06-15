@@ -1,8 +1,3 @@
----
-title: "Replace Me Or Have Your Pull Request Closed"
-labels: "type:enhancement" "type:fix" "status:help-wanted" "status:testing-required"
----
-
 ### Explain the Pull Request
 <!-- Describe the PR in as much detail as possible, leave nothing out. -->
 <!-- If you think images or example videos help describe the PR, include them. -->
