@@ -49,7 +49,7 @@
 
 #define ENABLE_STACK_CHECKS
 
-nvidia::cuda::context::~context()
+streamfx::nvidia::cuda::context::~context()
 {
 	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
 
@@ -59,15 +59,16 @@ nvidia::cuda::context::~context()
 	_cuda->cuCtxDestroy(_ctx);
 }
 
-nvidia::cuda::context::context() : _cuda(::nvidia::cuda::cuda::get()), _ctx(), _has_device(false), _device()
+streamfx::nvidia::cuda::context::context()
+	: _cuda(::streamfx::nvidia::cuda::cuda::get()), _ctx(), _has_device(false), _device()
 {
 	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
 }
 
 #ifdef WIN32
-nvidia::cuda::context::context(ID3D11Device* device) : context()
+streamfx::nvidia::cuda::context::context(ID3D11Device* device) : context()
 {
-	using namespace nvidia::cuda;
+	using namespace streamfx::nvidia::cuda;
 
 	if (!device)
 		throw std::invalid_argument("device");
@@ -93,45 +94,45 @@ nvidia::cuda::context::context(ID3D11Device* device) : context()
 }
 #endif
 
-::nvidia::cuda::context_t nvidia::cuda::context::get()
+::streamfx::nvidia::cuda::context_t streamfx::nvidia::cuda::context::get()
 {
 	return _ctx;
 }
 
-std::shared_ptr<::nvidia::cuda::context_stack> nvidia::cuda::context::enter()
+std::shared_ptr<::streamfx::nvidia::cuda::context_stack> streamfx::nvidia::cuda::context::enter()
 {
-	return std::make_shared<::nvidia::cuda::context_stack>(shared_from_this());
+	return std::make_shared<::streamfx::nvidia::cuda::context_stack>(shared_from_this());
 }
 
-void nvidia::cuda::context::push()
+void streamfx::nvidia::cuda::context::push()
 {
-	if (auto res = _cuda->cuCtxPushCurrent(_ctx); res != ::nvidia::cuda::result::SUCCESS) {
-		throw ::nvidia::cuda::cuda_error(res);
+	if (auto res = _cuda->cuCtxPushCurrent(_ctx); res != ::streamfx::nvidia::cuda::result::SUCCESS) {
+		throw ::streamfx::nvidia::cuda::cuda_error(res);
 	}
 }
 
-void nvidia::cuda::context::pop()
+void streamfx::nvidia::cuda::context::pop()
 {
 #ifdef ENABLE_STACK_CHECKS
-	::nvidia::cuda::context_t ctx;
-	if (_cuda->cuCtxGetCurrent(&ctx) == ::nvidia::cuda::result::SUCCESS)
+	::streamfx::nvidia::cuda::context_t ctx;
+	if (_cuda->cuCtxGetCurrent(&ctx) == ::streamfx::nvidia::cuda::result::SUCCESS)
 		assert(ctx == _ctx);
 #endif
 
-	assert(_cuda->cuCtxPopCurrent(&ctx) == ::nvidia::cuda::result::SUCCESS);
+	assert(_cuda->cuCtxPopCurrent(&ctx) == ::streamfx::nvidia::cuda::result::SUCCESS);
 }
 
-void nvidia::cuda::context::synchronize()
+void streamfx::nvidia::cuda::context::synchronize()
 {
 	D_LOG_DEBUG("Synchronizing... (Addr: 0x%" PRIuPTR ")", this);
 
 #ifdef ENABLE_STACK_CHECKS
-	::nvidia::cuda::context_t ctx;
-	if (_cuda->cuCtxGetCurrent(&ctx) == ::nvidia::cuda::result::SUCCESS)
+	::streamfx::nvidia::cuda::context_t ctx;
+	if (_cuda->cuCtxGetCurrent(&ctx) == ::streamfx::nvidia::cuda::result::SUCCESS)
 		assert(ctx == _ctx);
 #endif
 
-	if (auto res = _cuda->cuCtxSynchronize(); res != ::nvidia::cuda::result::SUCCESS) {
-		throw ::nvidia::cuda::cuda_error(res);
+	if (auto res = _cuda->cuCtxSynchronize(); res != ::streamfx::nvidia::cuda::result::SUCCESS) {
+		throw ::streamfx::nvidia::cuda::cuda_error(res);
 	}
 }

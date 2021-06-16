@@ -22,11 +22,11 @@
 #include <memory>
 #include "nvidia-cuda.hpp"
 
-namespace nvidia::cuda {
+namespace streamfx::nvidia::cuda {
 	class memory {
-		std::shared_ptr<::nvidia::cuda::cuda> _cuda;
-		device_ptr_t                          _pointer;
-		size_t                                _size;
+		std::shared_ptr<::streamfx::nvidia::cuda::cuda> _cuda;
+		device_ptr_t                                    _pointer;
+		size_t                                          _size;
 
 		public:
 		~memory();
@@ -36,4 +36,4 @@ namespace nvidia::cuda {
 
 		std::size_t size();
 	};
-} // namespace nvidia::cuda
+} // namespace streamfx::nvidia::cuda
