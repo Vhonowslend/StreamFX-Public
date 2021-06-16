@@ -35,40 +35,41 @@
 #define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
 #endif
 
-nvidia::cuda::stream::~stream()
+streamfx::nvidia::cuda::stream::~stream()
 {
 	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
 
 	_cuda->cuStreamDestroy(_stream);
 }
 
-nvidia::cuda::stream::stream(::nvidia::cuda::stream_flags flags, int32_t priority) : _cuda(::nvidia::cuda::cuda::get())
+streamfx::nvidia::cuda::stream::stream(::streamfx::nvidia::cuda::stream_flags flags, int32_t priority)
+	: _cuda(::streamfx::nvidia::cuda::cuda::get())
 {
 	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
 
-	nvidia::cuda::result res;
+	streamfx::nvidia::cuda::result res;
 	if (priority == 0) {
 		res = _cuda->cuStreamCreate(&_stream, flags);
 	} else {
 		res = _cuda->cuStreamCreateWithPriority(&_stream, flags, priority);
 	}
 	switch (res) {
-	case nvidia::cuda::result::SUCCESS:
+	case streamfx::nvidia::cuda::result::SUCCESS:
 		break;
 	default:
 		throw std::runtime_error("Failed to create CUstream object.");
 	}
 }
 
-::nvidia::cuda::stream_t nvidia::cuda::stream::get()
+::streamfx::nvidia::cuda::stream_t streamfx::nvidia::cuda::stream::get()
 {
 	return _stream;
 }
 
-void nvidia::cuda::stream::synchronize()
+void streamfx::nvidia::cuda::stream::synchronize()
 {
 	D_LOG_DEBUG("Synchronizing... (Addr: 0x%" PRIuPTR ")", this);
-	if (auto res = _cuda->cuStreamSynchronize(_stream); res != ::nvidia::cuda::result::SUCCESS) {
-		throw ::nvidia::cuda::cuda_error(res);
+	if (auto res = _cuda->cuStreamSynchronize(_stream); res != ::streamfx::nvidia::cuda::result::SUCCESS) {
+		throw ::streamfx::nvidia::cuda::cuda_error(res);
 	}
 }

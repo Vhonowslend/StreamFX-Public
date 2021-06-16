@@ -80,12 +80,12 @@
 			D_LOG_WARNING("Loading of optional symbol '" #NAME "' failed.", 0);      \
 	}
 
-nvidia::cuda::cuda::~cuda()
+streamfx::nvidia::cuda::cuda::~cuda()
 {
 	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
 }
 
-nvidia::cuda::cuda::cuda() : _library()
+streamfx::nvidia::cuda::cuda::cuda() : _library()
 {
 	int32_t cuda_version = 0;
 
@@ -238,21 +238,21 @@ nvidia::cuda::cuda::cuda() : _library()
 	cuInit(0);
 }
 
-int32_t nvidia::cuda::cuda::version()
+int32_t streamfx::nvidia::cuda::cuda::version()
 {
 	int32_t v = 0;
 	cuDriverGetVersion(&v);
 	return v;
 }
 
-std::shared_ptr<nvidia::cuda::cuda> nvidia::cuda::cuda::get()
+std::shared_ptr<streamfx::nvidia::cuda::cuda> streamfx::nvidia::cuda::cuda::get()
 {
-	static std::weak_ptr<nvidia::cuda::cuda> instance;
-	static std::mutex                        lock;
+	static std::weak_ptr<streamfx::nvidia::cuda::cuda> instance;
+	static std::mutex                                  lock;
 
 	std::unique_lock<std::mutex> ul(lock);
 	if (instance.expired()) {
-		auto hard_instance = std::make_shared<nvidia::cuda::cuda>();
+		auto hard_instance = std::make_shared<streamfx::nvidia::cuda::cuda>();
 		instance           = hard_instance;
 		return hard_instance;
 	}
