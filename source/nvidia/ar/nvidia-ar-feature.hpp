@@ -22,13 +22,13 @@
 #include "nvidia-ar.hpp"
 #include "nvidia/cuda/nvidia-cuda-stream.hpp"
 
-namespace nvidia::ar {
+namespace streamfx::nvidia::ar {
 	class feature {
-		std::shared_ptr<::nvidia::ar::ar> _ar;
-		std::shared_ptr<nvAR_Feature>     _feature;
+		std::shared_ptr<::streamfx::nvidia::ar::ar> _ar;
+		std::shared_ptr<nvAR_Feature>               _feature;
 
 		public:
-		feature(std::shared_ptr<::nvidia::ar::ar> ar, NvAR_FeatureID feature);
+		feature(std::shared_ptr<::streamfx::nvidia::ar::ar> ar, NvAR_FeatureID feature);
 		~feature();
 
 		public:
@@ -144,13 +144,13 @@ namespace nvidia::ar {
 		}
 
 		template<>
-		inline NvCV_Status set(std::string name, std::shared_ptr<::nvidia::cuda::stream> value)
+		inline NvCV_Status set(std::string name, std::shared_ptr<::streamfx::nvidia::cuda::stream> value)
 		{
 			return _ar->set_cuda_stream(_feature.get(), name.c_str(), reinterpret_cast<CUstream>(value->get()));
 		}
 
 		template<>
-		inline NvCV_Status get(std::string name, std::shared_ptr<::nvidia::cuda::stream>& value)
+		inline NvCV_Status get(std::string name, std::shared_ptr<::streamfx::nvidia::cuda::stream>& value)
 		{}
 	};
-} // namespace nvidia::ar
+} // namespace streamfx::nvidia::ar

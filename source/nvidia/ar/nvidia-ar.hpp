@@ -35,7 +35,7 @@
 #pragma warning(pop)
 #endif
 
-namespace nvidia::ar {
+namespace streamfx::nvidia::ar {
 	class ar {
 		public:
 		ar();
@@ -91,4 +91,4 @@ namespace nvidia::ar {
 		NvCV_Status cuda_stream_destroy(CUstream stream);
 		const char* cv_get_error_string_from_code(NvCV_Status code);
 	};
-} // namespace nvidia::ar
+} // namespace streamfx::nvidia::ar
