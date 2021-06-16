@@ -23,21 +23,21 @@
 #include "nvidia-cuda-stream.hpp"
 #include "nvidia-cuda.hpp"
 
-namespace nvidia::cuda {
+namespace streamfx::nvidia::cuda {
 	class obs {
-		std::shared_ptr<::nvidia::cuda::cuda>    _cuda;
-		std::shared_ptr<::nvidia::cuda::context> _context;
-		std::shared_ptr<::nvidia::cuda::stream>  _stream;
+		std::shared_ptr<::streamfx::nvidia::cuda::cuda>    _cuda;
+		std::shared_ptr<::streamfx::nvidia::cuda::context> _context;
+		std::shared_ptr<::streamfx::nvidia::cuda::stream>  _stream;
 
 		public:
 		~obs();
 		obs();
 
-		std::shared_ptr<::nvidia::cuda::cuda>    get_cuda();
-		std::shared_ptr<::nvidia::cuda::context> get_context();
-		std::shared_ptr<::nvidia::cuda::stream>  get_stream();
+		std::shared_ptr<::streamfx::nvidia::cuda::cuda>    get_cuda();
+		std::shared_ptr<::streamfx::nvidia::cuda::context> get_context();
+		std::shared_ptr<::streamfx::nvidia::cuda::stream>  get_stream();
 
 		public:
-		static std::shared_ptr<::nvidia::cuda::obs> get();
+		static std::shared_ptr<::streamfx::nvidia::cuda::obs> get();
 	};
-} // namespace nvidia::cuda
+} // namespace streamfx::nvidia::cuda

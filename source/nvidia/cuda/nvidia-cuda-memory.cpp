@@ -35,32 +35,33 @@
 #define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
 #endif
 
-nvidia::cuda::memory::~memory()
+streamfx::nvidia::cuda::memory::~memory()
 {
 	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
 
 	_cuda->cuMemFree(_pointer);
 }
 
-nvidia::cuda::memory::memory(size_t size) : _cuda(::nvidia::cuda::cuda::get()), _pointer(), _size(size)
+streamfx::nvidia::cuda::memory::memory(size_t size)
+	: _cuda(::streamfx::nvidia::cuda::cuda::get()), _pointer(), _size(size)
 {
 	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
 
-	::nvidia::cuda::result res = _cuda->cuMemAlloc(&_pointer, _size);
+	::streamfx::nvidia::cuda::result res = _cuda->cuMemAlloc(&_pointer, _size);
 	switch (res) {
-	case ::nvidia::cuda::result::SUCCESS:
+	case ::streamfx::nvidia::cuda::result::SUCCESS:
 		break;
 	default:
 		throw std::runtime_error("nvidia::cuda::memory: cuMemAlloc failed.");
 	}
 }
 
-nvidia::cuda::device_ptr_t nvidia::cuda::memory::get()
+streamfx::nvidia::cuda::device_ptr_t streamfx::nvidia::cuda::memory::get()
 {
 	return _pointer;
 }
 
-std::size_t nvidia::cuda::memory::size()
+std::size_t streamfx::nvidia::cuda::memory::size()
 {
 	return _size;
 }

@@ -24,24 +24,24 @@
 #include "nvidia-cuda.hpp"
 #include "obs/gs/gs-texture.hpp"
 
-namespace nvidia::cuda {
+namespace streamfx::nvidia::cuda {
 	class gstexture {
-		std::shared_ptr<::nvidia::cuda::cuda>       _cuda;
-		std::shared_ptr<streamfx::obs::gs::texture> _texture;
-		graphics_resource_t                         _resource;
+		std::shared_ptr<::streamfx::nvidia::cuda::cuda> _cuda;
+		std::shared_ptr<streamfx::obs::gs::texture>     _texture;
+		graphics_resource_t                             _resource;
 
-		bool                                  _is_mapped;
-		array_t                               _pointer;
-		std::shared_ptr<nvidia::cuda::stream> _stream;
+		bool                                            _is_mapped;
+		array_t                                         _pointer;
+		std::shared_ptr<streamfx::nvidia::cuda::stream> _stream;
 
 		public:
 		~gstexture();
 		gstexture(std::shared_ptr<streamfx::obs::gs::texture> texture);
 
-		array_t map(std::shared_ptr<nvidia::cuda::stream> stream);
+		array_t map(std::shared_ptr<streamfx::nvidia::cuda::stream> stream);
 		void    unmap();
 
-		std::shared_ptr<streamfx::obs::gs::texture> get_texture();
-		::nvidia::cuda::graphics_resource_t         get();
+		std::shared_ptr<streamfx::obs::gs::texture>   get_texture();
+		::streamfx::nvidia::cuda::graphics_resource_t get();
 	};
-} // namespace nvidia::cuda
+} // namespace streamfx::nvidia::cuda

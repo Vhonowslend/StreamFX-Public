@@ -35,7 +35,7 @@
 #define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
 #endif
 
-nvidia::cuda::obs::~obs()
+streamfx::nvidia::cuda::obs::~obs()
 {
 	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
 
@@ -49,7 +49,7 @@ nvidia::cuda::obs::~obs()
 	_cuda.reset();
 }
 
-nvidia::cuda::obs::obs() : _cuda(::nvidia::cuda::cuda::get()), _context()
+streamfx::nvidia::cuda::obs::obs() : _cuda(::streamfx::nvidia::cuda::cuda::get()), _context()
 {
 	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
 
@@ -58,7 +58,8 @@ nvidia::cuda::obs::obs() : _cuda(::nvidia::cuda::cuda::get()), _context()
 	// Create Context
 #ifdef WIN32
 	if (gs_get_device_type() == GS_DEVICE_DIRECT3D_11) {
-		_context = std::make_shared<::nvidia::cuda::context>(reinterpret_cast<ID3D11Device*>(gs_get_device_obj()));
+		_context =
+			std::make_shared<::streamfx::nvidia::cuda::context>(reinterpret_cast<ID3D11Device*>(gs_get_device_obj()));
 	}
 #endif
 	if (gs_get_device_type() == GS_DEVICE_OPENGL) {
@@ -67,35 +68,35 @@ nvidia::cuda::obs::obs() : _cuda(::nvidia::cuda::cuda::get()), _context()
 
 	// Create Stream
 	auto stack = _context->enter();
-	_stream    = std::make_shared<::nvidia::cuda::stream>();
+	_stream    = std::make_shared<::streamfx::nvidia::cuda::stream>();
 }
 
-std::shared_ptr<nvidia::cuda::obs> nvidia::cuda::obs::get()
+std::shared_ptr<streamfx::nvidia::cuda::obs> streamfx::nvidia::cuda::obs::get()
 {
-	static std::weak_ptr<nvidia::cuda::obs> instance;
-	static std::mutex                       lock;
+	static std::weak_ptr<streamfx::nvidia::cuda::obs> instance;
+	static std::mutex                                 lock;
 
 	std::unique_lock<std::mutex> ul(lock);
 	if (instance.expired()) {
-		std::shared_ptr<nvidia::cuda::obs> hard_instance;
-		hard_instance = std::make_shared<nvidia::cuda::obs>();
+		std::shared_ptr<streamfx::nvidia::cuda::obs> hard_instance;
+		hard_instance = std::make_shared<streamfx::nvidia::cuda::obs>();
 		instance      = hard_instance;
 		return hard_instance;
 	}
 	return instance.lock();
 }
 
-std::shared_ptr<nvidia::cuda::cuda> nvidia::cuda::obs::get_cuda()
+std::shared_ptr<streamfx::nvidia::cuda::cuda> streamfx::nvidia::cuda::obs::get_cuda()
 {
 	return _cuda;
 }
 
-std::shared_ptr<nvidia::cuda::context> nvidia::cuda::obs::get_context()
+std::shared_ptr<streamfx::nvidia::cuda::context> streamfx::nvidia::cuda::obs::get_context()
 {
 	return _context;
 }
 
-std::shared_ptr<nvidia::cuda::stream> nvidia::cuda::obs::get_stream()
+std::shared_ptr<streamfx::nvidia::cuda::stream> streamfx::nvidia::cuda::obs::get_stream()
 {
 	return _stream;
 }

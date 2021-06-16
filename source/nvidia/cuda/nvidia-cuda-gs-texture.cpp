@@ -35,7 +35,7 @@
 #define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
 #endif
 
-nvidia::cuda::gstexture::~gstexture()
+streamfx::nvidia::cuda::gstexture::~gstexture()
 {
 	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
 
@@ -43,8 +43,8 @@ nvidia::cuda::gstexture::~gstexture()
 	_cuda->cuGraphicsUnregisterResource(_resource);
 }
 
-nvidia::cuda::gstexture::gstexture(std::shared_ptr<streamfx::obs::gs::texture> texture)
-	: _cuda(::nvidia::cuda::cuda::get()), _texture(texture), _resource(), _is_mapped(false), _pointer()
+streamfx::nvidia::cuda::gstexture::gstexture(std::shared_ptr<streamfx::obs::gs::texture> texture)
+	: _cuda(::streamfx::nvidia::cuda::cuda::get()), _texture(texture), _resource(), _is_mapped(false), _pointer()
 {
 	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
 
@@ -77,7 +77,7 @@ nvidia::cuda::gstexture::gstexture(std::shared_ptr<streamfx::obs::gs::texture> t
 		}
 
 		switch (_cuda->cuGraphicsD3D11RegisterResource(&_resource, resource, 0)) {
-		case nvidia::cuda::result::SUCCESS:
+		case streamfx::nvidia::cuda::result::SUCCESS:
 			break;
 		default:
 			throw std::runtime_error("nvidia::cuda::gstexture: Failed to register resource.");
@@ -86,7 +86,8 @@ nvidia::cuda::gstexture::gstexture(std::shared_ptr<streamfx::obs::gs::texture> t
 #endif
 }
 
-nvidia::cuda::array_t nvidia::cuda::gstexture::map(std::shared_ptr<nvidia::cuda::stream> stream)
+streamfx::nvidia::cuda::array_t
+	streamfx::nvidia::cuda::gstexture::map(std::shared_ptr<streamfx::nvidia::cuda::stream> stream)
 {
 	if (_is_mapped) {
 		return _pointer;
@@ -94,7 +95,7 @@ nvidia::cuda::array_t nvidia::cuda::gstexture::map(std::shared_ptr<nvidia::cuda:
 
 	graphics_resource_t resources[] = {_resource};
 	switch (_cuda->cuGraphicsMapResources(1, resources, stream->get())) {
-	case nvidia::cuda::result::SUCCESS:
+	case streamfx::nvidia::cuda::result::SUCCESS:
 		break;
 	default:
 		throw std::runtime_error("nvidia::cuda::gstexture: Mapping failed.");
@@ -104,7 +105,7 @@ nvidia::cuda::array_t nvidia::cuda::gstexture::map(std::shared_ptr<nvidia::cuda:
 	_is_mapped = true;
 
 	switch (_cuda->cuGraphicsSubResourceGetMappedArray(&_pointer, _resource, 0, 0)) {
-	case nvidia::cuda::result::SUCCESS:
+	case streamfx::nvidia::cuda::result::SUCCESS:
 		break;
 	default:
 		unmap();
@@ -114,14 +115,14 @@ nvidia::cuda::array_t nvidia::cuda::gstexture::map(std::shared_ptr<nvidia::cuda:
 	return _pointer;
 }
 
-void nvidia::cuda::gstexture::unmap()
+void streamfx::nvidia::cuda::gstexture::unmap()
 {
 	if (!_is_mapped)
 		return;
 
 	graphics_resource_t resources[] = {_resource};
 	switch (_cuda->cuGraphicsUnmapResources(1, resources, _stream->get())) {
-	case nvidia::cuda::result::SUCCESS:
+	case streamfx::nvidia::cuda::result::SUCCESS:
 		break;
 	default:
 		throw std::runtime_error("nvidia::cuda::gstexture: Unmapping failed.");
@@ -132,12 +133,12 @@ void nvidia::cuda::gstexture::unmap()
 	_stream.reset();
 }
 
-std::shared_ptr<streamfx::obs::gs::texture> nvidia::cuda::gstexture::get_texture()
+std::shared_ptr<streamfx::obs::gs::texture> streamfx::nvidia::cuda::gstexture::get_texture()
 {
 	return _texture;
 }
 
-::nvidia::cuda::graphics_resource_t nvidia::cuda::gstexture::get()
+::streamfx::nvidia::cuda::graphics_resource_t streamfx::nvidia::cuda::gstexture::get()
 {
 	return _resource;
 }
