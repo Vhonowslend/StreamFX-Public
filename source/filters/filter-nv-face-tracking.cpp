@@ -54,7 +54,7 @@ face_tracking_instance::face_tracking_instance(obs_data_t* settings, obs_source_
 
 	  _geometry(), _filters(), _values(),
 
-	  _cuda(::nvidia::cuda::obs::get()), _cuda_stream(),
+	  _cuda(::streamfx::nvidia::cuda::obs::get()), _cuda_stream(),
 
 	  _ar_library(face_tracking_factory::get()->get_ar()), _ar_loaded(false), _ar_feature(), _ar_is_tracking(false),
 	  _ar_bboxes_confidence(), _ar_bboxes_data(), _ar_bboxes(), _ar_texture(), _ar_texture_cuda_fresh(false),
@@ -73,11 +73,12 @@ face_tracking_instance::face_tracking_instance(obs_data_t* settings, obs_source_
 #endif
 
 	{ // Create render target, vertex buffer, and CUDA stream.
-		auto gctx    = streamfx::obs::gs::context{};
-		_rt          = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA_UNORM, GS_ZS_NONE);
-		_geometry    = std::make_shared<streamfx::obs::gs::vertex_buffer>(uint32_t(4), uint8_t(1));
-		auto cctx    = _cuda->get_context()->enter();
-		_cuda_stream = std::make_shared<::nvidia::cuda::stream>(::nvidia::cuda::stream_flags::NON_BLOCKING, 0);
+		auto gctx = streamfx::obs::gs::context{};
+		_rt       = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA_UNORM, GS_ZS_NONE);
+		_geometry = std::make_shared<streamfx::obs::gs::vertex_buffer>(uint32_t(4), uint8_t(1));
+		auto cctx = _cuda->get_context()->enter();
+		_cuda_stream =
+			std::make_shared<::streamfx::nvidia::cuda::stream>(::streamfx::nvidia::cuda::stream_flags::NON_BLOCKING, 0);
 	}
 
 	{ // Asynchronously load Face Tracking.
@@ -278,9 +279,10 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 												   "%s: Reallocate CUDA Buffers", obs_source_get_name(_self)};
 #endif
 			// Assign new texture and allocate new memory.
-			std::size_t pitch    = _ar_texture->get_width() * 4ul;
-			_ar_texture_cuda     = std::make_shared<::nvidia::cuda::gstexture>(_ar_texture);
-			_ar_texture_cuda_mem = std::make_shared<::nvidia::cuda::memory>(pitch * _ar_texture->get_height());
+			std::size_t pitch = _ar_texture->get_width() * 4ul;
+			_ar_texture_cuda  = std::make_shared<::streamfx::nvidia::cuda::gstexture>(_ar_texture);
+			_ar_texture_cuda_mem =
+				std::make_shared<::streamfx::nvidia::cuda::memory>(pitch * _ar_texture->get_height());
 			if (auto res = _ar_library->image_init(&_ar_image, static_cast<unsigned int>(_ar_texture->get_width()),
 												   static_cast<unsigned int>(_ar_texture->get_height()),
 												   static_cast<int>(pitch),
@@ -320,26 +322,26 @@ void face_tracking_instance::async_track(std::shared_ptr<void> ptr)
 #ifdef ENABLE_PROFILING
 			auto prof = _profile_ar_copy->track();
 #endif
-			::nvidia::cuda::memcpy2d_v2_t mc;
+			::streamfx::nvidia::cuda::memcpy2d_v2_t mc;
 			mc.src_x_in_bytes  = 0;
 			mc.src_y           = 0;
-			mc.src_memory_type = ::nvidia::cuda::memory_type::ARRAY;
+			mc.src_memory_type = ::streamfx::nvidia::cuda::memory_type::ARRAY;
 			mc.src_host        = nullptr;
 			mc.src_device      = 0;
 			mc.src_array       = _ar_texture_cuda->map(_cuda_stream);
 			mc.src_pitch       = static_cast<size_t>(_ar_image.pitch);
 			mc.dst_x_in_bytes  = 0;
 			mc.dst_y           = 0;
-			mc.dst_memory_type = ::nvidia::cuda::memory_type::DEVICE;
+			mc.dst_memory_type = ::streamfx::nvidia::cuda::memory_type::DEVICE;
 			mc.dst_host        = 0;
-			mc.dst_device      = reinterpret_cast<::nvidia::cuda::device_ptr_t>(_ar_image.pixels);
+			mc.dst_device      = reinterpret_cast<::streamfx::nvidia::cuda::device_ptr_t>(_ar_image.pixels);
 			mc.dst_array       = 0;
 			mc.dst_pitch       = static_cast<size_t>(_ar_image.pitch);
 			mc.width_in_bytes  = static_cast<size_t>(_ar_image.pitch);
 			mc.height          = _ar_image.height;
 
-			if (::nvidia::cuda::result res = _cuda->get_cuda()->cuMemcpy2DAsync(&mc, _cuda_stream->get());
-				res != ::nvidia::cuda::result::SUCCESS) {
+			if (::streamfx::nvidia::cuda::result res = _cuda->get_cuda()->cuMemcpy2DAsync(&mc, _cuda_stream->get());
+				res != ::streamfx::nvidia::cuda::result::SUCCESS) {
 				DLOG_ERROR("<%s> Failed to prepare buffers for tracking.", obs_source_get_name(_self));
 				return;
 			}
@@ -619,10 +621,10 @@ bool face_tracking_instance::button_profile(obs_properties_t* props, obs_propert
 face_tracking_factory::face_tracking_factory()
 {
 	// Try and load CUDA.
-	_cuda = ::nvidia::cuda::obs::get();
+	_cuda = ::streamfx::nvidia::cuda::obs::get();
 
 	// Try and load AR.
-	_ar = std::make_shared<::nvidia::ar::ar>();
+	_ar = std::make_shared<::streamfx::nvidia::ar::ar>();
 
 	// Info
 	_info.id           = S_PREFIX "filter-nvidia-face-tracking";
@@ -696,7 +698,7 @@ obs_properties_t* face_tracking_factory::get_properties2(face_tracking_instance*
 	return pr;
 }
 
-std::shared_ptr<::nvidia::ar::ar> face_tracking_factory::get_ar()
+std::shared_ptr<::streamfx::nvidia::ar::ar> face_tracking_factory::get_ar()
 {
 	return _ar;
 }
