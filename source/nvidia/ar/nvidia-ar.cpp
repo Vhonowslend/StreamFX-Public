@@ -34,15 +34,15 @@
 #undef nvGetProcAddress
 #undef nvFreeLibrary
 
-nvidia::ar::ar::ar()
+streamfx::nvidia::ar::ar::ar()
 {
 	if (!getNvARLib())
 		throw std::runtime_error("Failed to load NVIDIA AR SDK runtime.");
 }
 
-nvidia::ar::ar::~ar() {}
+streamfx::nvidia::ar::ar::~ar() {}
 
-std::filesystem::path nvidia::ar::ar::get_ar_sdk_path()
+std::filesystem::path streamfx::nvidia::ar::ar::get_ar_sdk_path()
 {
 	char* arsdk_path = getenv("NV_AR_SDK_PATH");
 	if (arsdk_path) {
@@ -65,202 +65,205 @@ std::filesystem::path nvidia::ar::ar::get_ar_sdk_path()
 	}
 }
 
-NvCV_Status nvidia::ar::ar::image_init(NvCVImage* im, unsigned width, unsigned height, int pitch, void* pixels,
-									   NvCVImage_PixelFormat format, NvCVImage_ComponentType type, unsigned isPlanar,
-									   unsigned onGPU)
+NvCV_Status streamfx::nvidia::ar::ar::image_init(NvCVImage* im, unsigned width, unsigned height, int pitch,
+												 void* pixels, NvCVImage_PixelFormat format,
+												 NvCVImage_ComponentType type, unsigned isPlanar, unsigned onGPU)
 {
 	return NvCVImage_Init(im, width, height, pitch, pixels, format, type, isPlanar, onGPU);
 }
 
-void nvidia::ar::ar::image_init_view(NvCVImage* subImg, NvCVImage* fullImg, int x, int y, unsigned width,
-									 unsigned height)
+void streamfx::nvidia::ar::ar::image_init_view(NvCVImage* subImg, NvCVImage* fullImg, int x, int y, unsigned width,
+											   unsigned height)
 {
 	NvCVImage_InitView(subImg, fullImg, x, y, width, height);
 }
 
-NvCV_Status nvidia::ar::ar::image_alloc(NvCVImage* im, unsigned width, unsigned height, NvCVImage_PixelFormat format,
-										NvCVImage_ComponentType type, unsigned isPlanar, unsigned onGPU,
-										unsigned alignment)
+NvCV_Status streamfx::nvidia::ar::ar::image_alloc(NvCVImage* im, unsigned width, unsigned height,
+												  NvCVImage_PixelFormat format, NvCVImage_ComponentType type,
+												  unsigned isPlanar, unsigned onGPU, unsigned alignment)
 {
 	return NvCVImage_Alloc(im, width, height, format, type, isPlanar, onGPU, alignment);
 }
 
-NvCV_Status nvidia::ar::ar::image_realloc(NvCVImage* im, unsigned width, unsigned height, NvCVImage_PixelFormat format,
-										  NvCVImage_ComponentType type, unsigned isPlanar, unsigned onGPU,
-										  unsigned alignment)
+NvCV_Status streamfx::nvidia::ar::ar::image_realloc(NvCVImage* im, unsigned width, unsigned height,
+													NvCVImage_PixelFormat format, NvCVImage_ComponentType type,
+													unsigned isPlanar, unsigned onGPU, unsigned alignment)
 {
 	return NvCVImage_Realloc(im, width, height, format, type, isPlanar, onGPU, alignment);
 }
 
-void nvidia::ar::ar::image_dealloc(NvCVImage* im)
+void streamfx::nvidia::ar::ar::image_dealloc(NvCVImage* im)
 {
 	NvCVImage_Dealloc(im);
 }
 
-NvCV_Status nvidia::ar::ar::image_create(unsigned width, unsigned height, NvCVImage_PixelFormat format,
-										 NvCVImage_ComponentType type, unsigned isPlanar, unsigned onGPU,
-										 unsigned alignment, NvCVImage** out)
+NvCV_Status streamfx::nvidia::ar::ar::image_create(unsigned width, unsigned height, NvCVImage_PixelFormat format,
+												   NvCVImage_ComponentType type, unsigned isPlanar, unsigned onGPU,
+												   unsigned alignment, NvCVImage** out)
 {
 	return NvCVImage_Create(width, height, format, type, isPlanar, onGPU, alignment, out);
 }
 
-void nvidia::ar::ar::image_destroy(NvCVImage* im)
+void streamfx::nvidia::ar::ar::image_destroy(NvCVImage* im)
 {
 	NvCVImage_Destroy(im);
 }
 
-void nvidia::ar::ar::image_component_offsets(NvCVImage_PixelFormat format, int* rOff, int* gOff, int* bOff, int* aOff,
-											 int* yOff)
+void streamfx::nvidia::ar::ar::image_component_offsets(NvCVImage_PixelFormat format, int* rOff, int* gOff, int* bOff,
+													   int* aOff, int* yOff)
 {
 	NvCVImage_ComponentOffsets(format, rOff, gOff, bOff, aOff, yOff);
 }
 
-NvCV_Status nvidia::ar::ar::image_transfer(const NvCVImage* src, NvCVImage* dst, float scale, CUstream_st* stream,
-										   NvCVImage* tmp)
+NvCV_Status streamfx::nvidia::ar::ar::image_transfer(const NvCVImage* src, NvCVImage* dst, float scale,
+													 CUstream_st* stream, NvCVImage* tmp)
 {
 	return NvCVImage_Transfer(src, dst, scale, stream, tmp);
 }
 
-NvCV_Status nvidia::ar::ar::image_composite(const NvCVImage* src, const NvCVImage* mat, NvCVImage* dst)
+NvCV_Status streamfx::nvidia::ar::ar::image_composite(const NvCVImage* src, const NvCVImage* mat, NvCVImage* dst)
 {
 	//return NvCVImage_Composite(src, mat, dst);
 	throw std::runtime_error("Not implemented.");
 }
 
-NvCV_Status nvidia::ar::ar::image_composite_over_constant(const NvCVImage* src, const NvCVImage* mat,
-														  const unsigned char bgColor[3], NvCVImage* dst)
+NvCV_Status streamfx::nvidia::ar::ar::image_composite_over_constant(const NvCVImage* src, const NvCVImage* mat,
+																	const unsigned char bgColor[3], NvCVImage* dst)
 {
 	return NvCVImage_CompositeOverConstant(src, mat, bgColor, dst);
 }
 
-NvCV_Status nvidia::ar::ar::image_flipy(const NvCVImage* src, NvCVImage* dst)
+NvCV_Status streamfx::nvidia::ar::ar::image_flipy(const NvCVImage* src, NvCVImage* dst)
 {
 	return NvCVImage_FlipY(src, dst);
 }
 
-NvCV_Status nvidia::ar::ar::create(NvAR_FeatureID featureID, NvAR_FeatureHandle* handle)
+NvCV_Status streamfx::nvidia::ar::ar::create(NvAR_FeatureID featureID, NvAR_FeatureHandle* handle)
 {
 	return NvAR_Create(featureID, handle);
 }
 
-NvCV_Status nvidia::ar::ar::destroy(NvAR_FeatureHandle handle)
+NvCV_Status streamfx::nvidia::ar::ar::destroy(NvAR_FeatureHandle handle)
 {
 	return NvAR_Destroy(handle);
 }
 
-NvCV_Status nvidia::ar::ar::set_uint32(NvAR_FeatureHandle handle, const char* name, unsigned int val)
+NvCV_Status streamfx::nvidia::ar::ar::set_uint32(NvAR_FeatureHandle handle, const char* name, unsigned int val)
 {
 	return NvAR_SetU32(handle, name, val);
 }
 
-NvCV_Status nvidia::ar::ar::set_int32(NvAR_FeatureHandle handle, const char* name, int val)
+NvCV_Status streamfx::nvidia::ar::ar::set_int32(NvAR_FeatureHandle handle, const char* name, int val)
 {
 	return NvAR_SetS32(handle, name, val);
 }
 
-NvCV_Status nvidia::ar::ar::set_float32(NvAR_FeatureHandle handle, const char* name, float val)
+NvCV_Status streamfx::nvidia::ar::ar::set_float32(NvAR_FeatureHandle handle, const char* name, float val)
 {
 	return NvAR_SetF32(handle, name, val);
 }
 
-NvCV_Status nvidia::ar::ar::set_float64(NvAR_FeatureHandle handle, const char* name, double val)
+NvCV_Status streamfx::nvidia::ar::ar::set_float64(NvAR_FeatureHandle handle, const char* name, double val)
 {
 	return NvAR_SetF64(handle, name, val);
 }
 
-NvCV_Status nvidia::ar::ar::set_uint64(NvAR_FeatureHandle handle, const char* name, unsigned long long val)
+NvCV_Status streamfx::nvidia::ar::ar::set_uint64(NvAR_FeatureHandle handle, const char* name, unsigned long long val)
 {
 	return NvAR_SetU64(handle, name, val);
 }
 
-NvCV_Status nvidia::ar::ar::set_object(NvAR_FeatureHandle handle, const char* name, void* ptr, unsigned long typeSize)
+NvCV_Status streamfx::nvidia::ar::ar::set_object(NvAR_FeatureHandle handle, const char* name, void* ptr,
+												 unsigned long typeSize)
 {
 	return NvAR_SetObject(handle, name, ptr, typeSize);
 }
 
-NvCV_Status nvidia::ar::ar::set_string(NvAR_FeatureHandle handle, const char* name, const char* str)
+NvCV_Status streamfx::nvidia::ar::ar::set_string(NvAR_FeatureHandle handle, const char* name, const char* str)
 {
 	return NvAR_SetString(handle, name, str);
 }
 
-NvCV_Status nvidia::ar::ar::set_cuda_stream(NvAR_FeatureHandle handle, const char* name, CUstream stream)
+NvCV_Status streamfx::nvidia::ar::ar::set_cuda_stream(NvAR_FeatureHandle handle, const char* name, CUstream stream)
 {
 	return NvAR_SetCudaStream(handle, name, stream);
 }
 
-NvCV_Status nvidia::ar::ar::set_float32_array(NvAR_FeatureHandle handle, const char* name, float* val, int count)
+NvCV_Status streamfx::nvidia::ar::ar::set_float32_array(NvAR_FeatureHandle handle, const char* name, float* val,
+														int count)
 {
 	return NvAR_SetF32Array(handle, name, val, count);
 }
 
-NvCV_Status nvidia::ar::ar::get_uint32(NvAR_FeatureHandle handle, const char* name, unsigned int* val)
+NvCV_Status streamfx::nvidia::ar::ar::get_uint32(NvAR_FeatureHandle handle, const char* name, unsigned int* val)
 {
 	return NvAR_GetU32(handle, name, val);
 }
 
-NvCV_Status nvidia::ar::ar::get_int32(NvAR_FeatureHandle handle, const char* name, int* val)
+NvCV_Status streamfx::nvidia::ar::ar::get_int32(NvAR_FeatureHandle handle, const char* name, int* val)
 {
 	return NvAR_GetS32(handle, name, val);
 }
 
-NvCV_Status nvidia::ar::ar::get_float32(NvAR_FeatureHandle handle, const char* name, float* val)
+NvCV_Status streamfx::nvidia::ar::ar::get_float32(NvAR_FeatureHandle handle, const char* name, float* val)
 {
 	return NvAR_GetF32(handle, name, val);
 }
 
-NvCV_Status nvidia::ar::ar::get_float64(NvAR_FeatureHandle handle, const char* name, double* val)
+NvCV_Status streamfx::nvidia::ar::ar::get_float64(NvAR_FeatureHandle handle, const char* name, double* val)
 {
 	return NvAR_GetF64(handle, name, val);
 }
 
-NvCV_Status nvidia::ar::ar::get_uint64(NvAR_FeatureHandle handle, const char* name, unsigned long long* val)
+NvCV_Status streamfx::nvidia::ar::ar::get_uint64(NvAR_FeatureHandle handle, const char* name, unsigned long long* val)
 {
 	return NvAR_GetU64(handle, name, val);
 }
 
-NvCV_Status nvidia::ar::ar::get_object(NvAR_FeatureHandle handle, const char* name, const void** ptr,
-									   unsigned long typeSize)
+NvCV_Status streamfx::nvidia::ar::ar::get_object(NvAR_FeatureHandle handle, const char* name, const void** ptr,
+												 unsigned long typeSize)
 {
 	return NvAR_GetObject(handle, name, ptr, typeSize);
 }
 
-NvCV_Status nvidia::ar::ar::get_string(NvAR_FeatureHandle handle, const char* name, const char** str)
+NvCV_Status streamfx::nvidia::ar::ar::get_string(NvAR_FeatureHandle handle, const char* name, const char** str)
 {
 	return NvAR_GetString(handle, name, str);
 }
 
-NvCV_Status nvidia::ar::ar::get_cuda_stream(NvAR_FeatureHandle handle, const char* name, const CUstream* stream)
+NvCV_Status streamfx::nvidia::ar::ar::get_cuda_stream(NvAR_FeatureHandle handle, const char* name,
+													  const CUstream* stream)
 {
 	return NvAR_GetCudaStream(handle, name, stream);
 }
 
-NvCV_Status nvidia::ar::ar::get_float32_array(NvAR_FeatureHandle handle, const char* name, const float** vals,
-											  int* count)
+NvCV_Status streamfx::nvidia::ar::ar::get_float32_array(NvAR_FeatureHandle handle, const char* name, const float** vals,
+														int* count)
 {
 	return NvAR_GetF32Array(handle, name, vals, count);
 }
 
-NvCV_Status nvidia::ar::ar::run(NvAR_FeatureHandle handle)
+NvCV_Status streamfx::nvidia::ar::ar::run(NvAR_FeatureHandle handle)
 {
 	return NvAR_Run(handle);
 }
 
-NvCV_Status nvidia::ar::ar::load(NvAR_FeatureHandle handle)
+NvCV_Status streamfx::nvidia::ar::ar::load(NvAR_FeatureHandle handle)
 {
 	return NvAR_Load(handle);
 }
 
-NvCV_Status nvidia::ar::ar::cuda_stream_create(CUstream* stream)
+NvCV_Status streamfx::nvidia::ar::ar::cuda_stream_create(CUstream* stream)
 {
 	return NvAR_CudaStreamCreate(stream);
 }
 
-NvCV_Status nvidia::ar::ar::cuda_stream_destroy(CUstream stream)
+NvCV_Status streamfx::nvidia::ar::ar::cuda_stream_destroy(CUstream stream)
 {
 	return NvAR_CudaStreamDestroy(stream);
 }
 
-const char* nvidia::ar::ar::cv_get_error_string_from_code(NvCV_Status code)
+const char* streamfx::nvidia::ar::ar::cv_get_error_string_from_code(NvCV_Status code)
 {
 	return NvCV_GetErrorStringFromCode(code);
 }
