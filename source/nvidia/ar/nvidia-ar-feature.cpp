@@ -19,7 +19,7 @@
 
 #include "nvidia-ar-feature.hpp"
 
-nvidia::ar::feature::feature(std::shared_ptr<::nvidia::ar::ar> ar, NvAR_FeatureID feature) : _ar(ar)
+streamfx::nvidia::ar::feature::feature(std::shared_ptr<::streamfx::nvidia::ar::ar> ar, NvAR_FeatureID feature) : _ar(ar)
 {
 	NvAR_FeatureHandle feat;
 	if (NvCV_Status res = _ar->create(feature, &feat); res != NVCV_SUCCESS) {
@@ -29,7 +29,7 @@ nvidia::ar::feature::feature(std::shared_ptr<::nvidia::ar::ar> ar, NvAR_FeatureI
 	_feature = std::shared_ptr<nvAR_Feature>{feat, [this](NvAR_FeatureHandle v) { _ar->destroy(v); }};
 }
 
-nvidia::ar::feature::~feature()
+streamfx::nvidia::ar::feature::~feature()
 {
 	_feature.reset();
 }
