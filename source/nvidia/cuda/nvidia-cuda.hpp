@@ -32,14 +32,14 @@
 #pragma warning(pop)
 #endif
 
-#define P_CUDA_DEFINE_FUNCTION(name, ...)                   \
-	private:                                                \
-	typedef ::nvidia::cuda::result (*t##name)(__VA_ARGS__); \
-                                                            \
-	public:                                                 \
+#define P_CUDA_DEFINE_FUNCTION(name, ...)                             \
+	private:                                                          \
+	typedef ::streamfx::nvidia::cuda::result (*t##name)(__VA_ARGS__); \
+                                                                      \
+	public:                                                           \
 	t##name name = nullptr;
 
-namespace nvidia::cuda {
+namespace streamfx::nvidia::cuda {
 	enum class result : std::size_t {
 		SUCCESS                  = 0,
 		INVALID_VALUE            = 1,
@@ -163,13 +163,13 @@ namespace nvidia::cuda {
 	};
 
 	class cuda_error : public std::exception {
-		::nvidia::cuda::result _code;
+		::streamfx::nvidia::cuda::result _code;
 
 		public:
 		~cuda_error(){};
-		cuda_error(::nvidia::cuda::result code) : _code(code) {}
+		cuda_error(::streamfx::nvidia::cuda::result code) : _code(code) {}
 
-		::nvidia::cuda::result code()
+		::streamfx::nvidia::cuda::result code()
 		{
 			return _code;
 		}
@@ -319,9 +319,9 @@ namespace nvidia::cuda {
 							   ID3D11Resource* d3dresource, uint32_t flags);
 #endif
 		public:
-		static std::shared_ptr<::nvidia::cuda::cuda> get();
+		static std::shared_ptr<::streamfx::nvidia::cuda::cuda> get();
 	};
-} // namespace nvidia::cuda
+} // namespace streamfx::nvidia::cuda
 
-P_ENABLE_BITMASK_OPERATORS(::nvidia::cuda::context_flags)
-P_ENABLE_BITMASK_OPERATORS(::nvidia::cuda::stream_flags)
+P_ENABLE_BITMASK_OPERATORS(::streamfx::nvidia::cuda::context_flags)
+P_ENABLE_BITMASK_OPERATORS(::streamfx::nvidia::cuda::stream_flags)
