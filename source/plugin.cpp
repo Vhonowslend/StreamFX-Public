@@ -24,6 +24,10 @@
 #include "obs/gs/gs-vertexbuffer.hpp"
 #include "obs/obs-source-tracker.hpp"
 
+#ifdef ENABLE_NVIDIA_CUDA
+#include "nvidia/cuda/nvidia-cuda-obs.hpp"
+#endif
+
 #ifdef ENABLE_ENCODER_FFMPEG
 #include "encoders/encoder-ffmpeg.hpp"
 #endif
@@ -88,6 +92,11 @@ try {
 
 	// Initialize Source Tracker
 	streamfx::obs::source_tracker::initialize();
+
+#ifdef ENABLE_NVIDIA_CUDA
+	// Initialize CUDA if features requested it.
+	auto cuda = ::streamfx::nvidia::cuda::obs::get();
+#endif
 
 	// GS Stuff
 	{

@@ -975,6 +975,9 @@ if(HAVE_NVIDIA_CUDA)
 		"source/nvidia/cuda/nvidia-cuda-stream.hpp"
 		"source/nvidia/cuda/nvidia-cuda-stream.cpp"
 	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_NVIDIA_CUDA
+	)
 endif()
 
 if(REQUIRE_OBSFE AND HAVE_OBSFE)
