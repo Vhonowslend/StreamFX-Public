@@ -44,6 +44,7 @@ streamfx::nvidia::cuda::obs::~obs()
 		auto stack = _context->enter();
 		_stream->synchronize();
 		_context->synchronize();
+		_stream.reset();
 	}
 	_context.reset();
 	_cuda.reset();
