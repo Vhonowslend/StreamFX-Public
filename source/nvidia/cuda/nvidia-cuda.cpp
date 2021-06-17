@@ -114,7 +114,9 @@ streamfx::nvidia::cuda::cuda::cuda() : _library()
 
 	{ // 3. Load remaining functions.
 		// Device Management
-		// - Not yet needed.
+		P_CUDA_LOAD_SYMBOL(cuDeviceGetName);
+		P_CUDA_LOAD_SYMBOL(cuDeviceGetLuid);
+		P_CUDA_LOAD_SYMBOL(cuDeviceGetUuid);
 
 		// Primary Context Management
 		P_CUDA_LOAD_SYMBOL(cuDevicePrimaryCtxRetain);
