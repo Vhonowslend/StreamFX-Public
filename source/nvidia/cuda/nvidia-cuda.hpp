@@ -162,6 +162,31 @@ namespace streamfx::nvidia::cuda {
 		uint32_t reserved[16];
 	};
 
+	struct uuid_t {
+		union {
+			char bytes[16];
+			struct {
+				uint32_t a;
+				uint16_t b;
+				uint16_t c;
+				uint16_t d;
+				uint16_t e;
+				uint32_t f;
+			} uuid;
+		};
+	};
+
+	struct luid_t {
+		union {
+			char bytes[8];
+			struct {
+				uint32_t low;
+				int32_t  high;
+			} parts;
+			uint64_t luid;
+		};
+	};
+
 	class cuda_error : public std::exception {
 		::streamfx::nvidia::cuda::result _code;
 
@@ -192,6 +217,9 @@ namespace streamfx::nvidia::cuda {
 		P_CUDA_DEFINE_FUNCTION(cuDriverGetVersion, int32_t* driverVersion);
 
 		// Device Management
+		P_CUDA_DEFINE_FUNCTION(cuDeviceGetName, char* name, int32_t length, device_t device);
+		P_CUDA_DEFINE_FUNCTION(cuDeviceGetLuid, luid_t* luid, uint32_t* device_node_mask, device_t device);
+		P_CUDA_DEFINE_FUNCTION(cuDeviceGetUuid, uuid_t* uuid, device_t device);
 		// - Not yet needed.
 
 		// Primary Context Management
