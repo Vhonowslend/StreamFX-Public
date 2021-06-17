@@ -55,8 +55,9 @@ streamfx::nvidia::cuda::context::~context()
 
 	if (_has_device) {
 		_cuda->cuDevicePrimaryCtxRelease(_device);
+	} else {
+		_cuda->cuCtxDestroy(_ctx);
 	}
-	_cuda->cuCtxDestroy(_ctx);
 }
 
 streamfx::nvidia::cuda::context::context()
@@ -84,6 +85,8 @@ streamfx::nvidia::cuda::context::context(ID3D11Device* device) : context()
 	if (result res = _cuda->cuD3D11GetDevice(&_device, dxgi_adapter); res != result::SUCCESS) {
 		throw std::runtime_error("Failed to get device index for device.");
 	}
+
+	_cuda->cuDevicePrimaryCtxSetFlags(_device, context_flags::SCHEDULER_BLOCKING_SYNC);
 
 	// Acquire Context
 	if (result res = _cuda->cuDevicePrimaryCtxRetain(&_ctx, _device); res != result::SUCCESS) {
