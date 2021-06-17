@@ -20,6 +20,7 @@
 
 #include "util-library.hpp"
 #include <unordered_map>
+#include "util-platform.hpp"
 
 #if defined(_WIN32) || defined(_WIN64) || defined(__CYGWIN__) // Windows
 #define ST_WINDOWS
@@ -37,6 +38,7 @@ streamfx::util::library::library(std::filesystem::path file) : _library(nullptr)
 {
 #if defined(ST_WINDOWS)
 	SetLastError(ERROR_SUCCESS);
+	file     = ::streamfx::util::platform::utf8_to_native(file);
 	_library = reinterpret_cast<void*>(LoadLibraryW(file.wstring().c_str()));
 	if (!_library) {
 		DWORD error = GetLastError();
