@@ -693,7 +693,7 @@ function(feature_filter_video_superresolution RESOLVE)
 		endif()
 
 		# Verify that we have at least one provider for Video Super-Resolution.
-		is_feature_enabled(FILTER_VIDEO_SUPERRESOLUTION T_CHECK_NVIDIA)
+		is_feature_enabled(FILTER_VIDEO_SUPERRESOLUTION_NVIDIA T_CHECK_NVIDIA)
 		if (NOT T_CHECK_NVIDIA)
 			message(WARNING "${LOGPREFIX}: Video Super-Resolution has no available providers. Disabling...")
 			set_feature_disabled(FILTER_VIDEO_SUPERRESOLUTION ON)
