@@ -68,7 +68,7 @@ streamfx::nvidia::cuda::stream::stream(::streamfx::nvidia::cuda::stream_flags fl
 
 void streamfx::nvidia::cuda::stream::synchronize()
 {
-	D_LOG_DEBUG("Synchronizing... (Addr: 0x%" PRIuPTR ")", this);
+	//D_LOG_DEBUG("Synchronizing... (Addr: 0x%" PRIuPTR ")", this);
 	if (auto res = _cuda->cuStreamSynchronize(_stream); res != ::streamfx::nvidia::cuda::result::SUCCESS) {
 		throw ::streamfx::nvidia::cuda::cuda_error(res);
 	}
