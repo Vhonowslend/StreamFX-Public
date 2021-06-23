@@ -20,16 +20,16 @@
 #include "util-profiler.hpp"
 #include <iterator>
 
-util::profiler::profiler() {}
+streamfx::util::profiler::profiler() {}
 
-util::profiler::~profiler() {}
+streamfx::util::profiler::~profiler() {}
 
-std::shared_ptr<util::profiler::instance> util::profiler::track()
+std::shared_ptr<streamfx::util::profiler::instance> streamfx::util::profiler::track()
 {
-	return std::make_shared<util::profiler::instance>(shared_from_this());
+	return std::make_shared<streamfx::util::profiler::instance>(shared_from_this());
 }
 
-void util::profiler::track(std::chrono::nanoseconds duration)
+void streamfx::util::profiler::track(std::chrono::nanoseconds duration)
 {
 	std::unique_lock<std::mutex> ul(_timings_lock);
 	auto                         itr = _timings.find(duration);
@@ -40,7 +40,7 @@ void util::profiler::track(std::chrono::nanoseconds duration)
 	}
 }
 
-uint64_t util::profiler::count()
+uint64_t streamfx::util::profiler::count()
 {
 	uint64_t count = 0;
 
@@ -57,7 +57,7 @@ uint64_t util::profiler::count()
 	return count;
 }
 
-std::chrono::nanoseconds util::profiler::total_duration()
+std::chrono::nanoseconds streamfx::util::profiler::total_duration()
 {
 	std::chrono::nanoseconds duration{0};
 
@@ -74,7 +74,7 @@ std::chrono::nanoseconds util::profiler::total_duration()
 	return duration;
 }
 
-double_t util::profiler::average_duration()
+double_t streamfx::util::profiler::average_duration()
 {
 	std::chrono::nanoseconds duration{0};
 	uint64_t                 count = 0;
@@ -99,7 +99,7 @@ inline bool is_equal(T a, T b, T c)
 	return (a == b) || ((a >= (b - c)) && (a <= (b + c)));
 }
 
-std::chrono::nanoseconds util::profiler::percentile(double_t percentile, bool by_time)
+std::chrono::nanoseconds streamfx::util::profiler::percentile(double_t percentile, bool by_time)
 {
 	constexpr double_t edge  = 0.00005;
 	uint64_t           calls = count();
@@ -144,11 +144,11 @@ std::chrono::nanoseconds util::profiler::percentile(double_t percentile, bool by
 	return std::chrono::nanoseconds(-1);
 }
 
-util::profiler::instance::instance(std::shared_ptr<util::profiler> parent)
+streamfx::util::profiler::instance::instance(std::shared_ptr<streamfx::util::profiler> parent)
 	: _parent(parent), _start(std::chrono::high_resolution_clock::now())
 {}
 
-util::profiler::instance::~instance()
+streamfx::util::profiler::instance::~instance()
 {
 	auto end = std::chrono::high_resolution_clock::now();
 	auto dur = end - _start;
@@ -157,12 +157,12 @@ util::profiler::instance::~instance()
 	}
 }
 
-void util::profiler::instance::cancel()
+void streamfx::util::profiler::instance::cancel()
 {
 	_parent.reset();
 }
 
-void util::profiler::instance::reparent(std::shared_ptr<util::profiler> parent)
+void streamfx::util::profiler::instance::reparent(std::shared_ptr<streamfx::util::profiler> parent)
 {
 	_parent = parent;
 }
