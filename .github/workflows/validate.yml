@@ -1,11 +1,11 @@
 name: Validation
 
-on: 
-  push:
-    tags:
-      - '*'
+on:
   pull_request:
     branches:
+      - '*'
+  push:
+    tags:
       - '*'
 
 jobs:
