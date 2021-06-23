@@ -150,7 +150,7 @@ void streamfx::nvidia::cuda::context::pop()
 
 void streamfx::nvidia::cuda::context::synchronize()
 {
-	D_LOG_DEBUG("Synchronizing... (Addr: 0x%" PRIuPTR ")", this);
+	//D_LOG_DEBUG("Synchronizing... (Addr: 0x%" PRIuPTR ")", this);
 
 #ifdef ENABLE_STACK_CHECKS
 	::streamfx::nvidia::cuda::context_t ctx;
