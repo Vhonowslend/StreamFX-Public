@@ -23,8 +23,8 @@
 #include <map>
 #include <mutex>
 
-namespace util {
-	class profiler : public std::enable_shared_from_this<util::profiler> {
+namespace streamfx::util {
+	class profiler : public std::enable_shared_from_this<streamfx::util::profiler> {
 		std::map<std::chrono::nanoseconds, size_t> _timings;
 		std::mutex                                 _timings_lock;
 
@@ -49,7 +49,7 @@ namespace util {
 		public:
 		~profiler();
 
-		std::shared_ptr<class util::profiler::instance> track();
+		std::shared_ptr<class streamfx::util::profiler::instance> track();
 
 		void track(std::chrono::nanoseconds duration);
 
@@ -62,9 +62,9 @@ namespace util {
 		std::chrono::nanoseconds percentile(double_t percentile, bool by_time = false);
 
 		public:
-		static std::shared_ptr<util::profiler> create()
+		static std::shared_ptr<streamfx::util::profiler> create()
 		{
-			return std::shared_ptr<util::profiler>{new profiler()};
+			return std::shared_ptr<streamfx::util::profiler>{new profiler()};
 		}
 	};
-} // namespace util
+} // namespace streamfx::util
