@@ -182,6 +182,12 @@ namespace streamfx::util {
 		}
 
 		template<typename T>
+		inline bool is_close(T target, T value, T delta)
+		{
+			return (target > (value - delta)) && (target < (value + delta));
+		}
+
+		template<typename T>
 		inline std::vector<T> pascal_triangle(size_t n)
 		{
 			std::vector<T> line;
