@@ -19,6 +19,7 @@
 // SOFTWARE.
 
 #include "nvidia-vfx-superresolution.hpp"
+#include <cmath>
 #include <utility>
 #include "obs/gs/gs-helper.hpp"
 #include "util/util-logging.hpp"
@@ -187,13 +188,13 @@ void streamfx::nvidia::vfx::superresolution::size(std::pair<uint32_t, uint32_t> 
 		double ar         = static_cast<double>(input_size.second) / static_cast<double>(input_size.first);
 		input_size.first  = std::clamp<uint32_t>(input_size.first, min_width, max_width);
 		input_size.second = std::clamp<uint32_t>(
-			static_cast<uint32_t>(round(static_cast<double>(input_size.first) * ar)), min_height, max_height);
+			static_cast<uint32_t>(std::lround(static_cast<double>(input_size.first) * ar)), min_height, max_height);
 	} else {
 		// Dominant Height
 		double ar         = static_cast<double>(input_size.first) / static_cast<double>(input_size.second);
 		input_size.second = std::clamp<uint32_t>(input_size.second, min_height, max_height);
 		input_size.first  = std::clamp<uint32_t>(
-            static_cast<uint32_t>(round(static_cast<double>(input_size.second) * ar)), min_width, max_width);
+            static_cast<uint32_t>(std::lround(static_cast<double>(input_size.second) * ar)), min_width, max_width);
 	}
 
 	// Calculate Output Size.
@@ -298,8 +299,8 @@ std::shared_ptr<::streamfx::obs::gs::texture>
 
 void streamfx::nvidia::vfx::superresolution::resize(uint32_t width, uint32_t height)
 {
-	uint32_t out_width  = static_cast<uint32_t>(width * _scale);
-	uint32_t out_height = static_cast<uint32_t>(height * _scale);
+	uint32_t out_width  = static_cast<uint32_t>(std::lround(width * _scale));
+	uint32_t out_height = static_cast<uint32_t>(std::lround(height * _scale));
 
 	auto gctx = ::streamfx::obs::gs::context();
 	auto cctx = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
