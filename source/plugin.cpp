@@ -98,7 +98,12 @@ try {
 
 #ifdef ENABLE_NVIDIA_CUDA
 	// Initialize CUDA if features requested it.
-	auto cuda = ::streamfx::nvidia::cuda::obs::get();
+	std::shared_ptr<::streamfx::nvidia::cuda::obs> cuda;
+	try {
+		cuda = ::streamfx::nvidia::cuda::obs::get();
+	} catch (...) {
+		// If CUDA failed to load, it is considered safe to ignore.
+	}
 #endif
 
 	// GS Stuff
@@ -185,6 +190,9 @@ try {
 
 	DLOG_INFO("Loaded Version %s", STREAMFX_VERSION_STRING);
 	return true;
+} catch (std::exception const& ex) {
+	DLOG_ERROR("Unexpected exception in function '%s': %s", __FUNCTION_NAME__, ex.what());
+	return false;
 } catch (...) {
 	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	return false;
@@ -274,6 +282,8 @@ try {
 	streamfx::configuration::finalize();
 
 	DLOG_INFO("Unloaded Version %s", STREAMFX_VERSION_STRING);
+} catch (std::exception const& ex) {
+	DLOG_ERROR("Unexpected exception in function '%s': %s", __FUNCTION_NAME__, ex.what());
 } catch (...) {
 	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
