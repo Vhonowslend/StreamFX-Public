@@ -329,10 +329,7 @@ void streamfx::nvidia::vfx::superresolution::resize(uint32_t width, uint32_t hei
 		}
 
 		if (_convert_to_fp32) {
-			_convert_to_fp32->reallocate(out_width, out_height, ::streamfx::nvidia::cv::pixel_format::RGBA,
-										 ::streamfx::nvidia::cv::component_type::FP32,
-										 ::streamfx::nvidia::cv::component_layout::PLANAR,
-										 ::streamfx::nvidia::cv::memory_location::GPU, 1);
+			_convert_to_fp32->resize(out_width, out_height);
 		} else {
 			_convert_to_fp32 = std::make_shared<::streamfx::nvidia::cv::image>(
 				out_width, out_height, ::streamfx::nvidia::cv::pixel_format::RGBA,
@@ -369,10 +366,7 @@ void streamfx::nvidia::vfx::superresolution::resize(uint32_t width, uint32_t hei
 		}
 
 		if (_convert_to_u8) {
-			_convert_to_u8->reallocate(out_width, out_height, ::streamfx::nvidia::cv::pixel_format::RGBA,
-									   ::streamfx::nvidia::cv::component_type::UINT8,
-									   ::streamfx::nvidia::cv::component_layout::INTERLEAVED,
-									   ::streamfx::nvidia::cv::memory_location::GPU, 1);
+			_convert_to_u8->resize(out_width, out_height);
 		} else {
 			_convert_to_u8 = std::make_shared<::streamfx::nvidia::cv::image>(
 				out_width, out_height, ::streamfx::nvidia::cv::pixel_format::RGBA,
