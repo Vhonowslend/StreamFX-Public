@@ -119,9 +119,5 @@ void streamfx::nvidia::cv::texture::free()
 					_cv->NvCV_GetErrorStringFromCode(res));
 		throw std::runtime_error("NvCVImage_UnmapResource");
 	}
-	if (auto res = _cv->NvCVImage_Dealloc(&_image); res != result::SUCCESS) {
-		D_LOG_ERROR("Object 0x%" PRIxPTR " failed NvCVImage_Dealloc call with error: %s", this,
-					_cv->NvCV_GetErrorStringFromCode(res));
-		throw std::runtime_error("NvCVImage_Dealloc");
-	}
+	_cv->NvCVImage_Dealloc(&_image);
 }

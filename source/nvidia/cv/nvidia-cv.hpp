@@ -226,7 +226,7 @@ namespace streamfx::nvidia::cv {
 		NVCVI_DEFINE_FUNCTION(NvCVImage_Realloc, image_t* image, uint32_t width, uint32_t height, pixel_format format,
 							  component_type comp_type, uint32_t comp_layout, uint32_t mem_location,
 							  uint32_t alignment);
-		NVCVI_DEFINE_FUNCTION(NvCVImage_Dealloc, image_t* image);
+		NVCVI_DEFINE_FUNCTION_EX(void, NvCVImage_Dealloc, image_t* image);
 		NVCVI_DEFINE_FUNCTION(NvCVImage_Create, uint32_t width, uint32_t height, pixel_format format,
 							  component_type comp_type, component_layout comp_layout, memory_location mem_location,
 							  uint32_t alignment, image_t** image);
