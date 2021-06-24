@@ -51,7 +51,7 @@ image::~image()
 	_cv->NvCVImage_Dealloc(&_image);
 }
 
-image::image() : _cv(::streamfx::nvidia::cv::cv::get()), _image()
+image::image() : _cv(::streamfx::nvidia::cv::cv::get()), _image(), _alignment(1)
 {
 	// Forcefully clear the image storage.
 	memset(&_image, sizeof(_image), 0);
@@ -64,8 +64,9 @@ image::image(uint32_t width, uint32_t height, pixel_format pix_fmt, component_ty
 	auto gctx = ::streamfx::obs::gs::context();
 	auto cctx = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
 
+	_alignment = alignment;
 	if (auto res = _cv->NvCVImage_Alloc(&_image, width, height, pix_fmt, cmp_type, static_cast<uint32_t>(cmp_layout),
-										static_cast<uint32_t>(location), alignment);
+										static_cast<uint32_t>(location), _alignment);
 		res != result::SUCCESS) {
 		throw std::runtime_error(_cv->NvCV_GetErrorStringFromCode(res));
 	}
@@ -83,13 +84,13 @@ void streamfx::nvidia::cv::image::reallocate(uint32_t width, uint32_t height, pi
 		res != result::SUCCESS) {
 		throw std::runtime_error(_cv->NvCV_GetErrorStringFromCode(res));
 	}
+	_alignment = alignment;
 }
 
 void streamfx::nvidia::cv::image::resize(uint32_t width, uint32_t height)
 {
-	// TODO: Is pixel_bytes correct?
 	reallocate(width, height, _image.pxl_format, _image.comp_type, static_cast<component_layout>(_image.comp_layout),
-			   static_cast<memory_location>(_image.mem_location), _image.pixel_bytes);
+			   static_cast<memory_location>(_image.mem_location), _alignment);
 }
 
 streamfx::nvidia::cv::image_t* streamfx::nvidia::cv::image::get_image()
