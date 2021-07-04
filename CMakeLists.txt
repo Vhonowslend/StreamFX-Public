@@ -1040,6 +1040,8 @@ if(HAVE_NVIDIA_VFX_SDK)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/nvidia/vfx/nvidia-vfx.hpp"
 		"source/nvidia/vfx/nvidia-vfx.cpp"
+		"source/nvidia/vfx/nvidia-vfx-effect.hpp"
+		"source/nvidia/vfx/nvidia-vfx-effect.cpp"
 		"source/nvidia/vfx/nvidia-vfx-superresolution.hpp"
 		"source/nvidia/vfx/nvidia-vfx-superresolution.cpp"
 	)
