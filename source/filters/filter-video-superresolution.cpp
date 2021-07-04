@@ -504,6 +504,12 @@ video_superresolution_factory::video_superresolution_factory()
 		_nvcvi.reset();
 		_nvcuda.reset();
 		D_LOG_WARNING("Failed to make NVIDIA Super-Resolution available due to error: %s", ex.what());
+	} catch (...) {
+		_nvidia_available = false;
+		_nvvfx.reset();
+		_nvcvi.reset();
+		_nvcuda.reset();
+		D_LOG_WARNING("Failed to make NVIDIA Super-Resolution available.", nullptr);
 	}
 #endif
 
