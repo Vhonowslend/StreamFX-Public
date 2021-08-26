@@ -22,6 +22,68 @@
 #include "plugin.hpp"
 
 namespace streamfx::obs {
+	class encoder_instance {
+		protected:
+		obs_encoder_t* _self;
+
+		public:
+		encoder_instance(obs_data_t* settings, obs_encoder_t* self, bool is_hw) : _self(self) {}
+		virtual ~encoder_instance(){};
+
+		virtual void migrate(obs_data_t* settings, uint64_t version) {}
+
+		virtual bool update(obs_data_t* settings)
+		{
+			return false;
+		}
+
+		virtual bool encode(struct encoder_frame* frame, struct encoder_packet* packet, bool* received_packet)
+		{
+			auto type = obs_encoder_get_type(_self);
+			if (type == OBS_ENCODER_VIDEO) {
+				return encode_video(frame, packet, received_packet);
+			} else if (type == OBS_ENCODER_AUDIO) {
+				return encode_audio(frame, packet, received_packet);
+			}
+			return false;
+		}
+
+		virtual bool encode_audio(struct encoder_frame* frame, struct encoder_packet* packet, bool* received_packet)
+		{
+			return false;
+		};
+
+		virtual bool encode_video(struct encoder_frame* frame, struct encoder_packet* packet, bool* received_packet)
+		{
+			return false;
+		};
+
+		virtual bool encode_video(uint32_t handle, int64_t pts, uint64_t lock_key, uint64_t* next_key,
+								  struct encoder_packet* packet, bool* received_packet)
+		{
+			return false;
+		};
+
+		virtual size_t get_frame_size()
+		{
+			return 0;
+		}
+
+		virtual bool get_extra_data(uint8_t** extra_data, size_t* size)
+		{
+			return false;
+		}
+
+		virtual bool get_sei_data(uint8_t** sei_data, size_t* size)
+		{
+			return false;
+		}
+
+		virtual void get_audio_info(struct audio_convert_info* info) {}
+
+		virtual void get_video_info(struct video_scale_info* info) {}
+	};
+
 	template<class _factory, typename _instance>
 	class encoder_factory {
 		public:
@@ -171,7 +233,7 @@ namespace streamfx::obs {
 
 		static bool _update(void* data, obs_data_t* settings) noexcept
 		try {
-			auto priv = reinterpret_cast<instance_t*>(data);
+			auto priv = reinterpret_cast<encoder_instance*>(data);
 			if (priv) {
 				uint64_t version = static_cast<uint64_t>(obs_data_get_int(settings, S_VERSION));
 				priv->migrate(settings, version);
@@ -192,7 +254,7 @@ namespace streamfx::obs {
 							bool* received_packet) noexcept
 		try {
 			if (data)
-				return reinterpret_cast<instance_t*>(data)->encode(frame, packet, received_packet);
+				return reinterpret_cast<encoder_instance*>(data)->encode_video(frame, packet, received_packet);
 			return false;
 		} catch (const std::exception& ex) {
 			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
@@ -206,8 +268,8 @@ namespace streamfx::obs {
 									struct encoder_packet* packet, bool* received_packet) noexcept
 		try {
 			if (data)
-				return reinterpret_cast<instance_t*>(data)->encode_video(handle, pts, lock_key, next_key, packet,
-																		 received_packet);
+				return reinterpret_cast<encoder_instance*>(data)->encode_video(handle, pts, lock_key, next_key, packet,
+																			   received_packet);
 			return false;
 		} catch (const std::exception& ex) {
 			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
@@ -220,7 +282,7 @@ namespace streamfx::obs {
 		static size_t _get_frame_size(void* data) noexcept
 		try {
 			if (data)
-				return reinterpret_cast<instance_t*>(data)->get_frame_size();
+				return reinterpret_cast<encoder_instance*>(data)->get_frame_size();
 			return 0;
 		} catch (const std::exception& ex) {
 			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
@@ -233,7 +295,7 @@ namespace streamfx::obs {
 		static bool _get_extra_data(void* data, uint8_t** extra_data, size_t* size) noexcept
 		try {
 			if (data)
-				return reinterpret_cast<instance_t*>(data)->get_extra_data(extra_data, size);
+				return reinterpret_cast<encoder_instance*>(data)->get_extra_data(extra_data, size);
 			return false;
 		} catch (const std::exception& ex) {
 			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
@@ -246,7 +308,7 @@ namespace streamfx::obs {
 		static bool _get_sei_data(void* data, uint8_t** sei_data, size_t* size) noexcept
 		try {
 			if (data)
-				return reinterpret_cast<instance_t*>(data)->get_sei_data(sei_data, size);
+				return reinterpret_cast<encoder_instance*>(data)->get_sei_data(sei_data, size);
 			return false;
 		} catch (const std::exception& ex) {
 			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
@@ -259,7 +321,7 @@ namespace streamfx::obs {
 		static void _get_audio_info(void* data, struct audio_convert_info* info) noexcept
 		try {
 			if (data)
-				reinterpret_cast<instance_t*>(data)->get_audio_info(info);
+				reinterpret_cast<encoder_instance*>(data)->get_audio_info(info);
 		} catch (const std::exception& ex) {
 			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
@@ -269,7 +331,7 @@ namespace streamfx::obs {
 		static void _get_video_info(void* data, struct video_scale_info* info) noexcept
 		try {
 			if (data)
-				reinterpret_cast<instance_t*>(data)->get_video_info(info);
+				reinterpret_cast<encoder_instance*>(data)->get_video_info(info);
 		} catch (const std::exception& ex) {
 			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
 		} catch (...) {
@@ -293,61 +355,6 @@ namespace streamfx::obs {
 		{
 			return nullptr;
 		}
-	};
-
-	class encoder_instance {
-		protected:
-		obs_encoder_t* _self;
-
-		public:
-		encoder_instance(obs_data_t* settings, obs_encoder_t* self, bool is_hw) : _self(self) {}
-		virtual ~encoder_instance(){};
-
-		virtual void migrate(obs_data_t* settings, uint64_t version) {}
-
-		virtual bool update(obs_data_t* settings)
-		{
-			return false;
-		}
-
-		virtual bool encode(struct encoder_frame* frame, struct encoder_packet* packet, bool* received_packet)
-		{
-			auto type = obs_encoder_get_type(_self);
-			if (type == OBS_ENCODER_VIDEO) {
-				return encode_video(frame, packet, received_packet);
-			} else if (type == OBS_ENCODER_AUDIO) {
-				return encode_audio(frame, packet, received_packet);
-			}
-			return false;
-		}
-
-		virtual bool encode_audio(struct encoder_frame* frame, struct encoder_packet* packet,
-								  bool* received_packet) = 0;
-
-		virtual bool encode_video(struct encoder_frame* frame, struct encoder_packet* packet,
-								  bool* received_packet) = 0;
-
-		virtual bool encode_video(uint32_t handle, int64_t pts, uint64_t lock_key, uint64_t* next_key,
-								  struct encoder_packet* packet, bool* received_packet) = 0;
-
-		virtual size_t get_frame_size()
-		{
-			return 0;
-		}
-
-		virtual bool get_extra_data(uint8_t** extra_data, size_t* size)
-		{
-			return false;
-		}
-
-		virtual bool get_sei_data(uint8_t** sei_data, size_t* size)
-		{
-			return false;
-		}
-
-		virtual void get_audio_info(struct audio_convert_info* info) {}
-
-		virtual void get_video_info(struct video_scale_info* info) {}
 	};
 
 } // namespace streamfx::obs
