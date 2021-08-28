@@ -28,6 +28,9 @@
 #include "nvidia/cuda/nvidia-cuda-obs.hpp"
 #endif
 
+#ifdef ENABLE_ENCODER_AOM_AV1
+#include "encoders/encoder-aom-av1.hpp"
+#endif
 #ifdef ENABLE_ENCODER_FFMPEG
 #include "encoders/encoder-ffmpeg.hpp"
 #endif
@@ -129,6 +132,9 @@ try {
 
 	// Encoders
 	{
+#ifdef ENABLE_ENCODER_AOM_AV1
+		streamfx::encoder::aom::av1::aom_av1_factory::initialize();
+#endif
 #ifdef ENABLE_ENCODER_FFMPEG
 		using namespace streamfx::encoder::ffmpeg;
 		ffmpeg_manager::initialize();
@@ -259,6 +265,9 @@ try {
 	{
 #ifdef ENABLE_ENCODER_FFMPEG
 		streamfx::encoder::ffmpeg::ffmpeg_manager::finalize();
+#endif
+#ifdef ENABLE_ENCODER_AOM_AV1
+		streamfx::encoder::aom::av1::aom_av1_factory::finalize();
 #endif
 	}
 
