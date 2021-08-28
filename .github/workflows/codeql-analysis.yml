@@ -83,14 +83,15 @@ jobs:
         sudo apt-get purge libjpeg9-dev:amd64 libjpeg8-dev:amd64 libjpeg-turbo8-dev:amd64
         sudo apt-get install \
           build-essential \
+          checkinstall \
+          pkg-config \
           cmake \
           ninja-build \
           git \
+          gcc-9 g++9 \
           qt5-default libqwt-qt5-dev libqt5svg5-dev \
           libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev \
-          libcurl4-openssl-dev \
-          gcc-9 g++9 \
-          checkinstall pkg-config
+          libcurl4-openssl-dev
         sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 800 --slave /usr/bin/g++ g++ /usr/bin/g++-9
 
     - name: "libobs: Cache"

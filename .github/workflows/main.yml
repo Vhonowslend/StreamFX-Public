@@ -14,6 +14,7 @@ env:
   QT_VERSION: "5.15.2"
   OBS_VERSION: "27.0.0-ci"
   OBSDEPS_VERSION: "27.0.0"
+  LIBAOM_VERSION: "3.1.2.115"
 
 jobs:
   windows:
@@ -64,6 +65,20 @@ jobs:
           build/temp/qt-build
           build/temp/qt-src
         key: qt-${{ matrix.id }}-${{ env.OBSDEPS_VERSION }}-${{ env.QT_VERSION }}-${{ secrets.CACHE_VERSION }}
+    - name: "libaom: Cache"
+      uses: actions/cache@v2
+      id: libaom-cache
+      with:
+        path: |
+          build/libaom
+        key: libaom-${{ matrix.id }}-${{ env.LIBAOM_VERSION }}-${{ secrets.CACHE_VERSION }}
+    - name: "libaom: Install"
+      if: "steps.libaom-cache.outputs.cache-hit != 'true'"
+      id: libaom-install
+      shell: bash
+      run: |
+        curl -L -o "aom.7z" "https://github.com/Xaymar/aom/releases/download/v${{ env.LIBAOM_VERSION }}/aom-windows-64-shared.7z"
+        7z x -o"build/libaom/" "aom.7z"
     - name: "StreamFX: Configure"
       shell: bash
       run: |
@@ -72,13 +87,14 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="build/distrib" \
           -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
           -DPACKAGE_PREFIX="build/package" \
-          -DDOWNLOAD_QT=ON \
           -DDOWNLOAD_OBS_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBS_VERSION }}/obs-studio-x64-0.0.0.0-windows-x86-64.7z" \
           -DDOWNLOAD_OBS_HASH="SHA256=EBF9853C8A553E16ECBCA22523F401E6CF1EB2E8DA93F1493FEF41D65BD06633" \
           -DDOWNLOAD_OBSDEPS_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBSDEPS_VERSION }}/deps-windows-x86.7z" \
           -DDOWNLOAD_OBSDEPS_HASH="SHA256=B4AED165016F0B64A7E8B256CCC12EAF8AF087F61B0B239B9D3D00277485B5B5" \
+          -DDOWNLOAD_QT=ON \
           -DDOWNLOAD_QT_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBSDEPS_VERSION }}/qt-${{ env.QT_VERSION }}-windows-x86-64.7z" \
-          -DDOWNLOAD_QT_HASH="SHA256=109B9C21EF165B0C46DFAA9AD23124F2070ED4D74207C4AFB308183CB8D43BDD"
+          -DDOWNLOAD_QT_HASH="SHA256=109B9C21EF165B0C46DFAA9AD23124F2070ED4D74207C4AFB308183CB8D43BDD" \
+          -DAOM_PATH="build/libaom/"
     - name: "StreamFX: Build"
       shell: bash
       run: |
@@ -101,6 +117,7 @@ jobs:
       with:
         name: ${{ matrix.id }}
         path: build/package
+
   ubuntu:
     name: "Ubuntu 64-bit"
     strategy:
@@ -142,14 +159,15 @@ jobs:
         sudo apt-get purge libjpeg9-dev:amd64 libjpeg8-dev:amd64 libjpeg-turbo8-dev:amd64
         sudo apt-get install \
           build-essential \
+          checkinstall \
+          pkg-config \
           cmake \
           ninja-build \
           git \
+          ${{ matrix.packages }} \
           qt5-default libqwt-qt5-dev libqt5svg5-dev \
           libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev \
-          libcurl4-openssl-dev \
-          ${{ matrix.packages }} \
-          checkinstall pkg-config
+          libcurl4-openssl-dev
         ${{ matrix.extra_command }}
     - name: "libobs: Cache"
       uses: actions/cache@v2
@@ -185,6 +203,7 @@ jobs:
       with:
         name: ${{ matrix.id }}
         path: build/package
+
   macos:
     strategy:
       fail-fast: true
