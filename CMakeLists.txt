@@ -294,6 +294,7 @@ set(${PREFIX}ENABLE_ENCODER_FFMPEG ON CACHE BOOL "Enable FFmpeg Encoder integrat
 set(${PREFIX}ENABLE_ENCODER_FFMPEG_AMF ON CACHE BOOL "Enable AMF Encoder in FFmpeg.")
 set(${PREFIX}ENABLE_ENCODER_FFMPEG_NVENC ON CACHE BOOL "Enable NVENC Encoder in FFmpeg.")
 set(${PREFIX}ENABLE_ENCODER_FFMPEG_PRORES ON CACHE BOOL "Enable ProRes Encoder in FFmpeg.")
+set(${PREFIX}ENABLE_ENCODER_AOM_AV1 ON CACHE BOOL "Enable AOM AV1 Encoder.")
 
 ## Filters
 set(${PREFIX}ENABLE_FILTER_BLUR ON CACHE BOOL "Enable Blur Filter")
@@ -636,6 +637,18 @@ function(feature_encoder_ffmpeg RESOLVE)
 	endif()
 endfunction()
 
+function(feature_encoder_aom_av1 RESOLVE)
+	is_feature_enabled(ENCODER_AOM_AV1 T_CHECK)
+	if(RESOLVE AND T_CHECK)
+		if(NOT HAVE_AOM)
+			message(WARNING "${LOGPREFIX}: AOM AV1 encoder missing AOM library. Disabling...")
+			set_feature_disabled(ENCODER_AOM_AV1 ON)
+		endif()
+	elseif(T_CHECK)
+		set(REQUIRE_AOM ON PARENT_SCOPE)
+	endif()
+endfunction()
+
 function(feature_filter_blur RESOLVE)
 	is_feature_enabled(FILTER_BLUR T_CHECK)
 endfunction()
@@ -749,6 +762,7 @@ endfunction()
 
 # Set Requirements
 feature_encoder_ffmpeg(OFF)
+feature_encoder_aom_av1(OFF)
 feature_filter_blur(OFF)
 feature_filter_color_grade(OFF)
 feature_filter_displacement(OFF)
@@ -819,6 +833,15 @@ if(REQUIRE_FFMPEG)
 
 	find_package(FFmpeg COMPONENTS avutil avcodec swscale)
 	set(HAVE_FFMPEG ${FFmpeg_FOUND})
+endif()
+
+#- AOM
+set(HAVE_AOM OFF)
+if(REQUIRE_AOM)
+	if(NOT D_PLATFORM_MAC)
+		find_package(AOM)
+		set(HAVE_AOM ${AOM_FOUND})
+	endif()
 endif()
 
 #- JSON
@@ -894,6 +917,7 @@ endif()
 
 # Verify Requirements
 feature_encoder_ffmpeg(ON)
+feature_encoder_aom_av1(ON)
 feature_filter_blur(ON)
 feature_filter_color_grade(ON)
 feature_filter_displacement(ON)
@@ -1213,6 +1237,23 @@ if(T_CHECK)
 			ENABLE_ENCODER_FFMPEG_PRORES
 		)
 	endif()
+endif()
+
+# Encoder/AOM-AV1
+is_feature_enabled(ENCODER_AOM_AV1 T_CHECK)
+if(T_CHECK)
+	list (APPEND PROJECT_PRIVATE_SOURCE
+		"source/encoders/codecs/av1.hpp"
+		"source/encoders/codecs/av1.cpp"
+		"source/encoders/encoder-aom-av1.hpp"
+		"source/encoders/encoder-aom-av1.cpp"
+	)
+	list (APPEND PROJECT_INCLUDE_DIRS
+		${AOM_INCLUDE_DIR}
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_ENCODER_AOM_AV1
+	)
 endif()
 
 # Filter/Blur
@@ -1740,6 +1781,15 @@ endif()
 if(${PREFIX}OBS_NATIVE)
 	# Grouped builds don't offer standalone services.
 	install_obs_plugin_with_data(${PROJECT_NAME} data)
+
+	# Dependency: AOM
+	if(HAVE_AOM AND AOM_BINARY AND D_PLATFORM_WINDOWS)
+		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+			COMMAND "${CMAKE_COMMAND}" -E copy
+				"${AOM_BINARY}"
+				"${CMAKE_BINARY_DIR}/rundir/$<CONFIGURATION>/data/obs-plugins/${PROJECT_NAME}"
+			VERBATIM)
+	endif()
 else()
 	if(STRUCTURE_UNIFIED)
 		install(
@@ -1762,6 +1812,14 @@ else()
 					DESTINATION "bin/windows-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/"
 					COMPONENT StreamFX
 					OPTIONAL
+				)
+			endif()
+
+			# Dependency: AOM
+			if(HAVE_AOM AND AOM_BINARY AND D_PLATFORM_WINDOWS)
+				install(
+					FILES ${AOM_BINARY}
+					DESTINATION "data/" COMPONENT StreamFX
 				)
 			endif()
 		elseif(D_PLATFORM_LINUX)
@@ -1805,6 +1863,14 @@ else()
 				FILES $<TARGET_PDB_FILE:${PROJECT_NAME}>
 				DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/"
 				OPTIONAL
+			)
+		endif()
+
+		# Dependency: AOM
+		if(HAVE_AOM AND AOM_BINARY AND D_PLATFORM_WINDOWS)
+			install(
+				FILES ${AOM_BINARY}
+				DESTINATION "data/obs-plugins/${PROJECT_NAME}/" COMPONENT StreamFX
 			)
 		endif()
 	elseif(D_PLATFORM_LINUX)
