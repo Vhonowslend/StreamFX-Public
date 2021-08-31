@@ -1,13 +1,29 @@
+// MIT License
+
+// Copyright (c) 2021 Radegast-FFXIV
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 #include "shared.effect"
 
 //-----------------------------------------------------------------------------
 // Uniforms
 //-----------------------------------------------------------------------------
-// Provided by OBS
-uniform float4x4 ViewProj<
-    bool automatic = true;
-    bool visible = false;
->;
 
 // Provided by StreamFX
 uniform float4 Time<
@@ -19,8 +35,6 @@ uniform float4 ViewSize<
 uniform texture2d InputA<
 	bool automatic = true;
 >;
-
-uniform texture2d swirl_result;
 
 uniform float2 coordinates<
     string name = "Coordinates (X, Y)";
@@ -57,6 +71,15 @@ uniform float tension<
     float maximum = 10.0;
 > = 1.0;
 
+uniform float aspect_ratio<
+    string name = "Aspect Ratio";
+    string description = "Adjusts the aspect ratio for the associated distortion.";
+    string field_type = "slider";
+    float step = 0.01;
+    float minimum = -1;
+    float maximum = 1;
+> = 0.0;
+
 uniform bool animate<
     string name = "Animate";
     string description = "Animates the effect, making it twist back and forth.";
@@ -66,6 +89,11 @@ uniform bool inverse_angle<
     string name = "Use Inverse Angle";
     string description = "Inverts the angle, making the edges more distorted than the center.";
 > = false;
+
+//-----------------------------------------------------------------------------
+// Textures
+//-----------------------------------------------------------------------------
+uniform texture2d swirl_result;
 
 //-----------------------------------------------------------------------------
 // Samplers
@@ -79,12 +107,28 @@ sampler_state texture_sampler {
 //-----------------------------------------------------------------------------
 // Functions
 //-----------------------------------------------------------------------------
+
+float2 swirl_transform (float percent, float2 input_vertex, float2 effect_center) {
+    float theta = percent * percent * radians(angle * (animate == true ? sin(Time.x) : 1.0) );
+    float s =  sin(theta);
+    float c =  cos(theta);
+    float2x2 transform = float2x2(
+        c, -s,
+        s, c
+    );
+    return mul(transform, input_vertex-effect_center);
+}
+
+//-----------------------------------------------------------------------------
+// Shaders
+//-----------------------------------------------------------------------------
 float4 PSSwirl(VertexData vtx) : TARGET {
     VertexData vertex_out;
     vertex_out.pos = vtx.pos;
 
-    float2 effect_center = coordinates;
-    float ar = 1. * ViewSize.y / ViewSize.x;
+    float2 effect_center = coordinates/2.0;
+    float ar_raw = 1. * ViewSize.y / ViewSize.x;
+    float ar = lerp(ar_raw, 1, aspect_ratio);
 
     vertex_out.uv = 1. * vtx.uv - effect_center;
     
@@ -98,14 +142,7 @@ float4 PSSwirl(VertexData vtx) : TARGET {
         float percent = (radius-dist) /tension_radius;
         percent = inverse_angle == 0 ? percent : 1 - percent;
 
-        float theta = percent * percent * radians(angle * (animate == true ? sin(Time.x) : 1.0) );
-        float s =  sin(theta);
-        float c =  cos(theta);
-        float2x2 transform = float2x2(
-            c, -s,
-            s, c
-        );
-        vertex_out.uv = mul(transform, vertex_out.uv-effect_center);
+        vertex_out.uv = swirl_transform(percent, vertex_out.uv, effect_center);
         vertex_out.uv += (2 * effect_center);
         
         vertex_out.uv.x *= ar;
