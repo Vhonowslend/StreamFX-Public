@@ -1,0 +1,196 @@
+// Copyright 2021 Radegast Stravinsky <radegast.ffxiv@gmail.com>
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice,
+//	this list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//	this list of conditions and the following disclaimer in the documentation
+//	and/or other materials provided with the distribution.
+// 3. Neither the name of the copyright holder nor the names of its contributors
+//	may be used to endorse or promote products derived from this software
+//	without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+
+#include "../base.effect"
+
+//-----------------------------------------------------------------------------
+// Uniforms
+//-----------------------------------------------------------------------------
+
+// Provided by StreamFX
+uniform float4 Time<
+	bool automatic = true;
+>;
+uniform float4 ViewSize<
+	bool automatic = true;
+>;
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+
+uniform float magnitude<
+	string name = "Magnitude";
+	string description = "The magnitude of the distortion.";
+	string field_type = "slider";
+	float minimum = 0.0;
+	float maximum = 10.0;
+> = 1.0;
+
+uniform float angle<
+    string name = "Angle";
+    string description = "The amount of oscillation in the image.";
+    string field_type = "slider";
+    float minimum = -1800.0;
+    float maximum = 1800.0;
+> = 90.0;
+
+uniform float period<
+	string name = "Period";
+	string description = "The frequency at which the wave oscillation occurs.";
+	string field_type = "slider";
+	float minimum = 0.0;
+	float maximum = 10.0;
+> = 0.5;
+
+uniform float phase<
+    string name = "Phase";
+    string description = "Adjusts the phase of the wave.";
+	string field_type = "slider";
+	float minimum = -1.0;
+	float maximum = 1.0;
+> = 0.0;
+
+uniform float amplitude<
+	string name = "Amplitude";
+	string description = "Adjusts the amplitude of the wave.";
+	string field_type = "slider";
+	float minimum = -1.0;
+	float maximum = 1.0;
+> = 0.25;
+
+uniform int wave_type<
+	string name = "Wave Type";
+	string description = "The wave distortion type to use.";
+	string field_type = "enum";
+	// Enumeration
+	int enum = 2;
+	int enum_0 = 0;
+	string enum_0_name = "X/X";
+	int enum_1 = 1;
+	string enum_1_name = "X/Y";
+> = 1;
+
+uniform int animate<
+	string name = "Animate By";
+	string description = "Animates the wave distortion by one of the parameters.";
+	string field_type = "enum";
+	// Enumeration
+	int enum = 4;
+	int enum_0 = 0;
+	string enum_0_name = "None";
+	int enum_1 = 1;
+	string enum_1_name = "Amplitude";
+	int enum_2 = 2;
+	string enum_2_name = "Phase";
+	int enum_3 = 3;
+	string enum_3_name = "Angle";
+> = 0;
+
+
+//-----------------------------------------------------------------------------
+// Structs
+//-----------------------------------------------------------------------------
+struct VertexData {
+	float4 pos : POSITION;
+	float2 uv : TEXCOORD0;
+};
+
+//-----------------------------------------------------------------------------
+// Samplers
+//-----------------------------------------------------------------------------
+sampler_state texture_sampler {
+	Filter    = Linear;
+	AddressU  = Mirror;
+	AddressV  = Mirror;
+};
+
+//-----------------------------------------------------------------------------
+// Functions
+//-----------------------------------------------------------------------------
+float4 PSWave(VertexData vtx) : TARGET {
+	const float ar = 1.0 * (float)ViewSize.y / (float)ViewSize.x;
+    float2 tc = vtx.uv;
+    const float2 center = float2(0.5 / ar, 0.5);
+    float4 color;
+
+    tc.x /= ar;
+
+    const float theta = radians(animate == 3 ? (Time.x * 5 % 360.0) : angle);
+    const float s =  sin(theta);
+    const float _s = sin(-theta);
+    const float c =  cos(theta);
+    const float _c = cos(-theta);
+
+    tc = float2(dot(tc - center, float2(c, -s)), dot(tc - center, float2(s, c)));
+        if(wave_type == 0)
+        {
+            switch(animate)
+            {
+                default:
+                    tc.x += amplitude * sin((tc.x * period * 10) + phase);
+                    break;
+                case 1:
+                    tc.x += (sin(Time.x) * amplitude) * sin((tc.x * period * 10) + phase);
+                    break;
+                case 2:
+                    tc.x += amplitude * sin((tc.x * period * 10) + Time.x);
+                    break;
+            }
+        }
+        else
+        {
+            switch(animate)
+            {
+                default:
+                    tc.x +=  amplitude * sin((tc.y * period * 10) + phase);
+                    break;
+                case 1:
+                    tc.x += (sin(Time.x) * amplitude) * sin((tc.y * period * 10) + phase);
+                    break;
+                case 2:
+                    tc.x += amplitude * sin((tc.y * period * 10) + Time.x);
+                    break;
+            }
+        }
+        tc = float2(dot(tc, float2(_c, -_s)), dot(tc, float2(_s, _c))) + center;
+
+        tc.x *= ar;
+
+        color = InputA.Sample(texture_sampler, tc);
+
+
+    return color;
+}
+
+
+technique Wave
+{
+	pass
+	{
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader = PSWave(vtx);
+	}
+}
