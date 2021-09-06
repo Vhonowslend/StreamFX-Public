@@ -1,5 +1,9 @@
 * @xaymar
 /data/examples/filter/rounded-rect.effect @carlosbaraza
+/data/examples/shaders/filter/bulge_pinch.effect @radeghast-ffxiv
+/data/examples/shaders/filter/swirl.effect @radeghast-ffxiv
+/data/examples/shaders/filter/wave.effect @radeghast-ffxiv
+/data/examples/shaders/filter/zigzag.effect @radeghast-ffxiv
 
 # Security critical owners
 /.github @xaymar
