@@ -4,9 +4,9 @@ uniform float2 imageTexel;
 uniform int level;
 
 sampler_state def_sampler {
-	Filter    = Linear;
-	AddressU  = Clamp;
-	AddressV  = Clamp;
+	Filter = Linear;
+	AddressU = Clamp;
+	AddressV = Clamp;
 };
 
 struct VertexData {

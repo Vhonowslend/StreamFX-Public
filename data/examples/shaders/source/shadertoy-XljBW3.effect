@@ -43,9 +43,6 @@ int2 iMouse() {
 	return int2(mouse.x * ViewSize.x, mouse.y * ViewSize.y);
 }
 
-/* ps start
-
-*/
 #define time iTime
 uniform float ratio;
 
@@ -58,58 +55,58 @@ float vorocloud(float2 p){
 	if(direction){
 		flow *= -1;
 	}
-    float2 pp = cos(float2(p.x * 14.0, (16.0 * p.y + cos(floor(p.x * 30.0)) + flow * time * PI2)) );
-    p = cos(p * 12.1 + pp * 10.0 + 0.5 * cos(pp.x * 10.0));
-    
-    float2 pts[4];    
-    
-    pts[0] = float2(0.5, 0.6);
-    pts[1] = float2(-0.4, 0.4);
-    pts[2] = float2(0.2, -0.7);
-    pts[3] = float2(-0.3, -0.4);
-    
-    float d = 5.0;
-    
-    for(int i = 0; i < 4; i++){
-      	pts[i].x += 0.03 * cos(float(i)) + p.x;
-      	pts[i].y += 0.03 * sin(float(i)) + p.y;
-    	d = min(d, distance(pts[i], pp));
-    }
-    
-    f = 2.0 * pow(1.0 - 0.3 * d, 13.0);
-    
-    f = min(f, 1.0);
-    
+	float2 pp = cos(float2(p.x * 14.0, (16.0 * p.y + cos(floor(p.x * 30.0)) + flow * time * PI2)) );
+	p = cos(p * 12.1 + pp * 10.0 + 0.5 * cos(pp.x * 10.0));
+
+	float2 pts[4];
+
+	pts[0] = float2(0.5, 0.6);
+	pts[1] = float2(-0.4, 0.4);
+	pts[2] = float2(0.2, -0.7);
+	pts[3] = float2(-0.3, -0.4);
+
+	float d = 5.0;
+
+	for(int i = 0; i < 4; i++){
+		pts[i].x += 0.03 * cos(float(i)) + p.x;
+		pts[i].y += 0.03 * sin(float(i)) + p.y;
+		d = min(d, distance(pts[i], pp));
+	}
+
+	f = 2.0 * pow(1.0 - 0.3 * d, 13.0);
+
+	f = min(f, 1.0);
+
 	return f;
 }
 
 vec4 scene(float2 UV){
-    float x = UV.x;
-    float y = UV.y;
-    
-    float2 p = float2(x, y) - 0.5;
-    
-    vec4 col = vec4(0.0,0.0,0.0,0.0);
+	float x = UV.x;
+	float y = UV.y;
+
+	float2 p = float2(x, y) - 0.5;
+
+	vec4 col = vec4(0.0,0.0,0.0,0.0);
 	col.g += 0.02;
-    
-    float v = vorocloud(p);
-    v = 0.2 * floor(v * 5.0);
-    
-    col.r += 0.1 * v;
-    col.g += 0.6 * v;
-    col.b += 0.5 * pow(v, 5.0);
-    
-    
-    v = vorocloud(p * 2.0);
-    v = 0.2 * floor(v * 5.0);
-    
-    col.r += 0.1 * v;
-    col.g += 0.2 * v;
-    col.b += 0.01 * pow(v, 5.0);
-    
-    col.a = 1.0;
-    
-    return col;
+
+	float v = vorocloud(p);
+	v = 0.2 * floor(v * 5.0);
+
+	col.r += 0.1 * v;
+	col.g += 0.6 * v;
+	col.b += 0.5 * pow(v, 5.0);
+
+
+	v = vorocloud(p * 2.0);
+	v = 0.2 * floor(v * 5.0);
+
+	col.r += 0.1 * v;
+	col.g += 0.2 * v;
+	col.b += 0.01 * pow(v, 5.0);
+
+	col.a = 1.0;
+
+	return col;
 }
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
@@ -118,7 +115,6 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 	fragColor = scene(uv);
 }
 
-/*ps end*/
 
 struct VertFragData {
 	float4 pos : POSITION;
@@ -136,11 +132,11 @@ float4 PSDefault(VertFragData vtx) : TARGET {
 	return col;
 }
 
-technique Draw 
+technique Draw
 {
 	pass
 	{
 		vertex_shader = VSDefault(vtx);
-		pixel_shader  = PSDefault(vtx); 
+		pixel_shader  = PSDefault(vtx);
 	}
 }

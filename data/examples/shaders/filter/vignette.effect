@@ -86,11 +86,11 @@ VertData VSDefault(VertData v_in) {
 }
 
 float4 PSDefault(VertData v_in) : TARGET {
-    static const float2 center = float2(.5, .5);
-    float4 smp = InputA.Sample(def_sampler, v_in.uv);
+	static const float2 center = float2(.5, .5);
+	float4 smp = InputA.Sample(def_sampler, v_in.uv);
 	float borderFade = clamp(((1. - distance(v_in.uv, center)) - (_00_vignette_area - .5)), 0., 1.);
 
-    float4 vignette_color = _01_vignette_color;
+	float4 vignette_color = _01_vignette_color;
 	return lerp(smp, vignette_color, (1. - borderFade) / max(1. - _02_vignette_strength, 0.0001));
 }
 
@@ -104,20 +104,20 @@ technique Draw
 }
 
 float4 PSRectangle(VertData v_in) : TARGET {
-    static const float2 center = float2(.5, .5);
-    float4 smp = InputA.Sample(def_sampler, v_in.uv);
+	static const float2 center = float2(.5, .5);
+	float4 smp = InputA.Sample(def_sampler, v_in.uv);
 
-    if (_00_vignette_area < 0.01)
-        return smp;
+	if (_00_vignette_area < 0.01)
+		return smp;
 
 	float2 borderArea = center * _00_vignette_area;
 	float2 borderDistance = center;
-    borderDistance -= abs(v_in.uv - center);
-    borderDistance /= center;
-    borderDistance -= center * _00_vignette_area;
-    borderDistance = min(borderDistance, 0);
-    borderDistance += borderArea;
-    borderDistance /= borderArea;
+	borderDistance -= abs(v_in.uv - center);
+	borderDistance /= center;
+	borderDistance -= center * _00_vignette_area;
+	borderDistance = min(borderDistance, 0);
+	borderDistance += borderArea;
+	borderDistance /= borderArea;
 
 	// Now apply a modifier so that we only get the border area.
 	float borderFade = sin(borderDistance.x * HalfPI) * sin(borderDistance.y * HalfPI);

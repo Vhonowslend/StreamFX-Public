@@ -1,7 +1,7 @@
 sampler_state __LUTSampler {
-	Filter    = Linear;
-	AddressU  = Clamp;
-	AddressV  = Clamp;
+	Filter = Linear;
+	AddressU = Clamp;
+	AddressV = Clamp;
 };
 
 float4 generate_lut(uint bit_depth, float2 uv) {
@@ -12,7 +12,7 @@ float4 generate_lut(uint bit_depth, float2 uv) {
 	uint2 xy = uint2(floor(uv * container_size));
 	uint2 rg = xy % size;
 	uint2 bb = xy / size;
-	
+
 	return float4(
 		rg.xy / float(size - 1),
 		((bb.y * z_size) + bb.x) / float(size - 1),
@@ -28,7 +28,7 @@ float4 generate_lut2(float2 uv, uint4 params0) {
 	uint2 xy = uint2(floor(uv * container_size));
 	uint2 rg = xy % size;
 	uint2 bb = xy / size;
-	
+
 	return float4(
 		rg.xy / float(size - 1),
 		((bb.y * z_size) + bb.x) / float(size - 1),
@@ -69,7 +69,7 @@ float3 sample_lut(float3 color, uint bit_depth, texture2D lut_texture) {
 	// 6. Figure out the Y location of the cell in the grid.
 	uint z_lo_y = z_lo / z_size;
 	uint z_hi_y = z_hi / z_size;
-	
+
 	// 7. Convert the X and Y locations into UV coordinates.
 	float2 z_lo_uv = float2(z_lo_x, z_lo_y) * inverse_z_size;
 	float2 z_hi_uv = float2(z_hi_x, z_hi_y) * inverse_z_size;
@@ -115,7 +115,7 @@ float3 sample_lut2(float3 color, texture2D lut_texture, int4 params0, float4 par
 	// 6. Figure out the Y location of the cell in the grid.
 	uint z_lo_y = z_lo / z_size;
 	uint z_hi_y = z_hi / z_size;
-	
+
 	// 7. Convert the X and Y locations into UV coordinates.
 	float2 z_lo_uv = float2(z_lo_x, z_lo_y) * inverse_z_size;
 	float2 z_hi_uv = float2(z_hi_x, z_hi_y) * inverse_z_size;
