@@ -19,15 +19,26 @@
 // SOFTWARE.
 
 #include "gfx-lut.hpp"
-
 #include <mutex>
-
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
+#include "util/util-logging.hpp"
+
+#ifdef _DEBUG
+#define ST_PREFIX "<%s> "
+#define D_LOG_ERROR(x, ...) P_LOG_ERROR(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_WARNING(x, ...) P_LOG_WARN(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_INFO(x, ...) P_LOG_INFO(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_DEBUG(x, ...) P_LOG_DEBUG(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#else
+#define ST_PREFIX "<transition::shader> "
+#define D_LOG_ERROR(...) P_LOG_ERROR(ST_PREFIX __VA_ARGS__)
+#define D_LOG_WARNING(...) P_LOG_WARN(ST_PREFIX __VA_ARGS__)
+#define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
+#define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
+#endif
 
 using namespace streamfx;
-
-#define ST_PREFIX "<gfx::lut::data> "
 
 std::shared_ptr<streamfx::gfx::lut::data> streamfx::gfx::lut::data::instance()
 {
@@ -53,7 +64,7 @@ streamfx::gfx::lut::data::data() : _producer_effect(), _consumer_effect()
 		try {
 			_producer_effect = std::make_shared<streamfx::obs::gs::effect>(lut_producer_path);
 		} catch (std::exception const& ex) {
-			DLOG_ERROR(ST_PREFIX "Loading LUT Producer effect failed: %s", ex.what());
+			D_LOG_ERROR("Loading LUT Producer effect failed: %s", ex.what());
 		}
 	}
 
@@ -62,7 +73,7 @@ streamfx::gfx::lut::data::data() : _producer_effect(), _consumer_effect()
 		try {
 			_consumer_effect = std::make_shared<streamfx::obs::gs::effect>(lut_consumer_path);
 		} catch (std::exception const& ex) {
-			DLOG_ERROR(ST_PREFIX "Loading LUT Consumer effect failed: %s", ex.what());
+			D_LOG_ERROR("Loading LUT Consumer effect failed: %s", ex.what());
 		}
 	}
 }
