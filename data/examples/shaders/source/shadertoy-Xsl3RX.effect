@@ -21,25 +21,14 @@
 // Always provided by OBS
 uniform float4x4 ViewProj<
 	bool automatic = true;
-	string name = "View Projection Matrix";
 >;
 
 
 // Provided by Stream Effects
 uniform float4 Time<
-    // x: Time in seconds since the source was created.
-    // y: Time in the current second.
-    // z: Total seconds passed since the source was created.
-    // w: Reserved
 	bool automatic = true;
-    string name = "Time Array";
-	string description = "A float4 value containing the total time, rendering time and the time since the last tick. The last value is a random number between 0 and 1.";
 >;
 uniform float4 ViewSize<
-    // x: Width
-    // y: Height
-    // z: 1. / Width
-    // w: 1. / Height
 	bool automatic = true;
 >;
 uniform texture2d InputA<
@@ -47,8 +36,6 @@ uniform texture2d InputA<
 >;
 uniform float4x4 Random<
 	bool automatic = true;
-	string name = "Random Array";
-	string description = "A float4x4 value containing random values between 0 and 1";
 >;
 
 
@@ -91,13 +78,13 @@ float mod(float x, float y) {
 
 // ---------- Shader Code
 sampler_state def_sampler {
-	Filter    = Linear;
+	Filter = Linear;
 	AddressU  = Clamp;
 	AddressV  = Clamp;
 };
 
 sampler_state imageSampler {
-	Filter    = Point;
+	Filter = Point;
 	AddressU  = Clamp;
 	AddressV  = Clamp;
 };
@@ -115,14 +102,14 @@ VertFragData VSDefault(VertFragData vtx) {
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
 	float2 position = fragCoord.xy / ViewSize.xy;
-    float aspect = ViewSize.x / ViewSize.y;
+	float aspect = ViewSize.x / ViewSize.y;
 	position.x *= aspect;
 	float dist = distance(position, float2( aspect * 0.5, 0.5));
 	float offset = Time.x * pVelocity;
 	float conv = pRings * 1.;
 	float v = dist * conv - offset;
 	float ringr = floor(v);
-    float ringv = abs( dist - (ringr + float( frac(v) > 0.5) + offset) / conv);
+	float ringv = abs( dist - (ringr + float( frac(v) > 0.5) + offset) / conv);
 	float color = smoothstep( -pBorder, pBorder, ringv);
 	if ( mod(ringr, 2.) == 1.) color = 1. - color;
 	fragColor = vec4(color, color, color, 1.);
@@ -140,6 +127,6 @@ technique Draw
 	pass
 	{
 		vertex_shader = VSDefault(vtx);
-		pixel_shader  = PSDefault(vtx); 
+		pixel_shader  = PSDefault(vtx);
 	}
 }
