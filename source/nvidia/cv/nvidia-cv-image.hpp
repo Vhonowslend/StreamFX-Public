@@ -32,7 +32,7 @@ namespace streamfx::nvidia::cv {
 		protected:
 		std::shared_ptr<::streamfx::nvidia::cv::cv> _cv;
 		image_t                                     _image;
-		size_t                                      _alignment;
+		uint32_t                                    _alignment;
 
 		public:
 		virtual ~image();

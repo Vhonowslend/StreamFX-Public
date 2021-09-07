@@ -113,7 +113,7 @@ void streamfx::nvidia::vfx::superresolution::set_strength(float strength)
 	std::swap(_strength, strength);
 
 	// If anything was changed, flag the effect as dirty.
-	if (!::streamfx::util::math::is_close<float>(_strength, strength, 0.01))
+	if (!::streamfx::util::math::is_close<float>(_strength, strength, 0.01f))
 		_dirty = true;
 
 	// Update Effect
@@ -137,9 +137,9 @@ void streamfx::nvidia::vfx::superresolution::set_scale(float scale)
 	scale = std::clamp<float>(scale, 1., 4.);
 
 	// Match to nearest scale.
-	std::pair<float, float> minimal = {0., std::numeric_limits<float>::max()};
+	std::pair<float, float> minimal = {0.f, std::numeric_limits<float>::max()};
 	std::vector<float>      deltas{
-        1. + (1. / 3.), 1.5, 2.0, 3.0, 4.0,
+        1.f + (1.f / 3.f), 1.5f, 2.0f, 3.0f, 4.0f,
     };
 	for (float delta : deltas) {
 		float value = abs(delta - scale);
@@ -150,7 +150,7 @@ void streamfx::nvidia::vfx::superresolution::set_scale(float scale)
 	}
 
 	// If anything was changed, flag the effect as dirty.
-	if (!::streamfx::util::math::is_close<float>(_scale, minimal.first, 0.01))
+	if (!::streamfx::util::math::is_close<float>(_scale, minimal.first, 0.01f))
 		_dirty = true;
 
 	_scale = minimal.first;
