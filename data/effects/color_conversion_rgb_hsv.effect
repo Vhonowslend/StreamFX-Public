@@ -7,7 +7,7 @@ float3 RGBtoHSV(float3 rgb) {
 	const float e = 1.0e-10;
 #ifdef RGB_HSV_FASTCONDITIONALMOVE
 	float4 p = rgb.g < rgb.b ? float4(rgb.bg, K.wz) : float4(rgb.gb, K.xy);
-	float4 q = rgb.r < p.x    ? float4(p.xyw, rgb.r) : float4(rgb.r, p.yzx);
+	float4 q = rgb.r < p.x ? float4(p.xyw, rgb.r) : float4(rgb.r, p.yzx);
 #else
 	float4 p = lerp(float4(rgb.bg, K.wz), float4(rgb.gb, K.xy), step(rgb.b, rgb.g));
 	float4 q = lerp(float4(p.xyw, rgb.r), float4(rgb.r, p.yzx), step(p.x, rgb.r));

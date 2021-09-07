@@ -232,13 +232,13 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR (WIN32 AND CMAKE_CXX_COMPILER_ID STR
 	# - Enable multi-processor compiling.
 
 	# Build with dynamic MSVC linkage.
-    add_compile_options(
-        $<$<CONFIG:>:/MD>
-        $<$<CONFIG:Debug>:/MDd>
-        $<$<CONFIG:Release>:/MD>
-        $<$<CONFIG:RelWithDebInfo>:/MD>
-        $<$<CONFIG:MinSizeRel>:/MD>
-    )
+	add_compile_options(
+		$<$<CONFIG:>:/MD>
+		$<$<CONFIG:Debug>:/MDd>
+		$<$<CONFIG:Release>:/MD>
+		$<$<CONFIG:RelWithDebInfo>:/MD>
+		$<$<CONFIG:MinSizeRel>:/MD>
+	)
 
 	# Enable most useful warnings.
 	set(DISABLED_WARNINGS

@@ -39,7 +39,7 @@ uniform float2 pImageSize;
 uniform float2 pImageTexel;
 uniform float pSize;
 uniform float pSizeInverseMul;
-uniform float pAngle; 
+uniform float pAngle;
 uniform float2 pCenter;
 uniform float2 pStepScale;
 uniform float4 pKernel[KERNEL_SIZE];
@@ -53,11 +53,11 @@ struct VertexInformation {
 };
 
 sampler_state LinearClampSampler {
-	Filter    = Linear;
-	AddressU  = Clamp;
-	AddressV  = Clamp;
-	MinLOD    = 0;
-	MaxLOD    = 0;
+	Filter = Linear;
+	AddressU = Clamp;
+	AddressV = Clamp;
+	MinLOD = 0;
+	MaxLOD = 0;
 };
 
 //------------------------------------------------------------------------------

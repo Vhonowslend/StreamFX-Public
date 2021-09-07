@@ -17,19 +17,19 @@ uniform float mask_multiplier;
 
 // Data
 sampler_state pointSampler {
-	Filter    = Point;
-	AddressU  = Clamp;
-	AddressV  = Clamp;
-	MinLOD    = 0;
-	MaxLOD    = 0;
+	Filter = Point;
+	AddressU = Clamp;
+	AddressV = Clamp;
+	MinLOD = 0;
+	MaxLOD = 0;
 };
 
 sampler_state linearSampler {
-	Filter    = Linear;
-	AddressU  = Clamp;
-	AddressV  = Clamp;
-	MinLOD    = 0;
-	MaxLOD    = 0;
+	Filter = Linear;
+	AddressU = Clamp;
+	AddressV = Clamp;
+	MinLOD = 0;
+	MaxLOD = 0;
 };
 
 struct VertDataIn {
@@ -74,28 +74,28 @@ float RegionFeathered(float2 uv) {
 float4 PSRegion(VertDataOut v_out) : TARGET {
 	float alpha = Region(v_out.uv);
 	float4 orig = image_orig.Sample(pointSampler, v_out.uv);
-	float4 blur = image_blur.Sample(pointSampler, v_out.uv);	
+	float4 blur = image_blur.Sample(pointSampler, v_out.uv);
 	return lerp(orig, blur, alpha);
 }
 
 float4 PSRegionInverted(VertDataOut v_out) : TARGET {
 	float alpha = 1.0 - Region(v_out.uv);
 	float4 orig = image_orig.Sample(pointSampler, v_out.uv);
-	float4 blur = image_blur.Sample(pointSampler, v_out.uv);	
+	float4 blur = image_blur.Sample(pointSampler, v_out.uv);
 	return lerp(orig, blur, alpha);
 }
 
 float4 PSRegionFeather(VertDataOut v_out) : TARGET {
 	float alpha = RegionFeathered(v_out.uv);
 	float4 orig = image_orig.Sample(pointSampler, v_out.uv);
-	float4 blur = image_blur.Sample(pointSampler, v_out.uv);	
+	float4 blur = image_blur.Sample(pointSampler, v_out.uv);
 	return lerp(orig, blur, alpha);
 }
 
 float4 PSRegionFeatherInverted(VertDataOut v_out) : TARGET {
 	float alpha = 1.0 - RegionFeathered(v_out.uv);
 	float4 orig = image_orig.Sample(pointSampler, v_out.uv);
-	float4 blur = image_blur.Sample(pointSampler, v_out.uv);	
+	float4 blur = image_blur.Sample(pointSampler, v_out.uv);
 	return lerp(orig, blur, alpha);
 }
 
@@ -103,7 +103,7 @@ float4 PSImage(VertDataOut v_out) : TARGET {
 	float4 mask = mask_image.Sample(linearSampler, v_out.uv) * mask_color * mask_multiplier;
 	float alpha = clamp(mask.r + mask.g + mask.b + mask.a, 0.0, 1.0);
 	float4 orig = image_orig.Sample(pointSampler, v_out.uv);
-	float4 blur = image_blur.Sample(pointSampler, v_out.uv);	
+	float4 blur = image_blur.Sample(pointSampler, v_out.uv);
 	return lerp(orig, blur, alpha);
 }
 
@@ -148,6 +148,6 @@ technique Image
 	pass
 	{
 		vertex_shader = VSDefault(v_out);
-		pixel_shader = PSImage(v_out);		
+		pixel_shader = PSImage(v_out);
 	}
 }

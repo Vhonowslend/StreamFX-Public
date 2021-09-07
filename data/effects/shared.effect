@@ -17,27 +17,27 @@ uniform float4x4 ViewProj;
 // Samplers
 //------------------------------------------------------------------------------
 sampler_state PointRepeatSampler {
-	Filter    = Point;
-	AddressU  = Repeat;
-	AddressV  = Repeat;
+	Filter = Point;
+	AddressU = Repeat;
+	AddressV = Repeat;
 };
 
 sampler_state PointClampSampler {
-	Filter    = Point;
-	AddressU  = Clamp;
-	AddressV  = Clamp;
+	Filter = Point;
+	AddressU = Clamp;
+	AddressV = Clamp;
 };
 
 sampler_state LinearRepeatSampler {
-	Filter    = Linear;
-	AddressU  = Repeat;
-	AddressV  = Repeat;
+	Filter = Linear;
+	AddressU = Repeat;
+	AddressV = Repeat;
 };
 
 sampler_state LinearClampSampler {
-	Filter    = Linear;
-	AddressU  = Clamp;
-	AddressV  = Clamp;
+	Filter = Linear;
+	AddressU = Clamp;
+	AddressV = Clamp;
 };
 
 //------------------------------------------------------------------------------

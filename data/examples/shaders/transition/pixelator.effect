@@ -33,7 +33,7 @@ uniform int2 TransitionSize<
 
 uniform bool _0_oldStyle<
 	string name = "Retro Style";
-	
+
 > = false;
 uniform float2 _1_pixelateCenter<
 	string name = "Pixelation Center";
@@ -85,13 +85,13 @@ VertData VSDefault(VertData v_in) {
 }
 
 float4 PSDefault(VertData v_in) : TARGET {
-    float animProgress = TransitionTime;
+	float animProgress = TransitionTime;
 
 	// Progress as a bounce value (0..1..0)
-    float animStuff = 1.0 - (abs(animProgress - 0.5) * 2.0);
-    // There are two ways to calculate this, one is pixel aligned the other is block aligned.
+	float animStuff = 1.0 - (abs(animProgress - 0.5) * 2.0);
+	// There are two ways to calculate this, one is pixel aligned the other is block aligned.
 	float animBlockSize = 0;
-    if (_0_oldStyle) {
+	if (_0_oldStyle) {
 		// Block Size, always a multiple of 2. (Block Aligned)
 		animBlockSize = pow(2.0, floor(_2_maximumBlockSize * animStuff));
 	} else {
@@ -128,6 +128,6 @@ technique Draw
 	pass
 	{
 		vertex_shader = VSDefault(v_in);
-		pixel_shader  = PSDefault(v_in); 
+		pixel_shader  = PSDefault(v_in);
 	}
 }

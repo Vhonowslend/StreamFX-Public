@@ -169,7 +169,7 @@ float3 RGBtoHSV(float3 RGBA) {
 	const float e = 1.0e-10;
 #ifdef RGB_HSV_FASTCONDITIONALMOVE
 	float4 p = RGBA.g < RGBA.b ? float4(RGBA.bg, K.wz) : float4(RGBA.gb, K.xy);
-	float4 q = RGBA.r < p.x    ? float4(p.xyw, RGBA.r) : float4(RGBA.r, p.yzx);
+	float4 q = RGBA.r < p.x	? float4(p.xyw, RGBA.r) : float4(RGBA.r, p.yzx);
 #else
 	float4 p = lerp(float4(RGBA.bg, K.wz), float4(RGBA.gb, K.xy), step(RGBA.b, RGBA.g));
 	float4 q = lerp(float4(p.xyw, RGBA.r), float4(RGBA.r, p.yzx), step(p.x, RGBA.r));
@@ -221,42 +221,42 @@ technique HSV
 //------------------------------------------------------------------------------
 // XYZ <-> RGB
 float4 RGBtoXYZ( float4 c ) {
-    float3 tmp;
-    tmp.x = ( c.r > 0.04045 ) ? pow( ( c.r + 0.055 ) / 1.055, 2.4 ) : c.r / 12.92;
-    tmp.y = ( c.g > 0.04045 ) ? pow( ( c.g + 0.055 ) / 1.055, 2.4 ) : c.g / 12.92,
-    tmp.z = ( c.b > 0.04045 ) ? pow( ( c.b + 0.055 ) / 1.055, 2.4 ) : c.b / 12.92;
-    const float3x3 mat = float3x3(
+	float3 tmp;
+	tmp.x = ( c.r > 0.04045 ) ? pow( ( c.r + 0.055 ) / 1.055, 2.4 ) : c.r / 12.92;
+	tmp.y = ( c.g > 0.04045 ) ? pow( ( c.g + 0.055 ) / 1.055, 2.4 ) : c.g / 12.92,
+	tmp.z = ( c.b > 0.04045 ) ? pow( ( c.b + 0.055 ) / 1.055, 2.4 ) : c.b / 12.92;
+	const float3x3 mat = float3x3(
 		0.4124, 0.3576, 0.1805,
-        0.2126, 0.7152, 0.0722,
-        0.0193, 0.1192, 0.9505
+		0.2126, 0.7152, 0.0722,
+		0.0193, 0.1192, 0.9505
 	);
 	float3 r = 100.0 * mul(tmp, mat);
-    return float4(r.r, r.g, r.b, c.a);
+	return float4(r.r, r.g, r.b, c.a);
 }
 
 float4 XYZtoRGB( float4 c ) {
 	const float3x3 mat = float3x3(
-        3.2406, -1.5372, -0.4986,
-        -0.9689, 1.8758, 0.0415,
-        0.0557, -0.2040, 1.0570
+		3.2406, -1.5372, -0.4986,
+		-0.9689, 1.8758, 0.0415,
+		0.0557, -0.2040, 1.0570
 	);
-    float3 v = mul(c.rgb / 100.0, mat);
-    float4 r;
-    r.x = ( v.r > 0.0031308 ) ? (( 1.055 * pow( v.r, ( 1.0 / 2.4 ))) - 0.055 ) : 12.92 * v.r;
-    r.y = ( v.g > 0.0031308 ) ? (( 1.055 * pow( v.g, ( 1.0 / 2.4 ))) - 0.055 ) : 12.92 * v.g;
-    r.z = ( v.b > 0.0031308 ) ? (( 1.055 * pow( v.b, ( 1.0 / 2.4 ))) - 0.055 ) : 12.92 * v.b;
+	float3 v = mul(c.rgb / 100.0, mat);
+	float4 r;
+	r.x = ( v.r > 0.0031308 ) ? (( 1.055 * pow( v.r, ( 1.0 / 2.4 ))) - 0.055 ) : 12.92 * v.r;
+	r.y = ( v.g > 0.0031308 ) ? (( 1.055 * pow( v.g, ( 1.0 / 2.4 ))) - 0.055 ) : 12.92 * v.g;
+	r.z = ( v.b > 0.0031308 ) ? (( 1.055 * pow( v.b, ( 1.0 / 2.4 ))) - 0.055 ) : 12.92 * v.b;
 	r.a = c.a;
-    return r;
+	return r;
 }
 
 // XYZ <-> L*a*b
 float4 XYZtoLAB( float4 c ) {
-    float3 n = c.rgb / float3(95.047, 100, 108.883);
-    float3 v;
-    v.x = ( n.x > 0.008856 ) ? pow( n.x, 1.0 / 3.0 ) : ( 7.787 * n.x ) + ( 16.0 / 116.0 );
-    v.y = ( n.y > 0.008856 ) ? pow( n.y, 1.0 / 3.0 ) : ( 7.787 * n.y ) + ( 16.0 / 116.0 );
-    v.z = ( n.z > 0.008856 ) ? pow( n.z, 1.0 / 3.0 ) : ( 7.787 * n.z ) + ( 16.0 / 116.0 );
-    return float4(
+	float3 n = c.rgb / float3(95.047, 100, 108.883);
+	float3 v;
+	v.x = ( n.x > 0.008856 ) ? pow( n.x, 1.0 / 3.0 ) : ( 7.787 * n.x ) + ( 16.0 / 116.0 );
+	v.y = ( n.y > 0.008856 ) ? pow( n.y, 1.0 / 3.0 ) : ( 7.787 * n.y ) + ( 16.0 / 116.0 );
+	v.z = ( n.z > 0.008856 ) ? pow( n.z, 1.0 / 3.0 ) : ( 7.787 * n.z ) + ( 16.0 / 116.0 );
+	return float4(
 		( 116.0 * v.y ) - 16.0,
 		500.0 * ( v.x - v.y ),
 		200.0 * ( v.y - v.z ),
@@ -265,21 +265,21 @@ float4 XYZtoLAB( float4 c ) {
 }
 
 float4 LABtoXYZ( float4 c ) {
-    float fy = ( c.x + 16.0 ) / 116.0;
-    float fx = c.y / 500.0 + fy;
-    float fz = fy - c.z / 200.0;
-    return float4(
-         95.047 * (( fx > 0.206897 ) ? fx * fx * fx : ( fx - 16.0 / 116.0 ) / 7.787),
-        100.000 * (( fy > 0.206897 ) ? fy * fy * fy : ( fy - 16.0 / 116.0 ) / 7.787),
-        108.883 * (( fz > 0.206897 ) ? fz * fz * fz : ( fz - 16.0 / 116.0 ) / 7.787),
+	float fy = ( c.x + 16.0 ) / 116.0;
+	float fx = c.y / 500.0 + fy;
+	float fz = fy - c.z / 200.0;
+	return float4(
+		 95.047 * (( fx > 0.206897 ) ? fx * fx * fx : ( fx - 16.0 / 116.0 ) / 7.787),
+		100.000 * (( fy > 0.206897 ) ? fy * fy * fy : ( fy - 16.0 / 116.0 ) / 7.787),
+		108.883 * (( fz > 0.206897 ) ? fz * fz * fz : ( fz - 16.0 / 116.0 ) / 7.787),
 		c.a
-    );
+	);
 }
 
 // L*a*b <-> RGB
 float4 RGBtoLAB( float4 c ) {
-    float4 lab = XYZtoLAB(RGBtoXYZ(c));
-    return float4(
+	float4 lab = XYZtoLAB(RGBtoXYZ(c));
+	return float4(
 		lab.x / 100.0,
 		0.5 + 0.5 * ( lab.y / 127.0 ),
 		0.5 + 0.5 * ( lab.z / 127.0 ),
@@ -288,7 +288,7 @@ float4 RGBtoLAB( float4 c ) {
 }
 
 float4 LABtoRGB( float4 c ) {
-    return XYZtoRGB(
+	return XYZtoRGB(
 		LABtoXYZ(
 			float4(
 				100.0 * c.x,

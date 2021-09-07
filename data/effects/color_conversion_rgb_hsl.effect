@@ -13,10 +13,10 @@ float3 RGBtoHSL(float3 rgb) {
 	l = ( cMax + cMin ) / 2.0;
 	if ( cMax > cMin ) {
 		float cDelta = cMax - cMin;
-        
+
 		//s = l < .05 ? cDelta / ( cMax + cMin ) : cDelta / ( 2.0 - ( cMax + cMin ) ); Original
 		s = l < .0 ? cDelta / ( cMax + cMin ) : cDelta / ( 2.0 - ( cMax + cMin ) );
-        
+
 		if ( r == cMax ) {
 			h = ( g - b ) / cDelta;
 		} else if ( g == cMax ) {
@@ -38,7 +38,7 @@ float4 RGBAtoHSLA(float4 rgba) {
 }
 
 float3 HSLtoRGB(float3 hsl) {
-    float3 rgb = clamp(
+	float3 rgb = clamp(
 		abs(
 			fmod(
 				hsl.x * 6.0 + float3(0.0, 4.0, 2.0),
@@ -48,7 +48,7 @@ float3 HSLtoRGB(float3 hsl) {
 		0.0,
 		1.0
 	);
-    return hsl.z + hsl.y * (rgb - 0.5) * (1.0 - abs(2.0 * hsl.z - 1.0));
+	return hsl.z + hsl.y * (rgb - 0.5) * (1.0 - abs(2.0 * hsl.z - 1.0));
 };
 
 float4 HSLAtoRGBA(float4 hsla) {

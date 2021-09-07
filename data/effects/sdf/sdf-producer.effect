@@ -13,7 +13,7 @@
 //     - R: If outside, distance to nearest wall, otherwise 0.
 //     - G: If inside, distance to nearest wall, otherwise 0.
 //     - BA: UV coordinates of nearest wall.
-// 
+//
 // Version 1.1:
 // - See Version 1.0
 // - Adjusted R, G to be 0..1 range, multiply by 65536.0 to get proper results.
@@ -75,17 +75,17 @@ VertDataOut VSDefault(VertDataIn v_in)
 float4 PS_SDFGenerator_v1(VertDataOut v_in) : TARGET
 {
 	float4 outval = float4(0.0, 0.0, v_in.uv.x, v_in.uv.y);
-	
+
 	// utility values
 	float2 uv_step = 1.0 / _size;
 	float lowest = NEAR_INFINITE;
 	float2 lowest_source = float2(NEAR_INFINITE, NEAR_INFINITE);
 	float2 lowest_origin = float2(NEAR_INFINITE, NEAR_INFINITE);
-	
-	// inputs	
-	float imageA = _image.Sample(imageSampler, v_in.uv).a;	
+
+	// inputs
+	float imageA = _image.Sample(imageSampler, v_in.uv).a;
 	// sdf contains 4 values: R = Positive Distance, G = Negative Distance, BA = UV of nearest edge.
-		
+
 	if (imageA > _threshold) {
 		// Inside
 		// TODO: Optimize to be O(n*n) instead of (2n*2n)
@@ -94,12 +94,12 @@ float4 PS_SDFGenerator_v1(VertDataOut v_in) : TARGET
 				if ((x == 0) && (y == 0)) {
 					continue;
 				}
-				
+
 				float2 dtr = float2(x, y);
 				float2 dt = uv_step * dtr;
 				float4 here = _sdf.Sample(sdfSampler, v_in.uv + dt);
 				float dst = abs(distance(float2(0., 0.), dtr));
-				
+
 				if (lowest > (here.g + dst)) {
 					lowest = here.g + dst;
 					lowest_source = v_in.uv + dt;
@@ -107,10 +107,10 @@ float4 PS_SDFGenerator_v1(VertDataOut v_in) : TARGET
 				}
 			}
 		}
-        if (lowest < NEAR_INFINITE) {
-            outval.g = lowest;
-            outval.ba = lowest_origin;
-        }
+		if (lowest < NEAR_INFINITE) {
+			outval.g = lowest;
+			outval.ba = lowest_origin;
+		}
 	} else {
 		// Outside
 		// TODO: Optimize to be O(n*n) instead of (2n*2n)
@@ -119,12 +119,12 @@ float4 PS_SDFGenerator_v1(VertDataOut v_in) : TARGET
 				if ((x == 0) && (y == 0)) {
 					continue;
 				}
-				
+
 				float2 dtr = float2(x, y);
 				float2 dt = uv_step * dtr;
 				float4 here = _sdf.Sample(sdfSampler, v_in.uv + dt);
 				float dst = abs(distance(float2(0., 0.), dtr));
-				
+
 				if (lowest > (here.r + dst)) {
 					lowest = here.r + dst;
 					lowest_source = v_in.uv + dt;
@@ -132,12 +132,12 @@ float4 PS_SDFGenerator_v1(VertDataOut v_in) : TARGET
 				}
 			}
 		}
-        if (lowest < NEAR_INFINITE) {
-            outval.r = lowest;
-            outval.ba = lowest_origin;
-        }
+		if (lowest < NEAR_INFINITE) {
+			outval.r = lowest;
+			outval.ba = lowest_origin;
+		}
 	}
-	
+
 	return outval;
 }
 
@@ -146,17 +146,17 @@ float4 PS_SDFGenerator_v1_1(VertDataOut v_in) : TARGET
 	const float step = 1.0 / MAX_DISTANCE;
 
 	float4 outval = float4(0.0, 0.0, v_in.uv.x, v_in.uv.y);
-	
+
 	// utility values
 	float2 uv_step = 1.0 / _size;
 	float lowest = NEAR_INFINITE;
 	float2 lowest_source = float2(NEAR_INFINITE, NEAR_INFINITE);
 	float2 lowest_origin = float2(NEAR_INFINITE, NEAR_INFINITE);
-	
-	// inputs	
+
+	// inputs
 	float imageA = _image.Sample(imageSampler, v_in.uv).a;
 	float4 self = _sdf.Sample(sdfSampler1_1, v_in.uv);
-		
+
 	if (imageA > _threshold) {
 		// Inside
 		// TODO: Optimize to be O(n*n) instead of (2n*2n)
@@ -165,12 +165,12 @@ float4 PS_SDFGenerator_v1_1(VertDataOut v_in) : TARGET
 				if ((x == 0) && (y == 0)) {
 					continue;
 				}
-				
+
 				float2 dtr = float2(x, y);
 				float2 dt = uv_step * dtr;
 				float4 here = _sdf.Sample(sdfSampler1_1, v_in.uv + dt);
 				float dst = abs(distance(float2(0., 0.), dtr)) * step;
-				
+
 				if (lowest > (here.g + dst)) {
 					lowest = here.g + dst;
 					lowest_source = v_in.uv + dt;
@@ -178,10 +178,10 @@ float4 PS_SDFGenerator_v1_1(VertDataOut v_in) : TARGET
 				}
 			}
 		}
-        if (lowest < NEAR_INFINITE) {
-            outval.g = lowest;
-            outval.ba = lowest_origin;
-        } else {
+		if (lowest < NEAR_INFINITE) {
+			outval.g = lowest;
+			outval.ba = lowest_origin;
+		} else {
 			outval.g = self.g + step;
 		}
 	} else {
@@ -192,12 +192,12 @@ float4 PS_SDFGenerator_v1_1(VertDataOut v_in) : TARGET
 				if ((x == 0) && (y == 0)) {
 					continue;
 				}
-				
+
 				float2 dtr = float2(x, y);
 				float2 dt = uv_step * dtr;
 				float4 here = _sdf.Sample(sdfSampler1_1, v_in.uv + dt);
 				float dst = abs(distance(float2(0., 0.), dtr)) * step;
-				
+
 				if (lowest > (here.r + dst)) {
 					lowest = here.r + dst;
 					lowest_source = v_in.uv + dt;
@@ -205,14 +205,14 @@ float4 PS_SDFGenerator_v1_1(VertDataOut v_in) : TARGET
 				}
 			}
 		}
-        if (lowest < NEAR_INFINITE) {
-            outval.r = lowest;
-            outval.ba = lowest_origin;
-        } else {
+		if (lowest < NEAR_INFINITE) {
+			outval.r = lowest;
+			outval.ba = lowest_origin;
+		} else {
 			outval.r = self.r + step;
 		}
 	}
-	
+
 	return outval;
 }
 
@@ -224,4 +224,3 @@ technique Draw
 		pixel_shader  = PS_SDFGenerator_v1_1(v_in);
 	}
 }
-
