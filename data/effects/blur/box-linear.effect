@@ -7,27 +7,27 @@
 //  the actual thing.
 //
 // Instead of sampling every texel like this:
-// 
-//       |Tx|Tx|Tx|Tx|Tx|
-//     Tx|-2|-1| 0|+1|+2|
-// 
+//
+//   |Tx|Tx|Tx|Tx|Tx|
+// Tx|-2|-1| 0|+1|+2|
+//
 // Linear optimization will sample like this:
-// 
-//       |Tx|Tx|Tx|Tx|Tx|
-//     Tx| -1  | 0|  +1 |
+//
+//   |Tx|Tx|Tx|Tx|Tx|
+// Tx| -1  | 0|  +1 |
 //
 // This effectively removes half the necessary samples and looks identical when
 //  when used with box blur. However there is an edge case when the blur width
 //  is not a multiple of two, where two additional samples have to be spent on
 //  reading the outer edge:
-// 
-//       |Tx|Tx|Tx|Tx|Tx|Tx|Tx|
-//     Tx|-2| -1  | 0|  +1 |+2|
+//
+//   |Tx|Tx|Tx|Tx|Tx|Tx|Tx|
+// Tx|-2| -1  | 0|  +1 |+2|
 //
 // or this alternative pattern that uses two less samples:
-// 
-//       |Tx|Tx|Tx|Tx|Tx|Tx|Tx|
-//     Tx|  0  |  +1 |  +2 |+3|
+//
+//   |Tx|Tx|Tx|Tx|Tx|Tx|Tx|
+// Tx|  0  |  +1 |  +2 |+3|
 //
 // With careful planning this can even be used for other types of Blur, such as
 //  Gaussian Blur, which suffers a larger hit - however there are better and
@@ -46,14 +46,14 @@ float4 PSBlur1D(VertexInformation vtx) : TARGET {
 	// y = yes, s = skip, b = break
 	// Size-> | 1| 2| 3| 4| 5| 6| 7|
 	// -------+--+--+--+--+--+--+--+
-	// n=1    | b| y| y| y| y| y| y|
-	// n=2    |  |bs| s| s| s| s| s|
-	// n=3    |  | b| b| y| y| y| y|
-	// n=4    |  |  |  |bs| s| s| s|
-	// n=5    |  |  |  | b| b| y| y|
-	// n=6    |  |  |  |  |  |bs| s|
-	// n=7    |  |  |  |  |  | b| b|
-	// n=8    |  |  |  |  |  |  |  |
+	//  n=1   | b| y| y| y| y| y| y|
+	//  n=2   |  |bs| s| s| s| s| s|
+	//  n=3   |  | b| b| y| y| y| y|
+	//  n=4   |  |  |  |bs| s| s| s|
+	//  n=5   |  |  |  | b| b| y| y|
+	//  n=6   |  |  |  |  |  |bs| s|
+	//  n=7   |  |  |  |  |  | b| b|
+	//  n=8   |  |  |  |  |  |  |  |
 
 	float4 final = pImage.Sample(LinearClampSampler, vtx.uv);
 	for (uint n = 1u; (n < uint(pSize)) && (n < MAX_BLUR_SIZE); n += 2u) {
