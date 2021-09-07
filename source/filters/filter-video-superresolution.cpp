@@ -603,12 +603,12 @@ bool streamfx::filter::video_superresolution::video_superresolution_factory::is_
 	}
 }
 
-std::shared_ptr<video_superresolution_factory> _video_denoising_factory_instance = nullptr;
+std::shared_ptr<video_superresolution_factory> _video_superresolution_factory_instance = nullptr;
 
 void video_superresolution_factory::initialize()
 try {
-	if (!_video_denoising_factory_instance)
-		_video_denoising_factory_instance = std::make_shared<video_superresolution_factory>();
+	if (!_video_superresolution_factory_instance)
+		_video_superresolution_factory_instance = std::make_shared<video_superresolution_factory>();
 } catch (const std::exception& ex) {
 	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
 } catch (...) {
@@ -617,10 +617,10 @@ try {
 
 void video_superresolution_factory::finalize()
 {
-	_video_denoising_factory_instance.reset();
+	_video_superresolution_factory_instance.reset();
 }
 
 std::shared_ptr<video_superresolution_factory> video_superresolution_factory::get()
 {
-	return _video_denoising_factory_instance;
+	return _video_superresolution_factory_instance;
 }
