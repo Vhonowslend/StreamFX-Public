@@ -23,6 +23,21 @@
 #include <stdexcept>
 #include <vector>
 #include "obs/gs/gs-helper.hpp"
+#include "util/util-logging.hpp"
+
+#ifdef _DEBUG
+#define ST_PREFIX "<%s> "
+#define D_LOG_ERROR(x, ...) P_LOG_ERROR(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_WARNING(x, ...) P_LOG_WARN(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_INFO(x, ...) P_LOG_INFO(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_DEBUG(x, ...) P_LOG_DEBUG(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#else
+#define ST_PREFIX "<filter::dynamic_mask> "
+#define D_LOG_ERROR(...) P_LOG_ERROR(ST_PREFIX __VA_ARGS__)
+#define D_LOG_WARNING(...) P_LOG_WARN(ST_PREFIX __VA_ARGS__)
+#define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
+#define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
+#endif
 
 // Filter to allow dynamic masking
 // Allow any channel to affect any other channel
@@ -520,8 +535,14 @@ std::string dynamic_mask_factory::translate_string(const char* format, ...)
 
 #ifdef ENABLE_FRONTEND
 bool dynamic_mask_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
-{
+try {
 	streamfx::open_url(HELP_URL);
+	return false;
+} catch (const std::exception& ex) {
+	D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
+	return false;
+} catch (...) {
+	D_LOG_ERROR("Failed to open manual due to unknown error.", "");
 	return false;
 }
 #endif
@@ -529,9 +550,13 @@ bool dynamic_mask_factory::on_manual_open(obs_properties_t* props, obs_property_
 std::shared_ptr<dynamic_mask_factory> _filter_dynamic_mask_factory_instance = nullptr;
 
 void streamfx::filter::dynamic_mask::dynamic_mask_factory::initialize()
-{
+try {
 	if (!_filter_dynamic_mask_factory_instance)
 		_filter_dynamic_mask_factory_instance = std::make_shared<dynamic_mask_factory>();
+} catch (const std::exception& ex) {
+	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
+} catch (...) {
+	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
 }
 
 void streamfx::filter::dynamic_mask::dynamic_mask_factory::finalize()

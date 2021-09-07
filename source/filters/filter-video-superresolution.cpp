@@ -572,8 +572,14 @@ obs_properties_t* video_superresolution_factory::get_properties2(video_superreso
 
 #ifdef ENABLE_FRONTEND
 bool video_superresolution_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
-{
+try {
 	streamfx::open_url(HELP_URL);
+	return false;
+} catch (const std::exception& ex) {
+	D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
+	return false;
+} catch (...) {
+	D_LOG_ERROR("Failed to open manual due to unknown error.", "");
 	return false;
 }
 #endif
@@ -594,9 +600,13 @@ bool streamfx::filter::video_superresolution::video_superresolution_factory::is_
 std::shared_ptr<video_superresolution_factory> _video_denoising_factory_instance = nullptr;
 
 void video_superresolution_factory::initialize()
-{
+try {
 	if (!_video_denoising_factory_instance)
 		_video_denoising_factory_instance = std::make_shared<video_superresolution_factory>();
+} catch (const std::exception& ex) {
+	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
+} catch (...) {
+	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
 }
 
 void video_superresolution_factory::finalize()

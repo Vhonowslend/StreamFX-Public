@@ -21,8 +21,21 @@
 #include "strings.hpp"
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
+#include "util/util-logging.hpp"
 
-#define ST_PREFIX "<filter-sdf-effects> "
+#ifdef _DEBUG
+#define ST_PREFIX "<%s> "
+#define D_LOG_ERROR(x, ...) P_LOG_ERROR(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_WARNING(x, ...) P_LOG_WARN(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_INFO(x, ...) P_LOG_INFO(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_DEBUG(x, ...) P_LOG_DEBUG(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#else
+#define ST_PREFIX "<filter::sdf_effects> "
+#define D_LOG_ERROR(...) P_LOG_ERROR(ST_PREFIX __VA_ARGS__)
+#define D_LOG_WARNING(...) P_LOG_WARN(ST_PREFIX __VA_ARGS__)
+#define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
+#define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
+#endif
 
 // Translation Strings
 #define ST_I18N "Filter.SDFEffects"
@@ -136,8 +149,8 @@ sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* s
 			try {
 				kv.second = streamfx::obs::gs::effect::create(path);
 			} catch (const std::exception& ex) {
-				DLOG_ERROR(ST_PREFIX "Failed to load effect '%s' (located at '%s') with error(s): %s", kv.first,
-						   path.c_str(), ex.what());
+				D_LOG_ERROR("Failed to load effect '%s' (located at '%s') with error(s): %s", kv.first, path.c_str(),
+							ex.what());
 			}
 		}
 	}
@@ -711,8 +724,14 @@ obs_properties_t* sdf_effects_factory::get_properties2(sdf_effects_instance* dat
 
 #ifdef ENABLE_FRONTEND
 bool sdf_effects_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
-{
+try {
 	streamfx::open_url(HELP_URL);
+	return false;
+} catch (const std::exception& ex) {
+	D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
+	return false;
+} catch (...) {
+	D_LOG_ERROR("Failed to open manual due to unknown error.", "");
 	return false;
 }
 #endif
@@ -720,9 +739,13 @@ bool sdf_effects_factory::on_manual_open(obs_properties_t* props, obs_property_t
 std::shared_ptr<sdf_effects_factory> _filter_sdf_effects_factory_instance = nullptr;
 
 void streamfx::filter::sdf_effects::sdf_effects_factory::initialize()
-{
+try {
 	if (!_filter_sdf_effects_factory_instance)
 		_filter_sdf_effects_factory_instance = std::make_shared<sdf_effects_factory>();
+} catch (const std::exception& ex) {
+	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
+} catch (...) {
+	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
 }
 
 void streamfx::filter::sdf_effects::sdf_effects_factory::finalize()

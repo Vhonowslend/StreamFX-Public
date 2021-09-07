@@ -24,6 +24,21 @@
 #include "nvidia/cuda/nvidia-cuda-context.hpp"
 #include "obs/gs/gs-helper.hpp"
 #include "obs/obs-tools.hpp"
+#include "util/util-logging.hpp"
+
+#ifdef _DEBUG
+#define ST_PREFIX "<%s> "
+#define D_LOG_ERROR(x, ...) P_LOG_ERROR(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_WARNING(x, ...) P_LOG_WARN(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_INFO(x, ...) P_LOG_INFO(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_DEBUG(x, ...) P_LOG_DEBUG(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#else
+#define ST_PREFIX "<filter::face_tracking> "
+#define D_LOG_ERROR(...) P_LOG_ERROR(ST_PREFIX __VA_ARGS__)
+#define D_LOG_WARNING(...) P_LOG_WARN(ST_PREFIX __VA_ARGS__)
+#define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
+#define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
+#endif
 
 #define ST_I18N "Filter.NVIDIA.FaceTracking"
 #define ST_I18N_ROI ST_I18N ".ROI"
@@ -706,12 +721,13 @@ std::shared_ptr<::streamfx::nvidia::ar::ar> face_tracking_factory::get_ar()
 std::shared_ptr<face_tracking_factory> _filter_nvidia_face_tracking_factory_instance = nullptr;
 
 void streamfx::filter::nvidia::face_tracking_factory::initialize()
-{
-	try {
+try {
+	if (!_filter_nvidia_face_tracking_factory_instance)
 		_filter_nvidia_face_tracking_factory_instance = std::make_shared<filter::nvidia::face_tracking_factory>();
-	} catch (const std::exception& ex) {
-		DLOG_ERROR("<NVIDIA Face Tracking Filter> %s", ex.what());
-	}
+} catch (const std::exception& ex) {
+	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
+} catch (...) {
+	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
 }
 
 void streamfx::filter::nvidia::face_tracking_factory::finalize()

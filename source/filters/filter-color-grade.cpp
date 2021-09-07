@@ -21,6 +21,21 @@
 #include "strings.hpp"
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
+#include "util/util-logging.hpp"
+
+#ifdef _DEBUG
+#define ST_PREFIX "<%s> "
+#define D_LOG_ERROR(x, ...) P_LOG_ERROR(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_WARNING(x, ...) P_LOG_WARN(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_INFO(x, ...) P_LOG_INFO(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_DEBUG(x, ...) P_LOG_DEBUG(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#else
+#define ST_PREFIX "<filter::color_grade> "
+#define D_LOG_ERROR(...) P_LOG_ERROR(ST_PREFIX __VA_ARGS__)
+#define D_LOG_WARNING(...) P_LOG_WARN(ST_PREFIX __VA_ARGS__)
+#define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
+#define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
+#endif
 
 // OBS
 #ifdef _MSC_VER
@@ -110,8 +125,6 @@ static constexpr std::string_view HELP_URL = "https://github.com/Xaymar/obs-Stre
 // TODO: Figure out a way to merge _lut_rt, _lut_texture, _rt_source, _rt_grad, _tex_source, _tex_grade, _source_updated and _grade_updated.
 // Seriously this is too much GPU space wasted on unused trash.
 
-#define ST_PREFIX "<filter::color-grade> "
-
 color_grade_instance::~color_grade_instance() {}
 
 color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self)
@@ -127,13 +140,13 @@ color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self)
 	// Load the color grading effect.
 	auto path = streamfx::data_file_path("effects/color-grade.effect");
 	if (!std::filesystem::exists(path)) {
-		DLOG_ERROR(ST_PREFIX "Failed to locate effect file '%s'.", path.u8string().c_str());
+		D_LOG_ERROR("Failed to locate effect file '%s'.", path.u8string().c_str());
 		throw std::runtime_error("Failed to load color grade effect.");
 	} else {
 		try {
 			_effect = streamfx::obs::gs::effect::create(path.u8string());
 		} catch (std::exception const& ex) {
-			DLOG_ERROR(ST_PREFIX "Failed to load effect '%s': %s", path.u8string().c_str(), ex.what());
+			D_LOG_ERROR("Failed to load effect '%s': %s", path.u8string().c_str(), ex.what());
 			throw;
 		}
 	}
@@ -144,7 +157,7 @@ color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self)
 		_lut_consumer    = std::make_shared<streamfx::gfx::lut::consumer>();
 		_lut_initialized = true;
 	} catch (std::exception const& ex) {
-		DLOG_WARNING(ST_PREFIX "Failed to initialize LUT rendering, falling back to direct rendering.\n%s", ex.what());
+		D_LOG_WARNING("Failed to initialize LUT rendering, falling back to direct rendering.\n%s", ex.what());
 		_lut_initialized = false;
 	}
 
@@ -152,7 +165,7 @@ color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self)
 	try {
 		allocate_rendertarget(GS_RGBA);
 	} catch (std::exception const& ex) {
-		DLOG_ERROR(ST_PREFIX "Failed to acquire render target for rendering: %s", ex.what());
+		D_LOG_ERROR("Failed to acquire render target for rendering: %s", ex.what());
 		throw;
 	}
 
@@ -487,7 +500,7 @@ void color_grade_instance::video_render(gs_effect_t* shader)
 			_lut_rt.reset();
 			_lut_texture.reset();
 			_lut_enabled = false;
-			DLOG_WARNING(ST_PREFIX "Reverting to direct rendering due to error: %s", ex.what());
+			D_LOG_WARNING("Reverting to direct rendering due to error: %s", ex.what());
 		}
 	}
 	if ((!_lut_initialized || !_lut_enabled) && !_cache_fresh) {
@@ -868,8 +881,14 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 
 #ifdef ENABLE_FRONTEND
 bool color_grade_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
-{
+try {
 	streamfx::open_url(HELP_URL);
+	return false;
+} catch (const std::exception& ex) {
+	D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
+	return false;
+} catch (...) {
+	D_LOG_ERROR("Failed to open manual due to unknown error.", "");
 	return false;
 }
 #endif
@@ -877,9 +896,13 @@ bool color_grade_factory::on_manual_open(obs_properties_t* props, obs_property_t
 std::shared_ptr<color_grade_factory> _color_grade_factory_instance = nullptr;
 
 void streamfx::filter::color_grade::color_grade_factory::initialize()
-{
+try {
 	if (!_color_grade_factory_instance)
 		_color_grade_factory_instance = std::make_shared<color_grade_factory>();
+} catch (const std::exception& ex) {
+	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
+} catch (...) {
+	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
 }
 
 void streamfx::filter::color_grade::color_grade_factory::finalize()
