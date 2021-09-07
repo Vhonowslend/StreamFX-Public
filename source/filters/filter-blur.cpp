@@ -31,6 +31,21 @@
 #include "gfx/blur/gfx-blur-gaussian.hpp"
 #include "obs/gs/gs-helper.hpp"
 #include "obs/obs-source-tracker.hpp"
+#include "util/util-logging.hpp"
+
+#ifdef _DEBUG
+#define ST_PREFIX "<%s> "
+#define D_LOG_ERROR(x, ...) P_LOG_ERROR(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_WARNING(x, ...) P_LOG_WARN(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_INFO(x, ...) P_LOG_INFO(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_DEBUG(x, ...) P_LOG_DEBUG(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#else
+#define ST_PREFIX "<filter::blur> "
+#define D_LOG_ERROR(...) P_LOG_ERROR(ST_PREFIX __VA_ARGS__)
+#define D_LOG_WARNING(...) P_LOG_WARN(ST_PREFIX __VA_ARGS__)
+#define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
+#define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
+#endif
 
 // OBS
 #ifdef _MSC_VER
@@ -880,8 +895,14 @@ std::string blur_factory::translate_string(const char* format, ...)
 
 #ifdef ENABLE_FRONTEND
 bool blur_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
-{
+try {
 	streamfx::open_url(HELP_URL);
+	return false;
+} catch (const std::exception& ex) {
+	D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
+	return false;
+} catch (...) {
+	D_LOG_ERROR("Failed to open manual due to unknown error.", "");
 	return false;
 }
 #endif
@@ -889,9 +910,13 @@ bool blur_factory::on_manual_open(obs_properties_t* props, obs_property_t* prope
 std::shared_ptr<blur_factory> _filter_blur_factory_instance = nullptr;
 
 void streamfx::filter::blur::blur_factory::initialize()
-{
+try {
 	if (!_filter_blur_factory_instance)
 		_filter_blur_factory_instance = std::make_shared<blur_factory>();
+} catch (const std::exception& ex) {
+	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
+} catch (...) {
+	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
 }
 
 void streamfx::filter::blur::blur_factory::finalize()

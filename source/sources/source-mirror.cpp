@@ -29,6 +29,21 @@
 #include "obs/gs/gs-helper.hpp"
 #include "obs/obs-source-tracker.hpp"
 #include "obs/obs-tools.hpp"
+#include "util/util-logging.hpp"
+
+#ifdef _DEBUG
+#define ST_PREFIX "<%s> "
+#define D_LOG_ERROR(x, ...) P_LOG_ERROR(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_WARNING(x, ...) P_LOG_WARN(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_INFO(x, ...) P_LOG_INFO(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_DEBUG(x, ...) P_LOG_DEBUG(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#else
+#define ST_PREFIX "<source::mirror> "
+#define D_LOG_ERROR(...) P_LOG_ERROR(ST_PREFIX __VA_ARGS__)
+#define D_LOG_WARNING(...) P_LOG_WARN(ST_PREFIX __VA_ARGS__)
+#define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
+#define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
+#endif
 
 // OBS
 #ifdef _MSC_VER
@@ -380,8 +395,14 @@ obs_properties_t* mirror_factory::get_properties2(mirror_instance* data)
 
 #ifdef ENABLE_FRONTEND
 bool mirror_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
-{
+try {
 	streamfx::open_url(HELP_URL);
+	return false;
+} catch (const std::exception& ex) {
+	D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
+	return false;
+} catch (...) {
+	D_LOG_ERROR("Failed to open manual due to unknown error.", "");
 	return false;
 }
 #endif
@@ -389,12 +410,19 @@ bool mirror_factory::on_manual_open(obs_properties_t* props, obs_property_t* pro
 std::shared_ptr<mirror_factory> _source_mirror_factory_instance;
 
 void streamfx::source::mirror::mirror_factory::initialize()
-{
+try {
 	if (!_source_mirror_factory_instance)
 		_source_mirror_factory_instance = std::make_shared<mirror_factory>();
+} catch (const std::exception& ex) {
+	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
+} catch (...) {
+	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
 }
 
-void streamfx::source::mirror::mirror_factory::finalize() {}
+void streamfx::source::mirror::mirror_factory::finalize()
+{
+	_source_mirror_factory_instance.reset();
+}
 
 std::shared_ptr<mirror_factory> streamfx::source::mirror::mirror_factory::get()
 {
