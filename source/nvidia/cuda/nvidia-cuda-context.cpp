@@ -101,7 +101,7 @@ streamfx::nvidia::cuda::context::context(ID3D11Device* device) : context()
 	{
 		// Device Name
 		std::vector<char> name(256, 0);
-		_cuda->cuDeviceGetName(name.data(), name.size() - 1, _device);
+		_cuda->cuDeviceGetName(name.data(), static_cast<int32_t>(name.size() - 1), _device);
 		device_name = std::string(name.data(), name.data() + strlen(name.data()));
 
 		// Device LUID

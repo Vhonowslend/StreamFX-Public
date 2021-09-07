@@ -196,7 +196,7 @@ void nvenc::override_update(ffmpeg_instance* instance, obs_data_t*)
 	}
 
 	// Set delay
-	context->delay = std::min<int>(std::max<int64_t>(async_depth, 3ll), surfaces - 1);
+	context->delay = std::min<int>(std::max<int>(static_cast<int>(async_depth), 3), static_cast<int>(surfaces - 1));
 }
 
 void nvenc::get_defaults(obs_data_t* settings, const AVCodec*, AVCodecContext*)
