@@ -22,6 +22,21 @@
 #include <stdexcept>
 #include <sys/stat.h>
 #include "obs/gs/gs-helper.hpp"
+#include "util/util-logging.hpp"
+
+#ifdef _DEBUG
+#define ST_PREFIX "<%s> "
+#define D_LOG_ERROR(x, ...) P_LOG_ERROR(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_WARNING(x, ...) P_LOG_WARN(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_INFO(x, ...) P_LOG_INFO(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_DEBUG(x, ...) P_LOG_DEBUG(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#else
+#define ST_PREFIX "<filter::displacement> "
+#define D_LOG_ERROR(...) P_LOG_ERROR(ST_PREFIX __VA_ARGS__)
+#define D_LOG_WARNING(...) P_LOG_WARN(ST_PREFIX __VA_ARGS__)
+#define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
+#define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
+#endif
 
 #define ST_I18N "Filter.Displacement"
 #define ST_I18N_FILE "Filter.Displacement.File"
@@ -165,9 +180,13 @@ obs_properties_t* displacement_factory::get_properties2(displacement_instance* d
 std::shared_ptr<displacement_factory> _filter_displacement_factory_instance = nullptr;
 
 void streamfx::filter::displacement::displacement_factory::initialize()
-{
+try {
 	if (!_filter_displacement_factory_instance)
 		_filter_displacement_factory_instance = std::make_shared<displacement_factory>();
+} catch (const std::exception& ex) {
+	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
+} catch (...) {
+	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
 }
 
 void streamfx::filter::displacement::displacement_factory::finalize()
