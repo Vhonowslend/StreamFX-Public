@@ -20,8 +20,21 @@
 #include "util-threadpool.hpp"
 #include "common.hpp"
 #include <cstddef>
+#include "util/util-logging.hpp"
 
+#ifdef _DEBUG
+#define ST_PREFIX "<%s> "
+#define D_LOG_ERROR(x, ...) P_LOG_ERROR(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_WARNING(x, ...) P_LOG_WARN(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_INFO(x, ...) P_LOG_INFO(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_DEBUG(x, ...) P_LOG_DEBUG(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#else
 #define ST_PREFIX "<util::threadpool> "
+#define D_LOG_ERROR(...) P_LOG_ERROR(ST_PREFIX __VA_ARGS__)
+#define D_LOG_WARNING(...) P_LOG_WARN(ST_PREFIX __VA_ARGS__)
+#define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
+#define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
+#endif
 
 // Most Tasks likely wait for IO, so we can use that time for other tasks.
 #define ST_CONCURRENCY_MULTIPLIER 2
@@ -103,15 +116,15 @@ void streamfx::util::threadpool::work()
 			try {
 				local_work->_callback(local_work->_data);
 			} catch (std::exception const& ex) {
-				DLOG_WARNING(ST_PREFIX "Worker %" PRIx32 " caught exception from task (%" PRIxPTR ", %" PRIxPTR
-									   ") with message: %s",
-							 local_number, reinterpret_cast<ptrdiff_t>(local_work->_callback.target<void>()),
-							 reinterpret_cast<ptrdiff_t>(local_work->_data.get()), ex.what());
+				D_LOG_WARNING("Worker %" PRIx32 " caught exception from task (%" PRIxPTR ", %" PRIxPTR
+							  ") with message: %s",
+							  local_number, reinterpret_cast<ptrdiff_t>(local_work->_callback.target<void>()),
+							  reinterpret_cast<ptrdiff_t>(local_work->_data.get()), ex.what());
 			} catch (...) {
-				DLOG_WARNING(ST_PREFIX "Worker %" PRIx32 " caught exception of unknown type from task (%" PRIxPTR
-									   ", %" PRIxPTR ").",
-							 local_number, reinterpret_cast<ptrdiff_t>(local_work->_callback.target<void>()),
-							 reinterpret_cast<ptrdiff_t>(local_work->_data.get()));
+				D_LOG_WARNING("Worker %" PRIx32 " caught exception of unknown type from task (%" PRIxPTR ", %" PRIxPTR
+							  ").",
+							  local_number, reinterpret_cast<ptrdiff_t>(local_work->_callback.target<void>()),
+							  reinterpret_cast<ptrdiff_t>(local_work->_data.get()));
 			}
 		}
 
