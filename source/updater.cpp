@@ -24,21 +24,26 @@
 #include <string_view>
 #include "configuration.hpp"
 #include "plugin.hpp"
+#include "util/util-logging.hpp"
+
+#ifdef _DEBUG
+#define ST_PREFIX "<%s> "
+#define D_LOG_ERROR(x, ...) P_LOG_ERROR(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_WARNING(x, ...) P_LOG_WARN(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_INFO(x, ...) P_LOG_INFO(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_DEBUG(x, ...) P_LOG_DEBUG(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#else
+#define ST_PREFIX "<updater> "
+#define D_LOG_ERROR(...) P_LOG_ERROR(ST_PREFIX __VA_ARGS__)
+#define D_LOG_WARNING(...) P_LOG_WARN(ST_PREFIX __VA_ARGS__)
+#define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
+#define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
+#endif
 
 // TODO:
 // - Cache result in the configuration directory (not as a configuration value).
 // - Move 'autoupdater.last_checked_at' to out of the configuration.
 // - Figure out if nightly updates are viable at all.
-
-#define ST_PREFIX "<updater> "
-#define D_LOG_ERROR(...) DLOG_ERROR(ST_PREFIX __VA_ARGS__)
-#define D_LOG_WARNING(...) DLOG_WARNING(ST_PREFIX __VA_ARGS__)
-#define D_LOG_INFO(...) DLOG_INFO(ST_PREFIX __VA_ARGS__)
-#ifdef _DEBUG
-#define D_LOG_DEBUG(...) DLOG_DEBUG(ST_PREFIX __VA_ARGS__)
-#else
-#define D_LOG_DEBUG(...)
-#endif
 
 #define ST_CFG_GDPR "updater.gdpr"
 #define ST_CFG_AUTOMATION "updater.automation"
@@ -212,7 +217,7 @@ try {
 					   info.version_patch, info.url.c_str());
 		}
 	} else {
-		D_LOG_DEBUG("No update available.");
+		D_LOG_DEBUG("No update available.", "");
 	}
 
 	// Notify listeners of the update.
@@ -258,7 +263,7 @@ void streamfx::updater::task_query(std::vector<char>& buffer)
 	buffer.reserve(0xFFFF);
 
 	// Finally, execute the request.
-	D_LOG_DEBUG("Querying for latest releases...");
+	D_LOG_DEBUG("Querying for latest releases...", "");
 	if (CURLcode res = curl.perform(); res != CURLE_OK) {
 		D_LOG_ERROR("Performing query failed with error: %s", curl_easy_strerror(res));
 		throw std::runtime_error(curl_easy_strerror(res));
@@ -370,7 +375,7 @@ streamfx::updater::updater()
 			_current_info.version_index = static_cast<uint16_t>(strtoul(&suffix.at(1), nullptr, 10));
 		}
 	} catch (...) {
-		D_LOG_ERROR("Failed to parse current version information, results may be inaccurate.");
+		D_LOG_ERROR("Failed to parse current version information, results may be inaccurate.", "");
 	}
 }
 

@@ -20,15 +20,20 @@
 
 #include "ui-updater.hpp"
 #include "common.hpp"
+#include "util/util-logging.hpp"
 
-#define ST_PREFIX "<ui::updater> "
-#define D_LOG_ERROR(...) DLOG_ERROR(ST_PREFIX __VA_ARGS__)
-#define D_LOG_WARNING(...) DLOG_WARNING(ST_PREFIX __VA_ARGS__)
-#define D_LOG_INFO(...) DLOG_INFO(ST_PREFIX __VA_ARGS__)
 #ifdef _DEBUG
-#define D_LOG_DEBUG(...) DLOG_DEBUG(ST_PREFIX __VA_ARGS__)
+#define ST_PREFIX "<%s> "
+#define D_LOG_ERROR(x, ...) P_LOG_ERROR(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_WARNING(x, ...) P_LOG_WARN(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_INFO(x, ...) P_LOG_INFO(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_DEBUG(x, ...) P_LOG_DEBUG(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
 #else
-#define D_LOG_DEBUG(...)
+#define ST_PREFIX "<ui::updater> "
+#define D_LOG_ERROR(...) P_LOG_ERROR(ST_PREFIX __VA_ARGS__)
+#define D_LOG_WARNING(...) P_LOG_WARN(ST_PREFIX __VA_ARGS__)
+#define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
+#define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
 #endif
 
 #define D_I18N_MENU_CHECKFORUPDATES "UI.Updater.Menu.CheckForUpdates"
