@@ -1,5 +1,4 @@
-#include "shared.effect"
-
+#include "../base.effect"
 //-----------------------------------------------------------------------------
 // Uniforms
 //-----------------------------------------------------------------------------
@@ -70,9 +69,12 @@ uniform bool inverse_angle<
 > = false;
 
 //-----------------------------------------------------------------------------
-// Textures
+// Structs
 //-----------------------------------------------------------------------------
-uniform texture2d swirl_result;
+struct VertexData {
+	float4 pos : POSITION;
+	float2 uv : TEXCOORD0;
+};
 
 //-----------------------------------------------------------------------------
 // Samplers
@@ -110,10 +112,10 @@ float4 PSSwirl(VertexData vtx) : TARGET {
     float ar = lerp(ar_raw, 1, aspect_ratio);
 
     vertex_out.uv = 1. * vtx.uv - effect_center;
-    
+
     effect_center.x /= ar;
     vertex_out.uv.x /= ar;
-    
+
     float dist = distance(vertex_out.uv, effect_center);
     if (dist < radius)
     {
@@ -123,7 +125,7 @@ float4 PSSwirl(VertexData vtx) : TARGET {
 
         vertex_out.uv = swirl_transform(percent, vertex_out.uv, effect_center);
         vertex_out.uv += (2 * effect_center);
-        
+
         vertex_out.uv.x *= ar;
 
         return InputA.Sample(texture_sampler, vertex_out.uv);
@@ -136,7 +138,7 @@ float4 PSSwirl(VertexData vtx) : TARGET {
 
 technique Swirl
 {
-    pass 
+    pass
     {
         vertex_shader = DefaultVertexShader(vtx);
         pixel_shader = PSSwirl(vtx);
