@@ -34,11 +34,14 @@ void streamfx::util::logging::log(level lvl, const char* format, ...)
 	va_list vargs;
 	va_start(vargs, format);
 
+	va_list vargs_copy;
+	va_copy(vargs_copy, vargs);
 	int32_t ret = vsnprintf(buffer.data(), buffer.size(), format, vargs);
 	buffer.resize(ret + 1);
-	ret = vsnprintf(buffer.data(), buffer.size(), format, vargs);
+	ret = vsnprintf(buffer.data(), buffer.size(), format, vargs_copy);
 
 	va_end(vargs);
+	va_end(vargs_copy);
 
 	blog(level_map.at(lvl), "[StreamFX] %s", buffer.data());
 }
