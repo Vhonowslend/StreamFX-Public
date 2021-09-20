@@ -1,0 +1,172 @@
+// Copyright 2021 Radegast Stravinsky <radegast.ffxiv@gmail.com>
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice,
+//	this list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//	this list of conditions and the following disclaimer in the documentation
+//	and/or other materials provided with the distribution.
+// 3. Neither the name of the copyright holder nor the names of its contributors
+//	may be used to endorse or promote products derived from this software
+//	without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+
+#include "../base.effect"
+//-----------------------------------------------------------------------------
+// Uniforms
+//-----------------------------------------------------------------------------
+
+// Provided by StreamFX
+uniform float4 Time<
+	bool automatic = true;
+>;
+uniform float4 ViewSize<
+	bool automatic = true;
+>;
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+
+uniform float2 coordinates<
+	string name = "Coordinates (X, Y)";
+	string description = "Determines the center of the effect.";
+	string field_type = "slider";
+	float2 step = {0.01, 0.01};
+	float2 minimum = {0.0, 0.0};
+	float2 maximum = {1.0, 1.0};
+> = {0.5, 0.5};
+
+uniform float angle<
+	string name = "Angle";
+	string description = "The angle in degrees to twist the image.";
+	string field_type = "slider";
+	float minimum = -1800.0;
+	float maximum = 1800.0;
+> = 270.0;
+
+uniform float radius<
+	string name = "Radius";
+	string description = "The radius of the effect.";
+	string field_type = "slider";
+	float step = 0.01;
+	float minimum = 0.0;
+	float maximum = 1.0;
+> = 0.5;
+
+uniform float tension<
+	string name = "Tension";
+	string description = "Controls how rapidly the distortion reaches the maximum value.";
+	string field_type = "slider";
+	float step = 0.01;
+	float minimum = 0.0;
+	float maximum = 10.0;
+> = 1.0;
+
+uniform float aspect_ratio<
+	string name = "Aspect Ratio";
+	string description = "Adjusts the aspect ratio for the associated distortion.";
+	string field_type = "slider";
+	float step = 0.01;
+	float minimum = -1;
+	float maximum = 1;
+> = 0.0;
+
+uniform bool animate<
+	string name = "Animate";
+	string description = "Animates the effect, making it twist back and forth.";
+> = false;
+
+uniform bool inverse_angle<
+	string name = "Use Inverse Angle";
+	string description = "Inverts the angle, making the edges more distorted than the center.";
+> = false;
+
+//-----------------------------------------------------------------------------
+// Structs
+//-----------------------------------------------------------------------------
+struct VertexData {
+	float4 pos : POSITION;
+	float2 uv : TEXCOORD0;
+};
+
+//-----------------------------------------------------------------------------
+// Samplers
+//-----------------------------------------------------------------------------
+sampler_state texture_sampler {
+	Filter    = Linear;
+	AddressU  = Mirror;
+	AddressV  = Mirror;
+};
+
+//-----------------------------------------------------------------------------
+// Functions
+//-----------------------------------------------------------------------------
+
+float2 swirl_transform (float percent, float2 input_vertex, float2 effect_center) {
+	float theta = percent * percent * radians(angle * (animate == true ? sin(Time.x) : 1.0) );
+	float s =  sin(theta);
+	float c =  cos(theta);
+	float2x2 transform = float2x2(
+		c, -s,
+		s, c
+	);
+	return mul(transform, input_vertex-effect_center);
+}
+
+//-----------------------------------------------------------------------------
+// Shaders
+//-----------------------------------------------------------------------------
+float4 PSSwirl(VertexData vtx) : TARGET {
+	VertexData vertex_out;
+	vertex_out.pos = vtx.pos;
+
+	float2 effect_center = coordinates/2.0;
+	float ar_raw = 1. * ViewSize.y / ViewSize.x;
+	float ar = lerp(ar_raw, 1, aspect_ratio);
+
+	vertex_out.uv = 1. * vtx.uv - effect_center;
+
+	effect_center.x /= ar;
+	vertex_out.uv.x /= ar;
+
+	float dist = distance(vertex_out.uv, effect_center);
+	if (dist < radius)
+	{
+		float tension_radius = lerp(radius-dist, radius, tension);
+		float percent = (radius-dist) /tension_radius;
+		percent = inverse_angle == 0 ? percent : 1 - percent;
+
+		vertex_out.uv = swirl_transform(percent, vertex_out.uv, effect_center);
+		vertex_out.uv += (2 * effect_center);
+
+		vertex_out.uv.x *= ar;
+
+		return InputA.Sample(texture_sampler, vertex_out.uv);
+	}
+	else
+	{
+		return InputA.Sample(texture_sampler, vtx.uv );
+	}
+}
+
+technique Swirl
+{
+	pass
+	{
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader = PSSwirl(vtx);
+	}
+}
