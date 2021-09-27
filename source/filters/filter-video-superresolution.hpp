@@ -49,6 +49,7 @@ namespace streamfx::filter::video_superresolution {
 
 		std::atomic<bool>                           _provider_ready;
 		std::atomic<video_superresolution_provider> _provider;
+		video_superresolution_provider              _provider_ui;
 		std::mutex                                  _provider_lock;
 		std::shared_ptr<util::threadpool::task>     _provider_task;
 
@@ -113,7 +114,8 @@ namespace streamfx::filter::video_superresolution {
 		static bool on_manual_open(obs_properties_t* props, obs_property_t* property, void* data);
 #endif
 
-		bool is_provider_available(video_superresolution_provider);
+		bool                           is_provider_available(video_superresolution_provider);
+		video_superresolution_provider find_ideal_provider();
 
 		public: // Singleton
 		static void                                                                                      initialize();
