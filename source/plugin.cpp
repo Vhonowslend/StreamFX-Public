@@ -59,8 +59,8 @@
 #ifdef ENABLE_FILTER_TRANSFORM
 #include "filters/filter-transform.hpp"
 #endif
-#ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION
-#include "filters/filter-video-superresolution.hpp"
+#ifdef ENABLE_FILTER_UPSCALING
+#include "filters/filter-upscaling.hpp"
 #endif
 
 #ifdef ENABLE_SOURCE_MIRROR
@@ -167,8 +167,8 @@ try {
 #ifdef ENABLE_FILTER_TRANSFORM
 		streamfx::filter::transform::transform_factory::initialize();
 #endif
-#ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION
-		streamfx::filter::video_superresolution::video_superresolution_factory::initialize();
+#ifdef ENABLE_FILTER_UPSCALING
+		streamfx::filter::upscaling::upscaling_factory::initialize();
 #endif
 	}
 
@@ -256,8 +256,8 @@ try {
 #ifdef ENABLE_FILTER_TRANSFORM
 		streamfx::filter::transform::transform_factory::finalize();
 #endif
-#ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION
-		streamfx::filter::video_superresolution::video_superresolution_factory::finalize();
+#ifdef ENABLE_FILTER_UPSCALING
+		streamfx::filter::upscaling::upscaling_factory::finalize();
 #endif
 	}
 
