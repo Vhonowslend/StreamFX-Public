@@ -138,16 +138,12 @@ void video_superresolution_instance::update(obs_data_t* data)
 	video_superresolution_provider provider =
 		static_cast<video_superresolution_provider>(obs_data_get_int(data, ST_KEY_PROVIDER));
 	if (provider == video_superresolution_provider::AUTOMATIC) {
-		for (auto v : provider_priority) {
-			if (video_superresolution_factory::get()->is_provider_available(v)) {
-				provider = v;
-				break;
-			}
-		}
+		provider = video_superresolution_factory::get()->find_ideal_provider();
 	}
 
 	// Check if the provider was changed, and if so switch.
 	if (provider != _provider) {
+		_provider_ui = provider;
 		switch_provider(provider);
 	}
 
@@ -168,18 +164,14 @@ void video_superresolution_instance::update(obs_data_t* data)
 
 void streamfx::filter::video_superresolution::video_superresolution_instance::properties(obs_properties_t* properties)
 {
-	if (_provider_ready) {
-		std::unique_lock<std::mutex> ul(_provider_lock);
-
-		switch (_provider) {
+	switch (_provider_ui) {
 #ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION_NVIDIA
-		case video_superresolution_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
-			nvvfxsr_properties(properties);
-			break;
+	case video_superresolution_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+		nvvfxsr_properties(properties);
+		break;
 #endif
-		default:
-			break;
-		}
+	default:
+		break;
 	}
 }
 
@@ -543,6 +535,17 @@ void video_superresolution_factory::get_defaults2(obs_data_t* data)
 #endif
 }
 
+static bool modified_provider(obs_properties_t* props, obs_property_t*, obs_data_t* settings) noexcept
+try {
+	return true;
+} catch (const std::exception& ex) {
+	DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+	return false;
+} catch (...) {
+	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	return false;
+}
+
 obs_properties_t* video_superresolution_factory::get_properties2(video_superresolution_instance* data)
 {
 	obs_properties_t* pr = obs_properties_create();
@@ -565,6 +568,7 @@ obs_properties_t* video_superresolution_factory::get_properties2(video_superreso
 		{
 			auto p = obs_properties_add_list(grp, ST_KEY_PROVIDER, D_TRANSLATE(ST_I18N_PROVIDER), OBS_COMBO_TYPE_LIST,
 											 OBS_COMBO_FORMAT_INT);
+			obs_property_set_modified_callback(p, modified_provider);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC),
 									  static_cast<int64_t>(video_superresolution_provider::AUTOMATIC));
 			obs_property_list_add_int(
@@ -601,6 +605,18 @@ bool streamfx::filter::video_superresolution::video_superresolution_factory::is_
 	default:
 		return false;
 	}
+}
+
+video_superresolution_provider
+	streamfx::filter::video_superresolution::video_superresolution_factory::find_ideal_provider()
+{
+	for (auto v : provider_priority) {
+		if (video_superresolution_factory::get()->is_provider_available(v)) {
+			return v;
+			break;
+		}
+	}
+	return video_superresolution_provider::AUTOMATIC;
 }
 
 std::shared_ptr<video_superresolution_factory> _video_superresolution_factory_instance = nullptr;
