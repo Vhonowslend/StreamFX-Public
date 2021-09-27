@@ -28,42 +28,42 @@
 #include "plugin.hpp"
 #include "util/util-threadpool.hpp"
 
-#ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION_NVIDIA
+#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
 #include "nvidia/vfx/nvidia-vfx-superresolution.hpp"
 #endif
 
-namespace streamfx::filter::video_superresolution {
-	enum class video_superresolution_provider {
+namespace streamfx::filter::upscaling {
+	enum class upscaling_provider {
 		INVALID                      = -1,
 		AUTOMATIC                    = 0,
 		NVIDIA_VIDEO_SUPERRESOLUTION = 1,
 	};
 
-	const char* cstring(video_superresolution_provider provider);
+	const char* cstring(upscaling_provider provider);
 
-	std::string string(video_superresolution_provider provider);
+	std::string string(upscaling_provider provider);
 
-	class video_superresolution_instance : public ::streamfx::obs::source_instance {
+	class upscaling_instance : public ::streamfx::obs::source_instance {
 		std::pair<uint32_t, uint32_t> _in_size;
 		std::pair<uint32_t, uint32_t> _out_size;
 
-		std::atomic<bool>                           _provider_ready;
-		std::atomic<video_superresolution_provider> _provider;
-		video_superresolution_provider              _provider_ui;
-		std::mutex                                  _provider_lock;
-		std::shared_ptr<util::threadpool::task>     _provider_task;
+		std::atomic<upscaling_provider>         _provider;
+		upscaling_provider                      _provider_ui;
+		std::atomic<bool>                       _provider_ready;
+		std::mutex                              _provider_lock;
+		std::shared_ptr<util::threadpool::task> _provider_task;
 
 		std::shared_ptr<::streamfx::obs::gs::rendertarget> _input;
 		std::shared_ptr<::streamfx::obs::gs::texture>      _output;
 		bool                                               _dirty;
 
-#ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION_NVIDIA
+#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
 		std::shared_ptr<::streamfx::nvidia::vfx::superresolution> _nvidia_fx;
 #endif
 
 		public:
-		video_superresolution_instance(obs_data_t* data, obs_source_t* self);
-		~video_superresolution_instance() override;
+		upscaling_instance(obs_data_t* data, obs_source_t* self);
+		~upscaling_instance() override;
 
 		void load(obs_data_t* data) override;
 		void migrate(obs_data_t* data, uint64_t version) override;
@@ -77,10 +77,10 @@ namespace streamfx::filter::video_superresolution {
 		void video_render(gs_effect_t* effect) override;
 
 		private:
-		void switch_provider(video_superresolution_provider provider);
+		void switch_provider(upscaling_provider provider);
 		void task_switch_provider(util::threadpool_data_t data);
 
-#ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION_NVIDIA
+#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
 		void nvvfxsr_load();
 		void nvvfxsr_unload();
 		void nvvfxsr_size();
@@ -90,11 +90,10 @@ namespace streamfx::filter::video_superresolution {
 #endif
 	};
 
-	class video_superresolution_factory
-		: public ::streamfx::obs::source_factory<
-			  ::streamfx::filter::video_superresolution::video_superresolution_factory,
-			  ::streamfx::filter::video_superresolution::video_superresolution_instance> {
-#ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION_NVIDIA
+	class upscaling_factory
+		: public ::streamfx::obs::source_factory<::streamfx::filter::upscaling::upscaling_factory,
+												 ::streamfx::filter::upscaling::upscaling_instance> {
+#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
 		bool                                           _nvidia_available;
 		std::shared_ptr<::streamfx::nvidia::cuda::obs> _nvcuda;
 		std::shared_ptr<::streamfx::nvidia::cv::cv>    _nvcvi;
@@ -102,25 +101,25 @@ namespace streamfx::filter::video_superresolution {
 #endif
 
 		public:
-		virtual ~video_superresolution_factory();
-		video_superresolution_factory();
+		virtual ~upscaling_factory();
+		upscaling_factory();
 
 		virtual const char* get_name() override;
 
 		virtual void              get_defaults2(obs_data_t* data) override;
-		virtual obs_properties_t* get_properties2(video_superresolution_instance* data) override;
+		virtual obs_properties_t* get_properties2(upscaling_instance* data) override;
 
 #ifdef ENABLE_FRONTEND
 		static bool on_manual_open(obs_properties_t* props, obs_property_t* property, void* data);
 #endif
 
-		bool                           is_provider_available(video_superresolution_provider);
-		video_superresolution_provider find_ideal_provider();
+		bool               is_provider_available(upscaling_provider);
+		upscaling_provider find_ideal_provider();
 
 		public: // Singleton
-		static void                                                                                      initialize();
-		static void                                                                                      finalize();
-		static std::shared_ptr<::streamfx::filter::video_superresolution::video_superresolution_factory> get();
+		static void                                                              initialize();
+		static void                                                              finalize();
+		static std::shared_ptr<::streamfx::filter::upscaling::upscaling_factory> get();
 	};
 
-} // namespace streamfx::filter::video_superresolution
+} // namespace streamfx::filter::upscaling

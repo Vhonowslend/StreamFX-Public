@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "filter-video-superresolution.hpp"
+#include "filter-upscaling.hpp"
 #include <algorithm>
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
@@ -38,12 +38,12 @@
 #define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
 #endif
 
-#define ST_I18N "Filter.VideoSuperResolution"
+#define ST_I18N "Filter.Upscaling"
 #define ST_KEY_PROVIDER "Provider"
 #define ST_I18N_PROVIDER ST_I18N "." ST_KEY_PROVIDER
-#define ST_I18N_PROVIDER_NVIDIA_SUPERRES ST_I18N_PROVIDER ".NVIDIAVideoSuperResolution"
+#define ST_I18N_PROVIDER_NVIDIA_SUPERRES ST_I18N_PROVIDER ".NVIDIA.VideoSuperResolution"
 
-#ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION_NVIDIA
+#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
 #define ST_KEY_NVIDIA_SUPERRES "NVIDIA.SuperRes"
 #define ST_I18N_NVIDIA_SUPERRES ST_I18N "." ST_KEY_NVIDIA_SUPERRES
 #define ST_KEY_NVIDIA_SUPERRES_STRENGTH "NVIDIA.SuperRes.Strength"
@@ -54,35 +54,35 @@
 #define ST_I18N_NVIDIA_SUPERRES_SCALE ST_I18N "." ST_KEY_NVIDIA_SUPERRES_SCALE
 #endif
 
-using streamfx::filter::video_superresolution::video_superresolution_factory;
-using streamfx::filter::video_superresolution::video_superresolution_instance;
-using streamfx::filter::video_superresolution::video_superresolution_provider;
+using streamfx::filter::upscaling::upscaling_factory;
+using streamfx::filter::upscaling::upscaling_instance;
+using streamfx::filter::upscaling::upscaling_provider;
 
 static constexpr std::string_view HELP_URL =
-	"https://github.com/Xaymar/obs-StreamFX/wiki/Filter-Video-Super-Resolution";
+	"https://github.com/Xaymar/obs-StreamFX/wiki/Filter-Upscaling";
 
 /** Priority of providers for automatic selection if more than one is available.
  * 
  */
-static video_superresolution_provider provider_priority[] = {
-	video_superresolution_provider::NVIDIA_VIDEO_SUPERRESOLUTION,
+static upscaling_provider provider_priority[] = {
+	upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION,
 };
 
-const char* streamfx::filter::video_superresolution::cstring(video_superresolution_provider provider)
+const char* streamfx::filter::upscaling::cstring(upscaling_provider provider)
 {
 	switch (provider) {
-	case video_superresolution_provider::INVALID:
+	case upscaling_provider::INVALID:
 		return "N/A";
-	case video_superresolution_provider::AUTOMATIC:
+	case upscaling_provider::AUTOMATIC:
 		return D_TRANSLATE(S_STATE_AUTOMATIC);
-	case video_superresolution_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+	case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
 		return D_TRANSLATE(ST_I18N_PROVIDER_NVIDIA_SUPERRES);
 	default:
 		throw std::runtime_error("Missing Conversion Entry");
 	}
 }
 
-std::string streamfx::filter::video_superresolution::string(video_superresolution_provider provider)
+std::string streamfx::filter::upscaling::string(upscaling_provider provider)
 {
 	return cstring(provider);
 }
@@ -90,11 +90,11 @@ std::string streamfx::filter::video_superresolution::string(video_superresolutio
 //------------------------------------------------------------------------------
 // Instance
 //------------------------------------------------------------------------------
-video_superresolution_instance::video_superresolution_instance(obs_data_t* data, obs_source_t* self)
+upscaling_instance::upscaling_instance(obs_data_t* data, obs_source_t* self)
 	: obs::source_instance(data, self),
 
-	  _in_size(1, 1), _out_size(1, 1), _provider_ready(false), _provider(video_superresolution_provider::INVALID),
-	  _provider_lock(), _provider_task(), _input(), _output(), _dirty(false)
+	  _in_size(1, 1), _out_size(1, 1), _provider_ready(false), _provider(upscaling_provider::INVALID), _provider_lock(),
+	  _provider_task(), _input(), _output(), _dirty(false)
 {
 	{
 		::streamfx::obs::gs::context gctx;
@@ -110,13 +110,13 @@ video_superresolution_instance::video_superresolution_instance(obs_data_t* data,
 	}
 }
 
-video_superresolution_instance::~video_superresolution_instance()
+upscaling_instance::~upscaling_instance()
 {
 	// TODO: Make this asynchronous.
 	std::unique_lock<std::mutex> ul(_provider_lock);
 	switch (_provider) {
-#ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION_NVIDIA
-	case video_superresolution_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+	case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
 		nvvfxsr_unload();
 		break;
 #endif
@@ -125,20 +125,19 @@ video_superresolution_instance::~video_superresolution_instance()
 	}
 }
 
-void video_superresolution_instance::load(obs_data_t* data)
+void upscaling_instance::load(obs_data_t* data)
 {
 	update(data);
 }
 
-void video_superresolution_instance::migrate(obs_data_t* data, uint64_t version) {}
+void upscaling_instance::migrate(obs_data_t* data, uint64_t version) {}
 
-void video_superresolution_instance::update(obs_data_t* data)
+void upscaling_instance::update(obs_data_t* data)
 {
 	// Check if the user changed which Denoising provider we use.
-	video_superresolution_provider provider =
-		static_cast<video_superresolution_provider>(obs_data_get_int(data, ST_KEY_PROVIDER));
-	if (provider == video_superresolution_provider::AUTOMATIC) {
-		provider = video_superresolution_factory::get()->find_ideal_provider();
+	upscaling_provider provider = static_cast<upscaling_provider>(obs_data_get_int(data, ST_KEY_PROVIDER));
+	if (provider == upscaling_provider::AUTOMATIC) {
+		provider = upscaling_factory::get()->find_ideal_provider();
 	}
 
 	// Check if the provider was changed, and if so switch.
@@ -151,8 +150,8 @@ void video_superresolution_instance::update(obs_data_t* data)
 		std::unique_lock<std::mutex> ul(_provider_lock);
 
 		switch (_provider) {
-#ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION_NVIDIA
-		case video_superresolution_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+		case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
 			nvvfxsr_update(data);
 			break;
 #endif
@@ -162,11 +161,11 @@ void video_superresolution_instance::update(obs_data_t* data)
 	}
 }
 
-void streamfx::filter::video_superresolution::video_superresolution_instance::properties(obs_properties_t* properties)
+void streamfx::filter::upscaling::upscaling_instance::properties(obs_properties_t* properties)
 {
 	switch (_provider_ui) {
-#ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION_NVIDIA
-	case video_superresolution_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+	case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
 		nvvfxsr_properties(properties);
 		break;
 #endif
@@ -175,17 +174,17 @@ void streamfx::filter::video_superresolution::video_superresolution_instance::pr
 	}
 }
 
-uint32_t streamfx::filter::video_superresolution::video_superresolution_instance::get_width()
+uint32_t streamfx::filter::upscaling::upscaling_instance::get_width()
 {
 	return std::max<uint32_t>(_out_size.first, 1);
 }
 
-uint32_t streamfx::filter::video_superresolution::video_superresolution_instance::get_height()
+uint32_t streamfx::filter::upscaling::upscaling_instance::get_height()
 {
 	return std::max<uint32_t>(_out_size.second, 1);
 }
 
-void video_superresolution_instance::video_tick(float_t time)
+void upscaling_instance::video_tick(float_t time)
 {
 	auto target = obs_filter_get_target(_self);
 	auto width  = obs_source_get_base_width(target);
@@ -198,8 +197,8 @@ void video_superresolution_instance::video_tick(float_t time)
 		std::unique_lock<std::mutex> ul(_provider_lock);
 
 		switch (_provider) {
-#ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION_NVIDIA
-		case video_superresolution_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+		case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
 			nvvfxsr_size();
 			break;
 #endif
@@ -211,7 +210,7 @@ void video_superresolution_instance::video_tick(float_t time)
 	_dirty = true;
 }
 
-void video_superresolution_instance::video_render(gs_effect_t* effect)
+void upscaling_instance::video_render(gs_effect_t* effect)
 {
 	auto parent = obs_filter_get_parent(_self);
 	auto target = obs_filter_get_target(_self);
@@ -285,8 +284,8 @@ void video_superresolution_instance::video_render(gs_effect_t* effect)
 			::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_convert, "Process"};
 #endif
 			switch (_provider) {
-#ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION_NVIDIA
-			case video_superresolution_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+			case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
 				nvvfxsr_process();
 				break;
 #endif
@@ -320,11 +319,10 @@ void video_superresolution_instance::video_render(gs_effect_t* effect)
 }
 
 struct switch_provider_data_t {
-	video_superresolution_provider provider;
+	upscaling_provider provider;
 };
 
-void streamfx::filter::video_superresolution::video_superresolution_instance::switch_provider(
-	video_superresolution_provider provider)
+void streamfx::filter::upscaling::upscaling_instance::switch_provider(upscaling_provider provider)
 {
 	std::unique_lock<std::mutex> ul(_provider_lock);
 
@@ -353,11 +351,10 @@ void streamfx::filter::video_superresolution::video_superresolution_instance::sw
 
 	// 3. Then spawn a new task to switch provider.
 	_provider_task = streamfx::threadpool()->push(
-		std::bind(&video_superresolution_instance::task_switch_provider, this, std::placeholders::_1), spd);
+		std::bind(&upscaling_instance::task_switch_provider, this, std::placeholders::_1), spd);
 }
 
-void streamfx::filter::video_superresolution::video_superresolution_instance::task_switch_provider(
-	util::threadpool_data_t data)
+void streamfx::filter::upscaling::upscaling_instance::task_switch_provider(util::threadpool_data_t data)
 {
 	std::shared_ptr<switch_provider_data_t> spd = std::static_pointer_cast<switch_provider_data_t>(data);
 
@@ -370,8 +367,8 @@ void streamfx::filter::video_superresolution::video_superresolution_instance::ta
 	try {
 		// 3. Unload the previous provider.
 		switch (spd->provider) {
-#ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION_NVIDIA
-		case video_superresolution_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+		case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
 			nvvfxsr_unload();
 			break;
 #endif
@@ -381,8 +378,8 @@ void streamfx::filter::video_superresolution::video_superresolution_instance::ta
 
 		// 4. Load the new provider.
 		switch (_provider) {
-#ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION_NVIDIA
-		case video_superresolution_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+		case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
 			nvvfxsr_load();
 			{
 				auto data = obs_source_get_settings(_self);
@@ -407,18 +404,18 @@ void streamfx::filter::video_superresolution::video_superresolution_instance::ta
 	}
 }
 
-#ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION_NVIDIA
-void streamfx::filter::video_superresolution::video_superresolution_instance::nvvfxsr_load()
+#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+void streamfx::filter::upscaling::upscaling_instance::nvvfxsr_load()
 {
 	_nvidia_fx = std::make_shared<::streamfx::nvidia::vfx::superresolution>();
 }
 
-void streamfx::filter::video_superresolution::video_superresolution_instance::nvvfxsr_unload()
+void streamfx::filter::upscaling::upscaling_instance::nvvfxsr_unload()
 {
 	_nvidia_fx.reset();
 }
 
-void streamfx::filter::video_superresolution::video_superresolution_instance::nvvfxsr_size()
+void streamfx::filter::upscaling::upscaling_instance::nvvfxsr_size()
 {
 	if (!_nvidia_fx) {
 		return;
@@ -428,7 +425,7 @@ void streamfx::filter::video_superresolution::video_superresolution_instance::nv
 	_nvidia_fx->size(in_size, _in_size, _out_size);
 }
 
-void streamfx::filter::video_superresolution::video_superresolution_instance::nvvfxsr_process()
+void streamfx::filter::upscaling::upscaling_instance::nvvfxsr_process()
 {
 	if (!_nvidia_fx) {
 		_output = _input->get_texture();
@@ -438,8 +435,7 @@ void streamfx::filter::video_superresolution::video_superresolution_instance::nv
 	_output = _nvidia_fx->process(_input->get_texture());
 }
 
-void streamfx::filter::video_superresolution::video_superresolution_instance::nvvfxsr_properties(
-	obs_properties_t* props)
+void streamfx::filter::upscaling::upscaling_instance::nvvfxsr_properties(obs_properties_t* props)
 {
 	obs_properties_t* grp = obs_properties_create();
 	obs_properties_add_group(props, ST_KEY_NVIDIA_SUPERRES, D_TRANSLATE(ST_I18N_NVIDIA_SUPERRES), OBS_GROUP_NORMAL,
@@ -460,7 +456,7 @@ void streamfx::filter::video_superresolution::video_superresolution_instance::nv
 	}
 }
 
-void streamfx::filter::video_superresolution::video_superresolution_instance::nvvfxsr_update(obs_data_t* data)
+void streamfx::filter::upscaling::upscaling_instance::nvvfxsr_update(obs_data_t* data)
 {
 	if (!_nvidia_fx)
 		return;
@@ -475,14 +471,14 @@ void streamfx::filter::video_superresolution::video_superresolution_instance::nv
 //------------------------------------------------------------------------------
 // Factory
 //------------------------------------------------------------------------------
-video_superresolution_factory::~video_superresolution_factory() {}
+upscaling_factory::~upscaling_factory() {}
 
-video_superresolution_factory::video_superresolution_factory()
+upscaling_factory::upscaling_factory()
 {
 	bool any_available = false;
 
 	// 1. Try and load any configured providers.
-#ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION_NVIDIA
+#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
 	try {
 		// Load CVImage and Video Effects SDK.
 		_nvcuda           = ::streamfx::nvidia::cuda::obs::get();
@@ -520,16 +516,16 @@ video_superresolution_factory::video_superresolution_factory()
 	finish_setup();
 }
 
-const char* video_superresolution_factory::get_name()
+const char* upscaling_factory::get_name()
 {
 	return D_TRANSLATE(ST_I18N);
 }
 
-void video_superresolution_factory::get_defaults2(obs_data_t* data)
+void upscaling_factory::get_defaults2(obs_data_t* data)
 {
-	obs_data_set_default_int(data, ST_KEY_PROVIDER, static_cast<int64_t>(video_superresolution_provider::AUTOMATIC));
+	obs_data_set_default_int(data, ST_KEY_PROVIDER, static_cast<int64_t>(upscaling_provider::AUTOMATIC));
 
-#ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION_NVIDIA
+#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
 	obs_data_set_default_double(data, ST_KEY_NVIDIA_SUPERRES_SCALE, 150.);
 	obs_data_set_default_double(data, ST_KEY_NVIDIA_SUPERRES_STRENGTH, 0.);
 #endif
@@ -546,14 +542,14 @@ try {
 	return false;
 }
 
-obs_properties_t* video_superresolution_factory::get_properties2(video_superresolution_instance* data)
+obs_properties_t* upscaling_factory::get_properties2(upscaling_instance* data)
 {
 	obs_properties_t* pr = obs_properties_create();
 
 #ifdef ENABLE_FRONTEND
 	{
-		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN),
-								   video_superresolution_factory::on_manual_open, nullptr);
+		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), upscaling_factory::on_manual_open,
+								   nullptr);
 	}
 #endif
 
@@ -570,10 +566,9 @@ obs_properties_t* video_superresolution_factory::get_properties2(video_superreso
 											 OBS_COMBO_FORMAT_INT);
 			obs_property_set_modified_callback(p, modified_provider);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC),
-									  static_cast<int64_t>(video_superresolution_provider::AUTOMATIC));
-			obs_property_list_add_int(
-				p, D_TRANSLATE(ST_I18N_PROVIDER_NVIDIA_SUPERRES),
-				static_cast<int64_t>(video_superresolution_provider::NVIDIA_VIDEO_SUPERRESOLUTION));
+									  static_cast<int64_t>(upscaling_provider::AUTOMATIC));
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_PROVIDER_NVIDIA_SUPERRES),
+									  static_cast<int64_t>(upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION));
 		}
 	}
 
@@ -581,7 +576,7 @@ obs_properties_t* video_superresolution_factory::get_properties2(video_superreso
 }
 
 #ifdef ENABLE_FRONTEND
-bool video_superresolution_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
+bool upscaling_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
 try {
 	streamfx::open_url(HELP_URL);
 	return false;
@@ -594,12 +589,11 @@ try {
 }
 #endif
 
-bool streamfx::filter::video_superresolution::video_superresolution_factory::is_provider_available(
-	video_superresolution_provider provider)
+bool streamfx::filter::upscaling::upscaling_factory::is_provider_available(upscaling_provider provider)
 {
 	switch (provider) {
-#ifdef ENABLE_FILTER_VIDEO_SUPERRESOLUTION_NVIDIA
-	case video_superresolution_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+	case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
 		return _nvidia_available;
 #endif
 	default:
@@ -607,36 +601,35 @@ bool streamfx::filter::video_superresolution::video_superresolution_factory::is_
 	}
 }
 
-video_superresolution_provider
-	streamfx::filter::video_superresolution::video_superresolution_factory::find_ideal_provider()
+upscaling_provider streamfx::filter::upscaling::upscaling_factory::find_ideal_provider()
 {
 	for (auto v : provider_priority) {
-		if (video_superresolution_factory::get()->is_provider_available(v)) {
+		if (upscaling_factory::get()->is_provider_available(v)) {
 			return v;
 			break;
 		}
 	}
-	return video_superresolution_provider::AUTOMATIC;
+	return upscaling_provider::AUTOMATIC;
 }
 
-std::shared_ptr<video_superresolution_factory> _video_superresolution_factory_instance = nullptr;
+std::shared_ptr<upscaling_factory> _video_superresolution_factory_instance = nullptr;
 
-void video_superresolution_factory::initialize()
+void upscaling_factory::initialize()
 try {
 	if (!_video_superresolution_factory_instance)
-		_video_superresolution_factory_instance = std::make_shared<video_superresolution_factory>();
+		_video_superresolution_factory_instance = std::make_shared<upscaling_factory>();
 } catch (const std::exception& ex) {
 	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
 } catch (...) {
 	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
 }
 
-void video_superresolution_factory::finalize()
+void upscaling_factory::finalize()
 {
 	_video_superresolution_factory_instance.reset();
 }
 
-std::shared_ptr<video_superresolution_factory> video_superresolution_factory::get()
+std::shared_ptr<upscaling_factory> upscaling_factory::get()
 {
 	return _video_superresolution_factory_instance;
 }

@@ -305,8 +305,8 @@ set(${PREFIX}ENABLE_FILTER_NVIDIA_FACE_TRACKING ON CACHE BOOL "Enable NVIDIA Fac
 set(${PREFIX}ENABLE_FILTER_SDF_EFFECTS ON CACHE BOOL "Enable SDF Effects Filter")
 set(${PREFIX}ENABLE_FILTER_SHADER ON CACHE BOOL "Enable Shader Filter")
 set(${PREFIX}ENABLE_FILTER_TRANSFORM ON CACHE BOOL "Enable Transform Filter")
-set(${PREFIX}ENABLE_FILTER_VIDEO_SUPERRESOLUTION ON CACHE BOOL "Enable Video Super-Resolution filter")
-set(${PREFIX}ENABLE_FILTER_VIDEO_SUPERRESOLUTION_NVIDIA ON CACHE BOOL "Enable NVIDIA Video Super-Resolution for Video Super-Resolution Filter")
+set(${PREFIX}ENABLE_FILTER_UPSCALING ON CACHE BOOL "Enable Upscaling Filter")
+set(${PREFIX}ENABLE_FILTER_UPSCALING_NVIDIA ON CACHE BOOL "Enable NVIDIA provider(s) for Upscaling Filter")
 
 ## Sources
 set(${PREFIX}ENABLE_SOURCE_MIRROR ON CACHE BOOL "Enable Mirror Source")
@@ -696,20 +696,20 @@ function(feature_filter_transform RESOLVE)
 	is_feature_enabled(FILTER_TRANSFORM T_CHECK)
 endfunction()
 
-function(feature_filter_video_superresolution RESOLVE)
-	is_feature_enabled(FILTER_VIDEO_SUPERRESOLUTION T_CHECK)
+function(feature_filter_upscaling RESOLVE)
+	is_feature_enabled(FILTER_UPSCALING T_CHECK)
 	if(RESOLVE AND T_CHECK)
 		# Verify that the requirements for the providers are available
 		if(NOT HAVE_NVIDIA_VFX_SDK)
-			message(WARNING "${LOGPREFIX}: 'NVIDIA Video Effects SDK' is missing. Disabling Video Super-Resolution provider...")
-			set_feature_disabled(FILTER_VIDEO_SUPERRESOLUTION_NVIDIA ON)
+			message(WARNING "${LOGPREFIX}: 'NVIDIA Video Effects SDK' is missing. Disabling NVIDIA provider(s)...")
+			set_feature_disabled(FILTER_UPSCALING_NVIDIA ON)
 		endif()
 
 		# Verify that we have at least one provider for Video Super-Resolution.
-		is_feature_enabled(FILTER_VIDEO_SUPERRESOLUTION_NVIDIA T_CHECK_NVIDIA)
+		is_feature_enabled(FILTER_UPSCALING_NVIDIA T_CHECK_NVIDIA)
 		if (NOT T_CHECK_NVIDIA)
-			message(WARNING "${LOGPREFIX}: Video Super-Resolution has no available providers. Disabling...")
-			set_feature_disabled(FILTER_VIDEO_SUPERRESOLUTION ON)
+			message(WARNING "${LOGPREFIX}: Upscaling has no available providers. Disabling...")
+			set_feature_disabled(FILTER_UPSCALING ON)
 		endif()
 	elseif(T_CHECK)
 		set(REQUIRE_NVIDIA_VFX_SDK ON PARENT_SCOPE)
@@ -771,7 +771,7 @@ feature_filter_nvidia_face_tracking(OFF)
 feature_filter_sdf_effects(OFF)
 feature_filter_shader(OFF)
 feature_filter_transform(OFF)
-feature_filter_video_superresolution(OFF)
+feature_filter_upscaling(OFF)
 feature_source_mirror(OFF)
 feature_source_shader(OFF)
 feature_transition_shader(OFF)
@@ -926,7 +926,7 @@ feature_filter_nvidia_face_tracking(ON)
 feature_filter_sdf_effects(ON)
 feature_filter_shader(ON)
 feature_filter_transform(ON)
-feature_filter_video_superresolution(ON)
+feature_filter_upscaling(ON)
 feature_source_mirror(ON)
 feature_source_shader(ON)
 feature_transition_shader(ON)
@@ -1391,19 +1391,19 @@ if(T_CHECK)
 endif()
 
 # Filter/Video Super-Resolution
-is_feature_enabled(FILTER_VIDEO_SUPERRESOLUTION T_CHECK)
+is_feature_enabled(FILTER_UPSCALING T_CHECK)
 if(T_CHECK)
 	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/filters/filter-video-superresolution.hpp"
-		"source/filters/filter-video-superresolution.cpp"
+		"source/filters/filter-upscaling.hpp"
+		"source/filters/filter-upscaling.cpp"
 	)
 	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_FILTER_VIDEO_SUPERRESOLUTION
+		ENABLE_FILTER_UPSCALING
 	)
-	is_feature_enabled(FILTER_VIDEO_SUPERRESOLUTION_NVIDIA T_CHECK)
+	is_feature_enabled(FILTER_UPSCALING_NVIDIA T_CHECK)
 	if (T_CHECK)
 		list(APPEND PROJECT_DEFINITIONS
-			ENABLE_FILTER_VIDEO_SUPERRESOLUTION_NVIDIA
+			ENABLE_FILTER_UPSCALING_NVIDIA
 		)
 	endif()
 endif()
