@@ -900,10 +900,10 @@ if(REQUIRE_NVIDIA_VFX_SDK AND D_PLATFORM_WINDOWS)
 
 	if(NOT TARGET NVIDIA::VFX)
 		add_library(NVIDIA::VFX IMPORTED INTERFACE)
-		target_include_directories(nvARProxy
+		target_include_directories(NVIDIA::VFX
 			INTERFACE
 				"${PROJECT_SOURCE_DIR}/third-party/nvidia-maxine-vfx-sdk/nvvfx/include/"
-				"${PROJECT_SOURCE_DIR}/third-party/nvidia-maxine-vfx-sdk/nvvfx/source/"
+				"${PROJECT_SOURCE_DIR}/third-party/nvidia-maxine-vfx-sdk/nvvfx/src/"
 		)
 	endif()
 endif()
