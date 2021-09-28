@@ -1,35 +1,66 @@
-/*
- * Modern effects for a modern Streamer
- * Copyright (C) 2020 Michael Fabian Dirks
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
- */
+// Copyright (c) 2021 Michael Fabian Dirks <info@xaymar.com>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 #include "nvidia-ar-feature.hpp"
+#include "obs/gs/gs-helper.hpp"
+#include "util/util-logging.hpp"
+#include "util/util-platform.hpp"
 
-streamfx::nvidia::ar::feature::feature(std::shared_ptr<::streamfx::nvidia::ar::ar> ar, NvAR_FeatureID feature) : _ar(ar)
-{
-	NvAR_FeatureHandle feat;
-	if (NvCV_Status res = _ar->create(feature, &feat); res != NVCV_SUCCESS) {
-		throw std::runtime_error("Failed to create feature.");
-	}
-
-	_feature = std::shared_ptr<nvAR_Feature>{feat, [this](NvAR_FeatureHandle v) { _ar->destroy(v); }};
-}
+#ifdef _DEBUG
+#define ST_PREFIX "<%s> "
+#define D_LOG_ERROR(x, ...) P_LOG_ERROR(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_WARNING(x, ...) P_LOG_WARN(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_INFO(x, ...) P_LOG_INFO(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_DEBUG(x, ...) P_LOG_DEBUG(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#else
+#define ST_PREFIX "<nvidia::ar::feature> "
+#define D_LOG_ERROR(...) P_LOG_ERROR(ST_PREFIX __VA_ARGS__)
+#define D_LOG_WARNING(...) P_LOG_WARN(ST_PREFIX __VA_ARGS__)
+#define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
+#define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
+#endif
 
 streamfx::nvidia::ar::feature::~feature()
 {
-	_feature.reset();
+	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
+}
+
+streamfx::nvidia::ar::feature::feature(feature_t feature)
+	: _nvcuda(::streamfx::nvidia::cuda::obs::get()), _nvcvi(::streamfx::nvidia::cv::cv::get()),
+	  _nvar(::streamfx::nvidia::ar::ar::get()), _fx()
+{
+	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
+	auto gctx = ::streamfx::obs::gs::context();
+	auto cctx = cuda::obs::get()->get_context()->enter();
+
+	// Create the Effect/Feature.
+	::streamfx::nvidia::ar::handle_t handle;
+	if (cv::result res = _nvar->NvAR_Create(feature, &handle); res != cv::result::SUCCESS) {
+		throw cv::exception("Failed to create feature.", res);
+	}
+	_fx = std::shared_ptr<void>(handle, [](::streamfx::nvidia::ar::handle_t handle) {
+		::streamfx::nvidia::ar::ar::get()->NvAR_Destroy(handle);
+	});
+
+	// Set CUDA stream and model directory.
+	set(P_NVAR_CONFIG "CUDAStream", _nvcuda->get_stream());
+	set(P_NVAR_CONFIG "ModelDir",
+		::streamfx::util::platform::native_to_utf8(_nvar->get_model_path()).generic_u8string());
 }

@@ -1,269 +1,186 @@
-/*
- * Modern effects for a modern Streamer
- * Copyright (C) 2020 Michael Fabian Dirks
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
- */
+// Copyright (c) 2021 Michael Fabian Dirks <info@xaymar.com>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 #include "nvidia-ar.hpp"
-#include <stdexcept>
-#include <util/bmem.h>
-#include <util/platform.h>
+#include <filesystem>
+#include <mutex>
+#include "nvidia/cuda/nvidia-cuda-obs.hpp"
+#include "obs/gs/gs-helper.hpp"
+#include "util/util-logging.hpp"
+#include "util/util-platform.hpp"
 
-#ifdef WIN32
-#include <Shlobj.h>
-#include <Windows.h>
+#ifdef _DEBUG
+#define ST_PREFIX "<%s> "
+#define D_LOG_ERROR(x, ...) P_LOG_ERROR(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_WARNING(x, ...) P_LOG_WARN(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_INFO(x, ...) P_LOG_INFO(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#define D_LOG_DEBUG(x, ...) P_LOG_DEBUG(ST_PREFIX##x, __FUNCTION_SIG__, __VA_ARGS__)
+#else
+#define ST_PREFIX "<nvidia::ar::ar> "
+#define D_LOG_ERROR(...) P_LOG_ERROR(ST_PREFIX __VA_ARGS__)
+#define D_LOG_WARNING(...) P_LOG_WARN(ST_PREFIX __VA_ARGS__)
+#define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
+#define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
 #endif
 
-#include <nvARProxy.cpp>
-#define nvGetProcAddress nvGetProcAddressCV
-#define nvFreeLibrary nvFreeLibraryCV
-#include <nvCVImageProxy.cpp>
-#undef nvGetProcAddress
-#undef nvFreeLibrary
+#ifdef WIN32
+#include <KnownFolders.h>
+#include <ShlObj.h>
+#include <Windows.h>
 
-streamfx::nvidia::ar::ar::ar()
+#define ST_LIBRARY_NAME "nvARPose.dll"
+#else
+#define ST_LIBRARY_NAME "libnvARPose.so"
+#endif
+
+#define P_NVAR_LOAD_SYMBOL(NAME)                                                                \
+	{                                                                                           \
+		NAME = reinterpret_cast<decltype(NAME)>(_library->load_symbol(#NAME));                  \
+		if (!NAME)                                                                              \
+			throw std::runtime_error("Failed to load '" #NAME "' from '" ST_LIBRARY_NAME "'."); \
+	}
+
+streamfx::nvidia::ar::ar::~ar()
 {
-	if (!getNvARLib())
-		throw std::runtime_error("Failed to load NVIDIA AR SDK runtime.");
+	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
 }
 
-streamfx::nvidia::ar::ar::~ar() {}
-
-std::filesystem::path streamfx::nvidia::ar::ar::get_ar_sdk_path()
+streamfx::nvidia::ar::ar::ar() : _library(), _model_path()
 {
-	char* arsdk_path = getenv("NV_AR_SDK_PATH");
-	if (arsdk_path) {
-		return std::filesystem::path(std::string{arsdk_path});
-	} else {
-		std::filesystem::path res;
+	std::filesystem::path sdk_path;
+	auto                  gctx = ::streamfx::obs::gs::context();
+	auto                  cctx = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
+
+	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
+
+	// Figure out where the Augmented Reality SDK is, if it is installed.
 #ifdef WIN32
-		std::vector<wchar_t> dll_path_w;
-		dll_path_w.resize(65535);
-		DWORD size_w = GetModuleFileNameW(getNvARLib(), dll_path_w.data(), static_cast<DWORD>(dll_path_w.size()));
+	{
+		// NVAR SDK only defines NVAR_MODEL_PATH, so we'll use that as our baseline.
+		DWORD env_size = GetEnvironmentVariableW(L"NVAR_MODEL_PATH", nullptr, 0);
+		if (env_size > 0) {
+			std::vector<wchar_t> buffer(env_size + 1, 0);
+			env_size    = GetEnvironmentVariableW(L"NVAR_MODEL_PATH", buffer.data(), buffer.size());
+			_model_path = std::wstring(buffer.data(), buffer.size());
+		}
 
-		std::vector<char> dll_path;
-		dll_path.resize(65535);
-		std::size_t size = os_wcs_to_utf8(dll_path_w.data(), size_w, dll_path.data(), dll_path.size());
+		// If the environment variable wasn't set and our model path is still undefined, guess!
+		if (_model_path.empty()) {
+			PWSTR   str = nullptr;
+			HRESULT res = SHGetKnownFolderPath(FOLDERID_ProgramFiles, KF_FLAG_DEFAULT, nullptr, &str);
+			if (res == S_OK) {
+				_model_path = std::wstring(str);
+				_model_path /= "NVIDIA Corporation";
+				_model_path /= "NVIDIA AR SDK";
+				_model_path /= "models";
+				CoTaskMemFree(str);
+			}
+		}
 
-		std::filesystem::path dll = std::string{dll_path.data(), dll_path.data() + size};
-		res                       = dll.remove_filename();
+		// The SDK is location one directory "up" from the model path.
+		sdk_path = std::filesystem::absolute(std::filesystem::path(_model_path) / "..");
+	}
+#else
+	throw std::runtime_error("Not yet implemented.");
 #endif
-		return res;
+
+	// Check if any of the found paths are valid.
+	if (!std::filesystem::exists(sdk_path)) {
+		D_LOG_ERROR("No supported NVIDIA SDK is installed to provide '%s'.", ST_LIBRARY_NAME);
+		throw std::runtime_error("Failed to load '" ST_LIBRARY_NAME "'.");
+	}
+
+#ifdef WIN32
+	// On platforms where it is possible, modify the linker directories.
+	//SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+	DLL_DIRECTORY_COOKIE ck = AddDllDirectory(sdk_path.wstring().c_str());
+#endif
+
+	// Try and load the libraries
+	if (!_library) {
+		// Load it by name.
+		try {
+			_library = ::streamfx::util::library::load(std::string_view(ST_LIBRARY_NAME));
+		} catch (...) {
+			// Load it by path.
+			auto lib_path = sdk_path;
+			lib_path /= ST_LIBRARY_NAME;
+			try {
+				_library = ::streamfx::util::library::load(::streamfx::util::platform::native_to_utf8(lib_path));
+			} catch (std::exception const& ex) {
+				D_LOG_ERROR("Failed to load '%s' from '%s' with error: %s", ST_LIBRARY_NAME,
+							util::platform::native_to_utf8(lib_path).string().c_str(), ex.what());
+				throw std::runtime_error("Failed to load '" ST_LIBRARY_NAME "'.");
+			} catch (...) {
+				D_LOG_ERROR("Failed to load '%s' from '%s'.", ST_LIBRARY_NAME,
+							util::platform::native_to_utf8(lib_path).string().c_str());
+				throw std::runtime_error("Failed to load '" ST_LIBRARY_NAME "'.");
+			}
+		}
+	}
+
+	{ // Load Symbols
+		P_NVAR_LOAD_SYMBOL(NvAR_GetVersion);
+		P_NVAR_LOAD_SYMBOL(NvAR_Create);
+		P_NVAR_LOAD_SYMBOL(NvAR_Destroy);
+		P_NVAR_LOAD_SYMBOL(NvAR_Run);
+		P_NVAR_LOAD_SYMBOL(NvAR_Load);
+		P_NVAR_LOAD_SYMBOL(NvAR_GetS32);
+		P_NVAR_LOAD_SYMBOL(NvAR_SetS32);
+		P_NVAR_LOAD_SYMBOL(NvAR_GetU32);
+		P_NVAR_LOAD_SYMBOL(NvAR_SetU32);
+		P_NVAR_LOAD_SYMBOL(NvAR_GetU64);
+		P_NVAR_LOAD_SYMBOL(NvAR_SetU64);
+		P_NVAR_LOAD_SYMBOL(NvAR_GetF32);
+		P_NVAR_LOAD_SYMBOL(NvAR_SetF32);
+		P_NVAR_LOAD_SYMBOL(NvAR_GetF64);
+		P_NVAR_LOAD_SYMBOL(NvAR_SetF64);
+		P_NVAR_LOAD_SYMBOL(NvAR_GetString);
+		P_NVAR_LOAD_SYMBOL(NvAR_SetString);
+		P_NVAR_LOAD_SYMBOL(NvAR_GetCudaStream);
+		P_NVAR_LOAD_SYMBOL(NvAR_SetCudaStream);
+		P_NVAR_LOAD_SYMBOL(NvAR_GetObject);
+		P_NVAR_LOAD_SYMBOL(NvAR_SetObject);
+		P_NVAR_LOAD_SYMBOL(NvAR_GetF32Array);
+		P_NVAR_LOAD_SYMBOL(NvAR_SetF32Array);
+	}
+
+	{ // Assign proper GPU.
+		auto cctx = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
+		NvAR_SetU32(nullptr, P_NVAR_CONFIG "GPU", 0);
 	}
 }
 
-NvCV_Status streamfx::nvidia::ar::ar::image_init(NvCVImage* im, unsigned width, unsigned height, int pitch,
-												 void* pixels, NvCVImage_PixelFormat format,
-												 NvCVImage_ComponentType type, unsigned isPlanar, unsigned onGPU)
+std::filesystem::path streamfx::nvidia::ar::ar::get_model_path()
 {
-	return NvCVImage_Init(im, width, height, pitch, pixels, format, type, isPlanar, onGPU);
+	return _model_path;
 }
 
-void streamfx::nvidia::ar::ar::image_init_view(NvCVImage* subImg, NvCVImage* fullImg, int x, int y, unsigned width,
-											   unsigned height)
+std::shared_ptr<streamfx::nvidia::ar::ar> streamfx::nvidia::ar::ar::get()
 {
-	NvCVImage_InitView(subImg, fullImg, x, y, width, height);
-}
+	static std::shared_ptr<streamfx::nvidia::ar::ar> instance;
+	static std::mutex                                lock;
 
-NvCV_Status streamfx::nvidia::ar::ar::image_alloc(NvCVImage* im, unsigned width, unsigned height,
-												  NvCVImage_PixelFormat format, NvCVImage_ComponentType type,
-												  unsigned isPlanar, unsigned onGPU, unsigned alignment)
-{
-	return NvCVImage_Alloc(im, width, height, format, type, isPlanar, onGPU, alignment);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::image_realloc(NvCVImage* im, unsigned width, unsigned height,
-													NvCVImage_PixelFormat format, NvCVImage_ComponentType type,
-													unsigned isPlanar, unsigned onGPU, unsigned alignment)
-{
-	return NvCVImage_Realloc(im, width, height, format, type, isPlanar, onGPU, alignment);
-}
-
-void streamfx::nvidia::ar::ar::image_dealloc(NvCVImage* im)
-{
-	NvCVImage_Dealloc(im);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::image_create(unsigned width, unsigned height, NvCVImage_PixelFormat format,
-												   NvCVImage_ComponentType type, unsigned isPlanar, unsigned onGPU,
-												   unsigned alignment, NvCVImage** out)
-{
-	return NvCVImage_Create(width, height, format, type, isPlanar, onGPU, alignment, out);
-}
-
-void streamfx::nvidia::ar::ar::image_destroy(NvCVImage* im)
-{
-	NvCVImage_Destroy(im);
-}
-
-void streamfx::nvidia::ar::ar::image_component_offsets(NvCVImage_PixelFormat format, int* rOff, int* gOff, int* bOff,
-													   int* aOff, int* yOff)
-{
-	NvCVImage_ComponentOffsets(format, rOff, gOff, bOff, aOff, yOff);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::image_transfer(const NvCVImage* src, NvCVImage* dst, float scale,
-													 CUstream_st* stream, NvCVImage* tmp)
-{
-	return NvCVImage_Transfer(src, dst, scale, stream, tmp);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::image_composite(const NvCVImage* src, const NvCVImage* mat, NvCVImage* dst)
-{
-	//return NvCVImage_Composite(src, mat, dst);
-	throw std::runtime_error("Not implemented.");
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::image_composite_over_constant(const NvCVImage* src, const NvCVImage* mat,
-																	const unsigned char bgColor[3], NvCVImage* dst)
-{
-	return NvCVImage_CompositeOverConstant(src, mat, bgColor, dst);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::image_flipy(const NvCVImage* src, NvCVImage* dst)
-{
-	return NvCVImage_FlipY(src, dst);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::create(NvAR_FeatureID featureID, NvAR_FeatureHandle* handle)
-{
-	return NvAR_Create(featureID, handle);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::destroy(NvAR_FeatureHandle handle)
-{
-	return NvAR_Destroy(handle);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::set_uint32(NvAR_FeatureHandle handle, const char* name, unsigned int val)
-{
-	return NvAR_SetU32(handle, name, val);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::set_int32(NvAR_FeatureHandle handle, const char* name, int val)
-{
-	return NvAR_SetS32(handle, name, val);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::set_float32(NvAR_FeatureHandle handle, const char* name, float val)
-{
-	return NvAR_SetF32(handle, name, val);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::set_float64(NvAR_FeatureHandle handle, const char* name, double val)
-{
-	return NvAR_SetF64(handle, name, val);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::set_uint64(NvAR_FeatureHandle handle, const char* name, unsigned long long val)
-{
-	return NvAR_SetU64(handle, name, val);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::set_object(NvAR_FeatureHandle handle, const char* name, void* ptr,
-												 unsigned long typeSize)
-{
-	return NvAR_SetObject(handle, name, ptr, typeSize);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::set_string(NvAR_FeatureHandle handle, const char* name, const char* str)
-{
-	return NvAR_SetString(handle, name, str);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::set_cuda_stream(NvAR_FeatureHandle handle, const char* name, CUstream stream)
-{
-	return NvAR_SetCudaStream(handle, name, stream);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::set_float32_array(NvAR_FeatureHandle handle, const char* name, float* val,
-														int count)
-{
-	return NvAR_SetF32Array(handle, name, val, count);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::get_uint32(NvAR_FeatureHandle handle, const char* name, unsigned int* val)
-{
-	return NvAR_GetU32(handle, name, val);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::get_int32(NvAR_FeatureHandle handle, const char* name, int* val)
-{
-	return NvAR_GetS32(handle, name, val);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::get_float32(NvAR_FeatureHandle handle, const char* name, float* val)
-{
-	return NvAR_GetF32(handle, name, val);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::get_float64(NvAR_FeatureHandle handle, const char* name, double* val)
-{
-	return NvAR_GetF64(handle, name, val);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::get_uint64(NvAR_FeatureHandle handle, const char* name, unsigned long long* val)
-{
-	return NvAR_GetU64(handle, name, val);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::get_object(NvAR_FeatureHandle handle, const char* name, const void** ptr,
-												 unsigned long typeSize)
-{
-	return NvAR_GetObject(handle, name, ptr, typeSize);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::get_string(NvAR_FeatureHandle handle, const char* name, const char** str)
-{
-	return NvAR_GetString(handle, name, str);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::get_cuda_stream(NvAR_FeatureHandle handle, const char* name,
-													  const CUstream* stream)
-{
-	return NvAR_GetCudaStream(handle, name, stream);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::get_float32_array(NvAR_FeatureHandle handle, const char* name, const float** vals,
-														int* count)
-{
-	return NvAR_GetF32Array(handle, name, vals, count);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::run(NvAR_FeatureHandle handle)
-{
-	return NvAR_Run(handle);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::load(NvAR_FeatureHandle handle)
-{
-	return NvAR_Load(handle);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::cuda_stream_create(CUstream* stream)
-{
-	return NvAR_CudaStreamCreate(stream);
-}
-
-NvCV_Status streamfx::nvidia::ar::ar::cuda_stream_destroy(CUstream stream)
-{
-	return NvAR_CudaStreamDestroy(stream);
-}
-
-const char* streamfx::nvidia::ar::ar::cv_get_error_string_from_code(NvCV_Status code)
-{
-	return NvCV_GetErrorStringFromCode(code);
+	std::unique_lock<std::mutex> ul(lock);
+	if (!instance) {
+		instance = std::make_shared<streamfx::nvidia::ar::ar>();
+	}
+	return instance;
 }
