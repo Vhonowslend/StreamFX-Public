@@ -265,6 +265,12 @@ namespace streamfx::nvidia::cuda {
 		P_CUDA_DEFINE_FUNCTION(cuMemcpyHtoAAsync, array_t dst, std::size_t dstOffset, void* src, std::size_t byteCount);
 		P_CUDA_DEFINE_FUNCTION(cuMemcpyHtoD, device_ptr_t dst, void* src, std::size_t byteCount);
 		P_CUDA_DEFINE_FUNCTION(cuMemcpyHtoDAsync, device_ptr_t dst, void* src, std::size_t byteCount);
+		P_CUDA_DEFINE_FUNCTION(cuMemsetD8, device_ptr_t dst, uint8_t d, size_t byteCount);
+		P_CUDA_DEFINE_FUNCTION(cuMemsetD8Async, device_ptr_t dst, uint8_t d, size_t byteCount, stream_t stream);
+		P_CUDA_DEFINE_FUNCTION(cuMemsetD16, device_ptr_t dst, uint16_t d, size_t byteCount);
+		P_CUDA_DEFINE_FUNCTION(cuMemsetD16Async, device_ptr_t dst, uint16_t d, size_t byteCount, stream_t stream);
+		P_CUDA_DEFINE_FUNCTION(cuMemsetD32, device_ptr_t dst, uint32_t d, size_t byteCount);
+		P_CUDA_DEFINE_FUNCTION(cuMemsetD32Async, device_ptr_t dst, uint32_t d, size_t byteCount, stream_t stream);
 
 		// Virtual Memory Management
 		// - Not yet needed.

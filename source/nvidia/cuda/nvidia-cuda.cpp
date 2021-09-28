@@ -157,6 +157,12 @@ streamfx::nvidia::cuda::cuda::cuda() : _library()
 		P_CUDA_LOAD_SYMBOL_OPT_V2(cuMemcpyHtoD);
 		P_CUDA_LOAD_SYMBOL_OPT_V2(cuMemcpyHtoDAsync);
 		P_CUDA_LOAD_SYMBOL_OPT_V2(cuMemHostGetDevicePointer);
+		P_CUDA_LOAD_SYMBOL_V2(cuMemsetD8);
+		P_CUDA_LOAD_SYMBOL(cuMemsetD8Async);
+		P_CUDA_LOAD_SYMBOL_OPT_V2(cuMemsetD16);
+		P_CUDA_LOAD_SYMBOL_OPT(cuMemsetD16Async);
+		P_CUDA_LOAD_SYMBOL_OPT_V2(cuMemsetD32);
+		P_CUDA_LOAD_SYMBOL_OPT(cuMemsetD32Async);
 
 		// Virtual Memory Management
 		// - Not yet needed.
