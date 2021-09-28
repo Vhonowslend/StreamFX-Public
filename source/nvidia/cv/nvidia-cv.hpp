@@ -284,6 +284,25 @@ namespace streamfx::nvidia::cv {
 		public:
 		static std::shared_ptr<::streamfx::nvidia::cv::cv> get();
 	};
+
+	class exception : std::runtime_error {
+		result _code;
+
+		public:
+		exception(const char* what, result code) : std::runtime_error(what), _code(code) {}
+		exception(const std::string& what, result code) : std::runtime_error(what), _code(code) {}
+		~exception() {};
+
+		inline result code()
+		{
+			return _code;
+		}
+
+		inline const char* description()
+		{
+			return ::streamfx::nvidia::cv::cv::get()->NvCV_GetErrorStringFromCode(_code);
+		}
+	};
 } // namespace streamfx::nvidia::cv
 
 P_ENABLE_BITMASK_OPERATORS(::streamfx::nvidia::cv::color_information);
