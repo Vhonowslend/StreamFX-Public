@@ -41,7 +41,7 @@
 #define ST_I18N "Filter.Upscaling"
 #define ST_KEY_PROVIDER "Provider"
 #define ST_I18N_PROVIDER ST_I18N "." ST_KEY_PROVIDER
-#define ST_I18N_PROVIDER_NVIDIA_SUPERRES ST_I18N_PROVIDER ".NVIDIA.VideoSuperResolution"
+#define ST_I18N_PROVIDER_NVIDIA_SUPERRES ST_I18N_PROVIDER ".NVIDIA.SuperResolution"
 
 #ifdef ENABLE_FILTER_UPSCALING_NVIDIA
 #define ST_KEY_NVIDIA_SUPERRES "NVIDIA.SuperRes"
@@ -64,7 +64,7 @@ static constexpr std::string_view HELP_URL = "https://github.com/Xaymar/obs-Stre
  * 
  */
 static upscaling_provider provider_priority[] = {
-	upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION,
+	upscaling_provider::NVIDIA_SUPERRESOLUTION,
 };
 
 const char* streamfx::filter::upscaling::cstring(upscaling_provider provider)
@@ -74,7 +74,7 @@ const char* streamfx::filter::upscaling::cstring(upscaling_provider provider)
 		return "N/A";
 	case upscaling_provider::AUTOMATIC:
 		return D_TRANSLATE(S_STATE_AUTOMATIC);
-	case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+	case upscaling_provider::NVIDIA_SUPERRESOLUTION:
 		return D_TRANSLATE(ST_I18N_PROVIDER_NVIDIA_SUPERRES);
 	default:
 		throw std::runtime_error("Missing Conversion Entry");
@@ -115,7 +115,7 @@ upscaling_instance::~upscaling_instance()
 	std::unique_lock<std::mutex> ul(_provider_lock);
 	switch (_provider) {
 #ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-	case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+	case upscaling_provider::NVIDIA_SUPERRESOLUTION:
 		nvvfxsr_unload();
 		break;
 #endif
@@ -150,7 +150,7 @@ void upscaling_instance::update(obs_data_t* data)
 
 		switch (_provider) {
 #ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-		case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+		case upscaling_provider::NVIDIA_SUPERRESOLUTION:
 			nvvfxsr_update(data);
 			break;
 #endif
@@ -164,7 +164,7 @@ void streamfx::filter::upscaling::upscaling_instance::properties(obs_properties_
 {
 	switch (_provider_ui) {
 #ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-	case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+	case upscaling_provider::NVIDIA_SUPERRESOLUTION:
 		nvvfxsr_properties(properties);
 		break;
 #endif
@@ -197,7 +197,7 @@ void upscaling_instance::video_tick(float_t time)
 
 		switch (_provider) {
 #ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-		case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+		case upscaling_provider::NVIDIA_SUPERRESOLUTION:
 			nvvfxsr_size();
 			break;
 #endif
@@ -284,7 +284,7 @@ void upscaling_instance::video_render(gs_effect_t* effect)
 #endif
 			switch (_provider) {
 #ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-			case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+			case upscaling_provider::NVIDIA_SUPERRESOLUTION:
 				nvvfxsr_process();
 				break;
 #endif
@@ -367,7 +367,7 @@ void streamfx::filter::upscaling::upscaling_instance::task_switch_provider(util:
 		// 3. Unload the previous provider.
 		switch (spd->provider) {
 #ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-		case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+		case upscaling_provider::NVIDIA_SUPERRESOLUTION:
 			nvvfxsr_unload();
 			break;
 #endif
@@ -378,7 +378,7 @@ void streamfx::filter::upscaling::upscaling_instance::task_switch_provider(util:
 		// 4. Load the new provider.
 		switch (_provider) {
 #ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-		case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+		case upscaling_provider::NVIDIA_SUPERRESOLUTION:
 			nvvfxsr_load();
 			{
 				auto data = obs_source_get_settings(_self);
@@ -567,7 +567,7 @@ obs_properties_t* upscaling_factory::get_properties2(upscaling_instance* data)
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC),
 									  static_cast<int64_t>(upscaling_provider::AUTOMATIC));
 			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_PROVIDER_NVIDIA_SUPERRES),
-									  static_cast<int64_t>(upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION));
+									  static_cast<int64_t>(upscaling_provider::NVIDIA_SUPERRESOLUTION));
 		}
 	}
 
@@ -592,7 +592,7 @@ bool streamfx::filter::upscaling::upscaling_factory::is_provider_available(upsca
 {
 	switch (provider) {
 #ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-	case upscaling_provider::NVIDIA_VIDEO_SUPERRESOLUTION:
+	case upscaling_provider::NVIDIA_SUPERRESOLUTION:
 		return _nvidia_available;
 #endif
 	default:

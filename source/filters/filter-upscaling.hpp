@@ -34,9 +34,9 @@
 
 namespace streamfx::filter::upscaling {
 	enum class upscaling_provider {
-		INVALID                      = -1,
-		AUTOMATIC                    = 0,
-		NVIDIA_VIDEO_SUPERRESOLUTION = 1,
+		INVALID                = -1,
+		AUTOMATIC              = 0,
+		NVIDIA_SUPERRESOLUTION = 1,
 	};
 
 	const char* cstring(upscaling_provider provider);
