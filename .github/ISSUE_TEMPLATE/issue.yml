@@ -21,6 +21,7 @@ body:
     label: "OBS Studio Version?"
     description: "Which OBS Studio version are you using to run StreamFX? Versions include all patches (the third element in 'A.B.C'), and release candidates for that version. Select 'Other' if you are using a custom build."
     options:
+      - "27.1"
       - "27.0"
       - "26.1"
       - "26.0"
@@ -33,6 +34,7 @@ body:
     label: "StreamFX Version"
     description: "On which StreamFX version did you first encounter this issue?"
     options:
+      - "0.11.0a4"
       - "0.11.0a3"
       - "0.11.0a2"
       - "0.11.0a1"
