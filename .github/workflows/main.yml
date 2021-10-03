@@ -78,7 +78,7 @@ jobs:
       shell: bash
       run: |
         curl -L -o "aom.7z" "https://github.com/Xaymar/aom/releases/download/v${{ env.LIBAOM_VERSION }}/aom-windows-64-shared.7z"
-        7z x -o"build/libaom/" "aom.7z"
+        7z x -y -o"build/libaom/" "aom.7z"
     - name: "StreamFX: Configure"
       shell: bash
       run: |
