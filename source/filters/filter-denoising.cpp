@@ -144,7 +144,7 @@ void denoising_instance::update(obs_data_t* data)
 		std::unique_lock<std::mutex> ul(_provider_lock);
 
 		switch (_provider) {
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_FILTER_DENOISING_NVIDIA
 		case denoising_provider::NVIDIA_DENOISING:
 			nvvfx_denoising_update(data);
 			break;
@@ -158,7 +158,7 @@ void denoising_instance::update(obs_data_t* data)
 void streamfx::filter::denoising::denoising_instance::properties(obs_properties_t* properties)
 {
 	switch (_provider_ui) {
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_FILTER_DENOISING_NVIDIA
 	case denoising_provider::NVIDIA_DENOISING:
 		nvvfx_denoising_properties(properties);
 		break;
@@ -190,7 +190,7 @@ void denoising_instance::video_tick(float_t time)
 		std::unique_lock<std::mutex> ul(_provider_lock);
 
 		switch (_provider) {
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_FILTER_DENOISING_NVIDIA
 		case denoising_provider::NVIDIA_DENOISING:
 			nvvfx_denoising_size();
 			break;
@@ -343,7 +343,7 @@ void denoising_instance::video_render(gs_effect_t* effect)
 			::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_convert, "Process"};
 #endif
 			switch (_provider) {
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_FILTER_DENOISING_NVIDIA
 			case denoising_provider::NVIDIA_DENOISING:
 				nvvfx_denoising_process();
 				break;
