@@ -2,10 +2,10 @@ name: Build
 
 on:
   push:
+    branches:
+      - 'master'
     tags:
       - '*'
-    branches-ignore:
-      - 'l10n_master'
   pull_request:
     branches:
       - '*'
