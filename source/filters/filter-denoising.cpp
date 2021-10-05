@@ -251,61 +251,6 @@ void denoising_instance::video_render(gs_effect_t* effect)
 			}
 		}
 
-		// Capture the input.
-		if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
-			auto op = _input->render(_size.first, _size.second);
-
-			// Clear the buffer
-			gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &blank, 0, 0);
-
-			// Set GPU state
-			gs_blend_state_push();
-			gs_enable_color(true, true, true, true);
-			gs_enable_blending(false);
-			gs_enable_depth_test(false);
-			gs_enable_stencil_test(false);
-			gs_set_cull_mode(GS_NEITHER);
-
-			// Render
-			bool srgb = gs_framebuffer_srgb_enabled();
-			gs_enable_framebuffer_srgb(gs_get_linear_srgb());
-			obs_source_process_filter_end(_self, obs_get_base_effect(OBS_EFFECT_DEFAULT), _size.first, _size.second);
-			gs_enable_framebuffer_srgb(srgb);
-
-			// Reset GPU state
-			gs_blend_state_pop();
-		} else {
-			obs_source_skip_video_filter(_self);
-			return;
-		}
-
-		// Process the captured input with the provider.
-		{
-			switch (_provider) {
-#ifdef ENABLE_FILTER_DENOISING_NVIDIA
-			case denoising_provider::NVIDIA_DENOISING:
-				nvvfx_denoising_process();
-				break;
-#endif
-			default:
-				_output = nullptr;
-				break;
-			}
-
-			if (!_output) {
-				D_LOG_ERROR("Provider '%s' did not return a result.", cstring(_provider));
-				obs_source_skip_video_filter(_self);
-				return;
-			}
-		}
-
-		// Unlock the provider, as we are no longer doing critical work with it.
-	}
-
-	if (_dirty) {
-		// Lock the provider from being changed.
-		std::unique_lock<std::mutex> ul(_provider_lock);
-
 		{ // Capture the incoming frame.
 #ifdef ENABLE_PROFILING
 			::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_capture, "Capture"};
@@ -368,7 +313,10 @@ void denoising_instance::video_render(gs_effect_t* effect)
 			return;
 		}
 
+		// Mark "clean".
 		_dirty = false;
+
+		// Unlock the provider, as we are no longer doing critical work with it.
 	}
 
 	{ // Draw the result for the next filter to use.
