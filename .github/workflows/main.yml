@@ -73,7 +73,7 @@ jobs:
           build/libaom
         key: libaom-${{ matrix.id }}-${{ env.LIBAOM_VERSION }}-${{ secrets.CACHE_VERSION }}
     - name: "libaom: Install"
-      if: "steps.libaom-cache.outputs.cache-hit != 'true'"
+      if: ${{ steps.libaom-cache.outputs.cache-hit != 'true' }}
       id: libaom-install
       shell: bash
       run: |
@@ -248,7 +248,7 @@ jobs:
           /usr/local/Cellar/qt@5
         key: qt-${{ matrix.id }}-${{ env.QT_VERSION }}-${{ secrets.CACHE_VERSION }}
     - name: "qt: Install"
-      if: "steps.qt-cache.outputs.cache-hit != 'true'"
+      if: ${{ steps.qt-cache.outputs.cache-hit != 'true' }}
       shell: bash
       run: |
         brew install qt@5
