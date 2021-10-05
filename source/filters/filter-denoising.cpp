@@ -253,7 +253,7 @@ void denoising_instance::video_render(gs_effect_t* effect)
 
 		// Capture the input.
 		if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
-			auto op = _input->render(width, height);
+			auto op = _input->render(_size.first, _size.second);
 
 			// Clear the buffer
 			gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &blank, 0, 0);
@@ -269,7 +269,7 @@ void denoising_instance::video_render(gs_effect_t* effect)
 			// Render
 			bool srgb = gs_framebuffer_srgb_enabled();
 			gs_enable_framebuffer_srgb(gs_get_linear_srgb());
-			obs_source_process_filter_end(_self, obs_get_base_effect(OBS_EFFECT_DEFAULT), width, height);
+			obs_source_process_filter_end(_self, obs_get_base_effect(OBS_EFFECT_DEFAULT), _size.first, _size.second);
 			gs_enable_framebuffer_srgb(srgb);
 
 			// Reset GPU state
