@@ -180,10 +180,15 @@ uint32_t streamfx::filter::denoising::denoising_instance::get_height()
 
 void denoising_instance::video_tick(float_t time)
 {
+	auto parent = obs_filter_get_parent(_self);
 	auto target = obs_filter_get_target(_self);
 	auto width  = obs_source_get_base_width(target);
 	auto height = obs_source_get_base_height(target);
-	_size       = {width, height};
+
+	// Verify that the detected size makes sense.
+	if ((width > 0) && (height > 0)) {
+		_size = {width, height};
+	}
 
 	// Allow the provider to restrict the size.
 	if (target && _provider_ready) {
