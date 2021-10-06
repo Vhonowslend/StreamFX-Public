@@ -426,8 +426,9 @@ aom_av1_instance::aom_av1_instance(obs_data_t* settings, obs_encoder_t* self, bo
 		}
 
 		{ // Tuning
-			_settings.tune_metric =
-				static_cast<aom_tune_metric>(obs_data_get_int(settings, ST_KEY_ADVANCED_TUNE_METRIC));
+			if (auto v = obs_data_get_int(settings, ST_KEY_ADVANCED_TUNE_METRIC); v != -1) {
+				_settings.tune_metric = static_cast<aom_tune_metric>(v);
+			}
 			_settings.tune_content =
 				static_cast<aom_tune_content>(obs_data_get_int(settings, ST_KEY_ADVANCED_TUNE_CONTENT));
 		}
