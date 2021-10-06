@@ -16,6 +16,9 @@ uniform float4x4 ViewProj;
 //------------------------------------------------------------------------------
 // Samplers
 //------------------------------------------------------------------------------
+sampler_state BlankSampler {
+};
+
 sampler_state PointRepeatSampler {
 	Filter = Point;
 	AddressU = Repeat;
