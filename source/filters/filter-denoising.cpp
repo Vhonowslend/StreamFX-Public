@@ -558,12 +558,15 @@ denoising_factory::denoising_factory()
 	}
 
 	// 3. In any other case, register the filter!
-	_info.id           = S_PREFIX "filter-video-denoising";
+	_info.id           = S_PREFIX "filter-denoising";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO;
 
 	set_resolution_enabled(true);
 	finish_setup();
+
+	// Proxies
+	register_proxy("streamfx-filter-video-denoising");
 }
 
 const char* denoising_factory::get_name()
