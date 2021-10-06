@@ -21,6 +21,7 @@
 #include "nvidia-vfx-superresolution.hpp"
 #include <cmath>
 #include <utility>
+#include <vector>
 #include "obs/gs/gs-helper.hpp"
 #include "util/util-logging.hpp"
 #include "util/utility.hpp"
@@ -38,6 +39,37 @@
 #define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
 #define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
 #endif
+
+static std::vector<float> supported_scale_factors{4. / 3., 1.5, 2., 3., 4.};
+
+static float find_closest_scale_factor(float factor)
+{
+	std::pair<float, float> minimal = {0.f, std::numeric_limits<float>::max()};
+	for (float delta : supported_scale_factors) {
+		float value = abs(delta - factor);
+		if (minimal.second > value) {
+			minimal.first  = delta;
+			minimal.second = value;
+		}
+	}
+
+	return minimal.first;
+}
+
+static size_t find_closest_scale_factor_index(float factor)
+{
+	std::pair<size_t, float> minimal = {0.f, std::numeric_limits<float>::max()};
+	for (size_t idx = 0; idx < supported_scale_factors.size(); idx++) {
+		float delta = supported_scale_factors[idx];
+		float value = abs(delta - factor);
+		if (minimal.second > value) {
+			minimal.first  = idx;
+			minimal.second = value;
+		}
+	}
+
+	return minimal.first;
+}
 
 streamfx::nvidia::vfx::superresolution::~superresolution()
 {
@@ -138,23 +170,14 @@ void streamfx::nvidia::vfx::superresolution::set_scale(float scale)
 	scale = std::clamp<float>(scale, 1., 4.);
 
 	// Match to nearest scale.
-	std::pair<float, float> minimal = {0.f, std::numeric_limits<float>::max()};
-	std::vector<float>      deltas{
-        1.f + (1.f / 3.f), 1.5f, 2.0f, 3.0f, 4.0f,
-    };
-	for (float delta : deltas) {
-		float value = abs(delta - scale);
-		if (minimal.second > value) {
-			minimal.first  = delta;
-			minimal.second = value;
-		}
-	}
+	double factor = find_closest_scale_factor(scale);
 
 	// If anything was changed, flag the effect as dirty.
-	if (!::streamfx::util::math::is_close<float>(_scale, minimal.first, 0.01f))
+	if (!::streamfx::util::math::is_close<float>(_scale, factor, 0.01f))
 		_dirty = true;
 
-	_scale = minimal.first;
+	// Save new scale factor.
+	_scale = factor;
 }
 
 float streamfx::nvidia::vfx::superresolution::scale()
@@ -182,6 +205,10 @@ void streamfx::nvidia::vfx::superresolution::size(std::pair<uint32_t, uint32_t> 
 		max_height = 1080;
 	}
 
+	// Restore Input Size
+	input_size.first  = size.first;
+	input_size.second = size.second;
+
 	// Calculate Input Size
 	if (input_size.first > input_size.second) {
 		// Dominant Width
@@ -198,8 +225,20 @@ void streamfx::nvidia::vfx::superresolution::size(std::pair<uint32_t, uint32_t> 
 	}
 
 	// Calculate Output Size.
-	output_size.first  = static_cast<uint32_t>(input_size.first * _scale);
-	output_size.second = static_cast<uint32_t>(input_size.second * _scale);
+	output_size.first  = static_cast<uint32_t>(std::lround(input_size.first * _scale));
+	output_size.second = static_cast<uint32_t>(std::lround(input_size.second * _scale));
+
+	// Verify that this is a valid scale factor.
+	float width_mul  = (static_cast<float>(output_size.first) / static_cast<float>(input_size.first));
+	float height_mul = (static_cast<float>(output_size.second) / static_cast<float>(input_size.second));
+	if (!::streamfx::util::math::is_close<float>(width_mul, _scale, 0.00001)
+		|| !::streamfx::util::math::is_close<float>(height_mul, _scale, 0.00001)) {
+		size_t scale_idx = find_closest_scale_factor_index(_scale);
+		if (scale_idx < supported_scale_factors.size()) {
+			_scale = supported_scale_factors[scale_idx + 1];
+			this->size(size, input_size, output_size);
+		}
+	}
 }
 
 std::shared_ptr<::streamfx::obs::gs::texture>
