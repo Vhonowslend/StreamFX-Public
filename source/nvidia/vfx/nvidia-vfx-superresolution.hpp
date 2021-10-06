@@ -47,6 +47,10 @@ namespace streamfx::nvidia::vfx {
 
 		bool _dirty;
 
+		std::pair<uint32_t, uint32_t> _cache_input_size;
+		std::pair<uint32_t, uint32_t> _cache_output_size;
+		float                         _cache_scale;
+
 		public:
 		~superresolution();
 		superresolution();
