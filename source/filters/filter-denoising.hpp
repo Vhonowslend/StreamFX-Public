@@ -22,6 +22,7 @@
 #include <atomic>
 #include <memory>
 #include <mutex>
+#include "obs/gs/gs-effect.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
 #include "obs/obs-source-factory.hpp"
@@ -51,6 +52,10 @@ namespace streamfx::filter::denoising {
 		std::atomic<bool>                       _provider_ready;
 		std::mutex                              _provider_lock;
 		std::shared_ptr<util::threadpool::task> _provider_task;
+
+		std::shared_ptr<::streamfx::obs::gs::effect>  _standard_effect;
+		std::shared_ptr<::streamfx::obs::gs::sampler> _channel0_sampler;
+		std::shared_ptr<::streamfx::obs::gs::sampler> _channel1_sampler;
 
 		std::shared_ptr<::streamfx::obs::gs::rendertarget> _input;
 		std::shared_ptr<::streamfx::obs::gs::texture>      _output;
