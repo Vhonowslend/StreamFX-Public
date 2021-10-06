@@ -392,8 +392,8 @@ aom_av1_instance::aom_av1_instance(obs_data_t* settings, obs_encoder_t* self, bo
 			_settings.profile = static_cast<codec::av1::profile>(obs_data_get_int(settings, ST_KEY_ENCODER_PROFILE));
 			if (_settings.profile == codec::av1::profile::UNKNOWN) {
 				// Resolve the automatic profile to a proper value.
-				bool need_professional = (_settings.color_format == VIDEO_FORMAT_I422);
-				bool need_high         = (_settings.color_format == VIDEO_FORMAT_I444) || _settings.monochrome;
+				bool need_professional = (_settings.color_format == AOM_IMG_FMT_I422);
+				bool need_high         = (_settings.color_format == AOM_IMG_FMT_I444) || _settings.monochrome;
 
 				if (need_professional) {
 					_settings.profile = codec::av1::profile::PROFESSIONAL;
