@@ -97,6 +97,20 @@ denoising_instance::denoising_instance(obs_data_t* data, obs_source_t* self)
 		_input = std::make_shared<::streamfx::obs::gs::rendertarget>(GS_RGBA_UNORM, GS_ZS_NONE);
 		_input->render(1, 1); // Preallocate the RT on the driver and GPU.
 		_output = _input->get_texture();
+
+		// Load the required effect.
+		_standard_effect =
+			std::make_shared<::streamfx::obs::gs::effect>(::streamfx::data_file_path("effects/standard.effect"));
+
+		// Create Samplers
+		_channel0_sampler = std::make_shared<::streamfx::obs::gs::sampler>();
+		_channel0_sampler->set_filter(gs_sample_filter::GS_FILTER_LINEAR);
+		_channel0_sampler->set_address_mode_u(GS_ADDRESS_CLAMP);
+		_channel0_sampler->set_address_mode_v(GS_ADDRESS_CLAMP);
+		_channel1_sampler = std::make_shared<::streamfx::obs::gs::sampler>();
+		_channel1_sampler->set_filter(gs_sample_filter::GS_FILTER_LINEAR);
+		_channel1_sampler->set_address_mode_u(GS_ADDRESS_CLAMP);
+		_channel1_sampler->set_address_mode_v(GS_ADDRESS_CLAMP);
 	}
 
 	if (data) {
@@ -323,8 +337,13 @@ void denoising_instance::video_render(gs_effect_t* effect)
 #ifdef ENABLE_PROFILING
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_render, "Render"};
 #endif
-		gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), _output->get_object());
-		while (gs_effect_loop(effect, "Draw")) {
+		if (_standard_effect->has_parameter("Channel0", ::streamfx::obs::gs::effect_parameter::type::Texture)) {
+			_standard_effect->get_parameter("Channel0").set_texture(_output);
+		}
+		if (_standard_effect->has_parameter("Channel1", ::streamfx::obs::gs::effect_parameter::type::Texture)) {
+			_standard_effect->get_parameter("Channel1").set_texture(_input->get_texture());
+		}
+		while (gs_effect_loop(_standard_effect->get_object(), "RestoreAlpha")) {
 			gs_draw_sprite(nullptr, 0, _size.first, _size.second);
 		}
 	}
@@ -508,7 +527,7 @@ denoising_factory::denoising_factory()
 	// 3. In any other case, register the filter!
 	_info.id           = S_PREFIX "filter-denoising";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
-	_info.output_flags = OBS_SOURCE_VIDEO;
+	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
 
 	set_resolution_enabled(true);
 	finish_setup();
