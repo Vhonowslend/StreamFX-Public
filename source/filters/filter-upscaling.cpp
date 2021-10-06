@@ -507,12 +507,15 @@ upscaling_factory::upscaling_factory()
 	}
 
 	// 3. In any other case, register the filter!
-	_info.id           = S_PREFIX "filter-video-superresolution";
+	_info.id           = S_PREFIX "filter-upscaling";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO /*| OBS_SOURCE_SRGB*/;
 
 	set_resolution_enabled(true);
 	finish_setup();
+
+	// Proxies
+	register_proxy("streamfx-filter-video-superresolution");
 }
 
 const char* upscaling_factory::get_name()
