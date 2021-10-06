@@ -1518,7 +1518,7 @@ obs_properties_t* aom_av1_factory::get_properties2(instance_t* data)
 														100, 1);
 				auto p2 = obs_properties_add_int_slider(grp2, ST_KEY_RATECONTROL_LIMITS_BITRATE_OVERSHOOT,
 														D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS_BITRATE_OVERSHOOT), -1,
-														1000, 1);
+														100, 1);
 				obs_property_float_set_suffix(p1, " %");
 				obs_property_float_set_suffix(p2, " %");
 			}
