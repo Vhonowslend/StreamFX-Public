@@ -1174,6 +1174,7 @@ list(APPEND PROJECT_DATA
 	"data/effects/color_conversion_rgb_yuv.effect"
 	"data/effects/mipgen.effect"
 	"data/effects/pack-unpack.effect"
+	"data/effects/standard.effect"
 	"data/effects/shared.effect"
 	"data/locale/en-US.ini"
 )

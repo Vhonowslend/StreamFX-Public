@@ -1,0 +1,27 @@
+#include "shared.effect"
+
+uniform texture2D Channel0;
+uniform texture2D Channel1;
+
+//------------------------------------------------------------------------------
+// Technique: Restore Alpha
+//------------------------------------------------------------------------------
+// Parameters:
+// - Channel0: RGBX Texture
+// - Channel1: XXXA Texture
+
+float4 PSRestoreAlpha(VertexData vtx) : TARGET {
+	float4 rgbx = Channel0.Sample(BlankSampler, vtx.uv);
+	float4 xxxa = Channel1.Sample(BlankSampler, vtx.uv);
+	rgbx.a = xxxa.a;
+	return rgbx;
+};
+
+technique RestoreAlpha
+{
+	pass
+	{
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader = PSRestoreAlpha(vtx);
+	};
+};
