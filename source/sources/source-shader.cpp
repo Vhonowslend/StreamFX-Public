@@ -106,6 +106,16 @@ void shader_instance::video_render(gs_effect_t* effect)
 	_fx->render(effect);
 }
 
+void streamfx::source::shader::shader_instance::show()
+{
+	_fx->set_visible(true);
+}
+
+void streamfx::source::shader::shader_instance::hide()
+{
+	_fx->set_visible(false);
+}
+
 void streamfx::source::shader::shader_instance::activate()
 {
 	_fx->set_active(true);
@@ -123,6 +133,7 @@ shader_factory::shader_factory()
 	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
 
 	set_activity_tracking_enabled(true);
+	set_visibility_tracking_enabled(true);
 	finish_setup();
 	register_proxy("obs-stream-effects-source-shader");
 }
