@@ -129,12 +129,14 @@ bool shader_instance::audio_render(uint64_t* ts_out, obs_source_audio_mix* audio
 
 void shader_instance::transition_start()
 {
+	_fx->set_visible(true);
 	_fx->set_active(true);
 }
 
 void shader_instance::transition_stop()
 {
 	_fx->set_active(false);
+	_fx->set_visible(false);
 }
 
 shader_factory::shader_factory()
