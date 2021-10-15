@@ -176,6 +176,10 @@ void streamfx::gfx::shader::parameter::update(obs_data_t* settings) {}
 
 void streamfx::gfx::shader::parameter::assign() {}
 
+void streamfx::gfx::shader::parameter::visible(bool visible) {}
+
+void streamfx::gfx::shader::parameter::active(bool active) {}
+
 std::shared_ptr<streamfx::gfx::shader::parameter>
 	streamfx::gfx::shader::parameter::make_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
 {

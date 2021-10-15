@@ -80,6 +80,10 @@ namespace streamfx::gfx {
 
 			virtual void assign();
 
+			virtual void visible(bool visible);
+
+			virtual void active(bool enabled);
+
 			public:
 			inline streamfx::obs::gs::effect_parameter get_parameter()
 			{
