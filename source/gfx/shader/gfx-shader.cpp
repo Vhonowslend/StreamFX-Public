@@ -139,45 +139,33 @@ try {
 		_shader_params.clear();
 		auto etech = _shader.get_technique(_shader_tech);
 		for (std::size_t idx = 0; idx < etech.count_passes(); idx++) {
-			auto pass = etech.get_pass(idx);
+			auto pass         = etech.get_pass(idx);
+			auto fetch_params = [&](std::size_t                                                     count,
+									std::function<streamfx::obs::gs::effect_parameter(std::size_t)> get_func) {
+				for (std::size_t vidx = 0; vidx < count; vidx++) {
+					auto el = get_func(vidx);
+					if (!el)
+						continue;
 
-			for (std::size_t vidx = 0; vidx < pass.count_vertex_parameters(); vidx++) {
-				auto el = pass.get_vertex_parameter(vidx);
+					auto el_name = el.get_name();
+					auto fnd     = _shader_params.find(el_name);
+					if (fnd != _shader_params.end())
+						continue;
 
-				if (!el)
-					continue;
+					auto param = streamfx::gfx::shader::parameter::make_parameter(el, ST_KEY_PARAMETERS);
 
-				auto fnd = _shader_params.find(el.get_name());
-				if (fnd != _shader_params.end())
-					continue;
-
-				auto param = streamfx::gfx::shader::parameter::make_parameter(el, ST_KEY_PARAMETERS);
-
-				if (param) {
-					_shader_params.insert_or_assign(el.get_name(), param);
-					param->defaults(settings.get());
-					param->update(settings.get());
+					if (param) {
+						_shader_params.insert_or_assign(el_name, param);
+						param->defaults(settings.get());
+						param->update(settings.get());
+					}
 				}
-			}
+			};
 
-			for (std::size_t vidx = 0; vidx < pass.count_pixel_parameters(); vidx++) {
-				auto el = pass.get_pixel_parameter(vidx);
-
-				if (!el)
-					continue;
-
-				auto fnd = _shader_params.find(el.get_name());
-				if (fnd != _shader_params.end())
-					continue;
-
-				auto param = streamfx::gfx::shader::parameter::make_parameter(el, ST_KEY_PARAMETERS);
-
-				if (param) {
-					_shader_params.insert_or_assign(el.get_name(), param);
-					param->defaults(settings.get());
-					param->update(settings.get());
-				}
-			}
+			auto gvp = [&](std::size_t idx) { return pass.get_vertex_parameter(idx); };
+			fetch_params(pass.count_vertex_parameters(), gvp);
+			auto gpp = [&](std::size_t idx) { return pass.get_pixel_parameter(idx); };
+			fetch_params(pass.count_pixel_parameters(), gpp);
 		}
 	}
 
@@ -383,12 +371,6 @@ uint32_t streamfx::gfx::shader::shader::width()
 	case shader_mode::Transition:
 		return _base_width;
 	case shader_mode::Source:
-		switch (_width_type) {
-		case size_type::Pixel:
-			return std::clamp(static_cast<uint32_t>(_width_value), 1u, 16384u);
-		case size_type::Percent:
-			return std::clamp(static_cast<uint32_t>(_width_value * _base_width), 1u, 16384u);
-		}
 	case shader_mode::Filter:
 		switch (_width_type) {
 		case size_type::Pixel:
@@ -407,12 +389,6 @@ uint32_t streamfx::gfx::shader::shader::height()
 	case shader_mode::Transition:
 		return _base_height;
 	case shader_mode::Source:
-		switch (_height_type) {
-		case size_type::Pixel:
-			return std::clamp(static_cast<uint32_t>(_height_value), 1u, 16384u);
-		case size_type::Percent:
-			return std::clamp(static_cast<uint32_t>(_height_value * _base_height), 1u, 16384u);
-		}
 	case shader_mode::Filter:
 		switch (_height_type) {
 		case size_type::Pixel:
