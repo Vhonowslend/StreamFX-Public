@@ -43,6 +43,9 @@ namespace streamfx::source::shader {
 		virtual void video_tick(float_t sec_since_last) override;
 		virtual void video_render(gs_effect_t* effect) override;
 
+		void show() override;
+		void hide() override;
+
 		void activate() override;
 		void deactivate() override;
 	};

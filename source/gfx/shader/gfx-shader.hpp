@@ -48,6 +48,7 @@ namespace streamfx::gfx {
 			uint32_t    _base_width;
 			uint32_t    _base_height;
 			bool        _active;
+			bool        _visible;
 
 			// Shader
 			streamfx::obs::gs::effect       _shader;
@@ -124,6 +125,8 @@ namespace streamfx::gfx {
 			void set_transition_time(float_t t);
 
 			void set_transition_size(uint32_t w, uint32_t h);
+
+			void set_visible(bool visible);
 
 			void set_active(bool active);
 		};

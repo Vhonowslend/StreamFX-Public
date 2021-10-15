@@ -592,9 +592,22 @@ void streamfx::gfx::shader::shader::set_transition_size(uint32_t w, uint32_t h)
 	}
 }
 
+void streamfx::gfx::shader::shader::set_visible(bool visible)
+{
+	_visible = visible;
+
+	for (auto kv : _shader_params) {
+		kv.second->visible(visible);
+	}
+}
+
 void streamfx::gfx::shader::shader::set_active(bool active)
 {
 	_active = active;
+
+	for (auto kv : _shader_params) {
+		kv.second->active(active);
+	}
 
 	// Recreate Per-Activation-Random values.
 	for (size_t idx = 0; idx < 4; idx++) {
