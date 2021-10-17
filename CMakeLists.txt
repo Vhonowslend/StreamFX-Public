@@ -40,7 +40,7 @@ set(VERSION_MAJOR 0)
 set(VERSION_MINOR 11)
 set(VERSION_PATCH 0)
 set(VERSION_TWEAK 0)
-set(VERSION_SUFFIX "a5")
+set(VERSION_SUFFIX "a6")
 set(VERSION_COMMIT "00000000")
 
 # Check if we are in a git repository.
