@@ -89,7 +89,10 @@ dynamic_mask_instance::dynamic_mask_instance(obs_data_t* settings, obs_source_t*
 	update(settings);
 }
 
-dynamic_mask_instance::~dynamic_mask_instance() {}
+dynamic_mask_instance::~dynamic_mask_instance()
+{
+	release();
+}
 
 void dynamic_mask_instance::load(obs_data_t* settings)
 {
@@ -101,27 +104,11 @@ void dynamic_mask_instance::migrate(obs_data_t* data, uint64_t version) {}
 void dynamic_mask_instance::update(obs_data_t* settings)
 {
 	// Update source.
-	try {
-		auto input   = std::make_shared<obs::deprecated_source>(obs_data_get_string(settings, ST_KEY_INPUT));
-		auto gctx    = streamfx::obs::gs::context();
-		auto capture = std::make_shared<streamfx::gfx::source_texture>(input, _self);
-
-		input->events.rename += std::bind(&dynamic_mask_instance::input_renamed, this, std::placeholders::_1,
-										  std::placeholders::_2, std::placeholders::_3);
-
-		_input         = input;
-		_input_capture = capture;
-
-		activate();
-		show();
-	} catch (std::exception const& ex) {
-		deactivate();
-		hide();
-
-		_input_capture.reset();
-		_input.reset();
-
-		DLOG_ERROR("Failed to update input: %s", ex.what());
+	if (auto v = obs_data_get_string(settings, ST_KEY_INPUT); (v != nullptr) && (strlen(v) > 0)) {
+		if (!acquire(v))
+			DLOG_ERROR("Failed to acquire Input source '%s'.", v);
+	} else {
+		release();
 	}
 
 	// Update data store
@@ -409,6 +396,49 @@ void streamfx::filter::dynamic_mask::dynamic_mask_instance::activate()
 void streamfx::filter::dynamic_mask::dynamic_mask_instance::deactivate()
 {
 	_input_ac.reset();
+}
+
+bool dynamic_mask_instance::acquire(std::string_view name)
+try {
+	// Prevent us from creating a circle.
+	if (auto v = obs_source_get_name(obs_filter_get_parent(_self)); (v != nullptr) && (name == v)) {
+		return false;
+	}
+
+	// Acquire a reference to the actual source.
+	auto input = std::make_shared<obs::deprecated_source>(std::string(name), true, true);
+
+	// Acquire a texture renderer for the source, with the parent source as the parent.
+	auto capture = std::make_shared<streamfx::gfx::source_texture>(input, obs_filter_get_parent(_self));
+
+	// Listed to the rename event.
+	input->events.rename += std::bind(&dynamic_mask_instance::input_renamed, this, std::placeholders::_1,
+									  std::placeholders::_2, std::placeholders::_3);
+
+	// Update our local storage.
+	_input         = input;
+	_input_capture = capture;
+
+	// Do the necessary things.
+	activate();
+	show();
+
+	return true;
+} catch (const std::exception&) {
+	release();
+	return false;
+} catch (...) {
+	release();
+	return false;
+}
+
+void dynamic_mask_instance::release()
+{
+	_input.reset();
+	_input_capture.reset();
+
+	deactivate();
+	hide();
 }
 
 dynamic_mask_factory::dynamic_mask_factory()

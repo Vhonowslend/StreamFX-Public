@@ -85,6 +85,9 @@ namespace streamfx::filter::dynamic_mask {
 		void hide() override;
 		void activate() override;
 		void deactivate() override;
+
+		bool acquire(std::string_view name);
+		void release();
 	};
 
 	class dynamic_mask_factory : public obs::source_factory<filter::dynamic_mask::dynamic_mask_factory,
