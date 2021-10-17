@@ -756,23 +756,28 @@ void nvenc::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* conte
 void streamfx::encoder::ffmpeg::handler::nvenc::migrate(obs_data_t* settings, uint64_t version, const AVCodec* codec,
 														AVCodecContext* context)
 {
-	switch (static_cast<uint64_t>(obs_data_get_int(settings, S_VERSION)) & STREAMFX_MASK_UPDATE) {
-	default:
-	case STREAMFX_MAKE_VERSION(0, 8, 0, 0):
+	// Only test for A.B.C in A.B.C.D
+	version = version & STREAMFX_MASK_UPDATE;
 
-		obs_data_set_int(settings, ST_KEY_RATECONTROL_LIMITS_BITRATE_TARGET,
-						 obs_data_get_int(settings, "RateControl.Bitrate.Target"));
-		obs_data_set_int(settings, ST_KEY_RATECONTROL_LIMITS_BITRATE_MAXIMUM,
-						 obs_data_get_int(settings, "RateControl.Bitrate.Maximum"));
-		obs_data_set_int(settings, ST_KEY_RATECONTROL_LIMITS_BUFFERSIZE,
-						 obs_data_get_int(settings, "RateControl.BufferSize"));
-		obs_data_set_double(settings, ST_KEY_RATECONTROL_LIMITS_QUALITY,
-							obs_data_get_double(settings, "RateControl.Quality.Target"));
-		obs_data_set_int(settings, ST_KEY_RATECONTROL_QP_MINIMUM,
-						 obs_data_get_int(settings, "RateControl.Quality.Minimum"));
-		obs_data_set_int(settings, ST_KEY_RATECONTROL_QP_MAXIMUM,
-						 obs_data_get_int(settings, "RateControl.Quality.Maximum"));
-
-		break;
+#define COPY_UNSET(TYPE, OLDNAME, NEWNAME)                                              \
+	if (obs_data_has_user_value(settings, OLDNAME)) {                                   \
+		obs_data_set_##TYPE(settings, NEWNAME, obs_data_get_##TYPE(settings, OLDNAME)); \
+		obs_data_unset_user_value(settings, OLDNAME);                                   \
 	}
+
+	if (version <= STREAMFX_MAKE_VERSION(0, 8, 0, 0)) {
+		COPY_UNSET(int, "RateControl.Bitrate.Target", ST_KEY_RATECONTROL_LIMITS_BITRATE_TARGET);
+		COPY_UNSET(int, "RateControl.Bitrate.Maximum", ST_KEY_RATECONTROL_LIMITS_BITRATE_TARGET);
+		COPY_UNSET(int, "RateControl.BufferSize", ST_KEY_RATECONTROL_LIMITS_BUFFERSIZE);
+		COPY_UNSET(int, "RateControl.Quality.Minimum", ST_KEY_RATECONTROL_QP_MINIMUM);
+		COPY_UNSET(int, "RateControl.Quality.Maximum", ST_KEY_RATECONTROL_QP_MAXIMUM);
+		COPY_UNSET(double, "RateControl.Quality.Target", ST_KEY_RATECONTROL_LIMITS_QUALITY);
+	}
+
+	if (version <= STREAMFX_MAKE_VERSION(0, 11, 0, 0)) {
+		obs_data_unset_user_value(settings, "Other.AccessUnitDelimiter");
+		obs_data_unset_user_value(settings, "Other.DecodedPictureBufferSize");
+	}
+
+#undef COPY_UNSET
 }
