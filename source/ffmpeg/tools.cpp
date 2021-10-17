@@ -369,21 +369,30 @@ void tools::print_av_option_string2(AVCodecContext* ctx_codec, void* ctx_option,
 		std::string name = "<Unknown>";
 
 		// Find the unit for the option.
-		auto* unitopt = av_opt_find(ctx_option, option.data(), nullptr, 0, AV_OPT_SEARCH_CHILDREN);
-		if (unitopt && unitopt->unit) {
-			std::string_view optname;
-			for (auto* opt = unitopt; (opt = av_opt_next(ctx_option, opt)) != nullptr;) {
-				if (opt->unit && (strcmp(unitopt->unit, opt->unit) != 0))
+		auto* opt = av_opt_find(ctx_option, option.data(), nullptr, 0, AV_OPT_SEARCH_CHILDREN);
+		if (opt && opt->unit) {
+			for (auto* opt_test = opt; (opt_test = av_opt_next(ctx_option, opt_test)) != nullptr;) {
+				// Skip this entry if the unit doesn't match.
+				if ((opt_test->unit == nullptr) || (strcmp(opt_test->unit, opt->unit) != 0)) {
 					continue;
+				}
 
-				if (opt->default_val.i64 == v)
-					optname = opt->name;
+				// Assign correct name if we found one.
+				if (opt_test->default_val.i64 == v) {
+					name = opt_test->name;
+					break;
+				}
 			}
 
 			if (decoder) {
-				name = decoder(v, optname);
+				name = decoder(v, name);
 			}
 			DLOG_INFO("[%s] %s: %s%s", ctx_codec->codec->name, text.data(), name.c_str(),
+					  av_opt_is_set_to_default_by_name(ctx_option, option.data(), AV_OPT_SEARCH_CHILDREN) > 0
+						  ? " <Default>"
+						  : "");
+		} else {
+			DLOG_INFO("[%s] %s: %" PRId64 "%s", ctx_codec->codec->name, text.data(), v,
 					  av_opt_is_set_to_default_by_name(ctx_option, option.data(), AV_OPT_SEARCH_CHILDREN) > 0
 						  ? " <Default>"
 						  : "");
