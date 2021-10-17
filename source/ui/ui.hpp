@@ -33,14 +33,13 @@ namespace streamfx::ui {
 		QAction* _menu_action;
 		QMenu*   _menu;
 
-		// Bug Report, Help Request
-		QAction* _report_issue;
-		QAction* _request_help;
-
-		// Website, Discord, Source
-		QAction* _link_website;
-		QAction* _link_discord;
-		QAction* _link_github;
+		// Menu Actions
+		QAction* _action_support;
+		QAction* _action_wiki;
+		QAction* _action_website;
+		QAction* _action_discord;
+		QAction* _action_twitter;
+		QAction* _action_youtube;
 
 		// About Dialog
 		QAction*   _about_action;
@@ -67,14 +66,13 @@ namespace streamfx::ui {
 		public slots:
 		; // Not having this breaks some linters.
 
-		// Issues & Help
-		void on_action_report_issue(bool);
-		void on_action_request_help(bool);
-
-		// Official Links
+		// Menu Actions
+		void on_action_support(bool);
+		void on_action_wiki(bool);
 		void on_action_website(bool);
 		void on_action_discord(bool);
-		void on_action_github(bool);
+		void on_action_twitter(bool);
+		void on_action_youtube(bool);
 
 		// About
 		void on_action_about(bool);

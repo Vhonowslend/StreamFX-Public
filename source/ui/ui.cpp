@@ -28,24 +28,27 @@
 #include <obs-frontend-api.h>
 
 // Translation Keys
-constexpr std::string_view _i18n_prefix            = "StreamFX::";
-constexpr std::string_view _i18n_menu              = "UI.Menu";
-constexpr std::string_view _i18n_menu_report_issue = "UI.Menu.ReportIssue";
-constexpr std::string_view _i18n_menu_request_help = "UI.Menu.RequestHelp";
-constexpr std::string_view _i18n_menu_website      = "UI.Menu.Website";
-constexpr std::string_view _i18n_menu_discord      = "UI.Menu.Discord";
-constexpr std::string_view _i18n_menu_github       = "UI.Menu.Github";
-constexpr std::string_view _i18n_menu_about        = "UI.Menu.About";
+constexpr std::string_view _i18n_prefix       = "StreamFX::";
+constexpr std::string_view _i18n_menu         = "UI.Menu";
+constexpr std::string_view _i18n_menu_support = "UI.Menu.Support";
+constexpr std::string_view _i18n_menu_wiki    = "UI.Menu.Wiki";
+constexpr std::string_view _i18n_menu_website = "UI.Menu.Website";
+constexpr std::string_view _i18n_menu_discord = "UI.Menu.Discord";
+constexpr std::string_view _i18n_menu_youtube = "UI.Menu.YouTube";
+constexpr std::string_view _i18n_menu_twitter = "UI.Menu.Twitter";
+constexpr std::string_view _i18n_menu_github  = "UI.Menu.Github";
+constexpr std::string_view _i18n_menu_about   = "UI.Menu.About";
 
 // Configuration
 constexpr std::string_view _cfg_have_shown_about = "UI.HaveShownAboutStreamFX";
 
 // URLs
-constexpr std::string_view _url_report_issue = "https://github.com/Xaymar/obs-StreamFX/issues/new?template=issue.md";
-constexpr std::string_view _url_request_help = "https://github.com/Xaymar/obs-StreamFX/issues/new?template=help.md";
-constexpr std::string_view _url_website      = "https://streamfx.xaymar.com";
-constexpr std::string_view _url_discord      = "https://discord.gg/rjkxERs";
-constexpr std::string_view _url_github       = "https://github.com/Xaymar/obs-StreamFX";
+constexpr std::string_view _url_support = "https://s.xaymar.com/streamfx-dc-support";
+constexpr std::string_view _url_wiki    = "https://github.com/Xaymar/obs-StreamFX/wiki";
+constexpr std::string_view _url_website = "https://streamfx.xaymar.com";
+constexpr std::string_view _url_discord = "https://s.xaymar.com/streamfx-dc";
+constexpr std::string_view _url_twitter = "https://s.xaymar.com/streamfx-tw";
+constexpr std::string_view _url_youtube = "https://s.xaymar.com/streamfx-yt";
 
 inline void qt_init_resource()
 {
@@ -74,9 +77,7 @@ bool streamfx::ui::handler::have_shown_about_streamfx(bool shown)
 streamfx::ui::handler::handler()
 	: QObject(), _menu_action(), _menu(),
 
-	  _report_issue(), _request_help(),
-
-	  _link_website(), _link_discord(), _link_github(),
+	  _action_support(), _action_wiki(), _action_website(), _action_discord(), _action_twitter(), _action_youtube(),
 
 	  _about_action(), _about_dialog(),
 
@@ -124,32 +125,48 @@ void streamfx::ui::handler::on_obs_loaded()
 	{ // Create and build the StreamFX menu
 		_menu = new QMenu(reinterpret_cast<QWidget*>(obs_frontend_get_main_window()));
 
-		// Report an Issue
-		_report_issue = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_report_issue.data())));
-		_report_issue->setMenuRole(QAction::NoRole);
-		connect(_report_issue, &QAction::triggered, this, &streamfx::ui::handler::on_action_report_issue);
+		// Wiki
+		// Help & Support
+		// ---
+		// Website
+		// Discord
+		// Twitter
+		// YouTube
+		// <--->
+		// <Updater>
+		// ---
+		// About StreamFX
 
-		// Request help
-		_request_help = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_request_help.data())));
-		_request_help->setMenuRole(QAction::NoRole);
-		connect(_request_help, &QAction::triggered, this, &streamfx::ui::handler::on_action_request_help);
+		{
+			// Wiki
+			_action_wiki = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_wiki.data())));
+			_action_wiki->setMenuRole(QAction::NoRole);
+			connect(_action_wiki, &QAction::triggered, this, &streamfx::ui::handler::on_action_wiki);
+
+			// Help & Support
+			_action_support = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_support.data())));
+			_action_support->setMenuRole(QAction::NoRole);
+			connect(_action_support, &QAction::triggered, this, &streamfx::ui::handler::on_action_support);
+		}
 
 		_menu->addSeparator();
+		{
+			_action_website = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_website.data())));
+			_action_website->setMenuRole(QAction::NoRole);
+			connect(_action_website, &QAction::triggered, this, &streamfx::ui::handler::on_action_website);
 
-		// Website
-		_link_website = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_website.data())));
-		_link_website->setMenuRole(QAction::NoRole);
-		connect(_link_website, &QAction::triggered, this, &streamfx::ui::handler::on_action_website);
+			_action_discord = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_discord.data())));
+			_action_discord->setMenuRole(QAction::NoRole);
+			connect(_action_discord, &QAction::triggered, this, &streamfx::ui::handler::on_action_discord);
 
-		// Discord
-		_link_discord = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_discord.data())));
-		_link_discord->setMenuRole(QAction::NoRole);
-		connect(_link_discord, &QAction::triggered, this, &streamfx::ui::handler::on_action_discord);
+			_action_twitter = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_twitter.data())));
+			_action_twitter->setMenuRole(QAction::NoRole);
+			connect(_action_twitter, &QAction::triggered, this, &streamfx::ui::handler::on_action_twitter);
 
-		// Github
-		_link_github = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_github.data())));
-		_link_github->setMenuRole(QAction::NoRole);
-		connect(_link_github, &QAction::triggered, this, &streamfx::ui::handler::on_action_github);
+			_action_youtube = _menu->addAction(QString::fromUtf8(D_TRANSLATE(_i18n_menu_youtube.data())));
+			_action_youtube->setMenuRole(QAction::NoRole);
+			connect(_action_youtube, &QAction::triggered, this, &streamfx::ui::handler::on_action_youtube);
+		}
 
 		// Create the updater.
 #ifdef ENABLE_UPDATER
@@ -203,14 +220,14 @@ void streamfx::ui::handler::on_obs_exit()
 	qt_cleanup_resource();
 }
 
-void streamfx::ui::handler::on_action_report_issue(bool)
+void streamfx::ui::handler::on_action_support(bool)
 {
-	QDesktopServices::openUrl(QUrl(QString::fromUtf8(_url_report_issue.data())));
+	QDesktopServices::openUrl(QUrl(QString::fromUtf8(_url_support.data())));
 }
 
-void streamfx::ui::handler::on_action_request_help(bool)
+void streamfx::ui::handler::on_action_wiki(bool)
 {
-	QDesktopServices::openUrl(QUrl(QString::fromUtf8(_url_request_help.data())));
+	QDesktopServices::openUrl(QUrl(QString::fromUtf8(_url_wiki.data())));
 }
 
 void streamfx::ui::handler::on_action_website(bool)
@@ -223,9 +240,14 @@ void streamfx::ui::handler::on_action_discord(bool)
 	QDesktopServices::openUrl(QUrl(QString::fromUtf8(_url_discord.data())));
 }
 
-void streamfx::ui::handler::on_action_github(bool)
+void streamfx::ui::handler::on_action_twitter(bool)
 {
-	QDesktopServices::openUrl(QUrl(QString::fromUtf8(_url_github.data())));
+	QDesktopServices::openUrl(QUrl(QString::fromUtf8(_url_twitter.data())));
+}
+
+void streamfx::ui::handler::on_action_youtube(bool)
+{
+	QDesktopServices::openUrl(QUrl(QString::fromUtf8(_url_youtube.data())));
 }
 
 void streamfx::ui::handler::on_action_about(bool checked)
