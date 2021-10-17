@@ -37,13 +37,18 @@ VersionInfoDescription={#MyAppName} Setup
 ArchitecturesInstallIn64BitMode=x64 arm64 ia64
 ArchitecturesAllowed=@ARCH@
 
+; Installation Modes
+PrivilegesRequired=lowest
+PrivilegesRequiredOverridesAllowed=dialog commandline
+
 ; Wizard Information
 WizardStyle=modern
 WizardResizable=yes
 SetupIconFile="@PROJECT_SOURCE_DIR@/media/icon.ico"
 
 ; Other Information
-UsePreviousAppDir=yes
+UsePreviousAppDir=no
+Uninstallable=not IsPortablePagePortableChoiceChecked()
 DefaultDirName={code:GetDefaultDirectory}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
@@ -68,9 +73,27 @@ Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 
 [Code]
 // ------------------------------------------------------------------------------------------------------------------ //
+var
+  oPortablePageStaticChoice: TNewRadioButton;
+  oPortablePagePortableChoice: TNewRadioButton;
+
+function FindRegistryKey(): String; forward;
+function GetDefaultDirectory(Value: String): String; forward;
+function GetUninstallerPath(): String; forward;
+function IsUpgrade(): Boolean; forward;
+function IsPortablePagePortableChoiceChecked(): Boolean; forward;
+function UninstallOldVersion(): Integer; forward;
+procedure OnPortablePagePortableChoiceClick(Sender: TObject); forward;
+procedure OnPortablePageStaticChoiceClick(Sender: TObject); forward;
+function CreatePortablePage: TWizardPage; forward;
+procedure InitializeWizard; forward;
+function ShouldSkipPage(PageID: Integer): Boolean; forward;
+function PrepareToInstall(var NeedsRestart: Boolean): String; forward;
+
+// ------------------------------------------------------------------------------------------------------------------ //
 function FindRegistryKey(): String;
 begin
-	Result := ExpandConstant('Software\Microsoft\Windows\CurrentVersion\Uninstall\{#emit SetupSetting('AppId')}_is1');	
+	Result := ExpandConstant('Software\Microsoft\Windows\CurrentVersion\Uninstall\{#emit SetupSetting('AppId')}_is1');
 end;
 
 // ------------------------------------------------------------------------------------------------------------------ //
@@ -86,25 +109,25 @@ begin
 		RegQueryStringValue(HKA64, FindRegistryKey(), 'InstallLocation', sInstallPath);
 
 	// 2. If empty, try and find the "Local Machine" installation of OBS Studio.
-	if (sInstallPath = '') then 
+	if (sInstallPath = '') then
 		RegQueryStringValue(HKLM64, 'SOFTWARE\OBS Studio', '', sInstallPath);
 
 	// 3. If empty, try and find the "Current User" installation of OBS Studio.
-	if (sInstallPath = '') then 
+	if (sInstallPath = '') then
 		RegQueryStringValue(HKCU64, 'SOFTWARE\OBS Studio', '', sInstallPath);
 
 	// 4. If empty, try and find the 32-bit "Local Machine" installation of OBS Studio.
-	if (sInstallPath = '') then 
+	if (sInstallPath = '') then
 		RegQueryStringValue(HKLM32, 'SOFTWARE\OBS Studio', '', sInstallPath);
 
 	// 5. If empty, try and find the 32-bit "Current User" installation of OBS Studio.
-	if (sInstallPath = '') then 
+	if (sInstallPath = '') then
 		RegQueryStringValue(HKCU32, 'SOFTWARE\OBS Studio', '', sInstallPath);
 
 	// 6. If empty, just use the default path.
-	if (sInstallPath = '') then 
+	if (sInstallPath = '') then
 		sInstallPath := ExpandConstant('{commonpf}\obs-studio');
-	
+
 	Result := sInstallPath
 end;
 
@@ -133,7 +156,7 @@ end;
 // ------------------------------------------------------------------------------------------------------------------ //
 function IsUpgrade(): Boolean;
 begin
-	Result := (GetUninstallerPath() <> '');
+	Result := (not IsPortablePagePortableChoiceChecked()) and (GetUninstallerPath() <> '');
 end;
 
 // ------------------------------------------------------------------------------------------------------------------ //
@@ -152,6 +175,168 @@ begin
 			Result := 1
 		end;
 	end;
+end;
+
+// ------------------------------------------------------------------------------------------------------------------ //
+procedure OnPortablePagePortableChoiceClick(Sender: TObject);
+begin
+  oPortablePageStaticChoice.Checked := False;
+  oPortablePagePortableChoice.Checked := True;
+end;
+
+procedure OnPortablePageStaticChoiceClick(Sender: TObject);
+begin
+  if (not oPortablePageStaticChoice.Enabled) then begin
+    OnPortablePagePortableChoiceClick(Sender);
+  end else begin
+    oPortablePageStaticChoice.Checked := True;
+    oPortablePagePortableChoice.Checked := False;
+  end;
+end;
+
+function IsPortablePagePortableChoiceChecked(): Boolean;
+begin
+	Result := oPortablePagePortableChoice.Checked;
+end;
+
+function CreatePortablePage: TWizardPage;
+var
+  oPage: TWizardPage;
+  oStaticPanel: TPanel;
+  oStaticChoice: TNewRadioButton;
+  oStaticText: TLabel;
+  oStaticWarningText: TLabel;
+  oPortablePanel: TPanel;
+  oPortableChoice: TNewRadioButton;
+  oPortableText: TLabel;
+begin
+  // Build a page that asks a user if they want to use Movable or Static installation.
+  oPage := CreateCustomPage(wpLicense,
+    'Installation Type',
+    'Select how to install StreamFX on your System');
+
+  oStaticPanel := TPanel.Create(oPage);
+  oStaticPanel.Parent := oPage.Surface;
+  oStaticPanel.ParentBackground := False;
+  oStaticPanel.Left := ScaleX(5);
+  oStaticPanel.Top := ScaleY(5);
+  oStaticPanel.Width := oPage.SurfaceWidth - ScaleX(10);
+  oStaticPanel.Height := ScaleY(100);
+  oStaticPanel.Anchors := [akLeft, akTop, akRight];
+  oStaticPanel.Color := clWindow;
+  oStaticPanel.BevelKind := bkTile;
+  oStaticPanel.BevelInner := bvNone;
+  oStaticPanel.BevelOuter := bvRaised;
+  oStaticPanel.BevelWidth := 1;
+  oStaticPanel.OnClick := @OnPortablePageStaticChoiceClick;
+
+  oStaticChoice := TNewRadioButton.Create(oStaticPanel);
+  oPortablePageStaticChoice := oStaticChoice;
+  oStaticChoice.Parent := oStaticPanel;
+  oStaticChoice.ParentBackground := False;
+  oStaticChoice.Left := ScaleX(5);
+  oStaticChoice.Top := ScaleY(5);
+  oStaticChoice.Width := oStaticPanel.Width - ScaleX(10);
+  oStaticChoice.Height := ScaleY(20);
+  oStaticChoice.Anchors := [akLeft, akTop, akRight];
+  oStaticChoice.Caption := 'Static';
+  oStaticChoice.Font.Style := [fsBold];
+  oStaticChoice.OnClick := @OnPortablePageStaticChoiceClick;
+
+  oStaticText := TLabel.Create(oStaticPanel);
+  oStaticText.Parent := oStaticPanel;
+  oStaticText.AutoSize := False;
+  oStaticText.Left := ScaleX(5);
+  oStaticText.Top := ScaleY(5) + oStaticChoice.Top + oStaticChoice.Height;
+  oStaticText.Width := oStaticPanel.Width - ScaleX(10);
+  oStaticText.Height := oStaticPanel.Height - ScaleX(5) - oStaticText.Top;
+  oStaticText.Anchors := [akLeft, akTop, akRight];
+  oStaticText.WordWrap := True
+  oStaticText.Caption := 'Install for use in a static version of OBS Studio, with all necessary features to support it.';
+  oStaticText.OnClick := @OnPortablePageStaticChoiceClick;
+
+  oPortablePanel := TPanel.Create(oPage);
+  oPortablePanel.Parent := oPage.Surface;
+  oPortablePanel.ParentBackground := False;
+  oPortablePanel.Left := ScaleX(5);
+  oPortablePanel.Top := ScaleY(5) + oStaticPanel.Top + oStaticPanel.Height;
+  oPortablePanel.Width := oPage.SurfaceWidth - ScaleX(10);
+  oPortablePanel.Height := ScaleY(100);
+  oPortablePanel.Anchors := [akLeft, akTop, akRight];
+  oPortablePanel.Color := clWindow;
+  oPortablePanel.BevelKind := bkTile;
+  oPortablePanel.BevelInner := bvNone;
+  oPortablePanel.BevelOuter := bvRaised;
+  oPortablePanel.BevelWidth := 1;
+  oPortablePanel.OnClick := @OnPortablePagePortableChoiceClick;
+
+  oPortableChoice := TNewRadioButton.Create(oPortablePanel);
+  oPortablePagePortableChoice := oPortableChoice;
+  oPortableChoice.Parent := oPortablePanel;
+  oPortableChoice.ParentBackground := False;
+  oPortableChoice.Left := ScaleX(5);
+  oPortableChoice.Top := ScaleY(5);
+  oPortableChoice.Width := oPortablePanel.Width - ScaleX(10);
+  oPortableChoice.Height := ScaleY(20);
+  oPortableChoice.Anchors := [akLeft, akTop, akRight];
+  oPortableChoice.Caption := 'Portable';
+  oPortableChoice.Font.Style := [fsBold];
+  oPortableChoice.OnClick := @OnPortablePagePortableChoiceClick;
+
+  oPortableText := TLabel.Create(oPortablePanel);
+  oPortableText.Parent := oPortablePanel;
+  oPortableText.AutoSize := False;
+  oPortableText.Left := ScaleX(5);
+  oPortableText.Top := ScaleY(5) + oPortableChoice.Top + oPortableChoice.Height;
+  oPortableText.Width := oPortablePanel.Width - ScaleX(10);
+  oPortableText.Height := oPortablePanel.Height - ScaleX(5) - oPortableText.Top;
+  oPortableText.Anchors := [akLeft, akTop, akRight];
+  oPortableText.WordWrap := True
+  oPortableText.Caption := 'Install for use in portable or multi-environment scenarios, which require StreamFX to not be tied to the System itself. The uninstaller, automatic updates and other system-dependent features will be unavailable.';
+  oPortableText.OnClick := @OnPortablePagePortableChoiceClick;
+
+  if (not IsAdmin()) then begin
+    oStaticWarningText := TLabel.Create(oStaticPanel);
+    oStaticWarningText.Parent := oStaticPanel;
+    oStaticWarningText.AutoSize := False;
+    oStaticWarningText.Left := ScaleX(5);
+    oStaticWarningText.Top := oPortablePanel.Height - ScaleY(5) - ScaleY(15);
+    oStaticWarningText.Width := oPortablePanel.Width - ScaleX(10);
+    oStaticWarningText.Height := ScaleY(15);
+    oStaticWarningText.Anchors := [akLeft, akBottom, akRight];
+    oStaticWarningText.WordWrap := True
+    oStaticWarningText.Font.Color := clRed;
+    oStaticWarningText.Font.Style := [fsBold];
+    oStaticWarningText.Caption := 'Please launch the Installer as Administrator for static installations.';
+
+    oStaticPanel.Enabled := False;
+    oStaticChoice.Enabled := False;
+    oStaticText.Enabled := False;
+
+    oStaticChoice.Checked := False;
+    oPortableChoice.Checked := True;
+  end else begin
+    oStaticChoice.Checked := True;
+    oPortableChoice.Checked := False;
+  end;
+
+  Result := oPage;
+end;
+
+procedure InitializeWizard;
+var
+  oPortablePage: TWizardPage;
+begin
+  oPortablePage := CreatePortablePage();
+end;
+
+// ------------------------------------------------------------------------------------------------------------------ //
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+	Result := False;
+	if ((not IsPortablePagePortableChoiceChecked()) and (PageID = wpSelectDir)) then begin
+		Result := True;
+	end
 end;
 
 // ------------------------------------------------------------------------------------------------------------------ //
