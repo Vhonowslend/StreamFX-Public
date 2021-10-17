@@ -57,6 +57,7 @@
 #define ST_I18N_ENCODER_CPUUSAGE_7 ST_I18N_ENCODER ".CPUUsage.7"
 #define ST_I18N_ENCODER_CPUUSAGE_8 ST_I18N_ENCODER ".CPUUsage.8"
 #define ST_I18N_ENCODER_CPUUSAGE_9 ST_I18N_ENCODER ".CPUUsage.9"
+#define ST_I18N_ENCODER_CPUUSAGE_10 ST_I18N_ENCODER ".CPUUsage.10"
 #define ST_KEY_ENCODER_CPUUSAGE "Encoder.CPUUsage"
 #define ST_KEY_ENCODER_PROFILE "Encoder.Profile"
 
@@ -1453,6 +1454,7 @@ obs_properties_t* aom_av1_factory::get_properties2(instance_t* data)
 			auto p = obs_properties_add_list(grp, ST_KEY_ENCODER_CPUUSAGE, D_TRANSLATE(ST_I18N_ENCODER_CPUUSAGE),
 											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), -1);
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_ENCODER_CPUUSAGE_10), 10);
 			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_ENCODER_CPUUSAGE_9), 9);
 			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_ENCODER_CPUUSAGE_8), 8);
 			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_ENCODER_CPUUSAGE_7), 7);
