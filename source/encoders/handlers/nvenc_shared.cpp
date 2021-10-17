@@ -241,6 +241,7 @@ static bool modified_ratecontrol(obs_properties_t* props, obs_property_t*, obs_d
 	bool have_bitrate       = false;
 	bool have_bitrate_range = false;
 	bool have_quality       = false;
+	bool have_qp_limits     = false;
 	bool have_qp            = false;
 
 	nvenc::ratecontrolmode rc =
@@ -253,13 +254,15 @@ static bool modified_ratecontrol(obs_properties_t* props, obs_property_t*, obs_d
 	case nvenc::ratecontrolmode::CBR:
 	case nvenc::ratecontrolmode::CBR_HQ:
 	case nvenc::ratecontrolmode::CBR_LD_HQ:
-		have_bitrate = true;
+		have_bitrate   = true;
+		have_qp_limits = true;
 		break;
 	case nvenc::ratecontrolmode::VBR:
 	case nvenc::ratecontrolmode::VBR_HQ:
 		have_bitrate       = true;
 		have_bitrate_range = true;
 		have_quality       = true;
+		have_qp_limits     = true;
 		have_qp            = true;
 		break;
 	}
@@ -270,9 +273,9 @@ static bool modified_ratecontrol(obs_properties_t* props, obs_property_t*, obs_d
 	obs_property_set_visible(obs_properties_get(props, ST_KEY_RATECONTROL_LIMITS_BITRATE_TARGET), have_bitrate);
 	obs_property_set_visible(obs_properties_get(props, ST_KEY_RATECONTROL_LIMITS_BITRATE_MAXIMUM), have_bitrate_range);
 
-	obs_property_set_visible(obs_properties_get(props, ST_I18N_RATECONTROL_QP), have_qp || have_bitrate_range);
-	obs_property_set_visible(obs_properties_get(props, ST_KEY_RATECONTROL_QP_MINIMUM), have_bitrate_range);
-	obs_property_set_visible(obs_properties_get(props, ST_KEY_RATECONTROL_QP_MAXIMUM), have_bitrate_range);
+	obs_property_set_visible(obs_properties_get(props, ST_I18N_RATECONTROL_QP), have_qp || have_qp_limits);
+	obs_property_set_visible(obs_properties_get(props, ST_KEY_RATECONTROL_QP_MINIMUM), have_qp_limits);
+	obs_property_set_visible(obs_properties_get(props, ST_KEY_RATECONTROL_QP_MAXIMUM), have_qp_limits);
 	obs_property_set_visible(obs_properties_get(props, ST_KEY_RATECONTROL_QP_I), have_qp);
 	obs_property_set_visible(obs_properties_get(props, ST_KEY_RATECONTROL_QP_P), have_qp);
 	obs_property_set_visible(obs_properties_get(props, ST_KEY_RATECONTROL_QP_B), have_qp);
@@ -530,6 +533,7 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		bool have_bitrate       = false;
 		bool have_bitrate_range = false;
 		bool have_quality       = false;
+		bool have_qp_limits     = false;
 		bool have_qp            = false;
 
 		ratecontrolmode rc    = static_cast<ratecontrolmode>(obs_data_get_int(settings, ST_KEY_RATECONTROL_MODE));
@@ -540,6 +544,7 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			have_bitrate       = true;
 			have_bitrate_range = true;
 			have_quality       = true;
+			have_qp_limits     = true;
 			have_qp            = true;
 		}
 
@@ -552,7 +557,8 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		case ratecontrolmode::CBR:
 		case ratecontrolmode::CBR_HQ:
 		case ratecontrolmode::CBR_LD_HQ:
-			have_bitrate = true;
+			have_bitrate   = true;
+			have_qp_limits = true;
 			av_opt_set_int(context->priv_data, "cbr", 1, AV_OPT_SEARCH_CHILDREN);
 			break;
 		case ratecontrolmode::VBR:
@@ -561,6 +567,7 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			have_bitrate       = true;
 			have_quality       = true;
 			have_qp            = true;
+			have_qp_limits     = true;
 			break;
 		}
 
@@ -618,7 +625,7 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		}
 
 		// Quality Limits
-		if (have_quality) {
+		if (have_qp_limits) {
 			if (int qmin = static_cast<int>(obs_data_get_int(settings, ST_KEY_RATECONTROL_QP_MINIMUM)); qmin > -1)
 				context->qmin = qmin;
 			if (int qmax = static_cast<int>(obs_data_get_int(settings, ST_KEY_RATECONTROL_QP_MAXIMUM)); qmax > -1)
@@ -629,8 +636,12 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		}
 
 		// Quality Target
-		if (double_t v = obs_data_get_double(settings, ST_KEY_RATECONTROL_LIMITS_QUALITY) / 100.0 * 51.0; v > 0) {
-			av_opt_set_double(context->priv_data, "cq", v, AV_OPT_SEARCH_CHILDREN);
+		if (have_quality) {
+			if (double_t v = obs_data_get_double(settings, ST_KEY_RATECONTROL_LIMITS_QUALITY) / 100.0 * 51.0; v > 0) {
+				av_opt_set_double(context->priv_data, "cq", v, AV_OPT_SEARCH_CHILDREN);
+			}
+		} else {
+			av_opt_set_double(context->priv_data, "cq", 0, AV_OPT_SEARCH_CHILDREN);
 		}
 
 		// QP Settings
