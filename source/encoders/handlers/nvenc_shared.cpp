@@ -84,10 +84,8 @@ extern "C" {
 #define ST_KEY_OTHER_WEIGHTEDPREDICTION "Other.WeightedPrediction"
 #define ST_I18N_OTHER_NONREFERENCEPFRAMES ST_I18N_OTHER ".NonReferencePFrames"
 #define ST_KEY_OTHER_NONREFERENCEPFRAMES "Other.NonReferencePFrames"
-#define ST_I18N_OTHER_ACCESSUNITDELIMITER ST_I18N_OTHER ".AccessUnitDelimiter"
-#define ST_KEY_OTHER_ACCESSUNITDELIMITER "Other.AccessUnitDelimiter"
-#define ST_I18N_OTHER_DECODEDPICTUREBUFFERSIZE ST_I18N_OTHER ".DecodedPictureBufferSize"
-#define ST_KEY_OTHER_DECODEDPICTUREBUFFERSIZE "Other.DecodedPictureBufferSize"
+#define ST_I18N_OTHER_REFERENCEFRAMES ST_I18N_OTHER ".ReferenceFrames"
+#define ST_KEY_OTHER_REFERENCEFRAMES "Other.ReferenceFrames"
 
 using namespace streamfx::encoder::ffmpeg::handler;
 
@@ -210,7 +208,7 @@ void nvenc::get_defaults(obs_data_t* settings, const AVCodec*, AVCodecContext*)
 
 	obs_data_set_default_int(settings, ST_KEY_RATECONTROL_LIMITS_BITRATE_TARGET, 6000);
 	obs_data_set_default_int(settings, ST_KEY_RATECONTROL_LIMITS_BITRATE_MAXIMUM, 0);
-	obs_data_set_default_int(settings, ST_KEY_RATECONTROL_LIMITS_BUFFERSIZE, 12000);
+	obs_data_set_default_int(settings, ST_KEY_RATECONTROL_LIMITS_BUFFERSIZE, 0);
 	obs_data_set_default_double(settings, ST_KEY_RATECONTROL_LIMITS_QUALITY, 0);
 
 	obs_data_set_default_int(settings, ST_KEY_RATECONTROL_QP_MINIMUM, -1);
@@ -228,8 +226,7 @@ void nvenc::get_defaults(obs_data_t* settings, const AVCodec*, AVCodecContext*)
 	obs_data_set_default_int(settings, ST_KEY_OTHER_ZEROLATENCY, -1);
 	obs_data_set_default_int(settings, ST_KEY_OTHER_WEIGHTEDPREDICTION, -1);
 	obs_data_set_default_int(settings, ST_KEY_OTHER_NONREFERENCEPFRAMES, -1);
-	obs_data_set_default_int(settings, ST_KEY_OTHER_ACCESSUNITDELIMITER, -1);
-	obs_data_set_default_int(settings, ST_KEY_OTHER_DECODEDPICTUREBUFFERSIZE, -1);
+	obs_data_set_default_int(settings, ST_KEY_OTHER_REFERENCEFRAMES, -1);
 
 	// Replay Buffer
 	obs_data_set_default_int(settings, "bitrate", 0);
@@ -470,13 +467,9 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		}
 
 		{
-			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_ACCESSUNITDELIMITER,
-																 D_TRANSLATE(ST_I18N_OTHER_ACCESSUNITDELIMITER));
-		}
-
-		{
-			auto p = obs_properties_add_int_slider(grp, ST_KEY_OTHER_DECODEDPICTUREBUFFERSIZE,
-												   D_TRANSLATE(ST_I18N_OTHER_DECODEDPICTUREBUFFERSIZE), -1, 16, 1);
+			auto p = obs_properties_add_int_slider(grp, ST_KEY_OTHER_REFERENCEFRAMES,
+												   D_TRANSLATE(ST_I18N_OTHER_REFERENCEFRAMES), -1,
+												   (strcmp(codec->name, "h264_nvenc") == 0) ? 16 : 4, 1);
 			obs_property_int_set_suffix(p, " frames");
 		}
 	}
@@ -512,8 +505,7 @@ void nvenc::get_runtime_properties(obs_properties_t* props, const AVCodec*, AVCo
 	obs_property_set_enabled(obs_properties_get(props, ST_KEY_OTHER_ZEROLATENCY), false);
 	obs_property_set_enabled(obs_properties_get(props, ST_KEY_OTHER_WEIGHTEDPREDICTION), false);
 	obs_property_set_enabled(obs_properties_get(props, ST_KEY_OTHER_NONREFERENCEPFRAMES), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_KEY_OTHER_ACCESSUNITDELIMITER), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_KEY_OTHER_DECODEDPICTUREBUFFERSIZE), false);
+	obs_property_set_enabled(obs_properties_get(props, ST_KEY_OTHER_REFERENCEFRAMES), false);
 }
 
 void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context)
@@ -683,11 +675,8 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		if (int64_t nrp = obs_data_get_int(settings, ST_KEY_OTHER_NONREFERENCEPFRAMES);
 			!streamfx::util::is_tristate_default(nrp))
 			av_opt_set_int(context->priv_data, "nonref_p", nrp, AV_OPT_SEARCH_CHILDREN);
-		if (int64_t v = obs_data_get_int(settings, ST_KEY_OTHER_ACCESSUNITDELIMITER);
-			!streamfx::util::is_tristate_default(v))
-			av_opt_set_int(context->priv_data, "aud", v, AV_OPT_SEARCH_CHILDREN);
-		if (int64_t v = obs_data_get_int(settings, ST_KEY_OTHER_DECODEDPICTUREBUFFERSIZE); v > -1)
-			av_opt_set_int(context->priv_data, "dpb_size", v, AV_OPT_SEARCH_CHILDREN);
+		if (int64_t v = obs_data_get_int(settings, ST_KEY_OTHER_REFERENCEFRAMES); v > -1)
+			av_opt_set_int(context->priv_data, "refs", v, AV_OPT_SEARCH_CHILDREN);
 
 		int64_t wp = obs_data_get_int(settings, ST_KEY_OTHER_WEIGHTEDPREDICTION);
 		if ((context->max_b_frames > 0) && streamfx::util::is_tristate_enabled(wp)) {
@@ -755,6 +744,7 @@ void nvenc::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* conte
 	tools::print_av_option_bool(context, "zerolatency", "      Zero Latency");
 	tools::print_av_option_bool(context, "weighted_pred", "      Weighted Prediction");
 	tools::print_av_option_bool(context, "nonref_p", "      Non-reference P-Frames");
+	tools::print_av_option_int(context, "refs", "      REference Frames", "Frames");
 	tools::print_av_option_bool(context, "strict_gop", "      Strict GOP");
 	tools::print_av_option_bool(context, "aud", "      Access Unit Delimiters");
 	tools::print_av_option_bool(context, "bluray-compat", "      Bluray Compatibility");
