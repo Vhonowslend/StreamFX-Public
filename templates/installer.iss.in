@@ -38,7 +38,8 @@ ArchitecturesInstallIn64BitMode=x64 arm64 ia64
 ArchitecturesAllowed=@ARCH@
 
 ; Installation Modes
-PrivilegesRequired=lowest
+UsePreviousPrivileges=no
+PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=dialog commandline
 
 ; Wizard Information
