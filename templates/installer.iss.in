@@ -46,6 +46,7 @@ PrivilegesRequiredOverridesAllowed=dialog commandline
 WizardStyle=modern
 WizardResizable=yes
 SetupIconFile="@PROJECT_SOURCE_DIR@/media/icon.ico"
+UninstallDisplayIcon={uninstallexe}
 
 ; Other Information
 UsePreviousAppDir=no
