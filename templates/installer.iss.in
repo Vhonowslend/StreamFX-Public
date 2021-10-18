@@ -334,9 +334,14 @@ end;
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
 	Result := False;
-	if ((not IsPortablePagePortableChoiceChecked()) and (PageID = wpSelectDir)) then begin
-		Result := True;
-	end
+	if (PageID = wpSelectDir) then begin
+		if (not IsPortablePagePortableChoiceChecked()) then begin
+			if (IsUpgrade()) then begin
+				Result := True;
+				Exit;
+			end;
+		end;
+	end;
 end;
 
 // ------------------------------------------------------------------------------------------------------------------ //
