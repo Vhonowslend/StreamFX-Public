@@ -118,14 +118,6 @@ begin
 	if (sInstallPath = '') then
 		RegQueryStringValue(HKCU64, 'SOFTWARE\OBS Studio', '', sInstallPath);
 
-	// 4. If empty, try and find the 32-bit "Local Machine" installation of OBS Studio.
-	if (sInstallPath = '') then
-		RegQueryStringValue(HKLM32, 'SOFTWARE\OBS Studio', '', sInstallPath);
-
-	// 5. If empty, try and find the 32-bit "Current User" installation of OBS Studio.
-	if (sInstallPath = '') then
-		RegQueryStringValue(HKCU32, 'SOFTWARE\OBS Studio', '', sInstallPath);
-
 	// 6. If empty, just use the default path.
 	if (sInstallPath = '') then
 		sInstallPath := ExpandConstant('{commonpf}\obs-studio');
