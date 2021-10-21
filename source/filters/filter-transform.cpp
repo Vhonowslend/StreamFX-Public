@@ -51,40 +51,37 @@
 #endif
 
 #define ST_I18N "Filter.Transform"
-#define ST_I18N_CAMERA "Filter.Transform.Camera"
-#define ST_KEY_CAMERA "Filter.Transform.Camera"
-#define ST_I18N_CAMERA_ORTHOGRAPHIC "Filter.Transform.Camera.Orthographic"
-#define ST_I18N_CAMERA_PERSPECTIVE "Filter.Transform.Camera.Perspective"
-#define ST_I18N_CAMERA_FIELDOFVIEW "Filter.Transform.Camera.FieldOfView"
-#define ST_KEY_CAMERA_FIELDOFVIEW "Filter.Transform.Camera.FieldOfView"
-#define ST_I18N_POSITION "Filter.Transform.Position"
-#define ST_KEY_POSITION "Filter.Transform.Position"
-#define ST_KEY_POSITION_X "Filter.Transform.Position.X"
-#define ST_KEY_POSITION_Y "Filter.Transform.Position.Y"
-#define ST_KEY_POSITION_Z "Filter.Transform.Position.Z"
-#define ST_I18N_ROTATION "Filter.Transform.Rotation"
-#define ST_KEY_ROTATION "Filter.Transform.Rotation"
-#define ST_KEY_ROTATION_X "Filter.Transform.Rotation.X"
-#define ST_KEY_ROTATION_Y "Filter.Transform.Rotation.Y"
-#define ST_KEY_ROTATION_Z "Filter.Transform.Rotation.Z"
-#define ST_I18N_SCALE "Filter.Transform.Scale"
-#define ST_KEY_SCALE "Filter.Transform.Scale"
-#define ST_KEY_SCALE_X "Filter.Transform.Scale.X"
-#define ST_KEY_SCALE_Y "Filter.Transform.Scale.Y"
-#define ST_I18N_SHEAR "Filter.Transform.Shear"
-#define ST_KEY_SHEAR "Filter.Transform.Shear"
-#define ST_KEY_SHEAR_X "Filter.Transform.Shear.X"
-#define ST_KEY_SHEAR_Y "Filter.Transform.Shear.Y"
-#define ST_I18N_ROTATION_ORDER "Filter.Transform.Rotation.Order"
-#define ST_KEY_ROTATION_ORDER "Filter.Transform.Rotation.Order"
-#define ST_I18N_ROTATION_ORDER_XYZ "Filter.Transform.Rotation.Order.XYZ"
-#define ST_I18N_ROTATION_ORDER_XZY "Filter.Transform.Rotation.Order.XZY"
-#define ST_I18N_ROTATION_ORDER_YXZ "Filter.Transform.Rotation.Order.YXZ"
-#define ST_I18N_ROTATION_ORDER_YZX "Filter.Transform.Rotation.Order.YZX"
-#define ST_I18N_ROTATION_ORDER_ZXY "Filter.Transform.Rotation.Order.ZXY"
-#define ST_I18N_ROTATION_ORDER_ZYX "Filter.Transform.Rotation.Order.ZYX"
-#define ST_I18N_MIPMAPPING "Filter.Transform.Mipmapping"
-#define ST_KEY_MIPMAPPING "Filter.Transform.Mipmapping"
+#define ST_I18N_CAMERA ST_I18N ".Camera"
+#define ST_I18N_CAMERA_MODE ST_I18N_CAMERA ".Mode"
+#define ST_KEY_CAMERA_MODE "Camera.Mode"
+#define ST_I18N_CAMERA_MODE_ORTHOGRAPHIC ST_I18N_CAMERA_MODE ".Orthographic"
+#define ST_I18N_CAMERA_MODE_PERSPECTIVE ST_I18N_CAMERA_MODE ".Perspective"
+#define ST_I18N_CAMERA_FIELDOFVIEW ST_I18N_CAMERA ".FieldOfView"
+#define ST_KEY_CAMERA_FIELDOFVIEW "Camera.FieldOfView"
+#define ST_I18N_POSITION ST_I18N ".Position"
+#define ST_KEY_POSITION_X "Position.X"
+#define ST_KEY_POSITION_Y "Position.Y"
+#define ST_KEY_POSITION_Z "Position.Z"
+#define ST_I18N_ROTATION ST_I18N ".Rotation"
+#define ST_KEY_ROTATION_X "Rotation.X"
+#define ST_KEY_ROTATION_Y "Rotation.Y"
+#define ST_KEY_ROTATION_Z "Rotation.Z"
+#define ST_I18N_SCALE ST_I18N ".Scale"
+#define ST_KEY_SCALE_X "Scale.X"
+#define ST_KEY_SCALE_Y "Scale.Y"
+#define ST_I18N_SHEAR ST_I18N ".Shear"
+#define ST_KEY_SHEAR_X "Shear.X"
+#define ST_KEY_SHEAR_Y "Shear.Y"
+#define ST_I18N_ROTATION_ORDER ST_I18N ".Rotation.Order"
+#define ST_KEY_ROTATION_ORDER "Rotation.Order"
+#define ST_I18N_ROTATION_ORDER_XYZ ST_I18N_ROTATION_ORDER ".XYZ"
+#define ST_I18N_ROTATION_ORDER_XZY ST_I18N_ROTATION_ORDER ".XZY"
+#define ST_I18N_ROTATION_ORDER_YXZ ST_I18N_ROTATION_ORDER ".YXZ"
+#define ST_I18N_ROTATION_ORDER_YZX ST_I18N_ROTATION_ORDER ".YZX"
+#define ST_I18N_ROTATION_ORDER_ZXY ST_I18N_ROTATION_ORDER ".ZXY"
+#define ST_I18N_ROTATION_ORDER_ZYX ST_I18N_ROTATION_ORDER ".ZYX"
+#define ST_I18N_MIPMAPPING ST_I18N ".Mipmapping"
+#define ST_KEY_MIPMAPPING "Mipmapping"
 
 using namespace streamfx::filter::transform;
 
@@ -141,19 +138,60 @@ void transform_instance::load(obs_data_t* settings)
 	update(settings);
 }
 
-void transform_instance::migrate(obs_data_t* data, uint64_t version)
+void transform_instance::migrate(obs_data_t* settings, uint64_t version)
 {
-	switch (version & STREAMFX_MASK_COMPAT) {
-	case 0:
-		obs_data_set_double(data, ST_KEY_ROTATION_X, -obs_data_get_double(data, ST_KEY_ROTATION_X));
-		obs_data_set_double(data, ST_KEY_ROTATION_Y, -obs_data_get_double(data, ST_KEY_ROTATION_Y));
+	// Only test for A.B.C in A.B.C.D
+	version = version & STREAMFX_MASK_UPDATE;
+
+#define COPY_UNSET(TYPE, OLDNAME, NEWNAME)                                              \
+	if (obs_data_has_user_value(settings, OLDNAME)) {                                   \
+		obs_data_set_##TYPE(settings, NEWNAME, obs_data_get_##TYPE(settings, OLDNAME)); \
+		obs_data_unset_user_value(settings, OLDNAME);                                   \
 	}
+#define COPY_IGNORE(TYPE, OLDNAME, NEWNAME)                                             \
+	if (obs_data_has_user_value(settings, OLDNAME)) {                                   \
+		obs_data_set_##TYPE(settings, NEWNAME, obs_data_get_##TYPE(settings, OLDNAME)); \
+	}
+#define SET_IF_UNSET(TYPE, NAME, value)             \
+	if (!obs_data_has_user_value(settings, NAME)) { \
+		obs_data_set_##TYPE(settings, NAME, value); \
+	}
+
+	if (version < STREAMFX_MAKE_VERSION(0, 8, 0, 0)) {
+		COPY_IGNORE(double, ST_KEY_ROTATION_X, ST_KEY_ROTATION_X);
+		COPY_IGNORE(double, ST_KEY_ROTATION_Y, ST_KEY_ROTATION_Y);
+	}
+
+	if (version < STREAMFX_MAKE_VERSION(0, 11, 0, 0)) {
+		COPY_UNSET(int, ST_KEY_CAMERA_MODE, "Filter.Transform.Camera");
+		COPY_UNSET(double, ST_KEY_CAMERA_FIELDOFVIEW, "Filter.Transform.Camera.FieldOfView");
+		COPY_UNSET(double, ST_KEY_POSITION_X, "Filter.Transform.Position.X");
+		COPY_UNSET(double, ST_KEY_POSITION_Y, "Filter.Transform.Position.Y");
+		COPY_UNSET(double, ST_KEY_POSITION_Z, "Filter.Transform.Position.Z");
+		COPY_UNSET(double, ST_KEY_ROTATION_X, "Filter.Transform.Rotation.X");
+		COPY_UNSET(double, ST_KEY_ROTATION_Y, "Filter.Transform.Rotation.Y");
+		COPY_UNSET(double, ST_KEY_ROTATION_Z, "Filter.Transform.Rotation.Z");
+		COPY_UNSET(double, ST_KEY_SCALE_X, "Filter.Transform.Scale.X");
+		COPY_UNSET(double, ST_KEY_SCALE_Y, "Filter.Transform.Scale.Y");
+		COPY_UNSET(double, ST_KEY_SHEAR_X, "Filter.Transform.Shear.X");
+		COPY_UNSET(double, ST_KEY_SHEAR_Y, "Filter.Transform.Shear.Y");
+		COPY_UNSET(double, ST_KEY_ROTATION_ORDER, "Filter.Transform.Rotation.Order");
+		COPY_UNSET(double, ST_KEY_MIPMAPPING, "Filter.Transform.Mipmapping");
+
+		if (!obs_data_has_user_value(settings, ST_KEY_CAMERA_MODE)) {
+			SET_IF_UNSET(int, ST_KEY_CAMERA_MODE, static_cast<int>(CameraMode::Orthographic));
+		}
+	}
+
+#undef SET_IF_UNSET
+#undef COPY_IGNORE
+#undef COPY_UNSET
 }
 
 void transform_instance::update(obs_data_t* settings)
 {
 	// Camera
-	_camera_orthographic = obs_data_get_int(settings, ST_KEY_CAMERA) == 0;
+	_camera_orthographic = obs_data_get_int(settings, ST_KEY_CAMERA_MODE) == 0;
 	_camera_fov          = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_CAMERA_FIELDOFVIEW));
 
 	// Source
@@ -171,7 +209,7 @@ void transform_instance::update(obs_data_t* settings)
 	_shear->y       = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_SHEAR_Y) / 100.0);
 	_shear->z       = 0.0f;
 
-	// Mipmapping
+	// Mip-mapping
 	_mipmap_enabled = obs_data_get_bool(settings, ST_KEY_MIPMAPPING);
 
 	_update_mesh = true;
@@ -483,7 +521,7 @@ const char* transform_factory::get_name()
 
 void transform_factory::get_defaults2(obs_data_t* settings)
 {
-	obs_data_set_default_int(settings, ST_KEY_CAMERA, static_cast<int64_t>(CameraMode::Orthographic));
+	obs_data_set_default_int(settings, ST_KEY_CAMERA_MODE, static_cast<int64_t>(CameraMode::Orthographic));
 	obs_data_set_default_double(settings, ST_KEY_CAMERA_FIELDOFVIEW, 90.0);
 	obs_data_set_default_double(settings, ST_KEY_POSITION_X, 0);
 	obs_data_set_default_double(settings, ST_KEY_POSITION_Y, 0);
@@ -499,18 +537,20 @@ void transform_factory::get_defaults2(obs_data_t* settings)
 	obs_data_set_default_bool(settings, ST_KEY_MIPMAPPING, false);
 }
 
-static bool modified_properties(obs_properties_t* pr, obs_property_t*, obs_data_t* d) noexcept
+static bool modified_camera_mode(obs_properties_t* pr, obs_property_t*, obs_data_t* d) noexcept
 try {
-	switch (static_cast<CameraMode>(obs_data_get_int(d, ST_KEY_CAMERA))) {
-	case CameraMode::Orthographic:
-		obs_property_set_visible(obs_properties_get(pr, ST_KEY_CAMERA_FIELDOFVIEW), false);
-		obs_property_set_visible(obs_properties_get(pr, ST_KEY_POSITION_Z), false);
-		break;
-	case CameraMode::Perspective:
-		obs_property_set_visible(obs_properties_get(pr, ST_KEY_CAMERA_FIELDOFVIEW), true);
-		obs_property_set_visible(obs_properties_get(pr, ST_KEY_POSITION_Z), true);
-		break;
-	}
+	auto mode            = static_cast<CameraMode>(obs_data_get_int(d, ST_KEY_CAMERA_MODE));
+	bool is_camera       = true;
+	bool is_perspective  = (mode == CameraMode::Perspective) && is_camera;
+	bool is_orthographic = (mode == CameraMode::Orthographic) && is_camera;
+
+	obs_property_set_visible(obs_properties_get(pr, ST_KEY_CAMERA_FIELDOFVIEW), is_perspective);
+	obs_property_set_visible(obs_properties_get(pr, ST_I18N_POSITION), is_camera);
+	obs_property_set_visible(obs_properties_get(pr, ST_KEY_POSITION_Z), is_perspective);
+	obs_property_set_visible(obs_properties_get(pr, ST_I18N_ROTATION), is_camera);
+	obs_property_set_visible(obs_properties_get(pr, ST_I18N_SCALE), is_camera);
+	obs_property_set_visible(obs_properties_get(pr, ST_I18N_SHEAR), is_camera);
+	obs_property_set_visible(obs_properties_get(pr, ST_KEY_ROTATION_ORDER), is_camera);
 
 	return true;
 } catch (const std::exception& ex) {
@@ -537,75 +577,93 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 		auto grp = obs_properties_create();
 
 		{ // Projection Mode
-			auto p = obs_properties_add_list(grp, ST_KEY_CAMERA, D_TRANSLATE(ST_I18N_CAMERA), OBS_COMBO_TYPE_LIST,
-											 OBS_COMBO_FORMAT_INT);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_CAMERA_ORTHOGRAPHIC),
+			auto p = obs_properties_add_list(grp, ST_KEY_CAMERA_MODE, D_TRANSLATE(ST_I18N_CAMERA_MODE),
+											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_CAMERA_MODE_ORTHOGRAPHIC),
 									  static_cast<int64_t>(CameraMode::Orthographic));
-			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_CAMERA_PERSPECTIVE),
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_CAMERA_MODE_PERSPECTIVE),
 									  static_cast<int64_t>(CameraMode::Perspective));
-			obs_property_set_modified_callback(p, modified_properties);
+			obs_property_set_modified_callback(p, modified_camera_mode);
 		}
 		{ // Field Of View
 			auto p = obs_properties_add_float_slider(grp, ST_KEY_CAMERA_FIELDOFVIEW,
 													 D_TRANSLATE(ST_I18N_CAMERA_FIELDOFVIEW), 1.0, 179.0, 0.01);
 		}
 
-		obs_properties_add_group(pr, ST_KEY_CAMERA, D_TRANSLATE(ST_I18N_CAMERA), OBS_GROUP_NORMAL, grp);
+		obs_properties_add_group(pr, ST_I18N_CAMERA, D_TRANSLATE(ST_I18N_CAMERA), OBS_GROUP_NORMAL, grp);
 	}
 
-	// Mesh
-	{ // Position
-		auto grp = obs_properties_create();
+	{
+		; // Parmametrized Mesh
 
-		const char* opts[] = {ST_KEY_POSITION_X, ST_KEY_POSITION_Y, ST_KEY_POSITION_Z};
-		for (auto opt : opts) {
-			auto p = obs_properties_add_float(grp, opt, D_TRANSLATE(opt), std::numeric_limits<float_t>::lowest(),
-											  std::numeric_limits<float_t>::max(), 0.01);
-		}
+		{ // Position
+			auto grp = obs_properties_create();
 
-		obs_properties_add_group(pr, ST_KEY_POSITION, D_TRANSLATE(ST_I18N_POSITION), OBS_GROUP_NORMAL, grp);
-	}
-	{ // Rotation
-		auto grp = obs_properties_create();
-
-		{
-			const char* opts[] = {ST_KEY_ROTATION_X, ST_KEY_ROTATION_Y, ST_KEY_ROTATION_Z};
+			std::pair<std::string, std::string> opts[] = {
+				{ST_KEY_POSITION_X, "X"},
+				{ST_KEY_POSITION_Y, "Y"},
+				{ST_KEY_POSITION_Z, "Z"},
+			};
 			for (auto opt : opts) {
-				auto p = obs_properties_add_float_slider(grp, opt, D_TRANSLATE(opt), -180.0, 180.0, 0.01);
+				auto p = obs_properties_add_float(grp, opt.first.c_str(), D_TRANSLATE(opt.second.c_str()),
+												  std::numeric_limits<float_t>::lowest(),
+												  std::numeric_limits<float_t>::max(), 0.01);
+			}
+
+			obs_properties_add_group(pr, ST_I18N_POSITION, D_TRANSLATE(ST_I18N_POSITION), OBS_GROUP_NORMAL, grp);
+		}
+		{ // Rotation
+			auto grp = obs_properties_create();
+
+			std::pair<std::string, std::string> opts[] = {
+				{ST_KEY_ROTATION_X, D_TRANSLATE(ST_I18N_ROTATION ".X")},
+				{ST_KEY_ROTATION_Y, D_TRANSLATE(ST_I18N_ROTATION ".Y")},
+				{ST_KEY_ROTATION_Z, D_TRANSLATE(ST_I18N_ROTATION ".Z")},
+			};
+			for (auto opt : opts) {
+				auto p = obs_properties_add_float_slider(grp, opt.first.c_str(), D_TRANSLATE(opt.second.c_str()),
+														 -180.0, 180.0, 0.01);
 				obs_property_float_set_suffix(p, "° Deg");
 			}
+
+			obs_properties_add_group(pr, ST_I18N_ROTATION, D_TRANSLATE(ST_I18N_ROTATION), OBS_GROUP_NORMAL, grp);
 		}
+		{ // Scale
+			auto grp = obs_properties_create();
 
-		obs_properties_add_group(pr, ST_KEY_ROTATION, D_TRANSLATE(ST_I18N_ROTATION), OBS_GROUP_NORMAL, grp);
-	}
-	{ // Scale
-		auto grp = obs_properties_create();
+			std::pair<std::string, std::string> opts[] = {
+				{ST_KEY_SCALE_X, "X"},
+				{ST_KEY_SCALE_Y, "Y"},
+			};
+			for (auto opt : opts) {
+				auto p = obs_properties_add_float_slider(grp, opt.first.c_str(), opt.second.c_str(), -1000, 1000, 0.01);
+				obs_property_float_set_suffix(p, "%");
+			}
 
-		const char* opts[] = {ST_KEY_SCALE_X, ST_KEY_SCALE_Y};
-		for (auto opt : opts) {
-			auto p = obs_properties_add_float_slider(grp, opt, D_TRANSLATE(opt), -1000, 1000, 0.01);
-			obs_property_float_set_suffix(p, "%");
+			obs_properties_add_group(pr, ST_I18N_SCALE, D_TRANSLATE(ST_I18N_SCALE), OBS_GROUP_NORMAL, grp);
 		}
+		{ // Shear
+			auto grp = obs_properties_create();
 
-		obs_properties_add_group(pr, ST_KEY_SCALE, D_TRANSLATE(ST_I18N_SCALE), OBS_GROUP_NORMAL, grp);
-	}
-	{ // Shear
-		auto grp = obs_properties_create();
+			std::pair<std::string, std::string> opts[] = {
+				{ST_KEY_SHEAR_X, "X"},
+				{ST_KEY_SHEAR_Y, "Y"},
+			};
+			for (auto opt : opts) {
+				auto p =
+					obs_properties_add_float_slider(grp, opt.first.c_str(), opt.second.c_str(), -200.0, 200.0, 0.01);
+				obs_property_float_set_suffix(p, "%");
+			}
 
-		const char* opts[] = {ST_KEY_SHEAR_X, ST_KEY_SHEAR_Y};
-		for (auto opt : opts) {
-			auto p = obs_properties_add_float_slider(grp, opt, D_TRANSLATE(opt), -200.0, 200.0, 0.01);
-			obs_property_float_set_suffix(p, "%");
+			obs_properties_add_group(pr, ST_I18N_SHEAR, D_TRANSLATE(ST_I18N_SHEAR), OBS_GROUP_NORMAL, grp);
 		}
-
-		obs_properties_add_group(pr, ST_KEY_SHEAR, D_TRANSLATE(ST_I18N_SHEAR), OBS_GROUP_NORMAL, grp);
 	}
 
 	{
 		auto grp = obs_properties_create();
 		obs_properties_add_group(pr, S_ADVANCED, D_TRANSLATE(S_ADVANCED), OBS_GROUP_NORMAL, grp);
 
-		{ // Mipmapping
+		{ // Mip-mapping
 			auto p = obs_properties_add_bool(grp, ST_KEY_MIPMAPPING, D_TRANSLATE(ST_I18N_MIPMAPPING));
 		}
 
