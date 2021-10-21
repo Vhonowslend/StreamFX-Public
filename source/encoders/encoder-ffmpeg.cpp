@@ -65,10 +65,6 @@ extern "C" {
 #define ST_KEY_FFMPEG_CUSTOMSETTINGS "FFmpeg.CustomSettings"
 #define ST_I18N_FFMPEG_THREADS ST_I18N_FFMPEG ".Threads"
 #define ST_KEY_FFMPEG_THREADS "FFmpeg.Threads"
-#define ST_I18N_FFMPEG_COLORFORMAT ST_I18N_FFMPEG ".ColorFormat"
-#define ST_KEY_FFMPEG_COLORFORMAT "FFmpeg.ColorFormat"
-#define ST_I18N_FFMPEG_STANDARDCOMPLIANCE ST_I18N_FFMPEG ".StandardCompliance"
-#define ST_KEY_FFMPEG_STANDARDCOMPLIANCE "FFmpeg.StandardCompliance"
 #define ST_I18N_FFMPEG_GPU ST_I18N_FFMPEG ".GPU"
 #define ST_KEY_FFMPEG_GPU "FFmpeg.GPU"
 
@@ -103,8 +99,7 @@ ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* self, bool
 	// Initialize GPU Stuff
 	if (is_hw) {
 		// Abort if user specified manual override.
-		if ((static_cast<AVPixelFormat>(obs_data_get_int(settings, ST_KEY_FFMPEG_COLORFORMAT)) != AV_PIX_FMT_NONE)
-			|| (obs_data_get_int(settings, ST_KEY_FFMPEG_GPU) != -1) || (obs_encoder_scaling_enabled(_self))
+		if ((obs_data_get_int(settings, ST_KEY_FFMPEG_GPU) != -1) || (obs_encoder_scaling_enabled(_self))
 			|| (video_output_get_info(obs_encoder_video(_self))->format != VIDEO_FORMAT_NV12)) {
 			throw std::runtime_error(
 				"Selected settings prevent the use of hardware encoding, falling back to software.");
@@ -184,9 +179,7 @@ void ffmpeg_instance::get_properties(obs_properties_t* props)
 	obs_property_set_enabled(obs_properties_get(props, ST_KEY_KEYFRAMES_INTERVAL_SECONDS), false);
 	obs_property_set_enabled(obs_properties_get(props, ST_KEY_KEYFRAMES_INTERVAL_FRAMES), false);
 
-	obs_property_set_enabled(obs_properties_get(props, ST_KEY_FFMPEG_COLORFORMAT), false);
 	obs_property_set_enabled(obs_properties_get(props, ST_KEY_FFMPEG_THREADS), false);
-	obs_property_set_enabled(obs_properties_get(props, ST_KEY_FFMPEG_STANDARDCOMPLIANCE), false);
 	obs_property_set_enabled(obs_properties_get(props, ST_KEY_FFMPEG_GPU), false);
 }
 
@@ -200,7 +193,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 {
 	// FFmpeg Options
 	_context->debug                 = 0;
-	_context->strict_std_compliance = static_cast<int>(obs_data_get_int(settings, ST_KEY_FFMPEG_STANDARDCOMPLIANCE));
+	_context->strict_std_compliance = FF_COMPLIANCE_NORMAL;
 
 	/// Threading
 	if (!_hwinst) {
@@ -421,35 +414,18 @@ void ffmpeg_instance::initialize_sw(obs_data_t* settings)
 		// Initialize Video Encoding
 		auto voi = video_output_get_info(obs_encoder_video(_self));
 
-		// Find a suitable Pixel Format.
-		AVPixelFormat _pixfmt_source = ::streamfx::ffmpeg::tools::obs_videoformat_to_avpixelformat(voi->format);
-		AVPixelFormat _pixfmt_target =
-			static_cast<AVPixelFormat>(obs_data_get_int(settings, ST_KEY_FFMPEG_COLORFORMAT));
-		if (_pixfmt_target == AV_PIX_FMT_NONE) {
-			// Find the best conversion format.
+		// Figure out a suitable pixel format to convert to if necessary.
+		AVPixelFormat pix_fmt_source = ::streamfx::ffmpeg::tools::obs_videoformat_to_avpixelformat(voi->format);
+		AVPixelFormat pix_fmt_target = AV_PIX_FMT_NONE;
+		{
 			if (_codec->pix_fmts) {
-				_pixfmt_target = ::streamfx::ffmpeg::tools::get_least_lossy_format(_codec->pix_fmts, _pixfmt_source);
+				pix_fmt_target = ::streamfx::ffmpeg::tools::get_least_lossy_format(_codec->pix_fmts, pix_fmt_source);
 			} else { // If there are no supported formats, just pass in the current one.
-				_pixfmt_target = _pixfmt_source;
+				pix_fmt_target = pix_fmt_source;
 			}
 
 			if (_handler) // Allow Handler to override the automatic color format for sanity reasons.
-				_handler->override_colorformat(_pixfmt_target, settings, _codec, _context);
-		} else {
-			// Use user override, guaranteed to be supported.
-			bool is_format_supported = false;
-			for (auto ptr = _codec->pix_fmts; *ptr != AV_PIX_FMT_NONE; ptr++) {
-				if (*ptr == _pixfmt_target) {
-					is_format_supported = true;
-				}
-			}
-
-			if (!is_format_supported) {
-				std::stringstream sstr;
-				sstr << "Color Format '" << ::streamfx::ffmpeg::tools::get_pixel_format_name(_pixfmt_target)
-					 << "' is not supported by the encoder.";
-				throw std::runtime_error(sstr.str().c_str());
-			}
+				_handler->override_colorformat(pix_fmt_target, settings, _codec, _context);
 		}
 
 		// Setup from OBS information.
@@ -458,7 +434,7 @@ void ffmpeg_instance::initialize_sw(obs_data_t* settings)
 		// Override with other information.
 		_context->width   = static_cast<int>(obs_encoder_get_width(_self));
 		_context->height  = static_cast<int>(obs_encoder_get_height(_self));
-		_context->pix_fmt = _pixfmt_target;
+		_context->pix_fmt = pix_fmt_target;
 
 		// Prevent pixelation by sampling "center" instead of corners. This creates
 		// a smoother look, which may not be H.264/AVC standard compliant, however it
@@ -467,11 +443,11 @@ void ffmpeg_instance::initialize_sw(obs_data_t* settings)
 
 		_scaler.set_source_size(static_cast<uint32_t>(_context->width), static_cast<uint32_t>(_context->height));
 		_scaler.set_source_color(_context->color_range == AVCOL_RANGE_JPEG, _context->colorspace);
-		_scaler.set_source_format(_pixfmt_source);
+		_scaler.set_source_format(pix_fmt_source);
 
 		_scaler.set_target_size(static_cast<uint32_t>(_context->width), static_cast<uint32_t>(_context->height));
 		_scaler.set_target_color(_context->color_range == AVCOL_RANGE_JPEG, _context->colorspace);
-		_scaler.set_target_format(_pixfmt_target);
+		_scaler.set_target_format(pix_fmt_target);
 
 		// Create Scaler
 		if (!_scaler.initialize(SWS_POINT)) {
@@ -994,10 +970,8 @@ void ffmpeg_factory::get_defaults2(obs_data_t* settings)
 	{ // Integrated Options
 		// FFmpeg
 		obs_data_set_default_string(settings, ST_KEY_FFMPEG_CUSTOMSETTINGS, "");
-		obs_data_set_default_int(settings, ST_KEY_FFMPEG_COLORFORMAT, static_cast<int64_t>(AV_PIX_FMT_NONE));
 		obs_data_set_default_int(settings, ST_KEY_FFMPEG_THREADS, 0);
 		obs_data_set_default_int(settings, ST_KEY_FFMPEG_GPU, -1);
-		obs_data_set_default_int(settings, ST_KEY_FFMPEG_STANDARDCOMPLIANCE, FF_COMPLIANCE_STRICT);
 	}
 }
 
@@ -1085,32 +1059,6 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 		if (_handler && _handler->has_threading_support(this)) {
 			auto p = obs_properties_add_int_slider(grp, ST_KEY_FFMPEG_THREADS, D_TRANSLATE(ST_I18N_FFMPEG_THREADS), 0,
 												   static_cast<int64_t>(std::thread::hardware_concurrency() * 2), 1);
-		}
-
-		if (_handler && _handler->has_pixel_format_support(this)) {
-			auto p = obs_properties_add_list(grp, ST_KEY_FFMPEG_COLORFORMAT, D_TRANSLATE(ST_I18N_FFMPEG_COLORFORMAT),
-											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), static_cast<int64_t>(AV_PIX_FMT_NONE));
-			for (auto ptr = _avcodec->pix_fmts; *ptr != AV_PIX_FMT_NONE; ptr++) {
-				obs_property_list_add_int(p, ::streamfx::ffmpeg::tools::get_pixel_format_name(*ptr),
-										  static_cast<int64_t>(*ptr));
-			}
-		}
-
-		{
-			auto p = obs_properties_add_list(grp, ST_KEY_FFMPEG_STANDARDCOMPLIANCE,
-											 D_TRANSLATE(ST_I18N_FFMPEG_STANDARDCOMPLIANCE), OBS_COMBO_TYPE_LIST,
-											 OBS_COMBO_FORMAT_INT);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_FFMPEG_STANDARDCOMPLIANCE ".VeryStrict"),
-									  FF_COMPLIANCE_VERY_STRICT);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_FFMPEG_STANDARDCOMPLIANCE ".Strict"),
-									  FF_COMPLIANCE_STRICT);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_FFMPEG_STANDARDCOMPLIANCE ".Normal"),
-									  FF_COMPLIANCE_NORMAL);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_FFMPEG_STANDARDCOMPLIANCE ".Unofficial"),
-									  FF_COMPLIANCE_UNOFFICIAL);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_FFMPEG_STANDARDCOMPLIANCE ".Experimental"),
-									  FF_COMPLIANCE_EXPERIMENTAL);
 		}
 	};
 
