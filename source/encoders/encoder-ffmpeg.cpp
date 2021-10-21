@@ -59,7 +59,7 @@ extern "C" {
 #endif
 
 // FFmpeg
-#define ST_I18N_FFMPEG "FFmpegEncoder"
+#define ST_I18N_FFMPEG "Encoder.FFmpeg"
 #define ST_I18N_FFMPEG_SUFFIX ST_I18N_FFMPEG ".Suffix"
 #define ST_I18N_FFMPEG_CUSTOMSETTINGS ST_I18N_FFMPEG ".CustomSettings"
 #define ST_KEY_FFMPEG_CUSTOMSETTINGS "FFmpeg.CustomSettings"

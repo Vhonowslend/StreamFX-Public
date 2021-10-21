@@ -30,10 +30,10 @@ extern "C" {
 }
 
 // Translation
-#define ST_I18N "FFmpegEncoder.AMF"
+#define ST_I18N "Encoder.FFmpeg.AMF"
 #define ST_I18N_PRESET ST_I18N ".Preset"
 #define ST_I18N_PRESET_(x) ST_I18N_PRESET "." x
-#define ST_I18N_RATECONTROL "FFmpegEncoder.AMF.RateControl"
+#define ST_I18N_RATECONTROL "Encoder.FFmpeg.AMF.RateControl"
 #define ST_I18N_RATECONTROL_MODE ST_I18N_RATECONTROL ".Mode"
 #define ST_I18N_RATECONTROL_MODE_(x) ST_I18N_RATECONTROL_MODE "." x
 #define ST_I18N_RATECONTROL_LOOKAHEAD ST_I18N_RATECONTROL ".LookAhead"
