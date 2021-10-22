@@ -136,10 +136,9 @@ jobs:
           - ubuntu: focal
             compiler: clang
             compiler-cxx: clang++
-            compiler-version: 9
             runner: ubuntu-20.04
-            packages: clang-9 clang-format-9 clang-tidy-9
-            extra_command: ""
+            packages: ""
+            extra_command: 'sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"'
             id: ubuntu-20.04-clang
     runs-on: ${{ matrix.runner }}
     env:
