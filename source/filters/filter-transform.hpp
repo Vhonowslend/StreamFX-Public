@@ -27,7 +27,27 @@
 #include "obs/obs-source-factory.hpp"
 
 namespace streamfx::filter::transform {
+	enum class transform_mode {
+		ORTHOGRAPHIC = 0,
+		PERSPECTIVE  = 1,
+	};
+
 	class transform_instance : public obs::source_instance {
+		// Settings
+		transform_mode _camera_mode;
+		float          _camera_fov;
+		struct {
+			vec3     position;
+			vec3     rotation;
+			uint32_t rotation_order;
+			vec3     scale;
+			vec3     shear;
+		} _params;
+
+		// Data
+		streamfx::obs::gs::effect  _standard_effect;
+		streamfx::obs::gs::sampler _sampler;
+
 		// Cache
 		bool                                             _cache_rendered;
 		std::shared_ptr<streamfx::obs::gs::rendertarget> _cache_rt;
@@ -48,15 +68,6 @@ namespace streamfx::filter::transform {
 		// Mesh
 		bool                                              _update_mesh;
 		std::shared_ptr<streamfx::obs::gs::vertex_buffer> _vertex_buffer;
-		uint32_t                                          _rotation_order;
-		std::unique_ptr<streamfx::util::vec3a>            _position;
-		std::unique_ptr<streamfx::util::vec3a>            _rotation;
-		std::unique_ptr<streamfx::util::vec3a>            _scale;
-		std::unique_ptr<streamfx::util::vec3a>            _shear;
-
-		// Camera
-		bool    _camera_orthographic;
-		float_t _camera_fov;
 
 		public:
 		transform_instance(obs_data_t*, obs_source_t*);
@@ -66,7 +77,7 @@ namespace streamfx::filter::transform {
 		virtual void migrate(obs_data_t* data, uint64_t version) override;
 		virtual void update(obs_data_t*) override;
 
-		virtual void video_tick(float_t) override;
+		virtual void video_tick(float) override;
 		virtual void video_render(gs_effect_t*) override;
 	};
 

@@ -87,46 +87,50 @@ using namespace streamfx::filter::transform;
 
 static constexpr std::string_view HELP_URL = "https://github.com/Xaymar/obs-StreamFX/wiki/Filter-3D-Transform";
 
-static const float_t farZ  = 2097152.0f; // 2 pow 21
-static const float_t nearZ = 1.0f / farZ;
-
-enum class CameraMode : int64_t { Orthographic, Perspective };
+static const float farZ  = 2097152.0f; // 2 pow 21
+static const float nearZ = 1.0f / farZ;
 
 enum RotationOrder : int64_t {
-	XYZ,
-	XZY,
-	YXZ,
-	YZX,
-	ZXY,
-	ZYX,
+	XYZ = 0,
+	XZY = 1,
+	YXZ = 2,
+	YZX = 3,
+	ZXY = 4,
+	ZYX = 5,
 };
 
 transform_instance::transform_instance(obs_data_t* data, obs_source_t* context)
-	: obs::source_instance(data, context), _cache_rendered(), _mipmap_enabled(), _source_rendered(), _source_size(),
-	  _update_mesh(), _rotation_order(), _camera_orthographic(), _camera_fov()
+	: obs::source_instance(data, context), _camera_mode(), _camera_fov(), _standard_effect(), _sampler(), _params(),
+	  _cache_rendered(), _mipmap_enabled(), _source_rendered(), _source_size(), _update_mesh(true)
 {
 	_cache_rt      = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	_source_rt     = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	_vertex_buffer = std::make_shared<streamfx::obs::gs::vertex_buffer>(uint32_t(4u), uint8_t(1u));
+	{
+		auto file = streamfx::data_file_path("effects/standard.effect");
+		try {
+			_standard_effect = streamfx::obs::gs::effect::create(file.generic_u8string());
+		} catch (const std::exception& ex) {
+			DLOG_ERROR("Error loading '%s' from disk: %s", file.generic_u8string().c_str(), ex.what());
+		}
+	}
+	{
+		_sampler.set_address_mode_u(GS_ADDRESS_CLAMP);
+		_sampler.set_address_mode_v(GS_ADDRESS_CLAMP);
+		_sampler.set_address_mode_w(GS_ADDRESS_CLAMP);
+		_sampler.set_filter(GS_FILTER_LINEAR);
+	}
 
-	_position = std::make_unique<streamfx::util::vec3a>();
-	_rotation = std::make_unique<streamfx::util::vec3a>();
-	_scale    = std::make_unique<streamfx::util::vec3a>();
-	_shear    = std::make_unique<streamfx::util::vec3a>();
-
-	vec3_set(_position.get(), 0, 0, 0);
-	vec3_set(_rotation.get(), 0, 0, 0);
-	vec3_set(_scale.get(), 1, 1, 1);
+	vec3_set(&_params.position, 0, 0, 0);
+	vec3_set(&_params.rotation, 0, 0, 0);
+	vec3_set(&_params.scale, 1, 1, 1);
+	vec3_set(&_params.shear, 0, 0, 0);
 
 	update(data);
 }
 
 transform_instance::~transform_instance()
 {
-	_shear.reset();
-	_scale.reset();
-	_rotation.reset();
-	_position.reset();
 	_vertex_buffer.reset();
 	_cache_rt.reset();
 	_cache_texture.reset();
@@ -179,7 +183,7 @@ void transform_instance::migrate(obs_data_t* settings, uint64_t version)
 		COPY_UNSET(double, ST_KEY_MIPMAPPING, "Filter.Transform.Mipmapping");
 
 		if (!obs_data_has_user_value(settings, ST_KEY_CAMERA_MODE)) {
-			SET_IF_UNSET(int, ST_KEY_CAMERA_MODE, static_cast<int>(CameraMode::Orthographic));
+			SET_IF_UNSET(int, ST_KEY_CAMERA_MODE, static_cast<int>(transform_mode::ORTHOGRAPHIC));
 		}
 	}
 
@@ -191,23 +195,24 @@ void transform_instance::migrate(obs_data_t* settings, uint64_t version)
 void transform_instance::update(obs_data_t* settings)
 {
 	// Camera
-	_camera_orthographic = obs_data_get_int(settings, ST_KEY_CAMERA_MODE) == 0;
-	_camera_fov          = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_CAMERA_FIELDOFVIEW));
+	_camera_mode = static_cast<transform_mode>(obs_data_get_int(settings, ST_KEY_CAMERA_MODE));
+	_camera_fov  = static_cast<float>(obs_data_get_double(settings, ST_KEY_CAMERA_FIELDOFVIEW));
 
-	// Source
-	_position->x    = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_POSITION_X) / 100.0);
-	_position->y    = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_POSITION_Y) / 100.0);
-	_position->z    = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_POSITION_Z) / 100.0);
-	_scale->x       = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_SCALE_X) / 100.0);
-	_scale->y       = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_SCALE_Y) / 100.0);
-	_scale->z       = 1.0f;
-	_rotation_order = static_cast<uint32_t>(obs_data_get_int(settings, ST_KEY_ROTATION_ORDER));
-	_rotation->x    = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_ROTATION_X) / 180.0 * S_PI);
-	_rotation->y    = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_ROTATION_Y) / 180.0 * S_PI);
-	_rotation->z    = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_ROTATION_Z) / 180.0 * S_PI);
-	_shear->x       = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_SHEAR_X) / 100.0);
-	_shear->y       = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_SHEAR_Y) / 100.0);
-	_shear->z       = 0.0f;
+	{ // Parametrized Mesh
+		_params.position.x     = static_cast<float>(obs_data_get_double(settings, ST_KEY_POSITION_X) / 100.0);
+		_params.position.y     = static_cast<float>(obs_data_get_double(settings, ST_KEY_POSITION_Y) / 100.0);
+		_params.position.z     = static_cast<float>(obs_data_get_double(settings, ST_KEY_POSITION_Z) / 100.0);
+		_params.scale.x        = static_cast<float>(obs_data_get_double(settings, ST_KEY_SCALE_X) / 100.0);
+		_params.scale.y        = static_cast<float>(obs_data_get_double(settings, ST_KEY_SCALE_Y) / 100.0);
+		_params.scale.z        = 1.0f;
+		_params.rotation_order = static_cast<uint32_t>(obs_data_get_int(settings, ST_KEY_ROTATION_ORDER));
+		_params.rotation.x     = static_cast<float>(obs_data_get_double(settings, ST_KEY_ROTATION_X) / 180.0 * S_PI);
+		_params.rotation.y     = static_cast<float>(obs_data_get_double(settings, ST_KEY_ROTATION_Y) / 180.0 * S_PI);
+		_params.rotation.z     = static_cast<float>(obs_data_get_double(settings, ST_KEY_ROTATION_Z) / 180.0 * S_PI);
+		_params.shear.x        = static_cast<float>(obs_data_get_double(settings, ST_KEY_SHEAR_X) / 100.0);
+		_params.shear.y        = static_cast<float>(obs_data_get_double(settings, ST_KEY_SHEAR_Y) / 100.0);
+		_params.shear.z        = 0.0f;
+	}
 
 	// Mip-mapping
 	_mipmap_enabled = obs_data_get_bool(settings, ST_KEY_MIPMAPPING);
@@ -215,7 +220,7 @@ void transform_instance::update(obs_data_t* settings)
 	_update_mesh = true;
 }
 
-void transform_instance::video_tick(float_t)
+void transform_instance::video_tick(float)
 {
 	uint32_t width  = 0;
 	uint32_t height = 0;
@@ -248,79 +253,80 @@ void transform_instance::video_tick(float_t)
 		}
 
 		// Calculate Aspect Ratio
-		float_t aspectRatioX = float_t(width) / float_t(height);
-		if (_camera_orthographic)
-			aspectRatioX = 1.0;
+		float aspect_ratio_x = float(width) / float(height);
+
+		if (_camera_mode == transform_mode::ORTHOGRAPHIC)
+			aspect_ratio_x = 1.0;
 
 		// Mesh
 		matrix4 ident;
 		matrix4_identity(&ident);
-		switch (_rotation_order) {
+		switch (_params.rotation_order) {
 		case RotationOrder::XYZ: // XYZ
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, _rotation->x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, _rotation->y);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, _rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, _params.rotation.x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, _params.rotation.y);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, _params.rotation.z);
 			break;
 		case RotationOrder::XZY: // XZY
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, _rotation->x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, _rotation->z);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, _rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, _params.rotation.x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, _params.rotation.z);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, _params.rotation.y);
 			break;
 		case RotationOrder::YXZ: // YXZ
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, _rotation->y);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, _rotation->x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, _rotation->z);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, _params.rotation.y);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, _params.rotation.x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, _params.rotation.z);
 			break;
 		case RotationOrder::YZX: // YZX
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, _rotation->y);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, _rotation->z);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, _rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, _params.rotation.y);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, _params.rotation.z);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, _params.rotation.x);
 			break;
 		case RotationOrder::ZXY: // ZXY
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, _rotation->z);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, _rotation->x);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, _rotation->y);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, _params.rotation.z);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, _params.rotation.x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, _params.rotation.y);
 			break;
 		case RotationOrder::ZYX: // ZYX
-			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, _rotation->z);
-			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, _rotation->y);
-			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, _rotation->x);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 0, 1, _params.rotation.z);
+			matrix4_rotate_aa4f(&ident, &ident, 0, 1, 0, _params.rotation.y);
+			matrix4_rotate_aa4f(&ident, &ident, 1, 0, 0, _params.rotation.x);
 			break;
 		}
-		matrix4_translate3f(&ident, &ident, _position->x, _position->y, _position->z);
+		matrix4_translate3f(&ident, &ident, _params.position.x, _params.position.y, _params.position.z);
 		//matrix4_scale3f(&ident, &ident, _source_size.first / 2.f, _source_size.second / 2.f, 1.f);
 
 		/// Calculate vertex position once only.
-		float_t p_x = aspectRatioX * _scale->x;
-		float_t p_y = 1.0f * _scale->y;
+		float p_x = aspect_ratio_x * _params.scale.x;
+		float p_y = 1.0f * _params.scale.y;
 
 		/// Generate mesh
 		{
 			auto vtx   = _vertex_buffer->at(0);
 			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 0, 0, 0, 0);
-			vec3_set(vtx.position, -p_x + _shear->x, -p_y - _shear->y, 0);
+			vec3_set(vtx.position, -p_x + _params.shear.x, -p_y - _params.shear.y, 0);
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 		{
 			auto vtx   = _vertex_buffer->at(1);
 			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 1, 0, 0, 0);
-			vec3_set(vtx.position, p_x + _shear->x, -p_y + _shear->y, 0);
+			vec3_set(vtx.position, p_x + _params.shear.x, -p_y + _params.shear.y, 0);
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 		{
 			auto vtx   = _vertex_buffer->at(2);
 			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 0, 1, 0, 0);
-			vec3_set(vtx.position, -p_x - _shear->x, p_y - _shear->y, 0);
+			vec3_set(vtx.position, -p_x - _params.shear.x, p_y - _params.shear.y, 0);
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 		{
 			auto vtx   = _vertex_buffer->at(3);
 			*vtx.color = 0xFFFFFFFF;
 			vec4_set(vtx.uv[0], 1, 1, 0, 0);
-			vec3_set(vtx.position, p_x - _shear->x, p_y + _shear->y, 0);
+			vec3_set(vtx.position, p_x - _params.shear.x, p_y + _params.shear.y, 0);
 			vec3_transform(vtx.position, vtx.position, &ident);
 		}
 
@@ -343,7 +349,7 @@ void transform_instance::video_render(gs_effect_t* effect)
 	if (!effect)
 		effect = default_effect;
 
-	if (!base_width || !base_height || !parent || !target) { // Skip if something is wrong.
+	if (!base_width || !base_height || !parent || !target || !_standard_effect) { // Skip if something is wrong.
 		obs_source_skip_video_filter(_self);
 		return;
 	}
@@ -382,7 +388,7 @@ void transform_instance::video_render(gs_effect_t* effect)
 
 		auto op = _cache_rt->render(cache_width, cache_height);
 
-		gs_ortho(0, static_cast<float_t>(base_width), 0, static_cast<float_t>(base_height), -1, 1);
+		gs_ortho(0, static_cast<float>(base_width), 0, static_cast<float>(base_height), -1, 1);
 
 		vec4 clear_color = {0, 0, 0, 0};
 		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &clear_color, 0, 0);
@@ -448,6 +454,9 @@ void transform_instance::video_render(gs_effect_t* effect)
 
 		auto op = _source_rt->render(base_width, base_height);
 
+		vec4 clear_color = {0, 0, 0, 0};
+		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &clear_color, 0, 0);
+
 		gs_blend_state_push();
 		gs_reset_blend_state();
 		gs_enable_blending(false);
@@ -459,25 +468,28 @@ void transform_instance::video_render(gs_effect_t* effect)
 		gs_enable_color(true, true, true, true);
 		gs_set_cull_mode(GS_NEITHER);
 
-		if (_camera_orthographic) {
+		switch (_camera_mode) {
+		case transform_mode::ORTHOGRAPHIC:
 			gs_ortho(-1., 1., -1., 1., -farZ, farZ);
-		} else {
-			gs_perspective(_camera_fov, float_t(base_width) / float_t(base_height), nearZ, farZ);
+			break;
+		case transform_mode::PERSPECTIVE:
+			gs_perspective(_camera_fov, float(base_width) / float(base_height), nearZ, farZ);
 			gs_matrix_scale3f(1.0, 1.0, 1.0);
 			gs_matrix_translate3f(0., 0., -1.0);
+			break;
 		}
-
-		vec4 clear_color = {0, 0, 0, 0};
-		gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &clear_color, 0, 0);
 
 		gs_load_vertexbuffer(_vertex_buffer->update(false));
 		gs_load_indexbuffer(nullptr);
-		gs_effect_set_texture(gs_effect_get_param_by_name(default_effect, "image"),
-							  _mipmap_enabled
-								  ? (_mipmap_texture ? _mipmap_texture->get_object() : _cache_texture->get_object())
-								  : _cache_texture->get_object());
-		while (gs_effect_loop(default_effect, "Draw")) {
-			gs_draw(GS_TRISTRIP, 0, 4);
+		if (auto v = _standard_effect.get_parameter("InputA");
+			v.get_type() == ::streamfx::obs::gs::effect_parameter::type::Texture) {
+			v.set_texture(_mipmap_enabled
+							  ? (_mipmap_texture ? _mipmap_texture->get_object() : _cache_texture->get_object())
+							  : _cache_texture->get_object());
+			v.set_sampler(_sampler.get_object());
+		}
+		while (gs_effect_loop(_standard_effect.get_object(), "Draw")) {
+			gs_draw(GS_TRISTRIP, 0, _vertex_buffer->size());
 		}
 		gs_load_vertexbuffer(nullptr);
 
@@ -521,7 +533,7 @@ const char* transform_factory::get_name()
 
 void transform_factory::get_defaults2(obs_data_t* settings)
 {
-	obs_data_set_default_int(settings, ST_KEY_CAMERA_MODE, static_cast<int64_t>(CameraMode::Orthographic));
+	obs_data_set_default_int(settings, ST_KEY_CAMERA_MODE, static_cast<int64_t>(transform_mode::ORTHOGRAPHIC));
 	obs_data_set_default_double(settings, ST_KEY_CAMERA_FIELDOFVIEW, 90.0);
 	obs_data_set_default_double(settings, ST_KEY_POSITION_X, 0);
 	obs_data_set_default_double(settings, ST_KEY_POSITION_Y, 0);
@@ -539,10 +551,10 @@ void transform_factory::get_defaults2(obs_data_t* settings)
 
 static bool modified_camera_mode(obs_properties_t* pr, obs_property_t*, obs_data_t* d) noexcept
 try {
-	auto mode            = static_cast<CameraMode>(obs_data_get_int(d, ST_KEY_CAMERA_MODE));
+	auto mode            = static_cast<transform_mode>(obs_data_get_int(d, ST_KEY_CAMERA_MODE));
 	bool is_camera       = true;
-	bool is_perspective  = (mode == CameraMode::Perspective) && is_camera;
-	bool is_orthographic = (mode == CameraMode::Orthographic) && is_camera;
+	bool is_perspective  = (mode == transform_mode::PERSPECTIVE) && is_camera;
+	bool is_orthographic = (mode == transform_mode::ORTHOGRAPHIC) && is_camera;
 
 	obs_property_set_visible(obs_properties_get(pr, ST_KEY_CAMERA_FIELDOFVIEW), is_perspective);
 	obs_property_set_visible(obs_properties_get(pr, ST_I18N_POSITION), is_camera);
@@ -580,9 +592,9 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 			auto p = obs_properties_add_list(grp, ST_KEY_CAMERA_MODE, D_TRANSLATE(ST_I18N_CAMERA_MODE),
 											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_CAMERA_MODE_ORTHOGRAPHIC),
-									  static_cast<int64_t>(CameraMode::Orthographic));
+									  static_cast<int64_t>(transform_mode::ORTHOGRAPHIC));
 			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_CAMERA_MODE_PERSPECTIVE),
-									  static_cast<int64_t>(CameraMode::Perspective));
+									  static_cast<int64_t>(transform_mode::PERSPECTIVE));
 			obs_property_set_modified_callback(p, modified_camera_mode);
 		}
 		{ // Field Of View
@@ -606,8 +618,8 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 			};
 			for (auto opt : opts) {
 				auto p = obs_properties_add_float(grp, opt.first.c_str(), D_TRANSLATE(opt.second.c_str()),
-												  std::numeric_limits<float_t>::lowest(),
-												  std::numeric_limits<float_t>::max(), 0.01);
+												  std::numeric_limits<float>::lowest(),
+												  std::numeric_limits<float>::max(), 0.01);
 			}
 
 			obs_properties_add_group(pr, ST_I18N_POSITION, D_TRANSLATE(ST_I18N_POSITION), OBS_GROUP_NORMAL, grp);
