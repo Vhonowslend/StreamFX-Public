@@ -138,6 +138,7 @@ transform_instance::transform_instance(obs_data_t* data, obs_source_t* context)
 		_sampler.set_address_mode_v(GS_ADDRESS_CLAMP);
 		_sampler.set_address_mode_w(GS_ADDRESS_CLAMP);
 		_sampler.set_filter(GS_FILTER_LINEAR);
+		_sampler.set_max_anisotropy(8);
 	}
 
 	vec3_set(&_params.position, 0, 0, 0);
@@ -251,6 +252,7 @@ void transform_instance::update(obs_data_t* settings)
 
 	// Mip-mapping
 	_mipmap_enabled = obs_data_get_bool(settings, ST_KEY_MIPMAPPING);
+	_sampler.set_filter(_mipmap_enabled ? GS_FILTER_ANISOTROPIC : GS_FILTER_LINEAR);
 
 	_update_mesh = true;
 }
