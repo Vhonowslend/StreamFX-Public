@@ -1,0 +1,122 @@
+#include "shared.effect"
+
+uniform texture2D InputA<
+	bool automatic = true;
+>;
+
+uniform float2 CornerTL<
+	string name = "Corner: Top Left";
+	string field_type = "slider";
+	string suffix = " %";
+	float2 minimum = {-100., -100.};
+	float2 maximum = {-200., -200.};
+	float2 step = {.01, .01};
+	float2 scale = {.01, .01};
+> = {0., 0.};
+
+uniform float2 CornerTR<
+	string name = "Corner: Top Right";
+	string field_type = "slider";
+	string suffix = " %";
+	float2 minimum = {-100., -100.};
+	float2 maximum = {-200., -200.};
+	float2 step = {.01, .01};
+	float2 scale = {.01, .01};
+> = {100., 0.};
+
+uniform float2 CornerBL<
+	string name = "Corner: Bottom Left";
+	string field_type = "slider";
+	string suffix = " %";
+	float2 minimum = {-100., -100.};
+	float2 maximum = {-200., -200.};
+	float2 step = {.01, .01};
+	float2 scale = {.01, .01};
+> = {0., 100.};
+
+uniform float2 CornerBR<
+	string name = "Corner: Bottom Right";
+	string field_type = "slider";
+	string suffix = " %";
+	float2 minimum = {-100., -100.};
+	float2 maximum = {-200., -200.};
+	float2 step = {.01, .01};
+	float2 scale = {.01, .01};
+> = {100., 100.};
+
+//------------------------------------------------------------------------------
+// Technique: Corner Pin
+//------------------------------------------------------------------------------
+//
+// Credits:
+// - Inigo Quilez: https://www.iquilezles.org/www/articles/ibilinear/ibilinear.htm
+//
+// Parameters:
+// - InputA: RGBA Texture
+// - CornerTL: Corner "A"
+// - CornerTR: Corner "B"
+// - CornerBL: Corner "D"
+// - CornerBR: Corner "C"
+
+float2 cross2d(in float2 a, in float2 b) {
+	return (a.x * b.y) - (a.y * b.x);
+};
+
+float2 inverse_bilinear(in float2 p, in float2 a, in float2 b, in float2 c, in float2 d) {
+	float2 result = float2(-1., -1.);
+
+	float2 e = b - a;
+	float2 f = d - a;
+	float2 g = a-b+c-d;
+	float2 h = p-a;
+
+	float k2 = cross2d(g, f);
+	float k1 = cross2d(e, f) + cross2d(h, g);
+	float k0 = cross2d(h, e);
+
+	if (abs(k2) < .001) { // Edges are likely parallel, so this is a linear equation.
+		result = float2(
+			(h.x * k1 + f.x * k0) / (e.x * k1 - g.x * k0),
+			-k0 / k1
+		);
+	} else { // It's a quadratic equation.
+		float w = k1 * k1 - 4.0 * k0 * k2;
+		if (w < 0.0) { // Prevent GPUs from going insane.
+			return result;
+		}
+		w = sqrt(w);
+
+		float ik2 = 0.5/k2;
+		float v = (-k1 - w) * ik2;
+		float u = (h.x - f.x * v) / (e.x + g.x * v);
+
+		if (u < 0.0 || u > 1.0 || v < 0.0 || v > 1.0) {
+			v = (-k1 + w) * ik2;
+			u = (h.x - f.x * v) / (e.x + g.x * v);
+		}
+
+		result = float2(u, v);
+	}
+
+	return result;
+};
+
+float4 PSCornerPin(VertexData vtx) : TARGET {
+	// Convert from screen coords to potential Quad UV coordinates.
+	float2 uv = inverse_bilinear((vtx.uv * 2.) - 1., CornerTL, CornerTR, CornerBR, CornerBL);
+
+	if (max(abs(uv.x - .5), abs(uv.y - .5)) >= .5) {
+		return float4(0, 0, 0, 0);
+	}
+
+	return InputA.Sample(BlankSampler, uv);
+};
+
+technique CornerPin
+{
+	pass
+	{
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader = PSCornerPin(vtx);
+	};
+};
