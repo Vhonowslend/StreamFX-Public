@@ -13,8 +13,8 @@ jobs:
     name: "clang-format"
     runs-on: ubuntu-20.04
     env:
-      CC: clang-9
-      CXX: clang++-9
+      CC: clang
+      CXX: clang++
       CMAKE_GENERATOR: "Ninja"
     steps:
     - name: "Clone Repository"
@@ -33,8 +33,8 @@ jobs:
           qt5-default libqwt-qt5-dev libqt5svg5-dev \
           libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev \
           libcurl4-openssl-dev \
-          checkinstall pkg-config \
-          clang-9 clang-format-9 clang-tidy-9
+          checkinstall pkg-config
+        sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
     - name: "Cache: Prerequisites"
       uses: actions/cache@v2
       with:
