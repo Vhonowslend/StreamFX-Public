@@ -337,11 +337,11 @@ void denoising_instance::video_render(gs_effect_t* effect)
 #ifdef ENABLE_PROFILING
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_render, "Render"};
 #endif
-		if (_standard_effect->has_parameter("Channel0", ::streamfx::obs::gs::effect_parameter::type::Texture)) {
-			_standard_effect->get_parameter("Channel0").set_texture(_output);
+		if (_standard_effect->has_parameter("InputA", ::streamfx::obs::gs::effect_parameter::type::Texture)) {
+			_standard_effect->get_parameter("InputA").set_texture(_output);
 		}
-		if (_standard_effect->has_parameter("Channel1", ::streamfx::obs::gs::effect_parameter::type::Texture)) {
-			_standard_effect->get_parameter("Channel1").set_texture(_input->get_texture());
+		if (_standard_effect->has_parameter("InputB", ::streamfx::obs::gs::effect_parameter::type::Texture)) {
+			_standard_effect->get_parameter("InputB").set_texture(_input->get_texture());
 		}
 		while (gs_effect_loop(_standard_effect->get_object(), "RestoreAlpha")) {
 			gs_draw_sprite(nullptr, 0, _size.first, _size.second);

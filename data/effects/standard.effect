@@ -1,18 +1,62 @@
 #include "shared.effect"
 
-uniform texture2D Channel0;
-uniform texture2D Channel1;
+uniform texture2D InputA<
+	bool automatic = true;
+>;
+uniform texture2D InputB<
+	bool automatic = true;
+>;
+
+//------------------------------------------------------------------------------
+// Technique: Draw
+//------------------------------------------------------------------------------
+// Parameters:
+// - InputA: RGBA Texture
+
+float4 PSDraw(VertexData vtx) : TARGET {
+	return InputA.Sample(BlankSampler, vtx.uv);
+};
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader = PSDraw(vtx);
+	};
+};
+
+//------------------------------------------------------------------------------
+// Technique: Draw
+//------------------------------------------------------------------------------
+// Parameters:
+// - InputA: RGBA Texture
+
+float4 PSDrawPremultiplied(VertexData vtx) : TARGET {
+	float4 rgba = InputA.Sample(BlankSampler, vtx.uv);
+	rgba.rgb /= rgba.a > (1. / 1024.) ? rgba.a : 1.0;
+	return rgba;
+};
+
+technique DrawPremultiplied
+{
+	pass
+	{
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader = PSDrawPremultiplied(vtx);
+	};
+};
 
 //------------------------------------------------------------------------------
 // Technique: Restore Alpha
 //------------------------------------------------------------------------------
 // Parameters:
-// - Channel0: RGBX Texture
-// - Channel1: XXXA Texture
+// - InputA: RGBX Texture
+// - InputB: XXXA Texture
 
 float4 PSRestoreAlpha(VertexData vtx) : TARGET {
-	float4 rgbx = Channel0.Sample(BlankSampler, vtx.uv);
-	float4 xxxa = Channel1.Sample(BlankSampler, vtx.uv);
+	float4 rgbx = InputA.Sample(BlankSampler, vtx.uv);
+	float4 xxxa = InputB.Sample(BlankSampler, vtx.uv);
 	rgbx.a = xxxa.a;
 	return rgbx;
 };
