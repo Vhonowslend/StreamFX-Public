@@ -30,6 +30,7 @@ namespace streamfx::filter::transform {
 	enum class transform_mode {
 		ORTHOGRAPHIC = 0,
 		PERSPECTIVE  = 1,
+		CORNER_PIN   = 2,
 	};
 
 	class transform_instance : public obs::source_instance {
@@ -43,9 +44,16 @@ namespace streamfx::filter::transform {
 			vec3     scale;
 			vec3     shear;
 		} _params;
+		struct {
+			vec2 tl;
+			vec2 tr;
+			vec2 bl;
+			vec2 br;
+		} _corners;
 
 		// Data
 		streamfx::obs::gs::effect  _standard_effect;
+		streamfx::obs::gs::effect  _transform_effect;
 		streamfx::obs::gs::sampler _sampler;
 
 		// Cache
