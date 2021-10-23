@@ -65,6 +65,9 @@
 #ifdef ENABLE_FILTER_UPSCALING
 #include "filters/filter-upscaling.hpp"
 #endif
+#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN
+#include "filters/filter-virtual-greenscreen.hpp"
+#endif
 
 #ifdef ENABLE_SOURCE_MIRROR
 #include "sources/source-mirror.hpp"
@@ -176,6 +179,9 @@ try {
 #ifdef ENABLE_FILTER_UPSCALING
 		streamfx::filter::upscaling::upscaling_factory::initialize();
 #endif
+#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN
+		streamfx::filter::virtual_greenscreen::virtual_greenscreen_factory::initialize();
+#endif
 	}
 
 	// Sources
@@ -267,6 +273,9 @@ try {
 #endif
 #ifdef ENABLE_FILTER_UPSCALING
 		streamfx::filter::upscaling::upscaling_factory::finalize();
+#endif
+#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN
+		streamfx::filter::virtual_greenscreen::virtual_greenscreen_factory::finalize();
 #endif
 	}
 
