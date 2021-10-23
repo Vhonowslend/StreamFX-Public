@@ -1068,6 +1068,8 @@ if(HAVE_NVIDIA_VFX_SDK)
 		"source/nvidia/vfx/nvidia-vfx-denoising.cpp"
 		"source/nvidia/vfx/nvidia-vfx-effect.hpp"
 		"source/nvidia/vfx/nvidia-vfx-effect.cpp"
+		"source/nvidia/vfx/nvidia-vfx-greenscreen.hpp"
+		"source/nvidia/vfx/nvidia-vfx-greenscreen.cpp"
 		"source/nvidia/vfx/nvidia-vfx-superresolution.hpp"
 		"source/nvidia/vfx/nvidia-vfx-superresolution.cpp"
 	)
