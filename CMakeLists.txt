@@ -596,19 +596,19 @@ endif()
 # 3. Again check which features are enabled, if their requirements are missing, warn about it and disable them.
 # TODO: Consider making this an error instead.
 
-function(is_feature_enabled FEATURE OUTPUT)
+macro(is_feature_enabled FEATURE OUTPUT)
 	set(T_ENABLED ${${PREFIX}ENABLE_${FEATURE}})
 	set(T_DISABLED ${${PREFIX}DISABLE_${FEATURE}})
 	if(T_ENABLED AND NOT T_DISABLED)
-		set(${OUTPUT} ON PARENT_SCOPE)
+		set(${OUTPUT} ON)
 	else()
-		set(${PREFIX}DISABLE_${FEATURE} ON PARENT_SCOPE)
-		set(${OUTPUT} OFF PARENT_SCOPE)
+		# set(${PREFIX}DISABLE_${FEATURE} ON CACHE INTERNAL "" FORCE)
+		set(${OUTPUT} OFF)
 	endif()
-endfunction()
+endmacro()
 
 macro(set_feature_disabled FEATURE DISABLED)
-	set(${PREFIX}DISABLE_${FEATURE} ${DISABLED} PARENT_SCOPE)
+	set(${PREFIX}DISABLE_${FEATURE} ${DISABLED} CACHE INTERNAL "" FORCE)
 endmacro()
 
 # Features
