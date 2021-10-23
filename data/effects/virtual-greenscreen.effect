@@ -1,0 +1,70 @@
+#include "shared.effect"
+
+uniform texture2D InputA<
+	bool automatic = true;
+>;
+uniform texture2D InputB<
+	bool automatic = true;
+>;
+uniform float Threshold<
+	string name = "Threshold";
+	string suffix = " %";
+	float minimum = 0.;
+	float maximum = 100.;
+	float step = .01;
+	float scale = .01;
+> = 10.;
+uniform float ThresholdRange<
+	string name = "Threshold Range";
+	string suffix = " %";
+	float minimum = 0.;
+	float maximum = 100.;
+	float step = .01;
+	float scale = .01;
+> = 10.;
+
+//------------------------------------------------------------------------------
+// Technique: Draw
+//------------------------------------------------------------------------------
+// Parameters:
+// - InputA: RGBA Texture
+// - InputB: XXXA Texture
+
+float4 PSDrawAlpha(VertexData vtx) : TARGET {
+	return InputA.Sample(BlankSampler, vtx.uv);
+};
+
+technique DrawAlpha
+{
+	pass
+	{
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader = PSDrawAlpha(vtx);
+	};
+};
+
+//------------------------------------------------------------------------------
+// Technique: Draw
+//------------------------------------------------------------------------------
+// Parameters:
+// - InputA: RGBX Texture
+// - InputB: XXXA Texture
+// - Threshold: Alha threshold to be "visible".
+
+float4 PSDrawAlphaThreshold(VertexData vtx) : TARGET {
+	float4 rgba = InputA.Sample(BlankSampler, vtx.uv);
+	float4 xxxa = InputB.Sample(BlankSampler, vtx.uv);
+
+	rgba.a = smoothstep(Threshold - ThresholdRange * .5, Threshold + ThresholdRange * .5, xxxa.a);
+
+	return rgba;
+};
+
+technique DrawAlphaThreshold
+{
+	pass
+	{
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader = PSDrawAlphaThreshold(vtx);
+	};
+};
