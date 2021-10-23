@@ -89,7 +89,7 @@ streamfx::nvidia::cv::cv::cv()
 		if (env_size > 0) {
 			buffer.resize(static_cast<size_t>(env_size) + 1);
 			env_size     = GetEnvironmentVariableW(ST_ENV_NVIDIA_VIDEO_EFFECTS_SDK_PATH, buffer.data(),
-                                               static_cast<DWORD>(buffer.size()));
+												   static_cast<DWORD>(buffer.size()));
 			vfx_sdk_path = std::wstring(buffer.data(), buffer.size());
 		} else {
 			PWSTR   str = nullptr;
