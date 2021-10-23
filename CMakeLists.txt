@@ -309,6 +309,8 @@ set(${PREFIX}ENABLE_FILTER_SHADER ON CACHE BOOL "Enable Shader Filter")
 set(${PREFIX}ENABLE_FILTER_TRANSFORM ON CACHE BOOL "Enable Transform Filter")
 set(${PREFIX}ENABLE_FILTER_UPSCALING ON CACHE BOOL "Enable Upscaling Filter")
 set(${PREFIX}ENABLE_FILTER_UPSCALING_NVIDIA ON CACHE BOOL "Enable NVIDIA provider(s) for Upscaling Filter")
+set(${PREFIX}ENABLE_FILTER_VIRTUAL_GREENSCREEN ON CACHE BOOL "Enable Virtual Greenscreen Filter")
+set(${PREFIX}ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA ON CACHE BOOL "Enable NVIDIA provider(s) for Virtual Greenscreen Filter")
 
 ## Sources
 set(${PREFIX}ENABLE_SOURCE_MIRROR ON CACHE BOOL "Enable Mirror Source")
@@ -738,6 +740,26 @@ function(feature_filter_upscaling RESOLVE)
 	endif()
 endfunction()
 
+function(feature_filter_virtual_greenscreen RESOLVE)
+	is_feature_enabled(FILTER_VIRTUAL_GREENSCREEN T_CHECK)
+	if(RESOLVE AND T_CHECK)
+		# Verify that the requirements for the providers are available
+		if(NOT HAVE_NVIDIA_VFX_SDK)
+			message(WARNING "${LOGPREFIX}: 'NVIDIA Video Effects SDK' is missing. Disabling NVIDIA provider(s)...")
+			set_feature_disabled(FILTER_VIRTUAL_GREENSCREEN_NVIDIA ON)
+		endif()
+
+		# Verify that we have at least one provider for Video Super-Resolution.
+		is_feature_enabled(FILTER_VIRTUAL_GREENSCREEN_NVIDIA T_CHECK_NVIDIA)
+		if (NOT T_CHECK_NVIDIA)
+			message(WARNING "${LOGPREFIX}: Virtual Greenscreen has no available providers. Disabling...")
+			set_feature_disabled(FILTER_VIRTUAL_GREENSCREEN ON)
+		endif()
+	elseif(T_CHECK)
+		set(REQUIRE_NVIDIA_VFX_SDK ON PARENT_SCOPE)
+	endif()
+endfunction()
+
 function(feature_source_mirror RESOLVE)
 	is_feature_enabled(SOURCE_MIRROR T_CHECK)
 endfunction()
@@ -795,6 +817,7 @@ feature_filter_sdf_effects(OFF)
 feature_filter_shader(OFF)
 feature_filter_transform(OFF)
 feature_filter_upscaling(OFF)
+feature_filter_virtual_greenscreen(OFF)
 feature_source_mirror(OFF)
 feature_source_shader(OFF)
 feature_transition_shader(OFF)
@@ -951,6 +974,7 @@ feature_filter_sdf_effects(ON)
 feature_filter_shader(ON)
 feature_filter_transform(ON)
 feature_filter_upscaling(ON)
+feature_filter_virtual_greenscreen(ON)
 feature_source_mirror(ON)
 feature_source_shader(ON)
 feature_transition_shader(ON)
@@ -1419,7 +1443,7 @@ if(T_CHECK)
 	)
 endif()
 
-# Filter/Video Denoising
+# Filter/Denoising
 is_feature_enabled(FILTER_DENOISING T_CHECK)
 if(T_CHECK)
 	list(APPEND PROJECT_PRIVATE_SOURCE
@@ -1437,7 +1461,7 @@ if(T_CHECK)
 	endif()
 endif()
 
-# Filter/Video Super-Resolution
+# Filter/Upscaling
 is_feature_enabled(FILTER_UPSCALING T_CHECK)
 if(T_CHECK)
 	list(APPEND PROJECT_PRIVATE_SOURCE
@@ -1451,6 +1475,24 @@ if(T_CHECK)
 	if (T_CHECK)
 		list(APPEND PROJECT_DEFINITIONS
 			ENABLE_FILTER_UPSCALING_NVIDIA
+		)
+	endif()
+endif()
+
+# Filter/Virtual Greenscreen
+is_feature_enabled(FILTER_VIRTUAL_GREENSCREEN T_CHECK)
+if(T_CHECK)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/filters/filter-virtual-greenscreen.hpp"
+		"source/filters/filter-virtual-greenscreen.cpp"
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_FILTER_VIRTUAL_GREENSCREEN
+	)
+	is_feature_enabled(FILTER_VIRTUAL_GREENSCREEN_NVIDIA T_CHECK)
+	if (T_CHECK)
+		list(APPEND PROJECT_DEFINITIONS
+			ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
 		)
 	endif()
 endif()
