@@ -35,6 +35,7 @@ namespace streamfx::nvidia::vfx {
 	using namespace ::streamfx::nvidia;
 
 	class effect {
+		protected:
 		std::shared_ptr<cuda::obs> _nvcuda;
 		std::shared_ptr<cv::cv>    _nvcvi;
 		std::shared_ptr<vfx>       _nvvfx;
@@ -112,40 +113,40 @@ namespace streamfx::nvidia::vfx {
 		};
 		cv::result get(parameter_t param, std::string& value);
 
-		inline cv::result set_stream(parameter_t param, cuda::stream_t value)
+		inline cv::result set(parameter_t param, cuda::stream_t value)
 		{
 			return _nvvfx->NvVFX_SetCudaStream(_fx.get(), param, value);
 		};
-		inline cv::result get_stream(parameter_t param, cuda::stream_t& value)
+		inline cv::result get(parameter_t param, cuda::stream_t& value)
 		{
 			return _nvvfx->NvVFX_GetCudaStream(_fx.get(), param, &value);
 		};
 
-		inline cv::result set_stream(parameter_t param, std::shared_ptr<cuda::stream> value)
+		inline cv::result set(parameter_t param, std::shared_ptr<cuda::stream> value)
 		{
 			return _nvvfx->NvVFX_SetCudaStream(_fx.get(), param, value->get());
 		};
 		//cv::result get_stream(parameter_t param, std::shared_ptr<cuda::stream>& value);
 
-		inline cv::result set_image(parameter_t param, cv::image_t& value)
+		inline cv::result set(parameter_t param, cv::image_t& value)
 		{
 			return _nvvfx->NvVFX_SetImage(_fx.get(), param, &value);
 		};
-		inline cv::result get_image(parameter_t param, cv::image_t& value)
+		inline cv::result get(parameter_t param, cv::image_t& value)
 		{
 			return _nvvfx->NvVFX_GetImage(_fx.get(), param, &value);
 		};
 
-		inline cv::result set_image(parameter_t param, std::shared_ptr<cv::image> value)
+		inline cv::result set(parameter_t param, std::shared_ptr<cv::image> value)
 		{
 			return _nvvfx->NvVFX_SetImage(_fx.get(), param, value->get_image());
 		};
-		inline cv::result get_image(parameter_t param, std::shared_ptr<cv::image>& value)
+		inline cv::result get(parameter_t param, std::shared_ptr<cv::image>& value)
 		{
 			return _nvvfx->NvVFX_GetImage(_fx.get(), param, value->get_image());
 		};
 
-		inline cv::result set_image(parameter_t param, std::shared_ptr<cv::texture> value)
+		inline cv::result set(parameter_t param, std::shared_ptr<cv::texture> value)
 		{
 			return _nvvfx->NvVFX_SetImage(_fx.get(), param, value->get_image());
 		};
@@ -167,7 +168,7 @@ namespace streamfx::nvidia::vfx {
 
 		inline cv::result run(bool async = false)
 		{
-			return _nvvfx->NvVFX_Run(_fx.get(), async ? 0 : 1);
+			return _nvvfx->NvVFX_Run(_fx.get(), async ? 1 : 0);
 		};
 	};
 } // namespace streamfx::nvidia::vfx
