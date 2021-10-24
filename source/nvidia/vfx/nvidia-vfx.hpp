@@ -62,7 +62,10 @@ namespace streamfx::nvidia::vfx {
 
 	class vfx {
 		std::shared_ptr<::streamfx::util::library> _library;
-		std::filesystem::path                      _model_path;
+#ifdef WIN32
+		void* _extra;
+#endif
+		std::filesystem::path _model_path;
 
 		public:
 		~vfx();
