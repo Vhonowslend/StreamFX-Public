@@ -63,10 +63,18 @@ streamfx::nvidia::vfx::vfx::~vfx()
 {
 	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
 
-	auto gctx = ::streamfx::obs::gs::context();
-	auto cctx = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
+#ifdef WIN32
+	// Remove the DLL directory from the library loader paths.
+	if (_extra != nullptr) {
+		RemoveDllDirectory(reinterpret_cast<DLL_DIRECTORY_COOKIE>(_extra));
+	}
+#endif
 
-	_library.reset();
+	{ // The library may need to release Graphics and CUDA resources.
+		auto gctx = ::streamfx::obs::gs::context();
+		auto cctx = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
+		_library.reset();
+	}
 }
 
 streamfx::nvidia::vfx::vfx::vfx()
@@ -110,32 +118,56 @@ streamfx::nvidia::vfx::vfx::vfx()
 		throw std::runtime_error("Failed to load '" LIB_NAME "'.");
 	}
 
+	// Try and load the library.
+	{
 #ifdef WIN32
-	// On platforms where it is possible, modify the linker directories.
-	SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
-	DLL_DIRECTORY_COOKIE ck = AddDllDirectory(sdk_path.wstring().c_str());
+		// On platforms where it is possible, modify the linker directories.
+		DLL_DIRECTORY_COOKIE ck = AddDllDirectory(sdk_path.wstring().c_str());
+		_extra                  = reinterpret_cast<void*>(ck);
+		if (ck == 0) {
+			DWORD       ec = GetLastError();
+			std::string error;
+			{
+				LPWSTR str;
+				FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER
+								   | FORMAT_MESSAGE_IGNORE_INSERTS,
+							   nullptr, ec, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
+							   reinterpret_cast<LPWSTR>(&str), 0, nullptr);
+				error = ::streamfx::util::platform::native_to_utf8(std::wstring(str));
+				LocalFree(str);
+			}
+			D_LOG_WARNING("Failed to add '%'s to the library loader paths with error: %s (Code %" PRIu32 ")",
+						  sdk_path.string().c_str(), error.c_str(), ec);
+		}
 #endif
 
-	// Try and load the libraries
-	if (!_library) {
-		// Load it by name.
-		try {
-			_library = ::streamfx::util::library::load(std::string_view(LIB_NAME));
-		} catch (...) {
-			// Load it by path.
-			auto lib_path = sdk_path;
-			lib_path /= LIB_NAME;
+		std::filesystem::path paths[] = {
+			LIB_NAME,
+			util::platform::native_to_utf8(std::filesystem::path(sdk_path) / LIB_NAME),
+		};
+
+		for (auto path : paths) {
 			try {
-				_library = ::streamfx::util::library::load(util::platform::native_to_utf8(lib_path));
+				_library = ::streamfx::util::library::load(path);
 			} catch (std::exception const& ex) {
-				D_LOG_ERROR("Failed to load '%s' from '%s' with error: %s", LIB_NAME,
-							util::platform::native_to_utf8(lib_path).string().c_str(), ex.what());
-				throw std::runtime_error("Failed to load '" LIB_NAME "'.");
+				D_LOG_ERROR("Failed to load '%s' with error: %s", path.string().c_str(), ex.what());
 			} catch (...) {
-				D_LOG_ERROR("Failed to load '%s' from '%s'.", LIB_NAME,
-							util::platform::native_to_utf8(lib_path).string().c_str());
-				throw std::runtime_error("Failed to load '" LIB_NAME "'.");
+				D_LOG_ERROR("Failed to load '%s'.", path.string().c_str());
 			}
+
+			if (_library) {
+				break;
+			}
+		}
+
+		if (!_library) {
+#ifdef WIN32
+			// Remove the DLL directory from the library loader paths.
+			if (_extra != nullptr) {
+				RemoveDllDirectory(reinterpret_cast<DLL_DIRECTORY_COOKIE>(_extra));
+			}
+#endif
+			throw std::runtime_error("Failed to load " LIB_NAME ".");
 		}
 	}
 
