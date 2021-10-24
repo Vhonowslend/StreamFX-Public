@@ -929,6 +929,8 @@ if(REQUIRE_NVIDIA_VFX_SDK AND D_PLATFORM_WINDOWS)
 				"${PROJECT_SOURCE_DIR}/third-party/nvidia-maxine-vfx-sdk/nvvfx/src/"
 		)
 	endif()
+
+	set(REQUIRE_NVIDIA_CUDA ON)
 endif()
 
 #- NVIDIA CUDA (Windows)
