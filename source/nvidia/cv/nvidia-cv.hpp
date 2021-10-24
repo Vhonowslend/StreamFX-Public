@@ -209,6 +209,9 @@ namespace streamfx::nvidia::cv {
 
 	class cv {
 		std::shared_ptr<::streamfx::util::library> _library;
+#ifdef WIN32
+		void* _extra;
+#endif
 
 		public:
 		~cv();
