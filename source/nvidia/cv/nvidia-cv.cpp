@@ -67,6 +67,13 @@
 streamfx::nvidia::cv::cv::~cv()
 {
 	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
+
+#ifdef WIN32
+	// Remove the DLL directory from the library loader paths.
+	if (_extra != nullptr) {
+		RemoveDllDirectory(reinterpret_cast<DLL_DIRECTORY_COOKIE>(_extra));
+	}
+#endif
 }
 
 streamfx::nvidia::cv::cv::cv()
@@ -149,13 +156,28 @@ streamfx::nvidia::cv::cv::cv()
 	// Try and load any available NvCVImage library.
 	for (auto path : lib_paths) {
 #ifdef WIN32
-		// On platforms where it is possible, modify the linker directories.
-		SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+		// Add the DLL directory to the library loader paths, if possible.
 		DLL_DIRECTORY_COOKIE ck = AddDllDirectory(vfx_sdk_path.wstring().c_str());
+		_extra                  = reinterpret_cast<void*>(ck);
+		if (ck == 0) {
+			DWORD       ec = GetLastError();
+			std::string error;
+			{
+				LPWSTR str;
+				FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER
+								   | FORMAT_MESSAGE_IGNORE_INSERTS,
+							   nullptr, ec, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
+							   reinterpret_cast<LPWSTR>(&str), 0, nullptr);
+				error = ::streamfx::util::platform::native_to_utf8(std::wstring(str));
+				LocalFree(str);
+			}
+			D_LOG_WARNING("Failed to add '%'s to the library loader paths with error: %s (Code %" PRIu32 ")",
+						  vfx_sdk_path.string().c_str(), error.c_str(), ec);
+		}
 #endif
 
+		// Try to load it directly first, it may be on the search path already.
 		try {
-			// Try to load it directly first, it may be on the search path already.
 			_library = ::streamfx::util::library::load(std::string_view(LIB_NAME));
 		} catch (...) {
 			auto pathu8 = util::platform::native_to_utf8(path / LIB_NAME);
@@ -165,11 +187,17 @@ streamfx::nvidia::cv::cv::cv()
 				D_LOG_WARNING("Failed to load '%s' from '%s'.", LIB_NAME, pathu8.string().c_str());
 			}
 		}
-		if (_library)
+
+		// If we were successful at loading it, break out.
+		if (_library) {
 			break;
+		}
 
 #ifdef WIN32
-		RemoveDllDirectory(ck);
+		// Remove the DLL directory from the library loader paths if we added it.
+		if (ck != 0) {
+			RemoveDllDirectory(ck);
+		}
 #endif
 	}
 
