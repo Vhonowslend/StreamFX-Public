@@ -35,20 +35,24 @@ namespace streamfx::util {
 		public:
 		class task {
 			protected:
-			std::atomic_bool      _is_dead;
-			threadpool_callback_t _callback;
-			threadpool_data_t     _data;
+			std::mutex              _mutex;
+			std::condition_variable _is_complete;
+			std::atomic<bool>       _is_dead;
+			threadpool_callback_t   _callback;
+			threadpool_data_t       _data;
 
 			public:
 			task();
 			task(threadpool_callback_t callback_function, threadpool_data_t data);
+
+			void await_completion();
 
 			friend class streamfx::util::threadpool;
 		};
 
 		private:
 		std::list<std::thread>                                         _workers;
-		std::atomic_bool                                               _worker_stop;
+		std::atomic<bool>                                              _worker_stop;
 		std::atomic<uint32_t>                                          _worker_idx;
 		std::list<std::shared_ptr<::streamfx::util::threadpool::task>> _tasks;
 		std::mutex                                                     _tasks_lock;
