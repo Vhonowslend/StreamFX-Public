@@ -303,7 +303,6 @@ set(${PREFIX}ENABLE_FILTER_DENOISING ON CACHE BOOL "Enable Denoising filter")
 set(${PREFIX}ENABLE_FILTER_DENOISING_NVIDIA ON CACHE BOOL "Enable NVIDIA provider(s) for Denoising Filter")
 set(${PREFIX}ENABLE_FILTER_DISPLACEMENT ON CACHE BOOL "Enable Displacement Filter")
 set(${PREFIX}ENABLE_FILTER_DYNAMIC_MASK ON CACHE BOOL "Enable Dynamic Mask Filter")
-set(${PREFIX}ENABLE_FILTER_NVIDIA_FACE_TRACKING ON CACHE BOOL "Enable NVIDIA Face Tracking Filter")
 set(${PREFIX}ENABLE_FILTER_SDF_EFFECTS ON CACHE BOOL "Enable SDF Effects Filter")
 set(${PREFIX}ENABLE_FILTER_SHADER ON CACHE BOOL "Enable Shader Filter")
 set(${PREFIX}ENABLE_FILTER_TRANSFORM ON CACHE BOOL "Enable Transform Filter")
@@ -689,25 +688,6 @@ function(feature_filter_dynamic_mask RESOLVE)
 	is_feature_enabled(FILTER_DYNAMIC_MASK T_CHECK)
 endfunction()
 
-function(feature_filter_nvidia_face_tracking RESOLVE)
-	is_feature_enabled(FILTER_NVIDIA_FACE_TRACKING T_CHECK)
-	if(RESOLVE AND T_CHECK)
-		if(NOT D_PLATFORM_WINDOWS)
-			message(WARNING "${LOGPREFIX}: NVIDIA Face Tracking requires Windows. Disabling...")
-			set_feature_disabled(FILTER_NVIDIA_FACE_TRACKING ON)
-		elseif(NOT HAVE_NVIDIA_ARSDK)
-			message(WARNING "${LOGPREFIX}: NVIDIA Face Tracking requires NVIDIA AR SDK. Disabling...")
-			set_feature_disabled(FILTER_NVIDIA_FACE_TRACKING ON)
-		elseif(NOT HAVE_NVIDIA_CUDA)
-			message(WARNING "${LOGPREFIX}: NVIDIA Face Tracking requires NVIDIA CUDA. Disabling...")
-			set_feature_disabled(FILTER_NVIDIA_FACE_TRACKING ON)
-		endif()
-	elseif(T_CHECK)
-		set(REQUIRE_NVIDIA_ARSDK ON PARENT_SCOPE)
-		set(REQUIRE_NVIDIA_CUDA ON PARENT_SCOPE)
-	endif()
-endfunction()
-
 function(feature_filter_sdf_effects RESOLVE)
 	is_feature_enabled(FILTER_SDF_EFFECTS T_CHECK)
 endfunction()
@@ -812,7 +792,6 @@ feature_filter_color_grade(OFF)
 feature_filter_denoising(OFF)
 feature_filter_displacement(OFF)
 feature_filter_dynamic_mask(OFF)
-feature_filter_nvidia_face_tracking(OFF)
 feature_filter_sdf_effects(OFF)
 feature_filter_shader(OFF)
 feature_filter_transform(OFF)
@@ -902,17 +881,6 @@ if(REQUIRE_JSON)
 	endif()
 endif()
 
-#- NVIDIA Augmented Reality SDK (Windows)
-set(HAVE_NVIDIA_ARSDK OFF)
-if(REQUIRE_NVIDIA_ARSDK AND D_PLATFORM_WINDOWS)
-	if(EXISTS "${PROJECT_SOURCE_DIR}/third-party/nvidia-arsdk/version.h")
-		set(NVAR_ROOT "${PROJECT_SOURCE_DIR}/third-party/nvidia-arsdk")
-	endif()
-
-	find_package(NVAR)
-
-	set(HAVE_NVIDIA_ARSDK ${NVAR_FOUND})
-endif()
 
 #- NVIDIA Video Effects SDK
 set(HAVE_NVIDIA_VFX_SDK OFF)
@@ -971,7 +939,6 @@ feature_filter_color_grade(ON)
 feature_filter_denoising(ON)
 feature_filter_displacement(ON)
 feature_filter_dynamic_mask(ON)
-feature_filter_nvidia_face_tracking(ON)
 feature_filter_sdf_effects(ON)
 feature_filter_shader(ON)
 feature_filter_transform(ON)
@@ -1063,19 +1030,7 @@ if(HAVE_JSON)
 	list(APPEND PROJECT_INCLUDE_DIRS ${JSON_INCLUDE_DIR})
 endif()
 
-if(HAVE_NVIDIA_ARSDK)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/nvidia/ar/nvidia-ar.hpp"
-		"source/nvidia/ar/nvidia-ar.cpp"
-		"source/nvidia/ar/nvidia-ar-feature.hpp"
-		"source/nvidia/ar/nvidia-ar-feature.cpp"
-	)
-	list(APPEND PROJECT_LIBRARIES
-		nvARProxy
-	)
-endif()
-
-if(HAVE_NVIDIA_ARSDK OR HAVE_NVIDIA_VFX_SDK)
+if(HAVE_NVIDIA_VFX_SDK)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/nvidia/cv/nvidia-cv.hpp"
 		"source/nvidia/cv/nvidia-cv.cpp"
@@ -1391,18 +1346,6 @@ if(T_CHECK)
 	)
 	list(APPEND PROJECT_DEFINITIONS
 		ENABLE_FILTER_DYNAMIC_MASK
-	)
-endif()
-
-# Filter/NVIDIA Face Tracking
-is_feature_enabled(FILTER_NVIDIA_FACE_TRACKING T_CHECK)
-if(T_CHECK)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/filters/filter-nv-face-tracking.hpp"
-		"source/filters/filter-nv-face-tracking.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_FILTER_NVIDIA_FACE_TRACKING
 	)
 endif()
 
