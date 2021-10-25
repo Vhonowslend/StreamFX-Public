@@ -1061,6 +1061,8 @@ if(HAVE_NVIDIA_AR_SDK)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/nvidia/ar/nvidia-ar.hpp"
 		"source/nvidia/ar/nvidia-ar.cpp"
+		"source/nvidia/ar/nvidia-ar-feature.hpp"
+		"source/nvidia/ar/nvidia-ar-feature.cpp"
 	)
 	list(APPEND PROJECT_LIBRARIES
 		NVIDIA::AR
