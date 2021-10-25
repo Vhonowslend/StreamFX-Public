@@ -881,6 +881,22 @@ if(REQUIRE_JSON)
 	endif()
 endif()
 
+#- NVIDIA Augmented Reality SDK
+set(HAVE_NVIDIA_AR_SDK OFF)
+if(REQUIRE_NVIDIA_AR_SDK AND D_PLATFORM_WINDOWS)
+	if(EXISTS "${PROJECT_SOURCE_DIR}/third-party/nvidia-maxine-ar-sdk/version.h")
+		set(HAVE_NVIDIA_AR_SDK ON)
+	endif()
+	
+	if(NOT TARGET NVIDIA::AR)
+		add_library(NVIDIA::AR IMPORTED INTERFACE)
+		target_include_directories(NVIDIA::AR
+			INTERFACE
+				"${PROJECT_SOURCE_DIR}/third-party/nvidia-maxine-ar-sdk/nvar/include/"
+				"${PROJECT_SOURCE_DIR}/third-party/nvidia-maxine-ar-sdk/nvar/src/"
+		)
+	endif()
+endif()
 
 #- NVIDIA Video Effects SDK
 set(HAVE_NVIDIA_VFX_SDK OFF)
@@ -1030,7 +1046,7 @@ if(HAVE_JSON)
 	list(APPEND PROJECT_INCLUDE_DIRS ${JSON_INCLUDE_DIR})
 endif()
 
-if(HAVE_NVIDIA_VFX_SDK)
+if(HAVE_NVIDIA_VFX_SDK OR HAVE_NVIDIA_AR_SDK)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/nvidia/cv/nvidia-cv.hpp"
 		"source/nvidia/cv/nvidia-cv.cpp"
@@ -1038,6 +1054,16 @@ if(HAVE_NVIDIA_VFX_SDK)
 		"source/nvidia/cv/nvidia-cv-image.cpp"
 		"source/nvidia/cv/nvidia-cv-texture.hpp"
 		"source/nvidia/cv/nvidia-cv-texture.cpp"
+	)
+endif()
+
+if(HAVE_NVIDIA_AR_SDK)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/nvidia/ar/nvidia-ar.hpp"
+		"source/nvidia/ar/nvidia-ar.cpp"
+	)
+	list(APPEND PROJECT_LIBRARIES
+		NVIDIA::AR
 	)
 endif()
 
