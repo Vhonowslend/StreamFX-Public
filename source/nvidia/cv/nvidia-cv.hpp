@@ -288,7 +288,7 @@ namespace streamfx::nvidia::cv {
 		static std::shared_ptr<::streamfx::nvidia::cv::cv> get();
 	};
 
-	class exception : std::runtime_error {
+	class exception : public std::runtime_error {
 		result _code;
 
 		public:
