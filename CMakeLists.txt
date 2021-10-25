@@ -1063,6 +1063,8 @@ if(HAVE_NVIDIA_AR_SDK)
 		"source/nvidia/ar/nvidia-ar.cpp"
 		"source/nvidia/ar/nvidia-ar-feature.hpp"
 		"source/nvidia/ar/nvidia-ar-feature.cpp"
+		"source/nvidia/ar/nvidia-ar-facedetection.hpp"
+		"source/nvidia/ar/nvidia-ar-facedetection.cpp"
 	)
 	list(APPEND PROJECT_LIBRARIES
 		NVIDIA::AR
