@@ -35,6 +35,9 @@
 #include "encoders/encoder-ffmpeg.hpp"
 #endif
 
+#ifdef ENABLE_FILTER_AUTOFRAMING
+#include "filters/filter-autoframing.hpp"
+#endif
 #ifdef ENABLE_FILTER_BLUR
 #include "filters/filter-blur.hpp"
 #endif
@@ -146,6 +149,9 @@ try {
 
 	// Filters
 	{
+#ifdef ENABLE_FILTER_AUTOFRAMING
+		streamfx::filter::autoframing::autoframing_factory::initialize();
+#endif
 #ifdef ENABLE_FILTER_BLUR
 		streamfx::filter::blur::blur_factory::initialize();
 #endif
@@ -238,6 +244,9 @@ try {
 
 	// Filters
 	{
+#ifdef ENABLE_FILTER_AUTOFRAMING
+		streamfx::filter::autoframing::autoframing_factory::finalize();
+#endif
 #ifdef ENABLE_FILTER_BLUR
 		streamfx::filter::blur::blur_factory::finalize();
 #endif
