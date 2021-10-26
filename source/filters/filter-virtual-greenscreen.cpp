@@ -94,6 +94,8 @@ virtual_greenscreen_instance::virtual_greenscreen_instance(obs_data_t* data, obs
 	  _provider_ui(virtual_greenscreen_provider::INVALID), _provider_ready(false), _provider_lock(), _provider_task(),
 	  _effect(), _channel0_sampler(), _channel1_sampler(), _input(), _output_color(), _output_alpha(), _dirty(true)
 {
+	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
+
 	{
 		::streamfx::obs::gs::context gctx;
 
@@ -131,16 +133,28 @@ virtual_greenscreen_instance::virtual_greenscreen_instance(obs_data_t* data, obs
 
 virtual_greenscreen_instance::~virtual_greenscreen_instance()
 {
-	// TODO: Make this asynchronous.
-	std::unique_lock<std::mutex> ul(_provider_lock);
-	switch (_provider) {
+	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
+
+	{ // Unload the underlying effect ASAP.
+		std::unique_lock<std::mutex> ul(_provider_lock);
+
+		// De-queue the underlying task.
+		if (_provider_task) {
+			streamfx::threadpool()->pop(_provider_task);
+			_provider_task->await_completion();
+			_provider_task.reset();
+		}
+
+		// TODO: Make this asynchronous.
+		switch (_provider) {
 #ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
-	case virtual_greenscreen_provider::NVIDIA_GREENSCREEN:
-		nvvfxgs_unload();
-		break;
+		case virtual_greenscreen_provider::NVIDIA_GREENSCREEN:
+			nvvfxgs_unload();
+			break;
 #endif
-	default:
-		break;
+		default:
+			break;
+		}
 	}
 }
 
@@ -364,17 +378,24 @@ void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::switch
 	D_LOG_INFO("Instance '%s' is switching provider from '%s' to '%s'.", obs_source_get_name(_self), cstring(_provider),
 			   cstring(provider));
 
-	// 1.If there is an existing task, attempt to cancel it.
+	// If there is an existing task, attempt to cancel it.
 	if (_provider_task) {
+		// De-queue it.
 		streamfx::threadpool()->pop(_provider_task);
+
+		// Await the death of the task itself.
+		_provider_task->await_completion();
+
+		// Clear any memory associated with it.
+		_provider_task.reset();
 	}
 
-	// 2. Build data to pass into the task.
+	// Build data to pass into the task.
 	auto spd      = std::make_shared<switch_provider_data_t>();
 	spd->provider = _provider;
 	_provider     = provider;
 
-	// 3. Then spawn a new task to switch provider.
+	// Then spawn a new task to switch provider.
 	_provider_task = streamfx::threadpool()->push(
 		std::bind(&virtual_greenscreen_instance::task_switch_provider, this, std::placeholders::_1), spd);
 }
@@ -384,14 +405,14 @@ void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::task_s
 {
 	std::shared_ptr<switch_provider_data_t> spd = std::static_pointer_cast<switch_provider_data_t>(data);
 
-	// 1. Mark the provider as no longer ready.
+	// Mark the provider as no longer ready.
 	_provider_ready = false;
 
-	// 2. Lock the provider from being used.
+	// Lock the provider from being used.
 	std::unique_lock<std::mutex> ul(_provider_lock);
 
 	try {
-		// 3. Unload the previous provider.
+		// Unload the previous provider.
 		switch (spd->provider) {
 #ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
 		case virtual_greenscreen_provider::NVIDIA_GREENSCREEN:
@@ -402,7 +423,7 @@ void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::task_s
 			break;
 		}
 
-		// 4. Load the new provider.
+		// Load the new provider.
 		switch (_provider) {
 #ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
 		case virtual_greenscreen_provider::NVIDIA_GREENSCREEN:
@@ -422,7 +443,7 @@ void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::task_s
 		D_LOG_INFO("Instance '%s' switched provider from '%s' to '%s'.", obs_source_get_name(_self),
 				   cstring(spd->provider), cstring(_provider));
 
-		// 5. Set the new provider as valid.
+		// Set the new provider as valid.
 		_provider_ready = true;
 	} catch (std::exception const& ex) {
 		// Log information.
