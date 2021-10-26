@@ -71,7 +71,7 @@ namespace streamfx::nvidia::vfx {
 		~vfx();
 		vfx();
 
-		std::filesystem::path model_path();
+		std::filesystem::path const& model_path();
 
 		public:
 		NVVFX_DEFINE_FUNCTION(NvVFX_GetVersion, uint32_t* version);

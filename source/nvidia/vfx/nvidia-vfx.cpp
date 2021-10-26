@@ -220,7 +220,7 @@ std::shared_ptr<::streamfx::nvidia::vfx::vfx> streamfx::nvidia::vfx::vfx::get()
 	return instance.lock();
 }
 
-std::filesystem::path streamfx::nvidia::vfx::vfx::model_path()
+std::filesystem::path const& streamfx::nvidia::vfx::vfx::model_path()
 {
 	return _model_path;
 }
