@@ -44,8 +44,6 @@ streamfx::nvidia::vfx::denoising::~denoising()
 	auto gctx = ::streamfx::obs::gs::context();
 	auto cctx = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
 
-	_fx.reset();
-
 	// Clean up state buffer.
 	_nvcuda->get_cuda()->cuMemFree(_state);
 
@@ -57,50 +55,15 @@ streamfx::nvidia::vfx::denoising::~denoising()
 	_convert_to_u8.reset();
 	_output.reset();
 	_tmp.reset();
-
-	// Release CUDA, CVImage, and Video Effects SDK.
-	_nvvfx.reset();
-	_nvcvi.reset();
-	_nvcuda.reset();
 }
 
 streamfx::nvidia::vfx::denoising::denoising()
-	: _nvcuda(::streamfx::nvidia::cuda::obs::get()), _nvcvi(::streamfx::nvidia::cv::cv::get()),
-	  _nvvfx(::streamfx::nvidia::vfx::vfx::get()), _state(0), _state_size(0), _strength(1.), _input(), _source(),
-	  _destination(), _convert_to_u8(), _output(), _tmp(), _dirty(true)
+	: effect(EFFECT_DENOISING), _dirty(true), _input(), _convert_to_fp32(), _source(), _destination(), _convert_to_u8(),
+	  _output(), _tmp(), _state(0), _state_size(0), _strength(1.)
 {
 	// Enter Graphics and CUDA context.
 	auto gctx = ::streamfx::obs::gs::context();
 	auto cctx = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
-
-	{ // Try & Create the Denoising effect.
-		::streamfx::nvidia::vfx::handle_t handle;
-		if (auto res = _nvvfx->NvVFX_CreateEffect(::streamfx::nvidia::vfx::EFFECT_DENOISING, &handle);
-			res != ::streamfx::nvidia::cv::result::SUCCESS) {
-			D_LOG_ERROR("Failed to create effect due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
-			throw std::runtime_error("CreateEffect failed.");
-		}
-
-		_fx = std::shared_ptr<void>(handle, [](::streamfx::nvidia::vfx::handle_t handle) {
-			::streamfx::nvidia::vfx::vfx::get()->NvVFX_DestroyEffect(handle);
-		});
-	}
-
-	// Assign the appropriate CUDA stream.
-	if (auto res = _nvvfx->NvVFX_SetCudaStream(_fx.get(), ::streamfx::nvidia::vfx::PARAMETER_CUDA_STREAM,
-											   _nvcuda->get_stream()->get());
-		res != ::streamfx::nvidia::cv::result::SUCCESS) {
-		D_LOG_ERROR("Failed to set CUDA stream due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
-		throw std::runtime_error("SetCudaStream failed.");
-	}
-
-	// Set the proper model directory.
-	if (auto res = _nvvfx->NvVFX_SetString(_fx.get(), ::streamfx::nvidia::vfx::PARAMETER_MODEL_DIRECTORY,
-										   _nvvfx->model_path().generic_u8string().c_str());
-		res != ::streamfx::nvidia::cv::result::SUCCESS) {
-		D_LOG_ERROR("Failed to set model directory due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
-		throw std::runtime_error("SetString failed.");
-	}
 
 	// Set the strength, scale and buffers.
 	set_strength(_strength);
@@ -121,9 +84,8 @@ void streamfx::nvidia::vfx::denoising::set_strength(float strength)
 	// Update Effect
 	auto gctx = ::streamfx::obs::gs::context();
 	auto cctx = _nvcuda->get_context()->enter();
-	if (auto res = _nvvfx->NvVFX_SetF32(_fx.get(), ::streamfx::nvidia::vfx::PARAMETER_STRENGTH, _strength);
-		res != ::streamfx::nvidia::cv::result::SUCCESS) {
-		D_LOG_ERROR("Failed to set '%s' to %1.3f.", ::streamfx::nvidia::vfx::PARAMETER_STRENGTH, _strength);
+	if (auto res = set(PARAMETER_STRENGTH, _strength); res != ::streamfx::nvidia::cv::result::SUCCESS) {
+		D_LOG_ERROR("Failed to set '%s' to %1.3f.", PARAMETER_STRENGTH, _strength);
 	};
 }
 
@@ -261,16 +223,16 @@ void streamfx::nvidia::vfx::denoising::resize(uint32_t width, uint32_t height)
 			::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 	}
 
-	// Input Size was changed.
-	if (!_input || !_source || !_destination || !_output || !_state || (width != _input->get_texture()->get_width())
-		|| (height != _input->get_texture()->get_height()) || (width != _output->get_texture()->get_width())
-		|| (height != _output->get_texture()->get_height())) {
+	if (!_input || (_input->get_image()->width != width) || (_input->get_image()->height != height)) {
 		if (_input) {
 			_input->resize(width, height);
 		} else {
 			_input = std::make_shared<::streamfx::nvidia::cv::texture>(width, height, GS_RGBA_UNORM);
 		}
+	}
 
+	if (!_convert_to_fp32 || (_convert_to_fp32->get_image()->width != width)
+		|| (_convert_to_fp32->get_image()->height != height)) {
 		if (_convert_to_fp32) {
 			_convert_to_fp32->resize(width, height);
 		} else {
@@ -278,7 +240,9 @@ void streamfx::nvidia::vfx::denoising::resize(uint32_t width, uint32_t height)
 				width, height, ::streamfx::nvidia::cv::pixel_format::RGBA, ::streamfx::nvidia::cv::component_type::FP32,
 				::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
+	}
 
+	if (!_source || (_source->get_image()->width != width) || (_source->get_image()->height != height)) {
 		if (_source) {
 			_source->resize(width, height);
 		} else {
@@ -287,13 +251,17 @@ void streamfx::nvidia::vfx::denoising::resize(uint32_t width, uint32_t height)
 				::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 
-		if (auto res = _nvvfx->NvVFX_SetImage(_fx.get(), ::streamfx::nvidia::vfx::PARAMETER_INPUT_IMAGE_0,
-											  _source->get_image());
+		if (auto res = set(::streamfx::nvidia::vfx::PARAMETER_INPUT_IMAGE_0, _source);
 			res != ::streamfx::nvidia::cv::result::SUCCESS) {
 			D_LOG_ERROR("Failed to set input image due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
+			_source.reset();
 			throw std::runtime_error("SetImage failed.");
 		}
 
+		_dirty = true;
+	}
+
+	if (!_destination || (_destination->get_image()->width != width) || (_destination->get_image()->height != height)) {
 		if (_destination) {
 			_destination->resize(width, height);
 		} else {
@@ -302,6 +270,18 @@ void streamfx::nvidia::vfx::denoising::resize(uint32_t width, uint32_t height)
 				::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 
+		if (auto res = set(::streamfx::nvidia::vfx::PARAMETER_OUTPUT_IMAGE_0, _destination);
+			res != ::streamfx::nvidia::cv::result::SUCCESS) {
+			D_LOG_ERROR("Failed to set output image due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
+			_destination.reset();
+			throw std::runtime_error("SetImage failed.");
+		}
+
+		_dirty = true;
+	}
+
+	if (!_convert_to_u8 || (_convert_to_u8->get_image()->width != width)
+		|| (_convert_to_u8->get_image()->height != height)) {
 		if (_convert_to_u8) {
 			_convert_to_u8->resize(width, height);
 		} else {
@@ -310,35 +290,31 @@ void streamfx::nvidia::vfx::denoising::resize(uint32_t width, uint32_t height)
 				::streamfx::nvidia::cv::component_type::UINT8, ::streamfx::nvidia::cv::component_layout::INTERLEAVED,
 				::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
+	}
 
+	if (!_output || (_output->get_image()->width != width) || (_output->get_image()->height != height)) {
 		if (_output) {
 			_output->resize(width, height);
 		} else {
 			_output = std::make_shared<::streamfx::nvidia::cv::texture>(width, height, GS_RGBA_UNORM);
 		}
+	}
 
-		if (auto res = _nvvfx->NvVFX_SetImage(_fx.get(), ::streamfx::nvidia::vfx::PARAMETER_OUTPUT_IMAGE_0,
-											  _destination->get_image());
-			res != ::streamfx::nvidia::cv::result::SUCCESS) {
-			D_LOG_ERROR("Failed to set output image due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
-			throw std::runtime_error("SetImage failed.");
+	if (!_state || _dirty) { // Reallocate and clean state.
+		if (_state) {
+			_nvcuda->get_cuda()->cuMemFree(_state);
 		}
 
-		{ // Reallocate and clean state.
-			_nvvfx->NvVFX_GetU32(_fx.get(), ::streamfx::nvidia::vfx::PARAMETER_STATE_SIZE, &_state_size);
-			if (_state) {
-				//_nvcuda->get_cuda()->cuMemFree(_state);
-			}
-			_nvcuda->get_cuda()->cuMemAlloc(&_state, _state_size);
-			_nvcuda->get_cuda()->cuMemsetD8(_state, 0, _state_size);
+		_nvvfx->NvVFX_GetU32(_fx.get(), ::streamfx::nvidia::vfx::PARAMETER_STATE_SIZE, &_state_size);
+		_nvcuda->get_cuda()->cuMemAlloc(&_state, _state_size);
+		_nvcuda->get_cuda()->cuMemsetD8(_state, 0, _state_size);
 
-			_states[0] = reinterpret_cast<void*>(_state);
-			if (auto res = _nvvfx->NvVFX_SetObject(_fx.get(), ::streamfx::nvidia::vfx::PARAMETER_STATE,
-												   reinterpret_cast<void*>(_states));
-				res != ::streamfx::nvidia::cv::result::SUCCESS) {
-				D_LOG_ERROR("Failed to set state due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
-				throw std::runtime_error("SetObject failed.");
-			}
+		_states[0] = reinterpret_cast<void*>(_state);
+		if (auto res = _nvvfx->NvVFX_SetObject(_fx.get(), ::streamfx::nvidia::vfx::PARAMETER_STATE,
+											   reinterpret_cast<void*>(_states));
+			res != ::streamfx::nvidia::cv::result::SUCCESS) {
+			D_LOG_ERROR("Failed to set state due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
+			throw std::runtime_error("SetObject failed.");
 		}
 
 		_dirty = true;
@@ -348,22 +324,11 @@ void streamfx::nvidia::vfx::denoising::resize(uint32_t width, uint32_t height)
 void streamfx::nvidia::vfx::denoising::load()
 {
 	auto gctx = ::streamfx::obs::gs::context();
-	{
-		auto cctx = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
-		if (auto res = _nvvfx->NvVFX_SetCudaStream(_fx.get(), ::streamfx::nvidia::vfx::PARAMETER_CUDA_STREAM,
-												   _nvcuda->get_stream()->get());
-			res != ::streamfx::nvidia::cv::result::SUCCESS) {
-			D_LOG_ERROR("Failed to set CUDA stream due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
-			throw std::runtime_error("SetCudaStream failed.");
-		}
-	}
+	auto cctx = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
 
-	{
-		auto cctx = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
-		if (auto res = _nvvfx->NvVFX_Load(_fx.get()); res != ::streamfx::nvidia::cv::result::SUCCESS) {
-			D_LOG_ERROR("Failed to initialize effect due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
-			throw std::runtime_error("Load failed.");
-		}
+	if (auto res = effect::load(); res != ::streamfx::nvidia::cv::result::SUCCESS) {
+		D_LOG_ERROR("Failed to initialize effect due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
+		throw std::runtime_error("Load failed.");
 	}
 
 	_dirty = false;

@@ -19,6 +19,7 @@
 // SOFTWARE.
 
 #pragma once
+#include "nvidia-vfx-effect.hpp"
 #include "nvidia-vfx.hpp"
 #include "nvidia/cuda/nvidia-cuda-gs-texture.hpp"
 #include "nvidia/cuda/nvidia-cuda-obs.hpp"
@@ -28,11 +29,8 @@
 #include "obs/gs/gs-texture.hpp"
 
 namespace streamfx::nvidia::vfx {
-	class denoising {
-		std::shared_ptr<::streamfx::nvidia::cuda::obs> _nvcuda;
-		std::shared_ptr<::streamfx::nvidia::cv::cv>    _nvcvi;
-		std::shared_ptr<::streamfx::nvidia::vfx::vfx>  _nvvfx;
-		std::shared_ptr<void>                          _fx;
+	class denoising : protected effect {
+		bool _dirty;
 
 		std::shared_ptr<::streamfx::nvidia::cv::texture> _input;
 		std::shared_ptr<::streamfx::nvidia::cv::image>   _convert_to_fp32;
@@ -41,13 +39,12 @@ namespace streamfx::nvidia::vfx {
 		std::shared_ptr<::streamfx::nvidia::cv::image>   _convert_to_u8;
 		std::shared_ptr<::streamfx::nvidia::cv::texture> _output;
 		std::shared_ptr<::streamfx::nvidia::cv::image>   _tmp;
-		void*                                            _states[1];
-		::streamfx::nvidia::cuda::device_ptr_t           _state;
-		uint32_t                                         _state_size;
+
+		void*                                  _states[1];
+		::streamfx::nvidia::cuda::device_ptr_t _state;
+		uint32_t                               _state_size;
 
 		float _strength;
-
-		bool _dirty;
 
 		public:
 		~denoising();
