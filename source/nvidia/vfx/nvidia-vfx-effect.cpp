@@ -49,8 +49,7 @@ vfx::effect::~effect()
 	_nvcuda.reset();
 }
 
-vfx::effect::effect(effect_t effect)
-	: _nvcuda(cuda::obs::get()), _nvcvi(cv::cv::get()), _nvvfx(vfx::vfx::get()), _fx(), _fx_dirty(true)
+vfx::effect::effect(effect_t effect) : _nvcuda(cuda::obs::get()), _nvcvi(cv::cv::get()), _nvvfx(vfx::vfx::get()), _fx()
 {
 	auto gctx = ::streamfx::obs::gs::context();
 	auto cctx = cuda::obs::get()->get_context()->enter();
@@ -61,8 +60,18 @@ vfx::effect::effect(effect_t effect)
 		D_LOG_ERROR("Unable to create effect: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 		throw std::runtime_error("Unable to create effect.");
 	}
-
 	_fx = std::shared_ptr<void>(handle, [](::vfx::handle_t handle) { ::vfx::vfx::get()->NvVFX_DestroyEffect(handle); });
+
+	// Assign CUDA Stream object.
+	if (auto v = set(PARAMETER_CUDA_STREAM, _nvcuda->get_stream()); v != cv::result::SUCCESS) {
+		throw ::streamfx::nvidia::cv::exception(PARAMETER_CUDA_STREAM, v);
+	}
+
+	// Assign Model Directory.
+	_model_path = _nvvfx->model_path().generic_u8string();
+	if (auto v = set(PARAMETER_MODEL_DIRECTORY, _model_path); v != cv::result::SUCCESS) {
+		throw ::streamfx::nvidia::cv::exception(PARAMETER_MODEL_DIRECTORY, v);
+	}
 }
 
 cv::result vfx::effect::get(parameter_t param, std::string_view& value)
