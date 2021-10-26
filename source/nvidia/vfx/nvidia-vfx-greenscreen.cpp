@@ -64,16 +64,6 @@ streamfx::nvidia::vfx::greenscreen::greenscreen()
 	auto gctx = ::streamfx::obs::gs::context();
 	auto cctx = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
 
-	// Assign CUDA Stream object.
-	if (auto v = set(PARAMETER_CUDA_STREAM, _nvcuda->get_stream()); v != cv::result::SUCCESS) {
-		throw ::streamfx::nvidia::cv::exception(PARAMETER_CUDA_STREAM, v);
-	}
-
-	// Assign Model Directory.
-	if (auto v = set(PARAMETER_MODEL_DIRECTORY, _nvvfx->model_path().generic_u8string()); v != cv::result::SUCCESS) {
-		throw ::streamfx::nvidia::cv::exception(PARAMETER_MODEL_DIRECTORY, v);
-	}
-
 	// Mode
 	set_mode(greenscreen_mode::QUALITY);
 
