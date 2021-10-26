@@ -19,6 +19,7 @@
 // SOFTWARE.
 
 #pragma once
+#include "nvidia-vfx-effect.hpp"
 #include "nvidia-vfx.hpp"
 #include "nvidia/cuda/nvidia-cuda-gs-texture.hpp"
 #include "nvidia/cuda/nvidia-cuda-obs.hpp"
@@ -28,12 +29,8 @@
 #include "obs/gs/gs-texture.hpp"
 
 namespace streamfx::nvidia::vfx {
-	class superresolution {
-		std::shared_ptr<::streamfx::nvidia::cuda::obs> _nvcuda;
-		std::shared_ptr<::streamfx::nvidia::cv::cv>    _nvcvi;
-		std::shared_ptr<::streamfx::nvidia::vfx::vfx>  _nvvfx;
-		std::shared_ptr<void>                          _fx;
-
+	class superresolution : protected effect {
+		bool                                             _dirty;
 		std::shared_ptr<::streamfx::nvidia::cv::texture> _input;
 		std::shared_ptr<::streamfx::nvidia::cv::image>   _convert_to_fp32;
 		std::shared_ptr<::streamfx::nvidia::cv::image>   _source;
@@ -44,8 +41,6 @@ namespace streamfx::nvidia::vfx {
 
 		float _strength;
 		float _scale;
-
-		bool _dirty;
 
 		std::pair<uint32_t, uint32_t> _cache_input_size;
 		std::pair<uint32_t, uint32_t> _cache_output_size;
