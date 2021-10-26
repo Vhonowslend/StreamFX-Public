@@ -38,9 +38,9 @@ streamfx::util::library::library(std::filesystem::path file) : _library(nullptr)
 {
 #if defined(ST_WINDOWS)
 	SetLastError(ERROR_SUCCESS);
-	file     = ::streamfx::util::platform::utf8_to_native(file);
-	_library = reinterpret_cast<void*>(LoadLibraryExW(
-		file.wstring().c_str(), nullptr, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS));
+	auto wfile = ::streamfx::util::platform::utf8_to_native(file.u8string());
+	_library   = reinterpret_cast<void*>(
+        LoadLibraryExW(wfile.c_str(), nullptr, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS));
 	if (!_library) {
 		DWORD error = GetLastError();
 		if (error != ERROR_PROC_NOT_FOUND) {
