@@ -95,6 +95,8 @@ upscaling_instance::upscaling_instance(obs_data_t* data, obs_source_t* self)
 	  _in_size(1, 1), _out_size(1, 1), _provider_ready(false), _provider(upscaling_provider::INVALID), _provider_lock(),
 	  _provider_task(), _input(), _output(), _dirty(false)
 {
+	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
+
 	{
 		::streamfx::obs::gs::context gctx;
 
@@ -125,16 +127,28 @@ upscaling_instance::upscaling_instance(obs_data_t* data, obs_source_t* self)
 
 upscaling_instance::~upscaling_instance()
 {
-	// TODO: Make this asynchronous.
-	std::unique_lock<std::mutex> ul(_provider_lock);
-	switch (_provider) {
+	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
+
+	{ // Unload the underlying effect ASAP.
+		std::unique_lock<std::mutex> ul(_provider_lock);
+
+		// De-queue the underlying task.
+		if (_provider_task) {
+			streamfx::threadpool()->pop(_provider_task);
+			_provider_task->await_completion();
+			_provider_task.reset();
+		}
+
+		// TODO: Make this asynchronous.
+		switch (_provider) {
 #ifdef ENABLE_FILTER_UPSCALING_NVIDIA
-	case upscaling_provider::NVIDIA_SUPERRESOLUTION:
-		nvvfxsr_unload();
-		break;
+		case upscaling_provider::NVIDIA_SUPERRESOLUTION:
+			nvvfxsr_unload();
+			break;
 #endif
-	default:
-		break;
+		default:
+			break;
+		}
 	}
 }
 
@@ -356,17 +370,24 @@ void streamfx::filter::upscaling::upscaling_instance::switch_provider(upscaling_
 	D_LOG_INFO("Instance '%s' is switching provider from '%s' to '%s'.", obs_source_get_name(_self), cstring(_provider),
 			   cstring(provider));
 
-	// 1.If there is an existing task, attempt to cancel it.
+	// If there is an existing task, attempt to cancel it.
 	if (_provider_task) {
+		// De-queue it.
 		streamfx::threadpool()->pop(_provider_task);
+
+		// Await the death of the task itself.
+		_provider_task->await_completion();
+
+		// Clear any memory associated with it.
+		_provider_task.reset();
 	}
 
-	// 2. Build data to pass into the task.
+	// Build data to pass into the task.
 	auto spd      = std::make_shared<switch_provider_data_t>();
 	spd->provider = _provider;
 	_provider     = provider;
 
-	// 3. Then spawn a new task to switch provider.
+	// Then spawn a new task to switch provider.
 	_provider_task = streamfx::threadpool()->push(
 		std::bind(&upscaling_instance::task_switch_provider, this, std::placeholders::_1), spd);
 }
