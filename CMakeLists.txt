@@ -1156,6 +1156,8 @@ list(APPEND PROJECT_PRIVATE_SOURCE
 	"source/util/util-platform.cpp"
 	"source/util/util-threadpool.cpp"
 	"source/util/util-threadpool.hpp"
+	"source/gfx/gfx-debug.hpp"
+	"source/gfx/gfx-debug.cpp"
 	"source/gfx/gfx-source-texture.hpp"
 	"source/gfx/gfx-source-texture.cpp"
 	"source/obs/gs/gs-helper.hpp"
