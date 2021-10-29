@@ -8,12 +8,12 @@ uniform texture2D InputB<
 >;
 
 //------------------------------------------------------------------------------
-// Technique: Draw
+// Technique: Texture
 //------------------------------------------------------------------------------
 // Parameters:
 // - InputA: RGBA Texture
 
-float4 PSDraw(VertexData vtx) : TARGET {
+float4 PSTexture(VertexData vtx) : TARGET {
 	return InputA.Sample(BlankSampler, vtx.uv);
 };
 
@@ -22,17 +22,44 @@ technique Draw
 	pass
 	{
 		vertex_shader = DefaultVertexShader(vtx);
-		pixel_shader = PSDraw(vtx);
+		pixel_shader = PSTexture(vtx);
+	};
+};
+technique Texture
+{
+	pass
+	{
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader = PSTexture(vtx);
 	};
 };
 
 //------------------------------------------------------------------------------
-// Technique: Draw
+// Technique: TextureColor
 //------------------------------------------------------------------------------
 // Parameters:
 // - InputA: RGBA Texture
 
-float4 PSDrawPremultiplied(VertexData vtx) : TARGET {
+float4 PSTextureColor(VertexColorData vtx) : TARGET {
+	return InputA.Sample(BlankSampler, vtx.uv) * vtx.clr;
+};
+
+technique TextureColor
+{
+	pass
+	{
+		vertex_shader = ColorVertexShader(vtx);
+		pixel_shader = PSTextureColor(vtx);
+	};
+};
+
+//------------------------------------------------------------------------------
+// Technique: Texture Premultiplied
+//------------------------------------------------------------------------------
+// Parameters:
+// - InputA: RGBA Texture
+
+float4 PSTexturePremultiplied(VertexData vtx) : TARGET {
 	float4 rgba = InputA.Sample(BlankSampler, vtx.uv);
 	rgba.rgb /= rgba.a > (1. / 1024.) ? rgba.a : 1.0;
 	return rgba;
@@ -43,7 +70,15 @@ technique DrawPremultiplied
 	pass
 	{
 		vertex_shader = DefaultVertexShader(vtx);
-		pixel_shader = PSDrawPremultiplied(vtx);
+		pixel_shader = PSTexturePremultiplied(vtx);
+	};
+};
+technique TexturePremultiplied
+{
+	pass
+	{
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader = PSTexturePremultiplied(vtx);
 	};
 };
 
@@ -67,5 +102,23 @@ technique RestoreAlpha
 	{
 		vertex_shader = DefaultVertexShader(vtx);
 		pixel_shader = PSRestoreAlpha(vtx);
+	};
+};
+
+//------------------------------------------------------------------------------
+// Technique: Color
+//------------------------------------------------------------------------------
+// Parameters:
+
+float4 PSColor(VertexColorData vtx) : TARGET {
+	return vtx.clr;
+};
+
+technique Color
+{
+	pass
+	{
+		vertex_shader = ColorVertexShader(vtx);
+		pixel_shader = PSColor(vtx);
 	};
 };
