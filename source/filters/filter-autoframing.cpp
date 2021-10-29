@@ -246,7 +246,7 @@ void autoframing_instance::update(obs_data_t* data)
 	// Tracking
 	_track_mode = static_cast<tracking_mode>(obs_data_get_int(data, ST_KEY_TRACKING_MODE));
 	{
-		if (auto text = obs_data_get_string(data, ST_KEY_TRACKING_FREQUENCY ".X"); text != nullptr) {
+		if (auto text = obs_data_get_string(data, ST_KEY_TRACKING_FREQUENCY); text != nullptr) {
 			float value = 0.;
 			if (sscanf(text, "%f", &value) == 1) {
 				if (const char* seconds = strchr(text, 's'); seconds == nullptr) {
