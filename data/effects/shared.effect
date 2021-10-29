@@ -50,11 +50,20 @@ struct VertexData {
 	float4 pos : POSITION;
 	float2 uv  : TEXCOORD0;
 };
+struct VertexColorData {
+	float4 pos : POSITION;
+	float4 clr : COLOR;
+	float2 uv  : TEXCOORD0;
+};
 
 //------------------------------------------------------------------------------
 // Vertex Shaders
 //------------------------------------------------------------------------------
 VertexData DefaultVertexShader(VertexData vtx) {
+	vtx.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
+	return vtx;
+};
+VertexColorData ColorVertexShader(VertexColorData vtx) {
 	vtx.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
 	return vtx;
 };
