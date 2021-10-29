@@ -244,8 +244,20 @@ void autoframing_instance::migrate(obs_data_t* data, uint64_t version)
 void autoframing_instance::update(obs_data_t* data)
 {
 	// Tracking
-	_track_mode              = static_cast<tracking_mode>(obs_data_get_int(data, ST_KEY_TRACKING_MODE));
-	_track_frequency         = static_cast<float>(obs_data_get_double(data, ST_KEY_TRACKING_FREQUENCY));
+	_track_mode = static_cast<tracking_mode>(obs_data_get_int(data, ST_KEY_TRACKING_MODE));
+	{
+		if (auto text = obs_data_get_string(data, ST_KEY_TRACKING_FREQUENCY ".X"); text != nullptr) {
+			float value = 0.;
+			if (sscanf(text, "%f", &value) == 1) {
+				if (const char* seconds = strchr(text, 's'); seconds == nullptr) {
+					value = 1.f / value; // Hz -> seconds
+				} else {
+					// No-op
+				}
+			}
+			_track_frequency = value;
+		}
+	}
 	_track_frequency_counter = 0;
 
 	// Motion
@@ -1090,7 +1102,7 @@ void autoframing_factory::get_defaults2(obs_data_t* data)
 {
 	// Tracking
 	obs_data_set_default_int(data, ST_KEY_TRACKING_MODE, static_cast<int64_t>(tracking_mode::SOLO));
-	obs_data_set_default_double(data, ST_KEY_TRACKING_FREQUENCY, 1. / 20.);
+	obs_data_set_default_string(data, ST_KEY_TRACKING_FREQUENCY, "20 Hz");
 
 	// Motion
 	obs_data_set_default_double(data, ST_KEY_MOTION_SMOOTHING, 33.333);
@@ -1146,9 +1158,8 @@ obs_properties_t* autoframing_factory::get_properties2(autoframing_instance* dat
 		}
 
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_TRACKING_FREQUENCY,
-													 D_TRANSLATE(ST_I18N_TRACKING_FREQUENCY), 0.00, 0.20, 0.01);
-			obs_property_float_set_suffix(p, " seconds");
+			auto p = obs_properties_add_text(grp, ST_KEY_TRACKING_FREQUENCY, D_TRANSLATE(ST_I18N_TRACKING_FREQUENCY),
+											 OBS_TEXT_DEFAULT);
 		}
 	}
 
