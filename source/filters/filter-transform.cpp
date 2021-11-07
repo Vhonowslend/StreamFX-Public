@@ -114,42 +114,46 @@ transform_instance::transform_instance(obs_data_t* data, obs_source_t* context)
 	  _sampler(), _params(), _corners(), _cache_rendered(), _mipmap_enabled(), _source_rendered(), _source_size(),
 	  _update_mesh(true)
 {
-	_cache_rt      = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	_source_rt     = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	_vertex_buffer = std::make_shared<streamfx::obs::gs::vertex_buffer>(uint32_t(4u), uint8_t(1u));
 	{
-		auto file = streamfx::data_file_path("effects/standard.effect");
-		try {
-			_standard_effect = streamfx::obs::gs::effect::create(file.generic_u8string());
-		} catch (const std::exception& ex) {
-			DLOG_ERROR("Error loading '%s' from disk: %s", file.generic_u8string().c_str(), ex.what());
-		}
-	}
-	{
-		auto file = streamfx::data_file_path("effects/transform.effect");
-		try {
-			_transform_effect = streamfx::obs::gs::effect::create(file.generic_u8string());
-		} catch (const std::exception& ex) {
-			DLOG_ERROR("Error loading '%s' from disk: %s", file.generic_u8string().c_str(), ex.what());
-		}
-	}
-	{
-		_sampler.set_address_mode_u(GS_ADDRESS_CLAMP);
-		_sampler.set_address_mode_v(GS_ADDRESS_CLAMP);
-		_sampler.set_address_mode_w(GS_ADDRESS_CLAMP);
-		_sampler.set_filter(GS_FILTER_LINEAR);
-		_sampler.set_max_anisotropy(8);
-	}
+		auto gctx = obs::gs::context();
 
-	vec3_set(&_params.position, 0, 0, 0);
-	vec3_set(&_params.rotation, 0, 0, 0);
-	vec3_set(&_params.scale, 1, 1, 1);
-	vec3_set(&_params.shear, 0, 0, 0);
+		_cache_rt      = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+		_source_rt     = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+		_vertex_buffer = std::make_shared<streamfx::obs::gs::vertex_buffer>(uint32_t(4u), uint8_t(1u));
+		{
+			auto file = streamfx::data_file_path("effects/standard.effect");
+			try {
+				_standard_effect = streamfx::obs::gs::effect::create(file);
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Error loading '%s': %s", file.generic_u8string().c_str(), ex.what());
+			}
+		}
+		{
+			auto file = streamfx::data_file_path("effects/transform.effect");
+			try {
+				_transform_effect = streamfx::obs::gs::effect::create(file);
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Error loading '%s': %s", file.generic_u8string().c_str(), ex.what());
+			}
+		}
+		{
+			_sampler.set_address_mode_u(GS_ADDRESS_CLAMP);
+			_sampler.set_address_mode_v(GS_ADDRESS_CLAMP);
+			_sampler.set_address_mode_w(GS_ADDRESS_CLAMP);
+			_sampler.set_filter(GS_FILTER_LINEAR);
+			_sampler.set_max_anisotropy(8);
+		}
 
-	vec2_set(&_corners.tl, 0, 0);
-	vec2_set(&_corners.tr, 1, 0);
-	vec2_set(&_corners.bl, 0, 1);
-	vec2_set(&_corners.br, 1, 1);
+		vec3_set(&_params.position, 0, 0, 0);
+		vec3_set(&_params.rotation, 0, 0, 0);
+		vec3_set(&_params.scale, 1, 1, 1);
+		vec3_set(&_params.shear, 0, 0, 0);
+
+		vec2_set(&_corners.tl, 0, 0);
+		vec2_set(&_corners.tr, 1, 0);
+		vec2_set(&_corners.bl, 0, 1);
+		vec2_set(&_corners.br, 1, 1);
+	}
 
 	update(data);
 }

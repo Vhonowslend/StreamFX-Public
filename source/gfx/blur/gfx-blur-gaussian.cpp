@@ -46,8 +46,15 @@ streamfx::gfx::blur::gaussian_data::gaussian_data()
 
 	{
 		auto gctx = streamfx::obs::gs::context();
-		_effect =
-			streamfx::obs::gs::effect::create(streamfx::data_file_path("effects/blur/gaussian.effect").u8string());
+
+		{
+			auto file = streamfx::data_file_path("effects/blur/gaussian.effect");
+			try {
+				_effect = streamfx::obs::gs::effect::create(file);
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Error loading '%s': %s", file.generic_u8string().c_str(), ex.what());
+			}
+		}
 	}
 
 	//#define ST_USE_PASCAL_TRIANGLE

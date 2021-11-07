@@ -45,6 +45,8 @@ streamfx::obs::gs::mipmapper::~mipmapper()
 
 streamfx::obs::gs::mipmapper::mipmapper()
 {
+	auto gctx = streamfx::obs::gs::context();
+
 	_vb = std::make_unique<streamfx::obs::gs::vertex_buffer>(uint32_t(3u), uint8_t(1u));
 
 	{
@@ -71,7 +73,14 @@ streamfx::obs::gs::mipmapper::mipmapper()
 
 	_vb->update();
 
-	_effect = streamfx::obs::gs::effect::create(streamfx::data_file_path("effects/mipgen.effect").u8string());
+	{
+		auto file = streamfx::data_file_path("effects/mipgen.effect");
+		try {
+			_effect = streamfx::obs::gs::effect::create(file);
+		} catch (const std::exception& ex) {
+			DLOG_ERROR("Error loading '%s': %s", file.generic_u8string().c_str(), ex.what());
+		}
+	}
 }
 
 void streamfx::obs::gs::mipmapper::rebuild(std::shared_ptr<streamfx::obs::gs::texture> source,

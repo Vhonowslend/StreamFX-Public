@@ -19,28 +19,78 @@
 
 #include "gs-effect.hpp"
 #include <fstream>
+#include <sstream>
 #include <stdexcept>
 #include <vector>
 #include "obs/gs/gs-helper.hpp"
+#include "util/util-platform.hpp"
 
-#define MAX_EFFECT_SIZE 32 * 1024 * 1024
+#define MAX_EFFECT_SIZE 32 * 1024 * 1024 // 32 MiB, big enough for everything.
 
-static std::string load_file_as_code(std::filesystem::path file)
+static std::string load_file_as_code(std::filesystem::path shader_file)
 {
-	uintmax_t size = std::filesystem::file_size(file);
+	std::stringstream     shader_stream;
+	std::filesystem::path shader_path = std::filesystem::absolute(shader_file);
+	std::filesystem::path shader_root = shader_path.parent_path();
+
+	// Ensure it meets size limits.
+	uintmax_t size = std::filesystem::file_size(shader_path);
 	if (size > MAX_EFFECT_SIZE) {
 		throw std::runtime_error("File is too large to be loaded.");
 	}
 
-	std::ifstream ifs(file, std::ios::binary);
+	// Try to open as-is.
+	std::ifstream ifs(shader_path, std::ios::in);
 	if (!ifs.is_open() || ifs.bad()) {
-		throw std::runtime_error("An unknown error occured trying to open the file.");
+		throw std::runtime_error("Failed to open file.");
 	}
 
-	std::vector<char> buf(size_t(size + 1), 0);
-	ifs.read(buf.data(), static_cast<std::streamsize>(size));
+	// Push Graphics API to shader.
+	switch (gs_get_device_type()) {
+	case GS_DEVICE_DIRECT3D_11:
+		shader_stream << "#define GS_DEVICE_DIRECT3D_11" << std::endl;
+		shader_stream << "#define GS_DEVICE_DIRECT3D" << std::endl;
+		break;
+	case GS_DEVICE_OPENGL:
+		shader_stream << "#define GS_DEVICE_OPENGL" << std::endl;
+		break;
+	}
 
-	return std::string(buf.data(), buf.data() + size);
+	// Pre-process the shader.
+	std::string line;
+	while (std::getline(ifs, line)) {
+		std::string line_trimmed = line;
+
+		{ // Figure out the length of the trim.
+			size_t trim_length = 0;
+			for (size_t idx = 0, edx = line_trimmed.length(); idx < edx; idx++) {
+				char ch = line_trimmed.at(idx);
+				if ((ch != ' ') && (ch != '\t')) {
+					trim_length = idx;
+					break;
+				}
+			}
+			if (trim_length > 0) {
+				line_trimmed.erase(0, trim_length);
+			}
+		}
+
+		// Handle '#include'
+		if (line_trimmed.substr(0, 8) == "#include") {
+			std::string           include_str  = line_trimmed.substr(10, line_trimmed.size() - 11); // '#include "'
+			std::filesystem::path include_path = include_str;
+
+			if (!include_path.is_absolute()) {
+				include_path = shader_root / include_str;
+			}
+
+			line = load_file_as_code(include_path);
+		}
+
+		shader_stream << line << std::endl;
+	}
+
+	return shader_stream.str();
 }
 
 streamfx::obs::gs::effect::effect(const std::string& code, const std::string& name)
@@ -58,7 +108,10 @@ streamfx::obs::gs::effect::effect(const std::string& code, const std::string& na
 	reset(effect, [](gs_effect_t* ptr) { gs_effect_destroy(ptr); });
 }
 
-streamfx::obs::gs::effect::effect(std::filesystem::path file) : effect(load_file_as_code(file), file.u8string()) {}
+streamfx::obs::gs::effect::effect(std::filesystem::path file)
+	: effect(load_file_as_code(file),
+			 streamfx::util::platform::utf8_to_native(std::filesystem::absolute(file)).generic_u8string())
+{}
 
 streamfx::obs::gs::effect::~effect()
 {

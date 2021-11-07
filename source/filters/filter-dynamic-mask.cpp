@@ -77,13 +77,21 @@ dynamic_mask_instance::dynamic_mask_instance(obs_data_t* settings, obs_source_t*
 	  _filter_texture(), _have_input_texture(false), _input(), _input_capture(), _input_texture(),
 	  _have_final_texture(false), _final_rt(), _final_texture(), _channels(), _precalc()
 {
-	_filter_rt = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-	_final_rt  = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	{
+		auto gctx = streamfx::obs::gs::context();
 
-	try {
-		_effect = streamfx::obs::gs::effect::create(streamfx::data_file_path("effects/channel-mask.effect").u8string());
-	} catch (const std::exception& ex) {
-		DLOG_ERROR("Loading channel mask effect failed with error(s):\n%s", ex.what());
+		_filter_rt = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+		_final_rt  = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+
+		{
+			auto file = streamfx::data_file_path("effects/channel-mask.effect");
+			try {
+				_effect = streamfx::obs::gs::effect::create(file);
+			} catch (std::exception& ex) {
+				D_LOG_ERROR("Error loading '%s': %s", file.u8string().c_str(), ex.what());
+				throw;
+			}
+		}
 	}
 
 	update(settings);

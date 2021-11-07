@@ -137,36 +137,37 @@ color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self)
 
 	  _lut_initialized(false), _lut_dirty(true), _lut_producer(), _lut_consumer()
 {
-	// Load the color grading effect.
-	auto path = streamfx::data_file_path("effects/color-grade.effect");
-	if (!std::filesystem::exists(path)) {
-		D_LOG_ERROR("Failed to locate effect file '%s'.", path.u8string().c_str());
-		throw std::runtime_error("Failed to load color grade effect.");
-	} else {
+	{
+		auto gctx = streamfx::obs::gs::context();
+
+		// Load the color grading effect.
+		{
+			auto file = streamfx::data_file_path("effects/color-grade.effect");
+			try {
+				_effect = streamfx::obs::gs::effect::create(file);
+			} catch (std::exception& ex) {
+				D_LOG_ERROR("Error loading '%s': %s", file.u8string().c_str(), ex.what());
+				throw;
+			}
+		}
+
+		// Initialize LUT work flow.
 		try {
-			_effect = streamfx::obs::gs::effect::create(path.u8string());
+			_lut_producer    = std::make_shared<streamfx::gfx::lut::producer>();
+			_lut_consumer    = std::make_shared<streamfx::gfx::lut::consumer>();
+			_lut_initialized = true;
 		} catch (std::exception const& ex) {
-			D_LOG_ERROR("Failed to load effect '%s': %s", path.u8string().c_str(), ex.what());
+			D_LOG_WARNING("Failed to initialize LUT rendering, falling back to direct rendering.\n%s", ex.what());
+			_lut_initialized = false;
+		}
+
+		// Allocate render target for rendering.
+		try {
+			allocate_rendertarget(GS_RGBA);
+		} catch (std::exception const& ex) {
+			D_LOG_ERROR("Failed to acquire render target for rendering: %s", ex.what());
 			throw;
 		}
-	}
-
-	// Initialize LUT work flow.
-	try {
-		_lut_producer    = std::make_shared<streamfx::gfx::lut::producer>();
-		_lut_consumer    = std::make_shared<streamfx::gfx::lut::consumer>();
-		_lut_initialized = true;
-	} catch (std::exception const& ex) {
-		D_LOG_WARNING("Failed to initialize LUT rendering, falling back to direct rendering.\n%s", ex.what());
-		_lut_initialized = false;
-	}
-
-	// Allocate render target for rendering.
-	try {
-		allocate_rendertarget(GS_RGBA);
-	} catch (std::exception const& ex) {
-		D_LOG_ERROR("Failed to acquire render target for rendering: %s", ex.what());
-		throw;
 	}
 
 	update(data);

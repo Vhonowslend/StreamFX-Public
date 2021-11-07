@@ -145,12 +145,12 @@ sdf_effects_instance::sdf_effects_instance(obs_data_t* settings, obs_source_t* s
 			{"effects/sdf/sdf-consumer.effect", _sdf_consumer_effect},
 		};
 		for (auto& kv : load_arr) {
-			auto path = streamfx::data_file_path(kv.first).u8string();
+			auto file = streamfx::data_file_path(kv.first);
 			try {
-				kv.second = streamfx::obs::gs::effect::create(path);
-			} catch (const std::exception& ex) {
-				D_LOG_ERROR("Failed to load effect '%s' (located at '%s') with error(s): %s", kv.first, path.c_str(),
-							ex.what());
+				kv.second = streamfx::obs::gs::effect::create(file);
+			} catch (std::exception& ex) {
+				D_LOG_ERROR("Error loading '%s': %s", file.u8string().c_str(), ex.what());
+				throw;
 			}
 		}
 	}
