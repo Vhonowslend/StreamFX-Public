@@ -37,10 +37,13 @@
 streamfx::gfx::blur::box_data::box_data()
 {
 	auto gctx = streamfx::obs::gs::context();
-	try {
-		_effect = streamfx::obs::gs::effect::create(streamfx::data_file_path("effects/blur/box.effect").u8string());
-	} catch (...) {
-		DLOG_ERROR("<gfx::blur::box> Failed to load _effect.");
+	{
+		auto file = streamfx::data_file_path("effects/blur/box.effect");
+		try {
+			_effect = streamfx::obs::gs::effect::create(file);
+		} catch (const std::exception& ex) {
+			DLOG_ERROR("Error loading '%s': %s", file.generic_u8string().c_str(), ex.what());
+		}
 	}
 }
 

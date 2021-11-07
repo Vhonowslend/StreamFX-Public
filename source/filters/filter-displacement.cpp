@@ -51,7 +51,19 @@ using namespace streamfx::filter::displacement;
 displacement_instance::displacement_instance(obs_data_t* data, obs_source_t* context)
 	: obs::source_instance(data, context)
 {
-	_effect = streamfx::obs::gs::effect::create(streamfx::data_file_path("effects/displace.effect").u8string());
+	{
+		auto gctx = streamfx::obs::gs::context();
+
+		{
+			auto file = streamfx::data_file_path("effects/displace.effect");
+			try {
+				_effect = streamfx::obs::gs::effect::create(file);
+			} catch (std::exception& ex) {
+				D_LOG_ERROR("Error loading '%s': %s", file.u8string().c_str(), ex.what());
+				throw;
+			}
+		}
+	}
 
 	update(data);
 }
