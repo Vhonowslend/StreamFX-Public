@@ -436,11 +436,6 @@ void ffmpeg_instance::initialize_sw(obs_data_t* settings)
 		_context->height  = static_cast<int>(obs_encoder_get_height(_self));
 		_context->pix_fmt = pix_fmt_target;
 
-		// Prevent pixelation by sampling "center" instead of corners. This creates
-		// a smoother look, which may not be H.264/AVC standard compliant, however it
-		// provides better support for scaling algorithms, such as Bicubic.
-		_context->chroma_sample_location = AVCHROMA_LOC_CENTER;
-
 		_scaler.set_source_size(static_cast<uint32_t>(_context->width), static_cast<uint32_t>(_context->height));
 		_scaler.set_source_color(_context->color_range == AVCOL_RANGE_JPEG, _context->colorspace);
 		_scaler.set_source_format(pix_fmt_source);
@@ -490,10 +485,10 @@ void ffmpeg_instance::initialize_hw(obs_data_t*)
 	ctx->format            = _context->pix_fmt;
 	ctx->sw_format         = _context->sw_pix_fmt;
 	if (int32_t res = av_hwframe_ctx_init(_context->hw_frames_ctx); res < 0) {
-		std::array<char, 2048> buffer;
-		size_t                 len = static_cast<size_t>(snprintf(buffer.data(), buffer.size(),
-                                                  "Initializing hardware context failed with error: %s (%" PRIu32 ")",
-                                                  ::streamfx::ffmpeg::tools::get_error_description(res), res));
+		std::array<char, 4096> buffer;
+
+		int len = snprintf(buffer.data(), buffer.size(), "Failed initialize hardware context: %s (%" PRIu32 ")",
+						   ::streamfx::ffmpeg::tools::get_error_description(res), res);
 		throw std::runtime_error(std::string(buffer.data(), buffer.data() + len));
 	}
 #endif
