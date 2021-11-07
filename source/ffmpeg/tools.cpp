@@ -255,6 +255,25 @@ void tools::context_setup_from_obs(const video_output_info* voi, AVCodecContext*
 	context->colorspace      = obs_to_av_color_space(voi->colorspace);
 	context->color_primaries = obs_to_av_color_primary(voi->colorspace);
 	context->color_trc       = obs_to_av_color_transfer_characteristics(voi->colorspace);
+
+	// Chroma Location
+	switch (context->pix_fmt) {
+	case AV_PIX_FMT_NV12:
+	case AV_PIX_FMT_YUV420P:
+	case AV_PIX_FMT_YUVA420P:
+	case AV_PIX_FMT_YUV422P:
+	case AV_PIX_FMT_YUVA422P:
+	case AV_PIX_FMT_YVYU422:
+	case AV_PIX_FMT_YUYV422:
+	case AV_PIX_FMT_UYVY422:
+		// libOBS merges Chroma at "Top", see H.264 specification.
+		context->chroma_sample_location = AVCHROMA_LOC_TOP;
+		break;
+	default:
+		// All other cases are unspecified.
+		context->chroma_sample_location = AVCHROMA_LOC_UNSPECIFIED;
+		break;
+	}
 }
 
 const char* tools::get_std_compliance_name(int compliance)
