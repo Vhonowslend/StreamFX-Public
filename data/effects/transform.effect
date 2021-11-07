@@ -1,6 +1,6 @@
 #include "shared.effect"
 
-uniform texture2D InputA<
+uniform texture2d InputA<
 	bool automatic = true;
 >;
 
@@ -58,7 +58,7 @@ uniform float2 CornerBR<
 // - CornerBL: Corner "D"
 // - CornerBR: Corner "C"
 
-float2 cross2d(in float2 a, in float2 b) {
+float cross2d(in float2 a, in float2 b) {
 	return (a.x * b.y) - (a.y * b.x);
 };
 
