@@ -36,7 +36,7 @@ float4 generate_lut2(float2 uv, uint4 params0) {
 	);
 };
 
-float3 sample_lut(float3 color, uint bit_depth, texture2D lut_texture) {
+float3 sample_lut(float3 color, uint bit_depth, texture2d lut_texture) {
 	uint size = pow(2, bit_depth);
 	uint z_size = pow(2, bit_depth / 2);
 	uint container_size = pow(2, bit_depth + (bit_depth / 2));
@@ -82,7 +82,7 @@ float3 sample_lut(float3 color, uint bit_depth, texture2D lut_texture) {
 	return lerp(c_lo, c_hi, frac(color.z));
 };
 
-float3 sample_lut2(float3 color, texture2D lut_texture, int4 params0, float4 params1) {
+float3 sample_lut2(float3 color, texture2d lut_texture, int4 params0, float4 params1) {
 	uint size = params0.r;
 	uint z_size = params0.g;
 	uint container_size = params0.b;

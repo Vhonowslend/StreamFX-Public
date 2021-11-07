@@ -1,9 +1,9 @@
 #include "shared.effect"
 
-uniform texture2D InputA<
+uniform texture2d InputA<
 	bool automatic = true;
 >;
-uniform texture2D InputB<
+uniform texture2d InputB<
 	bool automatic = true;
 >;
 uniform float Threshold<
