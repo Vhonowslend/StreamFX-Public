@@ -8,8 +8,6 @@ labels: "type:enhancement" "status:help-wanted" "status:testing-required"
 ### Explain the Feature/Enhancement
 <!-- Describe the feature or enhancement in as much detail as possible, leave nothing out. -->
 <!-- If you think images or example videos help describe the Feature/Enhancement, include them. -->
-
-### Why is this useful?
 <!-- Why should this feature/enhancement become part of the StreamFX plugin? -->
 <!-- What benefits do other users of StreamFX get from this? -->
 

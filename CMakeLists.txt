@@ -40,7 +40,7 @@ set(VERSION_MAJOR 0)
 set(VERSION_MINOR 11)
 set(VERSION_PATCH 0)
 set(VERSION_TWEAK 0)
-set(VERSION_SUFFIX "a7")
+set(VERSION_SUFFIX "a8")
 set(VERSION_COMMIT "00000000")
 
 # Check if we are in a git repository.
@@ -662,7 +662,7 @@ function(feature_filter_autoframing RESOLVE)
 			message(WARNING "${LOGPREFIX}: 'NVIDIA Augmented Reality SDK' is missing. Disabling NVIDIA provider...")
 			set_feature_disabled(FILTER_AUTOFRAMING_NVIDIA ON)
 		endif()
-		
+
 		# Verify that we have at least one provider for Auto-Framing.
 		is_feature_enabled(FILTER_AUTOFRAMING_NVIDIA T_CHECK_NVIDIA)
 		if (NOT T_CHECK_NVIDIA)
@@ -911,7 +911,7 @@ if(REQUIRE_NVIDIA_AR_SDK AND D_PLATFORM_WINDOWS)
 	if(EXISTS "${PROJECT_SOURCE_DIR}/third-party/nvidia-maxine-ar-sdk/version.h")
 		set(HAVE_NVIDIA_AR_SDK ON)
 	endif()
-	
+
 	if(NOT TARGET NVIDIA::AR)
 		add_library(NVIDIA::AR IMPORTED INTERFACE)
 		target_include_directories(NVIDIA::AR
