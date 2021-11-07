@@ -42,9 +42,18 @@
 
 streamfx::gfx::blur::gaussian_linear_data::gaussian_linear_data()
 {
-	auto gctx = streamfx::obs::gs::context();
-	_effect =
-		streamfx::obs::gs::effect::create(streamfx::data_file_path("effects/blur/gaussian-linear.effect").u8string());
+	{
+		auto gctx = streamfx::obs::gs::context();
+
+		{
+			auto file = streamfx::data_file_path("effects/blur/gaussian-linear.effect");
+			try {
+				_effect = streamfx::obs::gs::effect::create(file);
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Error loading '%s': %s", file.generic_u8string().c_str(), ex.what());
+			}
+		}
+	}
 
 	// Precalculate Kernels
 	for (std::size_t kernel_size = 1; kernel_size <= ST_MAX_BLUR_SIZE; kernel_size++) {

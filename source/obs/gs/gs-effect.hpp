@@ -49,14 +49,19 @@ namespace streamfx::obs::gs {
 			return get();
 		}
 
-		static streamfx::obs::gs::effect create(const std::string& file)
-		{
-			return streamfx::obs::gs::effect(file);
-		};
-
 		static streamfx::obs::gs::effect create(const std::string& code, const std::string& name)
 		{
 			return streamfx::obs::gs::effect(code, name);
+		};
+
+		static streamfx::obs::gs::effect create(const std::string& file)
+		{
+			return streamfx::obs::gs::effect(std::filesystem::path(file));
+		};
+
+		static streamfx::obs::gs::effect create(const std::filesystem::path& file)
+		{
+			return streamfx::obs::gs::effect(file);
 		};
 	};
 } // namespace streamfx::obs::gs

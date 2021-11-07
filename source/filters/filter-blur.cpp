@@ -153,11 +153,11 @@ blur_instance::blur_instance(obs_data_t* settings, obs_source_t* self)
 
 		// Load Effects
 		{
-			auto file = streamfx::data_file_path("effects/mask.effect").string();
+			auto file = streamfx::data_file_path("effects/mask.effect");
 			try {
 				_effect_mask = streamfx::obs::gs::effect::create(file);
-			} catch (std::runtime_error& ex) {
-				DLOG_ERROR("<filter-blur> Loading effect '%s' failed with error(s): %s", file.c_str(), ex.what());
+			} catch (std::exception& ex) {
+				DLOG_ERROR("Error loading '%s': %s", file.generic_u8string().c_str(), ex.what());
 			}
 		}
 	}
