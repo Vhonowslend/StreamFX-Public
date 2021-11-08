@@ -176,14 +176,14 @@ void transform_instance::migrate(obs_data_t* settings, uint64_t version)
 	// Only test for A.B.C in A.B.C.D
 	version = version & STREAMFX_MASK_UPDATE;
 
-#define COPY_UNSET(TYPE, OLDNAME, NEWNAME)                                              \
-	if (obs_data_has_user_value(settings, OLDNAME)) {                                   \
-		obs_data_set_##TYPE(settings, NEWNAME, obs_data_get_##TYPE(settings, OLDNAME)); \
-		obs_data_unset_user_value(settings, OLDNAME);                                   \
+#define COPY_UNSET(TYPE, NAME, OLDNAME)                                              \
+	if (obs_data_has_user_value(settings, OLDNAME)) {                                \
+		obs_data_set_##TYPE(settings, NAME, obs_data_get_##TYPE(settings, OLDNAME)); \
+		obs_data_unset_user_value(settings, OLDNAME);                                \
 	}
-#define COPY_IGNORE(TYPE, OLDNAME, NEWNAME)                                             \
-	if (obs_data_has_user_value(settings, OLDNAME)) {                                   \
-		obs_data_set_##TYPE(settings, NEWNAME, obs_data_get_##TYPE(settings, OLDNAME)); \
+#define COPY_IGNORE(TYPE, NAME, OLDNAME)                                             \
+	if (obs_data_has_user_value(settings, OLDNAME)) {                                \
+		obs_data_set_##TYPE(settings, NAME, obs_data_get_##TYPE(settings, OLDNAME)); \
 	}
 #define SET_IF_UNSET(TYPE, NAME, value)             \
 	if (!obs_data_has_user_value(settings, NAME)) { \
