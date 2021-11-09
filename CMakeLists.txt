@@ -1071,6 +1071,38 @@ if(HAVE_JSON)
 	list(APPEND PROJECT_INCLUDE_DIRS ${JSON_INCLUDE_DIR})
 endif()
 
+if(TRUE) # OpenGL
+	if(NOT TARGET khronos_glad)
+		add_library(khronos_glad STATIC
+			"${PROJECT_SOURCE_DIR}/third-party/khronos/glad/src/gl.c"
+		)
+		target_include_directories(khronos_glad
+			PRIVATE
+				"${PROJECT_SOURCE_DIR}/third-party/khronos/glad/include"
+			INTERFACE
+				"${PROJECT_SOURCE_DIR}/third-party/khronos/glad/include"
+			PUBLIC
+				"${PROJECT_SOURCE_DIR}/third-party/khronos/glad/include"
+		)
+		if(D_PLATFORM_WINDOWS)
+			target_sources(khronos_glad
+				PRIVATE
+				"${PROJECT_SOURCE_DIR}/third-party/khronos/glad/src/wgl.c"
+			)
+		elseif(D_PLATFORM_LINUX)
+			target_sources(khronos_glad
+				PRIVATE
+				"${PROJECT_SOURCE_DIR}/third-party/khronos/glad/src/glx.c"
+			)
+		endif()
+
+		# Requires for shared/static mixing.
+		set_property(TARGET khronos_glad PROPERTY POSITION_INDEPENDENT_CODE ON)
+	endif()
+
+	list(APPEND PROJECT_LIBRARIES khronos_glad)
+endif()
+
 if(HAVE_NVIDIA_VFX_SDK OR HAVE_NVIDIA_AR_SDK)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/nvidia/cv/nvidia-cv.hpp"
@@ -1168,6 +1200,8 @@ list(APPEND PROJECT_PRIVATE_SOURCE
 	"source/util/util-threadpool.hpp"
 	"source/gfx/gfx-debug.hpp"
 	"source/gfx/gfx-debug.cpp"
+	"source/gfx/gfx-opengl.hpp"
+	"source/gfx/gfx-opengl.cpp"
 	"source/gfx/gfx-source-texture.hpp"
 	"source/gfx/gfx-source-texture.cpp"
 	"source/obs/gs/gs-helper.hpp"
