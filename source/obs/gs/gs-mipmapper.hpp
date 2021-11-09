@@ -38,13 +38,14 @@
 
 namespace streamfx::obs::gs {
 	class mipmapper {
-		std::unique_ptr<streamfx::obs::gs::vertex_buffer> _vb;
-		std::unique_ptr<streamfx::obs::gs::rendertarget>  _rt;
-		streamfx::obs::gs::effect                         _effect;
+		std::unique_ptr<streamfx::obs::gs::rendertarget> _rt;
+		streamfx::obs::gs::effect                        _effect;
 
 		public:
 		~mipmapper();
 		mipmapper();
+
+		uint32_t calculate_max_mip_level(uint32_t width, uint32_t height);
 
 		void rebuild(std::shared_ptr<streamfx::obs::gs::texture> source,
 					 std::shared_ptr<streamfx::obs::gs::texture> target);
