@@ -21,6 +21,8 @@
 #include <fstream>
 #include <stdexcept>
 #include "configuration.hpp"
+#include "gfx/gfx-opengl.hpp"
+#include "obs/gs/gs-helper.hpp"
 #include "obs/gs/gs-vertexbuffer.hpp"
 #include "obs/obs-source-tracker.hpp"
 
@@ -91,6 +93,7 @@
 
 static std::shared_ptr<streamfx::util::threadpool>       _threadpool;
 static std::shared_ptr<streamfx::obs::gs::vertex_buffer> _gs_fstri_vb;
+static std::shared_ptr<streamfx::gfx::opengl>            _streamfx_gfx_opengl;
 
 MODULE_EXPORT bool obs_module_load(void)
 try {
@@ -104,6 +107,12 @@ try {
 
 	// Initialize Source Tracker
 	streamfx::obs::source_tracker::initialize();
+
+	// Initialize GLAD (OpenGL)
+	{
+		streamfx::obs::gs::context gctx{};
+		_streamfx_gfx_opengl = streamfx::gfx::opengl::get();
+	}
 
 #ifdef ENABLE_NVIDIA_CUDA
 	// Initialize CUDA if features requested it.
@@ -292,6 +301,12 @@ try {
 	// GS Stuff
 	{
 		_gs_fstri_vb.reset();
+	}
+
+	// Finalize GLAD (OpenGL)
+	{
+		streamfx::obs::gs::context gctx{};
+		_streamfx_gfx_opengl.reset();
 	}
 
 	// Finalize Source Tracker
