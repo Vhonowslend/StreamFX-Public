@@ -477,8 +477,7 @@ void transform_instance::video_render(gs_effect_t* effect)
 			streamfx::obs::gs::debug_marker gdr{streamfx::obs::gs::debug_color_allocate, "Allocate Mipmapped Texture"};
 #endif
 
-			std::size_t mip_levels = std::max(streamfx::util::math::get_power_of_two_exponent_ceil(cache_width),
-											  streamfx::util::math::get_power_of_two_exponent_ceil(cache_height));
+			std::size_t mip_levels = _mipmapper.calculate_max_mip_level(cache_width, cache_height);
 			_mipmap_texture        = std::make_shared<streamfx::obs::gs::texture>(cache_width, cache_height, GS_RGBA,
                                                                            static_cast<uint32_t>(mip_levels), nullptr,
                                                                            streamfx::obs::gs::texture::flags::None);
