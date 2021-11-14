@@ -2094,10 +2094,22 @@ if(NOT ${PREFIX}OBS_NATIVE)
 			get_filename_component(ISS_MSVCHELPER_PATH "${msvc-redist-helper_BUILD_DIR}" ABSOLUTE)
 			file(TO_NATIVE_PATH "${ISS_MSVCHELPER_PATH}" ISS_MSVCHELPER_PATH)
 
-			configure_file(
-				"templates/installer.iss.in"
-				"installer.iss"
-			)
+			if(HAVE_CODESIGN)
+				codesign_command_win32(SHA1 RETURN_BIN ISS_CODESIGN_BIN_SHA1 RETURN_ARGS ISS_CODESIGN_CMD_SHA1)
+				codesign_command_win32(SHA2 APPEND RETURN_BIN ISS_CODESIGN_BIN_SHA2 RETURN_ARGS ISS_CODESIGN_CMD_SHA2)
+				list(JOIN ISS_CODESIGN_CMD_SHA1 " " ISS_CODESIGN_CMD_SHA1)
+				list(JOIN ISS_CODESIGN_CMD_SHA2 " " ISS_CODESIGN_CMD_SHA2)
+
+				configure_file(
+					"templates/installer-signed.iss.in"
+					"installer.iss"
+				)
+			else()
+				configure_file(
+					"templates/installer.iss.in"
+					"installer.iss"
+				)
+			endif()
 		endif()
 
 		# Apple MacOS
