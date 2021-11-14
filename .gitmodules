@@ -1,6 +1,9 @@
 [submodule "cmake/clang"]
 	path = cmake/clang
 	url = https://github.com/Xaymar/cmake-clang.git
+[submodule "cmake/codesign"]
+	path = cmake/codesign
+	url = https://github.com/Xaymar/cmake-codesign.git
 [submodule "third-party/nlohmann-json"]
 	path = third-party/nlohmann-json
 	url = https://github.com/nlohmann/json.git

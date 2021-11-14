@@ -171,7 +171,6 @@ set(PROJECT_VERSION_STRING ${VERSION_STRING})
 
 # Search Paths
 set(CMAKE_MODULE_PATH
-	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/clang"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cmake"
 )
@@ -326,6 +325,7 @@ set(${PREFIX}ENABLE_UPDATER ON CACHE BOOL "Enable automatic update checks.")
 
 ## Code Related
 set(${PREFIX}ENABLE_CLANG ON CACHE BOOL "Enable Clang integration for supported compilers.")
+set(${PREFIX}ENABLE_CODESIGN OFF CACHE BOOL "Enable Code Signing integration for supported environments.")
 set(${PREFIX}ENABLE_PROFILING OFF CACHE BOOL "Enable CPU and GPU performance tracking, which has a non-zero overhead at all times. Do not enable this for release builds.")
 
 # Installation / Packaging
@@ -345,8 +345,17 @@ endif()
 ################################################################################
 
 if(${PREFIX}ENABLE_CLANG AND (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/clang/Clang.cmake"))
-	include("Clang")
+	include("cmake/clang/Clang.cmake")
 	set(HAVE_CLANG ON)
+endif()
+
+################################################################################
+# Codesign
+################################################################################
+
+if(${PREFIX}ENABLE_CODESIGN AND (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/codesign/CodeSign.cmake"))
+	include("cmake/codesign/CodeSign.cmake")
+	set(HAVE_CODESIGN ON)
 endif()
 
 ################################################################################
@@ -1883,6 +1892,11 @@ if(D_PLATFORM_MAC)
 		message(STATUS "${LOGPREFIX} Added post-build step for adjusting Qt5::Gui linking path (Found: ${Qt5_DIR} resolved to ${T_QT5GUI_LINK}).")
 		message(STATUS "${LOGPREFIX} Added post-build step for adjusting Qt5::Widgets linking path (Found: ${Qt5_DIR} resolved to ${T_QT5WIDGETS_LINK}).")
 	endif()
+endif()
+
+# Code Sign
+if(HAVE_CODESIGN)
+	codesign(TARGETS ${PROJECT_NAME})
 endif()
 
 ################################################################################
