@@ -79,10 +79,22 @@ jobs:
       run: |
         curl -L -o "aom.7z" "https://github.com/Xaymar/aom/releases/download/v${{ env.LIBAOM_VERSION }}/aom-windows-64-shared.7z"
         7z x -y -o"build/libaom/" "aom.7z"
-    - name: "StreamFX: Configure"
+    - name: "Code Signing"
+      if: ${{ github.repository_owner == 'Xaymar' }}
+      id: codesign
       shell: bash
       run: |
+        # Restore the Certificate back into a file.
+        echo "${{ secrets.CODESIGN_CERT_WIN }}" | base64 --decode > "${{ github.workspace }}/cert.pfx"
+        echo "::set-output name=cmake_args::-DENABLE_CODESIGN=ON -DCODESIGN_TIMESTAMPS=OFF"
+    - name: "StreamFX: Configure"
+      shell: bash
+      env:
+        CODESIGN_CERT_PASS: ${{ secrets.CODESIGN_CERT_WIN_PASSWORD }}
+        CODESIGN_CERT_FILE: ${{ github.workspace }}/cert.pfx
+      run: |
         cmake -H. -B"build/temp" \
+          ${{ steps.codesign.outputs.cmake_args }} \
           -DCMAKE_BUILD_TYPE=RelWithDebInfo \
           -DCMAKE_INSTALL_PREFIX="build/distrib" \
           -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
@@ -109,9 +121,20 @@ jobs:
         mkdir build/package
         cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_7Z
         cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_ZIP
-    - name: "StreamFX: Package Installer"
+    - name: "StreamFX: Signed Installer Preparation"
+      if: ${{ github.repository_owner == 'Xaymar' }}
+      id: codesign_install
+      shell: bash
       run: |
-        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 ".\build\temp\installer.iss"
+        if [[ -f "${{ github.workspace }}/cert.pfx" ]]; then
+          signtool=$(awk 'match($0, /^;signtool=(.+)$/, ary) {print ary[1]}' "${{ github.workspace }}/build/temp/installer.iss")
+          echo "::set-output name=iscc_signtool::${signtool}"
+        fi
+    - name: "StreamFX: Package Installer"
+      shell: cmd
+      run: |
+        echo '"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 "/Ssigntool=${{ steps.codesign_install.outputs.iscc_signtool }} $p" ".\build\temp\installer.iss"'
+        "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 "/Ssigntool=${{ steps.codesign_install.outputs.iscc_signtool }} $p" ".\build\temp\installer.iss"
     - name: "Artifacts"
       uses: actions/upload-artifact@v1
       with:
