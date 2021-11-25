@@ -1,0 +1,77 @@
+// Copyright 2021 Michael Fabian 'Xaymar' Dirks <info@xaymar.com>
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice,
+//	this list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//	this list of conditions and the following disclaimer in the documentation
+//	and/or other materials provided with the distribution.
+// 3. Neither the name of the copyright holder nor the names of its contributors
+//	may be used to endorse or promote products derived from this software
+//	without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+
+#define IS_FILTER
+#include "../base.effect"
+
+//-----------------------------------------------------------------------------
+// Uniforms
+//-----------------------------------------------------------------------------
+
+uniform texture2d DisplacementMap<
+	string name = "Displacement Map";
+	string description = "A standard normal map to be used for displacement";
+	string field_type = "input";
+>;
+
+uniform float DisplacementRange<
+	string name = "Displacement Range";
+	string field_type = "slider";
+	string suffix = " px";
+	float minimum = -1000.0;
+	float maximum = 1000.0;
+	float step = 0.01;
+	float scale = 1.00;
+> = 10.0;
+
+//-----------------------------------------------------------------------------
+// Technique: Version_1_0
+//-----------------------------------------------------------------------------
+
+float4 DisplacementPixelShader_v1(VertexInformation vtx) : TARGET {
+	// Calculate proper offset.
+	// 1. Sample the DisplacementMap texture.
+	float2 offset = DisplacementMap.Sample(LinearClampSampler, vtx.texcoord0.xy);
+	// 2. Convert from [+0.0, +1.0] to [-0.5, +0.5].
+	offset -= .5f;
+	// 3. Fix the aliasing that happens with 8bpc normal maps, which also gives us the range [-1.0, +1.0].
+	offset = floor(abs(offset * 255.f)) / 127.f * sign(offset);
+	// 4. Scale to correct range specified by the user.
+	offset *= DisplacementRange * ViewSize.zw;
+	// 5. Calculate final sampled UV.
+	float2 sample_uv = vtx.texcoord0.xy + offset;
+
+	// Sample the Input texture at sample_uv.
+	return InputA.Sample(LinearClampSampler, sample_uv);
+}
+
+technique Version_1_0 {	
+	pass
+	{
+		vertex_shader = DefaultVertexShader(vtx);
+		pixel_shader = DisplacementPixelShader_v1(vtx);
+	}
+}
