@@ -62,7 +62,8 @@ namespace streamfx::gfx {
 			std::list<basic_enum_data> _values;
 
 			public:
-			basic_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix);
+			basic_parameter(streamfx::gfx::shader::shader* parent, streamfx::obs::gs::effect_parameter param,
+							std::string prefix);
 			virtual ~basic_parameter();
 
 			virtual void load_parameter_data(streamfx::obs::gs::effect_parameter parameter, basic_data& data);
@@ -98,7 +99,8 @@ namespace streamfx::gfx {
 			std::vector<int32_t> _data;
 
 			public:
-			bool_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix);
+			bool_parameter(streamfx::gfx::shader::shader* parent, streamfx::obs::gs::effect_parameter param,
+						   std::string prefix);
 			virtual ~bool_parameter();
 
 			void defaults(obs_data_t* settings) override;
@@ -114,7 +116,8 @@ namespace streamfx::gfx {
 			std::vector<basic_data> _data;
 
 			public:
-			float_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix);
+			float_parameter(streamfx::gfx::shader::shader* parent, streamfx::obs::gs::effect_parameter param,
+							std::string prefix);
 			virtual ~float_parameter();
 
 			void defaults(obs_data_t* settings) override;
@@ -130,7 +133,8 @@ namespace streamfx::gfx {
 			std::vector<basic_data> _data;
 
 			public:
-			int_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix);
+			int_parameter(streamfx::gfx::shader::shader* parent, streamfx::obs::gs::effect_parameter param,
+						  std::string prefix);
 			virtual ~int_parameter();
 
 			void defaults(obs_data_t* settings) override;
