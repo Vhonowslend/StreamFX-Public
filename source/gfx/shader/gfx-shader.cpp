@@ -152,7 +152,7 @@ try {
 					if (fnd != _shader_params.end())
 						continue;
 
-					auto param = streamfx::gfx::shader::parameter::make_parameter(el, ST_KEY_PARAMETERS);
+					auto param = streamfx::gfx::shader::parameter::make_parameter(this, el, ST_KEY_PARAMETERS);
 
 					if (param) {
 						_shader_params.insert_or_assign(el_name, param);
@@ -616,6 +616,7 @@ void streamfx::gfx::shader::shader::set_active(bool active)
 	}
 }
 
-obs_source_t* streamfx::gfx::shader::shader::get() {
+obs_source_t* streamfx::gfx::shader::shader::get()
+{
 	return _self;
 }

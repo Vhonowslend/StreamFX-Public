@@ -111,8 +111,10 @@ streamfx::gfx::shader::parameter_type streamfx::gfx::shader::get_type_from_strin
 	throw std::invalid_argument("Invalid parameter type string.");
 }
 
-streamfx::gfx::shader::parameter::parameter(streamfx::obs::gs::effect_parameter param, std::string key_prefix)
-	: _param(param), _order(0), _key(_param.get_name()), _visible(true), _automatic(false), _name(_key), _description()
+streamfx::gfx::shader::parameter::parameter(streamfx::gfx::shader::shader*      parent,
+											streamfx::obs::gs::effect_parameter param, std::string key_prefix)
+	: _parent(parent), _param(param), _order(0), _key(_param.get_name()), _visible(true), _automatic(false),
+	  _name(_key), _description()
 {
 	{
 		std::stringstream ss;
@@ -181,9 +183,10 @@ void streamfx::gfx::shader::parameter::visible(bool visible) {}
 void streamfx::gfx::shader::parameter::active(bool active) {}
 
 std::shared_ptr<streamfx::gfx::shader::parameter>
-	streamfx::gfx::shader::parameter::make_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
+	streamfx::gfx::shader::parameter::make_parameter(streamfx::gfx::shader::shader*      parent,
+													 streamfx::obs::gs::effect_parameter param, std::string prefix)
 {
-	if (!param) {
+	if (!parent || !param) {
 		throw std::runtime_error("Bad call to make_parameter. This is a bug in the plugin.");
 	}
 
@@ -195,11 +198,11 @@ std::shared_ptr<streamfx::gfx::shader::parameter>
 
 	switch (real_type) {
 	case parameter_type::Boolean:
-		return std::make_shared<streamfx::gfx::shader::bool_parameter>(param, prefix);
+		return std::make_shared<streamfx::gfx::shader::bool_parameter>(parent, param, prefix);
 	case parameter_type::Integer:
-		return std::make_shared<streamfx::gfx::shader::int_parameter>(param, prefix);
+		return std::make_shared<streamfx::gfx::shader::int_parameter>(parent, param, prefix);
 	case parameter_type::Float:
-		return std::make_shared<streamfx::gfx::shader::float_parameter>(param, prefix);
+		return std::make_shared<streamfx::gfx::shader::float_parameter>(parent, param, prefix);
 	default:
 		return nullptr;
 	}

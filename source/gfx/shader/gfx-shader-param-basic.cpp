@@ -76,9 +76,10 @@ streamfx::gfx::shader::basic_field_type streamfx::gfx::shader::get_field_type_fr
 	return basic_field_type::Input;
 }
 
-streamfx::gfx::shader::basic_parameter::basic_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
-	: parameter(param, prefix), _field_type(basic_field_type::Input), _suffix(), _keys(), _names(), _min(), _max(),
-	  _step(), _values()
+streamfx::gfx::shader::basic_parameter::basic_parameter(streamfx::gfx::shader::shader*      parent,
+														streamfx::obs::gs::effect_parameter param, std::string prefix)
+	: parameter(parent, param, prefix), _field_type(basic_field_type::Input), _suffix(), _keys(), _names(), _min(),
+	  _max(), _step(), _values()
 {
 	char string_buffer[256];
 
@@ -161,8 +162,9 @@ void streamfx::gfx::shader::basic_parameter::load_parameter_data(streamfx::obs::
 	parameter.get_default_value(&data.i32, 1);
 }
 
-streamfx::gfx::shader::bool_parameter::bool_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
-	: basic_parameter(param, prefix)
+streamfx::gfx::shader::bool_parameter::bool_parameter(streamfx::gfx::shader::shader*      parent,
+													  streamfx::obs::gs::effect_parameter param, std::string prefix)
+	: basic_parameter(parent, param, prefix)
 {
 	_min.resize(0);
 	_max.resize(0);
@@ -214,8 +216,9 @@ void streamfx::gfx::shader::bool_parameter::assign()
 	get_parameter().set_value(_data.data(), _data.size());
 }
 
-streamfx::gfx::shader::float_parameter::float_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
-	: basic_parameter(param, prefix)
+streamfx::gfx::shader::float_parameter::float_parameter(streamfx::gfx::shader::shader*      parent,
+														streamfx::obs::gs::effect_parameter param, std::string prefix)
+	: basic_parameter(parent, param, prefix)
 {
 	_data.resize(get_size());
 
@@ -341,8 +344,9 @@ static inline obs_property_t* build_int_property(streamfx::gfx::shader::basic_fi
 	}
 }
 
-streamfx::gfx::shader::int_parameter::int_parameter(streamfx::obs::gs::effect_parameter param, std::string prefix)
-	: basic_parameter(param, prefix)
+streamfx::gfx::shader::int_parameter::int_parameter(streamfx::gfx::shader::shader*      parent,
+													streamfx::obs::gs::effect_parameter param, std::string prefix)
+	: basic_parameter(parent, param, prefix)
 {
 	_data.resize(get_size());
 
