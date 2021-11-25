@@ -189,8 +189,8 @@ namespace streamfx::obs::gs {
 		void get_matrix(matrix4& v);
 		void get_default_matrix(matrix4& v);
 
-		void set_texture(std::shared_ptr<streamfx::obs::gs::texture> v);
-		void set_texture(gs_texture_t* v);
+		void set_texture(std::shared_ptr<streamfx::obs::gs::texture> v, bool srgb = false);
+		void set_texture(gs_texture_t* v, bool srgb = false);
 
 		void set_sampler(std::shared_ptr<streamfx::obs::gs::sampler> v);
 		void set_sampler(gs_sampler_state* v);
