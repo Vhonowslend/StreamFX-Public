@@ -52,7 +52,7 @@ streamfx::gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
 
 	  _have_current_params(false), _time(0), _time_loop(0), _loops(0), _random(), _random_seed(0),
 
-	  _rt_up_to_date(false), _rt(std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE))
+	  _rt_up_to_date(false), _rt(std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA_UNORM, GS_ZS_NONE))
 {
 	// Initialize random values.
 	_random.seed(static_cast<unsigned long long>(_random_seed));
@@ -545,7 +545,7 @@ void streamfx::gfx::shader::shader::set_size(uint32_t w, uint32_t h)
 	_base_height = h;
 }
 
-void streamfx::gfx::shader::shader::set_input_a(std::shared_ptr<streamfx::obs::gs::texture> tex)
+void streamfx::gfx::shader::shader::set_input_a(std::shared_ptr<streamfx::obs::gs::texture> tex, bool srgb)
 {
 	if (!_shader)
 		return;
@@ -558,14 +558,14 @@ void streamfx::gfx::shader::shader::set_input_a(std::shared_ptr<streamfx::obs::g
 	for (auto& name : params) {
 		if (streamfx::obs::gs::effect_parameter el = _shader.get_parameter(name.data()); el != nullptr) {
 			if (el.get_type() == streamfx::obs::gs::effect_parameter::type::Texture) {
-				el.set_texture(tex);
+				el.set_texture(tex, srgb);
 				break;
 			}
 		}
 	}
 }
 
-void streamfx::gfx::shader::shader::set_input_b(std::shared_ptr<streamfx::obs::gs::texture> tex)
+void streamfx::gfx::shader::shader::set_input_b(std::shared_ptr<streamfx::obs::gs::texture> tex, bool srgb)
 {
 	if (!_shader)
 		return;
@@ -578,7 +578,7 @@ void streamfx::gfx::shader::shader::set_input_b(std::shared_ptr<streamfx::obs::g
 	for (auto& name : params) {
 		if (streamfx::obs::gs::effect_parameter el = _shader.get_parameter(name.data()); el != nullptr) {
 			if (el.get_type() == streamfx::obs::gs::effect_parameter::type::Texture) {
-				el.set_texture(tex);
+				el.set_texture(tex, srgb);
 				break;
 			}
 		}

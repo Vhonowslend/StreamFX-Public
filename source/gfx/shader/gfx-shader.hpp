@@ -122,9 +122,9 @@ namespace streamfx::gfx {
 			public:
 			void set_size(uint32_t w, uint32_t h);
 
-			void set_input_a(std::shared_ptr<streamfx::obs::gs::texture> tex);
+			void set_input_a(std::shared_ptr<streamfx::obs::gs::texture> tex, bool srgb = false);
 
-			void set_input_b(std::shared_ptr<streamfx::obs::gs::texture> tex);
+			void set_input_b(std::shared_ptr<streamfx::obs::gs::texture> tex, bool srgb = false);
 
 			void set_transition_time(float_t t);
 
