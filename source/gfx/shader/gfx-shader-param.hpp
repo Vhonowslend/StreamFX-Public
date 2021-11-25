@@ -22,6 +22,8 @@
 
 namespace streamfx::gfx {
 	namespace shader {
+		class shader;
+
 		enum class parameter_type {
 			// Unknown type, could be anything.
 			Unknown,
@@ -46,6 +48,9 @@ namespace streamfx::gfx {
 		parameter_type get_type_from_string(std::string v);
 
 		class parameter {
+			// Parent Shader
+			streamfx::gfx::shader::shader* _parent;
+
 			// Parameter used for all functionality.
 			streamfx::obs::gs::effect_parameter _param;
 
@@ -68,7 +73,8 @@ namespace streamfx::gfx {
 			std::string _description;
 
 			protected:
-			parameter(streamfx::obs::gs::effect_parameter param, std::string key_prefix);
+			parameter(streamfx::gfx::shader::shader* parent, streamfx::obs::gs::effect_parameter param,
+					  std::string key_prefix);
 			virtual ~parameter(){};
 
 			public:
@@ -85,6 +91,11 @@ namespace streamfx::gfx {
 			virtual void active(bool enabled);
 
 			public:
+			inline streamfx::gfx::shader::shader* get_parent()
+			{
+				return _parent;
+			}
+
 			inline streamfx::obs::gs::effect_parameter get_parameter()
 			{
 				return _param;
@@ -141,7 +152,8 @@ namespace streamfx::gfx {
 			}
 
 			public:
-			static std::shared_ptr<parameter> make_parameter(streamfx::obs::gs::effect_parameter param,
+			static std::shared_ptr<parameter> make_parameter(streamfx::gfx::shader::shader*      parent,
+															 streamfx::obs::gs::effect_parameter param,
 															 std::string                         prefix);
 		};
 	} // namespace shader
