@@ -647,18 +647,20 @@ void streamfx::obs::gs::effect_parameter::get_default_matrix(matrix4& v)
 	}
 }
 
-void streamfx::obs::gs::effect_parameter::set_texture(std::shared_ptr<streamfx::obs::gs::texture> v)
+void streamfx::obs::gs::effect_parameter::set_texture(std::shared_ptr<streamfx::obs::gs::texture> v, bool srgb)
 {
-	if (get_type() != type::Texture)
-		throw std::bad_cast();
-	gs_effect_set_texture(get(), v->get_object());
+	set_texture(v->get_object(), srgb);
 }
 
-void streamfx::obs::gs::effect_parameter::set_texture(gs_texture_t* v)
+void streamfx::obs::gs::effect_parameter::set_texture(gs_texture_t* v, bool srgb)
 {
 	if (get_type() != type::Texture)
 		throw std::bad_cast();
-	gs_effect_set_texture(get(), v);
+	if (!srgb) {
+		gs_effect_set_texture(get(), v);
+	} else {
+		gs_effect_set_texture_srgb(get(), v);
+	}
 }
 
 void streamfx::obs::gs::effect_parameter::set_sampler(std::shared_ptr<streamfx::obs::gs::sampler> v)
