@@ -117,6 +117,8 @@ namespace streamfx::gfx {
 
 			obs_source_t* get();
 
+			std::filesystem::path get_shader_file();
+
 			public:
 			void set_size(uint32_t w, uint32_t h);
 
