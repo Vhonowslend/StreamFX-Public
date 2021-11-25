@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <sstream>
 #include "gfx-shader-param-basic.hpp"
+#include "gfx-shader-param-texture.hpp"
 
 #define ST_ANNO_ORDER "order"
 #define ST_ANNO_VISIBILITY "visible"
@@ -203,6 +204,8 @@ std::shared_ptr<streamfx::gfx::shader::parameter>
 		return std::make_shared<streamfx::gfx::shader::int_parameter>(parent, param, prefix);
 	case parameter_type::Float:
 		return std::make_shared<streamfx::gfx::shader::float_parameter>(parent, param, prefix);
+	case parameter_type::Texture:
+		return std::make_shared<streamfx::gfx::shader::texture_parameter>(parent, param, prefix);
 	default:
 		return nullptr;
 	}
