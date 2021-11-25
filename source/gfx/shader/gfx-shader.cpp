@@ -53,7 +53,7 @@ streamfx::gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
 
 	  _rt_up_to_date(false), _rt(std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE))
 {
-	// Intialize random values.
+	// Initialize random values.
 	_random.seed(static_cast<unsigned long long>(_random_seed));
 	for (size_t idx = 0; idx < 16; idx++) {
 		_random_values[idx] =
@@ -614,4 +614,8 @@ void streamfx::gfx::shader::shader::set_active(bool active)
 		_random_values[4 + idx] =
 			static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
 	}
+}
+
+obs_source_t* streamfx::gfx::shader::shader::get() {
+	return _self;
 }

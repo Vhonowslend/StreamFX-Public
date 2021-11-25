@@ -115,6 +115,8 @@ namespace streamfx::gfx {
 
 			void render(gs_effect* effect);
 
+			obs_source_t* get();
+
 			public:
 			void set_size(uint32_t w, uint32_t h);
 
