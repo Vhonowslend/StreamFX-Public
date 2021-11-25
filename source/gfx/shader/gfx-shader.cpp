@@ -620,3 +620,8 @@ obs_source_t* streamfx::gfx::shader::shader::get()
 {
 	return _self;
 }
+
+std::filesystem::path streamfx::gfx::shader::shader::get_shader_file()
+{
+	return _shader_file;
+}
