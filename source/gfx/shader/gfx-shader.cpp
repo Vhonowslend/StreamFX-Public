@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include "obs/gs/gs-helper.hpp"
 #include "obs/obs-tools.hpp"
 #include "plugin.hpp"
 
@@ -265,9 +266,13 @@ bool streamfx::gfx::shader::shader::on_refresh_properties(obs_properties_t* prop
 		// Rebuild new parameters.
 		obs_data_t* data = obs_source_get_settings(_self);
 		for (auto kv : _shader_params) {
-			kv.second->properties(grp, data);
-			kv.second->defaults(data);
-			kv.second->update(data);
+			try {
+				kv.second->properties(grp, data);
+				kv.second->defaults(data);
+				kv.second->update(data);
+			} catch (...) {
+				// ToDo: Do something with these?
+			}
 		}
 		obs_source_update(_self, data);
 	}
@@ -497,7 +502,12 @@ void streamfx::gfx::shader::shader::render(gs_effect* effect)
 		effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
 
 	if (!_rt_up_to_date) {
-		auto op   = _rt->render(width(), height());
+#ifdef ENABLE_PROFILING
+		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_cache, "Render Cache"};
+#endif
+
+		auto op = _rt->render(width(), height());
+
 		vec4 zero = {0, 0, 0, 0};
 		gs_ortho(0, 1, 0, 1, 0, 1);
 		gs_clear(GS_CLEAR_COLOR, &zero, 0, 0);
@@ -517,9 +527,15 @@ void streamfx::gfx::shader::shader::render(gs_effect* effect)
 		_rt_up_to_date = true;
 	}
 
-	gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), _rt->get_texture()->get_object());
-	while (gs_effect_loop(effect, "Draw")) {
-		gs_draw_sprite(nullptr, 0, width(), height());
+	if (auto tex = _rt->get_texture(); tex) {
+#ifdef ENABLE_PROFILING
+		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_render, "Draw Cache"};
+#endif
+
+		gs_effect_set_texture_srgb(gs_effect_get_param_by_name(effect, "image"), tex->get_object());
+		while (gs_effect_loop(effect, "Draw")) {
+			gs_draw_sprite(nullptr, 0, width(), height());
+		}
 	}
 }
 
