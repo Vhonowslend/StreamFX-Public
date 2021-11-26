@@ -278,7 +278,7 @@ jobs:
           /usr/local/Cellar/qt@5
         key: qt-${{ matrix.id }}-${{ env.QT_VERSION }}-${{ secrets.CACHE_VERSION }}
     - name: "qt: Install"
-      if: ${{ steps.qt-cache.outputs.cache-hit != 'true' }}
+      if: ${{ (github.event_name != 'pull_request') || (steps.qt-cache.outputs.cache-hit != 'true') }}
       shell: bash
       run: |
         brew install qt@5
@@ -290,7 +290,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="build/distrib" \
           -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
           -DPACKAGE_PREFIX="build/package" \
-          -DQt5_DIR=$(brew --prefix)/Cellar/qt@5/${{ env.QT_VERSION }}/lib/cmake/Qt5 \
+          -DQt5_DIR="/usr/local/opt/qt@5/lib/cmake/Qt5/" \
           -DDOWNLOAD_OBS_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBS_VERSION }}/obs-studio-x64-0.0.0.0-macos-x86-64.7z" \
           -DDOWNLOAD_OBS_HASH="SHA256=F15BC4CA8EB3F581A94372759CFE554E30D202B604B541445A5756B878E4E799" \
           -DDOWNLOAD_OBSDEPS_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBSDEPS_VERSION }}/deps-macos-x86_64-2021-03-25.tar.gz" \
