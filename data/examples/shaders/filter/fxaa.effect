@@ -125,8 +125,8 @@ uniform float _300_EdgeThresholdMin<
 	#define FxaaTexOff(t, p, o, r) textureLodOffset(t, p, 0.0, o)
 #else
 	#define FxaaSat(x) saturate(x)
-	#define FxaaTexTop(t, p) t.SampleLevel(PointClampSampler, p, 0.0)
-	#define FxaaTexOff(t, p, o, r) t.SampleLevel(PointClampSampler, p, 0.0, o)
+	#define FxaaTexTop(t, p) t.SampleLevel(LinearClampSampler, p, 0.0)
+	#define FxaaTexOff(t, p, o, r) t.SampleLevel(LinearClampSampler, p, 0.0, o)
 #endif
 
 // Actual Functionality starts here.
@@ -519,7 +519,7 @@ FxaaFloat4 FxaaPixelShader(
 
 FxaaFloat4 ProcessPixelShader(VertexInformation vtx) : TARGET {
 	return FxaaPixelShader(
-		vtx.texcoord0.xy + (ViewSize.zw * .5),
+		vtx.texcoord0.xy,
 		InputA,
 		ViewSize.zw,
 		_100_SubpixelAliasingRemoval,
