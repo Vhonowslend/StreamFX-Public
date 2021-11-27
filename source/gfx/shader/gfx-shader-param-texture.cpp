@@ -108,7 +108,8 @@ streamfx::gfx::shader::texture_parameter::texture_parameter(streamfx::gfx::shade
 
 			// Value must be given, name is optional.
 			if (auto eanno = get_parameter().get_annotation(key_value);
-				eanno && (get_type_from_effect_type(eanno.get_type()) == get_type())) {
+				eanno
+				&& (get_type_from_effect_type(eanno.get_type()) == streamfx::gfx::shader::parameter_type::String)) {
 				texture_enum_data entry;
 
 				entry.data.file = std::filesystem::path(eanno.get_default_string());
@@ -210,7 +211,7 @@ void streamfx::gfx::shader::texture_parameter::properties(obs_properties_t* prop
 std::filesystem::path make_absolute_to(std::filesystem::path origin, std::filesystem::path destination)
 {
 	auto destination_dir = std::filesystem::absolute(destination.remove_filename());
-	return std::filesystem::absolute(origin / destination);
+	return std::filesystem::absolute(destination / origin);
 }
 
 void streamfx::gfx::shader::texture_parameter::update(obs_data_t* settings)
