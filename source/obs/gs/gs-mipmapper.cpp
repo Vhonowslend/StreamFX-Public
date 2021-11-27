@@ -284,6 +284,21 @@ void streamfx::obs::gs::mipmapper::rebuild(std::shared_ptr<streamfx::obs::gs::te
 			}
 		}
 
+		// Set up rendering state.
+		gs_blend_state_push();
+		gs_reset_blend_state();
+		gs_enable_blending(false);
+		gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
+		gs_enable_color(true, true, true, true);
+		gs_enable_depth_test(false);
+		gs_enable_stencil_test(false);
+		gs_enable_stencil_write(false);
+		gs_set_cull_mode(GS_NEITHER);
+
+		// sRGB support.
+		bool old_srgb = gs_framebuffer_srgb_enabled();
+		gs_enable_framebuffer_srgb(gs_get_linear_srgb());
+
 		// Render each mip map level.
 		for (size_t mip = 1; mip < max_mip_level; mip++) {
 #ifdef ENABLE_PROFILING
@@ -296,22 +311,11 @@ void streamfx::obs::gs::mipmapper::rebuild(std::shared_ptr<streamfx::obs::gs::te
 			float_t  iwidth  = 1.f / static_cast<float_t>(cwidth);
 			float_t  iheight = 1.f / static_cast<float_t>(cheight);
 
-			// Set up rendering state.
-			gs_blend_state_push();
-			gs_reset_blend_state();
-			gs_enable_blending(false);
-			gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
-			gs_enable_color(true, true, true, true);
-			gs_enable_depth_test(false);
-			gs_enable_stencil_test(false);
-			gs_enable_stencil_write(false);
-			gs_set_cull_mode(GS_NEITHER);
-
 			try {
 				auto op = _rt->render(cwidth, cheight);
 				gs_ortho(0, 1, 0, 1, 0, 1);
 
-				_effect.get_parameter("image").set_texture(target);
+				_effect.get_parameter("image").set_texture(target, gs_get_linear_srgb());
 				_effect.get_parameter("imageTexel").set_float2(iwidth, iheight);
 				_effect.get_parameter("level").set_int(int32_t(mip - 1));
 				while (gs_effect_loop(_effect.get_object(), "Draw")) {
@@ -319,9 +323,6 @@ void streamfx::obs::gs::mipmapper::rebuild(std::shared_ptr<streamfx::obs::gs::te
 				}
 			} catch (...) {
 			}
-
-			// Clean up rendering state.
-			gs_blend_state_pop();
 
 			// Copy from the render target to the target mip level.
 #ifdef _WIN32
@@ -333,6 +334,10 @@ void streamfx::obs::gs::mipmapper::rebuild(std::shared_ptr<streamfx::obs::gs::te
 				opengl_copy_subregion(oglinfo, _rt->get_texture(), mip, cwidth, cheight);
 			}
 		}
+
+		// Clean up rendering state.
+		gs_enable_framebuffer_srgb(old_srgb);
+		gs_blend_state_pop();
 
 	} else {
 		throw std::runtime_error("Only 2D Textures support Mip-mapping.");
