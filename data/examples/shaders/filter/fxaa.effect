@@ -96,7 +96,7 @@ uniform float _300_EdgeThresholdMin<
 > = 8.33;
 
 // ======================================== //
-// Functionality
+// FXAA Functionality
 // ======================================== //
 // This is a bit of a mess, but it is necessary to get things to work. We're
 // dealing with multiple unusual restrictions here, all of which are from 
@@ -121,42 +121,66 @@ uniform float _300_EdgeThresholdMin<
 #define FxaaTex texture2d
 #ifdef GS_DEVICE_OPENGL
 	#define FxaaSat(x) clamp(x, 0., 1.)
-    #define FxaaTexTop(t, p) textureLod(t, p, 0.0)
-    #define FxaaTexOff(t, p, o, r) textureLodOffset(t, p, 0.0, o)
+	#define FxaaTexTop(t, p) textureLod(t, p, 0.0)
+	#define FxaaTexOff(t, p, o, r) textureLodOffset(t, p, 0.0, o)
 #else
 	#define FxaaSat(x) saturate(x)
-    #define FxaaTexTop(t, p) t.SampleLevel(PointClampSampler, p, 0.0)
-    #define FxaaTexOff(t, p, o, r) t.SampleLevel(PointClampSampler, p, 0.0, o)
+	#define FxaaTexTop(t, p) t.SampleLevel(PointClampSampler, p, 0.0)
+	#define FxaaTexOff(t, p, o, r) t.SampleLevel(PointClampSampler, p, 0.0, o)
 #endif
 
 // Actual Functionality starts here.
 FxaaUInt quality_stages() {
-	FxaaUInt stages = FxaaUInt(_000_QualityPreset) % 10;
-	return (3 + stages);
+	FxaaUInt stages = FxaaUInt(_000_QualityPreset) % 10u;
+	return 3u + stages;
 }
 
 FxaaFloat quality_value(in FxaaUInt stage) {
-	const FxaaFloat preset_00[12] = { 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0};
+	#ifdef GS_DEVICE_OPENGL
+	const FxaaFloat preset_00[12u] = FxaaFloat[12u]( 0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f);
 	// 1.x
-	const FxaaFloat preset_10[12] = { 1.5,  3.0, 12.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0};
-	const FxaaFloat preset_11[12] = { 1.0,  1.5,  3.0, 12.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0};
-	const FxaaFloat preset_12[12] = { 1.0,  1.5,  2.0,  4.0, 12.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0};
-	const FxaaFloat preset_13[12] = { 1.0,  1.5,  2.0,  2.0,  4.0, 12.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0};
-	const FxaaFloat preset_14[12] = { 1.0,  1.5,  2.0,  2.0,  2.0,  4.0, 12.0,  0.0,  0.0,  0.0,  0.0,  0.0};
-	const FxaaFloat preset_15[12] = { 1.0,  1.5,  2.0,  2.0,  2.0,  2.0,  4.0, 12.0,  0.0,  0.0,  0.0,  0.0};
+	const FxaaFloat preset_10[12u] = FxaaFloat[12u]( 1.5f,  3.0f, 12.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f);
+	const FxaaFloat preset_11[12u] = FxaaFloat[12u]( 1.0f,  1.5f,  3.0f, 12.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f);
+	const FxaaFloat preset_12[12u] = FxaaFloat[12u]( 1.0f,  1.5f,  2.0f,  4.0f, 12.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f);
+	const FxaaFloat preset_13[12u] = FxaaFloat[12u]( 1.0f,  1.5f,  2.0f,  2.0f,  4.0f, 12.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f);
+	const FxaaFloat preset_14[12u] = FxaaFloat[12u]( 1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  4.0f, 12.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f);
+	const FxaaFloat preset_15[12u] = FxaaFloat[12u]( 1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  2.0f,  4.0f, 12.0f,  0.0f,  0.0f,  0.0f,  0.0f);
 	// 2.x
-	const FxaaFloat preset_20[12] = { 1.5,  2.0,  8.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0};
-	const FxaaFloat preset_21[12] = { 1.0,  1.5,  2.0,  8.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0};
-	const FxaaFloat preset_22[12] = { 1.0,  1.5,  2.0,  2.0,  8.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0};
-	const FxaaFloat preset_23[12] = { 1.0,  1.5,  2.0,  2.0,  2.0,  8.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0};
-	const FxaaFloat preset_24[12] = { 1.0,  1.5,  2.0,  2.0,  2.0,  3.0,  8.0,  0.0,  0.0,  0.0,  0.0,  0.0};
-	const FxaaFloat preset_25[12] = { 1.0,  1.5,  2.0,  2.0,  2.0,  2.0,  4.0,  8.0,  0.0,  0.0,  0.0,  0.0};
-	const FxaaFloat preset_26[12] = { 1.0,  1.5,  2.0,  2.0,  2.0,  2.0,  2.0,  4.0,  8.0,  0.0,  0.0,  0.0};
-	const FxaaFloat preset_27[12] = { 1.0,  1.5,  2.0,  2.0,  2.0,  2.0,  2.0,  2.0,  4.0,  8.0,  0.0,  0.0};
-	const FxaaFloat preset_28[12] = { 1.0,  1.5,  2.0,  2.0,  2.0,  2.0,  2.0,  2.0,  2.0,  4.0,  8.0,  0.0};
-	const FxaaFloat preset_29[12] = { 1.0,  1.5,  2.0,  2.0,  2.0,  2.0,  2.0,  2.0,  2.0,  2.0,  4.0,  8.0};
+	const FxaaFloat preset_20[12u] = FxaaFloat[12u]( 1.5f,  2.0f,  8.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f);
+	const FxaaFloat preset_21[12u] = FxaaFloat[12u]( 1.0f,  1.5f,  2.0f,  8.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f);
+	const FxaaFloat preset_22[12u] = FxaaFloat[12u]( 1.0f,  1.5f,  2.0f,  2.0f,  8.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f);
+	const FxaaFloat preset_23[12u] = FxaaFloat[12u]( 1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  8.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f);
+	const FxaaFloat preset_24[12u] = FxaaFloat[12u]( 1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  3.0f,  8.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f);
+	const FxaaFloat preset_25[12u] = FxaaFloat[12u]( 1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  2.0f,  4.0f,  8.0f,  0.0f,  0.0f,  0.0f,  0.0f);
+	const FxaaFloat preset_26[12u] = FxaaFloat[12u]( 1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  4.0f,  8.0f,  0.0f,  0.0f,  0.0f);
+	const FxaaFloat preset_27[12u] = FxaaFloat[12u]( 1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  4.0f,  8.0f,  0.0f,  0.0f);
+	const FxaaFloat preset_28[12u] = FxaaFloat[12u]( 1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  4.0f,  8.0f,  0.0f);
+	const FxaaFloat preset_29[12u] = FxaaFloat[12u]( 1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  4.0f,  8.0f);
 	// 3.x
-	const FxaaFloat preset_39[12] = { 1.0,  1.0,  1.0,  1.0,  1.0,  1.5,  2.0,  2.0,  2.0,  2.0,  4.0,  8.0};
+	const FxaaFloat preset_39[12u] = FxaaFloat[12u]( 1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  2.0f,  4.0f,  8.0f);
+	#else
+	const FxaaFloat preset_00[12u] = { 0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f};
+	// 1.x
+	const FxaaFloat preset_10[12u] = { 1.5f,  3.0f, 12.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f};
+	const FxaaFloat preset_11[12u] = { 1.0f,  1.5f,  3.0f, 12.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f};
+	const FxaaFloat preset_12[12u] = { 1.0f,  1.5f,  2.0f,  4.0f, 12.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f};
+	const FxaaFloat preset_13[12u] = { 1.0f,  1.5f,  2.0f,  2.0f,  4.0f, 12.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f};
+	const FxaaFloat preset_14[12u] = { 1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  4.0f, 12.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f};
+	const FxaaFloat preset_15[12u] = { 1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  2.0f,  4.0f, 12.0f,  0.0f,  0.0f,  0.0f,  0.0f};
+	// 2.x
+	const FxaaFloat preset_20[12u] = { 1.5f,  2.0f,  8.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f};
+	const FxaaFloat preset_21[12u] = { 1.0f,  1.5f,  2.0f,  8.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f};
+	const FxaaFloat preset_22[12u] = { 1.0f,  1.5f,  2.0f,  2.0f,  8.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f};
+	const FxaaFloat preset_23[12u] = { 1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  8.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f};
+	const FxaaFloat preset_24[12u] = { 1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  3.0f,  8.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f};
+	const FxaaFloat preset_25[12u] = { 1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  2.0f,  4.0f,  8.0f,  0.0f,  0.0f,  0.0f,  0.0f};
+	const FxaaFloat preset_26[12u] = { 1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  4.0f,  8.0f,  0.0f,  0.0f,  0.0f};
+	const FxaaFloat preset_27[12u] = { 1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  4.0f,  8.0f,  0.0f,  0.0f};
+	const FxaaFloat preset_28[12u] = { 1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  4.0f,  8.0f,  0.0f};
+	const FxaaFloat preset_29[12u] = { 1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  2.0f,  4.0f,  8.0f};
+	// 3.x
+	const FxaaFloat preset_39[12u] = { 1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  1.5f,  2.0f,  2.0f,  2.0f,  2.0f,  4.0f,  8.0f};
+	#endif
 
 	switch (_000_QualityPreset) {
 		case 10: return preset_10[stage];
@@ -209,239 +233,239 @@ FxaaBool FxaaStep(in FxaaTex tex,
 }
 
 FxaaFloat4 FxaaPixelShader(
-    //
-    // Use noperspective interpolation here (turn off perspective interpolation).
-    // {xy} = center of pixel
-    FxaaFloat2 pos,
-    //
-    // Input color texture.
-    // {rgb_} = color in linear or perceptual color space
-    // if (FXAA_GREEN_AS_LUMA == 0)
-    //     {___a} = luma in perceptual color space (not linear)
-    FxaaTex tex,
-    //
-    // Only used on FXAA Quality.
-    // This must be from a constant/uniform.
-    // {x_} = 1.0/screenWidthInPixels
-    // {_y} = 1.0/screenHeightInPixels
-    FxaaFloat2 fxaaQualityRcpFrame,
-    //
-    // Only used on FXAA Quality.
-    // This used to be the FXAA_QUALITY__SUBPIX define.
-    // It is here now to allow easier tuning.
-    // Choose the amount of sub-pixel aliasing removal.
-    // This can effect sharpness.
-    //   1.00 - upper limit (softer)
-    //   0.75 - default amount of filtering
-    //   0.50 - lower limit (sharper, less sub-pixel aliasing removal)
-    //   0.25 - almost off
-    //   0.00 - completely off
-    FxaaFloat fxaaQualitySubpix,
-    //
-    // Only used on FXAA Quality.
-    // This used to be the FXAA_QUALITY__EDGE_THRESHOLD define.
-    // It is here now to allow easier tuning.
-    // The minimum amount of local contrast required to apply algorithm.
-    //   0.333 - too little (faster)
-    //   0.250 - low quality
-    //   0.166 - default
-    //   0.125 - high quality 
-    //   0.063 - overkill (slower)
-    FxaaFloat fxaaQualityEdgeThreshold,
-    //
-    // Only used on FXAA Quality.
-    // This used to be the FXAA_QUALITY__EDGE_THRESHOLD_MIN define.
-    // It is here now to allow easier tuning.
-    // Trims the algorithm from processing darks.
-    //   0.0833 - upper limit (default, the start of visible unfiltered edges)
-    //   0.0625 - high quality (faster)
-    //   0.0312 - visible limit (slower)
-    // Special notes when using FXAA_GREEN_AS_LUMA,
-    //   Likely want to set this to zero.
-    //   As colors that are mostly not-green
-    //   will appear very dark in the green channel!
-    //   Tune by looking at mostly non-green content,
-    //   then start at zero and increase until aliasing is a problem.
-    FxaaFloat fxaaQualityEdgeThresholdMin
+	//
+	// Use noperspective interpolation here (turn off perspective interpolation).
+	// {xy} = center of pixel
+	FxaaFloat2 pos,
+	//
+	// Input color texture.
+	// {rgb_} = color in linear or perceptual color space
+	// if (FXAA_GREEN_AS_LUMA == 0)
+	//	 {___a} = luma in perceptual color space (not linear)
+	FxaaTex tex,
+	//
+	// Only used on FXAA Quality.
+	// This must be from a constant/uniform.
+	// {x_} = 1.0/screenWidthInPixels
+	// {_y} = 1.0/screenHeightInPixels
+	FxaaFloat2 fxaaQualityRcpFrame,
+	//
+	// Only used on FXAA Quality.
+	// This used to be the FXAA_QUALITY__SUBPIX define.
+	// It is here now to allow easier tuning.
+	// Choose the amount of sub-pixel aliasing removal.
+	// This can effect sharpness.
+	//   1.00 - upper limit (softer)
+	//   0.75 - default amount of filtering
+	//   0.50 - lower limit (sharper, less sub-pixel aliasing removal)
+	//   0.25 - almost off
+	//   0.00 - completely off
+	FxaaFloat fxaaQualitySubpix,
+	//
+	// Only used on FXAA Quality.
+	// This used to be the FXAA_QUALITY__EDGE_THRESHOLD define.
+	// It is here now to allow easier tuning.
+	// The minimum amount of local contrast required to apply algorithm.
+	//   0.333 - too little (faster)
+	//   0.250 - low quality
+	//   0.166 - default
+	//   0.125 - high quality 
+	//   0.063 - overkill (slower)
+	FxaaFloat fxaaQualityEdgeThreshold,
+	//
+	// Only used on FXAA Quality.
+	// This used to be the FXAA_QUALITY__EDGE_THRESHOLD_MIN define.
+	// It is here now to allow easier tuning.
+	// Trims the algorithm from processing darks.
+	//   0.0833 - upper limit (default, the start of visible unfiltered edges)
+	//   0.0625 - high quality (faster)
+	//   0.0312 - visible limit (slower)
+	// Special notes when using FXAA_GREEN_AS_LUMA,
+	//   Likely want to set this to zero.
+	//   As colors that are mostly not-green
+	//   will appear very dark in the green channel!
+	//   Tune by looking at mostly non-green content,
+	//   then start at zero and increase until aliasing is a problem.
+	FxaaFloat fxaaQualityEdgeThresholdMin
 ) {
 // ======================================== // Similar to 3.11
-    FxaaFloat2 posM;
-    posM.x = pos.x;
-    posM.y = pos.y;
-    #ifdef FXAA_GATHER4_ALPHA
-        #ifdef FXAA_DISCARD
-            FxaaFloat4 rgbyM = FxaaTexTop(tex, posM);
-            #ifndef FXAA_GREEN_AS_LUMA
-                #define lumaM rgbyM.w
-            #else
-                #define lumaM rgbyM.y
-            #endif
-        #endif
-        #ifndef FXAA_GREEN_AS_LUMA
-            FxaaFloat4 luma4A = FxaaTexAlpha4(tex, posM);
-            FxaaFloat4 luma4B = FxaaTexOffAlpha4(tex, posM, FxaaInt2(-1, -1));
-        #else
-            FxaaFloat4 luma4A = FxaaTexGreen4(tex, posM);
-            FxaaFloat4 luma4B = FxaaTexOffGreen4(tex, posM, FxaaInt2(-1, -1));
-        #endif
-        #ifdef FXAA_DISCARD
-            #define lumaM luma4A.w
-        #endif
-        #define lumaE luma4A.z
-        #define lumaS luma4A.x
-        #define lumaSE luma4A.y
-        #define lumaNW luma4B.w
-        #define lumaN luma4B.z
-        #define lumaW luma4B.x
-    #else
-        FxaaFloat4 rgbyM = FxaaTexTop(tex, posM);
-        #ifndef FXAA_GREEN_AS_LUMA
-            #define lumaM rgbyM.w
-        #else
-            #define lumaM rgbyM.y
-        #endif
-        FxaaFloat lumaS = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 0, 1), fxaaQualityRcpFrame.xy));
-        FxaaFloat lumaE = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 1, 0), fxaaQualityRcpFrame.xy));
-        FxaaFloat lumaN = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 0,-1), fxaaQualityRcpFrame.xy));
-        FxaaFloat lumaW = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(-1, 0), fxaaQualityRcpFrame.xy));
-    #endif
+	FxaaFloat2 posM;
+	posM.x = pos.x;
+	posM.y = pos.y;
+	#ifdef FXAA_GATHER4_ALPHA
+		#ifdef FXAA_DISCARD
+			FxaaFloat4 rgbyM = FxaaTexTop(tex, posM);
+			#ifndef FXAA_GREEN_AS_LUMA
+				#define lumaM rgbyM.w
+			#else
+				#define lumaM rgbyM.y
+			#endif
+		#endif
+		#ifndef FXAA_GREEN_AS_LUMA
+			FxaaFloat4 luma4A = FxaaTexAlpha4(tex, posM);
+			FxaaFloat4 luma4B = FxaaTexOffAlpha4(tex, posM, FxaaInt2(-1, -1));
+		#else
+			FxaaFloat4 luma4A = FxaaTexGreen4(tex, posM);
+			FxaaFloat4 luma4B = FxaaTexOffGreen4(tex, posM, FxaaInt2(-1, -1));
+		#endif
+		#ifdef FXAA_DISCARD
+			#define lumaM luma4A.w
+		#endif
+		#define lumaE luma4A.z
+		#define lumaS luma4A.x
+		#define lumaSE luma4A.y
+		#define lumaNW luma4B.w
+		#define lumaN luma4B.z
+		#define lumaW luma4B.x
+	#else
+		FxaaFloat4 rgbyM = FxaaTexTop(tex, posM);
+		#ifndef FXAA_GREEN_AS_LUMA
+			#define lumaM rgbyM.w
+		#else
+			#define lumaM rgbyM.y
+		#endif
+		FxaaFloat lumaS = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 0, 1), fxaaQualityRcpFrame.xy));
+		FxaaFloat lumaE = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 1, 0), fxaaQualityRcpFrame.xy));
+		FxaaFloat lumaN = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 0,-1), fxaaQualityRcpFrame.xy));
+		FxaaFloat lumaW = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(-1, 0), fxaaQualityRcpFrame.xy));
+	#endif
 		
 // ======================================== // Matches 3.11
-    FxaaFloat maxSM = max(lumaS, lumaM);
-    FxaaFloat minSM = min(lumaS, lumaM);
-    FxaaFloat maxESM = max(lumaE, maxSM);
-    FxaaFloat minESM = min(lumaE, minSM);
-    FxaaFloat maxWN = max(lumaN, lumaW);
-    FxaaFloat minWN = min(lumaN, lumaW);
-    FxaaFloat rangeMax = max(maxWN, maxESM);
-    FxaaFloat rangeMin = min(minWN, minESM);
-    FxaaFloat rangeMaxScaled = rangeMax * fxaaQualityEdgeThreshold;
-    FxaaFloat range = rangeMax - rangeMin;
-    FxaaFloat rangeMaxClamped = max(fxaaQualityEdgeThresholdMin, rangeMaxScaled);
-    FxaaBool earlyExit = range < rangeMaxClamped;
+	FxaaFloat maxSM = max(lumaS, lumaM);
+	FxaaFloat minSM = min(lumaS, lumaM);
+	FxaaFloat maxESM = max(lumaE, maxSM);
+	FxaaFloat minESM = min(lumaE, minSM);
+	FxaaFloat maxWN = max(lumaN, lumaW);
+	FxaaFloat minWN = min(lumaN, lumaW);
+	FxaaFloat rangeMax = max(maxWN, maxESM);
+	FxaaFloat rangeMin = min(minWN, minESM);
+	FxaaFloat rangeMaxScaled = rangeMax * fxaaQualityEdgeThreshold;
+	FxaaFloat range = rangeMax - rangeMin;
+	FxaaFloat rangeMaxClamped = max(fxaaQualityEdgeThresholdMin, rangeMaxScaled);
+	FxaaBool earlyExit = range < rangeMaxClamped;
 
 // ======================================== // Similar to 3.11
-    if(earlyExit) {
-        #ifdef FXAA_DISCARD
-            FxaaDiscard;
+	if(earlyExit) {
+		#ifdef FXAA_DISCARD
+			FxaaDiscard;
 		#else
-            return rgbyM;
-        #endif
+			return rgbyM;
+		#endif
 	}
 
 // ======================================== // Similar to 3.11
-    #ifndef FXAA_GATHER4_ALPHA
-        FxaaFloat lumaNW = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(-1,-1), fxaaQualityRcpFrame.xy));
-        FxaaFloat lumaSE = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 1, 1), fxaaQualityRcpFrame.xy));
-        FxaaFloat lumaNE = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 1,-1), fxaaQualityRcpFrame.xy));
-        FxaaFloat lumaSW = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(-1, 1), fxaaQualityRcpFrame.xy));
-    #else
-        FxaaFloat lumaNE = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(1, -1), fxaaQualityRcpFrame.xy));
-        FxaaFloat lumaSW = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(-1, 1), fxaaQualityRcpFrame.xy));
-    #endif
+	#ifndef FXAA_GATHER4_ALPHA
+		FxaaFloat lumaNW = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(-1,-1), fxaaQualityRcpFrame.xy));
+		FxaaFloat lumaSE = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 1, 1), fxaaQualityRcpFrame.xy));
+		FxaaFloat lumaNE = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 1,-1), fxaaQualityRcpFrame.xy));
+		FxaaFloat lumaSW = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(-1, 1), fxaaQualityRcpFrame.xy));
+	#else
+		FxaaFloat lumaNE = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(1, -1), fxaaQualityRcpFrame.xy));
+		FxaaFloat lumaSW = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(-1, 1), fxaaQualityRcpFrame.xy));
+	#endif
 
 // ======================================== // Matches 3.11
-    FxaaFloat lumaNS = lumaN + lumaS;
-    FxaaFloat lumaWE = lumaW + lumaE;
-    FxaaFloat subpixRcpRange = 1.0/range;
-    FxaaFloat subpixNSWE = lumaNS + lumaWE;
-    FxaaFloat edgeHorz1 = (-2.0 * lumaM) + lumaNS;
-    FxaaFloat edgeVert1 = (-2.0 * lumaM) + lumaWE;
+	FxaaFloat lumaNS = lumaN + lumaS;
+	FxaaFloat lumaWE = lumaW + lumaE;
+	FxaaFloat subpixRcpRange = 1.0/range;
+	FxaaFloat subpixNSWE = lumaNS + lumaWE;
+	FxaaFloat edgeHorz1 = (-2.0 * lumaM) + lumaNS;
+	FxaaFloat edgeVert1 = (-2.0 * lumaM) + lumaWE;
 
 // ======================================== // Matches 3.11
-    FxaaFloat lumaNESE = lumaNE + lumaSE;
-    FxaaFloat lumaNWNE = lumaNW + lumaNE;
-    FxaaFloat edgeHorz2 = (-2.0 * lumaE) + lumaNESE;
-    FxaaFloat edgeVert2 = (-2.0 * lumaN) + lumaNWNE;
+	FxaaFloat lumaNESE = lumaNE + lumaSE;
+	FxaaFloat lumaNWNE = lumaNW + lumaNE;
+	FxaaFloat edgeHorz2 = (-2.0 * lumaE) + lumaNESE;
+	FxaaFloat edgeVert2 = (-2.0 * lumaN) + lumaNWNE;
 
 // ======================================== // Matches 3.11
-    FxaaFloat lumaNWSW = lumaNW + lumaSW;
-    FxaaFloat lumaSWSE = lumaSW + lumaSE;
-    FxaaFloat edgeHorz4 = (abs(edgeHorz1) * 2.0) + abs(edgeHorz2);
-    FxaaFloat edgeVert4 = (abs(edgeVert1) * 2.0) + abs(edgeVert2);
-    FxaaFloat edgeHorz3 = (-2.0 * lumaW) + lumaNWSW;
-    FxaaFloat edgeVert3 = (-2.0 * lumaS) + lumaSWSE;
-    FxaaFloat edgeHorz = abs(edgeHorz3) + edgeHorz4;
-    FxaaFloat edgeVert = abs(edgeVert3) + edgeVert4;
+	FxaaFloat lumaNWSW = lumaNW + lumaSW;
+	FxaaFloat lumaSWSE = lumaSW + lumaSE;
+	FxaaFloat edgeHorz4 = (abs(edgeHorz1) * 2.0) + abs(edgeHorz2);
+	FxaaFloat edgeVert4 = (abs(edgeVert1) * 2.0) + abs(edgeVert2);
+	FxaaFloat edgeHorz3 = (-2.0 * lumaW) + lumaNWSW;
+	FxaaFloat edgeVert3 = (-2.0 * lumaS) + lumaSWSE;
+	FxaaFloat edgeHorz = abs(edgeHorz3) + edgeHorz4;
+	FxaaFloat edgeVert = abs(edgeVert3) + edgeVert4;
 
 // ======================================== // Matches 3.11
-    FxaaFloat subpixNWSWNESE = lumaNWSW + lumaNESE;
-    FxaaFloat lengthSign = fxaaQualityRcpFrame.x;
-    FxaaBool horzSpan = edgeHorz >= edgeVert;
-    FxaaFloat subpixA = subpixNSWE * 2.0 + subpixNWSWNESE;
+	FxaaFloat subpixNWSWNESE = lumaNWSW + lumaNESE;
+	FxaaFloat lengthSign = fxaaQualityRcpFrame.x;
+	FxaaBool horzSpan = edgeHorz >= edgeVert;
+	FxaaFloat subpixA = subpixNSWE * 2.0 + subpixNWSWNESE;
 
 // ======================================== // Matches 3.11
-    if(!horzSpan) lumaN = lumaW;
-    if(!horzSpan) lumaS = lumaE;
-    if(horzSpan) lengthSign = fxaaQualityRcpFrame.y;
-    FxaaFloat subpixB = (subpixA * (1.0/12.0)) - lumaM;
+	if(!horzSpan) lumaN = lumaW;
+	if(!horzSpan) lumaS = lumaE;
+	if(horzSpan) lengthSign = fxaaQualityRcpFrame.y;
+	FxaaFloat subpixB = (subpixA * (1.0/12.0)) - lumaM;
 
 // ======================================== // Matches 3.11
-    FxaaFloat gradientN = lumaN - lumaM;
-    FxaaFloat gradientS = lumaS - lumaM;
-    FxaaFloat lumaNN = lumaN + lumaM;
-    FxaaFloat lumaSS = lumaS + lumaM;
-    FxaaBool pairN = abs(gradientN) >= abs(gradientS);
-    FxaaFloat gradient = max(abs(gradientN), abs(gradientS));
-    if(pairN) lengthSign = -lengthSign;
-    FxaaFloat subpixC = FxaaSat(abs(subpixB) * subpixRcpRange);
+	FxaaFloat gradientN = lumaN - lumaM;
+	FxaaFloat gradientS = lumaS - lumaM;
+	FxaaFloat lumaNN = lumaN + lumaM;
+	FxaaFloat lumaSS = lumaS + lumaM;
+	FxaaBool pairN = abs(gradientN) >= abs(gradientS);
+	FxaaFloat gradient = max(abs(gradientN), abs(gradientS));
+	if(pairN) lengthSign = -lengthSign;
+	FxaaFloat subpixC = FxaaSat(abs(subpixB) * subpixRcpRange);
 
 // ======================================== // Matches 3.11
-    FxaaFloat2 posB;
-    posB.x = posM.x;
-    posB.y = posM.y;
-    FxaaFloat2 offNP;
-    offNP.x = (!horzSpan) ? 0.0 : fxaaQualityRcpFrame.x;
-    offNP.y = ( horzSpan) ? 0.0 : fxaaQualityRcpFrame.y;
-    if(!horzSpan) posB.x += lengthSign * 0.5;
-    if( horzSpan) posB.y += lengthSign * 0.5;
+	FxaaFloat2 posB;
+	posB.x = posM.x;
+	posB.y = posM.y;
+	FxaaFloat2 offNP;
+	offNP.x = (!horzSpan) ? 0.0 : fxaaQualityRcpFrame.x;
+	offNP.y = ( horzSpan) ? 0.0 : fxaaQualityRcpFrame.y;
+	if(!horzSpan) posB.x += lengthSign * 0.5;
+	if( horzSpan) posB.y += lengthSign * 0.5;
 
 // ======================================== // Custom (but still copied from 3.11)
-    FxaaFloat subpixD = ((-2.0)*subpixC) + 3.0;
-    FxaaFloat subpixE = subpixC * subpixC;
+	FxaaFloat subpixD = ((-2.0)*subpixC) + 3.0;
+	FxaaFloat subpixE = subpixC * subpixC;
 
 // ======================================== // Matches 3.11
-    if(!pairN) lumaNN = lumaSS;
-    FxaaFloat gradientScaled = gradient * 1.0/4.0;
-    FxaaFloat lumaMM = lumaM - lumaNN * 0.5;
-    FxaaFloat subpixF = subpixD * subpixE;
-    FxaaBool lumaMLTZero = lumaMM < 0.0;
+	if(!pairN) lumaNN = lumaSS;
+	FxaaFloat gradientScaled = gradient * 1.0/4.0;
+	FxaaFloat lumaMM = lumaM - lumaNN * 0.5;
+	FxaaFloat subpixF = subpixD * subpixE;
+	FxaaBool lumaMLTZero = lumaMM < 0.0;
 
 // ======================================== // Custom
 	uint stages = quality_stages();
 	FxaaBool doneN = false;
-    FxaaFloat2 posN = posB;
-    FxaaFloat lumaEndN = 0;
+	FxaaFloat2 posN = posB;
+	FxaaFloat lumaEndN = 0;
 	FxaaBool doneP = false;
-    FxaaFloat2 posP = posB;
-    FxaaFloat lumaEndP = 0;
+	FxaaFloat2 posP = posB;
+	FxaaFloat lumaEndP = 0;
 	FxaaBool doneNP = false;
 
-	FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(0));
-	if ((stages >= 1) && doneNP) {
-		FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(1));
-		if ((stages >= 2) && doneNP) {
-			FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(2));
-			if ((stages >= 3) && doneNP) {
-				FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(3));
-				if ((stages >= 4) && doneNP) {
-					FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(4));
-					if ((stages >= 5) && doneNP) {
-						FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(5));
-						if ((stages >= 6) && doneNP) {
-							FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(6));
-							if ((stages >= 7) && doneNP) {
-								FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(7));
-								if ((stages >= 8) && doneNP) {
-									FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(8));
-									if ((stages >= 9) && doneNP) {
-										FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(9));
-										if ((stages >= 10) && doneNP) {
-											FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(0));
-											if ((stages >= 11) && doneNP) {
-												FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(11));
+	FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(0u));
+	if ((stages >= 1u) && doneNP) {
+		FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(1u));
+		if ((stages >= 2u) && doneNP) {
+			FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(2u));
+			if ((stages >= 3u) && doneNP) {
+				FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(3u));
+				if ((stages >= 4u) && doneNP) {
+					FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(4u));
+					if ((stages >= 5u) && doneNP) {
+						FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(5u));
+						if ((stages >= 6u) && doneNP) {
+							FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(6u));
+							if ((stages >= 7u) && doneNP) {
+								FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(7u));
+								if ((stages >= 8u) && doneNP) {
+									FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(8u));
+									if ((stages >= 9u) && doneNP) {
+										FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(9u));
+										if ((stages >= 10u) && doneNP) {
+											FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(10u));
+											if ((stages >= 11u) && doneNP) {
+												FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(11u));
 // Present in FXAA 3.11, but not actually defined anywhere.												
-//												if ((stages >= 12) && doneNP) {
+//												if ((stages >= 12u) && doneNP) {
 //													FxaaStep(tex, doneN, posN, lumaEndN, doneP, posP, lumaEndP, doneNP, offNP, lumaNN, gradientScaled, quality_value(12));
 //												}
 											}
@@ -457,35 +481,35 @@ FxaaFloat4 FxaaPixelShader(
 	}
 
 // ======================================== // Matches 3.11
-    FxaaFloat dstN = posM.x - posN.x;
-    FxaaFloat dstP = posP.x - posM.x;
-    if(!horzSpan) dstN = posM.y - posN.y;
-    if(!horzSpan) dstP = posP.y - posM.y;
+	FxaaFloat dstN = posM.x - posN.x;
+	FxaaFloat dstP = posP.x - posM.x;
+	if(!horzSpan) dstN = posM.y - posN.y;
+	if(!horzSpan) dstP = posP.y - posM.y;
 
 // ======================================== // Matches 3.11
-    FxaaBool goodSpanN = (lumaEndN < 0.0) != lumaMLTZero;
-    FxaaFloat spanLength = (dstP + dstN);
-    FxaaBool goodSpanP = (lumaEndP < 0.0) != lumaMLTZero;
-    FxaaFloat spanLengthRcp = 1.0/spanLength;
+	FxaaBool goodSpanN = (lumaEndN < 0.0) != lumaMLTZero;
+	FxaaFloat spanLength = (dstP + dstN);
+	FxaaBool goodSpanP = (lumaEndP < 0.0) != lumaMLTZero;
+	FxaaFloat spanLengthRcp = 1.0/spanLength;
 
 // ======================================== // Matches 3.11
-    FxaaBool directionN = dstN < dstP;
-    FxaaFloat dst = min(dstN, dstP);
-    FxaaBool goodSpan = directionN ? goodSpanN : goodSpanP;
-    FxaaFloat subpixG = subpixF * subpixF;
-    FxaaFloat pixelOffset = (dst * (-spanLengthRcp)) + 0.5;
-    FxaaFloat subpixH = subpixG * fxaaQualitySubpix;
+	FxaaBool directionN = dstN < dstP;
+	FxaaFloat dst = min(dstN, dstP);
+	FxaaBool goodSpan = directionN ? goodSpanN : goodSpanP;
+	FxaaFloat subpixG = subpixF * subpixF;
+	FxaaFloat pixelOffset = (dst * (-spanLengthRcp)) + 0.5;
+	FxaaFloat subpixH = subpixG * fxaaQualitySubpix;
 
 // ======================================== // Similar to 3.11
-    FxaaFloat pixelOffsetGood = goodSpan ? pixelOffset : 0.0;
-    FxaaFloat pixelOffsetSubpix = max(pixelOffsetGood, subpixH);
-    if(!horzSpan) posM.x += pixelOffsetSubpix * lengthSign;
-    if( horzSpan) posM.y += pixelOffsetSubpix * lengthSign;
-    #ifdef FXAA_DISCARD
-        return FxaaTexTop(tex, posM);
-    #else
-        return FxaaFloat4(FxaaTexTop(tex, posM).xyz, lumaM);
-    #endif
+	FxaaFloat pixelOffsetGood = goodSpan ? pixelOffset : 0.0;
+	FxaaFloat pixelOffsetSubpix = max(pixelOffsetGood, subpixH);
+	if(!horzSpan) posM.x += pixelOffsetSubpix * lengthSign;
+	if( horzSpan) posM.y += pixelOffsetSubpix * lengthSign;
+	#ifdef FXAA_DISCARD
+		return FxaaTexTop(tex, posM);
+	#else
+		return FxaaFloat4(FxaaTexTop(tex, posM).xyz, lumaM);
+	#endif
 }
 
 // ======================================== //
@@ -495,7 +519,7 @@ FxaaFloat4 FxaaPixelShader(
 
 FxaaFloat4 ProcessPixelShader(VertexInformation vtx) : TARGET {
 	return FxaaPixelShader(
-		vtx.texcoord0.xy,
+		vtx.texcoord0.xy + (ViewSize.zw * .5),
 		InputA,
 		ViewSize.zw,
 		_100_SubpixelAliasingRemoval,
