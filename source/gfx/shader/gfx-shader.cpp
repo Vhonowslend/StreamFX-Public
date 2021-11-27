@@ -508,9 +508,9 @@ void streamfx::gfx::shader::shader::render(gs_effect* effect)
 
 		auto op = _rt->render(width(), height());
 
+		vec4 zero = {0, 0, 0, 0};
+		gs_clear(GS_CLEAR_COLOR, &zero, 0, 0);
 		gs_ortho(0, 1, 0, 1, 0, 1);
-		/*vec4 zero = {0, 0, 0, 0};
-		gs_clear(GS_CLEAR_COLOR, &zero, 0, 0);*/
 
 		// Update Blend State
 		gs_blend_state_push();
