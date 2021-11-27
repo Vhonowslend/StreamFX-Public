@@ -508,20 +508,30 @@ void streamfx::gfx::shader::shader::render(gs_effect* effect)
 
 		auto op = _rt->render(width(), height());
 
-		vec4 zero = {0, 0, 0, 0};
 		gs_ortho(0, 1, 0, 1, 0, 1);
-		gs_clear(GS_CLEAR_COLOR, &zero, 0, 0);
+		/*vec4 zero = {0, 0, 0, 0};
+		gs_clear(GS_CLEAR_COLOR, &zero, 0, 0);*/
 
+		// Update Blend State
 		gs_blend_state_push();
 		gs_reset_blend_state();
-
-		gs_enable_blending(true);
+		gs_enable_blending(false);
 		gs_blend_function_separate(GS_BLEND_ONE, GS_BLEND_ZERO, GS_BLEND_ONE, GS_BLEND_ZERO);
+
 		gs_enable_color(true, true, true, true);
+
+		// Fix sRGB Status
+		bool old_srgb = gs_framebuffer_srgb_enabled();
+		gs_enable_framebuffer_srgb(false);
+
 		while (gs_effect_loop(_shader.get_object(), _shader_tech.c_str())) {
 			streamfx::gs_draw_fullscreen_tri();
 		}
 
+		// Restore sRGB Status
+		gs_enable_framebuffer_srgb(old_srgb);
+
+		// Restore Blend State
 		gs_blend_state_pop();
 
 		_rt_up_to_date = true;
@@ -532,7 +542,7 @@ void streamfx::gfx::shader::shader::render(gs_effect* effect)
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_render, "Draw Cache"};
 #endif
 
-		gs_effect_set_texture_srgb(gs_effect_get_param_by_name(effect, "image"), tex->get_object());
+		gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), tex->get_object());
 		while (gs_effect_loop(effect, "Draw")) {
 			gs_draw_sprite(nullptr, 0, width(), height());
 		}
