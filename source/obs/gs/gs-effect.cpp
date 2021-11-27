@@ -46,14 +46,17 @@ static std::string load_file_as_code(std::filesystem::path shader_file)
 	}
 
 	// Push Graphics API to shader.
-	switch (gs_get_device_type()) {
-	case GS_DEVICE_DIRECT3D_11:
-		shader_stream << "#define GS_DEVICE_DIRECT3D_11" << std::endl;
-		shader_stream << "#define GS_DEVICE_DIRECT3D" << std::endl;
-		break;
-	case GS_DEVICE_OPENGL:
-		shader_stream << "#define GS_DEVICE_OPENGL" << std::endl;
-		break;
+	{
+		auto gctx = streamfx::obs::gs::context();
+		switch (gs_get_device_type()) {
+		case GS_DEVICE_DIRECT3D_11:
+			shader_stream << "#define GS_DEVICE_DIRECT3D_11" << std::endl;
+			shader_stream << "#define GS_DEVICE_DIRECT3D" << std::endl;
+			break;
+		case GS_DEVICE_OPENGL:
+			shader_stream << "#define GS_DEVICE_OPENGL" << std::endl;
+			break;
+		}
 	}
 
 	// Pre-process the shader.
