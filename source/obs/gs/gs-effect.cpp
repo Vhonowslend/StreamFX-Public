@@ -27,11 +27,11 @@
 
 #define MAX_EFFECT_SIZE 32 * 1024 * 1024 // 32 MiB, big enough for everything.
 
-static std::string load_file_as_code(std::filesystem::path shader_file)
+static std::string load_file_as_code(std::filesystem::path shader_file, bool is_top_level = true)
 {
 	std::stringstream     shader_stream;
 	std::filesystem::path shader_path = std::filesystem::absolute(shader_file);
-	std::filesystem::path shader_root = shader_path.parent_path();
+	std::filesystem::path shader_root = std::filesystem::path(shader_path).remove_filename();
 
 	// Ensure it meets size limits.
 	uintmax_t size = std::filesystem::file_size(shader_path);
@@ -46,7 +46,7 @@ static std::string load_file_as_code(std::filesystem::path shader_file)
 	}
 
 	// Push Graphics API to shader.
-	{
+	if (is_top_level) {
 		auto gctx = streamfx::obs::gs::context();
 		switch (gs_get_device_type()) {
 		case GS_DEVICE_DIRECT3D_11:
@@ -87,7 +87,7 @@ static std::string load_file_as_code(std::filesystem::path shader_file)
 				include_path = shader_root / include_str;
 			}
 
-			line = load_file_as_code(include_path);
+			line = load_file_as_code(include_path, false);
 		}
 
 		shader_stream << line << std::endl;
