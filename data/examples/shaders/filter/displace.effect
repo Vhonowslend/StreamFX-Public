@@ -54,7 +54,7 @@ uniform float DisplacementRange<
 float4 DisplacementPixelShader_v1(VertexInformation vtx) : TARGET {
 	// Calculate proper offset.
 	// 1. Sample the DisplacementMap texture.
-	float2 offset = DisplacementMap.Sample(LinearClampSampler, vtx.texcoord0.xy);
+	float2 offset = DisplacementMap.Sample(LinearClampSampler, vtx.texcoord0.xy).rg;
 	// 2. Convert from [+0.0, +1.0] to [-0.5, +0.5].
 	offset -= .5f;
 	// 3. Fix the aliasing that happens with 8bpc normal maps, which also gives us the range [-1.0, +1.0].
