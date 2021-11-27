@@ -45,14 +45,12 @@
 struct d3d_info {
 	ID3D11Device*        device  = nullptr;
 	ID3D11DeviceContext* context = nullptr;
-	ID3D11Resource*      source  = nullptr;
 	ID3D11Resource*      target  = nullptr;
 };
 
 void d3d_initialize(d3d_info& info, std::shared_ptr<streamfx::obs::gs::texture> source,
 					std::shared_ptr<streamfx::obs::gs::texture> target)
 {
-	info.source = reinterpret_cast<ID3D11Resource*>(gs_texture_get_obj(source->get_object()));
 	info.target = reinterpret_cast<ID3D11Resource*>(gs_texture_get_obj(target->get_object()));
 	info.device = reinterpret_cast<ID3D11Device*>(gs_get_device_obj());
 	info.device->GetImmediateContext(&info.context);
@@ -61,14 +59,14 @@ void d3d_initialize(d3d_info& info, std::shared_ptr<streamfx::obs::gs::texture> 
 void d3d_copy_subregion(d3d_info& info, std::shared_ptr<streamfx::obs::gs::texture> source, uint32_t mip_level,
 						uint32_t width, uint32_t height)
 {
-	D3D11_BOX box = {0, 0, 0, width, height, 1};
-	info.context->CopySubresourceRegion(info.target, mip_level, 0, 0, 0, info.source, 0, &box);
+	D3D11_BOX box        = {0, 0, 0, width, height, 1};
+	auto      source_ref = reinterpret_cast<ID3D11Resource*>(gs_texture_get_obj(source->get_object()));
+	info.context->CopySubresourceRegion(info.target, mip_level, 0, 0, 0, source_ref, 0, &box);
 }
 
 #endif
 
 struct opengl_info {
-	GLuint source = 0;
 	GLuint target = 0;
 	GLuint fbo    = 0;
 };
@@ -133,7 +131,6 @@ std::string opengl_translate_framebuffer_status(GLenum error)
 void opengl_initialize(opengl_info& info, std::shared_ptr<streamfx::obs::gs::texture> source,
 					   std::shared_ptr<streamfx::obs::gs::texture> target)
 {
-	info.source = *reinterpret_cast<GLuint*>(gs_texture_get_obj(source->get_object()));
 	info.target = *reinterpret_cast<GLuint*>(gs_texture_get_obj(target->get_object()));
 
 	glGenFramebuffers(1, &info.fbo);
@@ -144,19 +141,19 @@ void opengl_finalize(opengl_info& info)
 	glDeleteFramebuffers(1, &info.fbo);
 }
 
-void opengl_copy_subregion(opengl_info& info, std::shared_ptr<streamfx::obs::gs::texture> source_tex,
-						   uint32_t mip_level, uint32_t width, uint32_t height)
+void opengl_copy_subregion(opengl_info& info, std::shared_ptr<streamfx::obs::gs::texture> source, uint32_t mip_level,
+						   uint32_t width, uint32_t height)
 {
-	GLuint source = *reinterpret_cast<GLuint*>(gs_texture_get_obj(source_tex->get_object()));
+	GLuint source_ref = *reinterpret_cast<GLuint*>(gs_texture_get_obj(source->get_object()));
 
 	// Source -> Texture Unit 0, Read Color Framebuffer
 	glActiveTexture(GL_TEXTURE0);
 	D_OPENGL_CHECK_ERROR("glActiveTexture(GL_TEXTURE0);");
-	glBindTexture(GL_TEXTURE_2D, source);
+	glBindTexture(GL_TEXTURE_2D, source_ref);
 	D_OPENGL_CHECK_ERROR("glBindTexture(GL_TEXTURE_2D, origin);");
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, info.fbo);
 	D_OPENGL_CHECK_ERROR("glBindFramebuffer(GL_READ_FRAMEBUFFER, info.fbo);");
-	glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, source,
+	glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, source_ref,
 						   0); // Origin is a render target, not a texture
 	D_OPENGL_CHECK_ERROR(
 		"glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, origin, mip_level);");
@@ -309,13 +306,10 @@ void streamfx::obs::gs::mipmapper::rebuild(std::shared_ptr<streamfx::obs::gs::te
 			gs_enable_stencil_test(false);
 			gs_enable_stencil_write(false);
 			gs_set_cull_mode(GS_NEITHER);
-			try {
-				auto op = _rt->render(width, height);
-				gs_set_viewport(0, 0, static_cast<int>(cwidth), static_cast<int>(cheight));
-				gs_ortho(0, 1, 0, 1, 0, 1);
 
-				vec4 black = {1., 1., 1., 1};
-				gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &black, 0, 0);
+			try {
+				auto op = _rt->render(cwidth, cheight);
+				gs_ortho(0, 1, 0, 1, 0, 1);
 
 				_effect.get_parameter("image").set_texture(target);
 				_effect.get_parameter("imageTexel").set_float2(iwidth, iheight);
