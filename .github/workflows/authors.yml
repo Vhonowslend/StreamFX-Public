@@ -1,10 +1,5 @@
 name: Authors
-on:
-  schedule:
-    - cron: '0 0 * * 0'
-  push:
-    branches:
-      - 'master'
+on: workflow_dispatch
 
 jobs:
   update-authors:
