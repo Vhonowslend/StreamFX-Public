@@ -1,6 +1,7 @@
 
 #pragma once
 #include <obs.h>
+#include <chrono>
 #include <mutex>
 #include "gfx-shader-param.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
@@ -43,6 +44,10 @@ namespace streamfx::gfx {
 			bool                  _active;
 			bool                  _visible;
 			std::filesystem::path _default;
+
+			// Data: Dirty state
+			bool                                           _dirty;
+			std::chrono::high_resolution_clock::time_point _dirty_ts;
 
 			// Data: File
 			std::filesystem::path                       _file_path;
