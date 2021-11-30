@@ -70,7 +70,10 @@ streamfx::gfx::shader::texture_field_type streamfx::gfx::shader::get_texture_fie
 streamfx::gfx::shader::texture_parameter::texture_parameter(streamfx::gfx::shader::shader*      parent,
 															streamfx::obs::gs::effect_parameter param,
 															std::string                         prefix)
-	: parameter(parent, param, prefix)
+	: parameter(parent, param, prefix), _field_type(texture_field_type::Input), _keys(), _values(),
+	  _type(texture_type::File), _active(false), _visible(false), _dirty(true),
+	  _dirty_ts(std::chrono::high_resolution_clock::now()), _file_path(), _file_texture(), _source_name(), _source(),
+	  _source_child(), _source_active(), _source_visible(), _source_rendertarget()
 {
 	char string_buffer[256];
 
@@ -137,6 +140,10 @@ streamfx::gfx::shader::texture_parameter::texture_parameter(streamfx::gfx::shade
 		} else {
 			_keys[1] = get_key();
 		}
+	}
+
+	if (field_type() == texture_field_type::Input) {
+		// Special code for Input-only fields.
 	}
 }
 
@@ -237,37 +244,60 @@ void streamfx::gfx::shader::texture_parameter::update(obs_data_t* settings)
 	if (is_automatic())
 		return;
 
-	try {
-		if (field_type() == texture_field_type::Enum) {
-			std::filesystem::path file_path = obs_data_get_string(settings, get_key().data());
-			if (file_path.is_relative()) {
-				file_path = make_absolute_to(file_path, get_parent()->get_shader_file());
-			}
+	if (field_type() == texture_field_type::Input) {
+		_type = static_cast<texture_type>(obs_data_get_int(settings, _keys[0].c_str()));
+	} else {
+		_type = texture_type::File;
+	}
 
-			if ((file_path != _file_path) || !_file_texture) {
-				auto file_texture = std::make_shared<streamfx::obs::gs::texture>(file_path.generic_u8string().c_str());
-				_file_texture     = file_texture;
-				_file_path        = file_path;
-			}
-		} else {
-			auto type = static_cast<texture_type>(obs_data_get_int(settings, _keys[0].c_str()));
-			if (type == texture_type::File) {
-				std::filesystem::path file_path = obs_data_get_string(settings, _keys[1].c_str());
-				if (file_path.is_relative()) {
-					file_path = make_absolute_to(file_path, get_parent()->get_shader_file());
+	if (_type == texture_type::File) {
+		auto file_path = std::filesystem::path(obs_data_get_string(settings, _keys[1].c_str()));
+		if (file_path.is_relative()) {
+			file_path = make_absolute_to(file_path, get_parent()->get_shader_file());
+		}
+
+		if (_file_path != file_path) {
+			_file_path = file_path;
+			_dirty     = true;
+			_dirty_ts  = std::chrono::high_resolution_clock::now() - std::chrono::milliseconds(1);
+		}
+	} else if (_type == texture_type::Source) {
+		auto source_name = obs_data_get_string(settings, _keys[2].c_str());
+
+		if (_source_name != source_name) {
+			_source_name = source_name;
+			_dirty       = true;
+			_dirty_ts    = std::chrono::high_resolution_clock::now() - std::chrono::milliseconds(1);
+		}
+	}
+}
+
+void streamfx::gfx::shader::texture_parameter::assign()
+{
+	if (is_automatic())
+		return;
+
+	// If the data has been marked dirty, and the future timestamp minus the now is smaller than 0ms.
+	if (_dirty && ((_dirty_ts - std::chrono::high_resolution_clock::now()) < std::chrono::milliseconds(0))) {
+		// Reload or Reacquire everything necessary.
+		try {
+			// Remove now unused references.
+			_source.reset();
+			_source_child.reset();
+			_source_active.reset();
+			_source_visible.reset();
+			_source_rendertarget.reset();
+			_file_texture.reset();
+
+			if (((field_type() == texture_field_type::Input) && (_type == texture_type::File))
+				|| (field_type() == texture_field_type::Enum)) {
+				if (!_file_path.empty()) {
+					_file_texture = std::make_shared<streamfx::obs::gs::texture>(
+						streamfx::util::platform::native_to_utf8(_file_path).generic_u8string().c_str());
 				}
-
-				if ((file_path != _file_path) || !_file_texture) {
-					auto file_texture =
-						std::make_shared<streamfx::obs::gs::texture>(file_path.generic_u8string().c_str());
-					_file_texture = file_texture;
-					_file_path    = file_path;
-				}
-			} else {
-				auto source_name = obs_data_get_string(settings, _keys[2].c_str());
-
+			} else if ((field_type() == texture_field_type::Input) && (_type == texture_type::Source)) {
 				// Try and grab the source itself.
-				auto source = std::shared_ptr<obs_source_t>(obs_get_source_by_name(source_name),
+				auto source = std::shared_ptr<obs_source_t>(obs_get_source_by_name(_source_name.c_str()),
 															[](obs_source_t* v) { obs_source_release(v); });
 				if (!source) {
 					throw std::runtime_error("Specified Source does not exist.");
@@ -297,28 +327,13 @@ void streamfx::gfx::shader::texture_parameter::update(obs_data_t* settings)
 				_source              = source;
 			}
 
-			if (type != _type) {
-				if (_type == texture_type::Source) {
-					_source.reset();
-					_source_child.reset();
-					_source_active.reset();
-					_source_visible.reset();
-					_source_rendertarget.reset();
-				} else if (_type == texture_type::File) {
-					_file_texture.reset();
-				}
-				_type = type;
-			}
+			_dirty = false;
+		} catch (const std::exception& ex) {
+			_dirty_ts = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(5000);
+		} catch (...) {
+			_dirty_ts = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(5000);
 		}
-	} catch (...) {
-		// ToDo: Determine what to do with these.
 	}
-}
-
-void streamfx::gfx::shader::texture_parameter::assign()
-{
-	if (is_automatic())
-		return;
 
 	// If this is a source and active or visible, capture it.
 	if ((_type == texture_type::Source) && (_active || _visible) && _source_rendertarget) {
@@ -354,12 +369,18 @@ void streamfx::gfx::shader::texture_parameter::assign()
 			auto tex = _source_rendertarget->get_texture();
 			if (tex) {
 				get_parameter().set_texture(_source_rendertarget->get_texture(), false);
+			} else {
+				get_parameter().set_texture(nullptr, false);
 			}
+		} else {
+			get_parameter().set_texture(nullptr, false);
 		}
 	} else if (_type == texture_type::File) {
 		if (_file_texture) {
 			// Loaded files are always linear.
 			get_parameter().set_texture(_file_texture, false);
+		} else {
+			get_parameter().set_texture(nullptr, false);
 		}
 	}
 }
