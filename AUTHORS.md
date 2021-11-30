@@ -13,7 +13,6 @@ Thanks go to the following people, who have either wrangled with code or wrangle
 * [coolsoft.rf](https://github.com/Xaymar/obs-StreamFX/graphs/contributors)
 * [Daniel Hodgson](https://github.com/Xaymar/obs-StreamFX/graphs/contributors)
 * [Daniel Molkentin](https://github.com/Xaymar/obs-StreamFX/graphs/contributors)
-* [GitHub Actions](https://github.com/Xaymar/obs-StreamFX/graphs/contributors)
 * [kilin](https://github.com/Xaymar/obs-StreamFX/graphs/contributors)
 * [Michael Fabian 'Xaymar' Dirks](https://github.com/Xaymar/obs-StreamFX/graphs/contributors)
 * [Radegast-FFXIV](https://github.com/Xaymar/obs-StreamFX/graphs/contributors)
