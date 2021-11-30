@@ -199,7 +199,6 @@ void streamfx::gfx::shader::texture_parameter::properties(obs_properties_t* prop
 			obs_property_set_modified_callback2(p, modified_type, this);
 			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_TYPE_FILE), static_cast<int64_t>(texture_type::File));
 			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_TYPE_SOURCE), static_cast<int64_t>(texture_type::Source));
-			modified_type(this, props, p, settings);
 		}
 
 		{
@@ -229,6 +228,8 @@ void streamfx::gfx::shader::texture_parameter::properties(obs_properties_t* prop
 				},
 				obs::source_tracker::filter_scenes);
 		}
+
+		modified_type(this, props, nullptr, settings);
 	}
 }
 
