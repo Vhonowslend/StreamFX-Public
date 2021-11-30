@@ -257,6 +257,7 @@ bool streamfx::gfx::shader::shader::on_refresh_properties(obs_properties_t* prop
 			obs_property_list_add_string(p_tech_list, tech.name().c_str(), tech.name().c_str());
 		}
 	}
+
 	{ // Clear parameter options.
 		auto grp = obs_property_group_content(obs_properties_get(props, ST_KEY_PARAMETERS));
 		for (auto p = obs_properties_first(grp); p != nullptr; p = obs_properties_first(grp)) {
@@ -267,14 +268,14 @@ bool streamfx::gfx::shader::shader::on_refresh_properties(obs_properties_t* prop
 		obs_data_t* data = obs_source_get_settings(_self);
 		for (auto kv : _shader_params) {
 			try {
-				kv.second->properties(grp, data);
 				kv.second->defaults(data);
 				kv.second->update(data);
+				kv.second->properties(grp, data);
 			} catch (...) {
 				// ToDo: Do something with these?
 			}
 		}
-		obs_source_update(_self, data);
+		//obs_source_update(_self, data);
 	}
 
 	return true;
@@ -366,6 +367,7 @@ void streamfx::gfx::shader::shader::update(obs_data_t* data)
 	}
 
 	for (auto kv : _shader_params) {
+		kv.second->defaults(data);
 		kv.second->update(data);
 	}
 }
