@@ -8,11 +8,16 @@ on:
 
 jobs:
   update-authors:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     name: "Update Authors"
     steps:
     - name: "Checkout"
       uses: actions/checkout@v2
+    - name: "Dependecies"
+      shell: bash
+      run: |
+        sudo apt-get -qq update
+        sudo apt-get install nodejs npm
     - name: "Generate Authors file"
       shell: bash
       env:
@@ -24,7 +29,7 @@ jobs:
         pushd ./tools > /dev/null
         npm install
         node ./generate-contributors.js "${{ github.workspace }}/AUTHORS.md" "${{ github.workspace }}/data/thanks.json"
-        popd /dev/null
+        popd > /dev/null
         git add .
         git commit -a -m="project: Generate contributor attribution files"
         git push -f
