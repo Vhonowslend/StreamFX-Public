@@ -243,7 +243,7 @@ Thanks go to the following people, who have either wrangled with code or wrangle
 		for (let key in extra) {
 			info.set(key, extra[key]);
 		}
-		for (let key of Array.from(info.keys()).sort()) {
+		for (let key of Array.from(info.keys()).sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}))) {
 			let value = info.get(key);
 			json.contributor[key] = value;
 			markdown += `* [${key}](${value})\n`;
@@ -262,7 +262,7 @@ Thanks go to the following people, who have either wrangled with code or wrangle
 		for (let key in extra) {
 			info.set(key, extra[key]);
 		}
-		for (let key of Array.from(info.keys()).sort()) {
+		for (let key of Array.from(info.keys()).sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}))) {
 			let value = info.get(key);
 			json.translator[key] = value;
 			markdown += `* [${key}](${value})\n`;
@@ -285,7 +285,7 @@ The StreamFX project relies on generous donations from you through [Patreon](htt
 		for (let key in extra) {
 			info.set(key, extra[key]);
 		}
-		for (let key of Array.from(info.keys()).sort()) {
+		for (let key of Array.from(info.keys()).sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}))) {
 			let value = info.get(key);
 			json.supporter.github[key] = value;
 			markdown += `* [${key}](${value})\n`;
@@ -303,7 +303,7 @@ The StreamFX project relies on generous donations from you through [Patreon](htt
 		for (let key in extra) {
 			info.set(key, extra[key]);
 		}
-		for (let key of Array.from(info.keys()).sort()) {
+		for (let key of Array.from(info.keys()).sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}))) {
 			let value = info.get(key);
 			json.supporter.patreon[key] = value;
 			markdown += `* [${key}](${value})\n`;
