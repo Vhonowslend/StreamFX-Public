@@ -1,4 +1,4 @@
-name: Refresh
+name: Authors
 on:
   schedule:
     - cron: '0 0 * * 0'
@@ -13,6 +13,18 @@ jobs:
     steps:
     - name: "Checkout"
       uses: actions/checkout@v2
+    - name: "Configure"
+      shell: bash
+      run: |
+        git config --global user.name 'GitHub Actions'
+        git config --global user.email 'xaymar@users.noreply.github.com'
+        git config pull.ff only
+        git config pull.rebase true
+    - name: "Remotes"
+      shell: bash
+      run: |
+        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+        git fetch --all
     - name: "Dependecies"
       shell: bash
       run: |
@@ -31,5 +43,5 @@ jobs:
         node ./generate-contributors.js "${{ github.workspace }}/AUTHORS.md" "${{ github.workspace }}/data/thanks.json"
         popd > /dev/null
         git add .
-        git commit -a -m="project: Generate contributor attribution files"
-        git push -f
+        git commit -a -m "project: Update Contributors and Supporters"
+        git push -f --set-upstream origin authors
