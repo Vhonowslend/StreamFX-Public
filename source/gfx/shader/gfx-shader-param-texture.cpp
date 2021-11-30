@@ -24,6 +24,7 @@
 #include "gfx/gfx-debug.hpp"
 #include "obs/gs/gs-helper.hpp"
 #include "obs/obs-source-tracker.hpp"
+#include "util/util-platform.hpp"
 
 // TODO:
 // - FFT Audio Conversion
@@ -47,6 +48,7 @@
 #define ST_I18N_SOURCE ST_I18N ".Source"
 
 static constexpr std::string_view _annotation_field_type      = "field_type";
+static constexpr std::string_view _annotation_default         = "default";
 static constexpr std::string_view _annotation_enum_entry      = "enum_%zu";
 static constexpr std::string_view _annotation_enum_entry_name = "enum_%zu_name";
 
@@ -93,6 +95,9 @@ streamfx::gfx::shader::texture_parameter::texture_parameter(streamfx::gfx::shade
 	if (auto anno = get_parameter().get_annotation(_annotation_field_type); anno) {
 		_field_type = get_texture_field_type_from_string(anno.get_default_string());
 	}
+	if (auto anno = get_parameter().get_annotation(_annotation_default); anno) {
+		_default = std::filesystem::path(anno.get_default_string());
+	}
 
 	if (field_type() == texture_field_type::Enum) {
 		for (std::size_t idx = 0; idx < std::numeric_limits<std::size_t>::max(); idx++) {
@@ -129,12 +134,24 @@ streamfx::gfx::shader::texture_parameter::texture_parameter(streamfx::gfx::shade
 
 		if (_values.size() == 0) {
 			_field_type = texture_field_type::Input;
+		} else {
+			_keys[1] = get_key();
 		}
-	} else {
 	}
 }
 
 streamfx::gfx::shader::texture_parameter::~texture_parameter() {}
+
+void streamfx::gfx::shader::texture_parameter::defaults(obs_data_t* settings)
+{
+	if (field_type() == texture_field_type::Input) {
+		obs_data_set_default_int(settings, _keys[0].c_str(), static_cast<long long>(texture_type::File));
+		obs_data_set_default_string(settings, _keys[1].c_str(), _default.generic_u8string().c_str());
+		obs_data_set_default_string(settings, _keys[2].c_str(), "");
+	} else {
+		obs_data_set_default_string(settings, _keys[1].c_str(), _default.generic_u8string().c_str());
+	}
+}
 
 bool streamfx::gfx::shader::texture_parameter::modified_type(void* priv, obs_properties_t* props, obs_property_t*,
 															 obs_data_t* settings)
