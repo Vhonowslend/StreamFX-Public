@@ -93,19 +93,21 @@ uniform texture2d _200_PreviousPass<
 >;
 
 uniform texture2d _999_AreaTexture<
-	// bool visible = false;
+	bool visible = false;
 	string name = "Area Texture";
 	string field_type = "input";
 	string enum_0 = "./smaa/areatex.png";
 	string enum_0_name = "Area Texture";
+	string default = "./smaa/areatex.png";
 >;
 
 uniform texture2d _999_SearchTexture< 
-	// bool visible = false;
+	bool visible = false;
 	string name = "Search Texture";
 	string field_type = "input";
 	string enum_0 = "./smaa/searchtex.png";
 	string enum_0_name = "Search Texture";
+	string default = "./smaa/searchtex.png";
 >;
 
 #define SMAA_RT_METRICS float4(ViewSize.zw, ViewSize.xy)
