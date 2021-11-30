@@ -39,9 +39,10 @@ namespace streamfx::gfx {
 			std::list<texture_enum_data> _values;
 
 			// Data
-			texture_type _type;
-			bool         _active;
-			bool         _visible;
+			texture_type          _type;
+			bool                  _active;
+			bool                  _visible;
+			std::filesystem::path _default;
 
 			// Data: File
 			std::filesystem::path                       _file_path;
@@ -60,7 +61,7 @@ namespace streamfx::gfx {
 							  std::string prefix);
 			virtual ~texture_parameter();
 
-			void defaults(obs_data_t* settings) override{};
+			void defaults(obs_data_t* settings) override;
 
 			static bool modified_type(void*, obs_properties_t*, obs_property_t*, obs_data_t*);
 
