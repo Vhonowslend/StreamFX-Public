@@ -759,10 +759,10 @@ void streamfx::encoder::ffmpeg::handler::nvenc::migrate(obs_data_t* settings, ui
 	// Only test for A.B.C in A.B.C.D
 	version = version & STREAMFX_MASK_UPDATE;
 
-#define COPY_UNSET(TYPE, NAME, OLDNAME)                                              \
-	if (obs_data_has_user_value(settings, OLDNAME)) {                                \
-		obs_data_set_##TYPE(settings, NAME, obs_data_get_##TYPE(settings, OLDNAME)); \
-		obs_data_unset_user_value(settings, OLDNAME);                                \
+#define COPY_UNSET(TYPE, FROM, TO)                                              \
+	if (obs_data_has_user_value(settings, FROM)) {                              \
+		obs_data_set_##TYPE(settings, TO, obs_data_get_##TYPE(settings, FROM)); \
+		obs_data_unset_user_value(settings, FROM);                              \
 	}
 
 	if (version <= STREAMFX_MAKE_VERSION(0, 8, 0, 0)) {
@@ -774,7 +774,7 @@ void streamfx::encoder::ffmpeg::handler::nvenc::migrate(obs_data_t* settings, ui
 		COPY_UNSET(double, "RateControl.Quality.Target", ST_KEY_RATECONTROL_LIMITS_QUALITY);
 	}
 
-	if (version <= STREAMFX_MAKE_VERSION(0, 11, 0, 0)) {
+	if (version < STREAMFX_MAKE_VERSION(0, 11, 0, 0)) {
 		obs_data_unset_user_value(settings, "Other.AccessUnitDelimiter");
 		obs_data_unset_user_value(settings, "Other.DecodedPictureBufferSize");
 	}
