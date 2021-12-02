@@ -970,6 +970,12 @@ void ffmpeg_factory::get_defaults2(obs_data_t* settings)
 	}
 }
 
+void ffmpeg_factory::migrate(obs_data_t* data, uint64_t version)
+{
+	if (_handler)
+		_handler->migrate(data, version, _avcodec, nullptr);
+}
+
 static bool modified_keyframes(obs_properties_t* props, obs_property_t*, obs_data_t* settings) noexcept
 try {
 	bool is_seconds = obs_data_get_int(settings, ST_KEY_KEYFRAMES_INTERVALTYPE) == 0;
