@@ -631,15 +631,62 @@ int ffmpeg_instance::receive_packet(bool* received_packet, struct encoder_packet
 	if (_handler)
 		_handler->process_avpacket(_packet, _codec, _context);
 
-	packet->type          = OBS_ENCODER_VIDEO;
-	packet->pts           = _packet.pts;
-	packet->dts           = _packet.dts;
-	packet->data          = _packet.data;
-	packet->size          = static_cast<size_t>(_packet.size);
-	packet->keyframe      = !!(_packet.flags & AV_PKT_FLAG_KEY);
-	packet->drop_priority = packet->keyframe ? 0 : 1;
-	*received_packet      = true;
+	// Build packet for use in OBS.
+	packet->type     = OBS_ENCODER_VIDEO;
+	packet->pts      = _packet.pts;
+	packet->dts      = _packet.dts;
+	packet->data     = _packet.data;
+	packet->size     = static_cast<size_t>(_packet.size);
+	packet->keyframe = !!(_packet.flags & AV_PKT_FLAG_KEY);
+	*received_packet = true;
 
+	// Figure out priority and drop_priority.
+	// In theory, this is done by OBS, but its not doing a great job.
+	packet->priority      = packet->keyframe ? 3 : 2;
+	packet->drop_priority = 3;
+	for (size_t idx = 0, edx = _packet.side_data_elems; idx < edx; idx++) {
+		auto& side_data = _packet.side_data[idx];
+		if (side_data.type == AV_PKT_DATA_QUALITY_STATS) {
+			// Decisions based on picture type, if present.
+			switch (side_data.data[sizeof(uint32_t)]) {
+			case AV_PICTURE_TYPE_I:  // I-Frame
+			case AV_PICTURE_TYPE_SI: // Switching I-Frame
+				if (_packet.flags & AV_PKT_FLAG_KEY) {
+					// Recovery only via IDR-Frame.
+					packet->priority      = 3; // OBS_NAL_PRIORITY_HIGHEST
+					packet->drop_priority = 2; // OBS_NAL_PRIORITY_HIGH
+				} else {
+					// Recovery via I- or IDR-Frame.
+					packet->priority      = 2; // OBS_NAL_PRIORITY_HIGH
+					packet->drop_priority = 2; // OBS_NAL_PRIORITY_HIGH
+				}
+				break;
+			case AV_PICTURE_TYPE_P:  // P-Frame
+			case AV_PICTURE_TYPE_SP: // Switching P-Frame
+				// Recovery via I- or IDR-Frame.
+				packet->priority      = 1; // OBS_NAL_PRIORITY_LOW
+				packet->drop_priority = 2; // OBS_NAL_PRIORITY_HIGH
+				break;
+			case AV_PICTURE_TYPE_B: // B-Frame
+				// Recovery via I- or IDR-Frame.
+				packet->priority      = 0; // OBS_NAL_PRIORITY_DISPOSABLE
+				packet->drop_priority = 2; // OBS_NAL_PRIORITY_HIGH
+				break;
+			case AV_PICTURE_TYPE_BI: // BI-Frame, theoretically identical to I-Frame.
+				// Recovery via I- or IDR-Frame.
+				packet->priority      = 2; // OBS_NAL_PRIORITY_HIGH
+				packet->drop_priority = 2; // OBS_NAL_PRIORITY_HIGH
+				break;
+			default: // Unknown picture type.
+				// Recovery only via IDR-Frame
+				packet->priority      = 2; // OBS_NAL_PRIORITY_HIGH
+				packet->drop_priority = 3; // OBS_NAL_PRIORITY_HIGHEST
+				break;
+			}
+		}
+	}
+
+	// Push free frame back into pool.
 	push_free_frame(pop_used_frame());
 
 	return res;
