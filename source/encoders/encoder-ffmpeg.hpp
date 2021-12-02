@@ -143,6 +143,8 @@ namespace streamfx::encoder::ffmpeg {
 
 		void get_defaults2(obs_data_t* data) override;
 
+		void migrate(obs_data_t* data, uint64_t version) override;
+
 		obs_properties_t* get_properties2(instance_t* data) override;
 
 #ifdef ENABLE_FRONTEND
