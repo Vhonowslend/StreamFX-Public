@@ -60,4 +60,40 @@ namespace streamfx::encoder::codec::h264 {
 		L6_2,
 		UNKNOWN = -1,
 	};
+
+	// See ITU-T H.264
+	enum class nal_unit_type : uint8_t {
+		UNSPECIFIED                          = 0,
+		CODED_SLICE_NONIDR                   = 1,
+		CODED_SLICE_DATA_PARTITION_A         = 2,
+		CODED_SLICE_DATA_PARTITION_B         = 3,
+		CODED_SLICE_DATA_PARTITION_C         = 4,
+		CODED_SLICE_IDR                      = 5,
+		SUPPLEMENTAL_ENHANCEMENT_INFORMATION = 6,
+		SEQUENCE_PARAMETER_SET               = 7,
+		PICTURE_PARAMETER_SET                = 8,
+		ACCESS_UNIT_DELIMITER                = 9,
+		END_OF_SEQUENCE                      = 10,
+		END_OF_STREAM                        = 11,
+		FILLER_DATA                          = 12,
+		SEQUENCE_PARAMETER_SET_EXTENSION     = 13,
+		PREFIX_NAL_UNIT                      = 14,
+		SUBSET_SEQUENCE_PARAMETER_SET        = 15,
+		DEPTH_PARAMETER_SET                  = 16,
+		CODED_SLICE_AUXILIARY_PICTURE        = 19,
+		CODED_SLICE_EXTENSION                = 20,
+		CODED_SLICE_EXTENSION_DEPTH_VIEW     = 21,
+	};
+
+	/** Search for the closest NAL unit.
+	 *
+	 * \param ptr Beginning of the search range.
+	 * \param endptr End of the search range (exclusive).
+	 * 
+	 * \return A valid pointer if a NAL was found, otherwise \ref nullptr.
+	 */
+	uint8_t* find_closest_nal(uint8_t* ptr, uint8_t* endptr, size_t& size);
+
+	uint32_t get_packet_reference_count(uint8_t* ptr, uint8_t* endptr);
+
 } // namespace streamfx::encoder::codec::h264
