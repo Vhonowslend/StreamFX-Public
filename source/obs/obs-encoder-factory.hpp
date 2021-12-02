@@ -82,6 +82,11 @@ namespace streamfx::obs {
 		virtual void get_audio_info(struct audio_convert_info* info) {}
 
 		virtual void get_video_info(struct video_scale_info* info) {}
+
+		virtual obs_encoder_t* get()
+		{
+			return _self;
+		}
 	};
 
 	template<class _factory, typename _instance>
@@ -155,6 +160,18 @@ namespace streamfx::obs {
 			_proxies.emplace(name, proxy);
 		}
 
+		private:
+		void _migrate(obs_data_t* settings, encoder_instance* instance)
+		{
+			uint64_t version = static_cast<uint64_t>(obs_data_get_int(settings, S_VERSION));
+			migrate(settings, version);
+			if (instance) {
+				instance->migrate(settings, version);
+			}
+			obs_data_set_int(settings, S_VERSION, static_cast<int64_t>(STREAMFX_VERSION));
+			obs_data_set_string(settings, S_COMMIT, STREAMFX_COMMIT);
+		}
+
 		private /* Factory */:
 		static const char* _get_name(void* type_data) noexcept
 		try {
@@ -207,10 +224,35 @@ namespace streamfx::obs {
 			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 		}
 
+		static bool _properties_migrate_settings(void* priv, obs_properties_t*, obs_property_t* p,
+												 obs_data_t* settings) noexcept
+		try {
+			obs_property_set_visible(p, false);
+			reinterpret_cast<factory_t*>(priv)->_migrate(settings, nullptr);
+			return true;
+		} catch (const std::exception& ex) {
+			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			return false;
+		} catch (...) {
+			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			return false;
+		}
+
 		static obs_properties_t* _get_properties2(void* data, void* type_data) noexcept
 		try {
-			if (type_data)
-				return reinterpret_cast<factory_t*>(type_data)->get_properties2(reinterpret_cast<instance_t*>(data));
+			if (type_data) {
+				auto props =
+					reinterpret_cast<factory_t*>(type_data)->get_properties2(reinterpret_cast<instance_t*>(data));
+
+				{ // Support for permanent settings migration.
+					auto p = obs_properties_add_int(
+						props, S_VERSION, "If you can see this, something went horribly wrong.",
+						std::numeric_limits<int32_t>::lowest(), std::numeric_limits<int32_t>::max(), 1);
+					obs_property_set_modified_callback2(p, _properties_migrate_settings, type_data);
+				}
+
+				return props;
+			}
 			return nullptr;
 		} catch (const std::exception& ex) {
 			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
@@ -235,10 +277,7 @@ namespace streamfx::obs {
 		try {
 			auto priv = reinterpret_cast<encoder_instance*>(data);
 			if (priv) {
-				uint64_t version = static_cast<uint64_t>(obs_data_get_int(settings, S_VERSION));
-				priv->migrate(settings, version);
-				obs_data_set_int(settings, S_VERSION, static_cast<int64_t>(STREAMFX_VERSION));
-				obs_data_set_string(settings, S_COMMIT, STREAMFX_COMMIT);
+				reinterpret_cast<factory_t*>(obs_encoder_get_type_data(priv->get()))->_migrate(settings, priv);
 				return priv->update(settings);
 			}
 			return false;
@@ -350,6 +389,8 @@ namespace streamfx::obs {
 		}
 
 		virtual void get_defaults2(obs_data_t* data) {}
+
+		virtual void migrate(obs_data_t* data, uint64_t version) {}
 
 		virtual obs_properties_t* get_properties2(instance_t* data)
 		{
