@@ -602,9 +602,10 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		if (have_bitrate_range) {
 			if (int64_t max = obs_data_get_int(settings, ST_KEY_RATECONTROL_LIMITS_BITRATE_MAXIMUM); max > -1)
 				context->rc_max_rate = static_cast<int>(max * 1000);
+			context->rc_min_rate = context->bit_rate;
 		} else {
-			//context->rc_min_rate = 0;
-			context->rc_max_rate = 0;
+			context->rc_min_rate = context->bit_rate;
+			context->rc_max_rate = context->bit_rate;
 		}
 
 		// Buffer Size
