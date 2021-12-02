@@ -1125,16 +1125,16 @@ bool streamfx::encoder::aom::av1::aom_av1_instance::encode_video(encoder_frame* 
 								   || (_cfg.g_usage == AOM_USAGE_ALL_INTRA);
 				if (packet->keyframe) {
 					//
-					packet->priority      = 0;
-					packet->drop_priority = packet->priority;
+					packet->priority      = 3; // OBS_NAL_PRIORITY_HIGHEST
+					packet->drop_priority = 3; // OBS_NAL_PRIORITY_HIGHEST
 				} else if ((pkt->data.frame.flags & AOM_FRAME_IS_DROPPABLE) != AOM_FRAME_IS_DROPPABLE) {
 					// Dropping this frame breaks the bitstream.
-					packet->priority      = -1;
-					packet->drop_priority = packet->priority;
+					packet->priority      = 2; // OBS_NAL_PRIORITY_HIGH
+					packet->drop_priority = 3; // OBS_NAL_PRIORITY_HIGHEST
 				} else {
 					// This frame can be dropped at will.
-					packet->priority      = -2;
-					packet->drop_priority = packet->priority;
+					packet->priority      = 0; // OBS_NAL_PRIORITY_DISPOSABLE
+					packet->drop_priority = 0; // OBS_NAL_PRIORITY_DISPOSABLE
 				}
 
 				// Data
