@@ -547,6 +547,10 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		switch (rc) {
 		case ratecontrolmode::CQP:
 			have_qp = true;
+
+			{ // Support for OBS Studio
+				obs_data_set_string(settings, "rate_control", "CQP");
+			}
 			break;
 		case ratecontrolmode::INVALID:
 		case ratecontrolmode::CBR:
@@ -557,6 +561,10 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			if (!context->internal) {
 				av_opt_set_int(context->priv_data, "cbr", 1, AV_OPT_SEARCH_CHILDREN);
 			}
+
+			{ // Support for OBS Studio
+				obs_data_set_string(settings, "rate_control", "CBR");
+			}
 			break;
 		case ratecontrolmode::VBR:
 		case ratecontrolmode::VBR_HQ:
@@ -565,6 +573,10 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			have_quality       = true;
 			have_qp            = true;
 			have_qp_limits     = true;
+
+			{ // Support for OBS Studio
+				obs_data_set_string(settings, "rate_control", "VBR");
+			}
 			break;
 		}
 
@@ -599,21 +611,32 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 
 		if (have_bitrate) {
 			int64_t v = obs_data_get_int(settings, ST_KEY_RATECONTROL_LIMITS_BITRATE_TARGET);
-			if (v > -1)
-				context->bit_rate = static_cast<int>(v * 1000);
 
-			// Support for Replay Buffer
-			obs_data_set_int(settings, "bitrate", v);
+			// Allow OBS to specify a maximum allowed bitrate.
+			if (obs_data_get_int(settings, "bitrate") != obs_data_get_default_int(settings, "bitrate")) {
+				// obs_data_has_user_value(X, Y) is also true if obs_data_set_Z(X, Y, obs_data_get_Z(X, Y))
+				v = std::clamp<int64_t>(v, -1, obs_data_get_int(settings, "bitrate"));
+			}
+
+			if (v > -1) {
+				context->bit_rate = static_cast<int>(v * 1000);
+			}
 		} else {
 			context->bit_rate = 0;
 		}
 		if (have_bitrate_range) {
-			if (int64_t max = obs_data_get_int(settings, ST_KEY_RATECONTROL_LIMITS_BITRATE_MAXIMUM); max > -1)
+			if (int64_t max = obs_data_get_int(settings, ST_KEY_RATECONTROL_LIMITS_BITRATE_MAXIMUM); max > -1) {
 				context->rc_max_rate = static_cast<int>(max * 1000);
+			} else {
+				context->rc_max_rate = context->bit_rate;
+			}
 			context->rc_min_rate = context->bit_rate;
 		} else {
 			context->rc_min_rate = context->bit_rate;
 			context->rc_max_rate = context->bit_rate;
+		}
+		{ // Support for OBS Studio
+			obs_data_set_int(settings, "bitrate", context->rc_max_rate);
 		}
 
 		// Buffer Size
