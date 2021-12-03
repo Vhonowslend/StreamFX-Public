@@ -191,78 +191,98 @@ void ffmpeg_instance::migrate(obs_data_t* settings, uint64_t version)
 
 bool ffmpeg_instance::update(obs_data_t* settings)
 {
-	// FFmpeg Options
-	_context->debug                 = 0;
-	_context->strict_std_compliance = FF_COMPLIANCE_NORMAL;
+	bool support_reconfig           = false;
+	bool support_reconfig_threads   = false;
+	bool support_reconfig_gpu       = false;
+	bool support_reconfig_keyframes = false;
+	if (_handler) {
+		support_reconfig = _handler->supports_reconfigure(_factory, support_reconfig_threads, support_reconfig_gpu,
+														  support_reconfig_keyframes);
+	}
 
-	/// Threading
-	if (!_hwinst) {
-		_context->thread_type = 0;
-		if (_codec->capabilities & AV_CODEC_CAP_FRAME_THREADS) {
-			_context->thread_type |= FF_THREAD_FRAME;
-		}
-		if (_codec->capabilities & AV_CODEC_CAP_SLICE_THREADS) {
-			_context->thread_type |= FF_THREAD_SLICE;
-		}
-		if (_context->thread_type != 0) {
-			int64_t threads = obs_data_get_int(settings, ST_I18N_FFMPEG_THREADS);
-			if (threads > 0) {
-				_context->thread_count = static_cast<int>(threads);
-			} else {
-				_context->thread_count = static_cast<int>(std::thread::hardware_concurrency());
+	if (!_context->internal) {
+		// FFmpeg Options
+		_context->debug                 = 0;
+		_context->strict_std_compliance = FF_COMPLIANCE_NORMAL;
+	}
+
+	if (!_context->internal || (support_reconfig && support_reconfig_threads)) {
+		/// Threading
+		if (!_hwinst) {
+			_context->thread_type = 0;
+			if (_codec->capabilities & AV_CODEC_CAP_FRAME_THREADS) {
+				_context->thread_type |= FF_THREAD_FRAME;
 			}
+			if (_codec->capabilities & AV_CODEC_CAP_SLICE_THREADS) {
+				_context->thread_type |= FF_THREAD_SLICE;
+			}
+			if (_context->thread_type != 0) {
+				int64_t threads = obs_data_get_int(settings, ST_I18N_FFMPEG_THREADS);
+				if (threads > 0) {
+					_context->thread_count = static_cast<int>(threads);
+				} else {
+					_context->thread_count = static_cast<int>(std::thread::hardware_concurrency());
+				}
+			} else {
+				_context->thread_count = 1;
+			}
+
+			// Frame Delay (Lag In Frames)
+			_context->delay = _context->thread_count;
 		} else {
-			_context->thread_count = 1;
+			_context->delay = 0;
 		}
-		// Frame Delay (Lag In Frames)
-		_context->delay = _context->thread_count;
-	} else {
-		_context->delay = 0;
 	}
 
-	// Apply GPU Selection
-	if (!_hwinst && ::streamfx::ffmpeg::tools::can_hardware_encode(_codec)) {
-		av_opt_set_int(_context, "gpu", (int)obs_data_get_int(settings, ST_KEY_FFMPEG_GPU), AV_OPT_SEARCH_CHILDREN);
+	if (!_context->internal || (support_reconfig && support_reconfig_gpu)) {
+		// Apply GPU Selection
+		if (!_hwinst && ::streamfx::ffmpeg::tools::can_hardware_encode(_codec)) {
+			av_opt_set_int(_context, "gpu", (int)obs_data_get_int(settings, ST_KEY_FFMPEG_GPU), AV_OPT_SEARCH_CHILDREN);
+		}
 	}
 
-	// Keyframes
-	if (_handler && _handler->has_keyframe_support(_factory)) {
-		// Key-Frame Options
-		obs_video_info ovi;
-		if (!obs_get_video_info(&ovi)) {
-			throw std::runtime_error("obs_get_video_info failed, restart OBS Studio to fix it (hopefully).");
+	if (!_context->internal || (support_reconfig && support_reconfig_keyframes)) {
+		// Keyframes
+		if (_handler && _handler->has_keyframe_support(_factory)) {
+			// Key-Frame Options
+			obs_video_info ovi;
+			if (!obs_get_video_info(&ovi)) {
+				throw std::runtime_error("obs_get_video_info failed, restart OBS Studio to fix it (hopefully).");
+			}
+
+			int64_t kf_type    = obs_data_get_int(settings, ST_KEY_KEYFRAMES_INTERVALTYPE);
+			bool    is_seconds = (kf_type == 0);
+
+			if (is_seconds) {
+				_context->gop_size = static_cast<int>(obs_data_get_double(settings, ST_KEY_KEYFRAMES_INTERVAL_SECONDS)
+													  * (ovi.fps_num / ovi.fps_den));
+			} else {
+				_context->gop_size = static_cast<int>(obs_data_get_int(settings, ST_KEY_KEYFRAMES_INTERVAL_FRAMES));
+			}
+			_context->keyint_min = _context->gop_size;
+		}
+	}
+
+	if (!_context->internal || support_reconfig) {
+		// Handler Options
+		if (_handler)
+			_handler->update(settings, _codec, _context);
+
+		{ // FFmpeg Custom Options
+			const char* opts     = obs_data_get_string(settings, ST_KEY_FFMPEG_CUSTOMSETTINGS);
+			std::size_t opts_len = strnlen(opts, 65535);
+
+			parse_ffmpeg_commandline(std::string{opts, opts + opts_len});
 		}
 
-		int64_t kf_type    = obs_data_get_int(settings, ST_KEY_KEYFRAMES_INTERVALTYPE);
-		bool    is_seconds = (kf_type == 0);
-
-		if (is_seconds) {
-			_context->gop_size = static_cast<int>(obs_data_get_double(settings, ST_KEY_KEYFRAMES_INTERVAL_SECONDS)
-												  * (ovi.fps_num / ovi.fps_den));
-		} else {
-			_context->gop_size = static_cast<int>(obs_data_get_int(settings, ST_KEY_KEYFRAMES_INTERVAL_FRAMES));
-		}
-		_context->keyint_min = _context->gop_size;
+		// Handler Overrides
+		if (_handler)
+			_handler->override_update(this, settings);
 	}
-
-	// Handler Options
-	if (_handler)
-		_handler->update(settings, _codec, _context);
-
-	{ // FFmpeg Custom Options
-		const char* opts     = obs_data_get_string(settings, ST_KEY_FFMPEG_CUSTOMSETTINGS);
-		std::size_t opts_len = strnlen(opts, 65535);
-
-		parse_ffmpeg_commandline(std::string{opts, opts + opts_len});
-	}
-
-	// Handler Overrides
-	if (_handler)
-		_handler->override_update(this, settings);
 
 	// Handler Logging
-	if (_handler) {
-		DLOG_INFO("[%s] Initializing...", _codec->name);
+	if (!_context->internal || support_reconfig) {
+		DLOG_INFO("[%s] Configuration:", _codec->name);
 		DLOG_INFO("[%s]   FFmpeg:", _codec->name);
 		DLOG_INFO("[%s]     Custom Settings: %s", _codec->name,
 				  obs_data_get_string(settings, ST_KEY_FFMPEG_CUSTOMSETTINGS));
@@ -302,7 +322,10 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 		} else {
 			DLOG_INFO("[%s]     Distance: %i frames", _codec->name, _context->gop_size);
 		}
-		_handler->log_options(settings, _codec, _context);
+
+		if (_handler) {
+			_handler->log_options(settings, _codec, _context);
+		}
 	}
 
 	return true;
