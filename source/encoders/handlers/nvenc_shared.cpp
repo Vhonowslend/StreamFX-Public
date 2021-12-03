@@ -711,7 +711,7 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			!streamfx::util::is_tristate_default(nrp))
 			av_opt_set_int(context->priv_data, "nonref_p", nrp, AV_OPT_SEARCH_CHILDREN);
 		if (int64_t v = obs_data_get_int(settings, ST_KEY_OTHER_REFERENCEFRAMES); v > -1)
-			av_opt_set_int(context->priv_data, "refs", v, AV_OPT_SEARCH_CHILDREN);
+			context->refs = v;
 
 		int64_t wp = obs_data_get_int(settings, ST_KEY_OTHER_WEIGHTEDPREDICTION);
 		if ((context->max_b_frames > 0) && streamfx::util::is_tristate_enabled(wp)) {
@@ -779,7 +779,7 @@ void nvenc::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* conte
 	tools::print_av_option_bool(context, "zerolatency", "      Zero Latency");
 	tools::print_av_option_bool(context, "weighted_pred", "      Weighted Prediction");
 	tools::print_av_option_bool(context, "nonref_p", "      Non-reference P-Frames");
-	tools::print_av_option_int(context, "refs", "      REference Frames", "Frames");
+	tools::print_av_option_int(context, "refs", "      Reference Frames", "Frames");
 	tools::print_av_option_bool(context, "strict_gop", "      Strict GOP");
 	tools::print_av_option_bool(context, "aud", "      Access Unit Delimiters");
 	tools::print_av_option_bool(context, "bluray-compat", "      Bluray Compatibility");
