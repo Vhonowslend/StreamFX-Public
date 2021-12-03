@@ -54,6 +54,8 @@ namespace streamfx::encoder::ffmpeg::handler {
 
 		virtual bool has_pixel_format_support(ffmpeg_factory* instance);
 
+		virtual bool supports_reconfigure(ffmpeg_factory* instance, bool& threads, bool& gpu, bool& keyframes);
+
 		public /*settings*/:
 		virtual void get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context,
 									bool hw_encode);

@@ -108,24 +108,26 @@ void nvenc_hevc_handler::update(obs_data_t* settings, const AVCodec* codec, AVCo
 {
 	nvenc::update(settings, codec, context);
 
-	{ // HEVC Options
-		auto found = profiles.find(static_cast<profile>(obs_data_get_int(settings, ST_KEY_PROFILE)));
-		if (found != profiles.end()) {
-			av_opt_set(context->priv_data, "profile", found->second.c_str(), 0);
+	if (!context->internal) {
+		{ // HEVC Options
+			auto found = profiles.find(static_cast<profile>(obs_data_get_int(settings, ST_KEY_PROFILE)));
+			if (found != profiles.end()) {
+				av_opt_set(context->priv_data, "profile", found->second.c_str(), 0);
+			}
 		}
-	}
-	{
-		auto found = tiers.find(static_cast<tier>(obs_data_get_int(settings, ST_KEY_TIER)));
-		if (found != tiers.end()) {
-			av_opt_set(context->priv_data, "tier", found->second.c_str(), 0);
+		{
+			auto found = tiers.find(static_cast<tier>(obs_data_get_int(settings, ST_KEY_TIER)));
+			if (found != tiers.end()) {
+				av_opt_set(context->priv_data, "tier", found->second.c_str(), 0);
+			}
 		}
-	}
-	{
-		auto found = levels.find(static_cast<level>(obs_data_get_int(settings, ST_KEY_LEVEL)));
-		if (found != levels.end()) {
-			av_opt_set(context->priv_data, "level", found->second.c_str(), 0);
-		} else {
-			av_opt_set(context->priv_data, "level", "auto", 0);
+		{
+			auto found = levels.find(static_cast<level>(obs_data_get_int(settings, ST_KEY_LEVEL)));
+			if (found != levels.end()) {
+				av_opt_set(context->priv_data, "level", found->second.c_str(), 0);
+			} else {
+				av_opt_set(context->priv_data, "level", "auto", 0);
+			}
 		}
 	}
 }
@@ -199,4 +201,12 @@ void streamfx::encoder::ffmpeg::handler::nvenc_hevc_handler::migrate(obs_data_t*
 																	 const AVCodec* codec, AVCodecContext* context)
 {
 	nvenc::migrate(settings, version, codec, context);
+}
+
+bool nvenc_hevc_handler::supports_reconfigure(ffmpeg_factory* instance, bool& threads, bool& gpu, bool& keyframes)
+{
+	threads   = false;
+	gpu       = false;
+	keyframes = false;
+	return true;
 }

@@ -510,7 +510,7 @@ void nvenc::get_runtime_properties(obs_properties_t* props, const AVCodec*, AVCo
 
 void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context)
 {
-	{
+	if (!context->internal) {
 		preset c_preset = static_cast<preset>(obs_data_get_int(settings, ST_KEY_PRESET));
 		auto   found    = preset_to_opt.find(c_preset);
 		if (found != preset_to_opt.end()) {
@@ -530,7 +530,9 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		ratecontrolmode rc    = static_cast<ratecontrolmode>(obs_data_get_int(settings, ST_KEY_RATECONTROL_MODE));
 		auto            rcopt = ratecontrolmode_to_opt.find(rc);
 		if (rcopt != ratecontrolmode_to_opt.end()) {
-			av_opt_set(context->priv_data, "rc", rcopt->second.c_str(), AV_OPT_SEARCH_CHILDREN);
+			if (!context->internal) {
+				av_opt_set(context->priv_data, "rc", rcopt->second.c_str(), AV_OPT_SEARCH_CHILDREN);
+			}
 		} else {
 			have_bitrate       = true;
 			have_bitrate_range = true;
@@ -539,7 +541,9 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			have_qp            = true;
 		}
 
-		av_opt_set_int(context->priv_data, "cbr", 0, AV_OPT_SEARCH_CHILDREN);
+		if (!context->internal) {
+			av_opt_set_int(context->priv_data, "cbr", 0, AV_OPT_SEARCH_CHILDREN);
+		}
 		switch (rc) {
 		case ratecontrolmode::CQP:
 			have_qp = true;
@@ -550,7 +554,9 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		case ratecontrolmode::CBR_LD_HQ:
 			have_bitrate   = true;
 			have_qp_limits = true;
-			av_opt_set_int(context->priv_data, "cbr", 1, AV_OPT_SEARCH_CHILDREN);
+			if (!context->internal) {
+				av_opt_set_int(context->priv_data, "cbr", 1, AV_OPT_SEARCH_CHILDREN);
+			}
 			break;
 		case ratecontrolmode::VBR:
 		case ratecontrolmode::VBR_HQ:
@@ -562,30 +568,32 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			break;
 		}
 
-		// Two Pass
-		if (int tp = static_cast<int>(obs_data_get_int(settings, ST_KEY_RATECONTROL_TWOPASS)); tp > -1) {
-			av_opt_set_int(context->priv_data, "2pass", tp ? 1 : 0, AV_OPT_SEARCH_CHILDREN);
-		}
+		if (!context->internal) {
+			// Two Pass
+			if (int tp = static_cast<int>(obs_data_get_int(settings, ST_KEY_RATECONTROL_TWOPASS)); tp > -1) {
+				av_opt_set_int(context->priv_data, "2pass", tp ? 1 : 0, AV_OPT_SEARCH_CHILDREN);
+			}
 
-		// Look Ahead # of Frames
-		int la = static_cast<int>(obs_data_get_int(settings, ST_KEY_RATECONTROL_LOOKAHEAD));
-		if (!streamfx::util::is_tristate_default(la)) {
-			av_opt_set_int(context->priv_data, "rc-lookahead", la, AV_OPT_SEARCH_CHILDREN);
-		}
+			// Look Ahead # of Frames
+			int la = static_cast<int>(obs_data_get_int(settings, ST_KEY_RATECONTROL_LOOKAHEAD));
+			if (!streamfx::util::is_tristate_default(la)) {
+				av_opt_set_int(context->priv_data, "rc-lookahead", la, AV_OPT_SEARCH_CHILDREN);
+			}
 
-		// Adaptive I-Frames
-		if (int64_t adapt_i = obs_data_get_int(settings, ST_KEY_RATECONTROL_ADAPTIVEI);
-			!streamfx::util::is_tristate_default(adapt_i) && (la != 0)) {
-			// no-scenecut is inverted compared to our UI.
-			av_opt_set_int(context->priv_data, "no-scenecut", 1 - adapt_i, AV_OPT_SEARCH_CHILDREN);
-		}
+			// Adaptive I-Frames
+			if (int64_t adapt_i = obs_data_get_int(settings, ST_KEY_RATECONTROL_ADAPTIVEI);
+				!streamfx::util::is_tristate_default(adapt_i) && (la != 0)) {
+				// no-scenecut is inverted compared to our UI.
+				av_opt_set_int(context->priv_data, "no-scenecut", 1 - adapt_i, AV_OPT_SEARCH_CHILDREN);
+			}
 
-		// Adaptive B-Frames
-		constexpr std::string_view h264_encoder_name = "h264_nvenc";
-		if (h264_encoder_name == codec->name) {
-			if (int64_t adapt_b = obs_data_get_int(settings, ST_KEY_RATECONTROL_ADAPTIVEB);
-				!streamfx::util::is_tristate_default(adapt_b) && (la != 0)) {
-				av_opt_set_int(context->priv_data, "b_adapt", adapt_b, AV_OPT_SEARCH_CHILDREN);
+			// Adaptive B-Frames
+			constexpr std::string_view h264_encoder_name = "h264_nvenc";
+			if (h264_encoder_name == codec->name) {
+				if (int64_t adapt_b = obs_data_get_int(settings, ST_KEY_RATECONTROL_ADAPTIVEB);
+					!streamfx::util::is_tristate_default(adapt_b) && (la != 0)) {
+					av_opt_set_int(context->priv_data, "b_adapt", adapt_b, AV_OPT_SEARCH_CHILDREN);
+				}
 			}
 		}
 
@@ -616,38 +624,41 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			context->rc_buffer_size = 0;
 		}
 
-		// Quality Limits
-		if (have_qp_limits) {
-			if (int qmin = static_cast<int>(obs_data_get_int(settings, ST_KEY_RATECONTROL_QP_MINIMUM)); qmin > -1)
-				context->qmin = qmin;
-			if (int qmax = static_cast<int>(obs_data_get_int(settings, ST_KEY_RATECONTROL_QP_MAXIMUM)); qmax > -1)
-				context->qmax = qmax;
-		} else {
-			context->qmin = -1;
-			context->qmax = -1;
-		}
-
-		// Quality Target
-		if (have_quality) {
-			if (double_t v = obs_data_get_double(settings, ST_KEY_RATECONTROL_LIMITS_QUALITY) / 100.0 * 51.0; v > 0) {
-				av_opt_set_double(context->priv_data, "cq", v, AV_OPT_SEARCH_CHILDREN);
+		if (!context->internal) {
+			// Quality Limits
+			if (have_qp_limits) {
+				if (int qmin = static_cast<int>(obs_data_get_int(settings, ST_KEY_RATECONTROL_QP_MINIMUM)); qmin > -1)
+					context->qmin = qmin;
+				if (int qmax = static_cast<int>(obs_data_get_int(settings, ST_KEY_RATECONTROL_QP_MAXIMUM)); qmax > -1)
+					context->qmax = qmax;
+			} else {
+				context->qmin = -1;
+				context->qmax = -1;
 			}
-		} else {
-			av_opt_set_double(context->priv_data, "cq", 0, AV_OPT_SEARCH_CHILDREN);
-		}
 
-		// QP Settings
-		if (have_qp) {
-			if (int64_t qp = obs_data_get_int(settings, ST_KEY_RATECONTROL_QP_I); qp > -1)
-				av_opt_set_int(context->priv_data, "init_qpI", static_cast<int>(qp), AV_OPT_SEARCH_CHILDREN);
-			if (int64_t qp = obs_data_get_int(settings, ST_KEY_RATECONTROL_QP_P); qp > -1)
-				av_opt_set_int(context->priv_data, "init_qpP", static_cast<int>(qp), AV_OPT_SEARCH_CHILDREN);
-			if (int64_t qp = obs_data_get_int(settings, ST_KEY_RATECONTROL_QP_B); qp > -1)
-				av_opt_set_int(context->priv_data, "init_qpB", static_cast<int>(qp), AV_OPT_SEARCH_CHILDREN);
+			// Quality Target
+			if (have_quality) {
+				if (double_t v = obs_data_get_double(settings, ST_KEY_RATECONTROL_LIMITS_QUALITY) / 100.0 * 51.0;
+					v > 0) {
+					av_opt_set_double(context->priv_data, "cq", v, AV_OPT_SEARCH_CHILDREN);
+				}
+			} else {
+				av_opt_set_double(context->priv_data, "cq", 0, AV_OPT_SEARCH_CHILDREN);
+			}
+
+			// QP Settings
+			if (have_qp) {
+				if (int64_t qp = obs_data_get_int(settings, ST_KEY_RATECONTROL_QP_I); qp > -1)
+					av_opt_set_int(context->priv_data, "init_qpI", static_cast<int>(qp), AV_OPT_SEARCH_CHILDREN);
+				if (int64_t qp = obs_data_get_int(settings, ST_KEY_RATECONTROL_QP_P); qp > -1)
+					av_opt_set_int(context->priv_data, "init_qpP", static_cast<int>(qp), AV_OPT_SEARCH_CHILDREN);
+				if (int64_t qp = obs_data_get_int(settings, ST_KEY_RATECONTROL_QP_B); qp > -1)
+					av_opt_set_int(context->priv_data, "init_qpB", static_cast<int>(qp), AV_OPT_SEARCH_CHILDREN);
+			}
 		}
 	}
 
-	{ // AQ
+	if (!context->internal) { // AQ
 		int64_t saq = obs_data_get_int(settings, ST_KEY_AQ_SPATIAL);
 		int64_t taq = obs_data_get_int(settings, ST_KEY_AQ_TEMPORAL);
 
@@ -667,7 +678,7 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 				av_opt_set_int(context->priv_data, "aq-strength", static_cast<int>(aqs), AV_OPT_SEARCH_CHILDREN);
 	}
 
-	{ // Other
+	if (!context->internal) { // Other
 		if (int64_t bf = obs_data_get_int(settings, ST_KEY_OTHER_BFRAMES); bf > -1)
 			context->max_b_frames = static_cast<int>(bf);
 

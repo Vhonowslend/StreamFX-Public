@@ -107,19 +107,20 @@ void nvenc_h264_handler::update(obs_data_t* settings, const AVCodec* codec, AVCo
 {
 	nvenc::update(settings, codec, context);
 
-	{
-		auto found = profiles.find(static_cast<profile>(obs_data_get_int(settings, ST_KEY_PROFILE)));
-		if (found != profiles.end()) {
-			av_opt_set(context->priv_data, "profile", found->second.c_str(), 0);
+	if (!context->internal) {
+		{
+			auto found = profiles.find(static_cast<profile>(obs_data_get_int(settings, ST_KEY_PROFILE)));
+			if (found != profiles.end()) {
+				av_opt_set(context->priv_data, "profile", found->second.c_str(), 0);
+			}
 		}
-	}
-
-	{
-		auto found = levels.find(static_cast<level>(obs_data_get_int(settings, ST_KEY_LEVEL)));
-		if (found != levels.end()) {
-			av_opt_set(context->priv_data, "level", found->second.c_str(), 0);
-		} else {
-			av_opt_set(context->priv_data, "level", "auto", 0);
+		{
+			auto found = levels.find(static_cast<level>(obs_data_get_int(settings, ST_KEY_LEVEL)));
+			if (found != levels.end()) {
+				av_opt_set(context->priv_data, "level", found->second.c_str(), 0);
+			} else {
+				av_opt_set(context->priv_data, "level", "auto", 0);
+			}
 		}
 	}
 }
@@ -182,4 +183,12 @@ void streamfx::encoder::ffmpeg::handler::nvenc_h264_handler::migrate(obs_data_t*
 																	 const AVCodec* codec, AVCodecContext* context)
 {
 	nvenc::migrate(settings, version, codec, context);
+}
+
+bool nvenc_h264_handler::supports_reconfigure(ffmpeg_factory* instance, bool& threads, bool& gpu, bool& keyframes)
+{
+	threads   = false;
+	gpu       = false;
+	keyframes = false;
+	return true;
 }
