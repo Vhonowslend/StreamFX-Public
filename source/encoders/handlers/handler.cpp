@@ -43,3 +43,8 @@ bool handler::handler::has_pixel_format_support(ffmpeg_factory* instance)
 {
 	return (instance->get_avcodec()->pix_fmts != nullptr);
 }
+
+bool handler::handler::supports_reconfigure(ffmpeg_factory* instance, bool& threads, bool& gpu, bool& keyframes)
+{
+	return false;
+}
