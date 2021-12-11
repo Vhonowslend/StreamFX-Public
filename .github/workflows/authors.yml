@@ -20,7 +20,7 @@ jobs:
       run: |
         git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
         git fetch --all
-    - name: "Dependecies"
+    - name: "Dependencies"
       shell: bash
       run: |
         sudo apt-get -qq update
