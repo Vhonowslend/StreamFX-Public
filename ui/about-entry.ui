@@ -65,13 +65,15 @@ QWidget[objectName=&quot;title&quot;] {
      <property name="font">
       <font>
        <pointsize>14</pointsize>
-       <weight>75</weight>
-       <bold>true</bold>
-       <stylestrategy>PreferAntialias</stylestrategy>
       </font>
      </property>
+     <property name="styleSheet">
+      <string notr="true">QWidget {
+    font-family: &quot;MS Shell Dlg 2&quot;, &quot;MS Gothic&quot;, &quot;Malgun Gothic&quot;;
+}</string>
+     </property>
      <property name="text">
-      <string notr="true">Supporter Name</string>
+      <string notr="true">Name</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -92,7 +94,7 @@ QWidget[objectName=&quot;title&quot;] {
       </font>
      </property>
      <property name="text">
-      <string notr="true">Supporter Title</string>
+      <string notr="true">Title</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
