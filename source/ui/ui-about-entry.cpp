@@ -21,10 +21,7 @@
 
 constexpr std::string_view i18n_role_contributor = "UI.About.Role.Contributor";
 constexpr std::string_view i18n_role_translator  = "UI.About.Role.Translator";
-constexpr std::string_view i18n_role_family      = "UI.About.Role.Family";
-constexpr std::string_view i18n_role_friend      = "UI.About.Role.Friend";
 constexpr std::string_view i18n_role_supporter   = "UI.About.Role.Supporter";
-constexpr std::string_view i18n_role_creator     = "UI.About.Role.Creator";
 
 streamfx::ui::about_entry::about_entry(QWidget* parent, const streamfx::ui::about::entry& entry)
 	: QWidget(parent), _link()
@@ -44,9 +41,6 @@ streamfx::ui::about_entry::about_entry(QWidget* parent, const streamfx::ui::abou
 		break;
 	case streamfx::ui::about::role_type::SUPPORTER:
 		title->setText(D_TRANSLATE(i18n_role_supporter.data()));
-		break;
-	case streamfx::ui::about::role_type::CREATOR:
-		title->setText(D_TRANSLATE(i18n_role_creator.data()));
 		break;
 	default:
 		break;

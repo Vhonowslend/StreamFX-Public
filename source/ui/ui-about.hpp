@@ -37,12 +37,9 @@ namespace streamfx::ui {
 		public:
 		enum class role_type : int32_t {
 			NONE,
-			SPACER,
-			THANKYOU,
 			CONTRIBUTOR,
 			TRANSLATOR,
 			SUPPORTER,
-			CREATOR,
 		};
 
 		struct entry {

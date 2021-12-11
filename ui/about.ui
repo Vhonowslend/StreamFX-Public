@@ -29,6 +29,7 @@
    <string notr="true">QWidget {
 	background: transparent;
 	color: hsl(0, 0%, 100%);
+    font-family: &quot;MS Shell Dlg 2&quot;, &quot;MS Gothic&quot;, &quot;Malgun Gothic&quot;;
 }
 
 QWidget[objectName=&quot;About&quot;],
@@ -36,10 +37,23 @@ QWidget[objectName=&quot;contentContainer&quot;],
 QWidget[objectName=&quot;content&quot;] {
 	background: hsl(0, 0%, 10%);
 	border: 0;
+    font-family: &quot;MS Shell Dlg 2&quot;, &quot;MS Gothic&quot;, &quot;Malgun Gothic&quot;;
 }
 
 QWidget[objectName=&quot;PaddleMeDaddy&quot;] {
 	background: hsl(0, 0%, 10%);
+}
+
+a,
+a:link,
+a:visited {
+	color: hsl(200, 100%, 50%);
+    font-family: &quot;MS Shell Dlg 2&quot;, &quot;MS Gothic&quot;, &quot;Malgun Gothic&quot;;
+}
+
+a:hover,
+a:focus {
+	color: hsl(200, 100%, 70%);
 }</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
