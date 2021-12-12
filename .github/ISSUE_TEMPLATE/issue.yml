@@ -34,6 +34,7 @@ body:
     label: "StreamFX Version"
     description: "On which StreamFX version did you first encounter this issue?"
     options:
+      - "0.11.0c1"
       - "0.11.0b3"
       - "0.11.0b2"
       - "0.11.0b1"
