@@ -278,10 +278,15 @@ jobs:
           /usr/local/Cellar/qt@5
         key: qt-${{ matrix.id }}-${{ env.QT_VERSION }}-${{ secrets.CACHE_VERSION }}
     - name: "qt: Install"
-      if: ${{ (github.event_name != 'pull_request') || (steps.qt-cache.outputs.cache-hit != 'true') }}
+      if: ${{ (github.event_name == 'pull_request') || (steps.qt-cache.outputs.cache-hit != 'true') }}
       shell: bash
       run: |
         brew install qt@5
+    - name: "qt: Link"
+      if: ${{ (github.event_name != 'pull_request') && (steps.qt-cache.outputs.cache-hit != 'false') }}
+      shell: bash
+      run: |
+        brew link qt@5
     - name: "StreamFX: Configure"
       shell: bash
       run: |
