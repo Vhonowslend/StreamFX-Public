@@ -138,11 +138,12 @@ streamfx::ui::about::about() : QDialog(reinterpret_cast<QWidget*>(obs_frontend_g
 		int          row    = 0;
 		int          column = 0;
 		int          thanks = 0;
-		int          spacer = 0;
 
 		// Fix columns being stretched for no reason.
 		layout->setColumnStretch(0, 1);
 		layout->setColumnStretch(1, 1);
+
+		D_LOG_DEBUG("Building grid of Thank You entries...", "");
 
 		// Randomize the list.
 		std::shuffle(entries.begin(), entries.end(), generator);
@@ -152,13 +153,14 @@ streamfx::ui::about::about() : QDialog(reinterpret_cast<QWidget*>(obs_frontend_g
 			layout->addWidget(v, row, column);
 			layout->setRowStretch(row, 0);
 
+			D_LOG_DEBUG("  Added '%s' => '%s'.", entry.name.c_str(), entry.link.c_str());
+
 			// Proceed down the grid.
 			column += 1;
 			if (column >= 2) {
 				column = 0;
 				row += 1;
 				thanks += 1;
-				spacer += 1;
 
 				if (thanks % 9 == 8) { // "Thank you" every 8 rows.
 					auto image = new QLabel(content);
@@ -170,24 +172,6 @@ streamfx::ui::about::about() : QDialog(reinterpret_cast<QWidget*>(obs_frontend_g
 					layout->setRowStretch(row, 0);
 
 					thanks = 0;
-					row += 1;
-				} else if (spacer % 6 == 5) { // Spacer every 5 rows.
-					auto separator = new QFrame(content);
-					separator->setFrameShape(QFrame::HLine);
-					separator->setFrameShadow(QFrame::Sunken);
-					separator->setMaximumHeight(1);
-					separator->setMinimumHeight(1);
-					separator->setFixedHeight(1);
-					separator->setLineWidth(1);
-					{
-						auto sp = separator->sizePolicy();
-						sp.setVerticalPolicy(QSizePolicy::Fixed);
-						separator->setSizePolicy(sp);
-					}
-					layout->addWidget(separator, row, 0, 1, 2);
-					layout->setRowStretch(row, 0);
-
-					spacer = 0;
 					row += 1;
 				}
 			}
