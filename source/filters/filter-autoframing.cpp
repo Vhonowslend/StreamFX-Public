@@ -478,6 +478,9 @@ void autoframing_instance::video_render(gs_effect_t* effect)
 		if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
 			auto op = _input->render(width, height);
 
+			// Set correct projection matrix.
+			gs_ortho(0, width, 0, height, 0, 1);
+
 			// Clear the buffer
 			gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &blank, 0, 0);
 
