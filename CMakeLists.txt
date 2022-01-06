@@ -271,7 +271,7 @@ endif()
 # Detect if we are building with OBS Studio (different from Grouped builds)
 ################################################################################
 
-set(STANDALONE ON)
+set(STANDALONE CACHE BOOL ON Build standalone version)
 if(GROUPED AND (TARGET libobs))
 	set(STANDALONE OFF)
 endif()
