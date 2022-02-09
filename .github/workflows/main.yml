@@ -315,7 +315,8 @@ jobs:
       run: |
         curl -L -O http://s.sudre.free.fr/Software/files/Packages.dmg
         sudo hdiutil attach ./Packages.dmg
-        sudo installer -pkg /Volumes/Packages\ 1.2.9/Install\ Packages.pkg -target /
+        pushd /Volumes/Packages*
+        sudo installer -pkg ./Install\ Packages.pkg -target /
     - name: "Packages: Package"
       shell: bash
       run: |
