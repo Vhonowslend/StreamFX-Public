@@ -183,6 +183,83 @@ AVColorTransferCharacteristic streamfx::ffmpeg::tools::obs_to_av_color_transfer_
 	}
 }
 
+const char* tools::avoption_name_from_unit_value(const void* obj, std::string_view unit, int64_t value)
+{
+	for (const AVOption* opt = nullptr; (opt = av_opt_next(obj, opt)) != nullptr;) {
+		// Skip all irrelevant options.
+		if (!opt->unit)
+			continue;
+		if (opt->unit != unit)
+			continue;
+		if (opt->name == unit)
+			continue;
+
+		if (opt->default_val.i64 == value)
+			return opt->name;
+	}
+	return nullptr;
+}
+
+bool tools::avoption_exists(const void* obj, std::string_view name)
+{
+	for (const AVOption* opt = nullptr; (opt = av_opt_next(obj, opt)) != nullptr;) {
+		if (name == opt->name)
+			return true;
+	}
+	return false;
+}
+
+void tools::avoption_list_add_entries_unnamed(const void* obj, std::string_view unit, obs_property_t* prop,
+											  std::function<bool(const AVOption*)> filter)
+{
+	for (const AVOption* opt = nullptr; (opt = av_opt_next(obj, opt)) != nullptr;) {
+		// Skip all irrelevant options.
+		if (!opt->unit)
+			continue;
+		if (opt->unit != unit)
+			continue;
+		if (opt->name == unit)
+			continue;
+
+		// Skip any deprecated options.
+		if (opt->flags & AV_OPT_FLAG_DEPRECATED)
+			continue;
+
+		if (filter && filter(opt))
+			continue;
+
+		// Generate name and add to list.
+		obs_property_list_add_int(prop, opt->name, opt->default_val.i64);
+	}
+}
+
+void tools::avoption_list_add_entries(const void* obj, std::string_view unit, obs_property_t* prop,
+									  std::string_view prefix, std::function<bool(const AVOption*)> filter)
+{
+	for (const AVOption* opt = nullptr; (opt = av_opt_next(obj, opt)) != nullptr;) {
+		// Skip all irrelevant options.
+		if (!opt->unit)
+			continue;
+		if (opt->unit != unit)
+			continue;
+		if (opt->name == unit)
+			continue;
+
+		// Skip any deprecated options.
+		if (opt->flags & AV_OPT_FLAG_DEPRECATED)
+			continue;
+
+		// Skip based on filter function.
+		if (filter && filter(opt))
+			continue;
+
+		// Generate name and add to list.
+		char buffer[1024];
+		snprintf(buffer, sizeof(buffer), "%s.%s\0", prefix.data(), opt->name);
+		obs_property_list_add_int(prop, D_TRANSLATE(buffer), opt->default_val.i64);
+	}
+}
+
 bool tools::can_hardware_encode(const AVCodec* codec)
 {
 	AVPixelFormat hardware_formats[] = {AV_PIX_FMT_D3D11};
