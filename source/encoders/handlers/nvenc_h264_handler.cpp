@@ -45,20 +45,6 @@ extern "C" {
 using namespace streamfx::encoder::ffmpeg::handler;
 using namespace streamfx::encoder::codec::h264;
 
-static std::map<profile, std::string> profiles{
-	{profile::BASELINE, "baseline"},
-	{profile::MAIN, "main"},
-	{profile::HIGH, "high"},
-	{profile::HIGH444_PREDICTIVE, "high444p"},
-};
-
-static std::map<level, std::string> levels{
-	{level::L1_0, "1.0"}, {level::L1_0b, "1.0b"}, {level::L1_1, "1.1"}, {level::L1_2, "1.2"},
-	{level::L1_3, "1.3"}, {level::L2_0, "2.0"},   {level::L2_1, "2.1"}, {level::L2_2, "2.2"},
-	{level::L3_0, "3.0"}, {level::L3_1, "3.1"},   {level::L3_2, "3.2"}, {level::L4_0, "4.0"},
-	{level::L4_1, "4.1"}, {level::L4_2, "4.2"},   {level::L5_0, "5.0"}, {level::L5_1, "5.1"},
-};
-
 void nvenc_h264_handler::adjust_info(ffmpeg_factory* fac, const AVCodec*, std::string&, std::string& name, std::string&)
 {
 	name = "NVIDIA NVENC H.264/AVC (via FFmpeg)";
@@ -108,19 +94,13 @@ void nvenc_h264_handler::update(obs_data_t* settings, const AVCodec* codec, AVCo
 	nvenc::update(settings, codec, context);
 
 	if (!context->internal) {
-		{
-			auto found = profiles.find(static_cast<profile>(obs_data_get_int(settings, ST_KEY_PROFILE)));
-			if (found != profiles.end()) {
-				av_opt_set(context->priv_data, "profile", found->second.c_str(), 0);
-			}
+		if (auto value = obs_data_get_int(settings, ST_KEY_PROFILE); value > -1) {
+			av_opt_set_int(context->priv_data, "profile", value, AV_OPT_SEARCH_CHILDREN);
 		}
-		{
-			auto found = levels.find(static_cast<level>(obs_data_get_int(settings, ST_KEY_LEVEL)));
-			if (found != levels.end()) {
-				av_opt_set(context->priv_data, "level", found->second.c_str(), 0);
-			} else {
-				av_opt_set(context->priv_data, "level", "auto", 0);
-			}
+		if (auto value = obs_data_get_int(settings, ST_KEY_LEVEL); value > -1) {
+			av_opt_set_int(context->priv_data, "level", value, AV_OPT_SEARCH_CHILDREN);
+		} else {
+			av_opt_set(context->priv_data, "level", "auto", AV_OPT_SEARCH_CHILDREN);
 		}
 	}
 }
@@ -143,7 +123,13 @@ void nvenc_h264_handler::log_options(obs_data_t* settings, const AVCodec* codec,
 
 void nvenc_h264_handler::get_encoder_properties(obs_properties_t* props, const AVCodec* codec)
 {
-	nvenc::get_properties_pre(props, codec);
+	AVCodecContext* context = avcodec_alloc_context3(codec);
+	if (!context->priv_data) {
+		avcodec_free_context(&context);
+		return;
+	}
+
+	nvenc::get_properties_pre(props, codec, context);
 
 	{
 		obs_properties_t* grp = props;
@@ -155,23 +141,27 @@ void nvenc_h264_handler::get_encoder_properties(obs_properties_t* props, const A
 		{
 			auto p = obs_properties_add_list(grp, ST_KEY_PROFILE, D_TRANSLATE(S_CODEC_H264_PROFILE),
 											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), static_cast<int64_t>(profile::UNKNOWN));
-			for (auto const kv : profiles) {
-				std::string trans = std::string(S_CODEC_H264_PROFILE) + "." + kv.second;
-				obs_property_list_add_int(p, D_TRANSLATE(trans.c_str()), static_cast<int64_t>(kv.first));
-			}
+			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), -1);
+			streamfx::ffmpeg::tools::avoption_list_add_entries(context->priv_data, "profile", p, S_CODEC_H264_PROFILE);
 		}
 		{
 			auto p = obs_properties_add_list(grp, ST_KEY_LEVEL, D_TRANSLATE(S_CODEC_H264_LEVEL), OBS_COMBO_TYPE_LIST,
 											 OBS_COMBO_FORMAT_INT);
-			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), static_cast<int64_t>(level::UNKNOWN));
-			for (auto const kv : levels) {
-				obs_property_list_add_int(p, kv.second.c_str(), static_cast<int64_t>(kv.first));
-			}
+			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), 0);
+			streamfx::ffmpeg::tools::avoption_list_add_entries_unnamed(context->priv_data, "level", p,
+																	   [](const AVOption* opt) {
+																		   if (opt->default_val.i64 == 0)
+																			   return true;
+																		   return false;
+																	   });
 		}
 	}
 
-	nvenc::get_properties_post(props, codec);
+	nvenc::get_properties_post(props, codec, context);
+
+	if (context) {
+		avcodec_free_context(&context);
+	}
 }
 
 void nvenc_h264_handler::get_runtime_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context)

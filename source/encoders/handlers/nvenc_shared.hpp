@@ -42,63 +42,15 @@ extern "C" {
 */
 
 namespace streamfx::encoder::ffmpeg::handler::nvenc {
-	enum class preset : int64_t {
-		DEFAULT,
-		SLOW,
-		MEDIUM,
-		FAST,
-		HIGH_PERFORMANCE,
-		HIGH_QUALITY,
-		BLURAYDISC,
-		LOW_LATENCY,
-		LOW_LATENCY_HIGH_PERFORMANCE,
-		LOW_LATENCY_HIGH_QUALITY,
-		LOSSLESS,
-		LOSSLESS_HIGH_PERFORMANCE,
-		// Append things before this.
-		INVALID = -1,
-	};
-
-	enum class ratecontrolmode : int64_t {
-		CQP,
-		VBR,
-		VBR_HQ,
-		CBR,
-		CBR_HQ,
-		CBR_LD_HQ,
-		// Append things before this.
-		INVALID = -1,
-	};
-
-	enum class b_ref_mode : int64_t {
-		DISABLED,
-		EACH,
-		MIDDLE,
-		// Append things before this.
-		INVALID = -1,
-	};
-
-	extern std::map<preset, std::string> presets;
-
-	extern std::map<preset, std::string> preset_to_opt;
-
-	extern std::map<ratecontrolmode, std::string> ratecontrolmodes;
-
-	extern std::map<ratecontrolmode, std::string> ratecontrolmode_to_opt;
-
-	extern std::map<b_ref_mode, std::string> b_ref_modes;
-
-	extern std::map<b_ref_mode, std::string> b_ref_mode_to_opt;
-
 	bool is_available();
 
 	void override_update(ffmpeg_instance* instance, obs_data_t* settings);
 
 	void get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context);
 
-	void get_properties_pre(obs_properties_t* props, const AVCodec* codec);
+	void get_properties_pre(obs_properties_t* props, const AVCodec* codec, const AVCodecContext* context);
 
-	void get_properties_post(obs_properties_t* props, const AVCodec* codec);
+	void get_properties_post(obs_properties_t* props, const AVCodec* codec, const AVCodecContext* context);
 
 	void get_runtime_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context);
 
