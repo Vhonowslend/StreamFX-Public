@@ -29,6 +29,7 @@ extern "C" {
 #pragma warning(disable : 4242 4244 4365)
 #endif
 #include <libavcodec/avcodec.h>
+#include <libavutil/opt.h>
 #include <libavutil/pixfmt.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
@@ -79,5 +80,15 @@ namespace streamfx::ffmpeg::tools {
 								 std::function<std::string(int64_t, std::string_view)> decoder);
 	void print_av_option_string2(AVCodecContext* ctx_codec, void* ctx_option, std::string_view option,
 								 std::string_view text, std::function<std::string(int64_t, std::string_view)> decoder);
+
+	bool avoption_exists(const void* obj, std::string_view name);
+
+	const char* avoption_name_from_unit_value(const void* obj, std::string_view unit, int64_t value);
+
+	void avoption_list_add_entries_unnamed(const void* obj, std::string_view unit, obs_property_t* prop,
+										   std::function<bool(const AVOption*)> filter = nullptr);
+
+	void avoption_list_add_entries(const void* obj, std::string_view unit, obs_property_t* prop,
+								   std::string_view prefix, std::function<bool(const AVOption*)> filter = nullptr);
 
 } // namespace streamfx::ffmpeg::tools
