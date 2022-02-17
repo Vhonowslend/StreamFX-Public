@@ -42,23 +42,6 @@ extern "C" {
 using namespace streamfx::encoder::ffmpeg::handler;
 using namespace streamfx::encoder::codec::hevc;
 
-static std::map<profile, std::string> profiles{
-	{profile::MAIN, "main"},
-	{profile::MAIN10, "main10"},
-	{profile::RANGE_EXTENDED, "rext"},
-};
-
-static std::map<tier, std::string> tiers{
-	{tier::MAIN, "main"},
-	{tier::HIGH, "high"},
-};
-
-static std::map<level, std::string> levels{
-	{level::L1_0, "1.0"}, {level::L2_0, "2.0"}, {level::L2_1, "2.1"}, {level::L3_0, "3.0"}, {level::L3_1, "3.1"},
-	{level::L4_0, "4.0"}, {level::L4_1, "4.1"}, {level::L5_0, "5.0"}, {level::L5_1, "5.1"}, {level::L5_2, "5.2"},
-	{level::L6_0, "6.0"}, {level::L6_1, "6.1"}, {level::L6_2, "6.2"},
-};
-
 void nvenc_hevc_handler::adjust_info(ffmpeg_factory* fac, const AVCodec*, std::string&, std::string& name, std::string&)
 {
 	name = "NVIDIA NVENC H.265/HEVC (via FFmpeg)";
@@ -109,25 +92,16 @@ void nvenc_hevc_handler::update(obs_data_t* settings, const AVCodec* codec, AVCo
 	nvenc::update(settings, codec, context);
 
 	if (!context->internal) {
-		{ // HEVC Options
-			auto found = profiles.find(static_cast<profile>(obs_data_get_int(settings, ST_KEY_PROFILE)));
-			if (found != profiles.end()) {
-				av_opt_set(context->priv_data, "profile", found->second.c_str(), 0);
-			}
+		if (auto v = obs_data_get_int(settings, ST_KEY_PROFILE); v > -1) {
+			av_opt_set_int(context->priv_data, "profile", v, AV_OPT_SEARCH_CHILDREN);
 		}
-		{
-			auto found = tiers.find(static_cast<tier>(obs_data_get_int(settings, ST_KEY_TIER)));
-			if (found != tiers.end()) {
-				av_opt_set(context->priv_data, "tier", found->second.c_str(), 0);
-			}
+		if (auto v = obs_data_get_int(settings, ST_KEY_TIER); v > -1) {
+			av_opt_set_int(context->priv_data, "tier", v, AV_OPT_SEARCH_CHILDREN);
 		}
-		{
-			auto found = levels.find(static_cast<level>(obs_data_get_int(settings, ST_KEY_LEVEL)));
-			if (found != levels.end()) {
-				av_opt_set(context->priv_data, "level", found->second.c_str(), 0);
-			} else {
-				av_opt_set(context->priv_data, "level", "auto", 0);
-			}
+		if (auto v = obs_data_get_int(settings, ST_KEY_LEVEL); v > -1) {
+			av_opt_set_int(context->priv_data, "level", v, AV_OPT_SEARCH_CHILDREN);
+		} else {
+			av_opt_set(context->priv_data, "level", "auto", AV_OPT_SEARCH_CHILDREN);
 		}
 	}
 }
@@ -152,7 +126,13 @@ void nvenc_hevc_handler::log_options(obs_data_t* settings, const AVCodec* codec,
 
 void nvenc_hevc_handler::get_encoder_properties(obs_properties_t* props, const AVCodec* codec)
 {
-	nvenc::get_properties_pre(props, codec);
+	AVCodecContext* context = avcodec_alloc_context3(codec);
+	if (!context->priv_data) {
+		avcodec_free_context(&context);
+		return;
+	}
+
+	nvenc::get_properties_pre(props, codec, context);
 
 	{
 		obs_properties_t* grp = props;
@@ -164,32 +144,33 @@ void nvenc_hevc_handler::get_encoder_properties(obs_properties_t* props, const A
 		{
 			auto p = obs_properties_add_list(grp, ST_KEY_PROFILE, D_TRANSLATE(S_CODEC_HEVC_PROFILE),
 											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), static_cast<int64_t>(profile::UNKNOWN));
-			for (auto const kv : profiles) {
-				std::string trans = std::string(S_CODEC_HEVC_PROFILE) + "." + kv.second;
-				obs_property_list_add_int(p, D_TRANSLATE(trans.c_str()), static_cast<int64_t>(kv.first));
-			}
+			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), -1);
+			streamfx::ffmpeg::tools::avoption_list_add_entries(context->priv_data, "profile", p, S_CODEC_HEVC_PROFILE);
 		}
 		{
 			auto p = obs_properties_add_list(grp, ST_KEY_TIER, D_TRANSLATE(S_CODEC_HEVC_TIER), OBS_COMBO_TYPE_LIST,
 											 OBS_COMBO_FORMAT_INT);
-			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), static_cast<int64_t>(tier::UNKNOWN));
-			for (auto const kv : tiers) {
-				std::string trans = std::string(S_CODEC_HEVC_TIER) + "." + kv.second;
-				obs_property_list_add_int(p, D_TRANSLATE(trans.c_str()), static_cast<int64_t>(kv.first));
-			}
+			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), -1);
+			streamfx::ffmpeg::tools::avoption_list_add_entries(context->priv_data, "tier", p, S_CODEC_HEVC_TIER);
 		}
 		{
 			auto p = obs_properties_add_list(grp, ST_KEY_LEVEL, D_TRANSLATE(S_CODEC_HEVC_LEVEL), OBS_COMBO_TYPE_LIST,
 											 OBS_COMBO_FORMAT_INT);
-			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), static_cast<int64_t>(level::UNKNOWN));
-			for (auto const kv : levels) {
-				obs_property_list_add_int(p, kv.second.c_str(), static_cast<int64_t>(kv.first));
-			}
+			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), 0);
+			streamfx::ffmpeg::tools::avoption_list_add_entries_unnamed(context->priv_data, "level", p,
+																	   [](const AVOption* opt) {
+																		   if (opt->default_val.i64 == 0)
+																			   return true;
+																		   return false;
+																	   });
 		}
 	}
 
-	nvenc::get_properties_post(props, codec);
+	nvenc::get_properties_post(props, codec, context);
+
+	if (context) {
+		avcodec_free_context(&context);
+	}
 }
 
 void nvenc_hevc_handler::get_runtime_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context)
