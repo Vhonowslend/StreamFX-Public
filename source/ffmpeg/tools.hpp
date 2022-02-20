@@ -85,10 +85,7 @@ namespace streamfx::ffmpeg::tools {
 
 	const char* avoption_name_from_unit_value(const void* obj, std::string_view unit, int64_t value);
 
-	void avoption_list_add_entries_unnamed(const void* obj, std::string_view unit, obs_property_t* prop,
-										   std::function<bool(const AVOption*)> filter = nullptr);
-
-	void avoption_list_add_entries(const void* obj, std::string_view unit, obs_property_t* prop,
-								   std::string_view prefix, std::function<bool(const AVOption*)> filter = nullptr);
+	void avoption_list_add_entries(const void* obj, std::string_view unit,
+								   std::function<void(const AVOption*)> inserter = nullptr);
 
 } // namespace streamfx::ffmpeg::tools
