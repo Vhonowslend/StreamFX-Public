@@ -56,8 +56,8 @@ void nvenc_h264_handler::get_defaults(obs_data_t* settings, const AVCodec* codec
 {
 	nvenc::get_defaults(settings, codec, context);
 
-	obs_data_set_default_int(settings, ST_KEY_PROFILE, static_cast<int64_t>(profile::HIGH));
-	obs_data_set_default_int(settings, ST_KEY_LEVEL, static_cast<int64_t>(level::UNKNOWN));
+	obs_data_set_default_string(settings, ST_KEY_PROFILE, "");
+	obs_data_set_default_string(settings, ST_KEY_LEVEL, "auto");
 }
 
 bool nvenc_h264_handler::has_keyframe_support(ffmpeg_factory*)
@@ -94,13 +94,11 @@ void nvenc_h264_handler::update(obs_data_t* settings, const AVCodec* codec, AVCo
 	nvenc::update(settings, codec, context);
 
 	if (!context->internal) {
-		if (auto value = obs_data_get_int(settings, ST_KEY_PROFILE); value > -1) {
-			av_opt_set_int(context->priv_data, "profile", value, AV_OPT_SEARCH_CHILDREN);
+		if (auto v = obs_data_get_string(settings, ST_KEY_PROFILE); v && (strlen(v) > 0)) {
+			av_opt_set(context->priv_data, "profile", v, AV_OPT_SEARCH_CHILDREN);
 		}
-		if (auto value = obs_data_get_int(settings, ST_KEY_LEVEL); value > -1) {
-			av_opt_set_int(context->priv_data, "level", value, AV_OPT_SEARCH_CHILDREN);
-		} else {
-			av_opt_set(context->priv_data, "level", "auto", AV_OPT_SEARCH_CHILDREN);
+		if (auto v = obs_data_get_string(settings, ST_KEY_LEVEL); v && (strlen(v) > 0)) {
+			av_opt_set(context->priv_data, "level", v, AV_OPT_SEARCH_CHILDREN);
 		}
 	}
 }
@@ -140,20 +138,26 @@ void nvenc_h264_handler::get_encoder_properties(obs_properties_t* props, const A
 
 		{
 			auto p = obs_properties_add_list(grp, ST_KEY_PROFILE, D_TRANSLATE(S_CODEC_H264_PROFILE),
-											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), -1);
-			streamfx::ffmpeg::tools::avoption_list_add_entries(context->priv_data, "profile", p, S_CODEC_H264_PROFILE);
+											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+			obs_property_list_add_string(p, D_TRANSLATE(S_STATE_DEFAULT), "");
+			streamfx::ffmpeg::tools::avoption_list_add_entries(
+				context->priv_data, "profile", [&p](const AVOption* opt) {
+					char buffer[1024];
+					snprintf(buffer, sizeof(buffer), "%s.%s\0", S_CODEC_H264_PROFILE, opt->name);
+					obs_property_list_add_string(p, D_TRANSLATE(buffer), opt->name);
+				});
 		}
 		{
 			auto p = obs_properties_add_list(grp, ST_KEY_LEVEL, D_TRANSLATE(S_CODEC_H264_LEVEL), OBS_COMBO_TYPE_LIST,
-											 OBS_COMBO_FORMAT_INT);
-			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), 0);
-			streamfx::ffmpeg::tools::avoption_list_add_entries_unnamed(context->priv_data, "level", p,
-																	   [](const AVOption* opt) {
-																		   if (opt->default_val.i64 == 0)
-																			   return true;
-																		   return false;
-																	   });
+											 OBS_COMBO_FORMAT_STRING);
+
+			streamfx::ffmpeg::tools::avoption_list_add_entries(context->priv_data, "level", [&p](const AVOption* opt) {
+				if (opt->default_val.i64 == 0) {
+					obs_property_list_add_string(p, D_TRANSLATE(S_STATE_AUTOMATIC), "auto");
+				} else {
+					obs_property_list_add_string(p, opt->name, opt->name);
+				}
+			});
 		}
 	}
 
@@ -173,6 +177,24 @@ void streamfx::encoder::ffmpeg::handler::nvenc_h264_handler::migrate(obs_data_t*
 																	 const AVCodec* codec, AVCodecContext* context)
 {
 	nvenc::migrate(settings, version, codec, context);
+
+	if (version < STREAMFX_MAKE_VERSION(0, 11, 1, 0)) {
+		// Profile
+		if (auto v = obs_data_get_int(settings, ST_KEY_PROFILE); v != -1) {
+			if (!obs_data_has_user_value(settings, ST_KEY_PROFILE))
+				v = 3;
+
+			std::map<int64_t, std::string> preset{
+				{0, "baseline"}, {1, "baseline"}, {2, "main"}, {3, "high"}, {4, "high444p"},
+			};
+			if (auto k = preset.find(v); k != preset.end()) {
+				obs_data_set_string(settings, ST_KEY_PROFILE, k->second.data());
+			}
+		}
+
+		// Level
+		obs_data_set_string(settings, ST_KEY_LEVEL, "auto");
+	}
 }
 
 bool nvenc_h264_handler::supports_reconfigure(ffmpeg_factory* instance, bool& threads, bool& gpu, bool& keyframes)
