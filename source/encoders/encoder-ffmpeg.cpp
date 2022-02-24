@@ -42,6 +42,10 @@
 #include "handlers/prores_aw_handler.hpp"
 #endif
 
+#ifdef ENABLE_ENCODER_FFMPEG_DNXHR
+#include "handlers/dnxhd_handler.hpp"
+#endif
+
 extern "C" {
 #pragma warning(push)
 #pragma warning(disable : 4244)
@@ -1169,6 +1173,9 @@ ffmpeg_manager::ffmpeg_manager() : _factories(), _handlers(), _debug_handler()
 #endif
 #ifdef ENABLE_ENCODER_FFMPEG_PRORES
 	register_handler("prores_aw", ::std::make_shared<handler::prores_aw_handler>());
+#endif
+#ifdef ENABLE_ENCODER_FFMPEG_DNXHR
+	register_handler("dnxhd", ::std::make_shared<handler::dnxhd_handler>());
 #endif
 }
 
