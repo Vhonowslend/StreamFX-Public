@@ -293,6 +293,7 @@ set(${PREFIX}ENABLE_ENCODER_FFMPEG ON CACHE BOOL "Enable FFmpeg Encoder integrat
 set(${PREFIX}ENABLE_ENCODER_FFMPEG_AMF ON CACHE BOOL "Enable AMF Encoder in FFmpeg.")
 set(${PREFIX}ENABLE_ENCODER_FFMPEG_NVENC ON CACHE BOOL "Enable NVENC Encoder in FFmpeg.")
 set(${PREFIX}ENABLE_ENCODER_FFMPEG_PRORES ON CACHE BOOL "Enable ProRes Encoder in FFmpeg.")
+set(${PREFIX}ENABLE_ENCODER_FFMPEG_DNXHR ON CACHE BOOL "Enable DNXHR Encoder in FFmpeg.")
 set(${PREFIX}ENABLE_ENCODER_AOM_AV1 ON CACHE BOOL "Enable AOM AV1 Encoder.")
 
 ## Filters
@@ -665,6 +666,9 @@ function(feature_encoder_ffmpeg RESOLVE)
 
 			# ProRes
 			is_feature_enabled(ENCODER_FFMPEG_PRORES T_CHECK)
+
+			# DNxHR
+			is_feature_enabled(ENCODER_FFMPEG_DNXHR T_CHECK)
 		endif()
 	elseif(T_CHECK)
 		set(REQUIRE_FFMPEG ON PARENT_SCOPE)
@@ -1315,6 +1319,8 @@ if(T_CHECK)
 		"source/encoders/codecs/h264.cpp"
 		"source/encoders/codecs/prores.hpp"
 		"source/encoders/codecs/prores.cpp"
+		"source/encoders/codecs/dnxhr.hpp"
+		"source/encoders/codecs/dnxhr.cpp"
 
 		# Encoders/Handlers
 		"source/encoders/handlers/handler.hpp"
@@ -1367,6 +1373,18 @@ if(T_CHECK)
 		)
 		list(APPEND PROJECT_DEFINITIONS
 			ENABLE_ENCODER_FFMPEG_PRORES
+		)
+		endif()
+
+	# DNxHR
+	is_feature_enabled(ENCODER_FFMPEG_DNXHR T_CHECK)
+	if(T_CHECK)
+		list(APPEND PROJECT_PRIVATE_SOURCE
+				"source/encoders/handlers/dnxhd_handler.hpp"
+				"source/encoders/handlers/dnxhd_handler.cpp"
+		)
+		list(APPEND PROJECT_DEFINITIONS
+				ENABLE_ENCODER_FFMPEG_DNXHR
 		)
 	endif()
 endif()
