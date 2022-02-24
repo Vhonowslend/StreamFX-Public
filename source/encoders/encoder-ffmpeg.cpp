@@ -1180,7 +1180,7 @@ ffmpeg_manager::~ffmpeg_manager()
 void ffmpeg_manager::register_encoders()
 {
 	// Encoders
-#if FF_API_NEXT
+#if !FF_API_NEXT
 	void* iterator = nullptr;
 	for (const AVCodec* codec = av_codec_iterate(&iterator); codec != nullptr; codec = av_codec_iterate(&iterator)) {
 		// Only register encoders.
