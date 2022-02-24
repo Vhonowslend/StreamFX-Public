@@ -1180,7 +1180,6 @@ ffmpeg_manager::~ffmpeg_manager()
 void ffmpeg_manager::register_encoders()
 {
 	// Encoders
-#if FF_API_NEXT
 	void* iterator = nullptr;
 	for (const AVCodec* codec = av_codec_iterate(&iterator); codec != nullptr; codec = av_codec_iterate(&iterator)) {
 		// Only register encoders.
@@ -1195,22 +1194,6 @@ void ffmpeg_manager::register_encoders()
 			}
 		}
 	}
-#else
-	AVCodec* codec = nullptr;
-	for (codec = av_codec_next(codec); codec != nullptr; codec = av_codec_next(codec)) {
-		// Only register encoders.
-		if (!av_codec_is_encoder(codec))
-			continue;
-
-		if ((codec->type == AVMediaType::AVMEDIA_TYPE_AUDIO) || (codec->type == AVMediaType::AVMEDIA_TYPE_VIDEO)) {
-			try {
-				_factories.emplace(codec, std::make_shared<ffmpeg_factory>(codec));
-			} catch (const std::exception& ex) {
-				DLOG_ERROR("Failed to register encoder '%s': %s", codec->name, ex.what());
-			}
-		}
-	}
-#endif
 }
 
 void ffmpeg_manager::register_handler(std::string codec, std::shared_ptr<handler::handler> handler)
