@@ -19,10 +19,11 @@
 
 #pragma once
 #include "common.hpp"
+#include "obs-source.hpp"
 
 namespace streamfx::obs {
 	namespace tools {
-		bool scene_contains_source(obs_scene_t* scene, obs_source_t* source);
+		bool source_find_source(::streamfx::obs::source haystack, ::streamfx::obs::source needle);
 
 		class child_source {
 			obs_source_t*                 _parent;

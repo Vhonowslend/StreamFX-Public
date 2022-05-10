@@ -19,67 +19,96 @@
 
 #include "obs-tools.hpp"
 #include <map>
+#include <set>
 #include <stdexcept>
+#include "obs-source.hpp"
+#include "obs-weak-source.hpp"
 #include "plugin.hpp"
 
-struct scs_searchdata {
-	obs_source_t*                 source;
-	bool                          found = false;
-	std::map<obs_source_t*, bool> visited;
+struct __sfs_data {
+	std::set<::streamfx::obs::weak_source> sources;
 };
 
-static bool scs_contains(scs_searchdata& sd, obs_source_t* source);
+void __source_find_source_enumerate(obs_source_t* haystack, __sfs_data* cbd)
+{
+	auto tp = obs_source_get_type(haystack);
 
-static void scs_enum_active_cb(obs_source_t*, obs_source_t* child, void* searchdata) noexcept
-try {
-	scs_searchdata& sd = reinterpret_cast<scs_searchdata&>(*reinterpret_cast<scs_searchdata*>(searchdata));
-	scs_contains(sd, child);
-} catch (...) {
-	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+	// Check if this source is already present in the set.
+	::streamfx::obs::weak_source weak_child{haystack};
+	if (!weak_child || (cbd->sources.find(weak_child) != cbd->sources.end())) {
+		return;
+	}
+
+	// If it was not in the list, add it now.
+	cbd->sources.insert(weak_child);
+
+	// Enumerate direct reference tree.
+	obs_source_enum_full_tree(
+		haystack,
+		[](obs_source_t* parent, obs_source_t* child, void* param) {
+			try {
+				__source_find_source_enumerate(child, reinterpret_cast<__sfs_data*>(param));
+			} catch (...) {
+			}
+		},
+		cbd);
+
+	switch (tp) {
+	case OBS_SOURCE_TYPE_SCENE: {
+		obs_scene_enum_items(
+			obs_scene_from_source(haystack),
+			[](obs_scene_t* scene, obs_sceneitem_t* item, void* param) {
+				try {
+					__sfs_data* cbd = reinterpret_cast<__sfs_data*>(param);
+					__source_find_source_enumerate(obs_sceneitem_get_source(item), cbd);
+					return true;
+				} catch (...) {
+					return true;
+				}
+			},
+			cbd);
+	}
+#if __cplusplus >= 201700L
+		[[fallthrough]];
+#endif
+	case OBS_SOURCE_TYPE_INPUT: {
+		// Enumerate filter tree.
+		obs_source_enum_filters(
+			haystack,
+			[](obs_source_t* parent, obs_source_t* child, void* param) {
+				try {
+					__sfs_data* cbd = reinterpret_cast<__sfs_data*>(param);
+					__source_find_source_enumerate(child, cbd);
+				} catch (...) {
+				}
+			},
+			cbd);
+	}
+#if __cplusplus >= 201700L
+		[[fallthrough]];
+#endif
+	default:
+		break;
+	}
 }
 
-static bool scs_enum_items_cb(obs_scene_t*, obs_sceneitem_t* item, void* searchdata) noexcept
-try {
-	scs_searchdata& sd     = reinterpret_cast<scs_searchdata&>(*reinterpret_cast<scs_searchdata*>(searchdata));
-	obs_source_t*   source = obs_sceneitem_get_source(item);
-	return scs_contains(sd, source);
-} catch (...) {
-	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+bool streamfx::obs::tools::source_find_source(::streamfx::obs::source haystack, ::streamfx::obs::source needle)
+{
+	__sfs_data cbd = {};
+	try {
+		__source_find_source_enumerate(haystack.get(), &cbd);
+	} catch (...) {
+	}
+
+	for (auto weak_source : cbd.sources) {
+		if (!weak_source)
+			continue;
+
+		if (weak_source == needle)
+			return true;
+	}
+
 	return false;
-}
-
-static bool scs_contains(scs_searchdata& sd, obs_source_t* source)
-{
-	if (sd.visited.find(source) != sd.visited.end()) {
-		return false;
-	} else {
-		sd.visited.insert({source, true});
-	}
-
-	if (source == sd.source) {
-		sd.found = true;
-		return true;
-	} else {
-		if (strcmp(obs_source_get_id(source), "scene")) {
-			obs_scene_t* nscene = obs_scene_from_source(source);
-			obs_scene_enum_items(nscene, scs_enum_items_cb, &sd);
-		} else {
-			obs_source_enum_active_sources(source, scs_enum_active_cb, &sd);
-		}
-	}
-
-	if (sd.found) {
-		return false;
-	}
-	return true;
-}
-
-bool streamfx::obs::tools::scene_contains_source(obs_scene_t* scene, obs_source_t* source)
-{
-	scs_searchdata sd;
-	sd.source = source;
-	obs_scene_enum_items(scene, scs_enum_items_cb, &sd);
-	return sd.found;
 }
 
 streamfx::obs::tools::child_source::child_source(obs_source_t* parent, std::shared_ptr<obs_source_t> child)
