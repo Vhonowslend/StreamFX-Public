@@ -94,6 +94,7 @@
 static std::shared_ptr<streamfx::util::threadpool>       _threadpool;
 static std::shared_ptr<streamfx::obs::gs::vertex_buffer> _gs_fstri_vb;
 static std::shared_ptr<streamfx::gfx::opengl>            _streamfx_gfx_opengl;
+static std::shared_ptr<streamfx::obs::source_tracker>    _source_tracker;
 
 MODULE_EXPORT bool obs_module_load(void)
 try {
@@ -106,7 +107,7 @@ try {
 	_threadpool = std::make_shared<streamfx::util::threadpool>();
 
 	// Initialize Source Tracker
-	streamfx::obs::source_tracker::initialize();
+	_source_tracker = streamfx::obs::source_tracker::get();
 
 	// Initialize GLAD (OpenGL)
 	{
@@ -310,7 +311,7 @@ try {
 	}
 
 	// Finalize Source Tracker
-	streamfx::obs::source_tracker::finalize();
+	_source_tracker.reset();
 
 	//	// Auto-Updater
 	//#ifdef ENABLE_UPDATER

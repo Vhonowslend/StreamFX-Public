@@ -26,20 +26,16 @@
 namespace streamfx::obs {
 	class source_tracker {
 		std::map<std::string, std::shared_ptr<obs_weak_source_t>> _sources;
-		std::mutex                                                _lock;
+		std::mutex                                                _mutex;
 
 		static void source_create_handler(void* ptr, calldata_t* data) noexcept;
 		static void source_destroy_handler(void* ptr, calldata_t* data) noexcept;
 		static void source_rename_handler(void* ptr, calldata_t* data) noexcept;
 
-		public: // Singleton
-		static void                                           initialize();
-		static void                                           finalize();
-		static std::shared_ptr<streamfx::obs::source_tracker> get();
-
-		public:
-		source_tracker();
-		~source_tracker();
+		protected:
+		void insert_source(obs_source_t* source);
+		void remove_source(obs_source_t* source);
+		void rename_source(std::string_view old_name, std::string_view new_name, obs_source_t* source);
 
 		public:
 		// Callback function for enumerating sources.
@@ -56,6 +52,12 @@ namespace streamfx::obs {
 		// @return true to skip, false to pass along.
 		typedef std::function<bool(std::string, obs_source_t*)> filter_cb_t;
 
+		protected:
+		source_tracker();
+
+		public:
+		~source_tracker();
+
 		//! Enumerate all tracked sources
 		//
 		// @param enumerate_cb The function called for each tracked source.
@@ -68,5 +70,8 @@ namespace streamfx::obs {
 		static bool filter_video_sources(std::string name, obs_source_t* source);
 		static bool filter_transitions(std::string name, obs_source_t* source);
 		static bool filter_scenes(std::string name, obs_source_t* source);
+
+		public: // Singleton
+		static std::shared_ptr<streamfx::obs::source_tracker> get();
 	};
 } // namespace streamfx::obs
