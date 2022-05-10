@@ -1,27 +1,14 @@
-# For most projects, this workflow file will not need changing; you simply need
-# to commit it to your repository.
-#
-# You may wish to alter this file to override the set of languages analyzed,
-# or to provide custom queries or build logic.
-#
-# ******** NOTE ********
-# We have attempted to detect the languages in your repository. Please check
-# the `language` matrix defined below to confirm you have the correct set of
-# supported CodeQL languages.
-#
 name: "CodeQL"
 
 on:
   push:
     branches:
+      - 'master'
+    tags:
       - '*'
-      - '!i18n_master'
-      - '!l10n_master'
   pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [ master ]
-  schedule:
-    - cron: '37 20 * * 4'
+    branches: 
+      - '*'
 
 env:
   OBS_VERSION: "27.0.0-ci"
@@ -88,20 +75,18 @@ jobs:
           cmake \
           ninja-build \
           git \
-          gcc-9 g++9 \
           qt5-default libqwt-qt5-dev libqt5svg5-dev \
           libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev \
           libcurl4-openssl-dev
         sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 800 --slave /usr/bin/g++ g++ /usr/bin/g++-9
 
-    - name: "libobs: Cache"
+    - name: "Dependencies: Cache"
+      if: ${{ github.event_name != 'pull_request' }}
       uses: actions/cache@v2
       with:
         path: |
-          build/temp/libobs-download
-          build/temp/libobs-build
-          build/temp/libobs-src
-        key: libobs-codeql-${{ env.OBS_VERSION }}-${{ env.DOWNLOAD_OBS_HASH }}-${{ secrets.CACHE_VERSION }}
+          build/temp/autodeps
+        key: autodeps-${{ matrix.id }}-${{ env.CACHE_VERSION }}
 
     - name: "StreamFX: Configure"
       shell: bash
@@ -110,11 +95,8 @@ jobs:
           -DCMAKE_VERBOSE_MAKEFILE=ON \
           -DCMAKE_BUILD_TYPE=RelWithDebInfo \
           -DCMAKE_INSTALL_PREFIX="build/distrib" \
-          -DENABLE_FILTER_NVIDIA_FACE_TRACKING=FALSE \
           -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
-          -DPACKAGE_PREFIX="build/package" \
-          -DDOWNLOAD_OBS_URL="https://github.com/Xaymar/obs-studio/releases/download/${{ env.OBS_VERSION }}/obs-studio-x64-0.0.0.0-ubuntu-x86-64.7z" \
-          -DDOWNLOAD_OBS_HASH="SHA256=0AF6C7262C37D80C24CB18523A851FD765C04E766D8EB0F4AC0F6E75D13A035F"
+          -DPACKAGE_PREFIX="build/package"
 
     - name: "StreamFX: Build"
       shell: bash
