@@ -24,8 +24,6 @@ namespace streamfx::obs {
 	namespace tools {
 		bool scene_contains_source(obs_scene_t* scene, obs_source_t* source);
 
-		bool obs_properties_remove_by_name(obs_properties_t* props, const char* name);
-
 		class child_source {
 			obs_source_t*                 _parent;
 			std::shared_ptr<obs_source_t> _child;
