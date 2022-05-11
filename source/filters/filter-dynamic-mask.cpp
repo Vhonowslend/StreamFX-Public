@@ -455,11 +455,11 @@ dynamic_mask_factory::dynamic_mask_factory()
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
 
-	set_have_active_child_sources(true);
-	set_have_child_sources(true);
-	set_resolution_enabled(false);
-	set_activity_tracking_enabled(true);
-	set_visibility_tracking_enabled(true);
+	support_active_child_sources(true);
+	support_child_sources(true);
+	support_size(false);
+	support_activity_tracking(true);
+	support_visibility_tracking(true);
 	finish_setup();
 	register_proxy("obs-stream-effects-filter-dynamic-mask");
 }

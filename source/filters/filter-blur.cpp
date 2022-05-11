@@ -604,7 +604,7 @@ blur_factory::blur_factory()
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO;
 
-	set_resolution_enabled(false);
+	support_size(false);
 	finish_setup();
 	register_proxy("obs-stream-effects-filter-blur");
 }
