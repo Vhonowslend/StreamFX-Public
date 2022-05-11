@@ -296,8 +296,8 @@ mirror_factory::mirror_factory()
 	_info.type         = OBS_SOURCE_TYPE_INPUT;
 	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW | OBS_SOURCE_AUDIO;
 
-	set_have_active_child_sources(true);
-	set_have_child_sources(true);
+	support_active_child_sources(true);
+	support_child_sources(true);
 	finish_setup();
 	register_proxy("obs-stream-effects-source-mirror");
 }
