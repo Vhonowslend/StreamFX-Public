@@ -150,7 +150,7 @@ displacement_factory::displacement_factory()
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW | OBS_SOURCE_DEPRECATED | OBS_SOURCE_CAP_DISABLED;
 
-	set_resolution_enabled(false);
+	support_size(false);
 	finish_setup();
 	register_proxy("obs-stream-effects-filter-displacement");
 }

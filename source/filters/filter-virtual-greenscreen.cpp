@@ -554,7 +554,7 @@ virtual_greenscreen_factory::virtual_greenscreen_factory()
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
 	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW /*| OBS_SOURCE_SRGB*/;
 
-	set_resolution_enabled(true);
+	support_size(true);
 	finish_setup();
 }
 
