@@ -1,6 +1,5 @@
 /*
- * Modern effects for a modern Streamer
- * Copyright (C) 2018 Michael Fabian Dirks
+ * Copyright (C) 2022 Michael Fabian Dirks
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,4 +16,4 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#include "obs-source.hpp"
+#include "obs-source-showing-reference.hpp"
