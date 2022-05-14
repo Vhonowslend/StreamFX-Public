@@ -1313,18 +1313,32 @@ list(APPEND PROJECT_PRIVATE_SOURCE
 	"source/obs/gs/gs-vertex.cpp"
 	"source/obs/gs/gs-vertexbuffer.hpp"
 	"source/obs/gs/gs-vertexbuffer.cpp"
-	"source/obs/obs-encoder-factory.hpp"
-	"source/obs/obs-encoder-factory.cpp"
 	"source/obs/obs-signal-handler.hpp"
 	"source/obs/obs-signal-handler.cpp"
-	"source/obs/obs-source.hpp"
-	"source/obs/obs-source.cpp"
-	"source/obs/obs-source-factory.hpp"
-	"source/obs/obs-source-factory.cpp"
 	"source/obs/obs-source-tracker.hpp"
 	"source/obs/obs-source-tracker.cpp"
 	"source/obs/obs-tools.hpp"
 	"source/obs/obs-tools.cpp"
+
+	# obs_encoder_info_t, obs_encoder_t, obs_weak_encoder_t
+	"source/obs/obs-encoder-factory.hpp"
+	"source/obs/obs-encoder-factory.cpp"
+
+	# obs_source_info_t, obs_source_t, obs_weak_source_t
+	"source/obs/obs-source-factory.hpp"
+	"source/obs/obs-source-factory.cpp"
+	"source/obs/obs-source-info.hpp"
+	"source/obs/obs-source-info.cpp"
+	"source/obs/obs-source.hpp"
+	"source/obs/obs-source.cpp"
+	"source/obs/obs-source-active-child.hpp"
+	"source/obs/obs-source-active-child.cpp"
+	"source/obs/obs-source-active-reference.hpp"
+	"source/obs/obs-source-active-reference.cpp"
+	"source/obs/obs-source-showing-reference.hpp"
+	"source/obs/obs-source-showing-reference.cpp"
+	"source/obs/obs-weak-source.hpp"
+	"source/obs/obs-weak-source.cpp"
 )
 list(APPEND PROJECT_DATA
 	"data/effects/color_conversion_rgb_hsl.effect"
