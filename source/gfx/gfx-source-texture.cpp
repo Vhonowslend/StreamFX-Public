@@ -18,94 +18,52 @@
 #include "gfx-source-texture.hpp"
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
+#include "obs/obs-tools.hpp"
 
 streamfx::gfx::source_texture::~source_texture()
 {
 	if (_child && _parent) {
-		obs_source_remove_active_child(_parent->get(), _child->get());
+		obs_source_remove_active_child(_parent.get(), _child.get());
 	}
-
-	_parent.reset();
-	_child.reset();
 }
 
-streamfx::gfx::source_texture::source_texture(obs_source_t* parent)
+streamfx::gfx::source_texture::source_texture(streamfx::obs::weak_source child, streamfx::obs::weak_source parent)
+	: _child(child.lock()), _parent(parent.lock())
 {
-	if (!parent) {
-		throw std::invalid_argument("_parent must not be null");
+	// Verify that 'child' and 'parent' exist.
+	if (!_child || !_parent) {
+		throw std::invalid_argument("Child or Parent does not exist.");
 	}
-	_parent = std::make_shared<streamfx::obs::deprecated_source>(parent, false, false);
-	_rt     = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+
+	// Verify that 'child' does not contain 'parent'.
+	if (::streamfx::obs::tools::source_find_source(_child, _parent)) {
+		throw std::runtime_error("Child contains Parent");
+	} else if (!obs_source_add_active_child(_parent.get(), _child.get())) {
+		throw std::runtime_error("Child contains Parent");
+	}
+
+	_rt = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 }
-
-streamfx::gfx::source_texture::source_texture(obs_source_t* _source, obs_source_t* _parent) : source_texture(_parent)
-{
-	if (!_source) {
-		throw std::invalid_argument("source must not be null");
-	}
-	if (!obs_source_add_active_child(_parent, _source)) {
-		throw std::runtime_error("_parent is contained in _child");
-	}
-	_child = std::make_shared<streamfx::obs::deprecated_source>(_source, true, true);
-}
-
-streamfx::gfx::source_texture::source_texture(const char* _name, obs_source_t* _parent) : source_texture(_parent)
-{
-	if (!_name) {
-		throw std::invalid_argument("name must not be null");
-	}
-	_child = std::make_shared<streamfx::obs::deprecated_source>(_name, true, true);
-	if (!obs_source_add_active_child(_parent, _child->get())) {
-		throw std::runtime_error("_parent is contained in _child");
-	}
-}
-
-streamfx::gfx::source_texture::source_texture(std::string _name, obs_source_t* _parent)
-	: source_texture(_name.c_str(), _parent)
-{}
-
-streamfx::gfx::source_texture::source_texture(std::shared_ptr<streamfx::obs::deprecated_source> pchild,
-											  std::shared_ptr<streamfx::obs::deprecated_source> pparent)
-{
-	if (!pchild) {
-		throw std::invalid_argument("_child must not be null");
-	}
-	if (!pparent) {
-		throw std::invalid_argument("_parent must not be null");
-	}
-	if (!obs_source_add_active_child(pparent->get(), pchild->get())) {
-		throw std::runtime_error("_parent is contained in _child");
-	}
-	this->_child  = pchild;
-	this->_parent = pparent;
-	this->_rt     = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-}
-
-streamfx::gfx::source_texture::source_texture(std::shared_ptr<streamfx::obs::deprecated_source> _child,
-											  obs_source_t*                                     _parent)
-	: source_texture(_child, std::make_shared<streamfx::obs::deprecated_source>(_parent, false, false))
-{}
 
 obs_source_t* streamfx::gfx::source_texture::get_object()
 {
 	if (_child) {
-		return _child->get();
+		return _child.get();
 	}
 	return nullptr;
 }
 
 obs_source_t* streamfx::gfx::source_texture::get_parent()
 {
-	return _parent->get();
+	return _parent.get();
 }
 
 void streamfx::gfx::source_texture::clear()
 {
 	if (_child && _parent) {
-		obs_source_remove_active_child(_parent->get(), _child->get());
+		obs_source_remove_active_child(_parent.get(), _child.get());
 	}
-	_child->clear();
-	_child.reset();
+	_child = {};
 }
 
 std::shared_ptr<streamfx::obs::gs::texture> streamfx::gfx::source_texture::render(std::size_t width, std::size_t height)
@@ -116,7 +74,7 @@ std::shared_ptr<streamfx::obs::gs::texture> streamfx::gfx::source_texture::rende
 	if ((height == 0) || (height >= 16384)) {
 		throw std::runtime_error("Height too large or too small.");
 	}
-	if (_child->destroyed() || _parent->destroyed()) {
+	if (!_child || !_parent) {
 		return nullptr;
 	}
 
@@ -130,7 +88,7 @@ std::shared_ptr<streamfx::obs::gs::texture> streamfx::gfx::source_texture::rende
 		vec4_zero(&black);
 		gs_ortho(0, static_cast<float>(width), 0, static_cast<float_t>(height), 0, 1);
 		gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
-		obs_source_video_render(_child->get());
+		obs_source_video_render(_child.get());
 	}
 
 	std::shared_ptr<streamfx::obs::gs::texture> tex;
