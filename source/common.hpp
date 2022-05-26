@@ -109,3 +109,13 @@ extern "C" {
 #define __FUNCTION_SIG__ __func__
 #define __FUNCTION_NAME__ __func__
 #endif
+/// Forceful inlining
+#ifndef FORCE_INLINE
+#ifdef _MSC_VER
+#define FORCE_INLINE __force_inline
+#elif defined(__GNUC__) || defined(__MINGW32__)
+#define FORCE_INLINE __attribute__((always_inline))
+#else
+#define FORCE_INLINE inline
+#endif
+#endif
