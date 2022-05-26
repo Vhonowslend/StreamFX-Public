@@ -20,26 +20,18 @@
 #include <map>
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
-#include "obs/obs-source.hpp"
+#include "obs/obs-weak-source.hpp"
 
 namespace streamfx::gfx {
 	class source_texture {
-		std::shared_ptr<streamfx::obs::deprecated_source> _parent;
-		std::shared_ptr<streamfx::obs::deprecated_source> _child;
+		streamfx::obs::source _parent;
+		streamfx::obs::source _child;
 
 		std::shared_ptr<streamfx::obs::gs::rendertarget> _rt;
 
-		source_texture(obs_source_t* parent);
-
 		public:
 		~source_texture();
-		source_texture(obs_source_t* src, obs_source_t* parent);
-		source_texture(const char* name, obs_source_t* parent);
-		source_texture(std::string name, obs_source_t* parent);
-
-		source_texture(std::shared_ptr<streamfx::obs::deprecated_source> child,
-					   std::shared_ptr<streamfx::obs::deprecated_source> parent);
-		source_texture(std::shared_ptr<streamfx::obs::deprecated_source> child, obs_source_t* parent);
+		source_texture(streamfx::obs::weak_source child, streamfx::obs::weak_source parent);
 
 		public /*copy*/:
 		source_texture(source_texture const& other) = delete;
@@ -57,39 +49,5 @@ namespace streamfx::gfx {
 
 		obs_source_t* get_object();
 		obs_source_t* get_parent();
-	};
-
-	class source_texture_factory {
-		friend class source_texture;
-
-		std::map<std::shared_ptr<obs_weak_source_t>, std::weak_ptr<source_texture>> _cache;
-
-		public:
-		source_texture_factory();
-		~source_texture_factory();
-
-		std::shared_ptr<source_texture> get_source_texture(std::shared_ptr<obs_source_t> source);
-
-		protected:
-		void free_source_texture(std::shared_ptr<obs_source_t> source);
-
-		private: // Singleton
-		static std::shared_ptr<source_texture_factory> factory_instance;
-
-		public: // Singleton
-		static void initialize()
-		{
-			factory_instance = std::make_shared<source_texture_factory>();
-		}
-
-		static void finalize()
-		{
-			factory_instance.reset();
-		}
-
-		static std::shared_ptr<source_texture_factory> get()
-		{
-			return factory_instance;
-		}
 	};
 } // namespace streamfx::gfx
