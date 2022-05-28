@@ -283,7 +283,7 @@ void streamfx::gfx::shader::texture_parameter::assign()
 		// Reload or Reacquire everything necessary.
 		try {
 			// Remove now unused references.
-			_source.reset();
+			_source.release();
 			_source_child.reset();
 			_source_active.reset();
 			_source_visible.reset();
@@ -298,23 +298,22 @@ void streamfx::gfx::shader::texture_parameter::assign()
 				}
 			} else if ((field_type() == texture_field_type::Input) && (_type == texture_type::Source)) {
 				// Try and grab the source itself.
-				auto source = std::shared_ptr<obs_source_t>(obs_get_source_by_name(_source_name.c_str()),
-															[](obs_source_t* v) { obs_source_release(v); });
+				auto source = ::streamfx::obs::source(_source_name);
 				if (!source) {
 					throw std::runtime_error("Specified Source does not exist.");
 				}
 
 				// Attach the child to our parent.
-				auto child = std::make_shared<streamfx::obs::tools::child_source>(get_parent()->get(), source);
+				auto child = std::make_shared<::streamfx::obs::source_active_child>(source, get_parent()->get());
 
 				// Create necessary visible and active objects.
-				std::shared_ptr<streamfx::obs::tools::active_source>  active;
-				std::shared_ptr<streamfx::obs::tools::visible_source> visible;
+				decltype(_source_active)  active;
+				decltype(_source_visible) visible;
 				if (_active) {
-					active = std::make_shared<streamfx::obs::tools::active_source>(source.get());
+					active = ::streamfx::obs::source_active_reference::add_active_reference(source);
 				}
 				if (_visible) {
-					visible = std::make_shared<streamfx::obs::tools::visible_source>(source.get());
+					visible = ::streamfx::obs::source_showing_reference::add_showing_reference(source);
 				}
 
 				// Create the necessary render target to capture the source.
@@ -391,7 +390,7 @@ void streamfx::gfx::shader::texture_parameter::visible(bool visible)
 	_visible = visible;
 	if (visible) {
 		if (_source) {
-			_source_visible = std::make_shared<streamfx::obs::tools::visible_source>(_source.get());
+			_source_visible = ::streamfx::obs::source_showing_reference::add_showing_reference(_source);
 		}
 	} else {
 		_source_visible.reset();
@@ -403,7 +402,7 @@ void streamfx::gfx::shader::texture_parameter::active(bool active)
 	_active = active;
 	if (active) {
 		if (_source) {
-			_source_active = std::make_shared<streamfx::obs::tools::active_source>(_source.get());
+			_source_active = ::streamfx::obs::source_active_reference::add_active_reference(_source);
 		}
 	} else {
 		_source_active.reset();
