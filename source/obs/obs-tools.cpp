@@ -110,21 +110,3 @@ bool streamfx::obs::tools::source_find_source(::streamfx::obs::source haystack, 
 
 	return false;
 }
-
-streamfx::obs::tools::child_source::child_source(obs_source_t* parent, std::shared_ptr<obs_source_t> child)
-	: _parent(parent), _child(child)
-{
-	if (!obs_source_add_active_child(_parent, _child.get())) {
-		throw std::runtime_error("recursion detected");
-	}
-}
-
-streamfx::obs::tools::child_source::~child_source()
-{
-	obs_source_remove_active_child(_parent, _child.get());
-}
-
-std::shared_ptr<obs_source_t> streamfx::obs::tools::child_source::get()
-{
-	return _child;
-}
