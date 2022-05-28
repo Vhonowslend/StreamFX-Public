@@ -19,6 +19,7 @@
 
 #pragma once
 #include "common.hpp"
+#include "obs/obs-source.hpp"
 #include "util/util-event.hpp"
 
 namespace streamfx::obs {
@@ -68,7 +69,7 @@ namespace streamfx::obs {
 
 	// Audio Capture is also here, as it could be considered a signal.
 	class audio_signal_handler {
-		std::shared_ptr<obs_source_t> _keepalive;
+		::streamfx::obs::source _keepalive;
 
 		static void handle_audio(void* ptr, obs_source_t*, const struct audio_data* audio_data, bool muted) noexcept
 		try {
@@ -78,17 +79,17 @@ namespace streamfx::obs {
 		}
 
 		public:
-		audio_signal_handler(std::shared_ptr<obs_source_t> keepalive) : _keepalive(keepalive), event()
+		audio_signal_handler(::streamfx::obs::source const& keepalive) : _keepalive(keepalive), event()
 		{
-			obs_source_add_audio_capture_callback(_keepalive.get(), handle_audio, this);
+			obs_source_add_audio_capture_callback(_keepalive, handle_audio, this);
 		}
 		virtual ~audio_signal_handler()
 		{
 			event.clear();
-			obs_source_remove_audio_capture_callback(_keepalive.get(), handle_audio, this);
+			obs_source_remove_audio_capture_callback(_keepalive, handle_audio, this);
 		}
 
-		streamfx::util::event<std::shared_ptr<obs_source_t>, const struct audio_data*, bool> event;
+		streamfx::util::event<::streamfx::obs::source, const struct audio_data*, bool> event;
 	};
 
 } // namespace streamfx::obs
