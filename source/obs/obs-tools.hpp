@@ -24,46 +24,6 @@
 namespace streamfx::obs {
 	namespace tools {
 		bool source_find_source(::streamfx::obs::source haystack, ::streamfx::obs::source needle);
-
-		class child_source {
-			obs_source_t*                 _parent;
-			std::shared_ptr<obs_source_t> _child;
-
-			public:
-			child_source(obs_source_t* parent, std::shared_ptr<obs_source_t> child);
-			virtual ~child_source();
-
-			std::shared_ptr<obs_source_t> get();
-		};
-
-		// Class to manage
-		class active_source {
-			obs_source_t* _child;
-
-			public:
-			active_source(obs_source_t* child) : _child(child)
-			{
-				obs_source_inc_active(_child);
-			}
-			virtual ~active_source()
-			{
-				obs_source_dec_active(_child);
-			}
-		};
-
-		class visible_source {
-			obs_source_t* _child;
-
-			public:
-			visible_source(obs_source_t* child) : _child(child)
-			{
-				obs_source_inc_showing(_child);
-			}
-			virtual ~visible_source()
-			{
-				obs_source_dec_showing(_child);
-			}
-		};
 	} // namespace tools
 
 	inline void obs_source_deleter(obs_source_t* v)
