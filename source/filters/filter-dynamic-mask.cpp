@@ -376,10 +376,11 @@ void dynamic_mask_instance::enum_all_sources(obs_source_enum_proc_t enum_callbac
 
 void streamfx::filter::dynamic_mask::dynamic_mask_instance::show()
 {
-	if (!_input || !obs_source_showing(obs_filter_get_parent(_self)))
+	if (!_input || !_self.showing() || !(_self.get_filter_parent().showing()))
 		return;
 
-	_input_vs = std::make_shared<obs::tools::visible_source>(_input.lock().get());
+	auto input = _input.lock();
+	_input_vs  = ::streamfx::obs::source_showing_reference::add_showing_reference(input);
 }
 
 void streamfx::filter::dynamic_mask::dynamic_mask_instance::hide()
@@ -389,10 +390,11 @@ void streamfx::filter::dynamic_mask::dynamic_mask_instance::hide()
 
 void streamfx::filter::dynamic_mask::dynamic_mask_instance::activate()
 {
-	if (!_input || !obs_source_active(obs_filter_get_parent(_self)))
+	if (!_input || !_self.active() || !(_self.get_filter_parent().active()))
 		return;
 
-	_input_ac = std::make_shared<obs::tools::active_source>(_input.lock().get());
+	auto input = _input.lock();
+	_input_ac  = ::streamfx::obs::source_active_reference::add_active_reference(input);
 }
 
 void streamfx::filter::dynamic_mask::dynamic_mask_instance::deactivate()
