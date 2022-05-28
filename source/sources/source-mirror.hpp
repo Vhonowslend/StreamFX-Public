@@ -28,6 +28,7 @@
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-sampler.hpp"
 #include "obs/obs-signal-handler.hpp"
+#include "obs/obs-source-active-child.hpp"
 #include "obs/obs-source-factory.hpp"
 #include "obs/obs-source.hpp"
 #include "obs/obs-tools.hpp"
@@ -42,11 +43,11 @@ namespace streamfx::source::mirror {
 
 	class mirror_instance : public obs::source_instance {
 		// Source
-		std::shared_ptr<obs_source_t>               _source;
-		std::shared_ptr<obs::tools::child_source>   _source_child;
-		std::shared_ptr<obs::source_signal_handler> _signal_rename;
-		std::shared_ptr<obs::audio_signal_handler>  _signal_audio;
-		std::pair<uint32_t, uint32_t>               _source_size;
+		::streamfx::obs::source                               _source;
+		std::shared_ptr<::streamfx::obs::source_active_child> _source_child;
+		std::shared_ptr<obs::source_signal_handler>           _signal_rename;
+		std::shared_ptr<obs::audio_signal_handler>            _signal_audio;
+		std::pair<uint32_t, uint32_t>                         _source_size;
 
 		// Audio
 		bool                          _audio_enabled;
@@ -76,8 +77,7 @@ namespace streamfx::source::mirror {
 		void acquire(std::string source_name);
 		void release();
 
-		void on_rename(std::shared_ptr<obs_source_t>, calldata*);
-		void on_audio(std::shared_ptr<obs_source_t>, const struct audio_data*, bool);
+		void on_audio(::streamfx::obs::source, const struct audio_data*, bool);
 
 		void audio_output(std::shared_ptr<void> data);
 	};

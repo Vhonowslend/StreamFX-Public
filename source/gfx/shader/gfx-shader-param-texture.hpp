@@ -6,6 +6,10 @@
 #include "gfx-shader-param.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
+#include "obs/obs-source-active-child.hpp"
+#include "obs/obs-source-active-reference.hpp"
+#include "obs/obs-source-showing-reference.hpp"
+#include "obs/obs-source.hpp"
 #include "obs/obs-tools.hpp"
 
 namespace streamfx::gfx {
@@ -54,12 +58,12 @@ namespace streamfx::gfx {
 			std::shared_ptr<streamfx::obs::gs::texture> _file_texture;
 
 			// Data: Source
-			std::string                                           _source_name;
-			std::shared_ptr<obs_source_t>                         _source;
-			std::shared_ptr<streamfx::obs::tools::child_source>   _source_child;
-			std::shared_ptr<streamfx::obs::tools::active_source>  _source_active;
-			std::shared_ptr<streamfx::obs::tools::visible_source> _source_visible;
-			std::shared_ptr<streamfx::obs::gs::rendertarget>      _source_rendertarget;
+			std::string                                              _source_name;
+			::streamfx::obs::source                                  _source;
+			std::shared_ptr<streamfx::obs::source_active_child>      _source_child;
+			std::shared_ptr<streamfx::obs::source_active_reference>  _source_active;
+			std::shared_ptr<streamfx::obs::source_showing_reference> _source_visible;
+			std::shared_ptr<streamfx::obs::gs::rendertarget>         _source_rendertarget;
 
 			public:
 			texture_parameter(streamfx::gfx::shader::shader* parent, streamfx::obs::gs::effect_parameter param,
