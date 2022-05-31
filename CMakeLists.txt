@@ -25,16 +25,25 @@ else()
 endif()
 
 ################################################################################
-# Configure Type
+# Detect if we are building with OBS Studio (different from Grouped builds)
 ################################################################################
 
-# Detect if we are building by ourselves or as part of something else.
+set(STANDALONE ON)
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
 	set(GROUPED OFF)
 	set(PREFIX "")
 else()
 	set(GROUPED ON)
-	set(PREFIX "StreamFX_")
+	set(PREFIX "StreamFX_")	
+	if(GROUPED AND (TARGET libobs))
+		set(STANDALONE OFF)
+	endif()
+endif()
+
+if(STANDALONE)
+	message(STATUS "${LOGPREFIX} This is a standalone build, please make sure you've followed the instructions.")
+else()
+	message(STATUS "${LOGPREFIX} This is a combined build.")
 endif()
 
 ################################################################################
@@ -255,22 +264,6 @@ endif()
 set(D_PLATFORM_INSTR ${ARCH_INST})
 set(D_PLATFORM_ARCH ${ARCH_INST})
 message(STATUS "${LOGPREFIX} Taget is ${D_PLATFORM_BITS}bit ${ARCH_INST} with a pointer size of ${D_PLATFORM_BITS_PTR}bit.")
-
-################################################################################
-# Detect if we are building with OBS Studio (different from Grouped builds)
-################################################################################
-
-set(STANDALONE ON)
-if(GROUPED AND (TARGET libobs))
-	set(STANDALONE OFF)
-endif()
-if(STANDALONE)
-	message(STATUS "${LOGPREFIX} This is a standalone build, please make sure you've followed the instructions.")
-	set(${PREFIX}OBS_NATIVE OFF)
-else()
-	message(STATUS "${LOGPREFIX} This is a combined build.")
-	set(${PREFIX}OBS_NATIVE ON)
-endif()
 
 ################################################################################
 # Options
@@ -955,7 +948,7 @@ feature_updater(OFF)
 set(HAVE_CURL OFF)
 if(REQUIRE_CURL)
 	if(D_PLATFORM_WINDOWS)
-		if(${PREFIX}OBS_NATIVE) # Already defined by OBS
+		if(NOT STANDALONE) # Already defined by OBS
 			set(CURL_LIBRARIES "${CURL_LIB}")
 			set(CURL_INCLUDE_DIRS "${CURL_INCLUDE_DIR}")
 		else()
@@ -2104,7 +2097,7 @@ endif()
 # Installation
 ################################################################################
 
-if(${PREFIX}OBS_NATIVE)
+if(NOT STANDALONE)
 	# Grouped builds don't offer standalone services.
 	install_obs_plugin_with_data(${PROJECT_NAME} data)
 
@@ -2250,7 +2243,7 @@ endif()
 # Packaging
 ################################################################################
 
-if(NOT ${PREFIX}OBS_NATIVE)
+if(STANDALONE)
 	# Packaging
 	if(NOT PACKAGE_SUFFIX)
 		set(_PACKAGE_SUFFIX_OVERRIDE "${VERSION_STRING}")
