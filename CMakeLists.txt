@@ -316,6 +316,16 @@ set(${PREFIX}ENABLE_PROFILING OFF CACHE BOOL "Enable CPU and GPU performance tra
 
 ## Compile/Link Related
 set(${PREFIX}ENABLE_LTO ${D_HAS_IPO} CACHE BOOL "Enable Link Time Optimization for faster and smaller binaries.")
+if(D_PLATFORM_ARCH_X86)
+	set(${PREFIX}TARGET_X86_64_V4 OFF CACHE BOOL "Target x86-64-v4 (x86-64-v3, AVX512F, AVX512BW, AVX512CD, AVX512DQ, AVX512VL).")
+	set(${PREFIX}TARGET_X86_64_V3 OFF CACHE BOOL "Target x86-64-v3 (x86-64-v2, AVX, AVX2, BMI1, BMI2, F16C, FMA, LZCNT, MOVBE, OSXSAVE).")
+	set(${PREFIX}TARGET_X86_64_V2_EX ON CACHE BOOL "Target extended x86-64-v2 (x86-64-v2, AVX, BMI1, BMI2, F16C, FMA, MOVBE).")
+	set(${PREFIX}TARGET_X86_64_V2 ON CACHE BOOL "Target x86-64-v2 (x86-64, CMPXCHG16B, LAHF-SAHF, POPCNT, SSE3, SSE4.1, SSE4.2, SSSE3).")
+	set(${PREFIX}TARGET_X86_64 ON CACHE BOOL "Target x86-64 (CMOV, CX8, FPU, FXSR, MMX, OSFXSR, SCE, SSE, SSE2).")
+endif()
+if(NOT MSVC)
+	set(${PREFIX}TARGET_NATIVE OFF CACHE BOOL "Target the native CPU architecture. Enable it for development or personal builds, but disable it for distribution.")
+endif()
 
 # Installation / Packaging
 if(STANDALONE)
@@ -1955,15 +1965,10 @@ endif()
 # C/C++ Compiler Adjustments
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR (WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
 	# MSVC/ClangCL
-	# - Dynamically link Microsoft C/C++ Redistributable.
-	# - Enable /W3 and disable useless warnings.
-	# - Enable C++ exceptions with SEH exceptions.
-	# - Enable multi-processor compiling.
-	# - Enable updated __cplusplus macro
 	message(STATUS "${LOGPREFIX} Applying custom flags for MSVC style build.")
 
-	# Build with dynamic MSVC linkage.
-	target_compile_options(${PROJECT_NAME} PUBLIC 
+	# - Dynamically link Microsoft C/C++ Redistributable.
+	target_compile_options(${PROJECT_NAME} PRIVATE
 		$<$<CONFIG:>:/MD>
 		$<$<CONFIG:Debug>:/MDd>
 		$<$<CONFIG:Release>:/MD>
@@ -1971,33 +1976,121 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR (WIN32 AND CMAKE_CXX_COMPILER_ID STR
 		$<$<CONFIG:MinSizeRel>:/MD>
 	)
 
-	# Enable most useful warnings.
+	# - Enable most useful warnings.
 	set(DISABLED_WARNINGS
 		"/wd4061" "/wd4100" "/wd4180" "/wd4201" "/wd4464" "/wd4505" "/wd4514"
 		"/wd4571" "/wd4623" "/wd4625" "/wd4626" "/wd4668" "/wd4710" "/wd4774"
 		"/wd4820" "/wd5026" "/wd5027" "/wd5039" "/wd5045" "/wd26812"
 	)
-	target_compile_options(${PROJECT_NAME} PUBLIC "/W3")
+	target_compile_options(${PROJECT_NAME} PRIVATE "/W3")
 	foreach(WARN ${DISABLED_WARNINGS})
-		target_compile_options(${PROJECT_NAME} PUBLIC "${WARN}")
+		target_compile_options(${PROJECT_NAME} PRIVATE "${WARN}")
 	endforeach()
+	
+	# - Require enabled instruction sets.
+	if(D_PLATFORM_ARCH_X86)
+		if(${PREFIX}TARGET_X86_64_V4)
+			target_compile_options(${PROJECT_NAME} PRIVATE "/arch:AVX512")
+			message(STATUS "${LOGPREFIX} Targeting x86-64-v4.")
+		elseif(${PREFIX}TARGET_X86_64_V3)
+			target_compile_options(${PROJECT_NAME} PRIVATE "/arch:AVX2")
+			message(STATUS "${LOGPREFIX} Targeting x86-64-v3.")
+		elseif(${PREFIX}TARGET_X86_64_V2_EX)
+			target_compile_options(${PROJECT_NAME} PRIVATE "/arch:AVX")
+			message(STATUS "${LOGPREFIX} Targeting extended x86-64-v2.")
+		elseif(${PREFIX}TARGET_X86_64_V2)
+			target_compile_options(${PROJECT_NAME} PRIVATE "/d2archSSE42")
+			message(STATUS "${LOGPREFIX} Targeting x86-64-v2.")
+		elseif(${PREFIX}TARGET_X86_64)
+			#target_compile_options(${PROJECT_NAME} PRIVATE "/arch:SSE2")
+			message(STATUS "${LOGPREFIX} Targeting x86-64.")
+		endif()
+	endif()
+		
+	# - Disable incremental builds
+	target_compile_options(${PROJECT_NAME} PRIVATE "/INCREMENTAL:NO")
 
-	# C++ Exceptions & SEH
-	target_compile_options(${PROJECT_NAME} PUBLIC "/EHa")
+	# - Enable C++ exceptions with SEH exceptions.
+	target_compile_options(${PROJECT_NAME} PRIVATE "/EHa")
 
-	# Multiprocessor compiling
-	target_compile_options(${PROJECT_NAME} PUBLIC "/MP")
+	# - Enable multi-processor compiling.
+	target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
 
-	# Updated __cplusplus
-	target_compile_options(${PROJECT_NAME} PUBLIC "/Zc:__cplusplus")
+	# - Enable updated __cplusplus macro
+	target_compile_options(${PROJECT_NAME} PRIVATE "/Zc:__cplusplus")
+	
+	# - Generic Optimizations for Release/RelWithDebInfo/MinSizeRel
+	set(FLAGS
+		"/fp:fast"
+		"/OPT:REF"
+		"/OPT:ICF=3"
+		"/GL"
+		"/Gy"
+		"/GF"
+		"/Ox"
+		"/Ob3"
+	)
+	foreach(FLAG ${FLAGS})
+		target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:${FLAG}>")
+	endforeach()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	# Clang/AppleClang/GNU
-	# - Don't export by default. (Temporarily disabled)
-	# - Enable all and extra warnings.
 	message(STATUS "${LOGPREFIX} Applying custom flags for GNU style build.")
 
-	target_compile_options(${PROJECT_NAME} PUBLIC "-Wall")
-	target_compile_options(${PROJECT_NAME} PUBLIC "-Wextra")
+	# - Enable most useful warnings.
+	target_compile_options(${PROJECT_NAME} PRIVATE "-Wall")
+	target_compile_options(${PROJECT_NAME} PRIVATE "-Wextra")
+	
+	# - Require enabled instruction sets.
+	if(${PREFIX}TARGET_NATIVE)
+		target_compile_options(${PROJECT_NAME} PRIVATE 
+			"-march=native"
+			"-mtune=native"
+		)
+		message(WARNING "${LOGPREFIX} Targeting native architecture. Binaries will not be distributable to other systems!")
+	elseif(D_PLATFORM_ARCH_X86)
+		if(${PREFIX}TARGET_X86_64_V4)
+			target_compile_options(${PROJECT_NAME} PRIVATE 
+				"-march=x86-64-v4"
+				"-mtune=generic"
+			)
+			message(STATUS "${LOGPREFIX} Targeting x86-64-v4.")
+		elseif(${PREFIX}TARGET_X86_64_V3)
+			target_compile_options(${PROJECT_NAME} PRIVATE 
+				"-march=x86-64-v3"
+				"-mtune=generic"
+			)
+			message(STATUS "${LOGPREFIX} Targeting x86-64-v3.")
+		elseif(${PREFIX}TARGET_X86_64_V2_EX)
+			target_compile_options(${PROJECT_NAME} PRIVATE 
+				"-march=x86-64-v2"
+				"-mtune=generic"
+				"-mavx"
+				"-mbmi2"
+				"-mbmi"
+				"-mfma"
+				"-mf16c"
+				"-mmovbe"
+				"-mpclmul"
+				"-mpopcnt"
+			)
+			message(STATUS "${LOGPREFIX} Targeting extended x86-64-v2.")
+		elseif(${PREFIX}TARGET_X86_64_V2)
+			target_compile_options(${PROJECT_NAME} PRIVATE
+				"-march=x86-64-v2"
+				"-mtune=generic"
+			)
+			message(STATUS "${LOGPREFIX} Targeting x86-64-v2.")
+		elseif(${PREFIX}TARGET_X86_64)
+			target_compile_options(${PROJECT_NAME} PRIVATE 
+				"-march=x86-64"
+				"-mtune=generic"
+			)
+			message(STATUS "${LOGPREFIX} Targeting x86-64.")
+		endif()
+	endif()
+
+	# - Don't export by default, require attributes.
 	# add_compile_options("-fvisibility=hidden")
 endif()
 
