@@ -310,7 +310,7 @@ set(${PREFIX}ENABLE_FRONTEND ON CACHE BOOL "Enable Frontend code.")
 set(${PREFIX}ENABLE_UPDATER ON CACHE BOOL "Enable automatic update checks.")
 
 ## Code Related
-set(${PREFIX}ENABLE_CLANG ON CACHE BOOL "Enable Clang integration for supported compilers.")
+set(${PREFIX}ENABLE_CLANG OFF CACHE BOOL "Enable Clang integration for supported compilers.")
 set(${PREFIX}ENABLE_CODESIGN OFF CACHE BOOL "Enable Code Signing integration for supported environments.")
 set(${PREFIX}ENABLE_PROFILING OFF CACHE BOOL "Enable CPU and GPU performance tracking, which has a non-zero overhead at all times. Do not enable this for release builds.")
 
