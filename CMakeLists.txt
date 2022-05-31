@@ -439,30 +439,6 @@ if(STANDALONE)
 		endif()
 		CacheSet(${PREFIX}OBS_PATH "${libobs_SOURCE_DIR}")
 	endif()
-	
-	if(NOT EXISTS "${${PREFIX}OBS_PATH}/cmake/LibObs/LibObsConfig.cmake")
-		message(FATAL_ERROR "${LOGPREFIX} The provided path for libOBS is invalid as it did not contain '/cmake/LibObs/LibObsConfig.cmake'.")
-		return()
-	else()
-		include("${${PREFIX}OBS_PATH}/cmake/LibObs/LibObsConfig.cmake")
-	endif()
-
-	if(NOT TARGET obs-frontend-api)
-		if(EXISTS "${${PREFIX}OBS_PATH}/cmake/obs-frontend-api/obs-frontend-apiConfig.cmake")
-			include("${${PREFIX}OBS_PATH}/cmake/obs-frontend-api/obs-frontend-apiConfig.cmake")
-		elseif((EXISTS "${${PREFIX}OBS_PATH}/bin/${D_PLATFORM_BITS}bit/obs-frontend-api.lib") AND (EXISTS "${${PREFIX}OBS_PATH}/include/obs-frontend-api.h"))
-			add_library(obs-frontend-api SHARED IMPORTED)
-			set_target_properties(obs-frontend-api PROPERTIES
-				INTERFACE_INCLUDE_DIRECTORIES "${${PREFIX}OBS_PATH}/include"
-				INTERFACE_LINK_LIBRARIES "libobs"
-				IMPORTED_CONFIGURATIONS RELWITHDEBINFO
-				IMPORTED_IMPLIB_RELWITHDEBINFO "${${PREFIX}OBS_PATH}/bin/${D_PLATFORM_BITS}bit/obs-frontend-api.lib"
-				IMPORTED_LOCATION_RELWITHDEBINFO "${${PREFIX}OBS_PATH}/bin/${D_PLATFORM_BITS}bit/obs-frontend-api.dll"
-			)
-		else()
-			message(WARNING "${LOGPREFIX} The provided path for libOBS did not contain obs-frontend-api.")
-		endif()
-	endif()
 endif()
 
 ################################################################################
@@ -903,13 +879,13 @@ function(feature_frontend RESOLVE)
 		if(NOT HAVE_QT)
 			message(WARNING "${LOGPREFIX} Front-End requires Qt. Disabling...")
 			set_feature_disabled(FRONTEND ON)
-		elseif(NOT HAVE_OBSFE)
+		elseif(NOT HAVE_OBS_FRONTEND_API)
 			message(WARNING "${LOGPREFIX} Front-End requires OBS FrontEnd API. Disabling...")
 			set_feature_disabled(FRONTEND ON)
 		endif()
 	elseif(T_CHECK)
 		set(REQUIRE_QT ON PARENT_SCOPE)
-		set(REQUIRE_OBSFE ON PARENT_SCOPE)
+		set(REQUIRE_OBS_FRONTEND_API ON PARENT_SCOPE)
 	endif()
 endfunction()
 
@@ -950,16 +926,62 @@ feature_frontend(OFF)
 feature_updater(OFF)
 
 # Fulfill Requirements
+#- OBS: Library
+if(STANDALONE)
+	find_package(libobs REQUIRED NO_MODULE
+		PATHS
+			"${${PREFIX}OBS_PATH}/cmake/libobs"
+			"${${PREFIX}OBS_PATH}/cmake/LibObs"
+	)
+endif()
+
+#- OBS: Front-End API
+set(HAVE_OBS_FRONTEND_API OFF)
+if(REQUIRE_OBS_FRONTEND_API)
+	if(STANDALONE)
+		if(EXISTS "${${PREFIX}OBS_PATH}/cmake/obs-frontend-api/obs-frontend-apiConfig.cmake")
+			find_package("obs-frontend-api" NO_MODULE
+				PATHS
+					"${${PREFIX}OBS_PATH}/cmake/obs-frontend-api"
+			)
+		elseif((EXISTS "${${PREFIX}OBS_PATH}/bin/${D_PLATFORM_BITS}bit/obs-frontend-api.dll") AND (EXISTS "${${PREFIX}OBS_PATH}/bin/${D_PLATFORM_BITS}bit/obs-frontend-api.lib"))
+			add_library(obs-frontend-api SHARED IMPORTED)
+			set_target_properties(obs-frontend-api PROPERTIES
+				INTERFACE_INCLUDE_DIRECTORIES "${${PREFIX}OBS_PATH}/include"
+				INTERFACE_LINK_LIBRARIES "libobs"
+				IMPORTED_CONFIGURATIONS RELWITHDEBINFO
+				IMPORTED_IMPLIB_RELWITHDEBINFO "${${PREFIX}OBS_PATH}/bin/${D_PLATFORM_BITS}bit/obs-frontend-api.lib"
+				IMPORTED_LOCATION_RELWITHDEBINFO "${${PREFIX}OBS_PATH}/bin/${D_PLATFORM_BITS}bit/obs-frontend-api.dll"
+			)
+		elseif(EXISTS "${${PREFIX}OBS_PATH}/bin/${D_PLATFORM_BITS}bit/libobs-frontend-api.so")
+			add_library(obs-frontend-api SHARED IMPORTED)
+			set_target_properties(obs-frontend-api PROPERTIES
+				INTERFACE_INCLUDE_DIRECTORIES "${${PREFIX}OBS_PATH}/include"
+				INTERFACE_LINK_LIBRARIES "libobs"
+				IMPORTED_CONFIGURATIONS RELWITHDEBINFO
+				IMPORTED_LOCATION_RELWITHDEBINFO "${${PREFIX}OBS_PATH}/bin/${D_PLATFORM_BITS}bit/libobs-frontend-api.so"
+			)
+		else()
+			message(WARNING "${LOGPREFIX} The provided path for libOBS did not contain obs-frontend-api.")
+		endif()
+	endif()
+	
+	if(TARGET obs-frontend-api)
+		set(HAVE_OBS_FRONTEND_API ON)
+	endif()
+endif()
+
 #- CURL
 set(HAVE_CURL OFF)
 if(REQUIRE_CURL)
 	if(D_PLATFORM_WINDOWS)
-		if(NOT STANDALONE) # Already defined by OBS
-			set(CURL_LIBRARIES "${CURL_LIB}")
-			set(CURL_INCLUDE_DIRS "${CURL_INCLUDE_DIR}")
-		else()
+		if(STANDALONE)
 			set(CURL_LIBRARIES "${_OBSDEPS_PATH}/bin/libcurl.lib")
 			set(CURL_INCLUDE_DIRS "${_OBSDEPS_PATH}/include")
+		else()
+			# Already defined by OBS
+			set(CURL_LIBRARIES "${CURL_LIB}")
+			set(CURL_INCLUDE_DIRS "${CURL_INCLUDE_DIR}")
 		endif()
 		set(CURL_LIBRARY_DEBUG ${CURL_LIBRARIES})
 		set(CURL_LIBRARY_RELEASE ${CURL_LIBRARIES})
@@ -1040,14 +1062,6 @@ endif()
 set(HAVE_NVIDIA_CUDA OFF)
 if(REQUIRE_NVIDIA_CUDA AND D_PLATFORM_WINDOWS)
 	set(HAVE_NVIDIA_CUDA ON)
-endif()
-
-#- OBS Front-End API
-set(HAVE_OBSFE OFF)
-if(REQUIRE_OBSFE)
-	if(TARGET obs-frontend-api)
-		set(HAVE_OBSFE ON)
-	endif()
 endif()
 
 #- Qt5
@@ -1254,7 +1268,7 @@ if(HAVE_NVIDIA_CUDA)
 	)
 endif()
 
-if(REQUIRE_OBSFE AND HAVE_OBSFE)
+if(REQUIRE_OBS_FRONTEND_API AND HAVE_OBS_FRONTEND_API)
 	list(APPEND PROJECT_LIBRARIES obs-frontend-api)
 endif()
 
@@ -2063,7 +2077,7 @@ if(D_PLATFORM_MAC)
 	message(STATUS "${LOGPREFIX} Added post-build step for adjusting libobs linking path.")
 
 	# OBS Front-End API
-	if(REQUIRE_OBSFE AND HAVE_OBSFE)
+	if(REQUIRE_OBS_FRONTEND_API AND HAVE_OBS_FRONTEND_API)
 		mac_get_linker_id(TARGET obs-frontend-api OUTPUT T_OBSFE_LINK)
 		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 			COMMAND install_name_tool ARGS -change "${T_OBSFE_LINK}" "@executable_path/../Frameworks/libobs-frontend-api.dylib" $<TARGET_FILE:${PROJECT_NAME}>
