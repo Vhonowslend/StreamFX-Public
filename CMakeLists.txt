@@ -2222,19 +2222,7 @@ endif()
 # Installation
 ################################################################################
 
-if(NOT STANDALONE)
-	# Grouped builds don't offer standalone services.
-	install_obs_plugin_with_data(${PROJECT_NAME} data)
-
-	# Dependency: AOM
-	if(HAVE_AOM AND AOM_BINARY AND D_PLATFORM_WINDOWS)
-		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-			COMMAND "${CMAKE_COMMAND}" -E copy
-				"${AOM_BINARY}"
-				"${CMAKE_BINARY_DIR}/rundir/$<CONFIGURATION>/data/obs-plugins/${PROJECT_NAME}"
-			VERBATIM)
-	endif()
-else()
+if(STANDALONE)
 	if(STRUCTURE_UNIFIED)
 		install(
 			DIRECTORY "data/"
@@ -2311,9 +2299,9 @@ else()
 		endif()
 
 		# Dependency: AOM
-		if(HAVE_AOM AND AOM_BINARY AND D_PLATFORM_WINDOWS)
+		if(HAVE_AOM AND AOM_BINARY)
 			install(
-				FILES ${AOM_BINARY}
+				FILES "${AOM_BINARY}"
 				DESTINATION "data/obs-plugins/${PROJECT_NAME}/" COMPONENT StreamFX
 			)
 		endif()
@@ -2361,6 +2349,29 @@ else()
 			FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
 			DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
 		)
+	endif()
+else()
+	if(COMMAND setup_plugin_target)
+		setup_plugin_target(${PROJECT_NAME})
+		# Seems like we lost the ability to customize which directoy resources are in, and instead are forced to use '/data'.
+
+		if(HAVE_AOM AND AOM_BINARY) # Dependency: AOM
+			add_target_resource(${PROJECT_NAME} "${AOM_BINARY}" "obs-plugins/${PROJECT_NAME}")
+		endif()
+	elseif(COMMAND install_obs_plugin_with_data)
+		install_obs_plugin_with_data(${PROJECT_NAME} data)
+
+		if(HAVE_AOM AND AOM_BINARY) # Dependency: AOM
+			install(
+				FILES "${AOM_BINARY}"
+				DESTINATION "${OBS_DATA_DESTINATION}/obs-plugins/${PROJECT_NAME}"
+			)
+			add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+				COMMAND "${CMAKE_COMMAND}" -E copy
+					"${AOM_BINARY}"
+					"${OBS_DATA_DESTINATION}/obs-plugins/${PROJECT_NAME}"
+				VERBATIM)
+		endif()
 	endif()
 endif()
 
