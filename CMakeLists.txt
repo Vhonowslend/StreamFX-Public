@@ -122,12 +122,12 @@ if(NOT (${PREFIX}VERSION STREQUAL ""))
 	list(GET T_VERSION 0 VERSION_MAJOR)
 	list(GET T_VERSION 1 VERSION_MINOR)
 	list(GET T_VERSION 2 VERSION_PATCH)
-	if (T_VERSIONLEN GREATER_EQUAL 3)
+	if(T_VERSIONLEN GREATER_EQUAL 3)
 		list(GET T_VERSION 3 VERSION_TWEAK)
 	else()
 		set(VERSION_BUILD 0)
 	endif()
-	if (T_VERSIONLEN GREATER_EQUAL 4)
+	if(T_VERSIONLEN GREATER_EQUAL 4)
 		list(GET T_VERSION 4 VERSION_COMMIT)
 	else()
 		set(VERSION_COMMIT "")
@@ -266,7 +266,7 @@ check_ipo_supported(RESULT D_HAS_IPO)
 
 set(D_PLATFORM_INSTR ${ARCH_INST})
 set(D_PLATFORM_ARCH ${ARCH_INST})
-message(STATUS "${LOGPREFIX} Taget is ${D_PLATFORM_BITS}bit ${ARCH_INST} with a pointer size of ${D_PLATFORM_BITS_PTR}bit.")
+message(STATUS "${LOGPREFIX} Target is ${D_PLATFORM_BITS}bit ${ARCH_INST} with a pointer size of ${D_PLATFORM_BITS_PTR}bit.")
 
 ################################################################################
 # Options
@@ -386,23 +386,23 @@ if(STANDALONE)
 	if(${PREFIX}OBS_DOWNLOAD)
 		if(${PREFIX}OBS_DOWNLOAD_URL STREQUAL "")
 			# Figure out download URLs and hashes.
-			if (D_PLATFORM_WINDOWS)
-				if (D_PLATFORM_ARCH_X86)
-					if (D_PLATFORM_BITS EQUAL 64)
+			if(D_PLATFORM_WINDOWS)
+				if(D_PLATFORM_ARCH_X86)
+					if(D_PLATFORM_BITS EQUAL 64)
 						set(OBS_DOWNLOAD_URL "https://github.com/Xaymar/obs-studio/releases/download/27.2.4-ci/windows-x86_64.tar.gz")
 						set(OBS_DOWNLOAD_HASH "DD931BBB2E0720F1D7573C65D8CC9D638F1EE2AC99F7173BF8935CD3A3BCE3F4")
 					endif()
 				endif()
 			elseif(D_PLATFORM_LINUX)
-				if (D_PLATFORM_ARCH_X86)
-					if (D_PLATFORM_BITS EQUAL 64)
+				if(D_PLATFORM_ARCH_X86)
+					if(D_PLATFORM_BITS EQUAL 64)
 						set(OBS_DOWNLOAD_URL "https://github.com/Xaymar/obs-studio/releases/download/27.2.4-ci/linux-x86_64.tar.gz")
 						set(OBS_DOWNLOAD_HASH "CA19E8260E1A556E6231D75064837C61C6D480BD90C97A0B930005AE527BF625")
 					endif()
 				endif()
 			elseif(D_PLATFORM_MAC)
-				if (D_PLATFORM_ARCH_X86)
-					if (D_PLATFORM_BITS EQUAL 64)
+				if(D_PLATFORM_ARCH_X86)
+					if(D_PLATFORM_BITS EQUAL 64)
 						set(OBS_DOWNLOAD_URL "https://github.com/Xaymar/obs-studio/releases/download/27.2.4-ci/macos-x86_64.tar.gz")
 						set(OBS_DOWNLOAD_HASH "0DD5A57DD537B97CAA8470212F8F6B637F47D4742A5D1F17787F4FE9DBC70B33")
 					endif()
@@ -447,7 +447,7 @@ if(STANDALONE)
 		include("${${PREFIX}OBS_PATH}/cmake/LibObs/LibObsConfig.cmake")
 	endif()
 
-	if (NOT TARGET obs-frontend-api)
+	if(NOT TARGET obs-frontend-api)
 		if(EXISTS "${${PREFIX}OBS_PATH}/cmake/obs-frontend-api/obs-frontend-apiConfig.cmake")
 			include("${${PREFIX}OBS_PATH}/cmake/obs-frontend-api/obs-frontend-apiConfig.cmake")
 		elseif((EXISTS "${${PREFIX}OBS_PATH}/bin/${D_PLATFORM_BITS}bit/obs-frontend-api.lib") AND (EXISTS "${${PREFIX}OBS_PATH}/include/obs-frontend-api.h"))
@@ -484,28 +484,28 @@ if(STANDALONE AND NOT D_PLATFORM_LINUX)
 	if(${PREFIX}OBSDEPS_DOWNLOAD)
 		if(${PREFIX}OBSDEPS_DOWNLOAD_URL STREQUAL "")
 			# Figure out download URLs and hashes.
-			if (D_PLATFORM_WINDOWS)
+			if(D_PLATFORM_WINDOWS)
 				set(DEPS_VERSION "2022-01-31")
-				if (D_PLATFORM_ARCH_X86)
-					if (D_PLATFORM_BITS EQUAL 64)
+				if(D_PLATFORM_ARCH_X86)
+					if(D_PLATFORM_BITS EQUAL 64)
 						set(OBSDEPS_DOWNLOAD_URL "https://github.com/obsproject/obs-deps/releases/download/win-${DEPS_VERSION}/windows-deps-${DEPS_VERSION}.zip")
 						set(OBSDEPS_DOWNLOAD_HASH "66E55FE35A507C902C036EB11E691D0257FECA545A8EE57324B69427717026DD")
 					endif()
 				endif()
 			elseif(D_PLATFORM_MAC)
 				set(DEPS_VERSION "2022-02-13")
-				if (D_PLATFORM_ARCH_X86 AND D_PLATFORM_ARCH_ARM)
-					if (D_PLATFORM_BITS EQUAL 64)
+				if(D_PLATFORM_ARCH_X86 AND D_PLATFORM_ARCH_ARM)
+					if(D_PLATFORM_BITS EQUAL 64)
 						set(OBSDEPS_DOWNLOAD_URL "https://github.com/obsproject/obs-deps/releases/download/${DEPS_VERSION}/macos-deps-${DEPS_VERSION}-universal.tar.xz")
 						set(OBSDEPS_DOWNLOAD_HASH "77471B1D345A768E8EFEC3F6AD9DC79F3C7CD34840B66F721B80025D29713F5D")
 					endif()
-				elseif (D_PLATFORM_ARCH_X86)
-					if (D_PLATFORM_BITS EQUAL 64)
+				elseif(D_PLATFORM_ARCH_X86)
+					if(D_PLATFORM_BITS EQUAL 64)
 						set(OBSDEPS_DOWNLOAD_URL "https://github.com/obsproject/obs-deps/releases/download/${DEPS_VERSION}/macos-deps-${DEPS_VERSION}-x86_64.tar.xz")
 						set(OBSDEPS_DOWNLOAD_HASH "1A8715D66E664B857942DEADED0DC46C4F6CD22E88F01ED1188F3BD3FCF632C4")
 					endif()
-				elseif (D_PLATFORM_ARCH_ARM)
-					if (D_PLATFORM_BITS EQUAL 64)
+				elseif(D_PLATFORM_ARCH_ARM)
+					if(D_PLATFORM_BITS EQUAL 64)
 						set(OBSDEPS_DOWNLOAD_URL "https://github.com/obsproject/obs-deps/releases/download/${DEPS_VERSION}/macos-deps-${DEPS_VERSION}-arm64.tar.xz")
 						set(OBSDEPS_DOWNLOAD_HASH "2CFCAF05765400C696908F242AEA87B6E1848E1A48CD3EDC2EB7F8CB249C9D48")
 					endif()
@@ -542,8 +542,8 @@ if(STANDALONE AND NOT D_PLATFORM_LINUX)
 		endif()
 		CacheSet(${PREFIX}OBSDEPS_PATH "${obsdeps_SOURCE_DIR}")
 	endif()
-	
-	if (D_PLATFORM_WINDOWS)
+
+	if(D_PLATFORM_WINDOWS)
 		set(_OBSDEPS_PATH "${${PREFIX}OBSDEPS_PATH}/win${D_PLATFORM_BITS}")
 		set(FFmpegPath "${${PREFIX}OBSDEPS_PATH}/win${D_PLATFORM_BITS}")
 	elseif(D_PLATFORM_MAC)
@@ -571,28 +571,28 @@ if(STANDALONE AND NOT D_PLATFORM_LINUX)
 	if(${PREFIX}QT_DOWNLOAD)
 		if(${PREFIX}QT_DOWNLOAD_URL STREQUAL "")
 			# Figure out download URLs and hashes.
-			if (D_PLATFORM_WINDOWS)
+			if(D_PLATFORM_WINDOWS)
 				set(DEPS_VERSION "5.15.2")
-				if (D_PLATFORM_ARCH_X86)
-					if (D_PLATFORM_BITS EQUAL 64)
+				if(D_PLATFORM_ARCH_X86)
+					if(D_PLATFORM_BITS EQUAL 64)
 						set(QT_DOWNLOAD_URL "https://cdn-fastly.obsproject.com/downloads/Qt_${DEPS_VERSION}.7z")
 						set(QT_DOWNLOAD_HASH "9EF1DFEEBE6AB7FFC55FD285667CC5D9CB2D298646C107C2295D13F14708E64E")
 					endif()
 				endif()
 			elseif(D_PLATFORM_MAC)
 				set(DEPS_VERSION "2022-02-13")
-				if (D_PLATFORM_ARCH_X86 AND D_PLATFORM_ARCH_ARM)
-					if (D_PLATFORM_BITS EQUAL 64)
+				if(D_PLATFORM_ARCH_X86 AND D_PLATFORM_ARCH_ARM)
+					if(D_PLATFORM_BITS EQUAL 64)
 						set(QT_DOWNLOAD_URL "https://github.com/obsproject/obs-deps/releases/download/${DEPS_VERSION}/macos-deps-qt-${DEPS_VERSION}-universal.tar.xz")
 						set(QT_DOWNLOAD_HASH "13FBCC45FD9D08B30E702D481FE4D58B23F93AA06848CEDE4EBE0956C79A5E8A")
 					endif()
-				elseif (D_PLATFORM_ARCH_X86)
-					if (D_PLATFORM_BITS EQUAL 64)
+				elseif(D_PLATFORM_ARCH_X86)
+					if(D_PLATFORM_BITS EQUAL 64)
 						set(QT_DOWNLOAD_URL "https://github.com/obsproject/obs-deps/releases/download/${DEPS_VERSION}/macos-deps-qt-${DEPS_VERSION}-x86_64.tar.xz")
 						set(QT_DOWNLOAD_HASH "35A58FEE8DFD70D3D2DCC0AE0B77132C04A451C6F041A02DC41B207B375FC74B")
 					endif()
-				elseif (D_PLATFORM_ARCH_ARM)
-					if (D_PLATFORM_BITS EQUAL 64)
+				elseif(D_PLATFORM_ARCH_ARM)
+					if(D_PLATFORM_BITS EQUAL 64)
 						set(QT_DOWNLOAD_URL "https://github.com/obsproject/obs-deps/releases/download/${DEPS_VERSION}/macos-deps-qt-${DEPS_VERSION}-arm64.tar.xz")
 						set(QT_DOWNLOAD_HASH "E99146B9C7775C245A2D22F2EF24FC111FCCD71BAD0F03B64DB707124FFB8707")
 					endif()
@@ -635,7 +635,7 @@ if(STANDALONE AND NOT D_PLATFORM_LINUX)
 			CacheSet(${PREFIX}QT_PATH "${qt_SOURCE_DIR}")
 		endif()
 	endif()
-	
+
 	set(Qt5_DIR "${${PREFIX}QT_PATH}/lib/cmake/Qt5" CACHE STRING "Path to Qt")
 	CacheSet(Qt5_DIR "${${PREFIX}QT_PATH}/lib/cmake/Qt5")
 endif()
@@ -660,8 +660,8 @@ if(D_PLATFORM_WINDOWS)
 		if(${PREFIX}AOM_DOWNLOAD_URL STREQUAL "")
 			set(AOM_VERSION "v3.2.0.1")
 			# Figure out download URLs and hashes.
-			if (D_PLATFORM_WINDOWS)
-				if (D_PLATFORM_ARCH_X86)
+			if(D_PLATFORM_WINDOWS)
+				if(D_PLATFORM_ARCH_X86)
 					set(AOM_DOWNLOAD_URL "https://github.com/Xaymar/aom/releases/download/${AOM_VERSION}/aom-windows-${D_PLATFORM_BITS}-shared.7z")
 					set(AOM_DOWNLOAD_HASH "2DE0C215C5B00D6761AD2D1FEAFB545C04249B2CBD542F9F7D423E1A26BA59BD")
 				endif()
@@ -702,7 +702,7 @@ if(D_PLATFORM_WINDOWS)
 			CacheSet(${PREFIX}AOM_PATH "${AOM_SOURCE_DIR}")
 		endif()
 	endif()
-	
+
 	set(AOM_PATH "${${PREFIX}AOM_PATH}" CACHE STRING "Path to AOM")
 endif()
 
@@ -787,7 +787,7 @@ function(feature_filter_autoframing RESOLVE)
 
 		# Verify that we have at least one provider for Auto-Framing.
 		is_feature_enabled(FILTER_AUTOFRAMING_NVIDIA T_CHECK_NVIDIA)
-		if (NOT T_CHECK_NVIDIA)
+		if(NOT T_CHECK_NVIDIA)
 			message(WARNING "${LOGPREFIX} Auto-Framing has no available providers. Disabling...")
 			set_feature_disabled(FILTER_AUTOFRAMING ON)
 		endif()
@@ -816,7 +816,7 @@ function(feature_filter_denoising RESOLVE)
 
 		# Verify that we have at least one provider for Video Denoising.
 		is_feature_enabled(FILTER_DENOISING_NVIDIA T_CHECK_NVIDIA)
-		if (NOT T_CHECK_NVIDIA)
+		if(NOT T_CHECK_NVIDIA)
 			message(WARNING "${LOGPREFIX} Denoising has no available providers. Disabling...")
 			set_feature_disabled(FILTER_DENOISING ON)
 		endif()
@@ -856,7 +856,7 @@ function(feature_filter_upscaling RESOLVE)
 
 		# Verify that we have at least one provider for Video Super-Resolution.
 		is_feature_enabled(FILTER_UPSCALING_NVIDIA T_CHECK_NVIDIA)
-		if (NOT T_CHECK_NVIDIA)
+		if(NOT T_CHECK_NVIDIA)
 			message(WARNING "${LOGPREFIX} Upscaling has no available providers. Disabling...")
 			set_feature_disabled(FILTER_UPSCALING ON)
 		endif()
@@ -876,7 +876,7 @@ function(feature_filter_virtual_greenscreen RESOLVE)
 
 		# Verify that we have at least one provider for Video Super-Resolution.
 		is_feature_enabled(FILTER_VIRTUAL_GREENSCREEN_NVIDIA T_CHECK_NVIDIA)
-		if (NOT T_CHECK_NVIDIA)
+		if(NOT T_CHECK_NVIDIA)
 			message(WARNING "${LOGPREFIX} Virtual Greenscreen has no available providers. Disabling...")
 			set_feature_disabled(FILTER_VIRTUAL_GREENSCREEN ON)
 		endif()
@@ -1461,13 +1461,13 @@ endif()
 # Encoder/AOM-AV1
 is_feature_enabled(ENCODER_AOM_AV1 T_CHECK)
 if(T_CHECK)
-	list (APPEND PROJECT_PRIVATE_SOURCE
+	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/encoders/codecs/av1.hpp"
 		"source/encoders/codecs/av1.cpp"
 		"source/encoders/encoder-aom-av1.hpp"
 		"source/encoders/encoder-aom-av1.cpp"
 	)
-	list (APPEND PROJECT_INCLUDE_DIRS
+	list(APPEND PROJECT_INCLUDE_DIRS
 		${AOM_INCLUDE_DIR}
 	)
 	list(APPEND PROJECT_DEFINITIONS
@@ -1486,7 +1486,7 @@ if(T_CHECK)
 		ENABLE_FILTER_AUTOFRAMING
 	)
 	is_feature_enabled(FILTER_AUTOFRAMING_NVIDIA T_CHECK)
-	if (T_CHECK)
+	if(T_CHECK)
 		list(APPEND PROJECT_DEFINITIONS
 			ENABLE_FILTER_AUTOFRAMING_NVIDIA
 		)
@@ -1505,7 +1505,7 @@ if(T_CHECK)
 		"data/effects/blur/gaussian.effect"
 		"data/effects/blur/gaussian-linear.effect"
 	)
-	list (APPEND PROJECT_PRIVATE_SOURCE
+	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/gfx/blur/gfx-blur-base.hpp"
 		"source/gfx/blur/gfx-blur-base.cpp"
 		"source/gfx/blur/gfx-blur-box.hpp"
@@ -1532,7 +1532,7 @@ if(T_CHECK)
 	list(APPEND PROJECT_DATA
 		"data/effects/color-grade.effect"
 	)
-	list (APPEND PROJECT_PRIVATE_SOURCE
+	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/filters/filter-color-grade.hpp"
 		"source/filters/filter-color-grade.cpp"
 	)
@@ -1548,7 +1548,7 @@ if(T_CHECK)
 	list(APPEND PROJECT_DATA
 		"data/effects/displace.effect"
 	)
-	list (APPEND PROJECT_PRIVATE_SOURCE
+	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/filters/filter-displacement.hpp"
 		"source/filters/filter-displacement.cpp"
 	)
@@ -1624,7 +1624,7 @@ if(T_CHECK)
 		ENABLE_FILTER_DENOISING
 	)
 	is_feature_enabled(FILTER_DENOISING_NVIDIA T_CHECK)
-	if (T_CHECK)
+	if(T_CHECK)
 		list(APPEND PROJECT_DEFINITIONS
 			ENABLE_FILTER_DENOISING_NVIDIA
 		)
@@ -1642,7 +1642,7 @@ if(T_CHECK)
 		ENABLE_FILTER_UPSCALING
 	)
 	is_feature_enabled(FILTER_UPSCALING_NVIDIA T_CHECK)
-	if (T_CHECK)
+	if(T_CHECK)
 		list(APPEND PROJECT_DEFINITIONS
 			ENABLE_FILTER_UPSCALING_NVIDIA
 		)
@@ -1660,7 +1660,7 @@ if(T_CHECK)
 		ENABLE_FILTER_VIRTUAL_GREENSCREEN
 	)
 	is_feature_enabled(FILTER_VIRTUAL_GREENSCREEN_NVIDIA T_CHECK)
-	if (T_CHECK)
+	if(T_CHECK)
 		list(APPEND PROJECT_DEFINITIONS
 			ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
 		)
@@ -2005,7 +2005,7 @@ endif()
 if(D_PLATFORM_WINDOWS)
 	foreach(DELAYLOAD ${PROJECT_LIBRARIES_DELAYED})
 		get_target_property(_lf ${PROJECT_NAME} LINK_FLAGS)
-		if (NOT _lf)
+		if(NOT _lf)
 			set(_lf "")
 		endif()
 		set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${_lf} /DELAYLOAD:${DELAYLOAD}")
