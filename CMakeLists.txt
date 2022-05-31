@@ -192,6 +192,7 @@ set(CMAKE_MODULE_PATH
 # Include
 include("util")							# CacheClear, CacheSet
 include("DownloadProject")				# DownloadProject
+include("CheckIPOSupported")			# check_ipo_supported
 
 ################################################################################
 # Platform Setup
@@ -261,6 +262,8 @@ if(FOUND GREATER -1)
 	set(D_PLATFORM_ARCH_ITANIUM ON)
 endif()
 
+check_ipo_supported(RESULT D_HAS_IPO)
+
 set(D_PLATFORM_INSTR ${ARCH_INST})
 set(D_PLATFORM_ARCH ${ARCH_INST})
 message(STATUS "${LOGPREFIX} Taget is ${D_PLATFORM_BITS}bit ${ARCH_INST} with a pointer size of ${D_PLATFORM_BITS_PTR}bit.")
@@ -310,6 +313,9 @@ set(${PREFIX}ENABLE_UPDATER ON CACHE BOOL "Enable automatic update checks.")
 set(${PREFIX}ENABLE_CLANG ON CACHE BOOL "Enable Clang integration for supported compilers.")
 set(${PREFIX}ENABLE_CODESIGN OFF CACHE BOOL "Enable Code Signing integration for supported environments.")
 set(${PREFIX}ENABLE_PROFILING OFF CACHE BOOL "Enable CPU and GPU performance tracking, which has a non-zero overhead at all times. Do not enable this for release builds.")
+
+## Compile/Link Related
+set(${PREFIX}ENABLE_LTO ${D_HAS_IPO} CACHE BOOL "Enable Link Time Optimization for faster and smaller binaries.")
 
 # Installation / Packaging
 if(STANDALONE)
@@ -1913,12 +1919,24 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_INCLUDE_DIRS})
 target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_DEFINITIONS})
 target_link_libraries(${PROJECT_NAME} ${PROJECT_LIBRARIES})
 
+# Always generate position independent code.
+set_target_properties(${PROJECT_NAME} PROPERTIES
+	POSITION_INDEPENDENT_CODE ON
+)
+
 # Set C++ Standard and Extensions
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	CXX_STANDARD 17
 	CXX_STANDARD_REQUIRED ON
 	CXX_EXTENSIONS OFF
 )
+
+# Link-Time/Interprocedural Optimization
+if(${PREFIX}ENABLE_LTO)
+	set_target_properties(${PROJECT_NAME} PROPERTIES
+		INTERPROCEDURAL_OPTIMIZATION ON
+	)
+endif()
 
 # C/C++ Compiler Adjustments
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR (WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
