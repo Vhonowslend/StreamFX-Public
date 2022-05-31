@@ -17,6 +17,13 @@
 # CMake Setup
 cmake_minimum_required(VERSION 3.13...4.0)
 
+if(${CMAKE_VERSION} VERSION_LESS 3.19)
+	set(LOGPREFIX "[StreamFX]")
+else()
+	list(APPEND CMAKE_MESSAGE_INDENT "[StreamFX]")
+	set(LOGPREFIX "")
+endif()
+
 ################################################################################
 # Configure Type
 ################################################################################
@@ -29,7 +36,6 @@ else()
 	set(GROUPED ON)
 	set(PREFIX "StreamFX_")
 endif()
-set(LOGPREFIX "StreamFX:")
 
 ################################################################################
 # Versioning
