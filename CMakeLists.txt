@@ -34,7 +34,7 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
 	set(PREFIX "")
 else()
 	set(GROUPED ON)
-	set(PREFIX "StreamFX_")	
+	set(PREFIX "StreamFX_")
 	if(GROUPED AND (TARGET libobs))
 		set(STANDALONE OFF)
 	endif()
@@ -316,6 +316,7 @@ set(${PREFIX}ENABLE_PROFILING OFF CACHE BOOL "Enable CPU and GPU performance tra
 
 ## Compile/Link Related
 set(${PREFIX}ENABLE_LTO ${D_HAS_IPO} CACHE BOOL "Enable Link Time Optimization for faster and smaller binaries.")
+set(${PREFIX}ENABLE_FASTMATH ON CACHE BOOL "Enable fast math optimizations, which sacrifice precision and stability.")
 if(D_PLATFORM_ARCH_X86)
 	set(${PREFIX}TARGET_X86_64_V4 OFF CACHE BOOL "Target x86-64-v4 (x86-64-v3, AVX512F, AVX512BW, AVX512CD, AVX512DQ, AVX512VL).")
 	set(${PREFIX}TARGET_X86_64_V3 OFF CACHE BOOL "Target x86-64-v3 (x86-64-v2, AVX, AVX2, BMI1, BMI2, F16C, FMA, LZCNT, MOVBE, OSXSAVE).")
@@ -1971,7 +1972,7 @@ if(${PREFIX}ENABLE_LTO)
 endif()
 
 # C/C++ Compiler Adjustments
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR (WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+if(D_PLATFORM_WINDOWS AND ((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")))
 	# MSVC/ClangCL
 	message(STATUS "${LOGPREFIX} Applying custom flags for MSVC style build.")
 
@@ -1994,7 +1995,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR (WIN32 AND CMAKE_CXX_COMPILER_ID STR
 	foreach(WARN ${DISABLED_WARNINGS})
 		target_compile_options(${PROJECT_NAME} PRIVATE "${WARN}")
 	endforeach()
-	
+
 	# - Require enabled instruction sets.
 	if(D_PLATFORM_ARCH_X86)
 		if(${PREFIX}TARGET_X86_64_V4)
@@ -2014,7 +2015,18 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR (WIN32 AND CMAKE_CXX_COMPILER_ID STR
 			message(STATUS "${LOGPREFIX} Targeting x86-64.")
 		endif()
 	endif()
-		
+
+	# - Use fast unordered math if possible.
+	if(${PREFIX}ENABLE_FASTMATH)
+		target_compile_options(${PROJECT_NAME} PRIVATE "/fp:fast")
+	else()
+		target_compile_options(${PROJECT_NAME} PRIVATE "/fp:precise")
+		if(MSVC_VERSION GREATER 1930)
+			# Keep original behavior in VS2022 and up.
+			target_compile_options(${PROJECT_NAME} PRIVATE "/fp:contract")
+		endif()
+	endif()
+
 	# - Disable incremental builds
 	target_compile_options(${PROJECT_NAME} PRIVATE "/INCREMENTAL:NO")
 
@@ -2026,10 +2038,9 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR (WIN32 AND CMAKE_CXX_COMPILER_ID STR
 
 	# - Enable updated __cplusplus macro
 	target_compile_options(${PROJECT_NAME} PRIVATE "/Zc:__cplusplus")
-	
+
 	# - Generic Optimizations for Release/RelWithDebInfo/MinSizeRel
 	set(FLAGS
-		"/fp:fast"
 		"/OPT:REF"
 		"/OPT:ICF=3"
 		"/GL"
@@ -2041,38 +2052,34 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR (WIN32 AND CMAKE_CXX_COMPILER_ID STR
 	foreach(FLAG ${FLAGS})
 		target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:${FLAG}>")
 	endforeach()
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	# Clang/AppleClang/GNU
-	message(STATUS "${LOGPREFIX} Applying custom flags for GNU style build.")
+elseif(D_PLATFORM_LINUX AND ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")))
+	# GCC/Clang
+	message(STATUS "${LOGPREFIX} Applying custom flags for GCC/Clang style build.")
 
 	# - Enable most useful warnings.
 	target_compile_options(${PROJECT_NAME} PRIVATE "-Wall")
 	target_compile_options(${PROJECT_NAME} PRIVATE "-Wextra")
-	
+
 	# - Require enabled instruction sets.
 	if(${PREFIX}TARGET_NATIVE)
-		target_compile_options(${PROJECT_NAME} PRIVATE 
+		target_compile_options(${PROJECT_NAME} PRIVATE
 			"-march=native"
-			"-mtune=native"
 		)
 		message(WARNING "${LOGPREFIX} Targeting native architecture. Binaries will not be distributable to other systems!")
 	elseif(D_PLATFORM_ARCH_X86)
 		if(${PREFIX}TARGET_X86_64_V4)
-			target_compile_options(${PROJECT_NAME} PRIVATE 
+			target_compile_options(${PROJECT_NAME} PRIVATE
 				"-march=x86-64-v4"
-				"-mtune=generic"
 			)
 			message(STATUS "${LOGPREFIX} Targeting x86-64-v4.")
 		elseif(${PREFIX}TARGET_X86_64_V3)
-			target_compile_options(${PROJECT_NAME} PRIVATE 
+			target_compile_options(${PROJECT_NAME} PRIVATE
 				"-march=x86-64-v3"
-				"-mtune=generic"
 			)
 			message(STATUS "${LOGPREFIX} Targeting x86-64-v3.")
 		elseif(${PREFIX}TARGET_X86_64_V2_EX)
-			target_compile_options(${PROJECT_NAME} PRIVATE 
+			target_compile_options(${PROJECT_NAME} PRIVATE
 				"-march=x86-64-v2"
-				"-mtune=generic"
 				"-mavx"
 				"-mbmi2"
 				"-mbmi"
@@ -2086,17 +2093,64 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL 
 		elseif(${PREFIX}TARGET_X86_64_V2)
 			target_compile_options(${PROJECT_NAME} PRIVATE
 				"-march=x86-64-v2"
-				"-mtune=generic"
 			)
 			message(STATUS "${LOGPREFIX} Targeting x86-64-v2.")
 		elseif(${PREFIX}TARGET_X86_64)
-			target_compile_options(${PROJECT_NAME} PRIVATE 
+			target_compile_options(${PROJECT_NAME} PRIVATE
 				"-march=x86-64"
-				"-mtune=generic"
 			)
 			message(STATUS "${LOGPREFIX} Targeting x86-64.")
 		endif()
+		if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+			target_compile_options(${PROJECT_NAME} PRIVATE
+				"-mtune=generic"
+			)
+		else()
+			target_compile_options(${PROJECT_NAME} PRIVATE
+				"-mtune=x86-64"
+			)
+		endif()
 	endif()
+
+	# - Use fast unordered math if possible.
+	if(${PREFIX}ENABLE_FASTMATH)
+		if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+			target_compile_options(${PROJECT_NAME} PRIVATE
+				"-ffast-math"
+			)
+		else()
+			target_compile_options(${PROJECT_NAME} PRIVATE
+				"-ffp-model=fast"
+				"-ffp-contract=on"
+			)
+		endif()
+	else()
+		target_compile_options(${PROJECT_NAME} PRIVATE
+			"-ffp-model=precise"
+			"-ffp-contract=on"
+		)
+	endif()
+
+	# - Don't export by default, require attributes.
+	# add_compile_options("-fvisibility=hidden")
+elseif(D_PLATFORM_MAC AND (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
+	# AppleClang
+	message(STATUS "${LOGPREFIX} Applying custom flags for AppleClang style build.")
+
+	# - Enable most useful warnings.
+	target_compile_options(${PROJECT_NAME} PRIVATE "-Wall")
+	target_compile_options(${PROJECT_NAME} PRIVATE "-Wextra")
+
+	# - Require enabled instruction sets.
+	if(${PREFIX}TARGET_NATIVE)
+		target_compile_options(${PROJECT_NAME} PRIVATE
+			"-march=native"
+		)
+		message(WARNING "${LOGPREFIX} Targeting native architecture. Binaries will not be distributable to other systems!")
+	endif()
+
+	# - Use fast unordered math if possible.
+	# FIXME: Appears to not be supported.
 
 	# - Don't export by default, require attributes.
 	# add_compile_options("-fvisibility=hidden")
