@@ -1,5 +1,4 @@
-# StreamFX - The premier VFX plugin for OBS Studio.
-# Copyright (C) 2017 - 2020 Michael Fabian Dirks
+# Copyright (C) 2017 Michael Fabian Dirks
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 # CMake Setup
-cmake_minimum_required(VERSION 3.8...4.0)
+cmake_minimum_required(VERSION 3.13...4.0)
 
 ################################################################################
 # Configure Type
