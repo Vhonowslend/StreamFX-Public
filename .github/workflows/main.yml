@@ -10,141 +10,100 @@ on:
     branches:
       - '*'
 
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
-  CACHE_VERSION: 1
+  CACHE_VERSION: 2
   LIBAOM_VERSION: "3.2.0.0"
 
 jobs:
-  windows:
-    name: "Windows 64-bit"
+  build:
     strategy:
       fail-fast: true
       matrix:
-        runner: [ windows-2019 ]
+        runner: [ windows-2022, ubuntu-22.04, macos-12, windows-2019, ubuntu-20.04, macos-11, macos-10.15 ]
+        CMAKE_BUILD_TYPE: [ Debug, RelWithDebInfo ]
         include:
+          - runner: windows-2022
+            generator: MSVC
+            platform: "Windows 11"
+            PACKAGE_NAME: "windows-11"
+            CMAKE_SYSTEM_VERSION: "10.0.18362.0"
+            CMAKE_GENERATOR: "Visual Studio 17 2022"
+            CMAKE_GENERATOR_PLATFORM: "x64"
           - runner: windows-2019
-            id: windows-2019
-            windows_sdk: "10.0.18362.0"
-            cmake_generator: "Visual Studio 16 2019"
-            cmake_generator_platform: "x64"
+            generator: MSVC
+            platform: "Windows 10"
+            PACKAGE_NAME: "windows-10"
+            CMAKE_SYSTEM_VERSION: "10.0.18362.0"
+            CMAKE_GENERATOR: "Visual Studio 16 2019"
+            CMAKE_GENERATOR_PLATFORM: "x64"
+          - runner: ubuntu-22.04
+            generator: GCC
+            platform: "Ubuntu 22"
+            compiler_c: gcc
+            compiler_cxx: g++
+            PACKAGE_NAME: "ubuntu-22-gcc"
+            CMAKE_GENERATOR: "Ninja"
+          - runner: ubuntu-20.04
+            generator: GCC
+            platform: "Ubuntu 20"
+            compiler_c: gcc
+            compiler_cxx: g++
+            PACKAGE_NAME: "ubuntu-20-gcc"
+            CMAKE_GENERATOR: "Ninja"
+          - runner: ubuntu-22.04
+            generator: Clang
+            platform: "Ubuntu 22"
+            compiler_c: clang
+            compiler_cxx: clang++
+            PACKAGE_NAME: "ubuntu-22-clang"
+            CMAKE_GENERATOR: "Ninja"
+          - runner: ubuntu-20.04
+            generator: Clang
+            platform: "Ubuntu 20"
+            compiler_c: clang
+            compiler_cxx: clang++
+            PACKAGE_NAME: "ubuntu-20-clang"
+            CMAKE_GENERATOR: "Ninja"
+          - runner: macos-12
+            generator: Clang
+            platform: "MacOS 12"
+            PACKAGE_NAME: "macos-12"
+            CMAKE_GENERATOR: "Xcode"
+            CMAKE_OSX_DEPLOYMENT_TARGET: "10.15"
+          - runner: macos-11
+            generator: Clang
+            platform: "MacOS 11"
+            PACKAGE_NAME: "macos-11"
+            CMAKE_GENERATOR: "Xcode"
+            CMAKE_OSX_DEPLOYMENT_TARGET: "10.15"
+          - runner: macos-10.15
+            generator: Clang
+            platform: "MacOS 10.15"
+            PACKAGE_NAME: "macos-10.15"
+            CMAKE_GENERATOR: "Xcode"
+            CMAKE_OSX_DEPLOYMENT_TARGET: "10.15"
+    name: "${{ matrix.platform }} (${{ matrix.generator }}, ${{ matrix.CMAKE_BUILD_TYPE }})"
     runs-on: ${{ matrix.runner }}
     env:
-      CMAKE_GENERATOR: ${{ matrix.cmake_generator }}
-      CMAKE_GENERATOR_PLATFORM: ${{ matrix.cmake_generator_platform }}
-      CMAKE_GENERATOR_TOOLSET: "host=x64"
-      CMAKE_SYSTEM_VERSION: ${{ matrix.windows_sdk }}
+      CC: ${{ matrix.compiler_c }}
+      CXX: ${{ matrix.compiler_cxx }}
+      CMAKE_GENERATOR: ${{ matrix.CMAKE_GENERATOR }}
+      CMAKE_GENERATOR_PLATFORM: ${{ matrix.CMAKE_GENERATOR_PLATFORM }}
+      CMAKE_SYSTEM_VERSION: ${{ matrix.CMAKE_SYSTEM_VERSION }}
+      CMAKE_OSX_DEPLOYMENT_TARGET: "${{ matrix.CMAKE_OSX_DEPLOYMENT_TARGET }}"
     steps:
     - name: "Clone"
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         submodules: recursive
         fetch-depth: 0
 
-    - name: "Dependencies: Cache"
-      if: ${{ github.event_name != 'pull_request' }}
-      uses: actions/cache@v2
-      with:
-        path: |
-          build/temp/autodeps
-        key: autodeps-${{ matrix.id }}-${{ env.CACHE_VERSION }}
-
-    - name: "Code Signing"
-      if: ${{ github.event_name != 'pull_request' }}
-      id: codesign
-      shell: bash
-      run: |
-        # Restore the Certificate back into a file.
-        echo "${{ secrets.CODESIGN_CERT_WIN }}" | base64 --decode > "${{ github.workspace }}/cert.pfx"
-        echo "::set-output name=cmake_args::-DENABLE_CODESIGN=ON -DCODESIGN_TIMESTAMPS=ON"
-
-    - name: "StreamFX: Configure"
-      shell: bash
-      env:
-        CODESIGN_FILE: ${{ github.workspace }}/cert.pfx
-        CODESIGN_PASS: ${{ secrets.CODESIGN_CERT_WIN_PASSWORD }}
-      run: |
-        cmake -H. -B"build/temp" \
-          ${{ steps.codesign.outputs.cmake_args }} \
-          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-          -DCMAKE_INSTALL_PREFIX="build/distrib" \
-          -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
-          -DPACKAGE_PREFIX="build/package" \
-          -DAOM_PATH="build/libaom/"
-
-    - name: "StreamFX: Build"
-      shell: bash
-      run: |
-        cmake --build "build/temp" --config RelWithDebInfo --target INSTALL
-
-    - name: "StreamFX: Package (Install Prerequisites)"
-      run: |
-        curl "-kL" "https://cdn.xaymar.com/ci/innosetup-6.1.2.exe" "-f" "--retry" "5" "-o" "inno.exe"
-        .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
-
-    - name: "StreamFX: Package"
-      shell: bash
-      run: |
-        mkdir build/package
-        cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_7Z
-        cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_ZIP
-
-    - name: "StreamFX: Signed Installer Preparation"
-      if: ${{ github.event_name != 'pull_request' }}
-      id: codesign_install
-      shell: bash
-      run: |
-        if [[ -f "${{ github.workspace }}/cert.pfx" ]]; then
-          signtool=$(awk 'match($0, /^;signtool=(.+)$/, ary) {print ary[1]}' "${{ github.workspace }}/build/temp/installer.iss")
-          echo "::set-output name=iscc_signtool::${signtool}"
-        fi
-
-    - name: "StreamFX: Package Installer"
-      shell: cmd
-      run: |
-        echo '"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 "/Ssigntool=${{ steps.codesign_install.outputs.iscc_signtool }} $p" ".\build\temp\installer.iss"'
-        "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 "/Ssigntool=${{ steps.codesign_install.outputs.iscc_signtool }} $p" ".\build\temp\installer.iss"
-
-    - name: "Artifacts"
-      uses: actions/upload-artifact@v1
-      with:
-        name: ${{ matrix.id }}
-        path: build/package
-
-  ubuntu:
-    name: "Ubuntu 64-bit"
-    strategy:
-      fail-fast: true
-      matrix:
-        ubuntu: [ focal ]
-        compiler: [ gcc, clang ]
-        include:
-          - ubuntu: focal
-            compiler: gcc
-            compiler-cxx: g++
-            runner: ubuntu-20.04
-            packages: gcc-9 g++9
-            extra_command: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 800 --slave /usr/bin/g++ g++ /usr/bin/g++-9
-            id: ubuntu-20.04
-          - ubuntu: focal
-            compiler: clang
-            compiler-cxx: clang++
-            runner: ubuntu-20.04
-            packages: ""
-            extra_command: 'sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"'
-            id: ubuntu-20.04-clang
-    runs-on: ${{ matrix.runner }}
-    env:
-      CC: ${{ matrix.compiler }}
-      CXX: ${{ matrix.compiler-cxx }}
-      CMAKE_GENERATOR: "Ninja"
-    steps:
-    - name: "Clone"
-      uses: actions/checkout@v2
-      with:
-        submodules: recursive
-        fetch-depth: 0
-
-    - name: "Prerequisites: Apt-Get"
+    - name: "Dependency: Ninja, Qt, FFmpeg, CURL (Linux)"
+      if: startsWith( matrix.runner, 'ubuntu' )
       shell: bash
       run: |
         sudo apt-get -qq update
@@ -156,106 +115,115 @@ jobs:
           cmake \
           ninja-build \
           git \
-          ${{ matrix.packages }} \
-          qt5-default libqwt-qt5-dev libqt5svg5-dev \
+          qtbase5-dev qtbase5-private-dev libqt5svg5-dev \
           libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev \
           libcurl4-openssl-dev
-        ${{ matrix.extra_command }}
 
-    - name: "Dependencies: Cache"
-      if: ${{ github.event_name != 'pull_request' }}
-      uses: actions/cache@v2
-      with:
-        path: |
-          build/temp/autodeps
-        key: autodeps-${{ matrix.id }}-${{ env.CACHE_VERSION }}
-
-    - name: "StreamFX: Configure"
+    - name: "Dependency: GCC (Linux, GCC)"
+      if: startsWith( matrix.runner, 'ubuntu' ) && ( matrix.generator == 'GCC' )
       shell: bash
       run: |
-        cmake -H. -B"build/temp" \
-          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-          -DCMAKE_INSTALL_PREFIX="build/distrib" \
-          -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
-          -DPACKAGE_PREFIX="build/package"
+        sudo apt-get install gcc-10 g++10
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 800 --slave /usr/bin/g++ g++ /usr/bin/g++-10
 
-    - name: "StreamFX: Build"
+    - name: "Dependency: Clang (Linux, Clang)"
+      if: startsWith( matrix.runner, 'ubuntu' ) && ( matrix.generator == 'Clang' )
       shell: bash
       run: |
-        cmake --build "build/temp" --config RelWithDebInfo --target install
+        sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" 14
+        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-14 800
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-14 800
 
-    - name: "StreamFX: Package"
+    - name: 'Dependency: Packages (Linux)'
+      if: startsWith( matrix.runner, 'macos' )
       shell: bash
       run: |
-        mkdir build/package
-        cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_7Z
-        cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_ZIP
-
-    - name: "Artifacts"
-      uses: actions/upload-artifact@v1
-      with:
-        name: ${{ matrix.id }}
-        path: build/package
-
-  macos:
-    strategy:
-      fail-fast: true
-      matrix:
-        runner: [ macos-latest ]
-        include:
-          - runner: macos-latest
-            id: macos-10.15
-            target-version: "10.15"
-    name: "MacOS (${{ matrix.target-version }})"
-    runs-on: ${{ matrix.runner }}
-    env:
-      CMAKE_GENERATOR: "Xcode"
-      CMAKE_OSX_DEPLOYMENT_TARGET: "${{ matrix.target-version }}"
-    steps:
-    - name: "Clone"
-      uses: actions/checkout@v2
-      with:
-        submodules: recursive
-        fetch-depth: 0
-
-    - name: "Dependencies: Cache"
-      if: ${{ github.event_name != 'pull_request' }}
-      uses: actions/cache@v2
-      with:
-        path: |
-          build/temp/autodeps
-        key: autodeps-${{ matrix.id }}-${{ env.CACHE_VERSION }}
-
-    - name: "StreamFX: Configure"
-      shell: bash
-      run: |
-        cmake -H. -B"build/temp" \
-          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-          -DCMAKE_INSTALL_PREFIX="build/distrib" \
-          -DPACKAGE_NAME="streamfx-${{ matrix.id }}" \
-          -DPACKAGE_PREFIX="build/package"
-
-    - name: "StreamFX: Build"
-      shell: bash
-      run: |
-        cmake --build "build/temp" --config RelWithDebInfo --target install
-
-    - name: "StreamFX: Package"
-      shell: bash
-      run: |
-        mkdir build/package
-        cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_7Z
-        cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_ZIP
-
-    - name: 'Packages: Install'
-      shell: bash
-      run: |
-        curl -L -O http://s.sudre.free.fr/Software/files/Packages.dmg
+        curl -kL http://cdn.xaymar.com/ci/Packages-1.2.10.dmg -f --retry 5 -o "Packages.dmg"
         sudo hdiutil attach ./Packages.dmg
         pushd /Volumes/Packages*
         sudo installer -pkg ./Install\ Packages.pkg -target /
 
-    - name: "Packages: Package"
+    - name: "Dependency: InnoSetup (Windows)"
+      if: startsWith( matrix.runner, 'windows' )
+      run: |
+        curl "-kL" "https://cdn.xaymar.com/ci/innosetup-6.2.1.exe" "-f" "--retry" "5" "-o" "inno.exe"
+        .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
+
+    - name: "Auto-Dependency Cache"
+      if: github.event_name != 'pull_request'
+      uses: actions/cache@v3
+      with:
+        path: |
+          build/temp/autodeps
+        key: autodeps-${{ matrix.runner }}-${{ matrix.generator }}-${{ matrix.CMAKE_BUILD_TYPE }}-${{ env.CACHE_VERSION }}
+
+    - name: "Code Signing (Windows)"
+# Do not run this on pull requests, ever!
+      if: (github.event_name != 'pull_request') && startsWith( matrix.runner, 'windows' )
+      id: codesign
+      shell: bash
+      run: |
+        # Restore the Certificate back into a file.
+        echo "${{ secrets.CODESIGN_CERT_WIN }}" | base64 --decode > "${{ github.workspace }}/cert.pfx"
+        echo "::set-output name=cmake_args::-DENABLE_CODESIGN=ON -DCODESIGN_TIMESTAMPS=ON"
+
+    - name: "Configure"
+      shell: bash
+      env:
+        CODESIGN_FILE: ${{ github.workspace }}/cert.pfx
+        CODESIGN_PASS: ${{ secrets.CODESIGN_CERT_WIN_PASSWORD }}
+      run: |
+        cmake -H. -B"build/temp" \
+          ${{ steps.codesign.outputs.cmake_args }} \
+          -DCMAKE_BUILD_TYPE=${{ matrix.CMAKE_BUILD_TYPE }} \
+          -DCMAKE_INSTALL_PREFIX="build/distrib" \
+          -DPACKAGE_NAME="streamfx-${{ matrix.PACKAGE_NAME }}" \
+          -DPACKAGE_PREFIX="build/package"
+
+    - name: "Build (Windows)"
+      if: startsWith( matrix.runner, 'windows' )
+      shell: bash
+      run: |
+        cmake --build "build/temp" --config RelWithDebInfo --target INSTALL
+
+    - name: "Build (Linux)"
+      if: startsWith( matrix.runner, 'ubuntu' )
+      shell: bash
+      run: |
+        cmake --build "build/temp" --config RelWithDebInfo --target install/strip
+
+    - name: "Build (MacOS)"
+      if: startsWith( matrix.runner, 'macos' )
+      shell: bash
+      run: |
+        cmake --build "build/temp" --config RelWithDebInfo --target install
+
+    - name: "Package: Archives"
+      shell: bash
+      run: |
+        mkdir build/package
+        cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_7Z
+        cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_ZIP
+
+    - name: "Package: Installer Code Signing (Windows)"
+      if: (github.event_name != 'pull_request') && startsWith( matrix.runner, 'windows' )
+      id: codesign_install
+      shell: bash
+      run: |
+        if [[ -f "${{ github.workspace }}/cert.pfx" ]]; then
+          signtool=$(awk 'match($0, /^;signtool=(.+)$/, ary) {print ary[1]}' "${{ github.workspace }}/build/temp/installer.iss")
+          echo "::set-output name=iscc_signtool::${signtool}"
+        fi
+
+    - name: "Package: Installer (Windows)"
+      if: startsWith( matrix.runner, 'windows' )
+      shell: cmd
+      run: |
+        echo '"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 "/Ssigntool=${{ steps.codesign_install.outputs.iscc_signtool }} $p" ".\build\temp\installer.iss"'
+        "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 "/Ssigntool=${{ steps.codesign_install.outputs.iscc_signtool }} $p" ".\build\temp\installer.iss"
+
+    - name: "Package: Installer (MacOS)"
+      if: startsWith( matrix.runner, 'macos' )
       shell: bash
       run: |
         packagesbuild ./build/temp/installer.pkgproj
@@ -263,5 +231,5 @@ jobs:
     - name: "Artifacts"
       uses: actions/upload-artifact@v1
       with:
-        name: ${{ matrix.id }}
+        name: ${{ matrix.runner }}-${{ matrix.generator }}-${{ matrix.CMAKE_BUILD_TYPE }}
         path: build/package

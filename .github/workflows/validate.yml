@@ -8,25 +8,59 @@ on:
     tags:
       - '*'
 
+concurrency: 
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
-  CACHE_VERSION: 1
+  CACHE_VERSION: 2
 
 jobs:
-  clang-format:
-    name: "clang-format"
-    runs-on: ubuntu-20.04
+  validation:
+    strategy:
+      fail-fast: true
+      matrix:
+        runner: [ "windows-2022", "windows-2019", "ubuntu-22.04", "ubuntu-20.04" ]
+        CMAKE_BUILD_TYPE: [ "Debug", "Release" ]
+        include:
+          - runner: "windows-2022"
+            id: "windows-2022-validate"
+            name: "Windows 11"
+            CMAKE_SYSTEM_VERSION: "10.0.18362.0"
+            CMAKE_GENERATOR: "Visual Studio 17 2022"
+            CMAKE_GENERATOR_PLATFORM: "x64"
+          - runner: "windows-2019"
+            id: "windows-2019-validate"
+            name: "Windows 10"
+            CMAKE_SYSTEM_VERSION: "10.0.18362.0"
+            CMAKE_GENERATOR: "Visual Studio 16 2019"
+            CMAKE_GENERATOR_PLATFORM: "x64"
+          - runner: "ubuntu-22.04"
+            id: "linux-22.04-validate"
+            name: "Ubuntu 22.04"
+            CMAKE_GENERATOR: "Ninja"
+          - runner: "ubuntu-20.04"
+            id: "linux-20.04-validate"
+            name: "Ubuntu 20.04"
+            CMAKE_GENERATOR: "Ninja"
+    name: "${{ matrix.name }} (${{ matrix.CMAKE_BUILD_TYPE }})"
+    runs-on: ${{ matrix.runner }}
     env:
       CC: clang
       CXX: clang++
-      CMAKE_GENERATOR: "Ninja"
+      CMAKE_BUILD_TYPE: ${{ matrix.CMAKE_BUILD_TYPE }}
+      CMAKE_SYSTEM_VERSION: ${{ matrix.CMAKE_SYSTEM_VERSION }}
+      CMAKE_GENERATOR: ${{ matrix.CMAKE_GENERATOR }}
+      CMAKE_GENERATOR_PLATFORM: ${{ matrix.CMAKE_GENERATOR_PLATFORM }}
     steps:
     - name: "Clone"
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         submodules: recursive
         fetch-depth: 0
 
     - name: "Prerequisites: Apt-Get"
+      if: startsWith( matrix.id, 'linux' )
       shell: bash
       run: |
         sudo apt-get -qq update
@@ -38,15 +72,14 @@ jobs:
           cmake \
           ninja-build \
           git \
-          ${{ matrix.packages }} \
-          qt5-default libqwt-qt5-dev libqt5svg5-dev \
+          qtbase5-dev qtbase5-private-dev libqt5svg5-dev \
           libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev \
           libcurl4-openssl-dev
         sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
 
     - name: "Dependencies: Cache"
-      if: ${{ github.event_name != 'pull_request' }}
-      uses: actions/cache@v2
+      if: github.event_name != 'pull_request'
+      uses: actions/cache@v3
       with:
         path: |
           build/temp/autodeps
@@ -56,16 +89,19 @@ jobs:
       shell: bash
       run: |
         cmake -H. -B"build/temp" \
-          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-          -DCMAKE_INSTALL_PREFIX="build/distrib" \
-          -DCMAKE_PACKAGE_NAME="streamfx-${{ matrix.id }}" \
-          -DCMAKE_PACKAGE_PREFIX="build/package" \
+          -DCMAKE_BUILD_TYPE=${{ matrix.CMAKE_BUILD_TYPE }} \
           -DENABLE_CLANG=TRUE
 
-    - name: "StreamFX: Format"
+    - name: "StreamFX: clang-tidy"
+      continue-on-error: true
       shell: bash
       run: |
-        cmake --build "build/temp" --config RelWithDebInfo --target StreamFX_CLANG-FORMAT
+        cmake --build "build/temp" --config ${{ matrix.CMAKE_BUILD_TYPE }} --target StreamFX_clang-tidy
+
+    - name: "StreamFX: clang-format"
+      shell: bash
+      run: |
+        cmake --build "build/temp" --config ${{ matrix.CMAKE_BUILD_TYPE }} --target StreamFX_clang-format
 
     - name: "Validate Formatting"
       shell: bash
