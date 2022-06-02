@@ -938,11 +938,19 @@ feature_updater(OFF)
 # Fulfill Requirements
 #- OBS: Library
 if(STANDALONE)
-	find_package(libobs REQUIRED NO_MODULE
-		PATHS
-			"${${PREFIX}OBS_PATH}/cmake/libobs"
-			"${${PREFIX}OBS_PATH}/cmake/LibObs"
-	)
+	if(EXISTS "${${PREFIX}OBS_PATH}/cmake/LibObs/LibObsConfig.cmake")
+		find_package(LibObs REQUIRED NO_MODULE
+			PATHS
+				"${${PREFIX}OBS_PATH}/cmake/libobs"
+				"${${PREFIX}OBS_PATH}/cmake/LibObs"
+		)
+	else()
+		find_package(libobs REQUIRED NO_MODULE
+			PATHS
+				"${${PREFIX}OBS_PATH}/cmake/libobs"
+				"${${PREFIX}OBS_PATH}/cmake/LibObs"
+		)
+	endif()
 endif()
 
 #- OBS: Front-End API
