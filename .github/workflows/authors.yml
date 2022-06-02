@@ -7,7 +7,7 @@ jobs:
     name: "Update Authors"
     steps:
     - name: "Checkout"
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: "Configure"
       shell: bash
       run: |
