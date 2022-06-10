@@ -984,7 +984,7 @@ if(REQUIRE_OBS_FRONTEND_API)
 			message(WARNING "${LOGPREFIX}The provided path for libOBS did not contain obs-frontend-api.")
 		endif()
 	endif()
-	
+
 	if(TARGET obs-frontend-api)
 		set(HAVE_OBS_FRONTEND_API ON)
 	endif()
