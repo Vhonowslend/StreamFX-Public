@@ -18,9 +18,9 @@
 cmake_minimum_required(VERSION 3.13...4.0)
 
 if(${CMAKE_VERSION} VERSION_LESS 3.19)
-	set(LOGPREFIX "[StreamFX]")
+	set(LOGPREFIX "[StreamFX] ")
 else()
-	list(APPEND CMAKE_MESSAGE_INDENT "[StreamFX]")
+	list(APPEND CMAKE_MESSAGE_INDENT "[StreamFX] ")
 	set(LOGPREFIX "")
 endif()
 
@@ -41,9 +41,9 @@ else()
 endif()
 
 if(STANDALONE)
-	message(STATUS "${LOGPREFIX} This is a standalone build, please make sure you've followed the instructions.")
+	message(STATUS "${LOGPREFIX}This is a standalone build, please make sure you've followed the instructions.")
 else()
-	message(STATUS "${LOGPREFIX} This is a combined build.")
+	message(STATUS "${LOGPREFIX}This is a combined build.")
 endif()
 
 ################################################################################
@@ -105,11 +105,11 @@ if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
 				set(VERSION_SUFFIX "")
 			endif()
 		else()
-			message(WARNING "${LOGPREFIX} Failed to detect version, using default instead.")
+			message(WARNING "${LOGPREFIX}Failed to detect version, using default instead.")
 		endif()
 	endif()
 else()
-	message(STATUS "${LOGPREFIX} Not a git repository, automatic version detection disabled.")
+	message(STATUS "${LOGPREFIX}Not a git repository, automatic version detection disabled.")
 endif()
 
 # Allow manual overrides of the detected version.
@@ -152,7 +152,7 @@ else()
 endif()
 
 # Log the detected version.
-message(STATUS "${LOGPREFIX} Version ${VERSION_STRING}")
+message(STATUS "${LOGPREFIX}Version ${VERSION_STRING}")
 
 ################################################################################
 # Project
@@ -211,7 +211,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 else()
 	set(D_PLATFORM_OS "unknown")
 	set(D_PLATFORM_UNKNOWN 1)
-	message(WARNING "${LOGPREFIX} The operating system '${CMAKE_SYSTEM_NAME}' is unknown to to this script, continue at your own risk.")
+	message(WARNING "${LOGPREFIX}The operating system '${CMAKE_SYSTEM_NAME}' is unknown to to this script, continue at your own risk.")
 endif()
 
 # Architecture
@@ -266,7 +266,7 @@ check_ipo_supported(RESULT D_HAS_IPO)
 
 set(D_PLATFORM_INSTR ${ARCH_INST})
 set(D_PLATFORM_ARCH ${ARCH_INST})
-message(STATUS "${LOGPREFIX} Target is ${D_PLATFORM_BITS}bit ${ARCH_INST} with a pointer size of ${D_PLATFORM_BITS_PTR}bit.")
+message(STATUS "${LOGPREFIX}Target is ${D_PLATFORM_BITS}bit ${ARCH_INST} with a pointer size of ${D_PLATFORM_BITS_PTR}bit.")
 
 ################################################################################
 # Options
@@ -422,7 +422,7 @@ if(STANDALONE)
 
 			# Verify that the platform, architecture and bitness is supported.
 			if(OBS_DOWNLOAD_URL STREQUAL "")
-				message(FATAL_ERROR "${LOGPREFIX} Download for libOBS failed, as Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+				message(FATAL_ERROR "${LOGPREFIX}Download for libOBS failed, as Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
 				return()
 			endif()
 		else()
@@ -501,7 +501,7 @@ if(STANDALONE AND NOT D_PLATFORM_LINUX)
 
 			# Verify that the platform, architecture and bitness is supported.
 			if(OBSDEPS_DOWNLOAD_URL STREQUAL "")
-				message(FATAL_ERROR "${LOGPREFIX} Download for pre-built OBS dependencies failed, as Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+				message(FATAL_ERROR "${LOGPREFIX}Download for pre-built OBS dependencies failed, as Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
 				return()
 			endif()
 		else()
@@ -588,7 +588,7 @@ if(STANDALONE AND NOT D_PLATFORM_LINUX)
 
 			# Verify that the platform, architecture and bitness is supported.
 			if(QT_DOWNLOAD_URL STREQUAL "")
-				message(FATAL_ERROR "${LOGPREFIX} Download for Qt failed, as Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+				message(FATAL_ERROR "${LOGPREFIX}Download for Qt failed, as Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
 				return()
 			endif()
 		else()
@@ -656,7 +656,7 @@ if(D_PLATFORM_WINDOWS)
 
 			# Verify that the platform, architecture and bitness is supported.
 			if(AOM_DOWNLOAD_URL STREQUAL "")
-				message(FATAL_ERROR "${LOGPREFIX} Download for AOM failed, as Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
+				message(FATAL_ERROR "${LOGPREFIX}Download for AOM failed, as Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
 				return()
 			endif()
 		else()
@@ -723,20 +723,20 @@ function(feature_encoder_ffmpeg RESOLVE)
 	is_feature_enabled(ENCODER_FFMPEG T_CHECK)
 	if(RESOLVE AND T_CHECK)
 		if(NOT HAVE_FFMPEG)
-			message(WARNING "${LOGPREFIX} FFmpeg Encoder requires FFmpeg. Disabling...")
+			message(WARNING "${LOGPREFIX}FFmpeg Encoder requires FFmpeg. Disabling...")
 			set_feature_disabled(ENCODER_FFMPEG ON)
 		else()
 			# AMF
 			is_feature_enabled(ENCODER_FFMPEG_AMF T_CHECK)
 			if(T_CHECK AND D_PLATFORM_MAC)
-				message(WARNING "${LOGPREFIX} FFmpeg Encoder 'AMF' requires Windows or Linux. Disabling...")
+				message(WARNING "${LOGPREFIX}FFmpeg Encoder 'AMF' requires Windows or Linux. Disabling...")
 				set_feature_disabled(ENCODER_FFMPEG_AMF ON)
 			endif()
 
 			# NVENC
 			is_feature_enabled(ENCODER_FFMPEG_NVENC T_CHECK)
 			if(T_CHECK AND D_PLATFORM_MAC)
-				message(WARNING "${LOGPREFIX} FFmpeg Encoder 'NVENC' requires Windows or Linux. Disabling...")
+				message(WARNING "${LOGPREFIX}FFmpeg Encoder 'NVENC' requires Windows or Linux. Disabling...")
 				set_feature_disabled(ENCODER_FFMPEG_NVENC ON)
 			endif()
 
@@ -755,7 +755,7 @@ function(feature_encoder_aom_av1 RESOLVE)
 	is_feature_enabled(ENCODER_AOM_AV1 T_CHECK)
 	if(RESOLVE AND T_CHECK)
 		if(NOT HAVE_AOM)
-			message(WARNING "${LOGPREFIX} AOM AV1 encoder missing AOM library. Disabling...")
+			message(WARNING "${LOGPREFIX}AOM AV1 encoder missing AOM library. Disabling...")
 			set_feature_disabled(ENCODER_AOM_AV1 ON)
 		endif()
 	elseif(T_CHECK)
@@ -768,14 +768,14 @@ function(feature_filter_autoframing RESOLVE)
 	if(RESOLVE AND T_CHECK)
 		# Verify that the requirements for the providers are available
 		if(NOT HAVE_NVIDIA_AR_SDK)
-			message(WARNING "${LOGPREFIX} 'NVIDIA Augmented Reality SDK' is missing. Disabling NVIDIA provider...")
+			message(WARNING "${LOGPREFIX}'NVIDIA Augmented Reality SDK' is missing. Disabling NVIDIA provider...")
 			set_feature_disabled(FILTER_AUTOFRAMING_NVIDIA ON)
 		endif()
 
 		# Verify that we have at least one provider for Auto-Framing.
 		is_feature_enabled(FILTER_AUTOFRAMING_NVIDIA T_CHECK_NVIDIA)
 		if(NOT T_CHECK_NVIDIA)
-			message(WARNING "${LOGPREFIX} Auto-Framing has no available providers. Disabling...")
+			message(WARNING "${LOGPREFIX}Auto-Framing has no available providers. Disabling...")
 			set_feature_disabled(FILTER_AUTOFRAMING ON)
 		endif()
 	elseif(T_CHECK)
@@ -797,14 +797,14 @@ function(feature_filter_denoising RESOLVE)
 	if(RESOLVE AND T_CHECK)
 		# Verify that the requirements for the providers are available
 		if(NOT HAVE_NVIDIA_VFX_SDK)
-			message(WARNING "${LOGPREFIX} 'NVIDIA Video Effects SDK' is missing. Disabling NVIDIA provider...")
+			message(WARNING "${LOGPREFIX}'NVIDIA Video Effects SDK' is missing. Disabling NVIDIA provider...")
 			set_feature_disabled(FILTER_DENOISING_NVIDIA ON)
 		endif()
 
 		# Verify that we have at least one provider for Video Denoising.
 		is_feature_enabled(FILTER_DENOISING_NVIDIA T_CHECK_NVIDIA)
 		if(NOT T_CHECK_NVIDIA)
-			message(WARNING "${LOGPREFIX} Denoising has no available providers. Disabling...")
+			message(WARNING "${LOGPREFIX}Denoising has no available providers. Disabling...")
 			set_feature_disabled(FILTER_DENOISING ON)
 		endif()
 	elseif(T_CHECK)
@@ -837,14 +837,14 @@ function(feature_filter_upscaling RESOLVE)
 	if(RESOLVE AND T_CHECK)
 		# Verify that the requirements for the providers are available
 		if(NOT HAVE_NVIDIA_VFX_SDK)
-			message(WARNING "${LOGPREFIX} 'NVIDIA Video Effects SDK' is missing. Disabling NVIDIA provider(s)...")
+			message(WARNING "${LOGPREFIX}'NVIDIA Video Effects SDK' is missing. Disabling NVIDIA provider(s)...")
 			set_feature_disabled(FILTER_UPSCALING_NVIDIA ON)
 		endif()
 
 		# Verify that we have at least one provider for Video Super-Resolution.
 		is_feature_enabled(FILTER_UPSCALING_NVIDIA T_CHECK_NVIDIA)
 		if(NOT T_CHECK_NVIDIA)
-			message(WARNING "${LOGPREFIX} Upscaling has no available providers. Disabling...")
+			message(WARNING "${LOGPREFIX}Upscaling has no available providers. Disabling...")
 			set_feature_disabled(FILTER_UPSCALING ON)
 		endif()
 	elseif(T_CHECK)
@@ -857,14 +857,14 @@ function(feature_filter_virtual_greenscreen RESOLVE)
 	if(RESOLVE AND T_CHECK)
 		# Verify that the requirements for the providers are available
 		if(NOT HAVE_NVIDIA_VFX_SDK)
-			message(WARNING "${LOGPREFIX} 'NVIDIA Video Effects SDK' is missing. Disabling NVIDIA provider(s)...")
+			message(WARNING "${LOGPREFIX}'NVIDIA Video Effects SDK' is missing. Disabling NVIDIA provider(s)...")
 			set_feature_disabled(FILTER_VIRTUAL_GREENSCREEN_NVIDIA ON)
 		endif()
 
 		# Verify that we have at least one provider for Video Super-Resolution.
 		is_feature_enabled(FILTER_VIRTUAL_GREENSCREEN_NVIDIA T_CHECK_NVIDIA)
 		if(NOT T_CHECK_NVIDIA)
-			message(WARNING "${LOGPREFIX} Virtual Greenscreen has no available providers. Disabling...")
+			message(WARNING "${LOGPREFIX}Virtual Greenscreen has no available providers. Disabling...")
 			set_feature_disabled(FILTER_VIRTUAL_GREENSCREEN ON)
 		endif()
 	elseif(T_CHECK)
@@ -888,10 +888,10 @@ function(feature_frontend RESOLVE)
 	is_feature_enabled(FRONTEND T_CHECK)
 	if(RESOLVE AND T_CHECK)
 		if(NOT HAVE_QT)
-			message(WARNING "${LOGPREFIX} Front-End requires Qt. Disabling...")
+			message(WARNING "${LOGPREFIX}Front-End requires Qt. Disabling...")
 			set_feature_disabled(FRONTEND ON)
 		elseif(NOT HAVE_OBS_FRONTEND_API)
-			message(WARNING "${LOGPREFIX} Front-End requires OBS FrontEnd API. Disabling...")
+			message(WARNING "${LOGPREFIX}Front-End requires OBS FrontEnd API. Disabling...")
 			set_feature_disabled(FRONTEND ON)
 		endif()
 	elseif(T_CHECK)
@@ -904,10 +904,10 @@ function(feature_updater RESOLVE)
 	is_feature_enabled(UPDATER T_CHECK)
 	if(RESOLVE AND T_CHECK)
 		if(NOT HAVE_CURL)
-			message(WARNING "${LOGPREFIX} Updater requires CURL. Disabling...")
+			message(WARNING "${LOGPREFIX}Updater requires CURL. Disabling...")
 			set_feature_disabled(UPDATER ON)
 		elseif(NOT HAVE_JSON)
-			message(WARNING "${LOGPREFIX} Updater requires nlohmann::json. Disabling...")
+			message(WARNING "${LOGPREFIX}Updater requires nlohmann::json. Disabling...")
 			set_feature_disabled(UPDATER ON)
 		endif()
 	elseif(T_CHECK)
@@ -981,7 +981,7 @@ if(REQUIRE_OBS_FRONTEND_API)
 				IMPORTED_LOCATION_RELWITHDEBINFO "${${PREFIX}OBS_PATH}/bin/${D_PLATFORM_BITS}bit/libobs-frontend-api.so"
 			)
 		else()
-			message(WARNING "${LOGPREFIX} The provided path for libOBS did not contain obs-frontend-api.")
+			message(WARNING "${LOGPREFIX}The provided path for libOBS did not contain obs-frontend-api.")
 		endif()
 	endif()
 	
@@ -1033,7 +1033,7 @@ endif()
 set(HAVE_JSON OFF)
 if(REQUIRE_JSON)
 	if(NOT EXISTS "${PROJECT_SOURCE_DIR}/third-party/nlohmann-json/single_include")
-		message(FATAL_ERROR "${LOGPREFIX} Please make sure to update git submodules to their latest supported version.")
+		message(FATAL_ERROR "${LOGPREFIX}Please make sure to update git submodules to their latest supported version.")
 		return()
 	else()
 		set(JSON_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/third-party/nlohmann-json/single_include")
@@ -1974,7 +1974,7 @@ endif()
 # C/C++ Compiler Adjustments
 if(D_PLATFORM_WINDOWS AND ((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")))
 	# MSVC/ClangCL
-	message(STATUS "${LOGPREFIX} Applying custom flags for MSVC style build.")
+	message(STATUS "${LOGPREFIX}Applying custom flags for MSVC style build.")
 
 	# - Dynamically link Microsoft C/C++ Redistributable.
 	target_compile_options(${PROJECT_NAME} PRIVATE
@@ -2000,19 +2000,19 @@ if(D_PLATFORM_WINDOWS AND ((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR (CMAKE_CXX
 	if(D_PLATFORM_ARCH_X86)
 		if(${PREFIX}TARGET_X86_64_V4)
 			target_compile_options(${PROJECT_NAME} PRIVATE "/arch:AVX512")
-			message(STATUS "${LOGPREFIX} Targeting x86-64-v4.")
+			message(STATUS "${LOGPREFIX}Targeting x86-64-v4.")
 		elseif(${PREFIX}TARGET_X86_64_V3)
 			target_compile_options(${PROJECT_NAME} PRIVATE "/arch:AVX2")
-			message(STATUS "${LOGPREFIX} Targeting x86-64-v3.")
+			message(STATUS "${LOGPREFIX}Targeting x86-64-v3.")
 		elseif(${PREFIX}TARGET_X86_64_V2_EX)
 			target_compile_options(${PROJECT_NAME} PRIVATE "/arch:AVX")
-			message(STATUS "${LOGPREFIX} Targeting extended x86-64-v2.")
+			message(STATUS "${LOGPREFIX}Targeting extended x86-64-v2.")
 		elseif(${PREFIX}TARGET_X86_64_V2)
 			target_compile_options(${PROJECT_NAME} PRIVATE "/d2archSSE42")
-			message(STATUS "${LOGPREFIX} Targeting x86-64-v2.")
+			message(STATUS "${LOGPREFIX}Targeting x86-64-v2.")
 		elseif(${PREFIX}TARGET_X86_64)
 			#target_compile_options(${PROJECT_NAME} PRIVATE "/arch:SSE2")
-			message(STATUS "${LOGPREFIX} Targeting x86-64.")
+			message(STATUS "${LOGPREFIX}Targeting x86-64.")
 		endif()
 	endif()
 
@@ -2054,7 +2054,7 @@ if(D_PLATFORM_WINDOWS AND ((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR (CMAKE_CXX
 	endforeach()
 elseif(D_PLATFORM_LINUX AND ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")))
 	# GCC/Clang
-	message(STATUS "${LOGPREFIX} Applying custom flags for GCC/Clang style build.")
+	message(STATUS "${LOGPREFIX}Applying custom flags for GCC/Clang style build.")
 
 	# - Enable most useful warnings.
 	target_compile_options(${PROJECT_NAME} PRIVATE "-Wall")
@@ -2065,18 +2065,18 @@ elseif(D_PLATFORM_LINUX AND ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_
 		target_compile_options(${PROJECT_NAME} PRIVATE
 			"-march=native"
 		)
-		message(WARNING "${LOGPREFIX} Targeting native architecture. Binaries will not be distributable to other systems!")
+		message(WARNING "${LOGPREFIX}Targeting native architecture. Binaries will not be distributable to other systems!")
 	elseif(D_PLATFORM_ARCH_X86)
 		if(${PREFIX}TARGET_X86_64_V4)
 			target_compile_options(${PROJECT_NAME} PRIVATE
 				"-march=x86-64-v4"
 			)
-			message(STATUS "${LOGPREFIX} Targeting x86-64-v4.")
+			message(STATUS "${LOGPREFIX}Targeting x86-64-v4.")
 		elseif(${PREFIX}TARGET_X86_64_V3)
 			target_compile_options(${PROJECT_NAME} PRIVATE
 				"-march=x86-64-v3"
 			)
-			message(STATUS "${LOGPREFIX} Targeting x86-64-v3.")
+			message(STATUS "${LOGPREFIX}Targeting x86-64-v3.")
 		elseif(${PREFIX}TARGET_X86_64_V2_EX)
 			target_compile_options(${PROJECT_NAME} PRIVATE
 				"-march=x86-64-v2"
@@ -2089,17 +2089,17 @@ elseif(D_PLATFORM_LINUX AND ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_
 				"-mpclmul"
 				"-mpopcnt"
 			)
-			message(STATUS "${LOGPREFIX} Targeting extended x86-64-v2.")
+			message(STATUS "${LOGPREFIX}Targeting extended x86-64-v2.")
 		elseif(${PREFIX}TARGET_X86_64_V2)
 			target_compile_options(${PROJECT_NAME} PRIVATE
 				"-march=x86-64-v2"
 			)
-			message(STATUS "${LOGPREFIX} Targeting x86-64-v2.")
+			message(STATUS "${LOGPREFIX}Targeting x86-64-v2.")
 		elseif(${PREFIX}TARGET_X86_64)
 			target_compile_options(${PROJECT_NAME} PRIVATE
 				"-march=x86-64"
 			)
-			message(STATUS "${LOGPREFIX} Targeting x86-64.")
+			message(STATUS "${LOGPREFIX}Targeting x86-64.")
 		endif()
 		if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 			target_compile_options(${PROJECT_NAME} PRIVATE
@@ -2135,7 +2135,7 @@ elseif(D_PLATFORM_LINUX AND ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_
 	# add_compile_options("-fvisibility=hidden")
 elseif(D_PLATFORM_MAC AND (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
 	# AppleClang
-	message(STATUS "${LOGPREFIX} Applying custom flags for AppleClang style build.")
+	message(STATUS "${LOGPREFIX}Applying custom flags for AppleClang style build.")
 
 	# - Enable most useful warnings.
 	target_compile_options(${PROJECT_NAME} PRIVATE "-Wall")
@@ -2146,7 +2146,7 @@ elseif(D_PLATFORM_MAC AND (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
 		target_compile_options(${PROJECT_NAME} PRIVATE
 			"-march=native"
 		)
-		message(WARNING "${LOGPREFIX} Targeting native architecture. Binaries will not be distributable to other systems!")
+		message(WARNING "${LOGPREFIX}Targeting native architecture. Binaries will not be distributable to other systems!")
 	endif()
 
 	# - Use fast unordered math if possible.
@@ -2229,7 +2229,7 @@ if(D_PLATFORM_MAC)
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 		COMMAND install_name_tool ARGS -change "${T_OBS_LINK}" "@executable_path/../Frameworks/libobs.0.dylib" $<TARGET_FILE:${PROJECT_NAME}>
 	)
-	message(STATUS "${LOGPREFIX} Added post-build step for adjusting libobs linking path.")
+	message(STATUS "${LOGPREFIX}Added post-build step for adjusting libobs linking path.")
 
 	# OBS Front-End API
 	if(REQUIRE_OBS_FRONTEND_API AND HAVE_OBS_FRONTEND_API)
@@ -2237,7 +2237,7 @@ if(D_PLATFORM_MAC)
 		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 			COMMAND install_name_tool ARGS -change "${T_OBSFE_LINK}" "@executable_path/../Frameworks/libobs-frontend-api.dylib" $<TARGET_FILE:${PROJECT_NAME}>
 		)
-		message(STATUS "${LOGPREFIX} Added post-build step for adjusting libobs-frontend-api linking path.")
+		message(STATUS "${LOGPREFIX}Added post-build step for adjusting libobs-frontend-api linking path.")
 	endif()
 
 	# Qt5
@@ -2259,9 +2259,9 @@ if(D_PLATFORM_MAC)
 		# - QtWidgets
 			COMMAND install_name_tool ARGS -change "${T_QT5WIDGETS_LINK}" "@executable_path/../Frameworks/QtWidgets.framework/Versions/5/QtWidgets" $<TARGET_FILE:${PROJECT_NAME}>
 		)
-		message(STATUS "${LOGPREFIX} Added post-build step for adjusting Qt5::Core linking path (Found: ${Qt5_DIR} resolved to ${T_QT5CORE_LINK}).")
-		message(STATUS "${LOGPREFIX} Added post-build step for adjusting Qt5::Gui linking path (Found: ${Qt5_DIR} resolved to ${T_QT5GUI_LINK}).")
-		message(STATUS "${LOGPREFIX} Added post-build step for adjusting Qt5::Widgets linking path (Found: ${Qt5_DIR} resolved to ${T_QT5WIDGETS_LINK}).")
+		message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt5::Core linking path (Found: ${Qt5_DIR} resolved to ${T_QT5CORE_LINK}).")
+		message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt5::Gui linking path (Found: ${Qt5_DIR} resolved to ${T_QT5GUI_LINK}).")
+		message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt5::Widgets linking path (Found: ${Qt5_DIR} resolved to ${T_QT5WIDGETS_LINK}).")
 	endif()
 endif()
 
