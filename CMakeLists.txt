@@ -50,15 +50,88 @@ endif()
 # Versioning
 ################################################################################
 
-set(VERSION_MAJOR 0)
-set(VERSION_MINOR 12)
-set(VERSION_PATCH 0)
-set(VERSION_TWEAK 0)
-set(VERSION_SUFFIX "a1")
+# Variables for Versioning
+set(VERSION_MAJOR 0) # Major
+set(VERSION_MINOR 0) # Minor
+set(VERSION_PATCH 0) # Patch
+set(VERSION_STAGE "") # Prefix for Tweak, if left empty will assume '.'.
+set(VERSION_TWEAK 0) # Tweak
 set(VERSION_COMMIT "00000000")
+# Final format will be [MAJOR].[MINOR].[PATCH]([TYPE][TWEAK])(-[COMMIT])
+
+function(parse_version_string)
+	# Parses a version in the format A.B.C[.|a|b|rc]D-E
+	cmake_parse_arguments(
+		PARSE_ARGV 0
+		_ARGS
+		""
+		"INPUT;OUTPUT"
+		""
+	)
+	
+	set(_tmp_MAJOR 0)
+	set(_tmp_MINOR 0)
+	set(_tmp_PATCH 0)
+	set(_tmp_STAGE "")
+	set(_tmp_TWEAK "")
+	set(_tmp_COMMIT "")
+
+	# Replace separators with list separators
+	string(REPLACE "-" "." _tmp "${_ARGS_INPUT}")
+	string(REPLACE "." ";" _tmp "${_tmp}")
+	
+	# Parse version differently depending on total string length.
+	list(LENGTH _tmp _tmp_len)
+	if(_tmp_len GREATER_EQUAL 1) # A[...]
+		list(GET _tmp 0 _tmp_MAJOR)
+	endif()
+	if(_tmp_len GREATER_EQUAL 2) # A.B[...]
+		list(GET _tmp 1 _tmp_MINOR)
+	endif()
+	if(_tmp_len GREATER_EQUAL 3) # A.B.C[...]
+		list(GET _tmp 2 _tmp_PATCH)
+	endif()
+	if(_tmp_len EQUAL 4) # A.B.C.D or A.B.C-gEEEEEEEE
+		list(GET _tmp 3 _tmp2)
+		# No support for '{N,M}' in CMake-Regex!
+		if(_tmp2 MATCHES "^g[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]")
+			# A.B.C-gEEEEEEEE
+			set(_tmp_COMMIT "${_tmp2}")
+		else()
+			# It is A.B.C.D
+			set(_tmp_TWEAK "${_tmp2}")
+			set(_tmp_STAGE "a")
+		endif()
+	elseif(_tmp_len EQUAL 5) # A.B.C.D-gEEEEEEEE
+		set(_tmp_STAGE "a")
+		list(GET _tmp 3 _tmp_TWEAK)
+		list(GET _tmp 4 _tmp_COMMIT)
+	endif()
+	if(_tmp_TWEAK STREQUAL "") # Is A.B.C-gEEEEEEEE actually A.B.CxD-gEEEEEEEE?
+		string(REGEX MATCHALL "^([0-9]+)([_a-c]+)([0-9]+)" T_MATCHES "${_tmp_PATCH}")
+		if(T_MATCHES)
+			set(_tmp_PATCH ${CMAKE_MATCH_1})
+			set(_tmp_STAGE ${CMAKE_MATCH_2})
+			set(_tmp_TWEAK ${CMAKE_MATCH_3})			
+		endif()
+	endif()
+
+	set(${_ARGS_OUTPUT}_MAJOR ${_tmp_MAJOR} PARENT_SCOPE)
+	set(${_ARGS_OUTPUT}_MINOR ${_tmp_MINOR} PARENT_SCOPE)
+	set(${_ARGS_OUTPUT}_PATCH ${_tmp_PATCH} PARENT_SCOPE)
+	set(${_ARGS_OUTPUT}_STAGE ${_tmp_STAGE} PARENT_SCOPE)
+	set(${_ARGS_OUTPUT}_TWEAK ${_tmp_TWEAK} PARENT_SCOPE)
+	set(${_ARGS_OUTPUT}_COMMIT ${_tmp_COMMIT} PARENT_SCOPE)
+endfunction()
 
 # Check if we are in a git repository.
 if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
+	set(VERSION_BASE "0.11.0") # Automatic versioning base
+	set(VERSION_TARGET "0.12.0") # Automatic versioning target
+	
+	# Parse target version as it is for output.
+	parse_version_string(OUTPUT "VERSION" INPUT "${VERSION_TARGET}")
+
 	# Try and figure out where git is.
 	find_program(GIT git
 		PATHS
@@ -69,12 +142,9 @@ if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
 	)
 
 	if(GIT)
-		set(GIT_RESULT)
-		set(GIT_OUTPUT)
-		set(GIT_ERROR)
-
+		# Tweak 
 		execute_process(
-			COMMAND "${GIT}" describe --tags --long --match "[0-9]*.[0-9]*.[0-9]*" --abbrev=8 HEAD
+			COMMAND "${GIT}" describe --tags --long --match "${VERSION_BASE}" --abbrev=8 HEAD
 			WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 			RESULT_VARIABLE GIT_RESULT
 			OUTPUT_VARIABLE GIT_OUTPUT
@@ -83,29 +153,34 @@ if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
 			ERROR_STRIP_TRAILING_WHITESPACE
 			ERROR_QUIET
 		)
-
-		if(GIT_RESULT EQUAL 0)
-			string(REPLACE "-" "." GIT_OUTPUT "${GIT_OUTPUT}")
-			string(REPLACE "." ";" GIT_OUTPUT "${GIT_OUTPUT}")
-
-			# Parse Version
-			list(GET GIT_OUTPUT 0 VERSION_MAJOR)
-			list(GET GIT_OUTPUT 1 VERSION_MINOR)
-			list(GET GIT_OUTPUT 2 VERSION_PATCH)
-			list(GET GIT_OUTPUT 3 VERSION_TWEAK)
-			list(GET GIT_OUTPUT 4 VERSION_COMMIT)
-
-			# Patch needs additional parsing.
-			# This may be a [0-9]*[a-z]*[0-9]+ string.
-			string(REGEX MATCHALL "^([0-9]+)([a-z]+[0-9]+)?" T_MATCHES "${VERSION_PATCH}")
-			set(VERSION_PATCH "${CMAKE_MATCH_1}")
-			if(CMAKE_MATCH_2)
-				set(VERSION_SUFFIX "${CMAKE_MATCH_2}")
-			else()
-				set(VERSION_SUFFIX "")
-			endif()
-		else()
+		if(NOT GIT_RESULT EQUAL 0)
 			message(WARNING "${LOGPREFIX}Failed to detect version, using default instead.")
+		else()
+			parse_version_string(OUTPUT "GIT_VERSION" INPUT "${GIT_OUTPUT}")
+			set(VERSION_STAGE ${GIT_VERSION_STAGE})
+			set(VERSION_TWEAK ${GIT_VERSION_TWEAK})
+			set(VERSION_COMMIT ${GIT_VERSION_COMMIT})
+		endif()
+
+		# Is there a tag on the current commit?
+		execute_process(
+			COMMAND "${GIT}" tag "--sort=-v:refname" "--points-at" HEAD
+			WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+			RESULT_VARIABLE GIT_RESULT
+			OUTPUT_VARIABLE TAG_OUTPUT
+			ERROR_VARIABLE GIT_ERROR
+			OUTPUT_STRIP_TRAILING_WHITESPACE
+			ERROR_STRIP_TRAILING_WHITESPACE
+			ERROR_QUIET
+		)
+		if((GIT_RESULT EQUAL 0) AND (NOT "${TAG_OUTPUT}" STREQUAL ""))
+			string(REGEX REPLACE "[\r\n]+.*" "" T_MATCHES "${TAG_OUTPUT}")
+			parse_version_string(OUTPUT "TAG_VERSION" INPUT "${T_MATCHES}")
+			set(VERSION_MAJOR "${TAG_VERSION_MAJOR}")
+			set(VERSION_MINOR "${TAG_VERSION_MINOR}")
+			set(VERSION_PATCH "${TAG_VERSION_PATCH}")
+			set(VERSION_STAGE "${TAG_VERSION_STAGE}")
+			set(VERSION_TWEAK "${TAG_VERSION_TWEAK}")
 		endif()
 	endif()
 else()
@@ -113,42 +188,16 @@ else()
 endif()
 
 # Allow manual overrides of the detected version.
-set(${PREFIX}VERSION "" CACHE STRING "Override StreamFX version with this string. Format: Major.Minor.Patch[Suffix][-Tweak[-Commit8c]]")
+set(${PREFIX}VERSION "" CACHE STRING "Override StreamFX version with this string. Format: Major.Minor.Patch[Stage][Tweak[-Commit8c]]")
 if(NOT (${PREFIX}VERSION STREQUAL ""))
-	string(REPLACE "-" "." T_VERSION "${${PREFIX}VERSION}")
-	string(REPLACE "." ";" T_VERSION "${${PREFIX}VERSION}")
-
-	list(LENGTH T_VERSION T_VERSIONLEN)
-	list(GET T_VERSION 0 VERSION_MAJOR)
-	list(GET T_VERSION 1 VERSION_MINOR)
-	list(GET T_VERSION 2 VERSION_PATCH)
-	if(T_VERSIONLEN GREATER_EQUAL 3)
-		list(GET T_VERSION 3 VERSION_TWEAK)
-	else()
-		set(VERSION_BUILD 0)
-	endif()
-	if(T_VERSIONLEN GREATER_EQUAL 4)
-		list(GET T_VERSION 4 VERSION_COMMIT)
-	else()
-		set(VERSION_COMMIT "")
-	endif()
-
-	# Patch needs additional parsing.
-	# This may be a [0-9]*[a-z]*[0-9]+ string.
-	string(REGEX MATCHALL "^([0-9]+)([a-z]+[0-9]+)?" T_MATCHES "${VERSION_PATCH}")
-	set(VERSION_PATCH "${CMAKE_MATCH_1}")
-	if(CMAKE_MATCH_2)
-		set(VERSION_SUFFIX "${CMAKE_MATCH_2}")
-	else()
-		set(VERSION_SUFFIX "")
-	endif()
+	parse_version_string(OUTPUT "VERSION" INPUT "${${PREFIX}VERSION}")	
 endif()
 
 # Generate Version String
-if(NOT (VERSION_COMMIT STREQUAL ""))
-	set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}${VERSION_SUFFIX}-${VERSION_COMMIT}")
+if(VERSION_COMMIT)
+	set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}${VERSION_STAGE}${VERSION_TWEAK}-${VERSION_COMMIT}")
 else()
-	set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}${VERSION_SUFFIX}")
+	set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}${VERSION_STAGE}${VERSION_TWEAK}")
 endif()
 
 # Log the detected version.
@@ -157,11 +206,38 @@ message(STATUS "${LOGPREFIX}Version ${VERSION_STRING}")
 ################################################################################
 # Project
 ################################################################################
+set(_VERSION_TWEAK "0${VERSION_TWEAK}")
 project(
 	StreamFX
-	VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_TWEAK}
+	VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${_VERSION_TWEAK}
 	DESCRIPTION "Additional sources, filters, transitions and encoders for OBS Studio."
 	HOMEPAGE_URL "https://streamfx.xaymar.com/"
+)
+
+# Helpers for CI
+if(VERSION_STAGE STREQUAL "")
+	file(
+		GENERATE
+		OUTPUT "$<TARGET_PROPERTY:${PROJECT_NAME},BINARY_DIR>/tag_name"
+		CONTENT "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}"
+		TARGET ${PROJECT_NAME}
+		FILE_PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_READ GROUP_EXECUTE
+	)
+else()
+	file(
+		GENERATE
+		OUTPUT "$<TARGET_PROPERTY:${PROJECT_NAME},BINARY_DIR>/tag_name"
+		CONTENT "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}${VERSION_STAGE}${VERSION_TWEAK}"
+		TARGET ${PROJECT_NAME}
+		FILE_PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_READ GROUP_EXECUTE
+	)
+endif()
+file(
+	GENERATE
+	OUTPUT "$<TARGET_PROPERTY:${PROJECT_NAME},BINARY_DIR>/version"
+	CONTENT "${VERSION_STRING}"
+	TARGET ${PROJECT_NAME}
+	FILE_PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_READ GROUP_EXECUTE
 )
 
 # Full Project Name

@@ -39,8 +39,10 @@
 #define D_I18N_MENU_CHECKFORUPDATES "UI.Updater.Menu.CheckForUpdates"
 #define D_I18N_MENU_CHECKFORUPDATES_AUTOMATICALLY "UI.Updater.Menu.CheckForUpdates.Automatically"
 #define D_I18N_MENU_CHANNEL "UI.Updater.Menu.Channel"
-#define D_I18N_MENU_CHANNEL_RELEASE "UI.Updater.Menu.Channel.Release"
-#define D_I18N_MENU_CHANNEL_TESTING "UI.Updater.Menu.Channel.Testing"
+#define D_I18N_MENU_CHANNEL_STABLE "UI.Updater.Menu.Channel.Stable"
+#define D_I18N_MENU_CHANNEL_CANDIDATE "UI.Updater.Menu.Channel.Candidate"
+#define D_I18N_MENU_CHANNEL_BETA "UI.Updater.Menu.Channel.Beta"
+#define D_I18N_MENU_CHANNEL_ALPHA "UI.Updater.Menu.Channel.Alpha"
 #define D_I18N_DIALOG_TITLE "UI.Updater.Dialog.Title"
 #define D_I18N_GITHUBPERMISSION_TITLE "UI.Updater.GitHubPermission.Title"
 #define D_I18N_GITHUBPERMISSION_TEXT "UI.Updater.GitHubPermission.Text"
@@ -51,6 +53,7 @@ streamfx::ui::updater_dialog::updater_dialog() : QDialog(reinterpret_cast<QWidge
 	setWindowFlag(Qt::WindowContextHelpButtonHint, false);
 	setWindowFlag(Qt::WindowMinimizeButtonHint, false);
 	setWindowFlag(Qt::WindowMaximizeButtonHint, false);
+	setAttribute(Qt::WA_DeleteOnClose, false); // Do not delete on close.
 
 	connect(ok, &QPushButton::clicked, this, &streamfx::ui::updater_dialog::on_ok);
 	connect(cancel, &QPushButton::clicked, this, &streamfx::ui::updater_dialog::on_cancel);
@@ -58,52 +61,17 @@ streamfx::ui::updater_dialog::updater_dialog() : QDialog(reinterpret_cast<QWidge
 
 streamfx::ui::updater_dialog::~updater_dialog() {}
 
-void streamfx::ui::updater_dialog::show(streamfx::update_info current, streamfx::update_info update)
+void streamfx::ui::updater_dialog::show(streamfx::version_info current, streamfx::version_info update)
 {
-	{
-		std::vector<char> buf;
-		if (current.version_type) {
-			buf.resize(static_cast<size_t>(snprintf(nullptr, 0, "%" PRIu16 ".%" PRIu16 ".%" PRIu16 "%.1s%" PRIu16,
-													current.version_major, current.version_minor, current.version_patch,
-													&current.version_type, current.version_index))
-					   + 1);
-			snprintf(buf.data(), buf.size(), "%" PRIu16 ".%" PRIu16 ".%" PRIu16 "%.1s%" PRIu16, current.version_major,
-					 current.version_minor, current.version_patch, &current.version_type, current.version_index);
-		} else {
-			buf.resize(
-				static_cast<size_t>(snprintf(nullptr, 0, "%" PRIu16 ".%" PRIu16 ".%" PRIu16, current.version_major,
-											 current.version_minor, current.version_patch))
-				+ 1);
-			snprintf(buf.data(), buf.size(), "%" PRIu16 ".%" PRIu16 ".%" PRIu16, current.version_major,
-					 current.version_minor, current.version_patch);
-		}
-		currentVersion->setText(QString::fromUtf8(buf.data()));
-	}
+	currentVersion->setText(QString::fromStdString(static_cast<std::string>(current)));
+	latestVersion->setText(QString::fromStdString(static_cast<std::string>(update)));
 
 	{
-		std::vector<char> buf;
-		if (update.version_type) {
-			buf.resize(static_cast<size_t>(snprintf(nullptr, 0, "%" PRIu16 ".%" PRIu16 ".%" PRIu16 "%.1s%" PRIu16,
-													update.version_major, update.version_minor, update.version_patch,
-													&update.version_type, update.version_index))
-					   + 1);
-			snprintf(buf.data(), buf.size(), "%" PRIu16 ".%" PRIu16 ".%" PRIu16 "%.1s%" PRIu16, update.version_major,
-					 update.version_minor, update.version_patch, &update.version_type, update.version_index);
-		} else {
-			buf.resize(static_cast<size_t>(snprintf(nullptr, 0, "%" PRIu16 ".%" PRIu16 ".%" PRIu16,
-													update.version_major, update.version_minor, update.version_patch))
-					   + 1);
-			snprintf(buf.data(), buf.size(), "%" PRIu16 ".%" PRIu16 ".%" PRIu16, update.version_major,
-					 update.version_minor, update.version_patch);
-		}
-		latestVersion->setText(QString::fromUtf8(buf.data()));
-
-		{
-			std::vector<char> buf2;
-			buf2.resize(static_cast<size_t>(snprintf(nullptr, 0, D_TRANSLATE(D_I18N_DIALOG_TITLE), buf.data())) + 1);
-			snprintf(buf2.data(), buf2.size(), D_TRANSLATE(D_I18N_DIALOG_TITLE), buf.data());
-			setWindowTitle(QString::fromUtf8(buf2.data()));
-		}
+		std::string       buf = latestVersion->text().toStdString();
+		std::vector<char> buf2;
+		buf2.resize(static_cast<size_t>(snprintf(nullptr, 0, D_TRANSLATE(D_I18N_DIALOG_TITLE), buf.data())) + 1);
+		snprintf(buf2.data(), buf2.size(), D_TRANSLATE(D_I18N_DIALOG_TITLE), buf.data());
+		setWindowTitle(QString::fromUtf8(buf2.data()));
 	}
 
 	_update_url = QUrl(QString::fromStdString(update.url));
@@ -122,16 +90,19 @@ void streamfx::ui::updater_dialog::on_ok()
 {
 	QDesktopServices::openUrl(_update_url);
 	hide();
+	accept();
 }
 
 void streamfx::ui::updater_dialog::on_cancel()
 {
 	hide();
+	reject();
 }
 
 streamfx::ui::updater::updater(QMenu* menu)
 	: _updater(), _dialog(nullptr), _gdpr(nullptr), _cfu(nullptr), _cfu_auto(nullptr), _channel(nullptr),
-	  _channel_menu(nullptr), _channel_stable(nullptr), _channel_preview(nullptr), _channel_group(nullptr)
+	  _channel_menu(nullptr), _channel_stable(nullptr), _channel_candidate(nullptr), _channel_beta(nullptr),
+	  _channel_alpha(nullptr), _channel_group(nullptr)
 {
 	// Create dialog.
 	_dialog = new updater_dialog();
@@ -154,17 +125,27 @@ streamfx::ui::updater::updater(QMenu* menu)
 		_channel_menu = menu->addMenu(QString::fromUtf8(D_TRANSLATE(D_I18N_MENU_CHANNEL)));
 		_channel_menu->menuAction()->setMenuRole(QAction::NoRole);
 
-		_channel_stable = _channel_menu->addAction(QString::fromUtf8(D_TRANSLATE(D_I18N_MENU_CHANNEL_RELEASE)));
+		_channel_stable = _channel_menu->addAction(QString::fromUtf8(D_TRANSLATE(D_I18N_MENU_CHANNEL_STABLE)));
 		_channel_stable->setMenuRole(QAction::NoRole);
 		_channel_stable->setCheckable(true);
 
-		_channel_preview = _channel_menu->addAction(QString::fromUtf8(D_TRANSLATE(D_I18N_MENU_CHANNEL_TESTING)));
-		_channel_preview->setMenuRole(QAction::NoRole);
-		_channel_preview->setCheckable(true);
+		_channel_candidate = _channel_menu->addAction(QString::fromUtf8(D_TRANSLATE(D_I18N_MENU_CHANNEL_CANDIDATE)));
+		_channel_candidate->setMenuRole(QAction::NoRole);
+		_channel_candidate->setCheckable(true);
+
+		_channel_beta = _channel_menu->addAction(QString::fromUtf8(D_TRANSLATE(D_I18N_MENU_CHANNEL_BETA)));
+		_channel_beta->setMenuRole(QAction::NoRole);
+		_channel_beta->setCheckable(true);
+
+		_channel_alpha = _channel_menu->addAction(QString::fromUtf8(D_TRANSLATE(D_I18N_MENU_CHANNEL_ALPHA)));
+		_channel_alpha->setMenuRole(QAction::NoRole);
+		_channel_alpha->setCheckable(true);
 
 		_channel_group = new QActionGroup(_channel_menu);
 		_channel_group->addAction(_channel_stable);
-		_channel_group->addAction(_channel_preview);
+		_channel_group->addAction(_channel_candidate);
+		_channel_group->addAction(_channel_beta);
+		_channel_group->addAction(_channel_alpha);
 		connect(_channel_group, &QActionGroup::triggered, this, &streamfx::ui::updater::on_channel_group_triggered);
 	}
 
@@ -188,8 +169,8 @@ streamfx::ui::updater::updater(QMenu* menu)
 			std::bind(&streamfx::ui::updater::on_updater_refreshed, this, std::placeholders::_1));
 
 		// Sync with updater information.
-		emit autoupdate_changed(_updater->automation());
-		emit channel_changed(_updater->channel());
+		emit autoupdate_changed(_updater->is_automated());
+		emit channel_changed(_updater->get_channel());
 	}
 }
 
@@ -200,7 +181,7 @@ void streamfx::ui::updater::on_updater_automation_changed(streamfx::updater&, bo
 	emit autoupdate_changed(value);
 }
 
-void streamfx::ui::updater::on_updater_channel_changed(streamfx::updater&, streamfx::update_channel channel)
+void streamfx::ui::updater::on_updater_channel_changed(streamfx::updater&, streamfx::version_stage channel)
 {
 	emit channel_changed(channel);
 }
@@ -209,7 +190,7 @@ void streamfx::ui::updater::on_updater_refreshed(streamfx::updater&)
 {
 	emit check_active(false);
 
-	if (!_updater->have_update())
+	if (!_updater->is_update_available())
 		return;
 
 	emit update_detected();
@@ -217,8 +198,8 @@ void streamfx::ui::updater::on_updater_refreshed(streamfx::updater&)
 
 void streamfx::ui::updater::obs_ready()
 {
-	if (_updater->automation()) {
-		if (_updater->gdpr()) {
+	if (_updater->is_automated()) {
+		if (_updater->is_data_sharing_allowed()) {
 			_updater->refresh();
 		} else {
 			create_gdpr_box();
@@ -227,11 +208,17 @@ void streamfx::ui::updater::obs_ready()
 	}
 }
 
-void streamfx::ui::updater::on_channel_changed(streamfx::update_channel channel)
+void streamfx::ui::updater::on_channel_changed(streamfx::version_stage ch)
 {
-	bool is_stable = channel == streamfx::update_channel::RELEASE;
-	_channel_stable->setChecked(is_stable);
-	_channel_preview->setChecked(!is_stable);
+	QSignalBlocker bgroup(_channel_group);
+	QSignalBlocker bs(_channel_stable);
+	QSignalBlocker bc(_channel_candidate);
+	QSignalBlocker bb(_channel_beta);
+	QSignalBlocker ba(_channel_alpha);
+	_channel_stable->setChecked(ch == streamfx::version_stage::STABLE);
+	_channel_candidate->setChecked(ch == streamfx::version_stage::CANDIDATE);
+	_channel_beta->setChecked(ch == streamfx::version_stage::BETA);
+	_channel_alpha->setChecked(ch == streamfx::version_stage::ALPHA);
 }
 
 void streamfx::ui::updater::on_update_detected()
@@ -241,24 +228,25 @@ void streamfx::ui::updater::on_update_detected()
 
 void streamfx::ui::updater::on_autoupdate_changed(bool enabled)
 {
+	QSignalBlocker blocker(_cfu_auto);
 	_cfu_auto->setChecked(enabled);
 }
 
 void streamfx::ui::updater::on_gdpr_button(QAbstractButton* btn)
 {
 	if (_gdpr->standardButton(btn) == QMessageBox::Ok) {
-		_updater->set_gdpr(true);
+		_updater->set_data_sharing_allowed(true);
 		emit check_active(true);
 		_updater->refresh();
 	} else {
-		_updater->set_gdpr(false);
+		_updater->set_data_sharing_allowed(false);
 		_updater->set_automation(false);
 	}
 }
 
 void streamfx::ui::updater::on_cfu_triggered(bool)
 {
-	if (!_updater->gdpr()) {
+	if (!_updater->is_data_sharing_allowed()) {
 		create_gdpr_box();
 		_gdpr->exec();
 	} else {
@@ -274,10 +262,14 @@ void streamfx::ui::updater::on_cfu_auto_toggled(bool flag)
 
 void streamfx::ui::updater::on_channel_group_triggered(QAction* action)
 {
-	if (action == _channel_stable) {
-		_updater->set_channel(update_channel::RELEASE);
+	if (action == _channel_alpha) {
+		_updater->set_channel(streamfx::version_stage::ALPHA);
+	} else if (action == _channel_beta) {
+		_updater->set_channel(streamfx::version_stage::BETA);
+	} else if (action == _channel_candidate) {
+		_updater->set_channel(streamfx::version_stage::CANDIDATE);
 	} else {
-		_updater->set_channel(update_channel::TESTING);
+		_updater->set_channel(streamfx::version_stage::STABLE);
 	}
 }
 
@@ -300,7 +292,9 @@ void streamfx::ui::updater::on_check_active(bool active)
 {
 	_cfu->setEnabled(!active);
 	_channel_group->setEnabled(!active);
-	_channel_preview->setEnabled(!active);
+	_channel_alpha->setEnabled(!active);
+	_channel_beta->setEnabled(!active);
+	_channel_candidate->setEnabled(!active);
 	_channel_stable->setEnabled(!active);
 	_channel_menu->setEnabled(!active);
 }
