@@ -20,7 +20,9 @@
 
 #include "updater.hpp"
 #include "version.hpp"
+#include <fstream>
 #include <mutex>
+#include <regex>
 #include <string_view>
 #include "configuration.hpp"
 #include "plugin.hpp"
@@ -45,179 +47,308 @@
 // - Move 'autoupdater.last_checked_at' to out of the configuration.
 // - Figure out if nightly updates are viable at all.
 
-#define ST_CFG_GDPR "updater.gdpr"
+#define ST_CFG_DATASHARING "updater.datasharing"
 #define ST_CFG_AUTOMATION "updater.automation"
 #define ST_CFG_CHANNEL "updater.channel"
 #define ST_CFG_LASTCHECKEDAT "updater.lastcheckedat"
 
-void streamfx::to_json(nlohmann::json& json, const update_info& info)
+streamfx::version_stage streamfx::stage_from_string(std::string_view str)
+{
+	if (str == "a") {
+		return version_stage::ALPHA;
+	} else if (str == "b") {
+		return version_stage::BETA;
+	} else if (str == "c") {
+		return version_stage::CANDIDATE;
+	} else {
+		return version_stage::STABLE;
+	}
+}
+
+std::string_view streamfx::stage_to_string(version_stage t)
+{
+	switch (t) {
+	case version_stage::ALPHA:
+		return "a";
+	case version_stage::BETA:
+		return "b";
+	case version_stage::CANDIDATE:
+		return "c";
+	default:
+	case version_stage::STABLE:
+		return ".";
+	}
+}
+
+void streamfx::to_json(nlohmann::json& json, const version_stage& stage)
+{
+	json = stage_to_string(stage);
+}
+
+void streamfx::from_json(const nlohmann::json& json, version_stage& stage)
+{
+	stage = stage_from_string(json.get<std::string>());
+}
+
+streamfx::version_info::version_info()
+	: major(0), minor(0), patch(0), tweak(0), stage(version_stage::STABLE), url(""), name("")
+{}
+
+streamfx::version_info::version_info(const std::string text) : version_info()
+{
+	// text can be:
+	// 0.0.0 (Stable)
+	// 0.0.0a0 (Testing)
+	// 0.0.0b0 (Testing)
+	// 0.0.0c0 (Testing)
+	// 0.0.0_0 (Development)
+	static const std::regex re_version(
+		"([0-9]+)\\.([0-9]+)\\.([0-9]+)(([\\._abc]{1,1})([0-9]+|)|)(-g([0-9a-fA-F]{8,8})|)");
+	std::smatch matches;
+	if (std::regex_match(text, matches, re_version,
+						 std::regex_constants::match_any | std::regex_constants::match_continuous)) {
+		major = static_cast<uint16_t>(strtoul(matches[1].str().c_str(), nullptr, 10));
+		minor = static_cast<uint16_t>(strtoul(matches[2].str().c_str(), nullptr, 10));
+		patch = static_cast<uint16_t>(strtoul(matches[3].str().c_str(), nullptr, 10));
+		if (matches.size() >= 5) {
+			stage = stage_from_string(matches[5].str());
+			tweak = static_cast<uint16_t>(strtoul(matches[6].str().c_str(), nullptr, 10));
+		}
+	} else {
+		throw std::invalid_argument("Provided string is not a version.");
+	}
+}
+
+void streamfx::to_json(nlohmann::json& json, const version_info& info)
 {
 	auto version     = nlohmann::json::object();
-	version["major"] = info.version_major;
-	version["minor"] = info.version_minor;
-	version["patch"] = info.version_patch;
-	if (info.version_type)
-		version["alpha"] = info.version_type == 'a' ? true : false;
-	version["index"] = info.version_index;
+	version["major"] = info.major;
+	version["minor"] = info.minor;
+	version["patch"] = info.patch;
+	version["type"]  = info.stage;
+	version["tweak"] = info.tweak;
 	json["version"]  = version;
-	json["preview"]  = info.channel == update_channel::TESTING;
 	json["url"]      = info.url;
 	json["name"]     = info.name;
 }
 
-void streamfx::from_json(const nlohmann::json& json, update_info& info)
+void streamfx::from_json(const nlohmann::json& json, version_info& info)
 {
-	if (json.find("html_url") != json.end()) {
+	if (json.find("html_url") == json.end()) {
+		auto version = json.at("version");
+		info.major   = version.at("major").get<uint16_t>();
+		info.minor   = version.at("minor").get<uint16_t>();
+		info.patch   = version.at("patch").get<uint16_t>();
+		info.stage   = version.at("type");
+		info.tweak   = version.at("tweak").get<uint16_t>();
+		info.url     = json.at("url").get<std::string>();
+		info.name    = json.at("name").get<std::string>();
+	} else {
 		// This is a response from GitHub.
 
 		// Retrieve entries from the release object.
 		auto entry_tag_name = json.find("tag_name");
 		auto entry_name     = json.find("name");
 		auto entry_url      = json.find("html_url");
-		auto entry_preview  = json.find("prerelease");
-		if ((entry_tag_name == json.end()) || (entry_name == json.end()) || (entry_url == json.end())
-			|| (entry_preview == json.end())) {
+		if ((entry_tag_name == json.end()) || (entry_name == json.end()) || (entry_url == json.end())) {
 			throw std::runtime_error("JSON is missing one or more required keys.");
 		}
 
-		// Initialize update information.
-		info.channel = entry_preview->get<bool>() ? update_channel::TESTING : update_channel::RELEASE;
-		info.url     = entry_url->get<std::string>();
-		info.name    = entry_name->get<std::string>();
-
-		// Parse the tag name as SemVer (A.B.C)
-		{
-			std::string tag_name = entry_tag_name->get<std::string>();
-
-			size_t dot_1       = tag_name.find_first_of(".", 0) + 1;
-			info.version_major = static_cast<uint16_t>(strtoul(&tag_name.at(0), nullptr, 10));
-			if (dot_1 < tag_name.size()) {
-				info.version_minor = static_cast<uint16_t>(strtoul(&tag_name.at(dot_1), nullptr, 10));
-			}
-
-			char*  endptr = nullptr;
-			size_t dot_2  = tag_name.find_first_of(".", dot_1) + 1;
-			if (dot_2 < tag_name.size()) {
-				info.version_patch = static_cast<uint16_t>(strtoul(&tag_name.at(dot_2), &endptr, 10));
-			}
-
-			// Check if there's data following the SemVer structure. (A.B.CdE)
-			if ((endptr != nullptr) && (endptr < (tag_name.data() + tag_name.size()))) {
-				size_t last_num   = static_cast<size_t>(endptr - tag_name.data()) + 1;
-				info.version_type = *endptr;
-				if (last_num < tag_name.size())
-					info.version_index = static_cast<uint16_t>(strtoul(&tag_name.at(last_num), nullptr, 10));
-			} else {
-				info.version_type  = 0;
-				info.version_index = 0;
-			}
-		}
-	} else {
-		auto version       = json.at("version");
-		info.version_major = version.at("major").get<uint16_t>();
-		info.version_minor = version.at("minor").get<uint16_t>();
-		info.version_patch = version.at("patch").get<uint16_t>();
-		if (version.find("type") != version.end())
-			info.version_type = version.at("alpha").get<bool>() ? 'a' : 'b';
-		info.version_index = version.at("index").get<uint16_t>();
-		info.channel       = json.at("preview").get<bool>() ? update_channel::TESTING : update_channel::RELEASE;
-		info.url           = json.at("url").get<std::string>();
-		info.name          = json.at("name").get<std::string>();
+		// Parse the information.
+		std::string tag_name = entry_tag_name->get<std::string>();
+		info                 = {tag_name};
+		info.url             = entry_url->get<std::string>();
+		info.name            = entry_name->get<std::string>();
 	}
 }
 
-bool streamfx::update_info::is_newer(update_info& other)
+bool streamfx::version_info::is_older_than(const version_info other)
 {
+	// 'true' if other is newer, otherwise false.
+
 	// 1. Compare Major version:
 	//     A. Ours is greater: Remote is older.
 	//     B. Theirs is greater: Remote is newer.
 	//     C. Continue the check.
-	if (version_major > other.version_major)
+	if (major > other.major)
 		return false;
-	if (version_major < other.version_major)
+	if (major < other.major)
 		return true;
 
 	// 2. Compare Minor version:
 	//     A. Ours is greater: Remote is older.
 	//     B. Theirs is greater: Remote is newer.
 	//     C. Continue the check.
-	if (version_minor > other.version_minor)
+	if (minor > other.minor)
 		return false;
-	if (version_minor < other.version_minor)
+	if (minor < other.minor)
 		return true;
 
 	// 3. Compare Patch version:
 	//     A. Ours is greater: Remote is older.
 	//     B. Theirs is greater: Remote is newer.
 	//     C. Continue the check.
-	if (version_patch > other.version_patch)
+	if (patch > other.patch)
 		return false;
-	if (version_patch < other.version_patch)
+	if (patch < other.patch)
 		return true;
 
 	// 4. Compare Type:
-	//     A. Ours empty: Remote is older.
-	//     B. Theirs empty: Remote is newer.
+	//     A. Outs is smaller: Remote is older.
+	//     B. Theirs is smaller: Remote is newer.
 	//     C. Continue the check.
-	// A automatically implies that ours is not empty for B. A&B combined imply that both are not empty for step 5.
-	if (version_type == 0)
+	if (stage < other.stage)
 		return false;
-	if (other.version_type == 0)
+	if (stage > other.stage)
 		return true;
 
-	// 5. Compare Type value:
-	//     A. Ours is greater: Remote is older.
-	//     B. Theirs is greater: Remote is newer.
-	//     C. Continue the check.
-	if (version_type > other.version_type)
-		return false;
-	if (version_type < other.version_type)
-		return true;
-
-	// 6. Compare Index:
+	// 5. Compare Tweak:
 	//    A. Ours is greater or equal: Remote is older or identical.
 	//    B. Remote is newer
-	if (version_index >= other.version_index)
+	if (tweak >= other.tweak)
 		return false;
 
 	return true;
 }
 
+streamfx::version_info::operator std::string()
+{
+	std::vector<char> buffer(25, 0);
+	if (stage != version_stage::STABLE) {
+		auto   types = stage_to_string(stage);
+		size_t len   = snprintf(buffer.data(), buffer.size(), "%" PRIu16 ".%" PRIu16 ".%" PRIu16 "%.1s%" PRIu16, major,
+								minor, patch, types.data(), tweak);
+		return std::string(buffer.data(), buffer.data() + len);
+	} else {
+		size_t len = snprintf(buffer.data(), buffer.size(), "%" PRIu16 ".%" PRIu16 ".%" PRIu16, major, minor, patch);
+		return std::string(buffer.data(), buffer.data() + len);
+	}
+}
+
 void streamfx::updater::task(streamfx::util::threadpool_data_t)
 try {
-	{
-		std::vector<char> buffer;
-		task_query(buffer);
-		task_parse(buffer);
-	}
+	auto query_fn = [this](std::vector<char>& buffer) {
+		static constexpr std::string_view ST_API_URL =
+			"https://api.github.com/repos/Xaymar/obs-StreamFX/releases?per_page=25&page=1";
 
-#ifdef _DEBUG
-	{
-		std::lock_guard<std::mutex> lock(_lock);
-		nlohmann::json              current = _current_info;
-		nlohmann::json              stable  = _release_info;
-		nlohmann::json              preview = _testing_info;
+		streamfx::util::curl curl;
+		size_t               buffer_offset = 0;
 
-		D_LOG_DEBUG("Current Version: %s", current.dump().c_str());
-		D_LOG_DEBUG("Stable Version: %s", stable.dump().c_str());
-		D_LOG_DEBUG("Preview Version: %s", preview.dump().c_str());
-	}
-#endif
+		// Set headers (User-Agent is needed so Github can contact us!).
+		curl.set_header("User-Agent", "StreamFX Updater v" STREAMFX_VERSION_STRING);
+		curl.set_header("Accept", "application/vnd.github.v3+json");
 
-	// Log that we have a potential update.
-	if (have_update()) {
-		auto info = get_update_info();
+		// Set up request.
+		curl.set_option(CURLOPT_HTTPGET, true); // GET
+		curl.set_option(CURLOPT_POST, false);   // Not POST
+		curl.set_option(CURLOPT_URL, ST_API_URL);
+		curl.set_option(CURLOPT_TIMEOUT, 30); // 10s until we fail.
 
-		if (info.version_type) {
-			D_LOG_INFO("Update to version %d.%d.%d%.1s%d is available at \"%s\".", info.version_major,
-					   info.version_minor, info.version_patch, &info.version_type, info.version_index,
-					   info.url.c_str());
-		} else {
-			D_LOG_INFO("Update to version %d.%d.%d is available at \"%s\".", info.version_major, info.version_minor,
-					   info.version_patch, info.url.c_str());
+		// Callbacks
+		curl.set_write_callback([this, &buffer, &buffer_offset](void* data, size_t s1, size_t s2) {
+			size_t size = s1 * s2;
+			if (buffer.size() < (size + buffer_offset))
+				buffer.resize(buffer_offset + size);
+
+			memcpy(buffer.data() + buffer_offset, data, size);
+			buffer_offset += size;
+
+			return s1 * s2;
+		});
+		//std::bind(&streamfx::updater::task_write_cb, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
+
+		// Clear any unknown data and reserve 64KiB of memory.
+		buffer.clear();
+		buffer.reserve(0xFFFF);
+
+		// Finally, execute the request.
+		D_LOG_DEBUG("Querying for latest releases...", "");
+		if (CURLcode res = curl.perform(); res != CURLE_OK) {
+			D_LOG_ERROR("Performing query failed with error: %s", curl_easy_strerror(res));
+			throw std::runtime_error(curl_easy_strerror(res));
 		}
-	} else {
-		D_LOG_DEBUG("No update available.", "");
+
+		int32_t status_code = 0;
+		if (CURLcode res = curl.get_info(CURLINFO_HTTP_CODE, status_code); res != CURLE_OK) {
+			D_LOG_ERROR("Retrieving status code failed with error: %s", curl_easy_strerror(res));
+			throw std::runtime_error(curl_easy_strerror(res));
+		}
+		D_LOG_DEBUG("API returned status code %d.", status_code);
+
+		if (status_code != 200) {
+			D_LOG_ERROR("API returned unexpected status code %d.", status_code);
+			throw std::runtime_error("Request failed due to one or more reasons.");
+		}
+	};
+	auto parse_fn = [this](nlohmann::json json) {
+		// Check if it was parsed as an object.
+		if (json.type() != nlohmann::json::value_t::array) {
+			throw std::runtime_error("Invalid response from API.");
+		}
+
+		// Decide on the latest version for all update channels.
+		std::lock_guard<decltype(_lock)> lock(_lock);
+		_updates.clear();
+		for (auto obj : json) {
+			try {
+				auto info = obj.get<streamfx::version_info>();
+
+				switch (info.stage) {
+				case version_stage::STABLE:
+					if (get_update_info(version_stage::STABLE).is_older_than(info)) {
+						_updates.emplace(version_stage::STABLE, info);
+					}
+					[[fallthrough]];
+				case version_stage::CANDIDATE:
+					if (get_update_info(version_stage::CANDIDATE).is_older_than(info)) {
+						_updates.emplace(version_stage::CANDIDATE, info);
+					}
+					[[fallthrough]];
+				case version_stage::BETA:
+					if (get_update_info(version_stage::BETA).is_older_than(info)) {
+						_updates.emplace(version_stage::BETA, info);
+					}
+					[[fallthrough]];
+				case version_stage::ALPHA:
+					if (get_update_info(version_stage::ALPHA).is_older_than(info)) {
+						_updates.emplace(version_stage::ALPHA, info);
+					}
+				}
+
+			} catch (const std::exception& ex) {
+				D_LOG_DEBUG("Failed to parse entry, error: %s", ex.what());
+			}
+		}
+	};
+
+	{ // Query and parse the response.
+		nlohmann::json json;
+
+		// Query the API or parse a crafted response.
+		auto debug_path = streamfx::config_file_path("github_release_query_response.json");
+		if (std::filesystem::exists(debug_path)) {
+			std::ifstream fs{debug_path};
+			json = nlohmann::json::parse(fs);
+			fs.close();
+		} else {
+			std::vector<char> buffer;
+			query_fn(buffer);
+			json = nlohmann::json::parse(buffer.begin(), buffer.end());
+		}
+
+		// Parse the JSON response from the API.
+		parse_fn(json);
+	}
+
+	// Print all update information to the log file.
+	D_LOG_INFO("Current Version: %s", static_cast<std::string>(_current_info).c_str());
+	D_LOG_INFO("Latest Stable Version: %s", static_cast<std::string>(get_update_info(version_stage::STABLE)).c_str());
+	D_LOG_INFO("Latest Candidate Version: %s",
+			   static_cast<std::string>(get_update_info(version_stage::CANDIDATE)).c_str());
+	D_LOG_INFO("Latest Beta Version: %s", static_cast<std::string>(get_update_info(version_stage::BETA)).c_str());
+	D_LOG_INFO("Latest Alpha Version: %s", static_cast<std::string>(get_update_info(version_stage::ALPHA)).c_str());
+	if (is_update_available()) {
+		D_LOG_INFO("Update is available.", "");
 	}
 
 	// Notify listeners of the update.
@@ -226,91 +357,6 @@ try {
 	// Notify about the error.
 	std::string message = ex.what();
 	events.error.call(*this, message);
-}
-
-void streamfx::updater::task_query(std::vector<char>& buffer)
-{
-	static constexpr std::string_view ST_API_URL = "https://api.github.com/repos/Xaymar/obs-StreamFX/releases";
-
-	streamfx::util::curl curl;
-	size_t               buffer_offset = 0;
-
-	// Set headers (User-Agent is needed so Github can contact us!).
-	curl.set_header("User-Agent", "StreamFX Updater v" STREAMFX_VERSION_STRING);
-	curl.set_header("Accept", "application/vnd.github.v3+json");
-
-	// Set up request.
-	curl.set_option(CURLOPT_HTTPGET, true); // GET
-	curl.set_option(CURLOPT_POST, false);   // Not POST
-	curl.set_option(CURLOPT_URL, ST_API_URL);
-	curl.set_option(CURLOPT_TIMEOUT, 10); // 10s until we fail.
-
-	// Callbacks
-	curl.set_write_callback([this, &buffer, &buffer_offset](void* data, size_t s1, size_t s2) {
-		size_t size = s1 * s2;
-		if (buffer.size() < (size + buffer_offset))
-			buffer.resize(buffer_offset + size);
-
-		memcpy(buffer.data() + buffer_offset, data, size);
-		buffer_offset += size;
-
-		return s1 * s2;
-	});
-	//std::bind(&streamfx::updater::task_write_cb, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
-
-	// Clear any unknown data and reserve 64KiB of memory.
-	buffer.clear();
-	buffer.reserve(0xFFFF);
-
-	// Finally, execute the request.
-	D_LOG_DEBUG("Querying for latest releases...", "");
-	if (CURLcode res = curl.perform(); res != CURLE_OK) {
-		D_LOG_ERROR("Performing query failed with error: %s", curl_easy_strerror(res));
-		throw std::runtime_error(curl_easy_strerror(res));
-	}
-
-	int32_t status_code = 0;
-	if (CURLcode res = curl.get_info(CURLINFO_HTTP_CODE, status_code); res != CURLE_OK) {
-		D_LOG_ERROR("Retrieving status code failed with error: %s", curl_easy_strerror(res));
-		throw std::runtime_error(curl_easy_strerror(res));
-	}
-	D_LOG_DEBUG("API returned status code %d.", status_code);
-
-	if (status_code != 200) {
-		D_LOG_ERROR("API returned unexpected status code %d.", status_code);
-		throw std::runtime_error("Request failed due to one or more reasons.");
-	}
-}
-
-void streamfx::updater::task_parse(std::vector<char>& buffer)
-{
-	// Parse the JSON response from the API.
-	nlohmann::json json = nlohmann::json::parse(buffer.begin(), buffer.end());
-
-	// Check if it was parsed as an object.
-	if (json.type() != nlohmann::json::value_t::array) {
-		throw std::runtime_error("Response is not a JSON array.");
-	}
-
-	// Iterate over all entries.
-	std::lock_guard<std::mutex> lock(_lock);
-	for (auto obj : json) {
-		try {
-			auto info = obj.get<streamfx::update_info>();
-
-			if (info.channel == update_channel::RELEASE) {
-				if (_release_info.is_newer(info))
-					_release_info = info;
-				if (_testing_info.is_newer(info))
-					_testing_info = info;
-			} else {
-				if (_testing_info.is_newer(info))
-					_testing_info = info;
-			}
-		} catch (const std::exception& ex) {
-			D_LOG_DEBUG("Failed to parse entry, error: %s", ex.what());
-		}
-	}
 }
 
 bool streamfx::updater::can_check()
@@ -326,16 +372,16 @@ bool streamfx::updater::can_check()
 
 void streamfx::updater::load()
 {
-	std::lock_guard<std::mutex> lock(_lock);
+	std::lock_guard<decltype(_lock)> lock(_lock);
 	if (auto config = streamfx::configuration::instance(); config) {
 		auto dataptr = config->get();
 
-		if (obs_data_has_user_value(dataptr.get(), ST_CFG_GDPR))
-			_gdpr = obs_data_get_bool(dataptr.get(), ST_CFG_GDPR);
+		if (obs_data_has_user_value(dataptr.get(), ST_CFG_DATASHARING))
+			_data_sharing_allowed = obs_data_get_bool(dataptr.get(), ST_CFG_DATASHARING);
 		if (obs_data_has_user_value(dataptr.get(), ST_CFG_AUTOMATION))
 			_automation = obs_data_get_bool(dataptr.get(), ST_CFG_AUTOMATION);
 		if (obs_data_has_user_value(dataptr.get(), ST_CFG_CHANNEL))
-			_channel = static_cast<update_channel>(obs_data_get_int(dataptr.get(), ST_CFG_CHANNEL));
+			_channel = static_cast<version_stage>(obs_data_get_int(dataptr.get(), ST_CFG_CHANNEL));
 		if (obs_data_has_user_value(dataptr.get(), ST_CFG_LASTCHECKEDAT))
 			_lastcheckedat = std::chrono::seconds(obs_data_get_int(dataptr.get(), ST_CFG_LASTCHECKEDAT));
 	}
@@ -346,7 +392,7 @@ void streamfx::updater::save()
 	if (auto config = streamfx::configuration::instance(); config) {
 		auto dataptr = config->get();
 
-		obs_data_set_bool(dataptr.get(), ST_CFG_GDPR, _gdpr);
+		obs_data_set_bool(dataptr.get(), ST_CFG_DATASHARING, _data_sharing_allowed);
 		obs_data_set_bool(dataptr.get(), ST_CFG_AUTOMATION, _automation);
 		obs_data_set_int(dataptr.get(), ST_CFG_CHANNEL, static_cast<long long>(_channel));
 		obs_data_set_int(dataptr.get(), ST_CFG_LASTCHECKEDAT, static_cast<long long>(_lastcheckedat.count()));
@@ -356,24 +402,16 @@ void streamfx::updater::save()
 streamfx::updater::updater()
 	: _lock(), _task(),
 
-	  _gdpr(false), _automation(true), _channel(update_channel::RELEASE), _lastcheckedat(),
+	  _data_sharing_allowed(false), _automation(true), _channel(version_stage::STABLE), _lastcheckedat(),
 
-	  _current_info(), _release_info(), _testing_info(), _dirty(false)
+	  _current_info(), _updates(), _dirty(false)
 {
 	// Load information from configuration.
 	load();
 
 	// Build current version information.
 	try {
-		_current_info.version_major = STREAMFX_VERSION_MAJOR;
-		_current_info.version_minor = STREAMFX_VERSION_MINOR;
-		_current_info.version_patch = STREAMFX_VERSION_PATCH;
-		_current_info.channel       = _channel;
-		std::string suffix          = STREAMFX_VERSION_SUFFIX;
-		if (suffix.length()) {
-			_current_info.version_type  = suffix.at(0);
-			_current_info.version_index = static_cast<uint16_t>(strtoul(&suffix.at(1), nullptr, 10));
-		}
+		_current_info = {STREAMFX_VERSION_STRING};
 	} catch (...) {
 		D_LOG_ERROR("Failed to parse current version information, results may be inaccurate.", "");
 	}
@@ -384,26 +422,26 @@ streamfx::updater::~updater()
 	save();
 }
 
-bool streamfx::updater::gdpr()
+bool streamfx::updater::is_data_sharing_allowed()
 {
-	return _gdpr;
+	return _data_sharing_allowed;
 }
 
-void streamfx::updater::set_gdpr(bool value)
+void streamfx::updater::set_data_sharing_allowed(bool value)
 {
-	_dirty = true;
-	_gdpr  = value;
-	events.gdpr_changed(*this, _gdpr);
+	_dirty                = true;
+	_data_sharing_allowed = value;
+	events.gdpr_changed(*this, _data_sharing_allowed);
 
 	{
-		std::lock_guard<std::mutex> lock(_lock);
+		std::lock_guard<decltype(_lock)> lock(_lock);
 		save();
 	}
 
-	D_LOG_INFO("User %s the processing of data.", _gdpr ? "allowed" : "disallowed");
+	D_LOG_INFO("User %s the processing of data.", _data_sharing_allowed ? "allowed" : "disallowed");
 }
 
-bool streamfx::updater::automation()
+bool streamfx::updater::is_automated()
 {
 	return _automation;
 }
@@ -414,21 +452,21 @@ void streamfx::updater::set_automation(bool value)
 	events.automation_changed(*this, _automation);
 
 	{
-		std::lock_guard<std::mutex> lock(_lock);
+		std::lock_guard<decltype(_lock)> lock(_lock);
 		save();
 	}
 
 	D_LOG_INFO("Automatic checks at launch are now %s.", value ? "enabled" : "disabled");
 }
 
-streamfx::update_channel streamfx::updater::channel()
+streamfx::version_stage streamfx::updater::get_channel()
 {
 	return _channel;
 }
 
-void streamfx::updater::set_channel(update_channel value)
+void streamfx::updater::set_channel(version_stage value)
 {
-	std::lock_guard<std::mutex> lock(_lock);
+	std::lock_guard<decltype(_lock)> lock(_lock);
 
 	_dirty   = true;
 	_channel = value;
@@ -436,17 +474,17 @@ void streamfx::updater::set_channel(update_channel value)
 
 	save();
 
-	D_LOG_INFO("Update channel changed to %s.", value == update_channel::RELEASE ? "Release" : "Testing");
+	D_LOG_INFO("Update channel changed to '%s'.", stage_to_string(value).data());
 }
 
 void streamfx::updater::refresh()
 {
-	if (!_task.expired() || !gdpr()) {
+	if (!_task.expired() || !is_data_sharing_allowed()) {
 		return;
 	}
 
 	if (can_check()) {
-		std::lock_guard<std::mutex> lock(_lock);
+		std::lock_guard<decltype(_lock)> lock(_lock);
 
 		// Update last checked time.
 		_lastcheckedat =
@@ -460,25 +498,34 @@ void streamfx::updater::refresh()
 	}
 }
 
-bool streamfx::updater::have_update()
+bool streamfx::updater::is_update_available()
 {
-	auto info = get_update_info();
-	return _current_info.is_newer(info);
+	return _current_info.is_older_than(get_update_info());
 }
 
-streamfx::update_info streamfx::updater::get_current_info()
+bool streamfx::updater::is_update_available(version_stage channel)
+{
+	return _current_info.is_older_than(get_update_info(channel));
+}
+
+streamfx::version_info streamfx::updater::get_current_info()
 {
 	return _current_info;
 }
 
-streamfx::update_info streamfx::updater::get_update_info()
+streamfx::version_info streamfx::updater::get_update_info()
 {
-	std::lock_guard<std::mutex> lock(_lock);
-	update_info                 info = _release_info;
-	if (info.is_newer(_testing_info) && (_channel == update_channel::TESTING))
-		info = _testing_info;
+	return get_update_info(_channel);
+}
 
-	return info;
+streamfx::version_info streamfx::updater::get_update_info(version_stage channel)
+{
+	std::lock_guard<decltype(_lock)> lock(_lock);
+	if (auto iter = _updates.find(channel); iter != _updates.end()) {
+		return iter->second;
+	} else {
+		return {};
+	}
 }
 
 std::shared_ptr<streamfx::updater> streamfx::updater::instance()
