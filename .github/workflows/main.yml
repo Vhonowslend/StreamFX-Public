@@ -21,7 +21,7 @@ env:
 jobs:
   build:
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         runner: [ windows-2022, ubuntu-22.04, macos-12, windows-2019, ubuntu-20.04, macos-11, macos-10.15 ]
         generator: [ MSVC, GCC, Clang ]
