@@ -24,7 +24,33 @@ jobs:
       fail-fast: true
       matrix:
         runner: [ windows-2022, ubuntu-22.04, macos-12, windows-2019, ubuntu-20.04, macos-11, macos-10.15 ]
+        generator: [ MSVC, GCC, Clang ]
         CMAKE_BUILD_TYPE: [ Debug, RelWithDebInfo ]
+        exclude:
+          - runner: windows-2022
+            generator: GCC
+          - runner: windows-2019
+            generator: GCC
+          - runner: windows-2022
+            generator: Clang
+          - runner: windows-2019
+            generator: Clang
+          - runner: ubuntu-22.04
+            generator: MSVC
+          - runner: ubuntu-20.04
+            generator: MSVC
+          - runner: macos-12
+            generator: MSVC
+          - runner: macos-12
+            generator: GCC
+          - runner: macos-11
+            generator: MSVC
+          - runner: macos-11
+            generator: GCC
+          - runner: macos-10.15
+            generator: MSVC
+          - runner: macos-10.15
+            generator: GCC
         include:
           - runner: windows-2022
             generator: MSVC
