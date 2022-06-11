@@ -36,7 +36,7 @@
 #include <QWidgetAction>
 #include "ui_updater.h"
 
-Q_DECLARE_METATYPE(streamfx::update_channel);
+Q_DECLARE_METATYPE(::streamfx::version_stage);
 
 #ifdef _MSC_VER
 #pragma warning(pop)
@@ -53,7 +53,7 @@ namespace streamfx::ui {
 		updater_dialog();
 		~updater_dialog();
 
-		void show(streamfx::update_info current, streamfx::update_info update);
+		void show(streamfx::version_info current, streamfx::version_info update);
 		void hide();
 
 		public slots:
@@ -77,7 +77,9 @@ namespace streamfx::ui {
 		QAction*      _channel;
 		QMenu*        _channel_menu;
 		QAction*      _channel_stable;
-		QAction*      _channel_preview;
+		QAction*      _channel_candidate;
+		QAction*      _channel_beta;
+		QAction*      _channel_alpha;
 		QActionGroup* _channel_group;
 
 		public:
@@ -87,7 +89,7 @@ namespace streamfx::ui {
 		void create_gdpr_box();
 
 		void on_updater_automation_changed(streamfx::updater&, bool);
-		void on_updater_channel_changed(streamfx::updater&, streamfx::update_channel);
+		void on_updater_channel_changed(streamfx::updater&, streamfx::version_stage);
 		void on_updater_refreshed(streamfx::updater&);
 
 		void obs_ready();
@@ -96,7 +98,7 @@ namespace streamfx::ui {
 		; // Needed by some linters.
 
 		void autoupdate_changed(bool);
-		void channel_changed(streamfx::update_channel);
+		void channel_changed(streamfx::version_stage);
 		void update_detected();
 		void check_active(bool);
 
@@ -105,7 +107,7 @@ namespace streamfx::ui {
 
 		// Internal
 		void on_autoupdate_changed(bool);
-		void on_channel_changed(streamfx::update_channel);
+		void on_channel_changed(streamfx::version_stage);
 		void on_update_detected();
 		void on_check_active(bool);
 
