@@ -31,10 +31,6 @@ jobs:
             generator: GCC
           - runner: windows-2019
             generator: GCC
-          - runner: windows-2022
-            generator: Clang
-          - runner: windows-2019
-            generator: Clang
           - runner: ubuntu-22.04
             generator: MSVC
           - runner: ubuntu-20.04
@@ -66,6 +62,22 @@ jobs:
             CMAKE_SYSTEM_VERSION: "10.0.18362.0"
             CMAKE_GENERATOR: "Visual Studio 16 2019"
             CMAKE_GENERATOR_PLATFORM: "x64"
+          - runner: windows-2022
+            generator: Clang
+            platform: "Windows 11"
+            PACKAGE_NAME: "windows-11-clang"
+            CMAKE_SYSTEM_VERSION: "10.0.18362.0"
+            CMAKE_GENERATOR: "Visual Studio 17 2022"
+            CMAKE_GENERATOR_PLATFORM: "x64"
+            CMAKE_GENERATOR_TOOLSET: "ClangCL"
+          - runner: windows-2019
+            generator: Clang
+            platform: "Windows 10"
+            PACKAGE_NAME: "windows-10-clang"
+            CMAKE_SYSTEM_VERSION: "10.0.18362.0"
+            CMAKE_GENERATOR: "Visual Studio 16 2019"
+            CMAKE_GENERATOR_PLATFORM: "x64"
+            CMAKE_GENERATOR_TOOLSET: "ClangCL"
           - runner: ubuntu-22.04
             generator: GCC
             platform: "Ubuntu 22"
@@ -119,6 +131,7 @@ jobs:
       CXX: ${{ matrix.compiler_cxx }}
       CMAKE_GENERATOR: ${{ matrix.CMAKE_GENERATOR }}
       CMAKE_GENERATOR_PLATFORM: ${{ matrix.CMAKE_GENERATOR_PLATFORM }}
+      CMAKE_GENERATOR_TOOLSET: ${{ matrix.CMAKE_GENERATOR_TOOLSET }}
       CMAKE_SYSTEM_VERSION: ${{ matrix.CMAKE_SYSTEM_VERSION }}
       CMAKE_OSX_DEPLOYMENT_TARGET: "${{ matrix.CMAKE_OSX_DEPLOYMENT_TARGET }}"
     steps:
