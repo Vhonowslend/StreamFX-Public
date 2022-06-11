@@ -52,21 +52,21 @@ jobs:
             generator: MSVC
             platform: "Windows 11"
             PACKAGE_NAME: "windows-11"
-            CMAKE_SYSTEM_VERSION: "10.0.18362.0"
+            CMAKE_SYSTEM_VERSION: "10.0.22000.0"
             CMAKE_GENERATOR: "Visual Studio 17 2022"
             CMAKE_GENERATOR_PLATFORM: "x64"
           - runner: windows-2019
             generator: MSVC
             platform: "Windows 10"
             PACKAGE_NAME: "windows-10"
-            CMAKE_SYSTEM_VERSION: "10.0.18362.0"
+            CMAKE_SYSTEM_VERSION: "10.0.19041.0"
             CMAKE_GENERATOR: "Visual Studio 16 2019"
             CMAKE_GENERATOR_PLATFORM: "x64"
           - runner: windows-2022
             generator: Clang
             platform: "Windows 11"
             PACKAGE_NAME: "windows-11-clang"
-            CMAKE_SYSTEM_VERSION: "10.0.18362.0"
+            CMAKE_SYSTEM_VERSION: "10.0.22000.0"
             CMAKE_GENERATOR: "Visual Studio 17 2022"
             CMAKE_GENERATOR_PLATFORM: "x64"
             CMAKE_GENERATOR_TOOLSET: "ClangCL"
@@ -74,7 +74,7 @@ jobs:
             generator: Clang
             platform: "Windows 10"
             PACKAGE_NAME: "windows-10-clang"
-            CMAKE_SYSTEM_VERSION: "10.0.18362.0"
+            CMAKE_SYSTEM_VERSION: "10.0.19041.0"
             CMAKE_GENERATOR: "Visual Studio 16 2019"
             CMAKE_GENERATOR_PLATFORM: "x64"
             CMAKE_GENERATOR_TOOLSET: "ClangCL"
