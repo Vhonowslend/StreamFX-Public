@@ -34,11 +34,11 @@ namespace streamfx::gfx {
 		source_texture(streamfx::obs::weak_source child, streamfx::obs::weak_source parent);
 
 		public /*copy*/:
-		source_texture(source_texture const& other) = delete;
+		source_texture(source_texture const& other)            = delete;
 		source_texture& operator=(source_texture const& other) = delete;
 
 		public /*move*/:
-		source_texture(source_texture&& other) = delete;
+		source_texture(source_texture&& other)            = delete;
 		source_texture& operator=(source_texture&& other) = delete;
 
 		public:
