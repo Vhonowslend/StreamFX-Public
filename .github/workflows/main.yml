@@ -181,9 +181,14 @@ jobs:
       if: startsWith( matrix.runner, 'ubuntu' ) && ( matrix.generator == 'Clang' )
       shell: bash
       run: |
-        sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" 14
+        sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" 14 all
         sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-14 800
+        sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-14 800
         sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-14 800
+        sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-14 800
+        sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-14 800
+        sudo update-alternatives --install /usr/bin/lld lld /usr/bin/lld-14 800
+        sudo update-alternatives --install /usr/bin/lldb lldb /usr/bin/lldb-14 800
 
     - name: 'Dependency: Packages (Linux)'
       if: startsWith( matrix.runner, 'macos' )
@@ -229,7 +234,9 @@ jobs:
           -DCMAKE_BUILD_TYPE=${{ matrix.CMAKE_BUILD_TYPE }} \
           -DCMAKE_INSTALL_PREFIX="build/distrib" \
           -DPACKAGE_NAME="streamfx-${{ matrix.PACKAGE_NAME }}" \
-          -DPACKAGE_PREFIX="build/package"
+          -DPACKAGE_PREFIX="build/package" \
+          -DENABLE_CLANG=FALSE \
+          -DENABLE_PROFILING=FALSE
 
     - name: "Build (Windows)"
       if: startsWith( matrix.runner, 'windows' )
