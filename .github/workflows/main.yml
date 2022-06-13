@@ -50,6 +50,7 @@ jobs:
         include:
           - runner: windows-2022
             generator: MSVC
+            experimental: true
             platform: "Windows 11"
             PACKAGE_NAME: "windows-11"
             CMAKE_SYSTEM_VERSION: "10.0.22000.0"
@@ -57,6 +58,7 @@ jobs:
             CMAKE_GENERATOR_PLATFORM: "x64"
           - runner: windows-2019
             generator: MSVC
+            experimental: false
             platform: "Windows 10"
             PACKAGE_NAME: "windows-10"
             CMAKE_SYSTEM_VERSION: "10.0.19041.0"
@@ -64,6 +66,7 @@ jobs:
             CMAKE_GENERATOR_PLATFORM: "x64"
           - runner: windows-2022
             generator: Clang
+            experimental: true
             platform: "Windows 11"
             PACKAGE_NAME: "windows-11-clang"
             CMAKE_SYSTEM_VERSION: "10.0.22000.0"
@@ -72,6 +75,7 @@ jobs:
             CMAKE_GENERATOR_TOOLSET: "ClangCL"
           - runner: windows-2019
             generator: Clang
+            experimental: true
             platform: "Windows 10"
             PACKAGE_NAME: "windows-10-clang"
             CMAKE_SYSTEM_VERSION: "10.0.19041.0"
@@ -80,6 +84,7 @@ jobs:
             CMAKE_GENERATOR_TOOLSET: "ClangCL"
           - runner: ubuntu-22.04
             generator: GCC
+            experimental: false
             platform: "Ubuntu 22"
             compiler_c: gcc
             compiler_cxx: g++
@@ -87,6 +92,7 @@ jobs:
             CMAKE_GENERATOR: "Ninja"
           - runner: ubuntu-20.04
             generator: GCC
+            experimental: false
             platform: "Ubuntu 20"
             compiler_c: gcc
             compiler_cxx: g++
@@ -94,6 +100,7 @@ jobs:
             CMAKE_GENERATOR: "Ninja"
           - runner: ubuntu-22.04
             generator: Clang
+            experimental: false
             platform: "Ubuntu 22"
             compiler_c: clang
             compiler_cxx: clang++
@@ -101,6 +108,7 @@ jobs:
             CMAKE_GENERATOR: "Ninja"
           - runner: ubuntu-20.04
             generator: Clang
+            experimental: false
             platform: "Ubuntu 20"
             compiler_c: clang
             compiler_cxx: clang++
@@ -108,24 +116,28 @@ jobs:
             CMAKE_GENERATOR: "Ninja"
           - runner: macos-12
             generator: Clang
+            experimental: true
             platform: "MacOS 12"
             PACKAGE_NAME: "macos-12"
             CMAKE_GENERATOR: "Xcode"
             CMAKE_OSX_DEPLOYMENT_TARGET: "10.15"
           - runner: macos-11
             generator: Clang
+            experimental: false
             platform: "MacOS 11"
             PACKAGE_NAME: "macos-11"
             CMAKE_GENERATOR: "Xcode"
             CMAKE_OSX_DEPLOYMENT_TARGET: "10.15"
           - runner: macos-10.15
             generator: Clang
+            experimental: true
             platform: "MacOS 10.15"
             PACKAGE_NAME: "macos-10.15"
             CMAKE_GENERATOR: "Xcode"
             CMAKE_OSX_DEPLOYMENT_TARGET: "10.15"
     name: "${{ matrix.platform }} (${{ matrix.generator }}, ${{ matrix.CMAKE_BUILD_TYPE }})"
     runs-on: ${{ matrix.runner }}
+    continue-on-error: ${{ matrix.experimental }}
     env:
       CC: ${{ matrix.compiler_c }}
       CXX: ${{ matrix.compiler_cxx }}

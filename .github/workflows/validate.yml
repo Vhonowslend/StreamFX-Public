@@ -24,27 +24,32 @@ jobs:
         CMAKE_BUILD_TYPE: [ "Debug", "Release" ]
         include:
           - runner: "windows-2022"
+            experimental: true
             id: "windows-2022-validate"
             name: "Windows 11"
             CMAKE_SYSTEM_VERSION: "10.0.18362.0"
             CMAKE_GENERATOR: "Visual Studio 17 2022"
             CMAKE_GENERATOR_PLATFORM: "x64"
           - runner: "windows-2019"
+            experimental: true
             id: "windows-2019-validate"
             name: "Windows 10"
             CMAKE_SYSTEM_VERSION: "10.0.18362.0"
             CMAKE_GENERATOR: "Visual Studio 16 2019"
             CMAKE_GENERATOR_PLATFORM: "x64"
           - runner: "ubuntu-22.04"
+            experimental: false
             id: "linux-22.04-validate"
             name: "Ubuntu 22.04"
             CMAKE_GENERATOR: "Ninja"
           - runner: "ubuntu-20.04"
+            experimental: false
             id: "linux-20.04-validate"
             name: "Ubuntu 20.04"
             CMAKE_GENERATOR: "Ninja"
     name: "${{ matrix.name }} (${{ matrix.CMAKE_BUILD_TYPE }})"
     runs-on: ${{ matrix.runner }}
+    continue-on-error: ${{ matrix.experimental }}
     env:
       CC: clang
       CXX: clang++
@@ -75,7 +80,9 @@ jobs:
           qtbase5-dev qtbase5-private-dev libqt5svg5-dev \
           libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev \
           libcurl4-openssl-dev
-        sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+        sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" 14
+        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-14 800
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-14 800
 
     - name: "Dependencies: Cache"
       if: github.event_name != 'pull_request'
