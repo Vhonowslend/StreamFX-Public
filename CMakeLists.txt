@@ -2213,12 +2213,12 @@ if(T_CHECK AND HAVE_CLANG)
 	)
 	clang_tidy(
 		TARGETS ${PROJECT_NAME}
-		VERSION 9.0.0
+		VERSION 14.0.0
 	)
 	clang_format(
 		TARGETS ${PROJECT_NAME}
 		DEPENDENCY
-		VERSION 9.0.0
+		VERSION 14.0.0
 	)
 endif()
 
