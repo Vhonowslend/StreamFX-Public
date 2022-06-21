@@ -444,7 +444,7 @@ namespace streamfx::obs {
 					uint64_t version = static_cast<uint64_t>(obs_data_get_int(settings, S_VERSION));
 					priv->migrate(settings, version);
 					obs_data_set_int(settings, S_VERSION, static_cast<int64_t>(STREAMFX_VERSION));
-					obs_data_set_string(settings, S_COMMIT, STREAMFX_COMMIT);
+					obs_data_set_string(settings, S_COMMIT, STREAMFX_VERSION_BUILD);
 					priv->load(settings);
 				}
 			} catch (const std::exception& ex) {
@@ -472,7 +472,7 @@ namespace streamfx::obs {
 				if (data) {
 					reinterpret_cast<_instance*>(data)->save(settings);
 					obs_data_set_int(settings, S_VERSION, static_cast<int64_t>(STREAMFX_VERSION));
-					obs_data_set_string(settings, S_COMMIT, STREAMFX_COMMIT);
+					obs_data_set_string(settings, S_COMMIT, STREAMFX_VERSION_BUILD);
 				}
 			} catch (const std::exception& ex) {
 				DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
