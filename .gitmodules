@@ -4,6 +4,9 @@
 [submodule "cmake/codesign"]
 	path = cmake/codesign
 	url = https://github.com/Xaymar/cmake-codesign.git
+[submodule "cmake/version"]
+	path = cmake/version
+	url = https://github.com/Xaymar/cmake-version.git
 [submodule "third-party/nlohmann-json"]
 	path = third-party/nlohmann-json
 	url = https://github.com/nlohmann/json.git
