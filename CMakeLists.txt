@@ -25,6 +25,25 @@ else()
 endif()
 
 ################################################################################
+# Modules
+################################################################################
+
+# Search Paths
+set(CMAKE_MODULE_PATH
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules"
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/clang"
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/codesign"
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/version"
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+)
+
+# Include
+include("util")							# CacheClear, CacheSet
+include("version")						# version()
+include("DownloadProject")				# DownloadProject
+include("CheckIPOSupported")			# check_ipo_supported
+
+################################################################################
 # Detect if we are building with OBS Studio (different from Grouped builds)
 ################################################################################
 
@@ -50,116 +69,51 @@ endif()
 # Versioning
 ################################################################################
 
-# Variables for Versioning
-set(VERSION_MAJOR 0) # Major
-set(VERSION_MINOR 0) # Minor
-set(VERSION_PATCH 0) # Patch
-set(VERSION_STAGE "") # Prefix for Tweak, if left empty will assume '.'.
-set(VERSION_TWEAK 0) # Tweak
-set(VERSION_COMMIT "00000000")
-# Final format will be [MAJOR].[MINOR].[PATCH]([TYPE][TWEAK])(-[COMMIT])
+# For automatic versioning, which version is the "root" of the current changes?
+set(PROJECT_VERSION_GIT_BASE "0.11.0")
 
-function(parse_version_string)
-	# Parses a version in the format A.B.C[.|a|b|rc]D-E
-	cmake_parse_arguments(
-		PARSE_ARGV 0
-		_ARGS
-		""
-		"INPUT;OUTPUT"
-		""
-	)
-	
-	set(_tmp_MAJOR 0)
-	set(_tmp_MINOR 0)
-	set(_tmp_PATCH 0)
-	set(_tmp_STAGE "")
-	set(_tmp_TWEAK "")
-	set(_tmp_COMMIT "")
+# What is our version goal?
+set(PROJECT_VERSION "0.12.0")
+version(PARSE PROJECT_VERSION "${PROJECT_VERSION}")
 
-	# Replace separators with list separators
-	string(REPLACE "-" "." _tmp "${_ARGS_INPUT}")
-	string(REPLACE "." ";" _tmp "${_tmp}")
-	
-	# Parse version differently depending on total string length.
-	list(LENGTH _tmp _tmp_len)
-	if(_tmp_len GREATER_EQUAL 1) # A[...]
-		list(GET _tmp 0 _tmp_MAJOR)
-	endif()
-	if(_tmp_len GREATER_EQUAL 2) # A.B[...]
-		list(GET _tmp 1 _tmp_MINOR)
-	endif()
-	if(_tmp_len GREATER_EQUAL 3) # A.B.C[...]
-		list(GET _tmp 2 _tmp_PATCH)
-	endif()
-	if(_tmp_len EQUAL 4) # A.B.C.D or A.B.C-gEEEEEEEE
-		list(GET _tmp 3 _tmp2)
-		# No support for '{N,M}' in CMake-Regex!
-		if(_tmp2 MATCHES "^g[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]")
-			# A.B.C-gEEEEEEEE
-			set(_tmp_COMMIT "${_tmp2}")
-		else()
-			# It is A.B.C.D
-			set(_tmp_TWEAK "${_tmp2}")
-			set(_tmp_STAGE "a")
-		endif()
-	elseif(_tmp_len EQUAL 5) # A.B.C.D-gEEEEEEEE
-		set(_tmp_STAGE "a")
-		list(GET _tmp 3 _tmp_TWEAK)
-		list(GET _tmp 4 _tmp_COMMIT)
-	endif()
-	if(_tmp_TWEAK STREQUAL "") # Is A.B.C-gEEEEEEEE actually A.B.CxD-gEEEEEEEE?
-		string(REGEX MATCHALL "^([0-9]+)([_a-c]+)([0-9]+)" T_MATCHES "${_tmp_PATCH}")
-		if(T_MATCHES)
-			set(_tmp_PATCH ${CMAKE_MATCH_1})
-			set(_tmp_STAGE ${CMAKE_MATCH_2})
-			set(_tmp_TWEAK ${CMAKE_MATCH_3})			
-		endif()
-	endif()
-
-	set(${_ARGS_OUTPUT}_MAJOR ${_tmp_MAJOR} PARENT_SCOPE)
-	set(${_ARGS_OUTPUT}_MINOR ${_tmp_MINOR} PARENT_SCOPE)
-	set(${_ARGS_OUTPUT}_PATCH ${_tmp_PATCH} PARENT_SCOPE)
-	set(${_ARGS_OUTPUT}_STAGE ${_tmp_STAGE} PARENT_SCOPE)
-	set(${_ARGS_OUTPUT}_TWEAK ${_tmp_TWEAK} PARENT_SCOPE)
-	set(${_ARGS_OUTPUT}_COMMIT ${_tmp_COMMIT} PARENT_SCOPE)
-endfunction()
-
-# Check if we are in a git repository.
+# If possible, automatically generate versions from git.
 if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
-	set(VERSION_BASE "0.11.0") # Automatic versioning base
-	set(VERSION_TARGET "0.12.0") # Automatic versioning target
-	
-	# Parse target version as it is for output.
-	parse_version_string(OUTPUT "VERSION" INPUT "${VERSION_TARGET}")
-
-	# Try and figure out where git is.
-	find_program(GIT git
-		PATHS
-			/bin
-			/sbin
-			/usr/bin
-			/usr/local/bin
+	find_program(GIT
+		NAMES
+			git
+			git.exe
 	)
 
-	if(GIT)
-		# Tweak 
+	if(EXISTS "${GIT}")
+		# Calculate the Tweak version component from the given base version.
 		execute_process(
-			COMMAND "${GIT}" describe --tags --long --match "${VERSION_BASE}" --abbrev=8 HEAD
+			COMMAND "${GIT}" describe --tags --long --match "${PROJECT_VERSION_GIT_BASE}" --abbrev=8 HEAD
 			WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 			RESULT_VARIABLE GIT_RESULT
-			OUTPUT_VARIABLE GIT_OUTPUT
+			OUTPUT_VARIABLE PROJECT_VERSION_GIT
 			ERROR_VARIABLE GIT_ERROR
 			OUTPUT_STRIP_TRAILING_WHITESPACE
 			ERROR_STRIP_TRAILING_WHITESPACE
 			ERROR_QUIET
 		)
-		if(NOT GIT_RESULT EQUAL 0)
-			message(WARNING "${LOGPREFIX}Failed to detect version, using default instead.")
+		if(GIT_RESULT EQUAL 0)
+			# Some minor string editing so the output conforms to SemVer 2.0.0.
+			string(REPLACE "-" ";" PROJECT_VERSION_GIT "${PROJECT_VERSION_GIT}")
+
+			# Parse as SemVer 2.0.0
+			list(GET PROJECT_VERSION_GIT 1 PROJECT_VERSION_GIT_TWEAK)
+			list(GET PROJECT_VERSION_GIT 2 PROJECT_VERSION_GIT_BUILD)
+
+			# Update our global version.
+			version(MODIFY PROJECT_VERSION "${PROJECT_VERSION}" COMPRESS
+				TWEAK "${PROJECT_VERSION_GIT_TWEAK}"
+				BUILD "${PROJECT_VERSION_GIT_BUILD}"
+				PRERELEASE "a"
+				REQUIRE "PATCH;TWEAK"
+			)
+			version(PARSE PROJECT_VERSION "${PROJECT_VERSION}" REQUIRE "PATCH;TWEAK")
 		else()
-			parse_version_string(OUTPUT "GIT_VERSION" INPUT "${GIT_OUTPUT}")
-			set(VERSION_STAGE ${GIT_VERSION_STAGE})
-			set(VERSION_TWEAK ${GIT_VERSION_TWEAK})
-			set(VERSION_COMMIT ${GIT_VERSION_COMMIT})
+			message(WARNING "${LOGPREFIX}Unable to detect Tweak and Build component with 'git'.")
 		endif()
 
 		# Is there a tag on the current commit?
@@ -167,77 +121,79 @@ if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
 			COMMAND "${GIT}" tag "--sort=-v:refname" "--points-at" HEAD
 			WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 			RESULT_VARIABLE GIT_RESULT
-			OUTPUT_VARIABLE TAG_OUTPUT
+			OUTPUT_VARIABLE PROJECT_VERSION_TAG
 			ERROR_VARIABLE GIT_ERROR
 			OUTPUT_STRIP_TRAILING_WHITESPACE
 			ERROR_STRIP_TRAILING_WHITESPACE
 			ERROR_QUIET
 		)
-		if((GIT_RESULT EQUAL 0) AND (NOT "${TAG_OUTPUT}" STREQUAL ""))
-			string(REGEX REPLACE "[\r\n]+.*" "" T_MATCHES "${TAG_OUTPUT}")
-			parse_version_string(OUTPUT "TAG_VERSION" INPUT "${T_MATCHES}")
-			set(VERSION_MAJOR "${TAG_VERSION_MAJOR}")
-			set(VERSION_MINOR "${TAG_VERSION_MINOR}")
-			set(VERSION_PATCH "${TAG_VERSION_PATCH}")
-			set(VERSION_STAGE "${TAG_VERSION_STAGE}")
-			set(VERSION_TWEAK "${TAG_VERSION_TWEAK}")
+		if((GIT_RESULT EQUAL 0) AND (NOT "${PROJECT_VERSION_TAG}" STREQUAL ""))
+			# Some minor string editing so the output conforms to SemVer 2.0.0.
+			string(REGEX REPLACE "[\r\n]+.*" "" PROJECT_VERSION_TAG "${PROJECT_VERSION_TAG}")
+
+			# Parse as SemVer 2.0.0
+			version(PARSE PROJECT_VERSION_TAG "${PROJECT_VERSION_TAG}" REQUIRE "PATCH;TWEAK")
+			if(PROJECT_VERSION_TAG_PRERELEASE)
+				string(SUBSTRING "${PROJECT_VERSION_TAG_PRERELEASE}" 1 -1 PROJECT_VERSION_TAG_TWEAK)
+				string(SUBSTRING "${PROJECT_VERSION_TAG_PRERELEASE}" 0 1 PROJECT_VERSION_TAG_PRERELEASE)
+
+				if(NOT PROJECT_VERSION_TAG_TWEAK STREQUAL PROJECT_VERSION_GIT_TWEAK)
+					message(WARNING "${LOGPREFIX}'git' tag mismatches detected version: '${PROJECT_VERSION_TAG_TWEAK}' != '${PROJECT_VERSION_GIT_TWEAK}'.")
+				endif()
+			endif()
+
+			# Update our global version.
+			version(GENERATE PROJECT_VERSION COMPRESS
+				MAJOR "${PROJECT_VERSION_TAG_MAJOR}"
+				MINOR "${PROJECT_VERSION_TAG_MINOR}"
+				PATCH "${PROJECT_VERSION_TAG_PATCH}"
+				TWEAK "${PROJECT_VERSION_TAG_TWEAK}"
+				PRERELEASE "${PROJECT_VERSION_TAG_PRERELEASE}"
+				BUILD "${PROJECT_VERSION_BUILD}"
+			)
+			version(PARSE PROJECT_VERSION "${PROJECT_VERSION}" REQUIRE "PATCH;TWEAK")
 		endif()
+	else()
+		message(STATUS "${LOGPREFIX}'git' not found, automatic version detection disabled.")
 	endif()
 else()
 	message(STATUS "${LOGPREFIX}Not a git repository, automatic version detection disabled.")
 endif()
 
 # Allow manual overrides of the detected version.
-set(${PREFIX}VERSION "" CACHE STRING "Override StreamFX version with this string. Format: Major.Minor.Patch[Stage][Tweak[-Commit8c]]")
-if(NOT (${PREFIX}VERSION STREQUAL ""))
-	parse_version_string(OUTPUT "VERSION" INPUT "${${PREFIX}VERSION}")	
+set(${PREFIX}VERSION "" CACHE STRING "Override detected or pre-configured version with this string. Accepts strings in CMake and SemVer 2.0.0 format.")
+if(NOT ("${${PREFIX}VERSION}" STREQUAL ""))
+	version(PARSE PROJECT_VERSION_CFG "${${PREFIX}VERSION}" REQUIRE "PATCH;TWEAK")
+	if("${PROJECT_VERSION_CFG_BUILD}" STREQUAL "")
+		set(PROJECT_VERSION_CFG_BUILD "${PROJECT_VERSION_BUILD}")
+	endif()
+	version(GENERATE PROJECT_VERSION COMPRESS
+		MAJOR "${PROJECT_VERSION_CFG_MAJOR}"
+		MINOR "${PROJECT_VERSION_CFG_MINOR}"
+		PATCH "${PROJECT_VERSION_CFG_PATCH}"
+		TWEAK "${PROJECT_VERSION_CFG_TWEAK}"
+		PRERELEASE "${PROJECT_VERSION_CFG_PRERELEASE}"
+		BUILD "${PROJECT_VERSION_CFG_BUILD}"
+	)
 endif()
 
-# Generate Version String
-if(VERSION_COMMIT)
-	set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}${VERSION_STAGE}${VERSION_TWEAK}-${VERSION_COMMIT}")
-else()
-	set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}${VERSION_STAGE}${VERSION_TWEAK}")
-endif()
-
-# Log the detected version.
-message(STATUS "${LOGPREFIX}Version ${VERSION_STRING}")
+# Parse & Log the detected version.
+message(STATUS "${LOGPREFIX}Version ${PROJECT_VERSION}")
 
 ################################################################################
 # Project
 ################################################################################
-set(_VERSION_TWEAK "0${VERSION_TWEAK}")
+version(GENERATE PROJECT_VERSION_CMAKE
+	MAJOR "${PROJECT_VERSION_MAJOR}"
+	MINOR "${PROJECT_VERSION_MINOR}"
+	PATCH "${PROJECT_VERSION_PATCH}"
+	TWEAK "${PROJECT_VERSION_TWEAK}"
+)
 project(
 	StreamFX
-	VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${_VERSION_TWEAK}
+	VERSION ${PROJECT_VERSION_CMAKE}
 	DESCRIPTION "Additional sources, filters, transitions and encoders for OBS Studio."
 	HOMEPAGE_URL "https://streamfx.xaymar.com/"
-)
-
-# Helpers for CI
-if(VERSION_STAGE STREQUAL "")
-	file(
-		GENERATE
-		OUTPUT "$<TARGET_PROPERTY:${PROJECT_NAME},BINARY_DIR>/tag_name"
-		CONTENT "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}"
-		TARGET ${PROJECT_NAME}
-		FILE_PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_READ GROUP_EXECUTE
-	)
-else()
-	file(
-		GENERATE
-		OUTPUT "$<TARGET_PROPERTY:${PROJECT_NAME},BINARY_DIR>/tag_name"
-		CONTENT "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}${VERSION_STAGE}${VERSION_TWEAK}"
-		TARGET ${PROJECT_NAME}
-		FILE_PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_READ GROUP_EXECUTE
-	)
-endif()
-file(
-	GENERATE
-	OUTPUT "$<TARGET_PROPERTY:${PROJECT_NAME},BINARY_DIR>/version"
-	CONTENT "${VERSION_STRING}"
-	TARGET ${PROJECT_NAME}
-	FILE_PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_READ GROUP_EXECUTE
 )
 
 # Full Project Name
@@ -252,23 +208,6 @@ set(PROJECT_AUTHORS "Michael Fabian 'Xaymar' Dirks <info@xaymar.com>")
 # Copyright Years (TODO: Update every year)
 set(PROJECT_COPYRIGHT_YEARS "2018 - 2020")
 
-# Versioning
-set(PROJECT_VERSION_STRING ${VERSION_STRING})
-
-################################################################################
-# Modules
-################################################################################
-
-# Search Paths
-set(CMAKE_MODULE_PATH
-	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules"
-	"${CMAKE_CURRENT_SOURCE_DIR}/cmake"
-)
-
-# Include
-include("util")							# CacheClear, CacheSet
-include("DownloadProject")				# DownloadProject
-include("CheckIPOSupported")			# check_ipo_supported
 
 ################################################################################
 # Platform Setup
@@ -2241,6 +2180,8 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 # Set file version (on anything but MacOS)
 if(NOT D_PLATFORM_MAC)
 	set_target_properties(${PROJECT_NAME} PROPERTIES
+		MACHO_COMPATIBILITY_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+		MACHO_CURRENT_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
 		VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${PROJECT_VERSION_TWEAK}
 		SOVERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${PROJECT_VERSION_TWEAK}
 	)
@@ -2520,7 +2461,7 @@ endif()
 if(STANDALONE)
 	# Packaging
 	if(NOT PACKAGE_SUFFIX)
-		set(_PACKAGE_SUFFIX_OVERRIDE "${VERSION_STRING}")
+		set(_PACKAGE_SUFFIX_OVERRIDE "${PROJECT_VERSION}")
 	else()
 		set(_PACKAGE_SUFFIX_OVERRIDE "${PACKAGE_SUFFIX}")
 	endif()
