@@ -42,7 +42,7 @@ std::shared_ptr<AVFrame> avframe_queue::create_frame()
 	return frame;
 }
 
-avframe_queue::avframe_queue() {}
+avframe_queue::avframe_queue() = default;
 
 avframe_queue::~avframe_queue()
 {

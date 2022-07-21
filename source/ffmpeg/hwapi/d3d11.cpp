@@ -102,7 +102,7 @@ std::list<device> d3d11::enumerate_adapters()
 	return std::move(adapters);
 }
 
-std::shared_ptr<instance> d3d11::create(device target)
+std::shared_ptr<instance> d3d11::create(const device& target)
 {
 	std::shared_ptr<d3d11_instance>   inst;
 	ATL::CComPtr<ID3D11Device>        device;
@@ -156,10 +156,8 @@ struct D3D11AVFrame {
 };
 
 d3d11_instance::d3d11_instance(ATL::CComPtr<ID3D11Device> device, ATL::CComPtr<ID3D11DeviceContext> context)
-{
-	_device  = device;
-	_context = context;
-}
+	: _device(device), _context(context)
+{}
 
 d3d11_instance::~d3d11_instance() {}
 

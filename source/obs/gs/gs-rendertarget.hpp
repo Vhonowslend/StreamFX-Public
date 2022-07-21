@@ -65,7 +65,7 @@ namespace streamfx::obs::gs {
 		rendertarget_op(streamfx::obs::gs::rendertarget* rt, uint32_t width, uint32_t height);
 
 		// Move Constructor
-		rendertarget_op(streamfx::obs::gs::rendertarget_op&&);
+		rendertarget_op(streamfx::obs::gs::rendertarget_op&&) noexcept;
 
 		// Copy Constructor
 		rendertarget_op(const streamfx::obs::gs::rendertarget_op&) = delete;

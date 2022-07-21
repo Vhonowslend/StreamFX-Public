@@ -110,7 +110,7 @@ namespace streamfx::util {
 
 		void clear_headers();
 
-		void clear_header(std::string header);
+		void clear_header(std::string_view header);
 
 		void set_header(std::string header, std::string value);
 

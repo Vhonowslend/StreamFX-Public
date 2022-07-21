@@ -44,7 +44,7 @@ namespace streamfx::util {
 		event(const event<_args...>&) = delete;
 
 		/* Move Constructor */
-		event(event<_args...>&& other) : event()
+		event(event<_args...>&& other) noexcept : event()
 		{
 			std::lock_guard<std::recursive_mutex> lg(_lock);
 			std::lock_guard<std::recursive_mutex> lgo(other._lock);
@@ -60,7 +60,7 @@ namespace streamfx::util {
 		event<_args...>& operator=(const event<_args...>&) = delete;
 
 		/* Move Operator */
-		event<_args...>& operator=(event<_args...>&& other)
+		event<_args...>& operator=(event<_args...>&& other) noexcept
 		{
 			std::lock_guard<std::recursive_mutex> lg(_lock);
 			std::lock_guard<std::recursive_mutex> lgo(other._lock);

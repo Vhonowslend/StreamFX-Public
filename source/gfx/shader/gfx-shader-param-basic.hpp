@@ -29,7 +29,7 @@ namespace streamfx::gfx {
 			Enum,
 		};
 
-		basic_field_type get_field_type_from_string(std::string v);
+		basic_field_type get_field_type_from_string(std::string_view v);
 
 		struct basic_data {
 			union {

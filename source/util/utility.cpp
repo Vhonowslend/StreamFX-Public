@@ -103,12 +103,12 @@ void streamfx::util::vec4a::operator delete[](void* p)
 	streamfx::util::free_aligned(p);
 }
 
-std::pair<int64_t, int64_t> streamfx::util::size_from_string(std::string text, bool allowSquare)
+std::pair<int64_t, int64_t> streamfx::util::size_from_string(std::string_view text, bool allowSquare)
 {
 	int64_t width, height;
 
-	const char* begin = text.c_str();
-	const char* end   = text.c_str() + text.size() + 1;
+	const auto* begin = text.data();
+	const auto* end   = text.data() + text.size() + 1;
 	char*       here  = const_cast<char*>(end);
 
 	long long res = strtoll(begin, &here, 0);

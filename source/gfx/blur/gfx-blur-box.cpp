@@ -208,7 +208,7 @@ streamfx::gfx::blur::box::~box() {}
 
 void streamfx::gfx::blur::box::set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture)
 {
-	_input_texture = texture;
+	_input_texture = std::move(texture);
 }
 
 ::streamfx::gfx::blur::type streamfx::gfx::blur::box::get_type()

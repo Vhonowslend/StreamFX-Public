@@ -97,7 +97,7 @@ streamfx::obs::gs::rendertarget_op::rendertarget_op(streamfx::obs::gs::rendertar
 	parent->_is_being_rendered = true;
 }
 
-streamfx::obs::gs::rendertarget_op::rendertarget_op(streamfx::obs::gs::rendertarget_op&& r)
+streamfx::obs::gs::rendertarget_op::rendertarget_op(streamfx::obs::gs::rendertarget_op&& r) noexcept
 {
 	this->parent = r.parent;
 	r.parent     = nullptr;

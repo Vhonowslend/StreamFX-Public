@@ -118,7 +118,7 @@ namespace streamfx::obs {
 			_info.get_extra_data  = _get_extra_data;
 			_info.get_sei_data    = _get_sei_data;
 		}
-		virtual ~encoder_factory() {}
+		virtual ~encoder_factory() = default;
 
 		void finish_setup()
 		{

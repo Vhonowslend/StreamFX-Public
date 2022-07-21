@@ -45,7 +45,7 @@ namespace streamfx::obs {
 			_info.save            = _save;
 			_info.filter_remove   = _filter_remove;
 		}
-		virtual ~source_factory() {}
+		virtual ~source_factory() = default;
 
 		protected:
 		void finish_setup()

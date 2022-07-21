@@ -202,12 +202,12 @@ void nvenc::get_defaults(obs_data_t* settings, const AVCodec*, AVCodecContext*)
 static bool modified_ratecontrol(obs_properties_t* props, obs_property_t*, obs_data_t* settings) noexcept
 {
 	// Decode the name into useful flags.
-	auto value              = obs_data_get_string(settings, ST_KEY_RATECONTROL_MODE);
-	bool have_bitrate       = false;
-	bool have_bitrate_range = false;
-	bool have_quality       = false;
-	bool have_qp_limits     = false;
-	bool have_qp            = false;
+	const char* value              = obs_data_get_string(settings, ST_KEY_RATECONTROL_MODE);
+	bool        have_bitrate       = false;
+	bool        have_bitrate_range = false;
+	bool        have_quality       = false;
+	bool        have_qp_limits     = false;
+	bool        have_qp            = false;
 	if (value == std::string_view("cbr")) {
 		have_bitrate = true;
 	} else if (value == std::string_view("vbr")) {
@@ -513,14 +513,14 @@ void nvenc::get_runtime_properties(obs_properties_t* props, const AVCodec*, AVCo
 
 void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context)
 {
-	if (auto v = obs_data_get_string(settings, ST_KEY_PRESET);
-		!context->internal && (v != nullptr) && (strlen(v) > 0)) {
+	if (const char* v = obs_data_get_string(settings, ST_KEY_PRESET);
+		!context->internal && (v != nullptr) && (v[0] != '\0')) {
 		av_opt_set(context->priv_data, "preset", v, AV_OPT_SEARCH_CHILDREN);
 	}
 
 	{ // Rate Control
-		auto v = obs_data_get_string(settings, ST_KEY_RATECONTROL_MODE);
-		if (!context->internal && (v != nullptr) && (strlen(v) > 0)) {
+		const char* v = obs_data_get_string(settings, ST_KEY_RATECONTROL_MODE);
+		if (!context->internal && (v != nullptr) && (v[0] != '\0')) {
 			av_opt_set(context->priv_data, "rc", v, AV_OPT_SEARCH_CHILDREN);
 		}
 
@@ -572,8 +572,8 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		if (!context->internal) {
 			if (streamfx::ffmpeg::tools::avoption_exists(context->priv_data, "multipass")) {
 				// Multi-Pass
-				if (auto v = obs_data_get_string(settings, ST_KEY_RATECONTROL_MULTIPASS);
-					(v != nullptr) && (strlen(v) > 0)) {
+				if (const char* v = obs_data_get_string(settings, ST_KEY_RATECONTROL_MULTIPASS);
+					(v != nullptr) && (v[0] != '\0')) {
 					av_opt_set(context->priv_data, "multipass", v, AV_OPT_SEARCH_CHILDREN);
 					av_opt_set_int(context->priv_data, "2pass", 0, AV_OPT_SEARCH_CHILDREN);
 				}
@@ -717,8 +717,8 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			av_opt_set_int(context->priv_data, "weighted_pred", wp, AV_OPT_SEARCH_CHILDREN);
 		}
 
-		if (auto v = obs_data_get_string(settings, ST_KEY_OTHER_BFRAMEREFERENCEMODE);
-			(v != nullptr) && (strlen(v) > 0)) {
+		if (const char* v = obs_data_get_string(settings, ST_KEY_OTHER_BFRAMEREFERENCEMODE);
+			(v != nullptr) && (v[0] != '\0')) {
 			av_opt_set(context->priv_data, "b_ref_mode", v, AV_OPT_SEARCH_CHILDREN);
 		}
 

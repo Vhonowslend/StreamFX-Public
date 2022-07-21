@@ -84,7 +84,7 @@ std::size_t streamfx::gfx::shader::get_length_from_effect_type(streamfx::obs::gs
 	}
 }
 
-streamfx::gfx::shader::parameter_type streamfx::gfx::shader::get_type_from_string(std::string v)
+streamfx::gfx::shader::parameter_type streamfx::gfx::shader::get_type_from_string(std::string_view v)
 {
 	if ((v == "bool") || (v == "boolean")) {
 		return parameter_type::Boolean;
@@ -139,7 +139,7 @@ streamfx::gfx::shader::parameter::parameter(streamfx::gfx::shader::shader*      
 	// Read Name
 	if (auto anno = _param.get_annotation(ST_ANNO_NAME); anno) {
 		if (std::string v = anno.get_default_string(); v.length() > 0) {
-			_name = v;
+			_name = std::move(v);
 		} else {
 			throw std::out_of_range("'" ST_ANNO_NAME "' annotation has zero length.");
 		}
@@ -148,7 +148,7 @@ streamfx::gfx::shader::parameter::parameter(streamfx::gfx::shader::shader*      
 	// Read Description
 	if (auto anno = _param.get_annotation(ST_ANNO_DESCRIPTION); anno) {
 		if (std::string v = anno.get_default_string(); v.length() > 0) {
-			_description = v;
+			_description = std::move(v);
 		} else {
 			throw std::out_of_range("'" ST_ANNO_DESCRIPTION "' annotation has zero length.");
 		}

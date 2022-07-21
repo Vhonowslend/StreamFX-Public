@@ -202,7 +202,7 @@ streamfx::gfx::blur::dual_filtering::~dual_filtering() {}
 
 void streamfx::gfx::blur::dual_filtering::set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture)
 {
-	_input_texture = texture;
+	_input_texture = std::move(texture);
 }
 
 ::streamfx::gfx::blur::type streamfx::gfx::blur::dual_filtering::get_type()
