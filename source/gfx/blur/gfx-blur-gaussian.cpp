@@ -41,8 +41,8 @@ streamfx::gfx::blur::gaussian_data::gaussian_data()
 {
 	using namespace streamfx::util;
 
-	std::vector<double> kernel_dbl(ST_KERNEL_SIZE);
-	std::vector<float>  kernel(ST_KERNEL_SIZE);
+	std::array<double, ST_KERNEL_SIZE> kernel_dbl;
+	std::vector<float>                 kernel(ST_KERNEL_SIZE);
 
 	{
 		auto gctx = streamfx::obs::gs::context();
@@ -277,7 +277,7 @@ streamfx::gfx::blur::gaussian::~gaussian() {}
 
 void streamfx::gfx::blur::gaussian::set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture)
 {
-	_input_texture = texture;
+	_input_texture = std::move(texture);
 }
 
 ::streamfx::gfx::blur::type streamfx::gfx::blur::gaussian::get_type()

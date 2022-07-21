@@ -45,10 +45,10 @@ streamfx::util::library::library(std::filesystem::path file) : _library(nullptr)
 		_library = reinterpret_cast<void*>(LoadLibraryExW(wfile.c_str(), nullptr, LOAD_LIBRARY_SEARCH_DEFAULT_DIRS));
 	}
 	if (!_library) {
-		DWORD error = GetLastError();
+		std::string ex    = "Failed to load library.";
+		DWORD       error = GetLastError();
 		if (error != ERROR_PROC_NOT_FOUND) {
-			PSTR        message = NULL;
-			std::string ex      = "Failed to load library.";
+			PSTR message = NULL;
 			FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ALLOCATE_BUFFER,
 						   NULL, error, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), (LPSTR)&message, 0, NULL);
 			if (message) {
@@ -57,7 +57,7 @@ streamfx::util::library::library(std::filesystem::path file) : _library(nullptr)
 				throw std::runtime_error(ex);
 			}
 		}
-		throw std::runtime_error("Failed to load library.");
+		throw std::runtime_error(ex);
 	}
 #elif defined(ST_UNIX)
 	_library = dlopen(file.u8string().c_str(), RTLD_LAZY);

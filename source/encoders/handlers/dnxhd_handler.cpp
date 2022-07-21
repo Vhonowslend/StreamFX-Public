@@ -27,7 +27,7 @@ void dnxhd_handler::override_colorformat(AVPixelFormat& target_format, obs_data_
 		std::pair{"dnxhr_444", AV_PIX_FMT_YUV444P10LE}};
 
 	const char* selected_profile = obs_data_get_string(settings, S_CODEC_DNXHR_PROFILE);
-	for (auto kv : profile_to_format_map) {
+	for (const auto& kv : profile_to_format_map) {
 		if (strcmp(kv.first, selected_profile) == 0) {
 			target_format = kv.second;
 			return;

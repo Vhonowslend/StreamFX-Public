@@ -111,7 +111,7 @@ namespace streamfx::obs::gs {
 		*
 		* \param other
 		*/
-		void operator=(vertex_buffer const&& other);
+		void operator=(vertex_buffer const&& other) noexcept;
 
 		void resize(uint32_t new_size);
 

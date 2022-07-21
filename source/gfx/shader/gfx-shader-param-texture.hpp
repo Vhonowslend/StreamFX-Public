@@ -19,7 +19,7 @@ namespace streamfx::gfx {
 			Enum,
 		};
 
-		texture_field_type get_texture_field_type_from_string(std::string v);
+		texture_field_type get_texture_field_type_from_string(std::string_view v);
 
 		enum class texture_type {
 			File,

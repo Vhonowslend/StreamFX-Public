@@ -95,7 +95,7 @@ void displacement_instance::update(obs_data_t* settings)
 	_scale[0] = _scale[1] = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_SCALE));
 	_scale_type           = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_SCALE_TYPE) / 100.0);
 
-	std::string new_file = obs_data_get_string(settings, ST_KEY_FILE);
+	const char* new_file = obs_data_get_string(settings, ST_KEY_FILE);
 	if (new_file != _texture_file) {
 		try {
 			_texture      = std::make_shared<streamfx::obs::gs::texture>(new_file);

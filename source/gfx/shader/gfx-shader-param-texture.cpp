@@ -52,7 +52,7 @@ static constexpr std::string_view _annotation_default         = "default";
 static constexpr std::string_view _annotation_enum_entry      = "enum_%zu";
 static constexpr std::string_view _annotation_enum_entry_name = "enum_%zu_name";
 
-streamfx::gfx::shader::texture_field_type streamfx::gfx::shader::get_texture_field_type_from_string(std::string v)
+streamfx::gfx::shader::texture_field_type streamfx::gfx::shader::get_texture_field_type_from_string(std::string_view v)
 {
 	std::map<std::string, texture_field_type> matches = {
 		{"input", texture_field_type::Input},
@@ -60,7 +60,7 @@ streamfx::gfx::shader::texture_field_type streamfx::gfx::shader::get_texture_fie
 		{"enumeration", texture_field_type::Enum},
 	};
 
-	auto fnd = matches.find(v);
+	auto fnd = matches.find(v.data());
 	if (fnd != matches.end())
 		return fnd->second;
 
@@ -82,15 +82,15 @@ streamfx::gfx::shader::texture_parameter::texture_parameter(streamfx::gfx::shade
 		_keys.reserve(3);
 		{ // Type
 			snprintf(string_buffer, sizeof(string_buffer), "%s%s", get_key().data(), ST_KEY_TYPE);
-			_keys.push_back(std::string(string_buffer));
+			_keys.emplace_back(string_buffer);
 		}
 		{ // File
 			snprintf(string_buffer, sizeof(string_buffer), "%s%s", get_key().data(), ST_KEY_FILE);
-			_keys.push_back(std::string(string_buffer));
+			_keys.emplace_back(string_buffer);
 		}
 		{ // Source
 			snprintf(string_buffer, sizeof(string_buffer), "%s%s", get_key().data(), ST_KEY_SOURCE);
-			_keys.push_back(std::string(string_buffer));
+			_keys.emplace_back(string_buffer);
 		}
 	}
 
@@ -233,9 +233,8 @@ void streamfx::gfx::shader::texture_parameter::properties(obs_properties_t* prop
 	}
 }
 
-std::filesystem::path make_absolute_to(std::filesystem::path origin, std::filesystem::path destination)
+std::filesystem::path make_absolute_to(const std::filesystem::path& origin, const std::filesystem::path& destination)
 {
-	auto destination_dir = std::filesystem::absolute(destination.remove_filename());
 	return std::filesystem::absolute(destination / origin);
 }
 
@@ -263,7 +262,7 @@ void streamfx::gfx::shader::texture_parameter::update(obs_data_t* settings)
 			_dirty_ts  = std::chrono::high_resolution_clock::now() - std::chrono::milliseconds(1);
 		}
 	} else if (_type == texture_type::Source) {
-		auto source_name = obs_data_get_string(settings, _keys[2].c_str());
+		const char* source_name = obs_data_get_string(settings, _keys[2].c_str());
 
 		if (_source_name != source_name) {
 			_source_name = source_name;
@@ -321,14 +320,14 @@ void streamfx::gfx::shader::texture_parameter::assign()
 
 				// Propagate all of this into the storage.
 				_source_rendertarget = rt;
-				_source_visible      = visible;
-				_source_active       = active;
+				_source_visible      = std::move(visible);
+				_source_active       = std::move(active);
 				_source_child        = child;
-				_source              = source;
+				_source              = std::move(source);
 			}
 
 			_dirty = false;
-		} catch (const std::exception& ex) {
+		} catch (const std::exception&) {
 			_dirty_ts = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(5000);
 		} catch (...) {
 			_dirty_ts = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(5000);

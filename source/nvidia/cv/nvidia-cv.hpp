@@ -293,7 +293,7 @@ namespace streamfx::nvidia::cv {
 
 		public:
 		exception(const char* what, result code) : std::runtime_error(what), _code(code) {}
-		exception(const std::string& what, result code) : std::runtime_error(what), _code(code) {}
+		exception(std::string_view what, result code) : std::runtime_error(what.data()), _code(code) {}
 		~exception(){};
 
 		inline result code()

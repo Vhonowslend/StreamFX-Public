@@ -24,7 +24,7 @@
 
 using namespace streamfx::ffmpeg;
 
-swscale::swscale() {}
+swscale::swscale() = default;
 
 swscale::~swscale()
 {

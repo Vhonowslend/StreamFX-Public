@@ -62,11 +62,8 @@ streamfx::nvidia::cuda::gstexture::gstexture(std::shared_ptr<streamfx::obs::gs::
 		ID3D11Resource* resource = nullptr;
 		switch (_texture->get_type()) {
 		case streamfx::obs::gs::texture::type::Cube:
+		case streamfx::obs::gs::texture::type::Volume:
 		case streamfx::obs::gs::texture::type::Normal: {
-			resource = static_cast<ID3D11Resource*>(gs_texture_get_obj(_texture->get_object()));
-			break;
-		}
-		case streamfx::obs::gs::texture::type::Volume: {
 			resource = static_cast<ID3D11Resource*>(gs_texture_get_obj(_texture->get_object()));
 			break;
 		}
@@ -101,7 +98,7 @@ streamfx::nvidia::cuda::array_t
 		throw std::runtime_error("nvidia::cuda::gstexture: Mapping failed.");
 	}
 
-	_stream    = stream;
+	_stream    = std::move(stream);
 	_is_mapped = true;
 
 	switch (_cuda->cuGraphicsSubResourceGetMappedArray(&_pointer, _resource, 0, 0)) {

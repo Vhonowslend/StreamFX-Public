@@ -62,7 +62,7 @@ streamfx::gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
 	}
 }
 
-streamfx::gfx::shader::shader::~shader() {}
+streamfx::gfx::shader::shader::~shader() = default;
 
 bool streamfx::gfx::shader::shader::is_shader_different(const std::filesystem::path& file)
 try {
@@ -88,7 +88,7 @@ try {
 	return false;
 }
 
-bool streamfx::gfx::shader::shader::is_technique_different(const std::string& tech)
+bool streamfx::gfx::shader::shader::is_technique_different(std::string_view tech)
 {
 	// Is the technique different?
 	if (tech != _shader_tech)
@@ -97,7 +97,7 @@ bool streamfx::gfx::shader::shader::is_technique_different(const std::string& te
 	return false;
 }
 
-bool streamfx::gfx::shader::shader::load_shader(const std::filesystem::path& file, const std::string& tech,
+bool streamfx::gfx::shader::shader::load_shader(const std::filesystem::path& file, std::string_view tech,
 												bool& shader_dirty, bool& param_dirty)
 try {
 	if (!std::filesystem::exists(file))

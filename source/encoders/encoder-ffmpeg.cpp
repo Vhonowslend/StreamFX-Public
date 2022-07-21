@@ -824,7 +824,7 @@ const AVCodecContext* ffmpeg_instance::get_avcodeccontext()
 	return _context;
 }
 
-void ffmpeg_instance::parse_ffmpeg_commandline(std::string text)
+void ffmpeg_instance::parse_ffmpeg_commandline(std::string_view text)
 {
 	// Steps to properly parse a command line:
 	// 1. Split by space and package by quotes.
@@ -915,7 +915,7 @@ void ffmpeg_instance::parse_ffmpeg_commandline(std::string text)
 	//  have also dealt with escaping for the most part. We want to parse
 	//  an FFmpeg commandline option set here, so the first character in
 	//  the string must be a '-'.
-	for (std::string& opt : opts) {
+	for (const auto& opt : opts) {
 		// Skip empty options.
 		if (opt.size() == 0)
 			continue;
@@ -1133,7 +1133,7 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 
 		if (_handler && _handler->has_threading_support(this)) {
 			auto p = obs_properties_add_int_slider(grp, ST_KEY_FFMPEG_THREADS, D_TRANSLATE(ST_I18N_FFMPEG_THREADS), 0,
-												   static_cast<int64_t>(std::thread::hardware_concurrency() * 2), 1);
+												   static_cast<int64_t>(std::thread::hardware_concurrency()) * 2, 1);
 		}
 	};
 
@@ -1220,9 +1220,9 @@ std::shared_ptr<handler::handler> ffmpeg_manager::get_handler(std::string codec)
 #endif
 }
 
-bool ffmpeg_manager::has_handler(std::string codec)
+bool ffmpeg_manager::has_handler(std::string_view codec)
 {
-	return (_handlers.find(codec) != _handlers.end());
+	return (_handlers.find(codec.data()) != _handlers.end());
 }
 
 std::shared_ptr<ffmpeg_manager> _ffmepg_encoder_factory_instance = nullptr;

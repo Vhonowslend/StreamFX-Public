@@ -36,7 +36,7 @@ streamfx::obs::gs::effect_pass::effect_pass(gs_epass_t* pass, std::shared_ptr<gs
 	reset(pass, [](void*) {});
 }
 
-streamfx::obs::gs::effect_pass::~effect_pass() {}
+streamfx::obs::gs::effect_pass::~effect_pass() = default;
 
 std::string streamfx::obs::gs::effect_pass::name()
 {
@@ -58,22 +58,22 @@ streamfx::obs::gs::effect_parameter streamfx::obs::gs::effect_pass::get_vertex_p
 	return streamfx::obs::gs::effect_parameter((get()->vertshader_params.array + idx)->eparam, *this);
 }
 
-streamfx::obs::gs::effect_parameter streamfx::obs::gs::effect_pass::get_vertex_parameter(std::string name)
+streamfx::obs::gs::effect_parameter streamfx::obs::gs::effect_pass::get_vertex_parameter(std::string_view name)
 {
 	for (std::size_t idx = 0; idx < count_vertex_parameters(); idx++) {
 		auto ptr = get()->vertshader_params.array + idx;
-		if (strcmp(ptr->eparam->name, name.c_str()) == 0)
+		if (strcmp(ptr->eparam->name, name.data()) == 0)
 			return streamfx::obs::gs::effect_parameter(ptr->eparam, *this);
 	}
 	return nullptr;
 }
 
-bool streamfx::obs::gs::effect_pass::has_vertex_parameter(std::string name)
+bool streamfx::obs::gs::effect_pass::has_vertex_parameter(std::string_view name)
 {
 	return (get_vertex_parameter(name) != nullptr);
 }
 
-bool streamfx::obs::gs::effect_pass::has_vertex_parameter(std::string                               name,
+bool streamfx::obs::gs::effect_pass::has_vertex_parameter(std::string_view                          name,
 														  streamfx::obs::gs::effect_parameter::type type)
 {
 	if (auto el = get_vertex_parameter(name); el != nullptr) {
@@ -95,22 +95,22 @@ streamfx::obs::gs::effect_parameter streamfx::obs::gs::effect_pass::get_pixel_pa
 	return streamfx::obs::gs::effect_parameter((get()->pixelshader_params.array + idx)->eparam, *this);
 }
 
-streamfx::obs::gs::effect_parameter streamfx::obs::gs::effect_pass::get_pixel_parameter(std::string name)
+streamfx::obs::gs::effect_parameter streamfx::obs::gs::effect_pass::get_pixel_parameter(std::string_view name)
 {
 	for (std::size_t idx = 0; idx < count_pixel_parameters(); idx++) {
 		auto ptr = get()->pixelshader_params.array + idx;
-		if (strcmp(ptr->eparam->name, name.c_str()) == 0)
+		if (strcmp(ptr->eparam->name, name.data()) == 0)
 			return streamfx::obs::gs::effect_parameter(ptr->eparam, *this);
 	}
 	return nullptr;
 }
 
-bool streamfx::obs::gs::effect_pass::has_pixel_parameter(std::string name)
+bool streamfx::obs::gs::effect_pass::has_pixel_parameter(std::string_view name)
 {
 	return (get_pixel_parameter(name) != nullptr);
 }
 
-bool streamfx::obs::gs::effect_pass::has_pixel_parameter(std::string                               name,
+bool streamfx::obs::gs::effect_pass::has_pixel_parameter(std::string_view                          name,
 														 streamfx::obs::gs::effect_parameter::type type)
 {
 	if (auto el = get_pixel_parameter(name); el != nullptr) {

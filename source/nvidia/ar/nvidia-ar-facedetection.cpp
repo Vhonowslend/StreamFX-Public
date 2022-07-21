@@ -92,7 +92,7 @@ void ar::facedetection::set_tracking_limit(size_t v)
 
 	// Update bounding boxes structure.
 	_bboxes.rects   = _rects.data();
-	_bboxes.maximum = v;
+	_bboxes.maximum = static_cast<uint8_t>(v);
 	_bboxes.current = 0;
 
 	// Update feature.
