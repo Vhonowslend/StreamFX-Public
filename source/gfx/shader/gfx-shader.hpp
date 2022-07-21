@@ -84,9 +84,9 @@ namespace streamfx::gfx {
 
 			bool is_shader_different(const std::filesystem::path& file);
 
-			bool is_technique_different(const std::string& tech);
+			bool is_technique_different(std::string_view tech);
 
-			bool load_shader(const std::filesystem::path& file, const std::string& tech, bool& shader_dirty,
+			bool load_shader(const std::filesystem::path& file, std::string_view tech, bool& shader_dirty,
 							 bool& param_dirty);
 
 			static void defaults(obs_data_t* data);

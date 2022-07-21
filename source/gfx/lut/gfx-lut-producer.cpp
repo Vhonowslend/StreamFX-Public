@@ -47,7 +47,7 @@ streamfx::gfx::lut::producer::producer()
 		throw std::runtime_error("Unable to get LUT producer effect.");
 }
 
-streamfx::gfx::lut::producer::~producer() {}
+streamfx::gfx::lut::producer::~producer() = default;
 
 std::shared_ptr<streamfx::obs::gs::texture> streamfx::gfx::lut::producer::produce(streamfx::gfx::lut::color_depth depth)
 {

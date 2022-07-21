@@ -35,8 +35,8 @@ namespace streamfx::obs {
 	template<typename T>
 	class signal_handler : public signal_handler_base<T> {
 		public:
-		signal_handler(std::string signal, T keepalive) {}
-		virtual ~signal_handler() {}
+		signal_handler(std::string_view signal, T keepalive) {}
+		virtual ~signal_handler() = default;
 	};
 
 	template<>
@@ -51,7 +51,7 @@ namespace streamfx::obs {
 		}
 
 		public:
-		signal_handler(std::string signal, std::shared_ptr<obs_source_t> keepalive) : _keepalive(keepalive)
+		signal_handler(std::string_view signal, std::shared_ptr<obs_source_t> keepalive) : _keepalive(keepalive)
 		{
 			_signal              = signal;
 			signal_handler_t* sh = obs_source_get_signal_handler(_keepalive.get());

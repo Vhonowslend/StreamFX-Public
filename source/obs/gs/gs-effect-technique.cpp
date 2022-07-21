@@ -38,7 +38,7 @@ streamfx::obs::gs::effect_technique::effect_technique(gs_technique_t* technique,
 	reset(technique, [](void*) {});
 }
 
-streamfx::obs::gs::effect_technique::~effect_technique() {}
+streamfx::obs::gs::effect_technique::~effect_technique() = default;
 
 std::string streamfx::obs::gs::effect_technique::name()
 {
@@ -61,18 +61,18 @@ streamfx::obs::gs::effect_pass streamfx::obs::gs::effect_technique::get_pass(std
 	return streamfx::obs::gs::effect_pass(get()->passes.array + idx, *this);
 }
 
-streamfx::obs::gs::effect_pass streamfx::obs::gs::effect_technique::get_pass(std::string name)
+streamfx::obs::gs::effect_pass streamfx::obs::gs::effect_technique::get_pass(std::string_view name)
 {
 	for (std::size_t idx = 0; idx < get()->passes.num; idx++) {
 		auto ptr = get()->passes.array + idx;
-		if (strcmp(ptr->name, name.c_str()) == 0)
+		if (strcmp(ptr->name, name.data()) == 0)
 			return streamfx::obs::gs::effect_pass(ptr, *this);
 	}
 
 	return nullptr;
 }
 
-bool streamfx::obs::gs::effect_technique::has_pass(std::string name)
+bool streamfx::obs::gs::effect_technique::has_pass(std::string_view name)
 {
 	if (get_pass(name) != nullptr)
 		return true;

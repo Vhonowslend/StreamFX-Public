@@ -60,7 +60,7 @@ namespace streamfx::nvidia::cuda {
 		{
 			_ctx->pop();
 		}
-		inline context_stack(std::shared_ptr<::streamfx::nvidia::cuda::context> ctx) : _ctx(ctx)
+		inline context_stack(std::shared_ptr<::streamfx::nvidia::cuda::context> ctx) : _ctx(std::move(ctx))
 		{
 			_ctx->push();
 		}

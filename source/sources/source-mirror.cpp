@@ -195,7 +195,7 @@ try {
 
 	// Everything went well, store.
 	_source_child       = std::make_shared<::streamfx::obs::source_active_child>(_self, source);
-	_source             = source;
+	_source             = std::move(source);
 	_source_size.first  = obs_source_get_width(_source);
 	_source_size.second = obs_source_get_height(_source);
 

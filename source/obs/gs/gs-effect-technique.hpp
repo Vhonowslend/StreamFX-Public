@@ -33,7 +33,7 @@ namespace streamfx::obs::gs {
 
 		std::size_t                    count_passes();
 		streamfx::obs::gs::effect_pass get_pass(std::size_t idx);
-		streamfx::obs::gs::effect_pass get_pass(std::string name);
-		bool                           has_pass(std::string name);
+		streamfx::obs::gs::effect_pass get_pass(std::string_view name);
+		bool                           has_pass(std::string_view name);
 	};
 } // namespace streamfx::obs::gs

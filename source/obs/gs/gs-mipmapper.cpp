@@ -327,11 +327,11 @@ void streamfx::obs::gs::mipmapper::rebuild(std::shared_ptr<streamfx::obs::gs::te
 			// Copy from the render target to the target mip level.
 #ifdef _WIN32
 			if (gs_get_device_type() == GS_DEVICE_DIRECT3D_11) {
-				d3d_copy_subregion(d3dinfo, _rt->get_texture(), mip, cwidth, cheight);
+				d3d_copy_subregion(d3dinfo, _rt->get_texture(), static_cast<uint32_t>(mip), cwidth, cheight);
 			}
 #endif
 			if (gs_get_device_type() == GS_DEVICE_OPENGL) {
-				opengl_copy_subregion(oglinfo, _rt->get_texture(), mip, cwidth, cheight);
+				opengl_copy_subregion(oglinfo, _rt->get_texture(), static_cast<uint32_t>(mip), cwidth, cheight);
 			}
 		}
 

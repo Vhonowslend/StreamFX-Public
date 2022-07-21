@@ -27,11 +27,11 @@
 
 #define MAX_EFFECT_SIZE 32 * 1024 * 1024 // 32 MiB, big enough for everything.
 
-static std::string load_file_as_code(std::filesystem::path shader_file, bool is_top_level = true)
+static std::string load_file_as_code(const std::filesystem::path& shader_file, bool is_top_level = true)
 {
-	std::stringstream     shader_stream;
-	std::filesystem::path shader_path = std::filesystem::absolute(shader_file);
-	std::filesystem::path shader_root = std::filesystem::path(shader_path).remove_filename();
+	std::stringstream            shader_stream;
+	const std::filesystem::path& shader_path = std::filesystem::absolute(shader_file);
+	const std::filesystem::path& shader_root = std::filesystem::path(shader_path).remove_filename();
 
 	// Ensure it meets size limits.
 	uintmax_t size = std::filesystem::file_size(shader_path);
@@ -96,12 +96,12 @@ static std::string load_file_as_code(std::filesystem::path shader_file, bool is_
 	return shader_stream.str();
 }
 
-streamfx::obs::gs::effect::effect(const std::string& code, const std::string& name)
+streamfx::obs::gs::effect::effect(std::string_view code, std::string_view name)
 {
 	auto gctx = streamfx::obs::gs::context();
 
 	char*        error_buffer = nullptr;
-	gs_effect_t* effect       = gs_effect_create(code.c_str(), name.c_str(), &error_buffer);
+	gs_effect_t* effect       = gs_effect_create(code.data(), name.data(), &error_buffer);
 
 	if (!effect) {
 		throw error_buffer ? std::runtime_error(error_buffer)
@@ -136,11 +136,11 @@ streamfx::obs::gs::effect_technique streamfx::obs::gs::effect::get_technique(std
 	return streamfx::obs::gs::effect_technique(get()->techniques.array + idx, *this);
 }
 
-streamfx::obs::gs::effect_technique streamfx::obs::gs::effect::get_technique(const std::string& name)
+streamfx::obs::gs::effect_technique streamfx::obs::gs::effect::get_technique(std::string_view name)
 {
 	for (std::size_t idx = 0; idx < count_techniques(); idx++) {
 		auto ptr = get()->techniques.array + idx;
-		if (strcmp(ptr->name, name.c_str()) == 0) {
+		if (strcmp(ptr->name, name.data()) == 0) {
 			return streamfx::obs::gs::effect_technique(ptr, *this);
 		}
 	}
@@ -148,7 +148,7 @@ streamfx::obs::gs::effect_technique streamfx::obs::gs::effect::get_technique(con
 	return nullptr;
 }
 
-bool streamfx::obs::gs::effect::has_technique(const std::string& name)
+bool streamfx::obs::gs::effect::has_technique(std::string_view name)
 {
 	if (get_technique(name))
 		return true;
@@ -169,11 +169,11 @@ streamfx::obs::gs::effect_parameter streamfx::obs::gs::effect::get_parameter(std
 	return streamfx::obs::gs::effect_parameter(get()->params.array + idx, *this);
 }
 
-streamfx::obs::gs::effect_parameter streamfx::obs::gs::effect::get_parameter(const std::string& name)
+streamfx::obs::gs::effect_parameter streamfx::obs::gs::effect::get_parameter(std::string_view name)
 {
 	for (std::size_t idx = 0; idx < count_parameters(); idx++) {
 		auto ptr = get()->params.array + idx;
-		if (strcmp(ptr->name, name.c_str()) == 0) {
+		if (strcmp(ptr->name, name.data()) == 0) {
 			return streamfx::obs::gs::effect_parameter(ptr, *this);
 		}
 	}
@@ -181,14 +181,14 @@ streamfx::obs::gs::effect_parameter streamfx::obs::gs::effect::get_parameter(con
 	return nullptr;
 }
 
-bool streamfx::obs::gs::effect::has_parameter(const std::string& name)
+bool streamfx::obs::gs::effect::has_parameter(std::string_view name)
 {
 	if (get_parameter(name))
 		return true;
 	return false;
 }
 
-bool streamfx::obs::gs::effect::has_parameter(const std::string& name, effect_parameter::type type)
+bool streamfx::obs::gs::effect::has_parameter(std::string_view name, effect_parameter::type type)
 {
 	auto eprm = get_parameter(name);
 	if (eprm)

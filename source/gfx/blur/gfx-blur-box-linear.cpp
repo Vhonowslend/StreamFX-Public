@@ -66,7 +66,6 @@ bool streamfx::gfx::blur::box_linear_factory::is_type_supported(::streamfx::gfx:
 {
 	switch (type) {
 	case ::streamfx::gfx::blur::type::Area:
-		return true;
 	case ::streamfx::gfx::blur::type::Directional:
 		return true;
 	default:
@@ -199,7 +198,7 @@ streamfx::gfx::blur::box_linear::~box_linear() {}
 
 void streamfx::gfx::blur::box_linear::set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture)
 {
-	_input_texture = texture;
+	_input_texture = std::move(texture);
 }
 
 ::streamfx::gfx::blur::type streamfx::gfx::blur::box_linear::get_type()

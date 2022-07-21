@@ -112,7 +112,7 @@ void dynamic_mask_instance::migrate(obs_data_t* data, uint64_t version) {}
 void dynamic_mask_instance::update(obs_data_t* settings)
 {
 	// Update source.
-	if (auto v = obs_data_get_string(settings, ST_KEY_INPUT); (v != nullptr) && (strlen(v) > 0)) {
+	if (const char* v = obs_data_get_string(settings, ST_KEY_INPUT); (v != nullptr) && (v[0] != '\0')) {
 		if (!acquire(v))
 			DLOG_ERROR("Failed to acquire Input source '%s'.", v);
 	} else {
