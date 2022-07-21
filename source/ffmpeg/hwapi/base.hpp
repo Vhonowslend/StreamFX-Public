@@ -63,7 +63,7 @@ namespace streamfx::ffmpeg::hwapi {
 
 		virtual std::list<hwapi::device> enumerate_adapters() = 0;
 
-		virtual std::shared_ptr<hwapi::instance> create(hwapi::device target) = 0;
+		virtual std::shared_ptr<hwapi::instance> create(const hwapi::device& target) = 0;
 
 		virtual std::shared_ptr<hwapi::instance> create_from_obs() = 0;
 	};

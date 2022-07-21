@@ -70,7 +70,8 @@ streamfx::ui::about::about() : QDialog(reinterpret_cast<QWidget*>(obs_frontend_g
 	content->setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Maximum);
 
 	// Create a uniform
-	std::mt19937_64                         generator;
+	std::random_device                      rd;
+	std::mt19937_64                         generator(rd());
 	std::uniform_int_distribution<uint64_t> rnd;
 
 	// Load entries from 'thanks.json'

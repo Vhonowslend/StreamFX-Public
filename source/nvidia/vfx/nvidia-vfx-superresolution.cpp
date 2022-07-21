@@ -134,7 +134,7 @@ void streamfx::nvidia::vfx::superresolution::set_scale(float scale)
 	scale = std::clamp<float>(scale, 1., 4.);
 
 	// Match to nearest scale.
-	double factor = find_closest_scale_factor(scale);
+	float factor = static_cast<float>(find_closest_scale_factor(scale));
 
 	// If anything was changed, flag the effect as dirty.
 	if (!::streamfx::util::math::is_close<float>(_scale, factor, 0.01f))

@@ -27,21 +27,21 @@
 namespace streamfx::obs::gs {
 	class effect : public std::shared_ptr<gs_effect_t> {
 		public:
-		effect(){};
-		effect(const std::string& code, const std::string& name);
+		effect() = default;
+		effect(std::string_view code, std::string_view name);
 		effect(std::filesystem::path file);
 		~effect();
 
 		std::size_t                         count_techniques();
 		streamfx::obs::gs::effect_technique get_technique(std::size_t idx);
-		streamfx::obs::gs::effect_technique get_technique(const std::string& name);
-		bool                                has_technique(const std::string& name);
+		streamfx::obs::gs::effect_technique get_technique(std::string_view name);
+		bool                                has_technique(std::string_view name);
 
 		std::size_t                         count_parameters();
 		streamfx::obs::gs::effect_parameter get_parameter(std::size_t idx);
-		streamfx::obs::gs::effect_parameter get_parameter(const std::string& name);
-		bool                                has_parameter(const std::string& name);
-		bool                                has_parameter(const std::string& name, effect_parameter::type type);
+		streamfx::obs::gs::effect_parameter get_parameter(std::string_view name);
+		bool                                has_parameter(std::string_view name);
+		bool                                has_parameter(std::string_view name, effect_parameter::type type);
 
 		public /* Legacy Support */:
 		inline gs_effect_t* get_object()
@@ -49,12 +49,12 @@ namespace streamfx::obs::gs {
 			return get();
 		}
 
-		static streamfx::obs::gs::effect create(const std::string& code, const std::string& name)
+		static streamfx::obs::gs::effect create(std::string_view code, std::string_view name)
 		{
 			return streamfx::obs::gs::effect(code, name);
 		};
 
-		static streamfx::obs::gs::effect create(const std::string& file)
+		static streamfx::obs::gs::effect create(std::string_view file)
 		{
 			return streamfx::obs::gs::effect(std::filesystem::path(file));
 		};

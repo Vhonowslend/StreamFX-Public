@@ -103,7 +103,7 @@ namespace streamfx::util {
 		static void  operator delete[](void* p);
 	};
 
-	std::pair<int64_t, int64_t> size_from_string(std::string text, bool allowSquare = true);
+	std::pair<int64_t, int64_t> size_from_string(std::string_view text, bool allowSquare = true);
 
 	namespace math {
 		template<typename T>
@@ -243,7 +243,7 @@ namespace streamfx::util {
 				: _q_process_noise_covariance(pnc), _r_measurement_noise_covariance(mnc), _x_value_of_interest(value),
 				  _p_estimation_error_covariance(eec), _k_kalman_gain(0.0)
 			{}
-			~kalman1D() {}
+			~kalman1D() = default;
 
 			T filter(T measurement)
 			{

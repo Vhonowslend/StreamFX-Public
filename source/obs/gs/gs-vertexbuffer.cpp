@@ -203,7 +203,7 @@ streamfx::obs::gs::vertex_buffer::vertex_buffer(vertex_buffer const&& other) noe
 	_obs_data = other._obs_data;
 }
 
-void streamfx::obs::gs::vertex_buffer::operator=(vertex_buffer const&& other)
+void streamfx::obs::gs::vertex_buffer::operator=(vertex_buffer const&& other) noexcept
 { // Move Assignment
 	finalize();
 

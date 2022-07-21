@@ -705,7 +705,7 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 				{ST_KEY_POSITION_Y, "Y"},
 				{ST_KEY_POSITION_Z, "Z"},
 			};
-			for (auto opt : opts) {
+			for (const auto& opt : opts) {
 				auto p = obs_properties_add_float(grp, opt.first.c_str(), D_TRANSLATE(opt.second.c_str()),
 												  std::numeric_limits<float>::lowest(),
 												  std::numeric_limits<float>::max(), 0.01);
@@ -721,7 +721,7 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 				{ST_KEY_ROTATION_Y, D_TRANSLATE(ST_I18N_ROTATION ".Y")},
 				{ST_KEY_ROTATION_Z, D_TRANSLATE(ST_I18N_ROTATION ".Z")},
 			};
-			for (auto opt : opts) {
+			for (const auto& opt : opts) {
 				auto p = obs_properties_add_float_slider(grp, opt.first.c_str(), D_TRANSLATE(opt.second.c_str()),
 														 -180.0, 180.0, 0.01);
 				obs_property_float_set_suffix(p, "° Deg");
@@ -736,7 +736,7 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 				{ST_KEY_SCALE_X, "X"},
 				{ST_KEY_SCALE_Y, "Y"},
 			};
-			for (auto opt : opts) {
+			for (const auto& opt : opts) {
 				auto p = obs_properties_add_float_slider(grp, opt.first.c_str(), opt.second.c_str(), -1000, 1000, 0.01);
 				obs_property_float_set_suffix(p, "%");
 			}
@@ -750,7 +750,7 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 				{ST_KEY_SHEAR_X, "X"},
 				{ST_KEY_SHEAR_Y, "Y"},
 			};
-			for (auto opt : opts) {
+			for (const auto& opt : opts) {
 				auto p =
 					obs_properties_add_float_slider(grp, opt.first.c_str(), opt.second.c_str(), -200.0, 200.0, 0.01);
 				obs_property_float_set_suffix(p, "%");

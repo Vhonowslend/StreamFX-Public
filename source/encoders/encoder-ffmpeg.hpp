@@ -123,7 +123,7 @@ namespace streamfx::encoder::ffmpeg {
 
 		const AVCodecContext* get_avcodeccontext();
 
-		void parse_ffmpeg_commandline(std::string text);
+		void parse_ffmpeg_commandline(std::string_view text);
 	};
 
 	class ffmpeg_factory : public obs::encoder_factory<ffmpeg_factory, ffmpeg_instance> {
@@ -172,7 +172,7 @@ namespace streamfx::encoder::ffmpeg {
 
 		std::shared_ptr<handler::handler> get_handler(std::string codec);
 
-		bool has_handler(std::string codec);
+		bool has_handler(std::string_view codec);
 
 		public: // Singleton
 		static void initialize();

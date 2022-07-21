@@ -145,7 +145,7 @@ void streamfx::util::threadpool::work()
 	_worker_idx.fetch_sub(1);
 }
 
-streamfx::util::threadpool::task::task() {}
+streamfx::util::threadpool::task::task() = default;
 
 streamfx::util::threadpool::task::task(threadpool_callback_t fn, threadpool_data_t dt)
 	: _mutex(), _is_complete(), _is_dead(false), _callback(fn), _data(dt)

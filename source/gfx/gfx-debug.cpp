@@ -139,7 +139,7 @@ void streamfx::gfx::debug::draw_arrow(float x, float y, float x2, float y2, floa
 	float len = sqrt(dx * dx + dy * dy);
 
 	if (abs(w) <= 1) {
-		w = len / 3.;
+		w = len / 3.f;
 	}
 
 	matrix4 rotator;

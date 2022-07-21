@@ -92,13 +92,13 @@ void nvenc_hevc_handler::update(obs_data_t* settings, const AVCodec* codec, AVCo
 	nvenc::update(settings, codec, context);
 
 	if (!context->internal) {
-		if (auto v = obs_data_get_string(settings, ST_KEY_PROFILE); v && (strlen(v) > 0)) {
+		if (const char* v = obs_data_get_string(settings, ST_KEY_PROFILE); v && (v[0] != '\0')) {
 			av_opt_set(context->priv_data, "profile", v, AV_OPT_SEARCH_CHILDREN);
 		}
-		if (auto v = obs_data_get_string(settings, ST_KEY_TIER); v && (strlen(v) > 0)) {
+		if (const char* v = obs_data_get_string(settings, ST_KEY_TIER); v && (v[0] != '\0')) {
 			av_opt_set(context->priv_data, "tier", v, AV_OPT_SEARCH_CHILDREN);
 		}
-		if (auto v = obs_data_get_string(settings, ST_KEY_LEVEL); v && (strlen(v) > 0)) {
+		if (const char* v = obs_data_get_string(settings, ST_KEY_LEVEL); v && (v[0] != '\0')) {
 			av_opt_set(context->priv_data, "level", v, AV_OPT_SEARCH_CHILDREN);
 		}
 	}

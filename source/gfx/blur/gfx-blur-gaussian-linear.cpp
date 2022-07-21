@@ -115,7 +115,6 @@ bool streamfx::gfx::blur::gaussian_linear_factory::is_type_supported(::streamfx:
 {
 	switch (v) {
 	case ::streamfx::gfx::blur::type::Area:
-		return true;
 	case ::streamfx::gfx::blur::type::Directional:
 		return true;
 	default:
@@ -251,7 +250,7 @@ streamfx::gfx::blur::gaussian_linear::~gaussian_linear() {}
 
 void streamfx::gfx::blur::gaussian_linear::set_input(std::shared_ptr<::streamfx::obs::gs::texture> texture)
 {
-	_input_texture = texture;
+	_input_texture = std::move(texture);
 }
 
 ::streamfx::gfx::blur::type streamfx::gfx::blur::gaussian_linear::get_type()
