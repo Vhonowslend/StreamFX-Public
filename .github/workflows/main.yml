@@ -31,6 +31,10 @@ jobs:
             generator: GCC
           - runner: windows-2019
             generator: GCC
+          - runner: windows-2022
+            generator: Clang
+          - runner: windows-2019
+            generator: Clang
           - runner: ubuntu-22.04
             generator: MSVC
           - runner: ubuntu-20.04
@@ -64,24 +68,6 @@ jobs:
             CMAKE_SYSTEM_VERSION: "10.0.19041.0"
             CMAKE_GENERATOR: "Visual Studio 16 2019"
             CMAKE_GENERATOR_PLATFORM: "x64"
-          - runner: windows-2022
-            generator: Clang
-            experimental: true
-            platform: "Windows 11"
-            PACKAGE_NAME: "windows-11-clang"
-            CMAKE_SYSTEM_VERSION: "10.0.22000.0"
-            CMAKE_GENERATOR: "Visual Studio 17 2022"
-            CMAKE_GENERATOR_PLATFORM: "x64"
-            CMAKE_GENERATOR_TOOLSET: "ClangCL"
-          - runner: windows-2019
-            generator: Clang
-            experimental: true
-            platform: "Windows 10"
-            PACKAGE_NAME: "windows-10-clang"
-            CMAKE_SYSTEM_VERSION: "10.0.19041.0"
-            CMAKE_GENERATOR: "Visual Studio 16 2019"
-            CMAKE_GENERATOR_PLATFORM: "x64"
-            CMAKE_GENERATOR_TOOLSET: "ClangCL"
           - runner: ubuntu-22.04
             generator: GCC
             experimental: false
@@ -213,8 +199,7 @@ jobs:
           build/temp/autodeps
         key: autodeps-${{ matrix.runner }}-${{ matrix.generator }}-${{ matrix.CMAKE_BUILD_TYPE }}-${{ env.CACHE_VERSION }}
 
-    - name: "Code Signing (Windows)"
-# Do not run this on pull requests, ever!
+    - name: "Code Signing (Windows)" # Do not run this on pull requests, ever!
       if: (github.event_name != 'pull_request') && startsWith( matrix.runner, 'windows' )
       id: codesign
       shell: bash
