@@ -512,7 +512,7 @@
 				<key>FOLLOW_SYMBOLIC_LINKS</key>
 				<false/>
 				<key>IDENTIFIER</key>
-				<string>com.xaymar.StreamFX</string>
+				<string>com.xaymar.@PROJECT_NAME@</string>
 				<key>LOCATION</key>
 				<integer>0</integer>
 				<key>NAME</key>
@@ -528,7 +528,7 @@
 				<key>USE_HFS+_COMPRESSION</key>
 				<false/>
 				<key>VERSION</key>
-				<string>1.0</string>
+				<string>@PROJECT_VERSION_CMAKE@</string>
 			</dict>
 			<key>TYPE</key>
 			<integer>0</integer>
@@ -691,7 +691,7 @@
 						<key>LANGUAGE</key>
 						<string>English</string>
 						<key>VALUE</key>
-						<string>@PROJECT_FULL_NAME@</string>
+						<string>@PROJECT_TITLE@</string>
 					</dict>
 				</array>
 			</dict>

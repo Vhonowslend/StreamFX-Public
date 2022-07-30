@@ -183,6 +183,8 @@ message(STATUS "${LOGPREFIX}Version ${PROJECT_VERSION}")
 ################################################################################
 # Project
 ################################################################################
+
+# Metadata
 version(GENERATE PROJECT_VERSION_CMAKE
 	MAJOR "${PROJECT_VERSION_MAJOR}"
 	MINOR "${PROJECT_VERSION_MINOR}"
@@ -195,19 +197,14 @@ project(
 	DESCRIPTION "Additional sources, filters, transitions and encoders for OBS Studio."
 	HOMEPAGE_URL "https://streamfx.xaymar.com/"
 )
-
-# Full Project Name
-set(PROJECT_FULL_NAME "StreamFX (for OBS Studio)")
-
-# Description
-set(PROJECT_DESCRIPTION "Better Production Quality, for free.")
-
-# Authors (TODO: Generate this from AUTHORS)
+set(PROJECT_TITLE "StreamFX (for OBS Studio)")
 set(PROJECT_AUTHORS "Michael Fabian 'Xaymar' Dirks <info@xaymar.com>")
-
-# Copyright Years (TODO: Update every year)
-set(PROJECT_COPYRIGHT_YEARS "2018 - 2020")
-
+set(PROJECT_COPYRIGHT "2017 - 2022, Michael Fabian Dirks. All Rights Reserved")
+set(PROJECT_TRADEMARKS "")
+list(APPEND PROJECT_TRADEMARKS
+	"AMD is a trademark of Advanced Micro Devices Inc."
+	"NVIDIA is a trademark of Nvidia Corporation"
+)
 
 ################################################################################
 # Platform Setup
