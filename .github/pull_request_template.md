@@ -1,13 +1,14 @@
 ### Explain the Pull Request
-<!-- Describe the PR in as much detail as possible, leave nothing out. -->
-<!-- If you think images or example videos help describe the PR, include them. -->
-<!-- What makes this PR necessary for StreamFX and it's users? -->
+<!-- Describe the PR in as much detail as possible. If possible include example images, videos and documents, and explain why it is necessary. If this is related to a discussion or issue, please also link them. -->
 
-### Related Issues
-<!-- Is this PR related to another PR or Issue? List them here. -->
-<!-- - #0000 Name of Issue -->
-<!-- - #0001 Name of Issue -->
-
-### Checklist
-- [ ] I will become the maintainer for this part of code.
-- [ ] I have tested this code on all supported Platforms.
+#### Completion Checklist
+- [ ] I have added myself to the Copyright and License headers and files.
+- [ ] I will maintain this code in the future and have added myself to `CODEOWNERS`.
+- I have tested this change on the following platforms:
+  - [ ] MacOS 10.15
+  - [ ] MacOS 11
+  - [ ] MacOS 12
+  - [ ] Ubuntu 20.04
+  - [ ] Ubuntu 22.04
+  - [ ] Windows 10
+  - [ ] Windows 11

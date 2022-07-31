@@ -1,8 +1,11 @@
 blank_issues_enabled: false
 contact_links:
-  - name: StreamFX Community Support
+  - name: Got an idea or feedback for StreamFX?
+    url: https://github.com/Xaymar/obs-StreamFX/discussions/categories/ideas-feedback
+	about: We're always open to new ideas and constructive feedback, as long as they have been discussed before.
+  - name: Having trouble using StreamFX?
     url: https://s.xaymar.com/streamfx-dc
-    about: Looking for StreamFX support? Then join our Discord!
+	about: Join the official Discord and head to support-hub to get all the support necessary.
   - name: OBS Studio Support
     url: https://obsproject.com/help
     about: Unsure if your Issue fits the StreamFX plugin? Consider the OBS Studio Support instead!
