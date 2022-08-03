@@ -139,7 +139,15 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - name: "Dependency: Ninja, Qt, FFmpeg, CURL (Linux)"
+    - name: "Dependencies: Windows"
+      if: startsWith( matrix.runner, 'windows' )
+      run: |
+        curl "-kL" "https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.4/LLVM-14.0.4-win64.exe" "-f" "--retry" "5" "-o" "llvm.exe"
+        7z x -y -o"C:\Program Files\LLVM" llvm.exe "bin" "include" "lib" "libexec" "share" "Uninstall.exe"
+        curl "-kL" "https://cdn.xaymar.com/ci/innosetup-6.2.1.exe" "-f" "--retry" "5" "-o" "inno.exe"
+        .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
+
+    - name: "Dependencies: Linux"
       if: startsWith( matrix.runner, 'ubuntu' )
       shell: bash
       run: |
@@ -155,28 +163,21 @@ jobs:
           qtbase5-dev qtbase5-private-dev libqt5svg5-dev \
           libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev \
           libcurl4-openssl-dev
+        if [[ "${{ matrix.generator }}" = "GCC" ]]; then
+          sudo apt-get install gcc-10 g++10
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 800 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+        elif [[ "${{ matrix.generator }}" = "Clang" ]]; then
+          sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" 14 all
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-14 800
+          sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-14 800
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-14 800
+          sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-14 800
+          sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-14 800
+          sudo update-alternatives --install /usr/bin/lld lld /usr/bin/lld-14 800
+          sudo update-alternatives --install /usr/bin/lldb lldb /usr/bin/lldb-14 800
+        fi
 
-    - name: "Dependency: GCC (Linux, GCC)"
-      if: startsWith( matrix.runner, 'ubuntu' ) && ( matrix.generator == 'GCC' )
-      shell: bash
-      run: |
-        sudo apt-get install gcc-10 g++10
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 800 --slave /usr/bin/g++ g++ /usr/bin/g++-10
-
-    - name: "Dependency: Clang (Linux, Clang)"
-      if: startsWith( matrix.runner, 'ubuntu' ) && ( matrix.generator == 'Clang' )
-      shell: bash
-      run: |
-        sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" 14 all
-        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-14 800
-        sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-14 800
-        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-14 800
-        sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-14 800
-        sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-14 800
-        sudo update-alternatives --install /usr/bin/lld lld /usr/bin/lld-14 800
-        sudo update-alternatives --install /usr/bin/lldb lldb /usr/bin/lldb-14 800
-
-    - name: 'Dependency: Packages (Linux)'
+    - name: 'Dependencies: MacOS'
       if: startsWith( matrix.runner, 'macos' )
       shell: bash
       run: |
@@ -184,12 +185,6 @@ jobs:
         sudo hdiutil attach ./Packages.dmg
         pushd /Volumes/Packages*
         sudo installer -pkg ./Install\ Packages.pkg -target /
-
-    - name: "Dependency: InnoSetup (Windows)"
-      if: startsWith( matrix.runner, 'windows' )
-      run: |
-        curl "-kL" "https://cdn.xaymar.com/ci/innosetup-6.2.1.exe" "-f" "--retry" "5" "-o" "inno.exe"
-        .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
 
     - name: "Auto-Dependency Cache"
       if: github.event_name != 'pull_request'
@@ -214,32 +209,30 @@ jobs:
         CODESIGN_FILE: ${{ github.workspace }}/cert.pfx
         CODESIGN_PASS: ${{ secrets.CODESIGN_CERT_WIN_PASSWORD }}
       run: |
+        if [[ "${{ matrix.CMAKE_BUILD_TYPE }}" = "Debug" ]]; then
+          ENABLE_PROFILING=ON
+        else
+          ENABLE_PROFILING=OFF
+        fi
         cmake -H. -B"build/temp" \
           ${{ steps.codesign.outputs.cmake_args }} \
           -DCMAKE_BUILD_TYPE=${{ matrix.CMAKE_BUILD_TYPE }} \
           -DCMAKE_INSTALL_PREFIX="build/distrib" \
           -DPACKAGE_NAME="streamfx-${{ matrix.PACKAGE_NAME }}" \
           -DPACKAGE_PREFIX="build/package" \
-          -DENABLE_CLANG=FALSE \
-          -DENABLE_PROFILING=FALSE
+          -DENABLE_CLANG=TRUE \
+          -DENABLE_PROFILING=${ENABLE_PROFILING}
 
-    - name: "Build (Windows)"
-      if: startsWith( matrix.runner, 'windows' )
+    - name: "Build"
       shell: bash
       run: |
-        cmake --build "build/temp" --config RelWithDebInfo --target INSTALL
-
-    - name: "Build (Linux)"
-      if: startsWith( matrix.runner, 'ubuntu' )
-      shell: bash
-      run: |
-        cmake --build "build/temp" --config RelWithDebInfo --target install/strip
-
-    - name: "Build (MacOS)"
-      if: startsWith( matrix.runner, 'macos' )
-      shell: bash
-      run: |
-        cmake --build "build/temp" --config RelWithDebInfo --target install
+        if [[ "${{ matrix.runner }}" = windows* ]]; then
+          cmake --build "build/temp" --config RelWithDebInfo --target INSTALL
+        elif [[ "${{ matrix.runner }}" = ubuntu* ]]; then
+          cmake --build "build/temp" --config RelWithDebInfo --target install/strip
+        elif [[ "${{ matrix.runner }}" = macos* ]]; then
+          cmake --build "build/temp" --config RelWithDebInfo --target install
+        fi
 
     - name: "Package: Archives"
       shell: bash
