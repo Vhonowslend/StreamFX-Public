@@ -223,6 +223,21 @@ jobs:
           -DENABLE_CLANG=TRUE \
           -DENABLE_PROFILING=${ENABLE_PROFILING}
 
+    - name: "Validation: clang-tidy"
+      continue-on-error: true
+      shell: bash
+      run: |
+        cmake --build "build/temp" --config ${{ matrix.CMAKE_BUILD_TYPE }} --target StreamFX_clang-tidy
+
+    - name: "Validation: Formatting (clang-format)"
+      continue-on-error: true
+      shell: bash
+      run: |
+        cmake --build "build/temp" --config ${{ matrix.CMAKE_BUILD_TYPE }} --target StreamFX_clang-format
+        git --no-pager diff --patch --minimal HEAD --
+        git update-index --refresh
+        git diff-index --quiet HEAD --
+
     - name: "Build"
       shell: bash
       run: |
