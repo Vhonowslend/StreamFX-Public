@@ -167,7 +167,8 @@ jobs:
           sudo apt-get install gcc-10 g++10
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 800 --slave /usr/bin/g++ g++ /usr/bin/g++-10
         elif [[ "${{ matrix.generator }}" = "Clang" ]]; then
-          sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" 14 all
+          curl -jLo /tmp/llvm.sh https://apt.llvm.org/llvm.sh
+          sudo bash -x /tmp/llvm.sh 14 all
           sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-14 800
           sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-14 800
           sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-14 800
