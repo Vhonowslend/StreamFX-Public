@@ -40,7 +40,6 @@ set(CMAKE_MODULE_PATH
 # Include
 include("util")							# CacheClear, CacheSet
 include("version")						# version()
-include("DownloadProject")				# DownloadProject
 include("CheckIPOSupported")			# check_ipo_supported
 
 ################################################################################
@@ -54,7 +53,7 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_LIST_DIR}")
 else()
 	set(GROUPED ON)
 	set(PREFIX "StreamFX_")
-	if(GROUPED AND (TARGET libobs))
+	if(GROUPED AND ((TARGET libobs) OR (TARGET OBS::libobs)))
 		set(STANDALONE OFF)
 	endif()
 endif()
@@ -284,6 +283,15 @@ message(STATUS "${LOGPREFIX}Target is ${D_PLATFORM_BITS}bit ${ARCH_INST} with a 
 # Options
 ################################################################################
 
+# Dependencies
+if(STANDALONE)
+	set(libobs_DIR "" CACHE PATH "Path to libobs and obs-frontend-api")
+	set(Qt_DIR "" CACHE PATH "Path to Qt6 or Qt5")
+	set(CURL_DIR "" CACHE PATH "Path to CURL")
+	set(FFmpeg_DIR "" CACHE PATH "Path to FFmpeg")
+endif()
+set(AOM_DIR "" CACHE PATH "Path to AOM library")
+
 # Features
 ## Encoders
 set(${PREFIX}ENABLE_ENCODER_FFMPEG ON CACHE BOOL "Enable FFmpeg Encoder integration.")
@@ -391,318 +399,38 @@ if(${PREFIX}ENABLE_CODESIGN AND (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/codes
 endif()
 
 ################################################################################
-# Auto-Dependency: libOBS + obs-frontend-api
+# Component search paths
 ################################################################################
 
-if(STANDALONE)
-	# Options
-	set(${PREFIX}OBS_DOWNLOAD TRUE CACHE BOOL "Automatically download libOBS and obs-frontend-api?")
-	set(${PREFIX}OBS_PATH "" CACHE PATH "Path to libOBS, if ${PREFIX}OBS_DOWNLOAD is not set.")
-	set(${PREFIX}OBS_DOWNLOAD_URL "" CACHE STRING "The URL from which to download libOBS and obs-frontend-api, if autodetection fails. (Optional)")
-	set(${PREFIX}OBS_DOWNLOAD_HASH "" CACHE STRING "The hash string for the given URL. Must be a SHA-256 hash if provided. (Optional)")
-	mark_as_advanced(
-		${PREFIX}OBS_PATH
-		${PREFIX}OBS_DOWNLOAD_URL
-		${PREFIX}OBS_DOWNLOAD_HASH
+list(APPEND CMAKE_PREFIX_PATH
+	"${${PREFIX}AOM_PATH}"
+	"${${PREFIX}OBSDEPS_PATH}"
+	"${${PREFIX}QT_PATH}"
+	"${AOM_DIR}"
+	"${CURL_DIR}"
+	"${DepsPath}"
+	"${FFmpeg_DIR}"
+	"${libobs_DIR}"
+	"${Qt_DIR}"
+	"${Qt5_DIR}"
+	"${Qt6_DIR}"
+	"${QTDIR}"
+)
+if(D_PLATFORM_MAC)
+	list(APPEND CMAKE_PREFIX_PATH
+		"${${PREFIX}AOM_PATH}/Frameworks"
+		"${${PREFIX}OBSDEPS_PATH}/Frameworks"
+		"${${PREFIX}QT_PATH}/Frameworks"
+		"${AOM_DIR}/Frameworks"
+		"${CURL_DIR}/Frameworks"
+		"${DepsPath}/Frameworks"
+		"${FFmpeg_DIR}/Frameworks"
+		"${libobs_DIR}/Frameworks"
+		"${Qt_DIR}/Frameworks"
+		"${Qt5_DIR}/Frameworks"
+		"${Qt6_DIR}/Frameworks"
+		"${QTDIR}/Frameworks"
 	)
-
-	if(${PREFIX}OBS_DOWNLOAD)
-		if(${PREFIX}OBS_DOWNLOAD_URL STREQUAL "")
-			# Figure out download URLs and hashes.
-			if(D_PLATFORM_WINDOWS)
-				if(D_PLATFORM_ARCH_X86)
-					if(D_PLATFORM_BITS EQUAL 64)
-						set(OBS_DOWNLOAD_URL "https://github.com/Xaymar/obs-studio/releases/download/27.2.4-ci/windows-x86_64.tar.gz")
-						set(OBS_DOWNLOAD_HASH "DD931BBB2E0720F1D7573C65D8CC9D638F1EE2AC99F7173BF8935CD3A3BCE3F4")
-					endif()
-				endif()
-			elseif(D_PLATFORM_LINUX)
-				if(D_PLATFORM_ARCH_X86)
-					if(D_PLATFORM_BITS EQUAL 64)
-						set(OBS_DOWNLOAD_URL "https://github.com/Xaymar/obs-studio/releases/download/27.2.4-ci/linux-x86_64.tar.gz")
-						set(OBS_DOWNLOAD_HASH "CA19E8260E1A556E6231D75064837C61C6D480BD90C97A0B930005AE527BF625")
-					endif()
-				endif()
-			elseif(D_PLATFORM_MAC)
-				if(D_PLATFORM_ARCH_X86)
-					if(D_PLATFORM_BITS EQUAL 64)
-						set(OBS_DOWNLOAD_URL "https://github.com/Xaymar/obs-studio/releases/download/27.2.4-ci/macos-x86_64.tar.gz")
-						set(OBS_DOWNLOAD_HASH "0DD5A57DD537B97CAA8470212F8F6B637F47D4742A5D1F17787F4FE9DBC70B33")
-					endif()
-				endif()
-			endif()
-
-			# Verify that the platform, architecture and bitness is supported.
-			if(OBS_DOWNLOAD_URL STREQUAL "")
-				message(FATAL_ERROR "${LOGPREFIX}Download for libOBS failed, as Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
-				return()
-			endif()
-		else()
-			set(OBS_DOWNLOAD_URL "${${PREFIX}OBS_DOWNLOAD_URL}")
-			set(OBS_DOWNLOAD_HASH "${${PREFIX}OBS_DOWNLOAD_HASH}")
-		endif()
-
-		if(OBS_DOWNLOAD_HASH STREQUAL "")
-			download_project(
-				PROJ libobs
-				PREFIX "autodeps"
-				URL "${OBS_DOWNLOAD_URL}"
-				DOWNLOAD_NO_PROGRESS OFF
-				UPDATE_DISCONNECTED OFF
-			)
-		else()
-			download_project(
-				PROJ libobs
-				PREFIX "autodeps"
-				URL "${OBS_DOWNLOAD_URL}"
-				URL_HASH "SHA256=${OBS_DOWNLOAD_HASH}"
-				DOWNLOAD_NO_PROGRESS OFF
-				UPDATE_DISCONNECTED OFF
-			)
-		endif()
-		CacheSet(${PREFIX}OBS_PATH "${libobs_SOURCE_DIR}")
-	endif()
-endif()
-
-################################################################################
-# Auto-Dependency: OBS Studio Dependencies
-################################################################################
-
-if(STANDALONE AND NOT D_PLATFORM_LINUX)
-	# Options
-	set(${PREFIX}OBSDEPS_DOWNLOAD TRUE CACHE BOOL "Automatically download pre-built libOBS dependencies?")
-	set(${PREFIX}OBSDEPS_PATH "" CACHE PATH "Path to pre-build libOBS dependencies, if ${PREFIX}OBSDEPS_DOWNLOAD is not set.")
-	set(${PREFIX}OBSDEPS_DOWNLOAD_URL "" CACHE STRING "The URL from which to download pre-built libOBS dependencies, if autodetection fails. (Optional)")
-	set(${PREFIX}OBSDEPS_DOWNLOAD_HASH "" CACHE STRING "The hash string for the given URL. Must be a SHA-256 hash if provided. (Optional)")
-	mark_as_advanced(
-		${PREFIX}OBSDEPS_PATH
-		${PREFIX}OBSDEPS_DOWNLOAD_URL
-		${PREFIX}OBSDEPS_DOWNLOAD_HASH
-	)
-
-	if(${PREFIX}OBSDEPS_DOWNLOAD)
-		if(${PREFIX}OBSDEPS_DOWNLOAD_URL STREQUAL "")
-			# Figure out download URLs and hashes.
-			if(D_PLATFORM_WINDOWS)
-				set(DEPS_VERSION "2022-01-31")
-				if(D_PLATFORM_ARCH_X86)
-					if(D_PLATFORM_BITS EQUAL 64)
-						set(OBSDEPS_DOWNLOAD_URL "https://github.com/obsproject/obs-deps/releases/download/win-${DEPS_VERSION}/windows-deps-${DEPS_VERSION}.zip")
-						set(OBSDEPS_DOWNLOAD_HASH "66E55FE35A507C902C036EB11E691D0257FECA545A8EE57324B69427717026DD")
-					endif()
-				endif()
-			elseif(D_PLATFORM_MAC)
-				set(DEPS_VERSION "2022-02-13")
-				if(D_PLATFORM_ARCH_X86 AND D_PLATFORM_ARCH_ARM)
-					if(D_PLATFORM_BITS EQUAL 64)
-						set(OBSDEPS_DOWNLOAD_URL "https://github.com/obsproject/obs-deps/releases/download/${DEPS_VERSION}/macos-deps-${DEPS_VERSION}-universal.tar.xz")
-						set(OBSDEPS_DOWNLOAD_HASH "77471B1D345A768E8EFEC3F6AD9DC79F3C7CD34840B66F721B80025D29713F5D")
-					endif()
-				elseif(D_PLATFORM_ARCH_X86)
-					if(D_PLATFORM_BITS EQUAL 64)
-						set(OBSDEPS_DOWNLOAD_URL "https://github.com/obsproject/obs-deps/releases/download/${DEPS_VERSION}/macos-deps-${DEPS_VERSION}-x86_64.tar.xz")
-						set(OBSDEPS_DOWNLOAD_HASH "1A8715D66E664B857942DEADED0DC46C4F6CD22E88F01ED1188F3BD3FCF632C4")
-					endif()
-				elseif(D_PLATFORM_ARCH_ARM)
-					if(D_PLATFORM_BITS EQUAL 64)
-						set(OBSDEPS_DOWNLOAD_URL "https://github.com/obsproject/obs-deps/releases/download/${DEPS_VERSION}/macos-deps-${DEPS_VERSION}-arm64.tar.xz")
-						set(OBSDEPS_DOWNLOAD_HASH "2CFCAF05765400C696908F242AEA87B6E1848E1A48CD3EDC2EB7F8CB249C9D48")
-					endif()
-				endif()
-			endif()
-
-			# Verify that the platform, architecture and bitness is supported.
-			if(OBSDEPS_DOWNLOAD_URL STREQUAL "")
-				message(FATAL_ERROR "${LOGPREFIX}Download for pre-built OBS dependencies failed, as Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
-				return()
-			endif()
-		else()
-			set(OBSDEPS_DOWNLOAD_URL "${${PREFIX}OBSDEPS_DOWNLOAD_URL}")
-			set(OBSDEPS_DOWNLOAD_HASH "${${PREFIX}OBSDEPS_DOWNLOAD_HASH}")
-		endif()
-
-		if(OBSDEPS_DOWNLOAD_HASH STREQUAL "")
-			download_project(
-				PROJ obsdeps
-				PREFIX "autodeps"
-				URL "${OBSDEPS_DOWNLOAD_URL}"
-				DOWNLOAD_NO_PROGRESS OFF
-				UPDATE_DISCONNECTED OFF
-			)
-		else()
-			download_project(
-				PROJ obsdeps
-				PREFIX "autodeps"
-				URL "${OBSDEPS_DOWNLOAD_URL}"
-				URL_HASH "SHA256=${OBSDEPS_DOWNLOAD_HASH}"
-				DOWNLOAD_NO_PROGRESS OFF
-				UPDATE_DISCONNECTED OFF
-			)
-		endif()
-		CacheSet(${PREFIX}OBSDEPS_PATH "${obsdeps_SOURCE_DIR}")
-	endif()
-
-	if(D_PLATFORM_WINDOWS)
-		set(_OBSDEPS_PATH "${${PREFIX}OBSDEPS_PATH}/win${D_PLATFORM_BITS}")
-		set(FFmpegPath "${${PREFIX}OBSDEPS_PATH}/win${D_PLATFORM_BITS}")
-	elseif(D_PLATFORM_MAC)
-		set(_OBSDEPS_PATH "${${PREFIX}OBSDEPS_PATH}/obsdeps")
-		set(FFmpegPath "${${PREFIX}OBSDEPS_PATH}/obsdeps")
-	endif()
-endif()
-
-################################################################################
-# Auto-Dependency: Qt v5.x
-################################################################################
-
-if(STANDALONE AND NOT D_PLATFORM_LINUX)
-	# Options
-	set(${PREFIX}QT_DOWNLOAD TRUE CACHE BOOL "Automatically download Qt?")
-	set(${PREFIX}QT_PATH "" CACHE PATH "Path to Qt, if ${PREFIX}QT_DOWNLOAD is not set.")
-	set(${PREFIX}QT_DOWNLOAD_URL "" CACHE STRING "The URL from which to download Qt, if autodetection fails. (Optional)")
-	set(${PREFIX}QT_DOWNLOAD_HASH "" CACHE STRING "The hash string for the given URL. Must be a SHA-256 hash if provided. (Optional)")
-	mark_as_advanced(
-		${PREFIX}QT_PATH
-		${PREFIX}QT_DOWNLOAD_URL
-		${PREFIX}QT_DOWNLOAD_HASH
-	)
-
-	if(${PREFIX}QT_DOWNLOAD)
-		if(${PREFIX}QT_DOWNLOAD_URL STREQUAL "")
-			# Figure out download URLs and hashes.
-			if(D_PLATFORM_WINDOWS)
-				set(DEPS_VERSION "5.15.2")
-				if(D_PLATFORM_ARCH_X86)
-					if(D_PLATFORM_BITS EQUAL 64)
-						set(QT_DOWNLOAD_URL "https://cdn-fastly.obsproject.com/downloads/Qt_${DEPS_VERSION}.7z")
-						set(QT_DOWNLOAD_HASH "9EF1DFEEBE6AB7FFC55FD285667CC5D9CB2D298646C107C2295D13F14708E64E")
-					endif()
-				endif()
-			elseif(D_PLATFORM_MAC)
-				set(DEPS_VERSION "2022-02-13")
-				if(D_PLATFORM_ARCH_X86 AND D_PLATFORM_ARCH_ARM)
-					if(D_PLATFORM_BITS EQUAL 64)
-						set(QT_DOWNLOAD_URL "https://github.com/obsproject/obs-deps/releases/download/${DEPS_VERSION}/macos-deps-qt-${DEPS_VERSION}-universal.tar.xz")
-						set(QT_DOWNLOAD_HASH "13FBCC45FD9D08B30E702D481FE4D58B23F93AA06848CEDE4EBE0956C79A5E8A")
-					endif()
-				elseif(D_PLATFORM_ARCH_X86)
-					if(D_PLATFORM_BITS EQUAL 64)
-						set(QT_DOWNLOAD_URL "https://github.com/obsproject/obs-deps/releases/download/${DEPS_VERSION}/macos-deps-qt-${DEPS_VERSION}-x86_64.tar.xz")
-						set(QT_DOWNLOAD_HASH "35A58FEE8DFD70D3D2DCC0AE0B77132C04A451C6F041A02DC41B207B375FC74B")
-					endif()
-				elseif(D_PLATFORM_ARCH_ARM)
-					if(D_PLATFORM_BITS EQUAL 64)
-						set(QT_DOWNLOAD_URL "https://github.com/obsproject/obs-deps/releases/download/${DEPS_VERSION}/macos-deps-qt-${DEPS_VERSION}-arm64.tar.xz")
-						set(QT_DOWNLOAD_HASH "E99146B9C7775C245A2D22F2EF24FC111FCCD71BAD0F03B64DB707124FFB8707")
-					endif()
-				endif()
-			endif()
-
-			# Verify that the platform, architecture and bitness is supported.
-			if(QT_DOWNLOAD_URL STREQUAL "")
-				message(FATAL_ERROR "${LOGPREFIX}Download for Qt failed, as Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
-				return()
-			endif()
-		else()
-			set(QT_DOWNLOAD_URL "${${PREFIX}QT_DOWNLOAD_URL}")
-			set(QT_DOWNLOAD_HASH "${${PREFIX}QT_DOWNLOAD_HASH}")
-		endif()
-
-		if(QT_DOWNLOAD_HASH STREQUAL "")
-			download_project(
-				PROJ qt
-				PREFIX "autodeps"
-				URL "${QT_DOWNLOAD_URL}"
-				DOWNLOAD_NO_PROGRESS OFF
-				UPDATE_DISCONNECTED OFF
-			)
-		else()
-			download_project(
-				PROJ qt
-				PREFIX "autodeps"
-				URL "${QT_DOWNLOAD_URL}"
-				URL_HASH "SHA256=${QT_DOWNLOAD_HASH}"
-				DOWNLOAD_NO_PROGRESS OFF
-				UPDATE_DISCONNECTED OFF
-			)
-		endif()
-		execute_process(COMMAND "xattr" "-r" "-d" "com.apple.quarantine" "${qt_SOURCE_DIR}")
-
-		if(D_PLATFORM_WINDOWS)
-			CacheSet(${PREFIX}QT_PATH "${qt_SOURCE_DIR}/msvc2019_64")
-		else()
-			CacheSet(${PREFIX}QT_PATH "${qt_SOURCE_DIR}")
-		endif()
-	endif()
-
-	set(Qt5_DIR "${${PREFIX}QT_PATH}/lib/cmake/Qt5" CACHE STRING "Path to Qt")
-	CacheSet(Qt5_DIR "${${PREFIX}QT_PATH}/lib/cmake/Qt5")
-endif()
-
-################################################################################
-# Auto-Dependency: libAOM
-################################################################################
-
-if(D_PLATFORM_WINDOWS)
-	# Options
-	set(${PREFIX}AOM_DOWNLOAD TRUE CACHE BOOL "Automatically download AOM?")
-	set(${PREFIX}AOM_PATH "" CACHE PATH "Path to AOM, if ${PREFIX}AOM_DOWNLOAD is not set.")
-	set(${PREFIX}AOM_DOWNLOAD_URL "" CACHE STRING "The URL from which to download AOM, if autodetection fails. (Optional)")
-	set(${PREFIX}AOM_DOWNLOAD_HASH "" CACHE STRING "The hash string for the given URL. Must be a SHA-256 hash if provided. (Optional)")
-	mark_as_advanced(
-		${PREFIX}AOM_PATH
-		${PREFIX}AOM_DOWNLOAD_URL
-		${PREFIX}AOM_DOWNLOAD_HASH
-	)
-
-	if(${PREFIX}AOM_DOWNLOAD)
-		if(${PREFIX}AOM_DOWNLOAD_URL STREQUAL "")
-			set(AOM_VERSION "v3.2.0.1")
-			# Figure out download URLs and hashes.
-			if(D_PLATFORM_WINDOWS)
-				if(D_PLATFORM_ARCH_X86)
-					set(AOM_DOWNLOAD_URL "https://github.com/Xaymar/aom/releases/download/${AOM_VERSION}/aom-windows-${D_PLATFORM_BITS}-shared.7z")
-					set(AOM_DOWNLOAD_HASH "2DE0C215C5B00D6761AD2D1FEAFB545C04249B2CBD542F9F7D423E1A26BA59BD")
-				endif()
-			endif()
-
-			# Verify that the platform, architecture and bitness is supported.
-			if(AOM_DOWNLOAD_URL STREQUAL "")
-				message(FATAL_ERROR "${LOGPREFIX}Download for AOM failed, as Platform '${D_PLATFORM_OS}' with architecture '${D_PLATFORM_ARCH}' and bitness '${D_PLATFORM_BITS}' is not supported.")
-				return()
-			endif()
-		else()
-			set(AOM_DOWNLOAD_URL "${${PREFIX}AOM_DOWNLOAD_URL}")
-			set(AOM_DOWNLOAD_HASH "${${PREFIX}AOM_DOWNLOAD_HASH}")
-		endif()
-
-		if(AOM_DOWNLOAD_HASH STREQUAL "")
-			download_project(
-				PROJ AOM
-				PREFIX "autodeps"
-				URL "${AOM_DOWNLOAD_URL}"
-				DOWNLOAD_NO_PROGRESS OFF
-				UPDATE_DISCONNECTED OFF
-			)
-		else()
-			download_project(
-				PROJ AOM
-				PREFIX "autodeps"
-				URL "${AOM_DOWNLOAD_URL}"
-				URL_HASH "SHA256=${AOM_DOWNLOAD_HASH}"
-				DOWNLOAD_NO_PROGRESS OFF
-				UPDATE_DISCONNECTED OFF
-			)
-		endif()
-
-		if(D_PLATFORM_WINDOWS)
-			CacheSet(${PREFIX}AOM_PATH "${AOM_SOURCE_DIR}/msvc2019_64")
-		else()
-			CacheSet(${PREFIX}AOM_PATH "${AOM_SOURCE_DIR}")
-		endif()
-	endif()
-
-	set(AOM_PATH "${${PREFIX}AOM_PATH}" CACHE STRING "Path to AOM")
 endif()
 
 ################################################################################
@@ -902,7 +630,7 @@ function(feature_frontend RESOLVE)
 		if(NOT (Qt6_FOUND OR Qt5_FOUND))
 			message(WARNING "${LOGPREFIX}Front-End requires Qt. Disabling...")
 			set_feature_disabled(FRONTEND ON)
-		elseif(NOT HAVE_OBS_FRONTEND_API)
+		elseif(NOT obs-frontend-api_FOUND)
 			message(WARNING "${LOGPREFIX}Front-End requires OBS FrontEnd API. Disabling...")
 			set_feature_disabled(FRONTEND ON)
 		endif()
@@ -915,7 +643,7 @@ endfunction()
 function(feature_updater RESOLVE)
 	is_feature_enabled(UPDATER T_CHECK)
 	if(RESOLVE AND T_CHECK)
-		if(NOT HAVE_CURL)
+		if(NOT CURL_FOUND)
 			message(WARNING "${LOGPREFIX}Updater requires CURL. Disabling...")
 			set_feature_disabled(UPDATER ON)
 		elseif(NOT HAVE_JSON)
@@ -951,84 +679,38 @@ feature_updater(OFF)
 # Fulfill Requirements
 #- OBS: Library
 if(STANDALONE)
-	if(EXISTS "${${PREFIX}OBS_PATH}/cmake/LibObs/LibObsConfig.cmake")
-		find_package(LibObs REQUIRED NO_MODULE
-			PATHS
-				"${${PREFIX}OBS_PATH}/cmake/libobs"
-				"${${PREFIX}OBS_PATH}/cmake/LibObs"
-		)
-	else()
-		find_package(libobs REQUIRED NO_MODULE
-			PATHS
-				"${${PREFIX}OBS_PATH}/cmake/libobs"
-				"${${PREFIX}OBS_PATH}/cmake/LibObs"
-		)
-	endif()
+	find_package("libobs" REQUIRED CONFIG)
+elseif(NOT TARGET OBS::libobs)
+	# Add the missing OBS::libobs alias target if possible.
+	add_library(OBS::libobs ALIAS libobs)
 endif()
 
 #- OBS: Front-End API
-set(HAVE_OBS_FRONTEND_API OFF)
+set(obs-frontend-api_FOUND OFF)
 if(REQUIRE_OBS_FRONTEND_API)
 	if(STANDALONE)
-		if(EXISTS "${${PREFIX}OBS_PATH}/cmake/obs-frontend-api/obs-frontend-apiConfig.cmake")
-			find_package("obs-frontend-api" NO_MODULE
-				PATHS
-					"${${PREFIX}OBS_PATH}/cmake/obs-frontend-api"
-			)
-		elseif((EXISTS "${${PREFIX}OBS_PATH}/bin/${D_PLATFORM_BITS}bit/obs-frontend-api.dll") AND (EXISTS "${${PREFIX}OBS_PATH}/bin/${D_PLATFORM_BITS}bit/obs-frontend-api.lib"))
-			add_library(obs-frontend-api SHARED IMPORTED)
-			set_target_properties(obs-frontend-api PROPERTIES
-				INTERFACE_INCLUDE_DIRECTORIES "${${PREFIX}OBS_PATH}/include"
-				INTERFACE_LINK_LIBRARIES "libobs"
-				IMPORTED_CONFIGURATIONS RELWITHDEBINFO
-				IMPORTED_IMPLIB_RELWITHDEBINFO "${${PREFIX}OBS_PATH}/bin/${D_PLATFORM_BITS}bit/obs-frontend-api.lib"
-				IMPORTED_LOCATION_RELWITHDEBINFO "${${PREFIX}OBS_PATH}/bin/${D_PLATFORM_BITS}bit/obs-frontend-api.dll"
-			)
-		elseif(EXISTS "${${PREFIX}OBS_PATH}/bin/${D_PLATFORM_BITS}bit/libobs-frontend-api.so")
-			add_library(obs-frontend-api SHARED IMPORTED)
-			set_target_properties(obs-frontend-api PROPERTIES
-				INTERFACE_INCLUDE_DIRECTORIES "${${PREFIX}OBS_PATH}/include"
-				INTERFACE_LINK_LIBRARIES "libobs"
-				IMPORTED_CONFIGURATIONS RELWITHDEBINFO
-				IMPORTED_LOCATION_RELWITHDEBINFO "${${PREFIX}OBS_PATH}/bin/${D_PLATFORM_BITS}bit/libobs-frontend-api.so"
-			)
-		else()
-			message(WARNING "${LOGPREFIX}The provided path for libOBS did not contain obs-frontend-api.")
-		endif()
+		find_package("obs-frontend-api" CONFIG)
+		set(obs-frontend-api_FOUND "${obs-frontend-api_FOUND}")
+	elseif(TARGET obs-frontend-api)
+		set(obs-frontend-api_FOUND ON)
 	endif()
-
-	if(TARGET obs-frontend-api)
-		set(HAVE_OBS_FRONTEND_API ON)
+	if(NOT TARGET OBS::obs-frontend-api)
+		add_library(OBS::obs-frontend-api ALIAS obs-frontend-api)
 	endif()
 endif()
 
 #- CURL
-set(HAVE_CURL OFF)
+set(CURL_FOUND OFF)
 if(REQUIRE_CURL)
-	if(D_PLATFORM_WINDOWS)
-		if(STANDALONE)
-			set(CURL_LIBRARIES "${_OBSDEPS_PATH}/bin/libcurl.lib")
-			set(CURL_INCLUDE_DIRS "${_OBSDEPS_PATH}/include")
-		else()
-			# Already defined by OBS
-			set(CURL_LIBRARIES "${CURL_LIB}")
-			set(CURL_INCLUDE_DIRS "${CURL_INCLUDE_DIR}")
-		endif()
-		set(CURL_LIBRARY_DEBUG ${CURL_LIBRARIES})
-		set(CURL_LIBRARY_RELEASE ${CURL_LIBRARIES})
-		set(CURL_INCLUDE_DIR ${CURL_INCLUDE_DIRS})
-		set(CURL_FOUND ON)
-	else()
-		find_package(CURL)
-	endif()
-
-	set(HAVE_CURL ${CURL_FOUND})
+	find_package("CURL")
 endif()
 
 #- FFmpeg
 set(HAVE_FFMPEG OFF)
 if(REQUIRE_FFMPEG)
-	find_package(FFmpeg COMPONENTS avutil avcodec swscale)
+	find_package("FFmpeg"
+		COMPONENTS "avutil" "avcodec" "swscale"
+	)
 	set(HAVE_FFMPEG ${FFmpeg_FOUND})
 endif()
 
@@ -1036,7 +718,7 @@ endif()
 set(HAVE_AOM OFF)
 if(REQUIRE_AOM)
 	if(NOT D_PLATFORM_MAC)
-		find_package(AOM)
+		find_package("AOM")
 		set(HAVE_AOM ${AOM_FOUND})
 	endif()
 endif()
@@ -1098,42 +780,22 @@ endif()
 #- Qt
 if(REQUIRE_QT)
 	# Try Qt6 first...
-	find_package(Qt6
+	find_package("Qt6"
 		COMPONENTS Core Gui Widgets
 		CONFIG
-		HINTS
-			"${Qt6_DIR}"
-			"${Qt6_DIR}/lib"
-			"${Qt6_DIR}/lib/cmake"
-			"${Qt6_DIR}/lib/cmake/Qt6"
-			"${QTDIR}"
-			"${QTDIR}/lib"
-			"${QTDIR}/lib/cmake"
-			"${QTDIR}/lib/cmake/Qt6"
-			"${DepsPath}"
-			"${DepsPath}/lib"
-			"${DepsPath}/lib/cmake"
-			"${DepsPath}/lib/cmake/Qt6"
 	)
+
+	# If Qt6 isn't present, try Qt5
 	if(NOT Qt6_FOUND)
-		# If Qt6 isn't present, try Qt5
-		find_package(Qt5
+		find_package("Qt5"
 			COMPONENTS Core Gui Widgets
 			CONFIG
-			HINTS
-				"${Qt5_DIR}"
-				"${Qt5_DIR}/lib"
-				"${Qt5_DIR}/lib/cmake"
-				"${Qt5_DIR}/lib/cmake/Qt5"
-				"${QTDIR}"
-				"${QTDIR}/lib"
-				"${QTDIR}/lib/cmake"
-				"${QTDIR}/lib/cmake/Qt5"
-				"${DepsPath}"
-				"${DepsPath}/lib"
-				"${DepsPath}/lib/cmake"
-				"${DepsPath}/lib/cmake/Qt5"
 		)
+	endif()
+	if(Qt6_FOUND)
+		message(STATUS "${LOGPREFIX}Using Qt6.")
+	elseif(Qt5_FOUND)
+		message(STATUS "${LOGPREFIX}Using Qt5.")
 	endif()
 endif()
 
@@ -1212,16 +874,15 @@ if(D_PLATFORM_WINDOWS) # Windows Support
 endif()
 
 # Minimum Dependencies
-list(APPEND PROJECT_LIBRARIES libobs)
+list(APPEND PROJECT_LIBRARIES OBS::libobs)
 
 # Components
-if(HAVE_CURL)
+if(CURL_FOUND)
 	list(APPEND PROJECT_PRIVATE_SOURCE
 		"source/util/util-curl.hpp"
 		"source/util/util-curl.cpp"
 	)
-	list(APPEND PROJECT_LIBRARIES ${CURL_LIBRARY_RELEASE})
-	list(APPEND PROJECT_INCLUDE_DIRS ${CURL_INCLUDE_DIR})
+	list(APPEND PROJECT_LIBRARIES CURL::libcurl)
 endif()
 
 if(HAVE_FFMPEG)
@@ -1332,8 +993,8 @@ if(HAVE_NVIDIA_CUDA)
 	)
 endif()
 
-if(REQUIRE_OBS_FRONTEND_API AND HAVE_OBS_FRONTEND_API)
-	list(APPEND PROJECT_LIBRARIES obs-frontend-api)
+if(REQUIRE_OBS_FRONTEND_API AND obs-frontend-api_FOUND)
+	list(APPEND PROJECT_LIBRARIES OBS::obs-frontend-api)
 endif()
 
 if(REQUIRE_QT)
@@ -1997,9 +1658,9 @@ endif()
 
 # Register the library
 add_library(${PROJECT_NAME} MODULE ${PROJECT_FILES}) # We are a module for libOBS.
+target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_INCLUDE_DIRS})
 target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_DEFINITIONS})
-target_link_libraries(${PROJECT_NAME} ${PROJECT_LIBRARIES})
 
 # Always generate position independent code.
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -2276,15 +1937,15 @@ endif()
 # Apple otool
 if(D_PLATFORM_MAC)
 	# OBS
-	mac_get_linker_id(TARGET libobs OUTPUT T_OBS_LINK)
+	mac_get_linker_id(TARGET OBS::libobs OUTPUT T_OBS_LINK)
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 		COMMAND install_name_tool ARGS -change "${T_OBS_LINK}" "@executable_path/../Frameworks/libobs.0.dylib" $<TARGET_FILE:${PROJECT_NAME}>
 	)
 	message(STATUS "${LOGPREFIX}Added post-build step for adjusting libobs linking path.")
 
 	# OBS Front-End API
-	if(REQUIRE_OBS_FRONTEND_API AND HAVE_OBS_FRONTEND_API)
-		mac_get_linker_id(TARGET obs-frontend-api OUTPUT T_OBSFE_LINK)
+	if(REQUIRE_OBS_FRONTEND_API AND obs-frontend-api_FOUND)
+		mac_get_linker_id(TARGET OBS::obs-frontend-api OUTPUT T_OBSFE_LINK)
 		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 			COMMAND install_name_tool ARGS -change "${T_OBSFE_LINK}" "@executable_path/../Frameworks/libobs-frontend-api.dylib" $<TARGET_FILE:${PROJECT_NAME}>
 		)
