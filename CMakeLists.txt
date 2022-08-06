@@ -899,7 +899,7 @@ endfunction()
 function(feature_frontend RESOLVE)
 	is_feature_enabled(FRONTEND T_CHECK)
 	if(RESOLVE AND T_CHECK)
-		if(NOT HAVE_QT)
+		if(NOT (Qt6_FOUND OR Qt5_FOUND))
 			message(WARNING "${LOGPREFIX}Front-End requires Qt. Disabling...")
 			set_feature_disabled(FRONTEND ON)
 		elseif(NOT HAVE_OBS_FRONTEND_API)
@@ -1095,13 +1095,46 @@ if(REQUIRE_NVIDIA_CUDA AND D_PLATFORM_WINDOWS)
 	set(HAVE_NVIDIA_CUDA ON)
 endif()
 
-#- Qt5
-set(HAVE_QT OFF)
+#- Qt
 if(REQUIRE_QT)
-	find_package(Qt5
-		COMPONENTS Widgets Core REQUIRED
+	# Try Qt6 first...
+	find_package(Qt6
+		COMPONENTS Core Gui Widgets
+		CONFIG
+		HINTS
+			"${Qt6_DIR}"
+			"${Qt6_DIR}/lib"
+			"${Qt6_DIR}/lib/cmake"
+			"${Qt6_DIR}/lib/cmake/Qt6"
+			"${QTDIR}"
+			"${QTDIR}/lib"
+			"${QTDIR}/lib/cmake"
+			"${QTDIR}/lib/cmake/Qt6"
+			"${DepsPath}"
+			"${DepsPath}/lib"
+			"${DepsPath}/lib/cmake"
+			"${DepsPath}/lib/cmake/Qt6"
 	)
-	set(HAVE_QT ${Qt5_FOUND})
+	if(NOT Qt6_FOUND)
+		# If Qt6 isn't present, try Qt5
+		find_package(Qt5
+			COMPONENTS Core Gui Widgets
+			CONFIG
+			HINTS
+				"${Qt5_DIR}"
+				"${Qt5_DIR}/lib"
+				"${Qt5_DIR}/lib/cmake"
+				"${Qt5_DIR}/lib/cmake/Qt5"
+				"${QTDIR}"
+				"${QTDIR}/lib"
+				"${QTDIR}/lib/cmake"
+				"${QTDIR}/lib/cmake/Qt5"
+				"${DepsPath}"
+				"${DepsPath}/lib"
+				"${DepsPath}/lib/cmake"
+				"${DepsPath}/lib/cmake/Qt5"
+		)
+	endif()
 endif()
 
 # Verify Requirements
@@ -1303,8 +1336,12 @@ if(REQUIRE_OBS_FRONTEND_API AND HAVE_OBS_FRONTEND_API)
 	list(APPEND PROJECT_LIBRARIES obs-frontend-api)
 endif()
 
-if(REQUIRE_QT AND HAVE_QT)
-	list(APPEND PROJECT_LIBRARIES Qt5::Core Qt5::Widgets)
+if(REQUIRE_QT)
+	if(Qt5_FOUND)
+		list(APPEND PROJECT_LIBRARIES Qt5::Core Qt5::Gui Qt5::Widgets)
+	elseif(Qt6_FOUND)
+		list(APPEND PROJECT_LIBRARIES Qt6::Core Qt6::Gui Qt6::Widgets)
+	endif()
 endif()
 
 ################################################################################
@@ -1949,7 +1986,7 @@ set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} ${PROJECT_UI} P
 )
 
 # Prevent non-UI files from being Qt'd
-if(HAVE_QT)
+if(Qt5_Found OR Qt6_FOUND)
 	set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} ${PROJECT_PRIVATE_GENERATED} ${PROJECT_PRIVATE_SOURCE} PROPERTIES
 		SKIP_AUTOGEN ON
 		SKIP_AUTOMOC ON
@@ -2197,7 +2234,7 @@ if(D_PLATFORM_WINDOWS)
 endif()
 
 # Enable Qt if needed
-if(HAVE_QT)
+if(Qt5_FOUND OR Qt6_FOUND)
 	set_target_properties(${PROJECT_NAME} PROPERTIES
 		AUTOUIC ON
 		AUTOUIC_SEARCH_PATHS "${PROJECT_SOURCE_DIR};${PROJECT_SOURCE_DIR}/ui"
@@ -2254,28 +2291,51 @@ if(D_PLATFORM_MAC)
 		message(STATUS "${LOGPREFIX}Added post-build step for adjusting libobs-frontend-api linking path.")
 	endif()
 
-	# Qt5
-	if(REQUIRE_QT AND HAVE_QT)
-		# Figure out the linker location for Qt5::Core
-		mac_get_linker_id(TARGET Qt5::Core OUTPUT T_QT5CORE_LINK)
+	# Qt
+	if(REQUIRE_QT)
+		if(Qt5_FOUND)
+			# Figure out the linker location for Qt5::Core
+			mac_get_linker_id(TARGET Qt5::Core OUTPUT T_QT5CORE_LINK)
 
-		# Figure out the linker location for Qt5::Gui
-		mac_get_linker_id(TARGET Qt5::Gui OUTPUT T_QT5GUI_LINK)
+			# Figure out the linker location for Qt5::Gui
+			mac_get_linker_id(TARGET Qt5::Gui OUTPUT T_QT5GUI_LINK)
 
-		# Figure out the linker location for Qt5::Widsgets
-		mac_get_linker_id(TARGET Qt5::Widgets OUTPUT T_QT5WIDGETS_LINK)
+			# Figure out the linker location for Qt5::Widsgets
+			mac_get_linker_id(TARGET Qt5::Widgets OUTPUT T_QT5WIDGETS_LINK)
 
-		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-		# - QtCore
-			COMMAND install_name_tool ARGS -change "${T_QT5CORE_LINK}" "@executable_path/../Frameworks/QtCore.framework/Versions/5/QtCore" $<TARGET_FILE:${PROJECT_NAME}>
-		# - QtGui
-			COMMAND install_name_tool ARGS -change "${T_QT5GUI_LINK}" "@executable_path/../Frameworks/QtGui.framework/Versions/5/QtGui" $<TARGET_FILE:${PROJECT_NAME}>
-		# - QtWidgets
-			COMMAND install_name_tool ARGS -change "${T_QT5WIDGETS_LINK}" "@executable_path/../Frameworks/QtWidgets.framework/Versions/5/QtWidgets" $<TARGET_FILE:${PROJECT_NAME}>
-		)
-		message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt5::Core linking path (Found: ${Qt5_DIR} resolved to ${T_QT5CORE_LINK}).")
-		message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt5::Gui linking path (Found: ${Qt5_DIR} resolved to ${T_QT5GUI_LINK}).")
-		message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt5::Widgets linking path (Found: ${Qt5_DIR} resolved to ${T_QT5WIDGETS_LINK}).")
+			add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+			# - QtCore
+				COMMAND install_name_tool ARGS -change "${T_QT5CORE_LINK}" "@executable_path/../Frameworks/QtCore.framework/Versions/5/QtCore" $<TARGET_FILE:${PROJECT_NAME}>
+			# - QtGui
+				COMMAND install_name_tool ARGS -change "${T_QT5GUI_LINK}" "@executable_path/../Frameworks/QtGui.framework/Versions/5/QtGui" $<TARGET_FILE:${PROJECT_NAME}>
+			# - QtWidgets
+				COMMAND install_name_tool ARGS -change "${T_QT5WIDGETS_LINK}" "@executable_path/../Frameworks/QtWidgets.framework/Versions/5/QtWidgets" $<TARGET_FILE:${PROJECT_NAME}>
+			)
+			message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt5::Core linking path (Found: ${Qt5_DIR} resolved to ${T_QT5CORE_LINK}).")
+			message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt5::Gui linking path (Found: ${Qt5_DIR} resolved to ${T_QT5GUI_LINK}).")
+			message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt5::Widgets linking path (Found: ${Qt5_DIR} resolved to ${T_QT5WIDGETS_LINK}).")
+		elseif(Qt6_FOUND)
+			# Figure out the linker location for Qt6::Core
+			mac_get_linker_id(TARGET Qt6::Core OUTPUT T_QT6CORE_LINK)
+
+			# Figure out the linker location for Qt6::Gui
+			mac_get_linker_id(TARGET Qt6::Gui OUTPUT T_QT6GUI_LINK)
+
+			# Figure out the linker location for Qt6::Widsgets
+			mac_get_linker_id(TARGET Qt6::Widgets OUTPUT T_QT6WIDGETS_LINK)
+
+			add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+			# - QtCore
+				COMMAND install_name_tool ARGS -change "${T_QT6CORE_LINK}" "@executable_path/../Frameworks/QtCore.framework/Versions/6/QtCore" $<TARGET_FILE:${PROJECT_NAME}>
+			# - QtGui
+				COMMAND install_name_tool ARGS -change "${T_QT6GUI_LINK}" "@executable_path/../Frameworks/QtGui.framework/Versions/6/QtGui" $<TARGET_FILE:${PROJECT_NAME}>
+			# - QtWidgets
+				COMMAND install_name_tool ARGS -change "${T_QT6WIDGETS_LINK}" "@executable_path/../Frameworks/QtWidgets.framework/Versions/6/QtWidgets" $<TARGET_FILE:${PROJECT_NAME}>
+			)
+			message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt6::Core linking path (Found: ${Qt6_DIR} resolved to ${T_QT6CORE_LINK}).")
+			message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt6::Gui linking path (Found: ${Qt6_DIR} resolved to ${T_QT6GUI_LINK}).")
+			message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt6::Widgets linking path (Found: ${Qt6_DIR} resolved to ${T_QT6WIDGETS_LINK}).")
+		endif()
 	endif()
 endif()
 
