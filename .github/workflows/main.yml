@@ -167,7 +167,6 @@ jobs:
         elif [[ "${{ matrix.runner }}" = macos* ]]; then
           cmake --build "build/debug" --config Debug --target install
         fi
-        cmake --build "build/debug" --config Debug --target StreamFX_clang-tidy
         cmake --build "build/debug" --config Debug --target StreamFX_clang-format
 
     - name: "Configure & Build (Release)"
@@ -187,7 +186,6 @@ jobs:
         elif [[ "${{ matrix.runner }}" = macos* ]]; then
           cmake --build "build/release" --config RelWithDebInfo --target install
         fi
-        cmake --build "build/release" --config RelWithDebInfo --target StreamFX_clang-tidy
         cmake --build "build/release" --config RelWithDebInfo --target StreamFX_clang-format
 
     - name: "Validate Formatting"
