@@ -25,7 +25,6 @@ jobs:
       matrix:
         runner: [ windows-2022, ubuntu-22.04, macos-12, windows-2019, ubuntu-20.04, macos-11, macos-10.15 ]
         generator: [ MSVC, GCC, Clang ]
-        CMAKE_BUILD_TYPE: [ Debug, RelWithDebInfo ]
         exclude:
           - runner: windows-2022
             generator: GCC
@@ -192,73 +191,79 @@ jobs:
       uses: actions/cache@v3
       with:
         path: |
-          build/temp/autodeps
-        key: autodeps-${{ matrix.runner }}-${{ matrix.generator }}-${{ matrix.CMAKE_BUILD_TYPE }}-${{ env.CACHE_VERSION }}
+          build/debug/autodeps
+          build/release/autodeps
+        key: autodeps-${{ matrix.runner }}-${{ matrix.generator }}-${{ env.CACHE_VERSION }}
 
-    - name: "Configure"
+    - name: "Configure & Build (Debug)"
+      continue-on-error: true
       shell: bash
-      env:
-        CODESIGN_FILE: ${{ github.workspace }}/cert.pfx
-        CODESIGN_PASS: ${{ secrets.CODESIGN_CERT_WIN_PASSWORD }}
       run: |
-        if [[ "${{ matrix.CMAKE_BUILD_TYPE }}" = "Debug" ]]; then
-          ENABLE_PROFILING=ON
-        else
-          ENABLE_PROFILING=OFF
-        fi
-        cmake -H. -B"build/temp" \
-          -DCMAKE_BUILD_TYPE=${{ matrix.CMAKE_BUILD_TYPE }} \
-          -DCMAKE_INSTALL_PREFIX="build/distrib" \
-          -DPACKAGE_NAME="streamfx-${{ matrix.PACKAGE_NAME }}" \
+        cmake -H. -B"build/debug" \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DCMAKE_INSTALL_PREFIX="build/debug/install" \
+          -DPACKAGE_NAME="streamfx-${{ matrix.package_name }}-debug" \
           -DPACKAGE_PREFIX="build/package" \
           -DENABLE_CLANG=TRUE \
-          -DENABLE_PROFILING=${ENABLE_PROFILING}
+          -DENABLE_PROFILING=ON
+        if [[ "${{ matrix.runner }}" = windows* ]]; then
+          cmake --build "build/debug" --config Debug --target INSTALL
+        elif [[ "${{ matrix.runner }}" = ubuntu* ]]; then
+          cmake --build "build/debug" --config Debug --target install
+        elif [[ "${{ matrix.runner }}" = macos* ]]; then
+          cmake --build "build/debug" --config Debug --target install
+        fi
+        cmake --build "build/debug" --config Debug --target StreamFX_clang-tidy
+        cmake --build "build/debug" --config Debug --target StreamFX_clang-format
 
-    - name: "Validation: clang-tidy"
-      continue-on-error: true
+    - name: "Configure & Build (Release)"
       shell: bash
       run: |
-        cmake --build "build/temp" --config ${{ matrix.CMAKE_BUILD_TYPE }} --target StreamFX_clang-tidy
+        cmake -H. -B"build/release" \
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          -DCMAKE_INSTALL_PREFIX="build/release/install" \
+          -DPACKAGE_NAME="streamfx-${{ matrix.package_name }}" \
+          -DPACKAGE_PREFIX="build/package" \
+          -DENABLE_CLANG=TRUE \
+          -DENABLE_PROFILING=OFF
+        if [[ "${{ matrix.runner }}" = windows* ]]; then
+          cmake --build "build/release" --config RelWithDebInfo --target INSTALL
+        elif [[ "${{ matrix.runner }}" = ubuntu* ]]; then
+          cmake --build "build/release" --config RelWithDebInfo --target install/strip
+        elif [[ "${{ matrix.runner }}" = macos* ]]; then
+          cmake --build "build/release" --config RelWithDebInfo --target install
+        fi
+        cmake --build "build/release" --config RelWithDebInfo --target StreamFX_clang-tidy
+        cmake --build "build/release" --config RelWithDebInfo --target StreamFX_clang-format
 
-    - name: "Validation: Formatting (clang-format)"
-      continue-on-error: true
+    - name: "Validate Formatting"
+      continue-on-error: false
       shell: bash
       run: |
-        cmake --build "build/temp" --config ${{ matrix.CMAKE_BUILD_TYPE }} --target StreamFX_clang-format
         git --no-pager diff --patch --minimal HEAD --
         git update-index --refresh
         git diff-index --quiet HEAD --
-
-    - name: "Build"
-      shell: bash
-      run: |
-        if [[ "${{ matrix.runner }}" = windows* ]]; then
-          cmake --build "build/temp" --config RelWithDebInfo --target INSTALL
-        elif [[ "${{ matrix.runner }}" = ubuntu* ]]; then
-          cmake --build "build/temp" --config RelWithDebInfo --target install/strip
-        elif [[ "${{ matrix.runner }}" = macos* ]]; then
-          cmake --build "build/temp" --config RelWithDebInfo --target install
-        fi
 
     - name: "Package: Archives"
       shell: bash
       run: |
         mkdir build/package
-        cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_7Z
-        cmake --build "build/temp" --config RelWithDebInfo --target PACKAGE_ZIP
+        cmake --build "build/debug" --config RelWithDebInfo --target PACKAGE_7Z
+        cmake --build "build/release" --config RelWithDebInfo --target PACKAGE_7Z
 
     - name: "Package: Installer (Windows)"
       if: startsWith( matrix.runner, 'windows' )
       shell: cmd
       run: |
-        echo '"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 ".\build\temp\installer.iss"'
-        "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 ".\build\temp\installer.iss"
+        "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 ".\build\debug\installer.iss"
+        "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 ".\build\release\installer.iss"
 
     - name: "Package: Installer (MacOS)"
       if: startsWith( matrix.runner, 'macos' )
       shell: bash
       run: |
-        packagesbuild ./build/temp/installer.pkgproj
+        packagesbuild ./build/debug/installer.pkgproj
+        packagesbuild ./build/release/installer.pkgproj
 
     - name: "Artifacts"
       uses: actions/upload-artifact@v1
