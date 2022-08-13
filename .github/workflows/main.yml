@@ -23,114 +23,57 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ windows-2022, ubuntu-22.04, macos-12, windows-2019, ubuntu-20.04, macos-11, macos-10.15 ]
+        runner: [ windows-2022, macos-12, ubuntu-22.04, ubuntu-20.04 ]
         generator: [ MSVC, GCC, Clang ]
         exclude:
           - runner: windows-2022
             generator: GCC
-          - runner: windows-2019
-            generator: GCC
           - runner: windows-2022
             generator: Clang
-          - runner: windows-2019
-            generator: Clang
+          - runner: macos-12
+            generator: MSVC
+          - runner: macos-12
+            generator: GCC
           - runner: ubuntu-22.04
             generator: MSVC
           - runner: ubuntu-20.04
             generator: MSVC
-          - runner: macos-12
-            generator: MSVC
-          - runner: macos-12
-            generator: GCC
-          - runner: macos-11
-            generator: MSVC
-          - runner: macos-11
-            generator: GCC
-          - runner: macos-10.15
-            generator: MSVC
-          - runner: macos-10.15
-            generator: GCC
         include:
+          # Windows supports MSVC
           - runner: windows-2022
-            generator: MSVC
-            experimental: true
-            platform: "Windows 11"
-            PACKAGE_NAME: "windows-11"
-            CMAKE_SYSTEM_VERSION: "10.0.22000.0"
+            name: "Windows"
+            package_name: "windows"
+            CMAKE_SYSTEM_VERSION: "10.0.20348.0"
             CMAKE_GENERATOR: "Visual Studio 17 2022"
             CMAKE_GENERATOR_PLATFORM: "x64"
-          - runner: windows-2019
-            generator: MSVC
-            experimental: false
-            platform: "Windows 10"
-            PACKAGE_NAME: "windows-10"
-            CMAKE_SYSTEM_VERSION: "10.0.19041.0"
-            CMAKE_GENERATOR: "Visual Studio 16 2019"
-            CMAKE_GENERATOR_PLATFORM: "x64"
-          - runner: ubuntu-22.04
-            generator: GCC
-            experimental: false
-            platform: "Ubuntu 22"
-            compiler_c: gcc
-            compiler_cxx: g++
-            PACKAGE_NAME: "ubuntu-22-gcc"
-            CMAKE_GENERATOR: "Ninja"
-          - runner: ubuntu-20.04
-            generator: GCC
-            experimental: false
-            platform: "Ubuntu 20"
-            compiler_c: gcc
-            compiler_cxx: g++
-            PACKAGE_NAME: "ubuntu-20-gcc"
-            CMAKE_GENERATOR: "Ninja"
-          - runner: ubuntu-22.04
-            generator: Clang
-            experimental: false
-            platform: "Ubuntu 22"
-            compiler_c: clang
-            compiler_cxx: clang++
-            PACKAGE_NAME: "ubuntu-22-clang"
-            CMAKE_GENERATOR: "Ninja"
-          - runner: ubuntu-20.04
-            generator: Clang
-            experimental: false
-            platform: "Ubuntu 20"
-            compiler_c: clang
-            compiler_cxx: clang++
-            PACKAGE_NAME: "ubuntu-20-clang"
-            CMAKE_GENERATOR: "Ninja"
+
+          # MacOS supports Clang
           - runner: macos-12
-            generator: Clang
-            experimental: true
-            platform: "MacOS 12"
-            PACKAGE_NAME: "macos-12"
+            name: "MacOS"
+            package_name: "macos"
             CMAKE_GENERATOR: "Xcode"
             CMAKE_OSX_DEPLOYMENT_TARGET: "10.15"
-          - runner: macos-11
-            generator: Clang
-            experimental: false
-            platform: "MacOS 11"
-            PACKAGE_NAME: "macos-11"
-            CMAKE_GENERATOR: "Xcode"
-            CMAKE_OSX_DEPLOYMENT_TARGET: "10.15"
-          - runner: macos-10.15
-            generator: Clang
-            experimental: true
-            platform: "MacOS 10.15"
-            PACKAGE_NAME: "macos-10.15"
-            CMAKE_GENERATOR: "Xcode"
-            CMAKE_OSX_DEPLOYMENT_TARGET: "10.15"
-    name: "${{ matrix.platform }} (${{ matrix.generator }}, ${{ matrix.CMAKE_BUILD_TYPE }})"
+            CMAKE_OSX_ARCHITECTURES: "x86_64"
+
+          # Ubuntu needs version-specific binaries
+          - runner: ubuntu-22.04
+            name: "Ubuntu 22.04"
+            package_name: "ubuntu-22"
+            CMAKE_GENERATOR: "Ninja"
+          - runner: ubuntu-20.04
+            name: "Ubuntu 20.04"
+            package_name: "ubuntu-20"
+            CMAKE_GENERATOR: "Ninja"
+
     runs-on: ${{ matrix.runner }}
-    continue-on-error: ${{ matrix.experimental }}
+    name: "${{ matrix.name }} (${{ matrix.generator }})"
     env:
-      CC: ${{ matrix.compiler_c }}
-      CXX: ${{ matrix.compiler_cxx }}
-      CMAKE_GENERATOR: ${{ matrix.CMAKE_GENERATOR }}
-      CMAKE_GENERATOR_PLATFORM: ${{ matrix.CMAKE_GENERATOR_PLATFORM }}
-      CMAKE_GENERATOR_TOOLSET: ${{ matrix.CMAKE_GENERATOR_TOOLSET }}
-      CMAKE_SYSTEM_VERSION: ${{ matrix.CMAKE_SYSTEM_VERSION }}
+      CMAKE_GENERATOR: "${{ matrix.CMAKE_GENERATOR }}"
+      CMAKE_GENERATOR_PLATFORM: "${{ matrix.CMAKE_GENERATOR_PLATFORM }}"
+      CMAKE_GENERATOR_TOOLSET: "${{ matrix.CMAKE_GENERATOR_TOOLSET }}"
+      CMAKE_SYSTEM_VERSION: "${{ matrix.CMAKE_SYSTEM_VERSION }}"
       CMAKE_OSX_DEPLOYMENT_TARGET: "${{ matrix.CMAKE_OSX_DEPLOYMENT_TARGET }}"
+      CMAKE_OSX_ARCHITECTURES: "${{ matrix.CMAKE_OSX_ARCHITECTURES }}"
     steps:
     - name: "Clone"
       uses: actions/checkout@v3
@@ -162,19 +105,30 @@ jobs:
           qtbase5-dev qtbase5-private-dev libqt5svg5-dev \
           libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev \
           libcurl4-openssl-dev
+
+        # clang-format, clang-tidy
+        curl -jLo /tmp/llvm.sh "https://apt.llvm.org/llvm.sh"
+        chmod +x /tmp/llvm.sh
+        sudo /tmp/llvm.sh 14 all
+        sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-14 800
+        sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-14 800
+
+        # Compiler
         if [[ "${{ matrix.generator }}" = "GCC" ]]; then
           sudo apt-get install gcc-10 g++10
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 800 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+          echo "CC=gcc-10" >> "${GITHUB_ENV}"
+          echo "CXX=gcc-10" >> "${GITHUB_ENV}"
+          echo "LD=ld" >> "${GITHUB_ENV}"
         elif [[ "${{ matrix.generator }}" = "Clang" ]]; then
-          curl -jLo /tmp/llvm.sh https://apt.llvm.org/llvm.sh
-          sudo bash -x /tmp/llvm.sh 14 all
           sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-14 800
           sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-14 800
           sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-14 800
-          sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-14 800
-          sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-14 800
           sudo update-alternatives --install /usr/bin/lld lld /usr/bin/lld-14 800
           sudo update-alternatives --install /usr/bin/lldb lldb /usr/bin/lldb-14 800
+          echo "CC=clang-14" >> "${GITHUB_ENV}"
+          echo "CXX=clang++-14" >> "${GITHUB_ENV}"
+          echo "LD=lld" >> "${GITHUB_ENV}"
         fi
 
     - name: 'Dependencies: MacOS'
