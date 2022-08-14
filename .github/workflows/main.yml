@@ -86,6 +86,7 @@ jobs:
       run: |
         curl "-kL" "https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.4/LLVM-14.0.4-win64.exe" "-f" "--retry" "5" "-o" "llvm.exe"
         7z x -y -o"C:\Program Files\LLVM" llvm.exe "bin" "include" "lib" "libexec" "share" "Uninstall.exe"
+        echo "CLANG_PATH=\"C:\\Program Files\\LLVM\\bin\"" >> "${GITHUB_ENV}"
         curl "-kL" "https://cdn.xaymar.com/ci/innosetup-6.2.1.exe" "-f" "--retry" "5" "-o" "inno.exe"
         .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
 
@@ -112,6 +113,7 @@ jobs:
         sudo /tmp/llvm.sh 14 all
         sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-14 800
         sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-14 800
+        echo "CLANG_PATH=/usr/bin" >> "${GITHUB_ENV}"
 
         # Compiler
         if [[ "${{ matrix.generator }}" = "GCC" ]]; then
@@ -139,6 +141,7 @@ jobs:
         sudo hdiutil attach ./Packages.dmg
         pushd /Volumes/Packages*
         sudo installer -pkg ./Install\ Packages.pkg -target /
+        echo "CLANG_PATH=$(brew --prefix llvm@14)/bin/" >> "${GITHUB_ENV}"
 
     - name: "Auto-Dependency Cache"
       if: github.event_name != 'pull_request'
@@ -158,7 +161,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="build/debug/install" \
           -DPACKAGE_NAME="streamfx-${{ matrix.package_name }}-debug" \
           -DPACKAGE_PREFIX="build/package" \
-          -DENABLE_CLANG=TRUE \
+          -DENABLE_CLANG=TRUE -DCLANG_PATH="${{ env.CLANG_PATH }}" \
           -DENABLE_PROFILING=ON
         if [[ "${{ matrix.runner }}" = windows* ]]; then
           cmake --build "build/debug" --config Debug --target INSTALL
@@ -167,7 +170,6 @@ jobs:
         elif [[ "${{ matrix.runner }}" = macos* ]]; then
           cmake --build "build/debug" --config Debug --target install
         fi
-        cmake --build "build/debug" --config Debug --target StreamFX_clang-format
 
     - name: "Configure & Build (Release)"
       shell: bash
@@ -177,7 +179,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="build/release/install" \
           -DPACKAGE_NAME="streamfx-${{ matrix.package_name }}" \
           -DPACKAGE_PREFIX="build/package" \
-          -DENABLE_CLANG=TRUE \
+          -DENABLE_CLANG=TRUE -DCLANG_PATH="${{ env.CLANG_PATH }}" \
           -DENABLE_PROFILING=OFF
         if [[ "${{ matrix.runner }}" = windows* ]]; then
           cmake --build "build/release" --config RelWithDebInfo --target INSTALL
@@ -186,12 +188,12 @@ jobs:
         elif [[ "${{ matrix.runner }}" = macos* ]]; then
           cmake --build "build/release" --config RelWithDebInfo --target install
         fi
-        cmake --build "build/release" --config RelWithDebInfo --target StreamFX_clang-format
 
     - name: "Validate Formatting"
-      continue-on-error: false
       shell: bash
       run: |
+        cmake --build "build/debug" --config Debug --target StreamFX_clang-format
+        cmake --build "build/release" --config RelWithDebInfo --target StreamFX_clang-format
         git --no-pager diff --patch --minimal HEAD --
         git update-index --refresh
         git diff-index --quiet HEAD --
