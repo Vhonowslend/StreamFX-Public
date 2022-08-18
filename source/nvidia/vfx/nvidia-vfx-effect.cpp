@@ -19,6 +19,7 @@
 // SOFTWARE.
 
 #include "nvidia-vfx-effect.hpp"
+#include <string_view>
 #include "obs/gs/gs-helper.hpp"
 #include "util/util-logging.hpp"
 
@@ -38,7 +39,7 @@
 
 using namespace ::streamfx::nvidia;
 
-vfx::effect::~effect()
+streamfx::nvidia::vfx::effect::~effect()
 {
 	auto gctx = ::streamfx::obs::gs::context();
 	auto cctx = cuda::obs::get()->get_context()->enter();
@@ -49,7 +50,8 @@ vfx::effect::~effect()
 	_nvcuda.reset();
 }
 
-vfx::effect::effect(effect_t effect) : _nvcuda(cuda::obs::get()), _nvcvi(cv::cv::get()), _nvvfx(vfx::vfx::get()), _fx()
+streamfx::nvidia::vfx::effect::effect(effect_t effect)
+	: _nvcuda(cuda::obs::get()), _nvcvi(cv::cv::get()), _nvvfx(vfx::vfx::get()), _fx()
 {
 	auto gctx = ::streamfx::obs::gs::context();
 	auto cctx = cuda::obs::get()->get_context()->enter();
@@ -74,21 +76,21 @@ vfx::effect::effect(effect_t effect) : _nvcuda(cuda::obs::get()), _nvcvi(cv::cv:
 	}
 }
 
-cv::result vfx::effect::get(parameter_t param, std::string_view& value)
+cv::result streamfx::nvidia::vfx::effect::get(parameter_t param, std::string_view& value)
 {
 	const char* cvalue = nullptr;
 	cv::result  res    = get(param, cvalue);
 	if (res == cv::result::SUCCESS) {
 		if (cvalue) {
-			value.swap(std::string_view(cvalue));
+			value = std::string_view(cvalue);
 		} else {
-			value.swap(std::string_view());
+			value = std::string_view();
 		}
 	}
 	return res;
 }
 
-cv::result vfx::effect::get(parameter_t param, std::string& value)
+cv::result streamfx::nvidia::vfx::effect::get(parameter_t param, std::string& value)
 {
 	const char* cvalue = nullptr;
 	cv::result  res    = get(param, cvalue);
