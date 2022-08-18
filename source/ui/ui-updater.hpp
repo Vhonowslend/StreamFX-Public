@@ -28,6 +28,7 @@
 #endif
 
 #include <QAction>
+#include <QActionGroup>
 #include <QBoxLayout>
 #include <QComboBox>
 #include <QLabel>
