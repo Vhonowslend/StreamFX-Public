@@ -16,7 +16,6 @@ concurrency:
 
 env:
   CACHE_VERSION: 2
-  LIBAOM_VERSION: "3.2.0.0"
 
 jobs:
   build:
@@ -99,6 +98,17 @@ jobs:
           echo "::set-output name=obs_deps_version::BADVALUE"
         fi
         echo "::set-output name=obs_version::$(cd "${{ github.workspace }}/third-party/obs-studio" && git describe --tags --long)"
+
+        # CMake Flags
+        if [[ "${{ matrix.CMAKE_GENERATOR }}" != "" ]]; then
+          echo "::set-output name=cmake_generator::-G \"${{ matrix.CMAKE_GENERATOR }}\""
+        fi
+        if [[ "${{ matrix.CMAKE_GENERATOR_TOOLSET }}" != "" ]]; then
+          echo "::set-output name=cmake_generator_toolset::-T \"${{ matrix.CMAKE_GENERATOR_TOOLSET }}\""
+        fi
+        if [[ "${{ matrix.CMAKE_GENERATOR_PLATFORM }}" != "" ]]; then
+          echo "::set-output name=cmake_generator_platform::-A \"${{ matrix.CMAKE_GENERATOR_PLATFORM }}\""
+        fi
 
     - name: "Dependencies: Windows"
       if: startsWith( matrix.runner, 'windows' )
@@ -225,6 +235,8 @@ jobs:
       id: obs
       if: ${{ steps.obs-cache.outputs.cache-hit != 'true' }}
       shell: bash
+      env:
+        CMAKE_BUILD_TYPE: "Release"
       run: |
         # Extra requirements by libobs on Linux.
         if [[ "${{ matrix.runner }}" = ubuntu* ]]; then
@@ -238,9 +250,15 @@ jobs:
             libsndio-dev libspeexdsp-dev libudev-dev libv4l-dev libva-dev libvlc-dev libdrm-dev
         fi
         cmake \
-          -S"${{ github.workspace }}/third-party/obs-studio" \
-          -B"${{ github.workspace }}/build/obs" \
-          -DCMAKE_BUILD_TYPE=Release \
+          -S "${{ github.workspace }}/third-party/obs-studio" \
+          -B "${{ github.workspace }}/build/obs" \
+          ${{ steps.info.outputs.cmake_generator }} \
+          ${{ steps.info.outputs.cmake_generator_toolset }} \
+          ${{ steps.info.outputs.cmake_generator_platform }} \
+          -DDCMAKE_OSX_ARCHITECTURES="${{ matrix.CMAKE_OSX_ARCHITECTURES }}" \
+          -DCMAKE_OSX_DEPLOYMENT_TARGET="${{ matrix.CMAKE_OSX_DEPLOYMENT_TARGET }}" \
+          -DCMAKE_SYSTEM_VERSION="${{ matrix.CMAKE_SYSTEM_VERSION }}" \
+          -DCMAKE_BUILD_TYPE="${{ env.CMAKE_BUILD_TYPE }}" \
           -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/build/obs/install" \
           -DENABLE_PLUGINS=OFF \
           -DENABLE_UI=OFF \
@@ -262,8 +280,15 @@ jobs:
         CMAKE_BUILD_TYPE: "Debug"
       run: |
         cmake \
-          -S"${{ github.workspace }}" \
-          -B"${{ github.workspace }}/build/debug" \
+          -S "${{ github.workspace }}" \
+          -B "${{ github.workspace }}/build/debug" \
+          ${{ steps.info.outputs.cmake_generator }} \
+          ${{ steps.info.outputs.cmake_generator_toolset }} \
+          ${{ steps.info.outputs.cmake_generator_platform }} \
+          -DDCMAKE_OSX_ARCHITECTURES="${{ matrix.CMAKE_OSX_ARCHITECTURES }}" \
+          -DCMAKE_OSX_DEPLOYMENT_TARGET="${{ matrix.CMAKE_OSX_DEPLOYMENT_TARGET }}" \
+          -DCMAKE_SYSTEM_VERSION="${{ matrix.CMAKE_SYSTEM_VERSION }}" \
+          -DCMAKE_BUILD_TYPE="${{ env.CMAKE_BUILD_TYPE }}" \
           -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/build/debug/install" \
           -DPACKAGE_NAME="streamfx-${{ matrix.package_name }}-debug" \
           -DPACKAGE_PREFIX="${{ github.workspace }}/build/package" \
@@ -274,7 +299,7 @@ jobs:
           -DFFmpeg_DIR="${{ github.workspace }}/build/obsdeps" \
           -DCURL_DIR="${{ github.workspace }}/build/obsdeps"
         if [[ "${{ matrix.runner }}" = windows* ]]; then
-          cmake --build "build/debug" --config ${{ env.CMAKE_BUILD_TYPE }} --target INSTALL
+          cmake --build "build/debug" --config ${{ env.CMAKE_BUILD_TYPE }} --target install
         elif [[ "${{ matrix.runner }}" = ubuntu* ]]; then
           cmake --build "build/debug" --config ${{ env.CMAKE_BUILD_TYPE }} --target install
         elif [[ "${{ matrix.runner }}" = macos* ]]; then
@@ -287,8 +312,15 @@ jobs:
         CMAKE_BUILD_TYPE: "RelWithDebInfo"
       run: |
         cmake \
-          -S"${{ github.workspace }}" \
-          -B"${{ github.workspace }}/build/release" \
+          -S "${{ github.workspace }}" \
+          -B "${{ github.workspace }}/build/release" \
+          ${{ steps.info.outputs.cmake_generator }} \
+          ${{ steps.info.outputs.cmake_generator_toolset }} \
+          ${{ steps.info.outputs.cmake_generator_platform }} \
+          -DDCMAKE_OSX_ARCHITECTURES="${{ matrix.CMAKE_OSX_ARCHITECTURES }}" \
+          -DCMAKE_OSX_DEPLOYMENT_TARGET="${{ matrix.CMAKE_OSX_DEPLOYMENT_TARGET }}" \
+          -DCMAKE_SYSTEM_VERSION="${{ matrix.CMAKE_SYSTEM_VERSION }}" \
+          -DCMAKE_BUILD_TYPE="${{ env.CMAKE_BUILD_TYPE }}" \
           -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/build/release/install" \
           -DPACKAGE_NAME="streamfx-${{ matrix.package_name }}" \
           -DPACKAGE_PREFIX="${{ github.workspace }}/build/package" \
@@ -299,7 +331,7 @@ jobs:
           -DFFmpeg_DIR="${{ github.workspace }}/build/obsdeps" \
           -DCURL_DIR="${{ github.workspace }}/build/obsdeps"
         if [[ "${{ matrix.runner }}" = windows* ]]; then
-          cmake --build "build/release" --config ${{ env.CMAKE_BUILD_TYPE }} --target INSTALL
+          cmake --build "build/release" --config ${{ env.CMAKE_BUILD_TYPE }} --target install
         elif [[ "${{ matrix.runner }}" = ubuntu* ]]; then
           cmake --build "build/release" --config ${{ env.CMAKE_BUILD_TYPE }} --target install/strip
         elif [[ "${{ matrix.runner }}" = macos* ]]; then
