@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CACHE_VERSION: 2
+  CACHE_VERSION: "2022-08-19"
 
 jobs:
   build:
@@ -175,7 +175,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: "${{ github.workspace }}/build/qt"
-        key: "${{ matrix.runner }}-obsdeps${{ steps.info.outputs.obs_deps_version }}-qt${{ matrix.qt }}"
+        key: "${{ matrix.runner }}-obsdeps${{ steps.info.outputs.obs_deps_version }}-qt${{ matrix.qt }}-${{ env.CACHE_VERSION }}"
     - name: "Dependency: Qt "
       id: qt
       if: ${{ startsWith( matrix.runner, 'ubuntu' ) || (steps.qt-cache.outputs.cache-hit != 'true') }}
@@ -205,7 +205,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: "${{ github.workspace }}/build/obsdeps"
-        key: "${{ matrix.runner }}-obsdeps${{ steps.info.outputs.obs_deps_version }}"
+        key: "${{ matrix.runner }}-obsdeps${{ steps.info.outputs.obs_deps_version }}-${{ env.CACHE_VERSION }}"
     - name: "Dependency: OBS Dependencies (FFmpeg, CURL, ...)"
       id: obsdeps
       if: ${{ startsWith( matrix.runner, 'ubuntu' ) || (steps.obsdeps-cache.outputs.cache-hit != 'true') }}
@@ -230,7 +230,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: "${{ github.workspace }}/build/obs"
-        key: "${{ matrix.runner }}-${{ matrix.generator }}-obs${{ steps.info.outputs.obs_version }}-obsdeps${{ steps.info.outputs.obs_deps_version }}-qt${{ matrix.qt }}"
+        key: "${{ matrix.runner }}-${{ matrix.generator }}-obs${{ steps.info.outputs.obs_version }}-obsdeps${{ steps.info.outputs.obs_deps_version }}-qt${{ matrix.qt }}-${{ env.CACHE_VERSION }}"
     - name: "Dependency: OBS Libraries"
       id: obs
       if: ${{ steps.obs-cache.outputs.cache-hit != 'true' }}
