@@ -70,9 +70,9 @@ streamfx::nvidia::cv::result streamfx::nvidia::ar::feature::get(parameter_t para
 	cv::result  res    = get(param, cvalue);
 	if (res == cv::result::SUCCESS) {
 		if (cvalue) {
-			value.swap(std::string_view(cvalue));
+			value = std::string_view(cvalue);
 		} else {
-			value.swap(std::string_view());
+			value = std::string_view();
 		}
 	}
 	return res;
