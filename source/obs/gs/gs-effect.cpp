@@ -29,9 +29,9 @@
 
 static std::string load_file_as_code(const std::filesystem::path& shader_file, bool is_top_level = true)
 {
-	std::stringstream            shader_stream;
-	const std::filesystem::path& shader_path = std::filesystem::absolute(shader_file);
-	const std::filesystem::path& shader_root = std::filesystem::path(shader_path).remove_filename();
+	std::stringstream           shader_stream;
+	const std::filesystem::path shader_path = std::filesystem::absolute(shader_file.native());
+	const std::filesystem::path shader_root = std::filesystem::path(shader_path.native()).remove_filename();
 
 	// Ensure it meets size limits.
 	uintmax_t size = std::filesystem::file_size(shader_path);
