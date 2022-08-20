@@ -1987,11 +1987,11 @@ if(D_PLATFORM_MAC)
 
 			add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 			# - QtCore
-				COMMAND install_name_tool ARGS -change "${T_QT6CORE_LINK}" "@executable_path/../Frameworks/QtCore.framework/Versions/6/QtCore" $<TARGET_FILE:${PROJECT_NAME}>
+				COMMAND install_name_tool ARGS -change "${T_QT6CORE_LINK}" "@executable_path/../Frameworks/QtCore.framework/Versions/A/QtCore" $<TARGET_FILE:${PROJECT_NAME}>
 			# - QtGui
-				COMMAND install_name_tool ARGS -change "${T_QT6GUI_LINK}" "@executable_path/../Frameworks/QtGui.framework/Versions/6/QtGui" $<TARGET_FILE:${PROJECT_NAME}>
+				COMMAND install_name_tool ARGS -change "${T_QT6GUI_LINK}" "@executable_path/../Frameworks/QtGui.framework/Versions/A/QtGui" $<TARGET_FILE:${PROJECT_NAME}>
 			# - QtWidgets
-				COMMAND install_name_tool ARGS -change "${T_QT6WIDGETS_LINK}" "@executable_path/../Frameworks/QtWidgets.framework/Versions/6/QtWidgets" $<TARGET_FILE:${PROJECT_NAME}>
+				COMMAND install_name_tool ARGS -change "${T_QT6WIDGETS_LINK}" "@executable_path/../Frameworks/QtWidgets.framework/Versions/A/QtWidgets" $<TARGET_FILE:${PROJECT_NAME}>
 			)
 			message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt6::Core linking path (Found: ${Qt6_DIR} resolved to ${T_QT6CORE_LINK}).")
 			message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt6::Gui linking path (Found: ${Qt6_DIR} resolved to ${T_QT6GUI_LINK}).")
