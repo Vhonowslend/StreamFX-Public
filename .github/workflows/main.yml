@@ -255,7 +255,7 @@ jobs:
           ${{ steps.info.outputs.cmake_generator }} \
           ${{ steps.info.outputs.cmake_generator_toolset }} \
           ${{ steps.info.outputs.cmake_generator_platform }} \
-          -DDCMAKE_OSX_ARCHITECTURES="${{ matrix.CMAKE_OSX_ARCHITECTURES }}" \
+          -DCMAKE_OSX_ARCHITECTURES="${{ matrix.CMAKE_OSX_ARCHITECTURES }}" \
           -DCMAKE_OSX_DEPLOYMENT_TARGET="${{ matrix.CMAKE_OSX_DEPLOYMENT_TARGET }}" \
           -DCMAKE_SYSTEM_VERSION="${{ matrix.CMAKE_SYSTEM_VERSION }}" \
           -DCMAKE_BUILD_TYPE="${{ env.CMAKE_BUILD_TYPE }}" \
@@ -285,7 +285,7 @@ jobs:
           ${{ steps.info.outputs.cmake_generator }} \
           ${{ steps.info.outputs.cmake_generator_toolset }} \
           ${{ steps.info.outputs.cmake_generator_platform }} \
-          -DDCMAKE_OSX_ARCHITECTURES="${{ matrix.CMAKE_OSX_ARCHITECTURES }}" \
+          -DCMAKE_OSX_ARCHITECTURES="${{ matrix.CMAKE_OSX_ARCHITECTURES }}" \
           -DCMAKE_OSX_DEPLOYMENT_TARGET="${{ matrix.CMAKE_OSX_DEPLOYMENT_TARGET }}" \
           -DCMAKE_SYSTEM_VERSION="${{ matrix.CMAKE_SYSTEM_VERSION }}" \
           -DCMAKE_BUILD_TYPE="${{ env.CMAKE_BUILD_TYPE }}" \
@@ -317,7 +317,7 @@ jobs:
           ${{ steps.info.outputs.cmake_generator }} \
           ${{ steps.info.outputs.cmake_generator_toolset }} \
           ${{ steps.info.outputs.cmake_generator_platform }} \
-          -DDCMAKE_OSX_ARCHITECTURES="${{ matrix.CMAKE_OSX_ARCHITECTURES }}" \
+          -DCMAKE_OSX_ARCHITECTURES="${{ matrix.CMAKE_OSX_ARCHITECTURES }}" \
           -DCMAKE_OSX_DEPLOYMENT_TARGET="${{ matrix.CMAKE_OSX_DEPLOYMENT_TARGET }}" \
           -DCMAKE_SYSTEM_VERSION="${{ matrix.CMAKE_SYSTEM_VERSION }}" \
           -DCMAKE_BUILD_TYPE="${{ env.CMAKE_BUILD_TYPE }}" \
