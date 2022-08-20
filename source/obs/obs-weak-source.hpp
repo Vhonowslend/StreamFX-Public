@@ -18,40 +18,45 @@
 
 #pragma once
 #include "common.hpp"
+#include <string_view>
 #include "obs-source.hpp"
 
-namespace streamfx::obs {
-	class source;
+// ToDo:
+// - Is FORCE_INLINE necessary for optimal performance, or can LTO handle this?
 
+namespace streamfx::obs {
 	class weak_source {
 		obs_weak_source_t* _ref;
 
 		public:
-		~weak_source()
+		FORCE_INLINE ~weak_source() noexcept
 		{
 			if (_ref) {
 				obs_weak_source_release(_ref);
 			}
 		};
 
-		/** Empty/Invalid weak reference.
+		/** Create an empty weak source.
 		 *
+		 * The weak source will be expired, as it points at nothing.
 		 */
-		weak_source() : _ref(nullptr){};
+		FORCE_INLINE weak_source() : _ref(nullptr){};
 
 		/** Create a new weak reference from an existing pointer.
 		 *
-		 * Attention: Ownership of obs_weak_source_t is transferred to the class itself, and should not be released.
+		 * @param duplicate If true, will duplicate the pointer instead of taking ownership.
 		 */
-		weak_source(obs_weak_source_t* source) : _ref(source)
+		FORCE_INLINE weak_source(obs_weak_source_t* source, bool duplicate = true) : _ref(source)
 		{
 			if (!_ref)
 				throw std::invalid_argument("Parameter 'source' does not define a valid source.");
+			if (duplicate)
+				obs_weak_source_addref(_ref);
 		};
 
 		/** Create a new weak reference from an existing hard reference.
 		 */
-		weak_source(obs_source_t* source)
+		FORCE_INLINE weak_source(obs_source_t* source)
 		{
 			_ref = obs_source_get_weak_source(source);
 			if (!_ref)
@@ -60,7 +65,7 @@ namespace streamfx::obs {
 
 		/** Create a new weak reference from an existing hard reference.
 		 */
-		weak_source(::streamfx::obs::source& source)
+		FORCE_INLINE weak_source(const ::streamfx::obs::source& source)
 		{
 			_ref = obs_source_get_weak_source(source.get());
 			if (!_ref)
@@ -71,7 +76,7 @@ namespace streamfx::obs {
 		 *
 		 * Attention: May fail if the name does not exactly match.
 		 */
-		weak_source(std::string_view name)
+		FORCE_INLINE weak_source(std::string_view name)
 		{
 			std::shared_ptr<obs_source_t> ref{obs_get_source_by_name(name.data()),
 											  [](obs_source_t* v) { obs_source_release(v); }};
@@ -81,18 +86,31 @@ namespace streamfx::obs {
 			_ref = obs_source_get_weak_source(ref.get());
 		};
 
-		weak_source(weak_source&& move) noexcept
+		public /* Move & Copy Operators */:
+		/** Move Constructor
+		 * 
+		 */
+		FORCE_INLINE weak_source(::streamfx::obs::weak_source&& move) noexcept
 		{
 			_ref      = move._ref;
 			move._ref = nullptr;
 		};
 
-		FORCE_INLINE ::streamfx::obs::weak_source& operator=(weak_source&& move) noexcept
+		/** Copy Constructor
+		 * 
+		 */
+		FORCE_INLINE weak_source(const ::streamfx::obs::weak_source& copy) noexcept
 		{
-			if (_ref) {
-				obs_weak_source_release(_ref);
-				_ref = nullptr;
-			}
+			_ref = copy._ref;
+			obs_weak_source_addref(_ref);
+		};
+
+		/** Move Assign
+		 * 
+		 */
+		FORCE_INLINE ::streamfx::obs::weak_source& operator=(::streamfx::obs::weak_source&& move) noexcept
+		{
+			reset();
 			if (move._ref) {
 				_ref      = move._ref;
 				move._ref = nullptr;
@@ -100,18 +118,12 @@ namespace streamfx::obs {
 			return *this;
 		};
 
-		weak_source(const weak_source& copy)
+		/** Copy Assign
+		 * 
+		 */
+		FORCE_INLINE ::streamfx::obs::weak_source& operator=(const ::streamfx::obs::weak_source& copy) noexcept
 		{
-			_ref = copy._ref;
-			obs_weak_source_addref(_ref);
-		};
-
-		FORCE_INLINE ::streamfx::obs::weak_source& operator=(const weak_source& copy)
-		{
-			if (_ref) {
-				obs_weak_source_release(_ref);
-				_ref = nullptr;
-			}
+			reset();
 			if (copy._ref) {
 				_ref = copy._ref;
 				obs_weak_source_addref(_ref);
@@ -120,20 +132,33 @@ namespace streamfx::obs {
 			return *this;
 		};
 
+		public /* ... */:
 		/** Retrieve the underlying pointer for manual manipulation.
 		 *
 		 * Attention: Ownership remains with the class instance.
 		 */
-		FORCE_INLINE obs_weak_source_t* get() const
+		[[deprecated("Prefer operator*()")]] FORCE_INLINE obs_weak_source_t* get() const noexcept
 		{
 			return _ref;
+		};
+
+		/** Release the ownership of the managed object.
+		 *
+		 * Same as 'x = nullptr;'.
+		 */
+		FORCE_INLINE void reset() noexcept
+		{
+			if (_ref) {
+				obs_weak_source_release(_ref);
+				_ref = nullptr;
+			}
 		};
 
 		/** Is the weak reference expired?
 		 *
 		 * A weak reference is expired when the original object it is pointing at no longer exists.
 		 */
-		FORCE_INLINE bool expired() const
+		FORCE_INLINE bool expired() const noexcept
 		{
 			return (!_ref) || (obs_weak_source_expired(_ref));
 		};
@@ -142,48 +167,49 @@ namespace streamfx::obs {
 		 *
 		 * May fail if the reference expired before we successfully acquire it.
 		 */
-		FORCE_INLINE ::streamfx::obs::source lock() const
+		FORCE_INLINE ::streamfx::obs::source lock() const noexcept
 		{
 			return {obs_weak_source_get_source(_ref)};
 		};
 
-		public:
-		FORCE_INLINE operator obs_weak_source_t*() const
+		public /* Type Conversion Operators */:
+		FORCE_INLINE operator obs_weak_source_t*() const noexcept
 		{
 			return _ref;
-		}
+		};
 
-		FORCE_INLINE obs_weak_source_t* operator*() const
+		FORCE_INLINE obs_weak_source_t* operator*() const noexcept
 		{
 			return _ref;
-		}
+		};
 
-		FORCE_INLINE operator bool() const
+		FORCE_INLINE operator bool() const noexcept
 		{
 			return !expired();
 		};
 
-		FORCE_INLINE bool operator==(weak_source const& rhs) const
+		public /* Comparison Operators */:
+		FORCE_INLINE bool operator==(::streamfx::obs::weak_source const& rhs) const noexcept
 		{
 			return _ref == rhs._ref;
 		};
 
-		FORCE_INLINE bool operator<(weak_source const& rhs) const
+		FORCE_INLINE bool operator<(::streamfx::obs::weak_source const& rhs) const noexcept
 		{
 			return _ref < rhs._ref;
 		};
 
-		FORCE_INLINE bool operator==(obs_weak_source_t* const& rhs) const
+		FORCE_INLINE bool operator==(obs_weak_source_t* const& rhs) const noexcept
 		{
 			return _ref == rhs;
 		};
 
-		FORCE_INLINE bool operator==(source const& rhs) const
+		FORCE_INLINE bool operator==(::streamfx::obs::source const& rhs) const noexcept
 		{
 			return obs_weak_source_references_source(_ref, rhs.get());
 		};
 
-		FORCE_INLINE bool operator==(obs_source_t* const& rhs) const
+		FORCE_INLINE bool operator==(obs_source_t* const& rhs) const noexcept
 		{
 			return obs_weak_source_references_source(_ref, rhs);
 		};

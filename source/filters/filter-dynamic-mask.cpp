@@ -434,7 +434,7 @@ try {
 
 void dynamic_mask_instance::release()
 {
-	_input = {};
+	_input.reset();
 	_input_capture.reset();
 
 	deactivate();
