@@ -18,6 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+//--------------------------------------------------------------------------------//
+// THIS FEATURE IS DEPRECATED. SUBMITTED PATCHES WILL BE REJECTED.
+//--------------------------------------------------------------------------------//
+
 #include "encoder-aom-av1.hpp"
 #include <filesystem>
 #include <thread>
@@ -40,6 +44,7 @@
 #define ST_I18N "Encoder.AOM.AV1"
 
 // Preset
+#define ST_I18N_DEPRECATED ST_I18N ".Deprecated"
 #define ST_I18N_ENCODER ST_I18N ".Encoder"
 #define ST_I18N_ENCODER_USAGE ST_I18N_ENCODER ".Usage"
 #define ST_I18N_ENCODER_USAGE_GOODQUALITY ST_I18N_ENCODER_USAGE ".GoodQuality"
@@ -1263,6 +1268,7 @@ aom_av1_factory::aom_av1_factory()
 	_info.type  = obs_encoder_type::OBS_ENCODER_VIDEO;
 	_info.codec = "av1";
 	_info.caps  = OBS_ENCODER_CAP_DYN_BITRATE;
+	_info.caps |= OBS_ENCODER_CAP_DEPRECATED;
 
 	finish_setup();
 }
@@ -1424,6 +1430,12 @@ try {
 obs_properties_t* aom_av1_factory::get_properties2(instance_t* data)
 {
 	obs_properties_t* props = obs_properties_create();
+
+	{
+		auto p = obs_properties_add_text(props, "[[deprecated]]", D_TRANSLATE(ST_I18N_DEPRECATED), OBS_TEXT_INFO);
+		obs_property_text_set_info_type(p, OBS_TEXT_INFO_WARNING);
+		obs_property_text_set_info_word_wrap(p, true);
+	}
 
 #ifdef ENABLE_FRONTEND
 	{
