@@ -17,6 +17,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+//--------------------------------------------------------------------------------//
+// THIS FEATURE IS DEPRECATED. SUBMITTED PATCHES WILL BE REJECTED.
+//--------------------------------------------------------------------------------//
+
 #include "amf_h264_handler.hpp"
 #include "../codecs/h264.hpp"
 #include "../encoder-ffmpeg.hpp"
@@ -60,6 +64,7 @@ void amf_h264_handler::adjust_info(ffmpeg_factory* factory, const AVCodec* codec
 	name = "AMD AMF H.264/AVC (via FFmpeg)";
 	if (!amf::is_available())
 		factory->get_info()->caps |= OBS_ENCODER_CAP_DEPRECATED;
+	factory->get_info()->caps |= OBS_ENCODER_CAP_DEPRECATED;
 }
 
 void amf_h264_handler::get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context, bool hw_encode)
