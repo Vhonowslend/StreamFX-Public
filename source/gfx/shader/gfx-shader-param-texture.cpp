@@ -282,7 +282,7 @@ void streamfx::gfx::shader::texture_parameter::assign()
 		// Reload or Reacquire everything necessary.
 		try {
 			// Remove now unused references.
-			_source.release();
+			_source.reset();
 			_source_child.reset();
 			_source_active.reset();
 			_source_visible.reset();
@@ -323,7 +323,7 @@ void streamfx::gfx::shader::texture_parameter::assign()
 				_source_visible      = std::move(visible);
 				_source_active       = std::move(active);
 				_source_child        = child;
-				_source              = std::move(source);
+				_source              = source;
 			}
 
 			_dirty = false;
@@ -336,14 +336,15 @@ void streamfx::gfx::shader::texture_parameter::assign()
 
 	// If this is a source and active or visible, capture it.
 	if ((_type == texture_type::Source) && (_active || _visible) && _source_rendertarget) {
+		auto source = _source.lock();
 #ifdef ENABLE_PROFILING
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_capture, "Parameter '%s'",
 													get_key().data()};
 		::streamfx::obs::gs::debug_marker profiler2{::streamfx::obs::gs::debug_color_capture, "Capture '%s'",
-													obs_source_get_name(_source.get())};
+													source.name().data()};
 #endif
-		uint32_t width  = obs_source_get_width(_source.get());
-		uint32_t height = obs_source_get_height(_source.get());
+		uint32_t width  = source.width();
+		uint32_t height = source.height();
 
 		auto op = _source_rendertarget->render(width, height);
 
@@ -357,7 +358,7 @@ void streamfx::gfx::shader::texture_parameter::assign()
 
 		gs_enable_color(true, true, true, true);
 
-		obs_source_video_render(_source.get());
+		obs_source_video_render(source.get());
 
 		gs_blend_state_pop();
 		gs_matrix_pop();
@@ -388,8 +389,9 @@ void streamfx::gfx::shader::texture_parameter::visible(bool visible)
 {
 	_visible = visible;
 	if (visible) {
-		if (_source) {
-			_source_visible = ::streamfx::obs::source_showing_reference::add_showing_reference(_source);
+		auto source = _source.lock();
+		if (source) {
+			_source_visible = ::streamfx::obs::source_showing_reference::add_showing_reference(source);
 		}
 	} else {
 		_source_visible.reset();
@@ -400,8 +402,9 @@ void streamfx::gfx::shader::texture_parameter::active(bool active)
 {
 	_active = active;
 	if (active) {
-		if (_source) {
-			_source_active = ::streamfx::obs::source_active_reference::add_active_reference(_source);
+		auto source = _source.lock();
+		if (source) {
+			_source_active = ::streamfx::obs::source_active_reference::add_active_reference(source);
 		}
 	} else {
 		_source_active.reset();
