@@ -19,6 +19,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+//--------------------------------------------------------------------------------//
+// THIS FEATURE IS DEPRECATED. SUBMITTED PATCHES WILL BE REJECTED.
+//--------------------------------------------------------------------------------//
+
 #include "amf_shared.hpp"
 #include "ffmpeg/tools.hpp"
 
@@ -31,6 +35,7 @@ extern "C" {
 
 // Translation
 #define ST_I18N "Encoder.FFmpeg.AMF"
+#define ST_I18N_DEPRECATED ST_I18N ".Deprecated"
 #define ST_I18N_PRESET ST_I18N ".Preset"
 #define ST_I18N_PRESET_(x) ST_I18N_PRESET "." x
 #define ST_I18N_RATECONTROL "Encoder.FFmpeg.AMF.RateControl"
@@ -188,6 +193,12 @@ static bool modified_ratecontrol(obs_properties_t* props, obs_property_t*, obs_d
 
 void amf::get_properties_pre(obs_properties_t* props, const AVCodec* codec)
 {
+	{
+		auto p = obs_properties_add_text(props, "[[deprecated]]", D_TRANSLATE(ST_I18N_DEPRECATED), OBS_TEXT_INFO);
+		obs_property_text_set_info_type(p, OBS_TEXT_INFO_WARNING);
+		obs_property_text_set_info_word_wrap(p, true);
+	}
+
 	auto p = obs_properties_add_list(props, ST_KEY_PRESET, D_TRANSLATE(ST_I18N_PRESET), OBS_COMBO_TYPE_LIST,
 									 OBS_COMBO_FORMAT_INT);
 	for (auto kv : presets) {
