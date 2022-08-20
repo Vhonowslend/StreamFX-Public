@@ -684,6 +684,21 @@ elseif(NOT TARGET OBS::libobs)
 	# Add the missing OBS::libobs alias target if possible.
 	add_library(OBS::libobs ALIAS libobs)
 endif()
+if(D_PLATFORM_MAC)
+	# We may need to reconstruct the include directories on MacOS.
+	get_target_property(libobs_INTERFACE_INCLUDE_DIRECTORIES OBS::libobs INTERFACE_INCLUDE_DIRECTORIES)
+	if("${libobs_INTERFACE_INCLUDE_DIRECTORIES}" STREQUAL "libobs_INTERFACE_INCLUDE_DIRECTORIES-NOTFOUND")
+		get_target_property(libobs_IMPORTED_LOCATION_RELEASE OBS::libobs IMPORTED_LOCATION_RELEASE)
+		get_filename_component(libobs_IMPORTED_LOCATION_RELEASE "${libobs_IMPORTED_LOCATION_RELEASE}" DIRECTORY)
+		get_filename_component(libobs_IMPORTED_LOCATION_RELEASE "${libobs_IMPORTED_LOCATION_RELEASE}" DIRECTORY)
+		get_filename_component(libobs_IMPORTED_LOCATION_RELEASE "${libobs_IMPORTED_LOCATION_RELEASE}" DIRECTORY)
+		set(libobs_IMPORTED_LOCATION_RELEASE "${libobs_IMPORTED_LOCATION_RELEASE}/Headers")
+		set_target_properties(OBS::libobs PROPERTIES
+			INTERFACE_INCLUDE_DIRECTORIES
+				"${libobs_IMPORTED_LOCATION_RELEASE}"
+		)
+	endif()
+endif()
 
 #- OBS: Front-End API
 set(obs-frontend-api_FOUND OFF)
