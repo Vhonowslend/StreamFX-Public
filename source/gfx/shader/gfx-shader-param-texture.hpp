@@ -9,8 +9,8 @@
 #include "obs/obs-source-active-child.hpp"
 #include "obs/obs-source-active-reference.hpp"
 #include "obs/obs-source-showing-reference.hpp"
-#include "obs/obs-source.hpp"
 #include "obs/obs-tools.hpp"
+#include "obs/obs-weak-source.hpp"
 
 namespace streamfx::gfx {
 	namespace shader {
@@ -59,7 +59,7 @@ namespace streamfx::gfx {
 
 			// Data: Source
 			std::string                                              _source_name;
-			::streamfx::obs::source                                  _source;
+			::streamfx::obs::weak_source                             _source;
 			std::shared_ptr<streamfx::obs::source_active_child>      _source_child;
 			std::shared_ptr<streamfx::obs::source_active_reference>  _source_active;
 			std::shared_ptr<streamfx::obs::source_showing_reference> _source_visible;
