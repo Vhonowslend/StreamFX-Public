@@ -2,8 +2,8 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "@PROJECT_TITLE@"
-#define MyAppVersion "@PROJECT_VERSION_CMAKE@"
-#define MyAppVersionText "@PROJECT_VERSION@"
+#define MyAppVersion "@PROJECT_VERSION@"
+#define MyAppVersionText "@_VERSION@"
 #define MyAppPublisher "Xaymars Technology Workshop"
 #define MyAppURL "https://xaymar.com/"
 #define MyAppCopyright "@PROJECT_COPYRIGHT@"
