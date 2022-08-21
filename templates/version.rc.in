@@ -10,8 +10,8 @@
 #endif
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION     @PROJECT_VERSION_CMAKE@
-PRODUCTVERSION  @PROJECT_VERSION_CMAKE@
+FILEVERSION     @PROJECT_VERSION@
+PRODUCTVERSION  @PROJECT_VERSION@
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
 FILEFLAGS       (VER_DEBUG)
 FILEOS          VOS__WINDOWS32
@@ -29,8 +29,8 @@ BEGIN
             VALUE "CompanyName",      "@PROJECT_AUTHORS@\0"
             VALUE "LegalCopyright",   "@PROJECT_COPYRIGHT@\0"
             VALUE "LegalTrademarks",  "@PROJECT_TRADEMARKS@\0"
-            VALUE "FileVersion",      "@VERSION_STRING@\0"
-            VALUE "ProductVersion",   "@VERSION_STRING@\0"
+            VALUE "FileVersion",      "@_VERSION@\0"
+            VALUE "ProductVersion",   "@_VERSION@\0"
         END
     END
 
