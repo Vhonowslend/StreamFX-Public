@@ -130,8 +130,8 @@ ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* self, bool
 	}
 
 	// Allocate a small packet for later use.
-	av_init_packet(&_packet);
-	av_new_packet(&_packet, 8 * 1024 * 1024); // 8 MB precached Packet size.
+	_packet = {av_packet_alloc(), [](AVPacket* ptr) { av_packet_free(&ptr); }};
+	av_new_packet(_packet.get(), 8 * 1024 * 1024); // 8 MiB is usually enough for compressed data.
 
 	// Initialize
 	if (is_hw) {
@@ -158,7 +158,7 @@ ffmpeg_instance::~ffmpeg_instance()
 		// Flush encoders that require it.
 		if ((_codec->capabilities & AV_CODEC_CAP_DELAY) != 0) {
 			avcodec_send_frame(_context, nullptr);
-			while (avcodec_receive_packet(_context, &_packet) >= 0) {
+			while (avcodec_receive_packet(_context, _packet.get()) >= 0) {
 				avcodec_send_frame(_context, nullptr);
 				std::this_thread::sleep_for(std::chrono::milliseconds(1));
 			}
@@ -169,7 +169,7 @@ ffmpeg_instance::~ffmpeg_instance()
 		avcodec_free_context(&_context);
 	}
 
-	av_packet_unref(&_packet);
+	av_packet_unref(_packet.get());
 
 	_scaler.finalize();
 }
@@ -608,11 +608,11 @@ int ffmpeg_instance::receive_packet(bool* received_packet, struct encoder_packet
 {
 	int res = 0;
 
-	av_packet_unref(&_packet);
+	av_packet_unref(_packet.get());
 
 	{
 		auto gctx = streamfx::obs::gs::context();
-		res       = avcodec_receive_packet(_context, &_packet);
+		res       = avcodec_receive_packet(_context, _packet.get());
 	}
 	if (res != 0) {
 		return res;
@@ -625,7 +625,7 @@ int ffmpeg_instance::receive_packet(bool* received_packet, struct encoder_packet
 			uint8_t*    tmp_sei;
 			std::size_t sz_packet, sz_header, sz_sei;
 
-			obs_extract_avc_headers(_packet.data, static_cast<size_t>(_packet.size), &tmp_packet, &sz_packet,
+			obs_extract_avc_headers(_packet->data, static_cast<size_t>(_packet->size), &tmp_packet, &sz_packet,
 									&tmp_header, &sz_header, &tmp_sei, &sz_sei);
 
 			if (sz_header) {
@@ -646,7 +646,7 @@ int ffmpeg_instance::receive_packet(bool* received_packet, struct encoder_packet
 			bfree(tmp_header);
 			bfree(tmp_sei);
 		} else if (_codec->id == AV_CODEC_ID_HEVC) {
-			hevc::extract_header_sei(_packet.data, static_cast<size_t>(_packet.size), _extra_data, _sei_data);
+			hevc::extract_header_sei(_packet->data, static_cast<size_t>(_packet->size), _extra_data, _sei_data);
 		} else if (_context->extradata != nullptr) {
 			_extra_data.resize(static_cast<size_t>(_context->extradata_size));
 			std::memcpy(_extra_data.data(), _context->extradata, static_cast<size_t>(_context->extradata_size));
@@ -660,25 +660,25 @@ int ffmpeg_instance::receive_packet(bool* received_packet, struct encoder_packet
 
 	// Build packet for use in OBS.
 	packet->type     = OBS_ENCODER_VIDEO;
-	packet->pts      = _packet.pts;
-	packet->dts      = _packet.dts;
-	packet->data     = _packet.data;
-	packet->size     = static_cast<size_t>(_packet.size);
-	packet->keyframe = !!(_packet.flags & AV_PKT_FLAG_KEY);
+	packet->pts      = _packet->pts;
+	packet->dts      = _packet->dts;
+	packet->data     = _packet->data;
+	packet->size     = static_cast<size_t>(_packet->size);
+	packet->keyframe = !!(_packet->flags & AV_PKT_FLAG_KEY);
 	*received_packet = true;
 
 	// Figure out priority and drop_priority.
 	// In theory, this is done by OBS, but its not doing a great job.
 	packet->priority      = packet->keyframe ? 3 : 2;
 	packet->drop_priority = 3;
-	for (size_t idx = 0, edx = _packet.side_data_elems; idx < edx; idx++) {
-		auto& side_data = _packet.side_data[idx];
+	for (size_t idx = 0, edx = _packet->side_data_elems; idx < edx; idx++) {
+		auto& side_data = _packet->side_data[idx];
 		if (side_data.type == AV_PKT_DATA_QUALITY_STATS) {
 			// Decisions based on picture type, if present.
 			switch (side_data.data[sizeof(uint32_t)]) {
 			case AV_PICTURE_TYPE_I:  // I-Frame
 			case AV_PICTURE_TYPE_SI: // Switching I-Frame
-				if (_packet.flags & AV_PKT_FLAG_KEY) {
+				if (_packet->flags & AV_PKT_FLAG_KEY) {
 					// Recovery only via IDR-Frame.
 					packet->priority      = 3; // OBS_NAL_PRIORITY_HIGHEST
 					packet->drop_priority = 2; // OBS_NAL_PRIORITY_HIGH

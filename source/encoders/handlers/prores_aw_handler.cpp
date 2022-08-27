@@ -112,17 +112,3 @@ void prores_aw_handler::log_options(obs_data_t* settings, const AVCodec* codec, 
 		return std::string("<Unknown>");
 	});
 }
-
-void prores_aw_handler::process_avpacket(AVPacket& packet, const AVCodec*, AVCodecContext*)
-{
-	//FFmpeg Bug:
-	// When ProRes content is stored in Matroska, FFmpeg strips the size
-	// from the atom. Later when the ProRes content is demuxed from Matroska,
-	// FFmpeg creates an atom with the incorrect size, as the ATOM size
-	// should be content + atom, but FFmpeg set it to only be content. This
-	// difference leads to decoders to be off by 8 bytes.
-	//Fix (until FFmpeg stops being broken):
-	// Pad the packet with 8 bytes of 0x00.
-
-	av_grow_packet(&packet, 8);
-}

@@ -58,7 +58,7 @@ namespace streamfx::encoder::ffmpeg {
 		std::shared_ptr<handler::handler> _handler;
 
 		::streamfx::ffmpeg::swscale _scaler;
-		AVPacket                    _packet;
+		std::shared_ptr<AVPacket>   _packet;
 
 		std::shared_ptr<::streamfx::ffmpeg::hwapi::base>     _hwapi;
 		std::shared_ptr<::streamfx::ffmpeg::hwapi::instance> _hwinst;
