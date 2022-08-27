@@ -1720,15 +1720,14 @@ if(D_PLATFORM_WINDOWS AND ((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR (CMAKE_CXX
 		$<$<CONFIG:MinSizeRel>:/MD>
 	)
 
-	# - Enable most useful warnings.
+	# - Treat Warnings as Errors
+	target_compile_options(${PROJECT_NAME} PRIVATE "/Wall")
+
+	# - Disable useless warnings
 	set(DISABLED_WARNINGS
-		"/wd4061" "/wd4100" "/wd4180" "/wd4201" "/wd4464" "/wd4505" "/wd4514"
-		"/wd4571" "/wd4623" "/wd4625" "/wd4626" "/wd4668" "/wd4710" "/wd4774"
-		"/wd4820" "/wd5026" "/wd5027" "/wd5039" "/wd5045" "/wd26812"
 	)
-	target_compile_options(${PROJECT_NAME} PRIVATE "/W3")
 	foreach(WARN ${DISABLED_WARNINGS})
-		target_compile_options(${PROJECT_NAME} PRIVATE "${WARN}")
+		target_compile_options(${PROJECT_NAME} PRIVATE "/wd${WARN}")
 	endforeach()
 
 	# - Require enabled instruction sets.
@@ -1791,9 +1790,16 @@ elseif(D_PLATFORM_LINUX AND ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_
 	# GCC/Clang
 	message(STATUS "${LOGPREFIX}Applying custom flags for GCC/Clang style build.")
 
-	# - Enable most useful warnings.
+	# - Enable all warnings.
 	target_compile_options(${PROJECT_NAME} PRIVATE "-Wall")
 	target_compile_options(${PROJECT_NAME} PRIVATE "-Wextra")
+
+	# - Disable useless warnings
+	set(DISABLED_WARNINGS
+	)
+	foreach(WARN ${DISABLED_WARNINGS})
+		target_compile_options(${PROJECT_NAME} PRIVATE "-Wno-${WARN}")
+	endforeach()
 
 	# - Require enabled instruction sets.
 	if(${PREFIX}TARGET_NATIVE)
