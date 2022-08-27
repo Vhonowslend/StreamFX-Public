@@ -171,28 +171,32 @@ obs_properties_t* shader_factory::get_properties2(shader_instance* data)
 
 #ifdef ENABLE_FRONTEND
 bool shader_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
-try {
-	streamfx::open_url(HELP_URL);
-	return false;
-} catch (const std::exception& ex) {
-	D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
-	return false;
-} catch (...) {
-	D_LOG_ERROR("Failed to open manual due to unknown error.", "");
-	return false;
+{
+	try {
+		streamfx::open_url(HELP_URL);
+		return false;
+	} catch (const std::exception& ex) {
+		D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
+		return false;
+	} catch (...) {
+		D_LOG_ERROR("Failed to open manual due to unknown error.", "");
+		return false;
+	}
 }
 #endif
 
 std::shared_ptr<shader_factory> _source_shader_factory_instance = nullptr;
 
 void streamfx::source::shader::shader_factory::initialize()
-try {
-	if (!_source_shader_factory_instance)
-		_source_shader_factory_instance = std::make_shared<shader_factory>();
-} catch (const std::exception& ex) {
-	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
-} catch (...) {
-	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+{
+	try {
+		if (!_source_shader_factory_instance)
+			_source_shader_factory_instance = std::make_shared<shader_factory>();
+	} catch (const std::exception& ex) {
+		D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
+	} catch (...) {
+		D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+	}
 }
 
 void streamfx::source::shader::shader_factory::finalize()

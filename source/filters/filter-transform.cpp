@@ -636,28 +636,30 @@ void transform_factory::get_defaults2(obs_data_t* settings)
 }
 
 static bool modified_camera_mode(obs_properties_t* pr, obs_property_t*, obs_data_t* d) noexcept
-try {
-	auto mode            = static_cast<transform_mode>(obs_data_get_int(d, ST_KEY_CAMERA_MODE));
-	bool is_camera       = mode != transform_mode::CORNER_PIN;
-	bool is_perspective  = (mode == transform_mode::PERSPECTIVE) && is_camera;
-	bool is_orthographic = (mode == transform_mode::ORTHOGRAPHIC) && is_camera;
+{
+	try {
+		auto mode            = static_cast<transform_mode>(obs_data_get_int(d, ST_KEY_CAMERA_MODE));
+		bool is_camera       = mode != transform_mode::CORNER_PIN;
+		bool is_perspective  = (mode == transform_mode::PERSPECTIVE) && is_camera;
+		bool is_orthographic = (mode == transform_mode::ORTHOGRAPHIC) && is_camera;
 
-	obs_property_set_visible(obs_properties_get(pr, ST_KEY_CAMERA_FIELDOFVIEW), is_perspective);
-	obs_property_set_visible(obs_properties_get(pr, ST_I18N_POSITION), is_camera);
-	obs_property_set_visible(obs_properties_get(pr, ST_KEY_POSITION_Z), is_perspective);
-	obs_property_set_visible(obs_properties_get(pr, ST_I18N_ROTATION), is_camera);
-	obs_property_set_visible(obs_properties_get(pr, ST_I18N_SCALE), is_camera);
-	obs_property_set_visible(obs_properties_get(pr, ST_I18N_SHEAR), is_camera);
-	obs_property_set_visible(obs_properties_get(pr, ST_KEY_ROTATION_ORDER), is_camera);
-	obs_property_set_visible(obs_properties_get(pr, ST_I18N_CORNERS), !is_camera);
+		obs_property_set_visible(obs_properties_get(pr, ST_KEY_CAMERA_FIELDOFVIEW), is_perspective);
+		obs_property_set_visible(obs_properties_get(pr, ST_I18N_POSITION), is_camera);
+		obs_property_set_visible(obs_properties_get(pr, ST_KEY_POSITION_Z), is_perspective);
+		obs_property_set_visible(obs_properties_get(pr, ST_I18N_ROTATION), is_camera);
+		obs_property_set_visible(obs_properties_get(pr, ST_I18N_SCALE), is_camera);
+		obs_property_set_visible(obs_properties_get(pr, ST_I18N_SHEAR), is_camera);
+		obs_property_set_visible(obs_properties_get(pr, ST_KEY_ROTATION_ORDER), is_camera);
+		obs_property_set_visible(obs_properties_get(pr, ST_I18N_CORNERS), !is_camera);
 
-	return true;
-} catch (const std::exception& ex) {
-	DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return true;
-} catch (...) {
-	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return true;
+		return true;
+	} catch (const std::exception& ex) {
+		DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+		return true;
+	} catch (...) {
+		DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+		return true;
+	}
 }
 
 obs_properties_t* transform_factory::get_properties2(transform_instance* data)
@@ -856,28 +858,32 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 
 #ifdef ENABLE_FRONTEND
 bool transform_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
-try {
-	streamfx::open_url(HELP_URL);
-	return false;
-} catch (const std::exception& ex) {
-	D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
-	return false;
-} catch (...) {
-	D_LOG_ERROR("Failed to open manual due to unknown error.", "");
-	return false;
+{
+	try {
+		streamfx::open_url(HELP_URL);
+		return false;
+	} catch (const std::exception& ex) {
+		D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
+		return false;
+	} catch (...) {
+		D_LOG_ERROR("Failed to open manual due to unknown error.", "");
+		return false;
+	}
 }
 #endif
 
 std::shared_ptr<transform_factory> _filter_transform_factory_instance = nullptr;
 
 void transform_factory::initialize()
-try {
-	if (!_filter_transform_factory_instance)
-		_filter_transform_factory_instance = std::make_shared<transform_factory>();
-} catch (const std::exception& ex) {
-	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
-} catch (...) {
-	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+{
+	try {
+		if (!_filter_transform_factory_instance)
+			_filter_transform_factory_instance = std::make_shared<transform_factory>();
+	} catch (const std::exception& ex) {
+		D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
+	} catch (...) {
+		D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+	}
 }
 
 void transform_factory::finalize()

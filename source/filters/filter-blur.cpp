@@ -649,133 +649,135 @@ void blur_factory::get_defaults2(obs_data_t* settings)
 }
 
 bool modified_properties(void*, obs_properties_t* props, obs_property* prop, obs_data_t* settings) noexcept
-try {
-	obs_property_t* p;
-	const char*     propname = obs_property_name(prop);
-	const char*     vtype    = obs_data_get_string(settings, ST_KEY_TYPE);
-	const char*     vsubtype = obs_data_get_string(settings, ST_KEY_SUBTYPE);
+{
+	try {
+		obs_property_t* p;
+		const char*     propname = obs_property_name(prop);
+		const char*     vtype    = obs_data_get_string(settings, ST_KEY_TYPE);
+		const char*     vsubtype = obs_data_get_string(settings, ST_KEY_SUBTYPE);
 
-	// Find new Type
-	auto type_found = list_of_types.find(vtype);
-	if (type_found == list_of_types.end()) {
-		return false;
-	}
-
-	// Find new Subtype
-	auto subtype_found = list_of_subtypes.find(vsubtype);
-	if (subtype_found == list_of_subtypes.end()) {
-		return false;
-	}
-
-	// Blur Type
-	if (strcmp(propname, ST_KEY_TYPE) == 0) {
-		obs_property_t* prop_subtype = obs_properties_get(props, ST_KEY_SUBTYPE);
-
-		/// Disable unsupported items.
-		std::size_t subvalue_idx = 0;
-		for (std::size_t idx = 0, edx = obs_property_list_item_count(prop_subtype); idx < edx; idx++) {
-			const char* subtype  = obs_property_list_item_string(prop_subtype, idx);
-			bool        disabled = false;
-
-			auto subtype_found_idx = list_of_subtypes.find(subtype);
-			if (subtype_found_idx != list_of_subtypes.end()) {
-				disabled = !type_found->second.fn().is_type_supported(subtype_found_idx->second.type);
-			} else {
-				disabled = true;
-			}
-
-			obs_property_list_item_disable(prop_subtype, idx, disabled);
-			if (strcmp(subtype, vsubtype) == 0) {
-				subvalue_idx = idx;
-			}
+		// Find new Type
+		auto type_found = list_of_types.find(vtype);
+		if (type_found == list_of_types.end()) {
+			return false;
 		}
 
-		/// Ensure that there is a valid item selected.
-		if (obs_property_list_item_disabled(prop_subtype, subvalue_idx)) {
+		// Find new Subtype
+		auto subtype_found = list_of_subtypes.find(vsubtype);
+		if (subtype_found == list_of_subtypes.end()) {
+			return false;
+		}
+
+		// Blur Type
+		if (strcmp(propname, ST_KEY_TYPE) == 0) {
+			obs_property_t* prop_subtype = obs_properties_get(props, ST_KEY_SUBTYPE);
+
+			/// Disable unsupported items.
+			std::size_t subvalue_idx = 0;
 			for (std::size_t idx = 0, edx = obs_property_list_item_count(prop_subtype); idx < edx; idx++) {
-				if (!obs_property_list_item_disabled(prop_subtype, idx)) {
-					obs_data_set_string(settings, ST_KEY_SUBTYPE, obs_property_list_item_string(prop_subtype, idx));
+				const char* subtype  = obs_property_list_item_string(prop_subtype, idx);
+				bool        disabled = false;
 
-					// Find new Subtype
-					auto subtype_found2 = list_of_subtypes.find(vsubtype);
-					if (subtype_found2 == list_of_subtypes.end()) {
-						subtype_found = list_of_subtypes.end();
-					} else {
-						subtype_found = subtype_found2;
+				auto subtype_found_idx = list_of_subtypes.find(subtype);
+				if (subtype_found_idx != list_of_subtypes.end()) {
+					disabled = !type_found->second.fn().is_type_supported(subtype_found_idx->second.type);
+				} else {
+					disabled = true;
+				}
+
+				obs_property_list_item_disable(prop_subtype, idx, disabled);
+				if (strcmp(subtype, vsubtype) == 0) {
+					subvalue_idx = idx;
+				}
+			}
+
+			/// Ensure that there is a valid item selected.
+			if (obs_property_list_item_disabled(prop_subtype, subvalue_idx)) {
+				for (std::size_t idx = 0, edx = obs_property_list_item_count(prop_subtype); idx < edx; idx++) {
+					if (!obs_property_list_item_disabled(prop_subtype, idx)) {
+						obs_data_set_string(settings, ST_KEY_SUBTYPE, obs_property_list_item_string(prop_subtype, idx));
+
+						// Find new Subtype
+						auto subtype_found2 = list_of_subtypes.find(vsubtype);
+						if (subtype_found2 == list_of_subtypes.end()) {
+							subtype_found = list_of_subtypes.end();
+						} else {
+							subtype_found = subtype_found2;
+						}
+
+						break;
 					}
-
-					break;
 				}
 			}
 		}
+
+		// Blur Sub-Type
+		{
+			bool has_angle_support = (subtype_found->second.type == ::streamfx::gfx::blur::type::Directional)
+									 || (subtype_found->second.type == ::streamfx::gfx::blur::type::Rotational);
+			bool has_center_support = (subtype_found->second.type == ::streamfx::gfx::blur::type::Rotational)
+									  || (subtype_found->second.type == ::streamfx::gfx::blur::type::Zoom);
+			bool has_stepscale_support = type_found->second.fn().is_step_scale_supported(subtype_found->second.type);
+			bool show_scaling          = obs_data_get_bool(settings, ST_KEY_STEPSCALE) && has_stepscale_support;
+
+			/// Size
+			p = obs_properties_get(props, ST_KEY_SIZE);
+			obs_property_float_set_limits(p, type_found->second.fn().get_min_size(subtype_found->second.type),
+										  type_found->second.fn().get_max_size(subtype_found->second.type),
+										  type_found->second.fn().get_step_size(subtype_found->second.type));
+
+			/// Angle
+			p = obs_properties_get(props, ST_KEY_ANGLE);
+			obs_property_set_visible(p, has_angle_support);
+			obs_property_float_set_limits(p, type_found->second.fn().get_min_angle(subtype_found->second.type),
+										  type_found->second.fn().get_max_angle(subtype_found->second.type),
+										  type_found->second.fn().get_step_angle(subtype_found->second.type));
+
+			/// Center, Radius
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_CENTER_X), has_center_support);
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_CENTER_Y), has_center_support);
+
+			/// Step Scaling
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_STEPSCALE), has_stepscale_support);
+			p = obs_properties_get(props, ST_KEY_STEPSCALE_X);
+			obs_property_set_visible(p, show_scaling);
+			obs_property_float_set_limits(p, type_found->second.fn().get_min_step_scale_x(subtype_found->second.type),
+										  type_found->second.fn().get_max_step_scale_x(subtype_found->second.type),
+										  type_found->second.fn().get_step_step_scale_x(subtype_found->second.type));
+			p = obs_properties_get(props, ST_KEY_STEPSCALE_Y);
+			obs_property_set_visible(p, show_scaling);
+			obs_property_float_set_limits(p, type_found->second.fn().get_min_step_scale_x(subtype_found->second.type),
+										  type_found->second.fn().get_max_step_scale_x(subtype_found->second.type),
+										  type_found->second.fn().get_step_step_scale_x(subtype_found->second.type));
+		}
+
+		{ // Masking
+			using namespace ::streamfx::gfx::blur;
+			bool      show_mask   = obs_data_get_bool(settings, ST_KEY_MASK);
+			mask_type mtype       = static_cast<mask_type>(obs_data_get_int(settings, ST_KEY_MASK_TYPE));
+			bool      show_region = (mtype == mask_type::Region) && show_mask;
+			bool      show_image  = (mtype == mask_type::Image) && show_mask;
+			bool      show_source = (mtype == mask_type::Source) && show_mask;
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_TYPE), show_mask);
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_LEFT), show_region);
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_TOP), show_region);
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_RIGHT), show_region);
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_BOTTOM), show_region);
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_FEATHER), show_region);
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_FEATHER_SHIFT), show_region);
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_INVERT), show_region);
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_IMAGE), show_image);
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_SOURCE), show_source);
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_COLOR), show_image || show_source);
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_ALPHA), show_image || show_source);
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_MULTIPLIER), show_image || show_source);
+		}
+
+		return true;
+	} catch (...) {
+		DLOG_ERROR("Unexpected exception in modified_properties callback.");
+		return false;
 	}
-
-	// Blur Sub-Type
-	{
-		bool has_angle_support = (subtype_found->second.type == ::streamfx::gfx::blur::type::Directional)
-								 || (subtype_found->second.type == ::streamfx::gfx::blur::type::Rotational);
-		bool has_center_support = (subtype_found->second.type == ::streamfx::gfx::blur::type::Rotational)
-								  || (subtype_found->second.type == ::streamfx::gfx::blur::type::Zoom);
-		bool has_stepscale_support = type_found->second.fn().is_step_scale_supported(subtype_found->second.type);
-		bool show_scaling          = obs_data_get_bool(settings, ST_KEY_STEPSCALE) && has_stepscale_support;
-
-		/// Size
-		p = obs_properties_get(props, ST_KEY_SIZE);
-		obs_property_float_set_limits(p, type_found->second.fn().get_min_size(subtype_found->second.type),
-									  type_found->second.fn().get_max_size(subtype_found->second.type),
-									  type_found->second.fn().get_step_size(subtype_found->second.type));
-
-		/// Angle
-		p = obs_properties_get(props, ST_KEY_ANGLE);
-		obs_property_set_visible(p, has_angle_support);
-		obs_property_float_set_limits(p, type_found->second.fn().get_min_angle(subtype_found->second.type),
-									  type_found->second.fn().get_max_angle(subtype_found->second.type),
-									  type_found->second.fn().get_step_angle(subtype_found->second.type));
-
-		/// Center, Radius
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_CENTER_X), has_center_support);
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_CENTER_Y), has_center_support);
-
-		/// Step Scaling
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_STEPSCALE), has_stepscale_support);
-		p = obs_properties_get(props, ST_KEY_STEPSCALE_X);
-		obs_property_set_visible(p, show_scaling);
-		obs_property_float_set_limits(p, type_found->second.fn().get_min_step_scale_x(subtype_found->second.type),
-									  type_found->second.fn().get_max_step_scale_x(subtype_found->second.type),
-									  type_found->second.fn().get_step_step_scale_x(subtype_found->second.type));
-		p = obs_properties_get(props, ST_KEY_STEPSCALE_Y);
-		obs_property_set_visible(p, show_scaling);
-		obs_property_float_set_limits(p, type_found->second.fn().get_min_step_scale_x(subtype_found->second.type),
-									  type_found->second.fn().get_max_step_scale_x(subtype_found->second.type),
-									  type_found->second.fn().get_step_step_scale_x(subtype_found->second.type));
-	}
-
-	{ // Masking
-		using namespace ::streamfx::gfx::blur;
-		bool      show_mask   = obs_data_get_bool(settings, ST_KEY_MASK);
-		mask_type mtype       = static_cast<mask_type>(obs_data_get_int(settings, ST_KEY_MASK_TYPE));
-		bool      show_region = (mtype == mask_type::Region) && show_mask;
-		bool      show_image  = (mtype == mask_type::Image) && show_mask;
-		bool      show_source = (mtype == mask_type::Source) && show_mask;
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_TYPE), show_mask);
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_LEFT), show_region);
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_TOP), show_region);
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_RIGHT), show_region);
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_BOTTOM), show_region);
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_FEATHER), show_region);
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_FEATHER_SHIFT), show_region);
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_REGION_INVERT), show_region);
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_IMAGE), show_image);
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_SOURCE), show_source);
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_COLOR), show_image || show_source);
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_ALPHA), show_image || show_source);
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_MASK_MULTIPLIER), show_image || show_source);
-	}
-
-	return true;
-} catch (...) {
-	DLOG_ERROR("Unexpected exception in modified_properties callback.");
-	return false;
 }
 
 obs_properties_t* blur_factory::get_properties2(blur_instance* data)
@@ -896,28 +898,32 @@ std::string blur_factory::translate_string(const char* format, ...)
 
 #ifdef ENABLE_FRONTEND
 bool blur_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
-try {
-	streamfx::open_url(HELP_URL);
-	return false;
-} catch (const std::exception& ex) {
-	D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
-	return false;
-} catch (...) {
-	D_LOG_ERROR("Failed to open manual due to unknown error.", "");
-	return false;
+{
+	try {
+		streamfx::open_url(HELP_URL);
+		return false;
+	} catch (const std::exception& ex) {
+		D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
+		return false;
+	} catch (...) {
+		D_LOG_ERROR("Failed to open manual due to unknown error.", "");
+		return false;
+	}
 }
 #endif
 
 std::shared_ptr<blur_factory> _filter_blur_factory_instance = nullptr;
 
 void streamfx::filter::blur::blur_factory::initialize()
-try {
-	if (!_filter_blur_factory_instance)
-		_filter_blur_factory_instance = std::make_shared<blur_factory>();
-} catch (const std::exception& ex) {
-	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
-} catch (...) {
-	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+{
+	try {
+		if (!_filter_blur_factory_instance)
+			_filter_blur_factory_instance = std::make_shared<blur_factory>();
+	} catch (const std::exception& ex) {
+		D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
+	} catch (...) {
+		D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+	}
 }
 
 void streamfx::filter::blur::blur_factory::finalize()
