@@ -56,7 +56,5 @@ namespace streamfx::encoder::ffmpeg::handler {
 		public /*instance*/:
 		void override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec,
 								  AVCodecContext* context) override;
-
-		void process_avpacket(AVPacket& packet, const AVCodec* codec, AVCodecContext* context) override;
 	};
 } // namespace streamfx::encoder::ffmpeg::handler
