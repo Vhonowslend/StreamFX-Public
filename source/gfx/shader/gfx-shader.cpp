@@ -65,27 +65,29 @@ streamfx::gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
 streamfx::gfx::shader::shader::~shader() = default;
 
 bool streamfx::gfx::shader::shader::is_shader_different(const std::filesystem::path& file)
-try {
-	if (std::filesystem::exists(file)) {
-		// Check if the file name differs.
-		if (file != _shader_file)
-			return true;
+{
+	try {
+		if (std::filesystem::exists(file)) {
+			// Check if the file name differs.
+			if (file != _shader_file)
+				return true;
+		}
+
+		if (std::filesystem::exists(_shader_file)) {
+			// Is the file write time different?
+			if (std::filesystem::last_write_time(_shader_file) != _shader_file_mt)
+				return true;
+
+			// Is the file size different?
+			if (std::filesystem::file_size(_shader_file) != _shader_file_sz)
+				return true;
+		}
+
+		return false;
+	} catch (const std::exception& ex) {
+		DLOG_ERROR("Loading shader '%s' failed with error: %s", file.c_str(), ex.what());
+		return false;
 	}
-
-	if (std::filesystem::exists(_shader_file)) {
-		// Is the file write time different?
-		if (std::filesystem::last_write_time(_shader_file) != _shader_file_mt)
-			return true;
-
-		// Is the file size different?
-		if (std::filesystem::file_size(_shader_file) != _shader_file_sz)
-			return true;
-	}
-
-	return false;
-} catch (const std::exception& ex) {
-	DLOG_ERROR("Loading shader '%s' failed with error: %s", file.c_str(), ex.what());
-	return false;
 }
 
 bool streamfx::gfx::shader::shader::is_technique_different(std::string_view tech)
@@ -99,83 +101,85 @@ bool streamfx::gfx::shader::shader::is_technique_different(std::string_view tech
 
 bool streamfx::gfx::shader::shader::load_shader(const std::filesystem::path& file, std::string_view tech,
 												bool& shader_dirty, bool& param_dirty)
-try {
-	if (!std::filesystem::exists(file))
-		return false;
+{
+	try {
+		if (!std::filesystem::exists(file))
+			return false;
 
-	shader_dirty = is_shader_different(file);
-	param_dirty  = is_technique_different(tech) || shader_dirty;
+		shader_dirty = is_shader_different(file);
+		param_dirty  = is_technique_different(tech) || shader_dirty;
 
-	// Update Shader
-	if (shader_dirty) {
-		_shader           = streamfx::obs::gs::effect(file);
-		_shader_file_mt   = std::filesystem::last_write_time(file);
-		_shader_file_sz   = std::filesystem::file_size(file);
-		_shader_file      = file;
-		_shader_file_tick = 0;
-	}
+		// Update Shader
+		if (shader_dirty) {
+			_shader           = streamfx::obs::gs::effect(file);
+			_shader_file_mt   = std::filesystem::last_write_time(file);
+			_shader_file_sz   = std::filesystem::file_size(file);
+			_shader_file      = file;
+			_shader_file_tick = 0;
+		}
 
-	// Update Params
-	if (param_dirty) {
-		auto settings =
-			std::shared_ptr<obs_data_t>(obs_source_get_settings(_self), [](obs_data_t* p) { obs_data_release(p); });
+		// Update Params
+		if (param_dirty) {
+			auto settings =
+				std::shared_ptr<obs_data_t>(obs_source_get_settings(_self), [](obs_data_t* p) { obs_data_release(p); });
 
-		bool have_valid_tech = false;
-		for (std::size_t idx = 0; idx < _shader.count_techniques(); idx++) {
-			if (_shader.get_technique(idx).name() == tech) {
-				have_valid_tech = true;
-				break;
+			bool have_valid_tech = false;
+			for (std::size_t idx = 0; idx < _shader.count_techniques(); idx++) {
+				if (_shader.get_technique(idx).name() == tech) {
+					have_valid_tech = true;
+					break;
+				}
+			}
+			if (have_valid_tech) {
+				_shader_tech = tech;
+			} else {
+				_shader_tech = _shader.get_technique(0).name();
+
+				// Update source data.
+				obs_data_set_string(settings.get(), ST_KEY_SHADER_TECHNIQUE, _shader_tech.c_str());
+			}
+
+			// Clear the shader parameters map and rebuild.
+			_shader_params.clear();
+			auto etech = _shader.get_technique(_shader_tech);
+			for (std::size_t idx = 0; idx < etech.count_passes(); idx++) {
+				auto pass         = etech.get_pass(idx);
+				auto fetch_params = [&](std::size_t                                                     count,
+										std::function<streamfx::obs::gs::effect_parameter(std::size_t)> get_func) {
+					for (std::size_t vidx = 0; vidx < count; vidx++) {
+						auto el = get_func(vidx);
+						if (!el)
+							continue;
+
+						auto el_name = el.get_name();
+						auto fnd     = _shader_params.find(el_name);
+						if (fnd != _shader_params.end())
+							continue;
+
+						auto param = streamfx::gfx::shader::parameter::make_parameter(this, el, ST_KEY_PARAMETERS);
+
+						if (param) {
+							_shader_params.insert_or_assign(el_name, param);
+							param->defaults(settings.get());
+							param->update(settings.get());
+						}
+					}
+				};
+
+				auto gvp = [&](std::size_t idx) { return pass.get_vertex_parameter(idx); };
+				fetch_params(pass.count_vertex_parameters(), gvp);
+				auto gpp = [&](std::size_t idx) { return pass.get_pixel_parameter(idx); };
+				fetch_params(pass.count_pixel_parameters(), gpp);
 			}
 		}
-		if (have_valid_tech) {
-			_shader_tech = tech;
-		} else {
-			_shader_tech = _shader.get_technique(0).name();
 
-			// Update source data.
-			obs_data_set_string(settings.get(), ST_KEY_SHADER_TECHNIQUE, _shader_tech.c_str());
-		}
-
-		// Clear the shader parameters map and rebuild.
-		_shader_params.clear();
-		auto etech = _shader.get_technique(_shader_tech);
-		for (std::size_t idx = 0; idx < etech.count_passes(); idx++) {
-			auto pass         = etech.get_pass(idx);
-			auto fetch_params = [&](std::size_t                                                     count,
-									std::function<streamfx::obs::gs::effect_parameter(std::size_t)> get_func) {
-				for (std::size_t vidx = 0; vidx < count; vidx++) {
-					auto el = get_func(vidx);
-					if (!el)
-						continue;
-
-					auto el_name = el.get_name();
-					auto fnd     = _shader_params.find(el_name);
-					if (fnd != _shader_params.end())
-						continue;
-
-					auto param = streamfx::gfx::shader::parameter::make_parameter(this, el, ST_KEY_PARAMETERS);
-
-					if (param) {
-						_shader_params.insert_or_assign(el_name, param);
-						param->defaults(settings.get());
-						param->update(settings.get());
-					}
-				}
-			};
-
-			auto gvp = [&](std::size_t idx) { return pass.get_vertex_parameter(idx); };
-			fetch_params(pass.count_vertex_parameters(), gvp);
-			auto gpp = [&](std::size_t idx) { return pass.get_pixel_parameter(idx); };
-			fetch_params(pass.count_pixel_parameters(), gpp);
-		}
+		return true;
+	} catch (const std::exception& ex) {
+		DLOG_ERROR("Loading shader '%s' failed with error: %s", file.c_str(), ex.what());
+		return false;
+	} catch (...) {
+		return false;
 	}
-
-	return true;
-} catch (const std::exception& ex) {
-	DLOG_ERROR("Loading shader '%s' failed with error: %s", file.c_str(), ex.what());
-	return false;
-} catch (...) {
-	return false;
 }
 
 void streamfx::gfx::shader::shader::defaults(obs_data_t* data)

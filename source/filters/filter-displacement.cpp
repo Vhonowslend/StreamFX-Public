@@ -203,13 +203,15 @@ obs_properties_t* displacement_factory::get_properties2(displacement_instance* d
 std::shared_ptr<displacement_factory> _filter_displacement_factory_instance = nullptr;
 
 void streamfx::filter::displacement::displacement_factory::initialize()
-try {
-	if (!_filter_displacement_factory_instance)
-		_filter_displacement_factory_instance = std::make_shared<displacement_factory>();
-} catch (const std::exception& ex) {
-	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
-} catch (...) {
-	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+{
+	try {
+		if (!_filter_displacement_factory_instance)
+			_filter_displacement_factory_instance = std::make_shared<displacement_factory>();
+	} catch (const std::exception& ex) {
+		D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
+	} catch (...) {
+		D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+	}
 }
 
 void streamfx::filter::displacement::displacement_factory::finalize()

@@ -1125,14 +1125,16 @@ void autoframing_factory::get_defaults2(obs_data_t* data)
 }
 
 static bool modified_provider(obs_properties_t* props, obs_property_t*, obs_data_t* settings) noexcept
-try {
-	return true;
-} catch (const std::exception& ex) {
-	DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return false;
-} catch (...) {
-	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return false;
+{
+	try {
+		return true;
+	} catch (const std::exception& ex) {
+		DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+		return false;
+	} catch (...) {
+		DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+		return false;
+	}
 }
 
 obs_properties_t* autoframing_factory::get_properties2(autoframing_instance* data)
@@ -1315,13 +1317,15 @@ tracking_provider streamfx::filter::autoframing::autoframing_factory::find_ideal
 std::shared_ptr<autoframing_factory> _filter_autoframing_factory_instance = nullptr;
 
 void autoframing_factory::initialize()
-try {
-	if (!_filter_autoframing_factory_instance)
-		_filter_autoframing_factory_instance = std::make_shared<autoframing_factory>();
-} catch (const std::exception& ex) {
-	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
-} catch (...) {
-	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+{
+	try {
+		if (!_filter_autoframing_factory_instance)
+			_filter_autoframing_factory_instance = std::make_shared<autoframing_factory>();
+	} catch (const std::exception& ex) {
+		D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
+	} catch (...) {
+		D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+	}
 }
 
 void autoframing_factory::finalize()

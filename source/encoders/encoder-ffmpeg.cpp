@@ -129,7 +129,7 @@ ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* self, bool
 		throw std::runtime_error("Failed to create encoder context.");
 	}
 
-	// Create 8MB of precached Packet data for use later on.
+	// Allocate a small packet for later use.
 	av_init_packet(&_packet);
 	av_new_packet(&_packet, 8 * 1024 * 1024); // 8 MB precached Packet size.
 
@@ -1051,17 +1051,19 @@ void ffmpeg_factory::migrate(obs_data_t* data, uint64_t version)
 }
 
 static bool modified_keyframes(obs_properties_t* props, obs_property_t*, obs_data_t* settings) noexcept
-try {
-	bool is_seconds = obs_data_get_int(settings, ST_KEY_KEYFRAMES_INTERVALTYPE) == 0;
-	obs_property_set_visible(obs_properties_get(props, ST_KEY_KEYFRAMES_INTERVAL_FRAMES), !is_seconds);
-	obs_property_set_visible(obs_properties_get(props, ST_KEY_KEYFRAMES_INTERVAL_SECONDS), is_seconds);
-	return true;
-} catch (const std::exception& ex) {
-	DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return false;
-} catch (...) {
-	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return false;
+{
+	try {
+		bool is_seconds = obs_data_get_int(settings, ST_KEY_KEYFRAMES_INTERVALTYPE) == 0;
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_KEYFRAMES_INTERVAL_FRAMES), !is_seconds);
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_KEYFRAMES_INTERVAL_SECONDS), is_seconds);
+		return true;
+	} catch (const std::exception& ex) {
+		DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+		return false;
+	} catch (...) {
+		DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+		return false;
+	}
 }
 
 obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)

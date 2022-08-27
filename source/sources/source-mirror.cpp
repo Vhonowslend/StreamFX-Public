@@ -184,29 +184,31 @@ void mirror_instance::enum_all_sources(obs_source_enum_proc_t cb, void* ptr)
 }
 
 void mirror_instance::acquire(std::string source_name)
-try {
-	release();
+{
+	try {
+		release();
 
-	// Find source by name if possible.
-	decltype(_source) source{source_name};
-	if ((!source) || (source == _self)) { // If we failed, just exit early.
-		return;
+		// Find source by name if possible.
+		decltype(_source) source{source_name};
+		if ((!source) || (source == _self)) { // If we failed, just exit early.
+			return;
+		}
+
+		// Everything went well, store.
+		_source_child       = std::make_shared<::streamfx::obs::source_active_child>(_self, source);
+		_source             = std::move(source);
+		_source_size.first  = obs_source_get_width(_source);
+		_source_size.second = obs_source_get_height(_source);
+
+		// Listen to any audio the source spews out.
+		if (_audio_enabled) {
+			_signal_audio = std::make_shared<obs::audio_signal_handler>(_source);
+			_signal_audio->event.add(std::bind(&mirror_instance::on_audio, this, std::placeholders::_1,
+											   std::placeholders::_2, std::placeholders::_3));
+		}
+	} catch (...) {
+		release();
 	}
-
-	// Everything went well, store.
-	_source_child       = std::make_shared<::streamfx::obs::source_active_child>(_self, source);
-	_source             = std::move(source);
-	_source_size.first  = obs_source_get_width(_source);
-	_source_size.second = obs_source_get_height(_source);
-
-	// Listen to any audio the source spews out.
-	if (_audio_enabled) {
-		_signal_audio = std::make_shared<obs::audio_signal_handler>(_source);
-		_signal_audio->event.add(std::bind(&mirror_instance::on_audio, this, std::placeholders::_1,
-										   std::placeholders::_2, std::placeholders::_3));
-	}
-} catch (...) {
-	release();
 }
 
 void mirror_instance::release()
@@ -306,15 +308,17 @@ void mirror_factory::get_defaults2(obs_data_t* data)
 }
 
 static bool modified_properties(obs_properties_t* pr, obs_property_t* p, obs_data_t* data) noexcept
-try {
-	if (obs_properties_get(pr, ST_KEY_SOURCE_AUDIO) == p) {
-		bool show = obs_data_get_bool(data, ST_KEY_SOURCE_AUDIO);
-		obs_property_set_visible(obs_properties_get(pr, ST_KEY_SOURCE_AUDIO_LAYOUT), show);
-		return true;
+{
+	try {
+		if (obs_properties_get(pr, ST_KEY_SOURCE_AUDIO) == p) {
+			bool show = obs_data_get_bool(data, ST_KEY_SOURCE_AUDIO);
+			obs_property_set_visible(obs_properties_get(pr, ST_KEY_SOURCE_AUDIO_LAYOUT), show);
+			return true;
+		}
+		return false;
+	} catch (...) {
+		return false;
 	}
-	return false;
-} catch (...) {
-	return false;
 }
 
 obs_properties_t* mirror_factory::get_properties2(mirror_instance* data)
@@ -384,28 +388,32 @@ obs_properties_t* mirror_factory::get_properties2(mirror_instance* data)
 
 #ifdef ENABLE_FRONTEND
 bool mirror_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
-try {
-	streamfx::open_url(HELP_URL);
-	return false;
-} catch (const std::exception& ex) {
-	D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
-	return false;
-} catch (...) {
-	D_LOG_ERROR("Failed to open manual due to unknown error.", "");
-	return false;
+{
+	try {
+		streamfx::open_url(HELP_URL);
+		return false;
+	} catch (const std::exception& ex) {
+		D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
+		return false;
+	} catch (...) {
+		D_LOG_ERROR("Failed to open manual due to unknown error.", "");
+		return false;
+	}
 }
 #endif
 
 std::shared_ptr<mirror_factory> _source_mirror_factory_instance;
 
 void streamfx::source::mirror::mirror_factory::initialize()
-try {
-	if (!_source_mirror_factory_instance)
-		_source_mirror_factory_instance = std::make_shared<mirror_factory>();
-} catch (const std::exception& ex) {
-	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
-} catch (...) {
-	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+{
+	try {
+		if (!_source_mirror_factory_instance)
+			_source_mirror_factory_instance = std::make_shared<mirror_factory>();
+	} catch (const std::exception& ex) {
+		D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
+	} catch (...) {
+		D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+	}
 }
 
 void streamfx::source::mirror::mirror_factory::finalize()

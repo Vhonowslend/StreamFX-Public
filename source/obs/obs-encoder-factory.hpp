@@ -174,207 +174,237 @@ namespace streamfx::obs {
 
 		private /* Factory */:
 		static const char* _get_name(void* type_data) noexcept
-		try {
-			if (type_data)
-				return reinterpret_cast<factory_t*>(type_data)->get_name();
-			return nullptr;
-		} catch (const std::exception& ex) {
-			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-			return nullptr;
-		} catch (...) {
-			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-			return nullptr;
+		{
+			try {
+				if (type_data)
+					return reinterpret_cast<factory_t*>(type_data)->get_name();
+				return nullptr;
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+				return nullptr;
+			} catch (...) {
+				DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+				return nullptr;
+			}
 		}
 
 		static void* _create(obs_data_t* settings, obs_encoder_t* encoder) noexcept
-		try {
-			auto* fac = reinterpret_cast<factory_t*>(obs_encoder_get_type_data(encoder));
-			return fac->create(settings, encoder, false);
-		} catch (const std::exception& ex) {
-			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-			return nullptr;
-		} catch (...) {
-			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-			return nullptr;
+		{
+			try {
+				auto* fac = reinterpret_cast<factory_t*>(obs_encoder_get_type_data(encoder));
+				return fac->create(settings, encoder, false);
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+				return nullptr;
+			} catch (...) {
+				DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+				return nullptr;
+			}
 		}
 
 		static void* _create_hw(obs_data_t* settings, obs_encoder_t* encoder) noexcept
-		try {
-			auto* fac = reinterpret_cast<factory_t*>(obs_encoder_get_type_data(encoder));
+		{
 			try {
-				return fac->create(settings, encoder, true);
+				auto* fac = reinterpret_cast<factory_t*>(obs_encoder_get_type_data(encoder));
+				try {
+					return fac->create(settings, encoder, true);
+				} catch (...) {
+					return obs_encoder_create_rerouted(encoder, fac->_info_fallback.id);
+				}
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+				return nullptr;
 			} catch (...) {
-				return obs_encoder_create_rerouted(encoder, fac->_info_fallback.id);
+				DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+				return nullptr;
 			}
-		} catch (const std::exception& ex) {
-			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-			return nullptr;
-		} catch (...) {
-			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-			return nullptr;
 		}
 
 		static void _get_defaults2(obs_data_t* settings, void* type_data) noexcept
-		try {
-			if (type_data)
-				reinterpret_cast<factory_t*>(type_data)->get_defaults2(settings);
-		} catch (const std::exception& ex) {
-			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-		} catch (...) {
-			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+		{
+			try {
+				if (type_data)
+					reinterpret_cast<factory_t*>(type_data)->get_defaults2(settings);
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			} catch (...) {
+				DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			}
 		}
 
 		static bool _properties_migrate_settings(void* priv, obs_properties_t*, obs_property_t* p,
 												 obs_data_t* settings) noexcept
-		try {
-			obs_property_set_visible(p, false);
-			reinterpret_cast<factory_t*>(priv)->_migrate(settings, nullptr);
-			return true;
-		} catch (const std::exception& ex) {
-			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-			return false;
-		} catch (...) {
-			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-			return false;
+		{
+			try {
+				obs_property_set_visible(p, false);
+				reinterpret_cast<factory_t*>(priv)->_migrate(settings, nullptr);
+				return true;
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+				return false;
+			} catch (...) {
+				DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+				return false;
+			}
 		}
 
 		static obs_properties_t* _get_properties2(void* data, void* type_data) noexcept
-		try {
-			if (type_data) {
-				auto props =
-					reinterpret_cast<factory_t*>(type_data)->get_properties2(reinterpret_cast<instance_t*>(data));
+		{
+			try {
+				if (type_data) {
+					auto props =
+						reinterpret_cast<factory_t*>(type_data)->get_properties2(reinterpret_cast<instance_t*>(data));
 
-				{ // Support for permanent settings migration.
-					auto p = obs_properties_add_int(
-						props, S_VERSION, "If you can see this, something went horribly wrong.",
-						std::numeric_limits<int32_t>::lowest(), std::numeric_limits<int32_t>::max(), 1);
-					obs_property_set_modified_callback2(p, _properties_migrate_settings, type_data);
+					{ // Support for permanent settings migration.
+						auto p = obs_properties_add_int(
+							props, S_VERSION, "If you can see this, something went horribly wrong.",
+							std::numeric_limits<int32_t>::lowest(), std::numeric_limits<int32_t>::max(), 1);
+						obs_property_set_modified_callback2(p, _properties_migrate_settings, type_data);
+					}
+
+					return props;
 				}
-
-				return props;
+				return nullptr;
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+				return nullptr;
+			} catch (...) {
+				DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+				return nullptr;
 			}
-			return nullptr;
-		} catch (const std::exception& ex) {
-			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-			return nullptr;
-		} catch (...) {
-			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-			return nullptr;
 		}
 
 		private /* Instance */:
 		static void _destroy(void* data) noexcept
-		try {
-			if (data)
-				delete reinterpret_cast<instance_t*>(data);
-		} catch (const std::exception& ex) {
-			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-		} catch (...) {
-			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+		{
+			try {
+				if (data)
+					delete reinterpret_cast<instance_t*>(data);
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			} catch (...) {
+				DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			}
 		}
 
 		static bool _update(void* data, obs_data_t* settings) noexcept
-		try {
-			auto priv = reinterpret_cast<encoder_instance*>(data);
-			if (priv) {
-				reinterpret_cast<factory_t*>(obs_encoder_get_type_data(priv->get()))->_migrate(settings, priv);
-				return priv->update(settings);
+		{
+			try {
+				auto priv = reinterpret_cast<encoder_instance*>(data);
+				if (priv) {
+					reinterpret_cast<factory_t*>(obs_encoder_get_type_data(priv->get()))->_migrate(settings, priv);
+					return priv->update(settings);
+				}
+				return false;
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+				return false;
+			} catch (...) {
+				DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+				return false;
 			}
-			return false;
-		} catch (const std::exception& ex) {
-			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-			return false;
-		} catch (...) {
-			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-			return false;
 		}
 
 		static bool _encode(void* data, struct encoder_frame* frame, struct encoder_packet* packet,
 							bool* received_packet) noexcept
-		try {
-			if (data)
-				return reinterpret_cast<encoder_instance*>(data)->encode_video(frame, packet, received_packet);
-			return false;
-		} catch (const std::exception& ex) {
-			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-			return false;
-		} catch (...) {
-			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-			return false;
+		{
+			try {
+				if (data)
+					return reinterpret_cast<encoder_instance*>(data)->encode_video(frame, packet, received_packet);
+				return false;
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+				return false;
+			} catch (...) {
+				DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+				return false;
+			}
 		}
 
 		static bool _encode_texture(void* data, uint32_t handle, int64_t pts, uint64_t lock_key, uint64_t* next_key,
 									struct encoder_packet* packet, bool* received_packet) noexcept
-		try {
-			if (data)
-				return reinterpret_cast<encoder_instance*>(data)->encode_video(handle, pts, lock_key, next_key, packet,
-																			   received_packet);
-			return false;
-		} catch (const std::exception& ex) {
-			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-			return false;
-		} catch (...) {
-			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-			return false;
+		{
+			try {
+				if (data)
+					return reinterpret_cast<encoder_instance*>(data)->encode_video(handle, pts, lock_key, next_key,
+																				   packet, received_packet);
+				return false;
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+				return false;
+			} catch (...) {
+				DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+				return false;
+			}
 		}
 
 		static size_t _get_frame_size(void* data) noexcept
-		try {
-			if (data)
-				return reinterpret_cast<encoder_instance*>(data)->get_frame_size();
-			return 0;
-		} catch (const std::exception& ex) {
-			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-			return 0;
-		} catch (...) {
-			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-			return 0;
+		{
+			try {
+				if (data)
+					return reinterpret_cast<encoder_instance*>(data)->get_frame_size();
+				return 0;
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+				return 0;
+			} catch (...) {
+				DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+				return 0;
+			}
 		}
 
 		static bool _get_extra_data(void* data, uint8_t** extra_data, size_t* size) noexcept
-		try {
-			if (data)
-				return reinterpret_cast<encoder_instance*>(data)->get_extra_data(extra_data, size);
-			return false;
-		} catch (const std::exception& ex) {
-			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-			return false;
-		} catch (...) {
-			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-			return false;
+		{
+			try {
+				if (data)
+					return reinterpret_cast<encoder_instance*>(data)->get_extra_data(extra_data, size);
+				return false;
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+				return false;
+			} catch (...) {
+				DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+				return false;
+			}
 		}
 
 		static bool _get_sei_data(void* data, uint8_t** sei_data, size_t* size) noexcept
-		try {
-			if (data)
-				return reinterpret_cast<encoder_instance*>(data)->get_sei_data(sei_data, size);
-			return false;
-		} catch (const std::exception& ex) {
-			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-			return false;
-		} catch (...) {
-			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-			return false;
+		{
+			try {
+				if (data)
+					return reinterpret_cast<encoder_instance*>(data)->get_sei_data(sei_data, size);
+				return false;
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+				return false;
+			} catch (...) {
+				DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+				return false;
+			}
 		}
 
 		static void _get_audio_info(void* data, struct audio_convert_info* info) noexcept
-		try {
-			if (data)
-				reinterpret_cast<encoder_instance*>(data)->get_audio_info(info);
-		} catch (const std::exception& ex) {
-			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-		} catch (...) {
-			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+		{
+			try {
+				if (data)
+					reinterpret_cast<encoder_instance*>(data)->get_audio_info(info);
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			} catch (...) {
+				DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			}
 		}
 
 		static void _get_video_info(void* data, struct video_scale_info* info) noexcept
-		try {
-			if (data)
-				reinterpret_cast<encoder_instance*>(data)->get_video_info(info);
-		} catch (const std::exception& ex) {
-			DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-		} catch (...) {
-			DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+		{
+			try {
+				if (data)
+					reinterpret_cast<encoder_instance*>(data)->get_video_info(info);
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+			} catch (...) {
+				DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+			}
 		}
 
 		public:

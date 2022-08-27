@@ -97,238 +97,242 @@ static std::shared_ptr<streamfx::gfx::opengl>            _streamfx_gfx_opengl;
 static std::shared_ptr<streamfx::obs::source_tracker>    _source_tracker;
 
 MODULE_EXPORT bool obs_module_load(void)
-try {
-	DLOG_INFO("Loading Version %s", STREAMFX_VERSION_STRING);
+{
+	try {
+		DLOG_INFO("Loading Version %s", STREAMFX_VERSION_STRING);
 
-	// Initialize global configuration.
-	streamfx::configuration::initialize();
+		// Initialize global configuration.
+		streamfx::configuration::initialize();
 
-	// Initialize global Thread Pool.
-	_threadpool = std::make_shared<streamfx::util::threadpool>();
+		// Initialize global Thread Pool.
+		_threadpool = std::make_shared<streamfx::util::threadpool>();
 
-	// Initialize Source Tracker
-	_source_tracker = streamfx::obs::source_tracker::get();
+		// Initialize Source Tracker
+		_source_tracker = streamfx::obs::source_tracker::get();
 
-	// Initialize GLAD (OpenGL)
-	{
-		streamfx::obs::gs::context gctx{};
-		_streamfx_gfx_opengl = streamfx::gfx::opengl::get();
-	}
+		// Initialize GLAD (OpenGL)
+		{
+			streamfx::obs::gs::context gctx{};
+			_streamfx_gfx_opengl = streamfx::gfx::opengl::get();
+		}
 
 #ifdef ENABLE_NVIDIA_CUDA
-	// Initialize CUDA if features requested it.
-	std::shared_ptr<::streamfx::nvidia::cuda::obs> cuda;
-	try {
-		cuda = ::streamfx::nvidia::cuda::obs::get();
-	} catch (...) {
-		// If CUDA failed to load, it is considered safe to ignore.
-	}
+		// Initialize CUDA if features requested it.
+		std::shared_ptr<::streamfx::nvidia::cuda::obs> cuda;
+		try {
+			cuda = ::streamfx::nvidia::cuda::obs::get();
+		} catch (...) {
+			// If CUDA failed to load, it is considered safe to ignore.
+		}
 #endif
 
-	// GS Stuff
-	{
-		_gs_fstri_vb = std::make_shared<streamfx::obs::gs::vertex_buffer>(uint32_t(3), uint8_t(1));
+		// GS Stuff
 		{
-			auto vtx = _gs_fstri_vb->at(0);
-			vec3_set(vtx.position, 0, 0, 0);
-			vec4_set(vtx.uv[0], 0, 0, 0, 0);
+			_gs_fstri_vb = std::make_shared<streamfx::obs::gs::vertex_buffer>(uint32_t(3), uint8_t(1));
+			{
+				auto vtx = _gs_fstri_vb->at(0);
+				vec3_set(vtx.position, 0, 0, 0);
+				vec4_set(vtx.uv[0], 0, 0, 0, 0);
+			}
+			{
+				auto vtx = _gs_fstri_vb->at(1);
+				vec3_set(vtx.position, 2, 0, 0);
+				vec4_set(vtx.uv[0], 2, 0, 0, 0);
+			}
+			{
+				auto vtx = _gs_fstri_vb->at(2);
+				vec3_set(vtx.position, 0, 2, 0);
+				vec4_set(vtx.uv[0], 0, 2, 0, 0);
+			}
+			_gs_fstri_vb->update();
 		}
-		{
-			auto vtx = _gs_fstri_vb->at(1);
-			vec3_set(vtx.position, 2, 0, 0);
-			vec4_set(vtx.uv[0], 2, 0, 0, 0);
-		}
-		{
-			auto vtx = _gs_fstri_vb->at(2);
-			vec3_set(vtx.position, 0, 2, 0);
-			vec4_set(vtx.uv[0], 0, 2, 0, 0);
-		}
-		_gs_fstri_vb->update();
-	}
 
-	// Encoders
-	{
+		// Encoders
+		{
 #ifdef ENABLE_ENCODER_AOM_AV1
-		streamfx::encoder::aom::av1::aom_av1_factory::initialize();
+			streamfx::encoder::aom::av1::aom_av1_factory::initialize();
 #endif
 #ifdef ENABLE_ENCODER_FFMPEG
-		using namespace streamfx::encoder::ffmpeg;
-		ffmpeg_manager::initialize();
+			using namespace streamfx::encoder::ffmpeg;
+			ffmpeg_manager::initialize();
 #endif
-	}
+		}
 
-	// Filters
-	{
+		// Filters
+		{
 #ifdef ENABLE_FILTER_AUTOFRAMING
-		streamfx::filter::autoframing::autoframing_factory::initialize();
+			streamfx::filter::autoframing::autoframing_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_BLUR
-		streamfx::filter::blur::blur_factory::initialize();
+			streamfx::filter::blur::blur_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_COLOR_GRADE
-		streamfx::filter::color_grade::color_grade_factory::initialize();
+			streamfx::filter::color_grade::color_grade_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_DENOISING
-		streamfx::filter::denoising::denoising_factory::initialize();
+			streamfx::filter::denoising::denoising_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_DISPLACEMENT
-		streamfx::filter::displacement::displacement_factory::initialize();
+			streamfx::filter::displacement::displacement_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_DYNAMIC_MASK
-		streamfx::filter::dynamic_mask::dynamic_mask_factory::initialize();
+			streamfx::filter::dynamic_mask::dynamic_mask_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_SDF_EFFECTS
-		streamfx::filter::sdf_effects::sdf_effects_factory::initialize();
+			streamfx::filter::sdf_effects::sdf_effects_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_SHADER
-		streamfx::filter::shader::shader_factory::initialize();
+			streamfx::filter::shader::shader_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_TRANSFORM
-		streamfx::filter::transform::transform_factory::initialize();
+			streamfx::filter::transform::transform_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_UPSCALING
-		streamfx::filter::upscaling::upscaling_factory::initialize();
+			streamfx::filter::upscaling::upscaling_factory::initialize();
 #endif
 #ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN
-		streamfx::filter::virtual_greenscreen::virtual_greenscreen_factory::initialize();
+			streamfx::filter::virtual_greenscreen::virtual_greenscreen_factory::initialize();
 #endif
-	}
+		}
 
-	// Sources
-	{
+		// Sources
+		{
 #ifdef ENABLE_SOURCE_MIRROR
-		streamfx::source::mirror::mirror_factory::initialize();
+			streamfx::source::mirror::mirror_factory::initialize();
 #endif
 #ifdef ENABLE_SOURCE_SHADER
-		streamfx::source::shader::shader_factory::initialize();
+			streamfx::source::shader::shader_factory::initialize();
 #endif
-	}
+		}
 
-	// Transitions
-	{
+		// Transitions
+		{
 #ifdef ENABLE_TRANSITION_SHADER
-		streamfx::transition::shader::shader_factory::initialize();
+			streamfx::transition::shader::shader_factory::initialize();
 #endif
-	}
+		}
 
 // Frontend
 #ifdef ENABLE_FRONTEND
-	streamfx::ui::handler::initialize();
+		streamfx::ui::handler::initialize();
 #endif
 
-	DLOG_INFO("Loaded Version %s", STREAMFX_VERSION_STRING);
-	return true;
-} catch (std::exception const& ex) {
-	DLOG_ERROR("Unexpected exception in function '%s': %s", __FUNCTION_NAME__, ex.what());
-	return false;
-} catch (...) {
-	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return false;
+		DLOG_INFO("Loaded Version %s", STREAMFX_VERSION_STRING);
+		return true;
+	} catch (std::exception const& ex) {
+		DLOG_ERROR("Unexpected exception in function '%s': %s", __FUNCTION_NAME__, ex.what());
+		return false;
+	} catch (...) {
+		DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+		return false;
+	}
 }
 
 MODULE_EXPORT void obs_module_unload(void)
-try {
-	DLOG_INFO("Unloading Version %s", STREAMFX_VERSION_STRING);
+{
+	try {
+		DLOG_INFO("Unloading Version %s", STREAMFX_VERSION_STRING);
 
-	// Frontend
+		// Frontend
 #ifdef ENABLE_FRONTEND
-	streamfx::ui::handler::finalize();
+		streamfx::ui::handler::finalize();
 #endif
 
-	// Transitions
-	{
+		// Transitions
+		{
 #ifdef ENABLE_TRANSITION_SHADER
-		streamfx::transition::shader::shader_factory::finalize();
+			streamfx::transition::shader::shader_factory::finalize();
 #endif
-	}
+		}
 
-	// Sources
-	{
+		// Sources
+		{
 #ifdef ENABLE_SOURCE_MIRROR
-		streamfx::source::mirror::mirror_factory::finalize();
+			streamfx::source::mirror::mirror_factory::finalize();
 #endif
 #ifdef ENABLE_SOURCE_SHADER
-		streamfx::source::shader::shader_factory::finalize();
+			streamfx::source::shader::shader_factory::finalize();
 #endif
-	}
+		}
 
-	// Filters
-	{
+		// Filters
+		{
 #ifdef ENABLE_FILTER_AUTOFRAMING
-		streamfx::filter::autoframing::autoframing_factory::finalize();
+			streamfx::filter::autoframing::autoframing_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_BLUR
-		streamfx::filter::blur::blur_factory::finalize();
+			streamfx::filter::blur::blur_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_COLOR_GRADE
-		streamfx::filter::color_grade::color_grade_factory::finalize();
+			streamfx::filter::color_grade::color_grade_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_DENOISING
-		streamfx::filter::denoising::denoising_factory::finalize();
+			streamfx::filter::denoising::denoising_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_DISPLACEMENT
-		streamfx::filter::displacement::displacement_factory::finalize();
+			streamfx::filter::displacement::displacement_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_DYNAMIC_MASK
-		streamfx::filter::dynamic_mask::dynamic_mask_factory::finalize();
+			streamfx::filter::dynamic_mask::dynamic_mask_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_SDF_EFFECTS
-		streamfx::filter::sdf_effects::sdf_effects_factory::finalize();
+			streamfx::filter::sdf_effects::sdf_effects_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_SHADER
-		streamfx::filter::shader::shader_factory::finalize();
+			streamfx::filter::shader::shader_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_TRANSFORM
-		streamfx::filter::transform::transform_factory::finalize();
+			streamfx::filter::transform::transform_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_UPSCALING
-		streamfx::filter::upscaling::upscaling_factory::finalize();
+			streamfx::filter::upscaling::upscaling_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN
-		streamfx::filter::virtual_greenscreen::virtual_greenscreen_factory::finalize();
+			streamfx::filter::virtual_greenscreen::virtual_greenscreen_factory::finalize();
 #endif
-	}
+		}
 
-	// Encoders
-	{
+		// Encoders
+		{
 #ifdef ENABLE_ENCODER_FFMPEG
-		streamfx::encoder::ffmpeg::ffmpeg_manager::finalize();
+			streamfx::encoder::ffmpeg::ffmpeg_manager::finalize();
 #endif
 #ifdef ENABLE_ENCODER_AOM_AV1
-		streamfx::encoder::aom::av1::aom_av1_factory::finalize();
+			streamfx::encoder::aom::av1::aom_av1_factory::finalize();
 #endif
+		}
+
+		// GS Stuff
+		{
+			_gs_fstri_vb.reset();
+		}
+
+		// Finalize GLAD (OpenGL)
+		{
+			streamfx::obs::gs::context gctx{};
+			_streamfx_gfx_opengl.reset();
+		}
+
+		// Finalize Source Tracker
+		_source_tracker.reset();
+
+		//	// Auto-Updater
+		//#ifdef ENABLE_UPDATER
+		//	_updater.reset();
+		//#endif
+
+		// Finalize Thread Pool
+		_threadpool.reset();
+
+		// Finalize Configuration
+		streamfx::configuration::finalize();
+
+		DLOG_INFO("Unloaded Version %s", STREAMFX_VERSION_STRING);
+	} catch (std::exception const& ex) {
+		DLOG_ERROR("Unexpected exception in function '%s': %s", __FUNCTION_NAME__, ex.what());
+	} catch (...) {
+		DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 	}
-
-	// GS Stuff
-	{
-		_gs_fstri_vb.reset();
-	}
-
-	// Finalize GLAD (OpenGL)
-	{
-		streamfx::obs::gs::context gctx{};
-		_streamfx_gfx_opengl.reset();
-	}
-
-	// Finalize Source Tracker
-	_source_tracker.reset();
-
-	//	// Auto-Updater
-	//#ifdef ENABLE_UPDATER
-	//	_updater.reset();
-	//#endif
-
-	// Finalize Thread Pool
-	_threadpool.reset();
-
-	// Finalize Configuration
-	streamfx::configuration::finalize();
-
-	DLOG_INFO("Unloaded Version %s", STREAMFX_VERSION_STRING);
-} catch (std::exception const& ex) {
-	DLOG_ERROR("Unexpected exception in function '%s': %s", __FUNCTION_NAME__, ex.what());
-} catch (...) {
-	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
 }
 
 std::shared_ptr<streamfx::util::threadpool> streamfx::threadpool()
