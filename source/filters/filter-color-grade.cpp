@@ -882,28 +882,32 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 
 #ifdef ENABLE_FRONTEND
 bool color_grade_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
-try {
-	streamfx::open_url(HELP_URL);
-	return false;
-} catch (const std::exception& ex) {
-	D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
-	return false;
-} catch (...) {
-	D_LOG_ERROR("Failed to open manual due to unknown error.", "");
-	return false;
+{
+	try {
+		streamfx::open_url(HELP_URL);
+		return false;
+	} catch (const std::exception& ex) {
+		D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
+		return false;
+	} catch (...) {
+		D_LOG_ERROR("Failed to open manual due to unknown error.", "");
+		return false;
+	}
 }
 #endif
 
 std::shared_ptr<color_grade_factory> _color_grade_factory_instance = nullptr;
 
 void streamfx::filter::color_grade::color_grade_factory::initialize()
-try {
-	if (!_color_grade_factory_instance)
-		_color_grade_factory_instance = std::make_shared<color_grade_factory>();
-} catch (const std::exception& ex) {
-	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
-} catch (...) {
-	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+{
+	try {
+		if (!_color_grade_factory_instance)
+			_color_grade_factory_instance = std::make_shared<color_grade_factory>();
+	} catch (const std::exception& ex) {
+		D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
+	} catch (...) {
+		D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+	}
 }
 
 void streamfx::filter::color_grade::color_grade_factory::finalize()

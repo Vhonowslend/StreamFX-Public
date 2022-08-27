@@ -226,137 +226,140 @@ streamfx::version_info::operator std::string()
 }
 
 void streamfx::updater::task(streamfx::util::threadpool_data_t)
-try {
-	auto query_fn = [this](std::vector<char>& buffer) {
-		static constexpr std::string_view ST_API_URL =
-			"https://api.github.com/repos/Xaymar/obs-StreamFX/releases?per_page=25&page=1";
+{
+	try {
+		auto query_fn = [this](std::vector<char>& buffer) {
+			static constexpr std::string_view ST_API_URL =
+				"https://api.github.com/repos/Xaymar/obs-StreamFX/releases?per_page=25&page=1";
 
-		streamfx::util::curl curl;
-		size_t               buffer_offset = 0;
+			streamfx::util::curl curl;
+			size_t               buffer_offset = 0;
 
-		// Set headers (User-Agent is needed so Github can contact us!).
-		curl.set_header("User-Agent", "StreamFX Updater v" STREAMFX_VERSION_STRING);
-		curl.set_header("Accept", "application/vnd.github.v3+json");
+			// Set headers (User-Agent is needed so Github can contact us!).
+			curl.set_header("User-Agent", "StreamFX Updater v" STREAMFX_VERSION_STRING);
+			curl.set_header("Accept", "application/vnd.github.v3+json");
 
-		// Set up request.
-		curl.set_option(CURLOPT_HTTPGET, true); // GET
-		curl.set_option(CURLOPT_POST, false);   // Not POST
-		curl.set_option(CURLOPT_URL, ST_API_URL);
-		curl.set_option(CURLOPT_TIMEOUT, 30); // 10s until we fail.
+			// Set up request.
+			curl.set_option(CURLOPT_HTTPGET, true); // GET
+			curl.set_option(CURLOPT_POST, false);   // Not POST
+			curl.set_option(CURLOPT_URL, ST_API_URL);
+			curl.set_option(CURLOPT_TIMEOUT, 30); // 10s until we fail.
 
-		// Callbacks
-		curl.set_write_callback([this, &buffer, &buffer_offset](void* data, size_t s1, size_t s2) {
-			size_t size = s1 * s2;
-			if (buffer.size() < (size + buffer_offset))
-				buffer.resize(buffer_offset + size);
+			// Callbacks
+			curl.set_write_callback([this, &buffer, &buffer_offset](void* data, size_t s1, size_t s2) {
+				size_t size = s1 * s2;
+				if (buffer.size() < (size + buffer_offset))
+					buffer.resize(buffer_offset + size);
 
-			memcpy(buffer.data() + buffer_offset, data, size);
-			buffer_offset += size;
+				memcpy(buffer.data() + buffer_offset, data, size);
+				buffer_offset += size;
 
-			return s1 * s2;
-		});
-		//std::bind(&streamfx::updater::task_write_cb, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
+				return s1 * s2;
+			});
+			//std::bind(&streamfx::updater::task_write_cb, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
 
-		// Clear any unknown data and reserve 64KiB of memory.
-		buffer.clear();
-		buffer.reserve(0xFFFF);
+			// Clear any unknown data and reserve 64KiB of memory.
+			buffer.clear();
+			buffer.reserve(0xFFFF);
 
-		// Finally, execute the request.
-		D_LOG_DEBUG("Querying for latest releases...", "");
-		if (CURLcode res = curl.perform(); res != CURLE_OK) {
-			D_LOG_ERROR("Performing query failed with error: %s", curl_easy_strerror(res));
-			throw std::runtime_error(curl_easy_strerror(res));
-		}
-
-		int32_t status_code = 0;
-		if (CURLcode res = curl.get_info(CURLINFO_HTTP_CODE, status_code); res != CURLE_OK) {
-			D_LOG_ERROR("Retrieving status code failed with error: %s", curl_easy_strerror(res));
-			throw std::runtime_error(curl_easy_strerror(res));
-		}
-		D_LOG_DEBUG("API returned status code %d.", status_code);
-
-		if (status_code != 200) {
-			D_LOG_ERROR("API returned unexpected status code %d.", status_code);
-			throw std::runtime_error("Request failed due to one or more reasons.");
-		}
-	};
-	auto parse_fn = [this](nlohmann::json json) {
-		// Check if it was parsed as an object.
-		if (json.type() != nlohmann::json::value_t::array) {
-			throw std::runtime_error("Invalid response from API.");
-		}
-
-		// Decide on the latest version for all update channels.
-		std::lock_guard<decltype(_lock)> lock(_lock);
-		_updates.clear();
-		for (auto obj : json) {
-			try {
-				auto info = obj.get<streamfx::version_info>();
-
-				switch (info.stage) {
-				case version_stage::STABLE:
-					if (get_update_info(version_stage::STABLE).is_older_than(info)) {
-						_updates.emplace(version_stage::STABLE, info);
-					}
-					[[fallthrough]];
-				case version_stage::CANDIDATE:
-					if (get_update_info(version_stage::CANDIDATE).is_older_than(info)) {
-						_updates.emplace(version_stage::CANDIDATE, info);
-					}
-					[[fallthrough]];
-				case version_stage::BETA:
-					if (get_update_info(version_stage::BETA).is_older_than(info)) {
-						_updates.emplace(version_stage::BETA, info);
-					}
-					[[fallthrough]];
-				case version_stage::ALPHA:
-					if (get_update_info(version_stage::ALPHA).is_older_than(info)) {
-						_updates.emplace(version_stage::ALPHA, info);
-					}
-				}
-
-			} catch (const std::exception& ex) {
-				D_LOG_DEBUG("Failed to parse entry, error: %s", ex.what());
+			// Finally, execute the request.
+			D_LOG_DEBUG("Querying for latest releases...", "");
+			if (CURLcode res = curl.perform(); res != CURLE_OK) {
+				D_LOG_ERROR("Performing query failed with error: %s", curl_easy_strerror(res));
+				throw std::runtime_error(curl_easy_strerror(res));
 			}
+
+			int32_t status_code = 0;
+			if (CURLcode res = curl.get_info(CURLINFO_HTTP_CODE, status_code); res != CURLE_OK) {
+				D_LOG_ERROR("Retrieving status code failed with error: %s", curl_easy_strerror(res));
+				throw std::runtime_error(curl_easy_strerror(res));
+			}
+			D_LOG_DEBUG("API returned status code %d.", status_code);
+
+			if (status_code != 200) {
+				D_LOG_ERROR("API returned unexpected status code %d.", status_code);
+				throw std::runtime_error("Request failed due to one or more reasons.");
+			}
+		};
+		auto parse_fn = [this](nlohmann::json json) {
+			// Check if it was parsed as an object.
+			if (json.type() != nlohmann::json::value_t::array) {
+				throw std::runtime_error("Invalid response from API.");
+			}
+
+			// Decide on the latest version for all update channels.
+			std::lock_guard<decltype(_lock)> lock(_lock);
+			_updates.clear();
+			for (auto obj : json) {
+				try {
+					auto info = obj.get<streamfx::version_info>();
+
+					switch (info.stage) {
+					case version_stage::STABLE:
+						if (get_update_info(version_stage::STABLE).is_older_than(info)) {
+							_updates.emplace(version_stage::STABLE, info);
+						}
+						[[fallthrough]];
+					case version_stage::CANDIDATE:
+						if (get_update_info(version_stage::CANDIDATE).is_older_than(info)) {
+							_updates.emplace(version_stage::CANDIDATE, info);
+						}
+						[[fallthrough]];
+					case version_stage::BETA:
+						if (get_update_info(version_stage::BETA).is_older_than(info)) {
+							_updates.emplace(version_stage::BETA, info);
+						}
+						[[fallthrough]];
+					case version_stage::ALPHA:
+						if (get_update_info(version_stage::ALPHA).is_older_than(info)) {
+							_updates.emplace(version_stage::ALPHA, info);
+						}
+					}
+
+				} catch (const std::exception& ex) {
+					D_LOG_DEBUG("Failed to parse entry, error: %s", ex.what());
+				}
+			}
+		};
+
+		{ // Query and parse the response.
+			nlohmann::json json;
+
+			// Query the API or parse a crafted response.
+			auto debug_path = streamfx::config_file_path("github_release_query_response.json");
+			if (std::filesystem::exists(debug_path)) {
+				std::ifstream fs{debug_path};
+				json = nlohmann::json::parse(fs);
+				fs.close();
+			} else {
+				std::vector<char> buffer;
+				query_fn(buffer);
+				json = nlohmann::json::parse(buffer.begin(), buffer.end());
+			}
+
+			// Parse the JSON response from the API.
+			parse_fn(json);
 		}
-	};
 
-	{ // Query and parse the response.
-		nlohmann::json json;
-
-		// Query the API or parse a crafted response.
-		auto debug_path = streamfx::config_file_path("github_release_query_response.json");
-		if (std::filesystem::exists(debug_path)) {
-			std::ifstream fs{debug_path};
-			json = nlohmann::json::parse(fs);
-			fs.close();
-		} else {
-			std::vector<char> buffer;
-			query_fn(buffer);
-			json = nlohmann::json::parse(buffer.begin(), buffer.end());
+		// Print all update information to the log file.
+		D_LOG_INFO("Current Version: %s", static_cast<std::string>(_current_info).c_str());
+		D_LOG_INFO("Latest Stable Version: %s",
+				   static_cast<std::string>(get_update_info(version_stage::STABLE)).c_str());
+		D_LOG_INFO("Latest Candidate Version: %s",
+				   static_cast<std::string>(get_update_info(version_stage::CANDIDATE)).c_str());
+		D_LOG_INFO("Latest Beta Version: %s", static_cast<std::string>(get_update_info(version_stage::BETA)).c_str());
+		D_LOG_INFO("Latest Alpha Version: %s", static_cast<std::string>(get_update_info(version_stage::ALPHA)).c_str());
+		if (is_update_available()) {
+			D_LOG_INFO("Update is available.", "");
 		}
 
-		// Parse the JSON response from the API.
-		parse_fn(json);
+		// Notify listeners of the update.
+		events.refreshed.call(*this);
+	} catch (const std::exception& ex) {
+		// Notify about the error.
+		std::string message = ex.what();
+		events.error.call(*this, message);
 	}
-
-	// Print all update information to the log file.
-	D_LOG_INFO("Current Version: %s", static_cast<std::string>(_current_info).c_str());
-	D_LOG_INFO("Latest Stable Version: %s", static_cast<std::string>(get_update_info(version_stage::STABLE)).c_str());
-	D_LOG_INFO("Latest Candidate Version: %s",
-			   static_cast<std::string>(get_update_info(version_stage::CANDIDATE)).c_str());
-	D_LOG_INFO("Latest Beta Version: %s", static_cast<std::string>(get_update_info(version_stage::BETA)).c_str());
-	D_LOG_INFO("Latest Alpha Version: %s", static_cast<std::string>(get_update_info(version_stage::ALPHA)).c_str());
-	if (is_update_available()) {
-		D_LOG_INFO("Update is available.", "");
-	}
-
-	// Notify listeners of the update.
-	events.refreshed.call(*this);
-} catch (const std::exception& ex) {
-	// Notify about the error.
-	std::string message = ex.what();
-	events.error.call(*this, message);
 }
 
 bool streamfx::updater::can_check()

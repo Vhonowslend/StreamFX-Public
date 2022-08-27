@@ -724,28 +724,32 @@ obs_properties_t* sdf_effects_factory::get_properties2(sdf_effects_instance* dat
 
 #ifdef ENABLE_FRONTEND
 bool sdf_effects_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
-try {
-	streamfx::open_url(HELP_URL);
-	return false;
-} catch (const std::exception& ex) {
-	D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
-	return false;
-} catch (...) {
-	D_LOG_ERROR("Failed to open manual due to unknown error.", "");
-	return false;
+{
+	try {
+		streamfx::open_url(HELP_URL);
+		return false;
+	} catch (const std::exception& ex) {
+		D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
+		return false;
+	} catch (...) {
+		D_LOG_ERROR("Failed to open manual due to unknown error.", "");
+		return false;
+	}
 }
 #endif
 
 std::shared_ptr<sdf_effects_factory> _filter_sdf_effects_factory_instance = nullptr;
 
 void streamfx::filter::sdf_effects::sdf_effects_factory::initialize()
-try {
-	if (!_filter_sdf_effects_factory_instance)
-		_filter_sdf_effects_factory_instance = std::make_shared<sdf_effects_factory>();
-} catch (const std::exception& ex) {
-	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
-} catch (...) {
-	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+{
+	try {
+		if (!_filter_sdf_effects_factory_instance)
+			_filter_sdf_effects_factory_instance = std::make_shared<sdf_effects_factory>();
+	} catch (const std::exception& ex) {
+		D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
+	} catch (...) {
+		D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+	}
 }
 
 void streamfx::filter::sdf_effects::sdf_effects_factory::finalize()

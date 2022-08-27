@@ -403,33 +403,35 @@ void streamfx::filter::dynamic_mask::dynamic_mask_instance::deactivate()
 }
 
 bool dynamic_mask_instance::acquire(std::string_view name)
-try {
-	// Prevent us from creating a circle.
-	if (auto v = obs_source_get_name(obs_filter_get_parent(_self)); (v != nullptr) && (name == v)) {
+{
+	try {
+		// Prevent us from creating a circle.
+		if (auto v = obs_source_get_name(obs_filter_get_parent(_self)); (v != nullptr) && (name == v)) {
+			return false;
+		}
+
+		// Acquire a reference to the actual source.
+		::streamfx::obs::source input = name;
+
+		// Acquire a texture renderer for the source, with the parent source as the parent.
+		auto capture = std::make_shared<streamfx::gfx::source_texture>(input, obs_filter_get_parent(_self));
+
+		// Update our local storage.
+		_input         = input;
+		_input_capture = capture;
+
+		// Do the necessary things.
+		activate();
+		show();
+
+		return true;
+	} catch (const std::exception&) {
+		release();
+		return false;
+	} catch (...) {
+		release();
 		return false;
 	}
-
-	// Acquire a reference to the actual source.
-	::streamfx::obs::source input = name;
-
-	// Acquire a texture renderer for the source, with the parent source as the parent.
-	auto capture = std::make_shared<streamfx::gfx::source_texture>(input, obs_filter_get_parent(_self));
-
-	// Update our local storage.
-	_input         = input;
-	_input_capture = capture;
-
-	// Do the necessary things.
-	activate();
-	show();
-
-	return true;
-} catch (const std::exception&) {
-	release();
-	return false;
-} catch (...) {
-	release();
-	return false;
 }
 
 void dynamic_mask_instance::release()
@@ -565,28 +567,32 @@ std::string dynamic_mask_factory::translate_string(const char* format, ...)
 
 #ifdef ENABLE_FRONTEND
 bool dynamic_mask_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
-try {
-	streamfx::open_url(HELP_URL);
-	return false;
-} catch (const std::exception& ex) {
-	D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
-	return false;
-} catch (...) {
-	D_LOG_ERROR("Failed to open manual due to unknown error.", "");
-	return false;
+{
+	try {
+		streamfx::open_url(HELP_URL);
+		return false;
+	} catch (const std::exception& ex) {
+		D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
+		return false;
+	} catch (...) {
+		D_LOG_ERROR("Failed to open manual due to unknown error.", "");
+		return false;
+	}
 }
 #endif
 
 std::shared_ptr<dynamic_mask_factory> _filter_dynamic_mask_factory_instance = nullptr;
 
 void streamfx::filter::dynamic_mask::dynamic_mask_factory::initialize()
-try {
-	if (!_filter_dynamic_mask_factory_instance)
-		_filter_dynamic_mask_factory_instance = std::make_shared<dynamic_mask_factory>();
-} catch (const std::exception& ex) {
-	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
-} catch (...) {
-	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+{
+	try {
+		if (!_filter_dynamic_mask_factory_instance)
+			_filter_dynamic_mask_factory_instance = std::make_shared<dynamic_mask_factory>();
+	} catch (const std::exception& ex) {
+		D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
+	} catch (...) {
+		D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+	}
 }
 
 void streamfx::filter::dynamic_mask::dynamic_mask_factory::finalize()

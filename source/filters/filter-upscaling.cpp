@@ -573,14 +573,16 @@ void upscaling_factory::get_defaults2(obs_data_t* data)
 }
 
 static bool modified_provider(obs_properties_t* props, obs_property_t*, obs_data_t* settings) noexcept
-try {
-	return true;
-} catch (const std::exception& ex) {
-	DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return false;
-} catch (...) {
-	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return false;
+{
+	try {
+		return true;
+	} catch (const std::exception& ex) {
+		DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+		return false;
+	} catch (...) {
+		DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+		return false;
+	}
 }
 
 obs_properties_t* upscaling_factory::get_properties2(upscaling_instance* data)
@@ -618,15 +620,17 @@ obs_properties_t* upscaling_factory::get_properties2(upscaling_instance* data)
 
 #ifdef ENABLE_FRONTEND
 bool upscaling_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
-try {
-	streamfx::open_url(HELP_URL);
-	return false;
-} catch (const std::exception& ex) {
-	D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
-	return false;
-} catch (...) {
-	D_LOG_ERROR("Failed to open manual due to unknown error.", "");
-	return false;
+{
+	try {
+		streamfx::open_url(HELP_URL);
+		return false;
+	} catch (const std::exception& ex) {
+		D_LOG_ERROR("Failed to open manual due to error: %s", ex.what());
+		return false;
+	} catch (...) {
+		D_LOG_ERROR("Failed to open manual due to unknown error.", "");
+		return false;
+	}
 }
 #endif
 
@@ -656,13 +660,15 @@ upscaling_provider streamfx::filter::upscaling::upscaling_factory::find_ideal_pr
 std::shared_ptr<upscaling_factory> _video_superresolution_factory_instance = nullptr;
 
 void upscaling_factory::initialize()
-try {
-	if (!_video_superresolution_factory_instance)
-		_video_superresolution_factory_instance = std::make_shared<upscaling_factory>();
-} catch (const std::exception& ex) {
-	D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
-} catch (...) {
-	D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+{
+	try {
+		if (!_video_superresolution_factory_instance)
+			_video_superresolution_factory_instance = std::make_shared<upscaling_factory>();
+	} catch (const std::exception& ex) {
+		D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
+	} catch (...) {
+		D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+	}
 }
 
 void upscaling_factory::finalize()
