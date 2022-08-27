@@ -58,7 +58,7 @@ static float find_closest_scale_factor(float factor)
 
 static size_t find_closest_scale_factor_index(float factor)
 {
-	std::pair<size_t, float> minimal = {0.f, std::numeric_limits<float>::max()};
+	std::pair<size_t, float> minimal = {0, std::numeric_limits<float>::max()};
 	for (size_t idx = 0; idx < supported_scale_factors.size(); idx++) {
 		float delta = supported_scale_factors[idx];
 		float value = abs(delta - factor);

@@ -1278,12 +1278,14 @@ aom_av1_factory::~aom_av1_factory() {}
 std::shared_ptr<aom_av1_factory> _aom_av1_factory_instance = nullptr;
 
 void aom_av1_factory::initialize()
-try {
-	if (!_aom_av1_factory_instance) {
-		_aom_av1_factory_instance = std::make_shared<aom_av1_factory>();
+{
+	try {
+		if (!_aom_av1_factory_instance) {
+			_aom_av1_factory_instance = std::make_shared<aom_av1_factory>();
+		}
+	} catch (std::exception const& ex) {
+		D_LOG_ERROR("Failed to initialize AOM AV1 encoder: %s", ex.what());
 	}
-} catch (std::exception const& ex) {
-	D_LOG_ERROR("Failed to initialize AOM AV1 encoder: %s", ex.what());
 }
 
 void aom_av1_factory::finalize()
@@ -1349,82 +1351,88 @@ void aom_av1_factory::get_defaults2(obs_data_t* settings)
 }
 
 static bool modified_usage(obs_properties_t* props, obs_property_t*, obs_data_t* settings) noexcept
-try {
-	bool is_all_intra = false;
-	if (obs_data_get_int(settings, ST_KEY_ENCODER_USAGE) == AOM_USAGE_ALL_INTRA) {
-		is_all_intra = true;
+{
+	try {
+		bool is_all_intra = false;
+		if (obs_data_get_int(settings, ST_KEY_ENCODER_USAGE) == AOM_USAGE_ALL_INTRA) {
+			is_all_intra = true;
+		}
+
+		// All-Intra does not support these.
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_RATECONTROL_LOOKAHEAD), !is_all_intra);
+		obs_property_set_visible(obs_properties_get(props, ST_I18N_KEYFRAMES), !is_all_intra);
+
+		return true;
+	} catch (const std::exception& ex) {
+		DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+		return false;
+	} catch (...) {
+		DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+		return false;
 	}
-
-	// All-Intra does not support these.
-	obs_property_set_visible(obs_properties_get(props, ST_KEY_RATECONTROL_LOOKAHEAD), !is_all_intra);
-	obs_property_set_visible(obs_properties_get(props, ST_I18N_KEYFRAMES), !is_all_intra);
-
-	return true;
-} catch (const std::exception& ex) {
-	DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return false;
-} catch (...) {
-	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return false;
 }
 
 static bool modified_ratecontrol_mode(obs_properties_t* props, obs_property_t*, obs_data_t* settings) noexcept
-try {
-	bool is_bitrate_visible        = false;
-	bool is_overundershoot_visible = false;
-	bool is_quality_visible        = false;
+{
+	try {
+		bool is_bitrate_visible        = false;
+		bool is_overundershoot_visible = false;
+		bool is_quality_visible        = false;
 
-	// Fix rate control mode selection if ALL_INTRA is selected.
-	if (obs_data_get_int(settings, ST_KEY_ENCODER_USAGE) == AOM_USAGE_ALL_INTRA) {
-		obs_data_set_int(settings, ST_KEY_RATECONTROL_MODE, static_cast<long long>(aom_rc_mode::AOM_Q));
-	}
-
-	{ // Based on the Rate Control Mode, show and hide options.
-		auto mode = static_cast<aom_rc_mode>(obs_data_get_int(settings, ST_KEY_RATECONTROL_MODE));
-		if (mode == AOM_CBR) {
-			is_bitrate_visible        = true;
-			is_overundershoot_visible = true;
-		} else if (mode == AOM_VBR) {
-			is_bitrate_visible        = true;
-			is_overundershoot_visible = true;
-		} else if (mode == AOM_CQ) {
-			is_bitrate_visible        = true;
-			is_overundershoot_visible = true;
-			is_quality_visible        = true;
-		} else if (mode == AOM_Q) {
-			is_quality_visible = true;
+		// Fix rate control mode selection if ALL_INTRA is selected.
+		if (obs_data_get_int(settings, ST_KEY_ENCODER_USAGE) == AOM_USAGE_ALL_INTRA) {
+			obs_data_set_int(settings, ST_KEY_RATECONTROL_MODE, static_cast<long long>(aom_rc_mode::AOM_Q));
 		}
 
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_RATECONTROL_LIMITS_BITRATE), is_bitrate_visible);
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_RATECONTROL_LIMITS_BITRATE_UNDERSHOOT),
-								 is_overundershoot_visible);
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_RATECONTROL_LIMITS_BITRATE_OVERSHOOT),
-								 is_overundershoot_visible);
+		{ // Based on the Rate Control Mode, show and hide options.
+			auto mode = static_cast<aom_rc_mode>(obs_data_get_int(settings, ST_KEY_RATECONTROL_MODE));
+			if (mode == AOM_CBR) {
+				is_bitrate_visible        = true;
+				is_overundershoot_visible = true;
+			} else if (mode == AOM_VBR) {
+				is_bitrate_visible        = true;
+				is_overundershoot_visible = true;
+			} else if (mode == AOM_CQ) {
+				is_bitrate_visible        = true;
+				is_overundershoot_visible = true;
+				is_quality_visible        = true;
+			} else if (mode == AOM_Q) {
+				is_quality_visible = true;
+			}
+
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_RATECONTROL_LIMITS_BITRATE), is_bitrate_visible);
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_RATECONTROL_LIMITS_BITRATE_UNDERSHOOT),
+									 is_overundershoot_visible);
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_RATECONTROL_LIMITS_BITRATE_OVERSHOOT),
+									 is_overundershoot_visible);
 #ifdef AOM_CTRL_AOME_SET_CQ_LEVEL
-		obs_property_set_visible(obs_properties_get(props, ST_KEY_RATECONTROL_LIMITS_QUALITY), is_quality_visible);
+			obs_property_set_visible(obs_properties_get(props, ST_KEY_RATECONTROL_LIMITS_QUALITY), is_quality_visible);
 #endif
+		}
+		return true;
+	} catch (const std::exception& ex) {
+		DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+		return false;
+	} catch (...) {
+		DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+		return false;
 	}
-	return true;
-} catch (const std::exception& ex) {
-	DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return false;
-} catch (...) {
-	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return false;
 }
 
 static bool modified_keyframes(obs_properties_t* props, obs_property_t*, obs_data_t* settings) noexcept
-try {
-	bool is_seconds = obs_data_get_int(settings, ST_KEY_KEYFRAMES_INTERVALTYPE) == 0;
-	obs_property_set_visible(obs_properties_get(props, ST_KEY_KEYFRAMES_INTERVAL_FRAMES), !is_seconds);
-	obs_property_set_visible(obs_properties_get(props, ST_KEY_KEYFRAMES_INTERVAL_SECONDS), is_seconds);
-	return true;
-} catch (const std::exception& ex) {
-	DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
-	return false;
-} catch (...) {
-	DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
-	return false;
+{
+	try {
+		bool is_seconds = obs_data_get_int(settings, ST_KEY_KEYFRAMES_INTERVALTYPE) == 0;
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_KEYFRAMES_INTERVAL_FRAMES), !is_seconds);
+		obs_property_set_visible(obs_properties_get(props, ST_KEY_KEYFRAMES_INTERVAL_SECONDS), is_seconds);
+		return true;
+	} catch (const std::exception& ex) {
+		DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
+		return false;
+	} catch (...) {
+		DLOG_ERROR("Unexpected exception in function '%s'.", __FUNCTION_NAME__);
+		return false;
+	}
 }
 
 obs_properties_t* aom_av1_factory::get_properties2(instance_t* data)

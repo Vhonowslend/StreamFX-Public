@@ -44,10 +44,12 @@ namespace streamfx::obs {
 		std::shared_ptr<obs_source_t> _keepalive;
 
 		static void handle_signal(void* ptr, calldata* cd) noexcept
-		try {
-			auto p = reinterpret_cast<signal_handler<std::shared_ptr<obs_source_t>>*>(ptr);
-			p->event(p->_keepalive, cd);
-		} catch (...) {
+		{
+			try {
+				auto p = reinterpret_cast<signal_handler<std::shared_ptr<obs_source_t>>*>(ptr);
+				p->event(p->_keepalive, cd);
+			} catch (...) {
+			}
 		}
 
 		public:
@@ -72,10 +74,12 @@ namespace streamfx::obs {
 		::streamfx::obs::source _keepalive;
 
 		static void handle_audio(void* ptr, obs_source_t*, const struct audio_data* audio_data, bool muted) noexcept
-		try {
-			auto p = reinterpret_cast<audio_signal_handler*>(ptr);
-			p->event(p->_keepalive, audio_data, muted);
-		} catch (...) {
+		{
+			try {
+				auto p = reinterpret_cast<audio_signal_handler*>(ptr);
+				p->event(p->_keepalive, audio_data, muted);
+			} catch (...) {
+			}
 		}
 
 		public:
