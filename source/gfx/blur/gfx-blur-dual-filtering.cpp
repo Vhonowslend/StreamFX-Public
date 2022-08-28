@@ -16,20 +16,11 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "gfx-blur-dual-filtering.hpp"
+#include "common.hpp"
 #include <algorithm>
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <obs.h>
-#include <obs-module.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 // Dual Filtering Blur
 //

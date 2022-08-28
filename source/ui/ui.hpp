@@ -18,8 +18,8 @@
  */
 
 #pragma once
-#include "ui-about.hpp"
 #include "ui-common.hpp"
+#include "ui-about.hpp"
 
 #ifdef ENABLE_UPDATER
 #include "ui-updater.hpp"

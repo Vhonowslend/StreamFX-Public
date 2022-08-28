@@ -27,7 +27,13 @@
 extern "C" {
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4201)
+#pragma warning(disable : 4464)
+#pragma warning(disable : 4820)
+#pragma warning(disable : 5220)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wextra"
 #endif
 #include <obs.h>
 #include <graphics/vec2.h>
@@ -35,6 +41,8 @@ extern "C" {
 #include <graphics/vec4.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
 #endif
 }
 

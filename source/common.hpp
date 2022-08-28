@@ -59,7 +59,13 @@
 extern "C" {
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4201)
+#pragma warning(disable : 4464)
+#pragma warning(disable : 4820)
+#pragma warning(disable : 5220)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wextra"
 #endif
 #include <obs.h>
 
@@ -79,13 +85,14 @@ extern "C" {
 #include <graphics/vec4.h>
 
 #include <util/platform.h>
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
 
 // Fix libOBS's global defines
 #undef strtoll
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 }
 
 // Common Global defines

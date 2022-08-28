@@ -31,7 +31,24 @@
 #include "util/util-library.hpp"
 #include "util/util-profiler.hpp"
 
+extern "C" {
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4464)
+#pragma warning(disable : 4820)
+#pragma warning(disable : 5220)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wextra"
+#endif
 #include <aom/aomcx.h>
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
+};
 
 namespace streamfx::encoder::aom::av1 {
 	class aom_av1_factory;
