@@ -146,7 +146,7 @@ void nvenc_hevc_handler::get_encoder_properties(obs_properties_t* props, const A
 			streamfx::ffmpeg::tools::avoption_list_add_entries(
 				context->priv_data, "profile", [&p](const AVOption* opt) {
 					char buffer[1024];
-					snprintf(buffer, sizeof(buffer), "%s.%s\0", S_CODEC_HEVC_PROFILE, opt->name);
+					snprintf(buffer, sizeof(buffer), "%s.%s", S_CODEC_HEVC_PROFILE, opt->name);
 					obs_property_list_add_string(p, D_TRANSLATE(buffer), opt->name);
 				});
 		}
@@ -156,7 +156,7 @@ void nvenc_hevc_handler::get_encoder_properties(obs_properties_t* props, const A
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), -1);
 			streamfx::ffmpeg::tools::avoption_list_add_entries(context->priv_data, "tier", [&p](const AVOption* opt) {
 				char buffer[1024];
-				snprintf(buffer, sizeof(buffer), "%s.%s\0", S_CODEC_HEVC_TIER, opt->name);
+				snprintf(buffer, sizeof(buffer), "%s.%s", S_CODEC_HEVC_TIER, opt->name);
 				obs_property_list_add_string(p, D_TRANSLATE(buffer), opt->name);
 			});
 		}

@@ -143,7 +143,7 @@ void nvenc_h264_handler::get_encoder_properties(obs_properties_t* props, const A
 			streamfx::ffmpeg::tools::avoption_list_add_entries(
 				context->priv_data, "profile", [&p](const AVOption* opt) {
 					char buffer[1024];
-					snprintf(buffer, sizeof(buffer), "%s.%s\0", S_CODEC_H264_PROFILE, opt->name);
+					snprintf(buffer, sizeof(buffer), "%s.%s", S_CODEC_H264_PROFILE, opt->name);
 					obs_property_list_add_string(p, D_TRANSLATE(buffer), opt->name);
 				});
 		}
