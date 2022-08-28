@@ -279,8 +279,9 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::dual_filterin
 
 		// Apply
 		effect.get_parameter("pImage").set_texture(tex);
-		effect.get_parameter("pImageSize").set_float2(float_t(owidth), float_t(oheight));
-		effect.get_parameter("pImageTexel").set_float2(0.5f / owidth, 0.5f / oheight);
+		effect.get_parameter("pImageSize").set_float2(static_cast<float>(owidth), static_cast<float>(oheight));
+		effect.get_parameter("pImageTexel")
+			.set_float2(0.5f / static_cast<float>(owidth), 0.5f / static_cast<float>(oheight));
 
 		{
 			auto op = _rts[n]->render(owidth, oheight);
@@ -308,8 +309,9 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::dual_filterin
 
 		// Apply
 		effect.get_parameter("pImage").set_texture(tex);
-		effect.get_parameter("pImageSize").set_float2(float_t(iwidth), float_t(iheight));
-		effect.get_parameter("pImageTexel").set_float2(0.5f / iwidth, 0.5f / iheight);
+		effect.get_parameter("pImageSize").set_float2(static_cast<float>(iwidth), static_cast<float>(iheight));
+		effect.get_parameter("pImageTexel")
+			.set_float2(0.5f / static_cast<float>(iwidth), 0.5f / static_cast<float>(iheight));
 
 		{
 			auto op = _rts[n - 1]->render(owidth, oheight);
