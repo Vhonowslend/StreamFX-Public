@@ -420,7 +420,7 @@ aom_av1_instance::aom_av1_instance(obs_data_t* settings, obs_encoder_t* self, bo
 			if (auto threads = obs_data_get_int(settings, ST_KEY_ADVANCED_THREADS); threads > 0) {
 				_settings.threads = static_cast<int8_t>(threads);
 			} else {
-				_settings.threads = std::thread::hardware_concurrency();
+				_settings.threads = static_cast<int8_t>(std::thread::hardware_concurrency());
 			}
 			_settings.rowmultithreading =
 				static_cast<int8_t>(obs_data_get_int(settings, ST_KEY_ADVANCED_ROWMULTITHREADING));
@@ -664,16 +664,16 @@ bool aom_av1_instance::update(obs_data_t* settings)
 		}
 
 		{ // Rate Control
-			_settings.rc_bitrate = static_cast<int32_t>(obs_data_get_int(settings, ST_KEY_RATECONTROL_LIMITS_BITRATE));
+			_settings.rc_bitrate = static_cast<int8_t>(obs_data_get_int(settings, ST_KEY_RATECONTROL_LIMITS_BITRATE));
 			_settings.rc_bitrate_overshoot =
 				static_cast<int32_t>(obs_data_get_int(settings, ST_KEY_RATECONTROL_LIMITS_BITRATE_UNDERSHOOT));
 			_settings.rc_bitrate_undershoot =
 				static_cast<int32_t>(obs_data_get_int(settings, ST_KEY_RATECONTROL_LIMITS_BITRATE_OVERSHOOT));
-			_settings.rc_quality = static_cast<int32_t>(obs_data_get_int(settings, ST_KEY_RATECONTROL_LIMITS_QUALITY));
+			_settings.rc_quality = static_cast<int8_t>(obs_data_get_int(settings, ST_KEY_RATECONTROL_LIMITS_QUALITY));
 			_settings.rc_quantizer_min =
-				static_cast<int32_t>(obs_data_get_int(settings, ST_KEY_RATECONTROL_LIMITS_QUANTIZER_MINIMUM));
+				static_cast<int8_t>(obs_data_get_int(settings, ST_KEY_RATECONTROL_LIMITS_QUANTIZER_MINIMUM));
 			_settings.rc_quantizer_max =
-				static_cast<int32_t>(obs_data_get_int(settings, ST_KEY_RATECONTROL_LIMITS_QUANTIZER_MAXIMUM));
+				static_cast<int8_t>(obs_data_get_int(settings, ST_KEY_RATECONTROL_LIMITS_QUANTIZER_MAXIMUM));
 			_settings.rc_buffer_ms = static_cast<int32_t>(obs_data_get_int(settings, ST_KEY_RATECONTROL_BUFFER_SIZE));
 			_settings.rc_buffer_initial_ms =
 				static_cast<int32_t>(obs_data_get_int(settings, ST_KEY_RATECONTROL_BUFFER_SIZE_INITIAL));
@@ -687,12 +687,12 @@ bool aom_av1_instance::update(obs_data_t* settings)
 
 			_settings.kf_mode = AOM_KF_AUTO;
 			if (is_seconds) {
-				_settings.kf_distance_max = static_cast<unsigned int>(
+				_settings.kf_distance_max = static_cast<int32_t>(
 					std::lround(obs_data_get_double(settings, ST_KEY_KEYFRAMES_INTERVAL_SECONDS)
 								* static_cast<double>(obsFPSnum) / static_cast<double>(obsFPSden)));
 			} else {
 				_settings.kf_distance_max =
-					static_cast<unsigned int>(obs_data_get_int(settings, ST_KEY_KEYFRAMES_INTERVAL_FRAMES));
+					static_cast<int32_t>(obs_data_get_int(settings, ST_KEY_KEYFRAMES_INTERVAL_FRAMES));
 			}
 			_settings.kf_distance_min = _settings.kf_distance_max;
 		}
@@ -719,15 +719,15 @@ bool aom_av1_instance::update(obs_data_t* settings)
 			_cfg.g_h = _settings.height;
 
 			// Time Base (Rate is inverted Time Base)
-			_cfg.g_timebase.num = _settings.fps.den;
-			_cfg.g_timebase.den = _settings.fps.num;
+			_cfg.g_timebase.num = static_cast<int>(_settings.fps.den);
+			_cfg.g_timebase.den = static_cast<int>(_settings.fps.num);
 
 			// !INFO: Whenever OBS decides to support anything but 8-bits, let me know.
 			_cfg.g_bit_depth       = AOM_BITS_8;
 			_cfg.g_input_bit_depth = AOM_BITS_8;
 
 			// Monochrome color
-			_cfg.monochrome = _settings.monochrome ? 1 : 0;
+			_cfg.monochrome = _settings.monochrome ? 1u : 0u;
 		}
 
 		{ // Encoder

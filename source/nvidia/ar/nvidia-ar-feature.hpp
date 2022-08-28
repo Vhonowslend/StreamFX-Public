@@ -104,7 +104,7 @@ namespace streamfx::nvidia::ar {
 
 			result = _nvar->NvAR_GetF32Array(_fx.get(), param, &data, &size);
 
-			value.resize(size);
+			value.resize(static_cast<size_t>(size));
 			memcpy(value.data(), data, size * sizeof(float));
 
 			return result;

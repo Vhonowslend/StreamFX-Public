@@ -37,7 +37,7 @@ void streamfx::util::logging::log(level lvl, const char* format, ...)
 	va_list vargs_copy;
 	va_copy(vargs_copy, vargs);
 	int32_t ret = vsnprintf(buffer.data(), buffer.size(), format, vargs);
-	buffer.resize(ret + 1);
+	buffer.resize(static_cast<size_t>(ret) + 1);
 	ret = vsnprintf(buffer.data(), buffer.size(), format, vargs_copy);
 
 	va_end(vargs);

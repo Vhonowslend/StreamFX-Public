@@ -72,9 +72,9 @@ uint32_t streamfx::encoder::codec::h264::get_packet_reference_count(uint8_t* ptr
 		// Try and figure out the ideal priority.
 		switch (static_cast<nal_unit_type>((*nal_ptr) & 0x5)) {
 		case nal_unit_type::CODED_SLICE_NONIDR:
-			return (*nal_ptr >> 5) & 0x2;
+			return static_cast<uint32_t>((*nal_ptr >> 5) & 0x2);
 		case nal_unit_type::CODED_SLICE_IDR:
-			return (*nal_ptr >> 5) & 0x2;
+			return static_cast<uint32_t>((*nal_ptr >> 5) & 0x2);
 		default:
 			break;
 		}

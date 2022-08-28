@@ -671,7 +671,7 @@ int ffmpeg_instance::receive_packet(bool* received_packet, struct encoder_packet
 	// In theory, this is done by OBS, but its not doing a great job.
 	packet->priority      = packet->keyframe ? 3 : 2;
 	packet->drop_priority = 3;
-	for (size_t idx = 0, edx = _packet->side_data_elems; idx < edx; idx++) {
+	for (size_t idx = 0, edx = static_cast<size_t>(_packet->side_data_elems); idx < edx; idx++) {
 		auto& side_data = _packet->side_data[idx];
 		if (side_data.type == AV_PKT_DATA_QUALITY_STATS) {
 			// Decisions based on picture type, if present.
