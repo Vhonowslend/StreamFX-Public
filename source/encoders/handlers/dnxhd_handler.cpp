@@ -56,7 +56,7 @@ bool dnxhd_handler::has_pixel_format_support(ffmpeg_factory* instance)
 inline const char* dnx_profile_to_display_name(const char* profile)
 {
 	char buffer[1024];
-	snprintf(buffer, sizeof(buffer), "%s.%s\0", S_CODEC_DNXHR_PROFILE, profile);
+	snprintf(buffer, sizeof(buffer), "%s.%s", S_CODEC_DNXHR_PROFILE, profile);
 	return D_TRANSLATE(buffer);
 }
 
