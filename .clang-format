@@ -2,11 +2,11 @@
 TabWidth: 4
 UseTab: ForContinuationAndIndentation
 ColumnLimit: 120
- 
+
 # Language
 Language: Cpp
 Standard: Cpp11
- 
+
 # Indentation
 AccessModifierOffset: 0
 ConstructorInitializerIndentWidth: 4
@@ -16,11 +16,11 @@ IndentCaseLabels: false
 IndentWidth: 4
 IndentWrappedFunctionNames: true
 NamespaceIndentation: All
- 
+
 # Includes
 #IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex: '^(<|")(config.hpp|common.hpp|strings.hpp|version.hpp|obs.h)("|>)'
+  - Regex: '^(<|")(config.hpp|common.hpp|ui-common.hpp|strings.hpp|version.hpp|obs.h)("|>)'
     Priority: 100
   - Regex: '^<obs-'
     Priority: 150
@@ -33,7 +33,7 @@ IncludeCategories:
   - Regex: '.moc"$'
     Priority: 300
 SortIncludes: true
- 
+
 # Alignment
 AlignAfterOpenBracket: true
 AlignConsecutiveAssignments: true
@@ -43,7 +43,7 @@ AlignOperands: true
 AlignTrailingComments: true
 DerivePointerAlignment: false
 PointerAlignment: Left
- 
+
 # Wrapping and Breaking
 AllowAllParametersOfDeclarationOnNextLine: true
 AllowShortBlocksOnASingleLine: false
@@ -78,7 +78,7 @@ BreakConstructorInitializers: BeforeColon
 BreakStringLiterals: true
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
 Cpp11BracedListStyle: true
- 
+
 # Spaces
 SpaceAfterCStyleCast: false
 SpaceAfterTemplateKeyword: false
@@ -95,7 +95,7 @@ SpacesInCStyleCastParentheses: false
 SpacesInContainerLiterals: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
- 
+
 # Other
 CommentPragmas: '^(!FIXME!|!TODO!|ToDo:)'
 CompactNamespaces: false

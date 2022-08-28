@@ -24,9 +24,11 @@
 
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4251 4365 4371 4619 4946)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wextra"
 #endif
-
 #include <QAction>
 #include <QActionGroup>
 #include <QBoxLayout>
@@ -41,6 +43,8 @@ Q_DECLARE_METATYPE(::streamfx::version_stage);
 
 #ifdef _MSC_VER
 #pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
 #endif
 
 namespace streamfx::ui {

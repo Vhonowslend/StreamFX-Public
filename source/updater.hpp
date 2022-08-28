@@ -22,10 +22,27 @@
 #include <atomic>
 #include <chrono>
 #include <map>
-#include <nlohmann/json.hpp>
 #include "util/util-curl.hpp"
 #include "util/util-event.hpp"
 #include "util/util-threadpool.hpp"
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4623)
+#pragma warning(disable : 4625)
+#pragma warning(disable : 4626)
+#pragma warning(disable : 5027)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wextra"
+#endif
+#include <nlohmann/json.hpp>
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
 
 namespace streamfx {
 	enum class version_stage : uint8_t {

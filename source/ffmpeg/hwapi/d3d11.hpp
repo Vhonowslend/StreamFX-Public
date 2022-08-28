@@ -24,7 +24,10 @@
 
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4191 4242 4244 4365 4777 4986 5039 5204)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wextra"
 #endif
 #include <atlutil.h>
 #include <d3d11.h>
@@ -32,6 +35,8 @@
 #include <dxgi.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
 #endif
 
 namespace streamfx::ffmpeg::hwapi {
