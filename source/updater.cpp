@@ -228,7 +228,7 @@ streamfx::version_info::operator std::string()
 void streamfx::updater::task(streamfx::util::threadpool_data_t)
 {
 	try {
-		auto query_fn = [this](std::vector<char>& buffer) {
+		auto query_fn = [](std::vector<char>& buffer) {
 			static constexpr std::string_view ST_API_URL =
 				"https://api.github.com/repos/Xaymar/obs-StreamFX/releases?per_page=25&page=1";
 
@@ -246,7 +246,7 @@ void streamfx::updater::task(streamfx::util::threadpool_data_t)
 			curl.set_option(CURLOPT_TIMEOUT, 30); // 10s until we fail.
 
 			// Callbacks
-			curl.set_write_callback([this, &buffer, &buffer_offset](void* data, size_t s1, size_t s2) {
+			curl.set_write_callback([&buffer, &buffer_offset](void* data, size_t s1, size_t s2) {
 				size_t size = s1 * s2;
 				if (buffer.size() < (size + buffer_offset))
 					buffer.resize(buffer_offset + size);
