@@ -114,7 +114,7 @@ void streamfx::nvidia::vfx::superresolution::set_strength(float strength)
 		_dirty = true;
 
 	// Update Effect
-	uint32_t value = (_strength >= .5f) ? 1 : 0;
+	uint32_t value = (_strength >= .5f) ? 1u : 0u;
 	auto     gctx  = ::streamfx::obs::gs::context();
 	auto     cctx  = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
 	if (auto res = set(::streamfx::nvidia::vfx::PARAMETER_STRENGTH, value);
@@ -198,8 +198,8 @@ void streamfx::nvidia::vfx::superresolution::size(std::pair<uint32_t, uint32_t> 
 	}
 
 	// Calculate Output Size.
-	output_size.first  = static_cast<uint32_t>(std::lround(input_size.first * _scale));
-	output_size.second = static_cast<uint32_t>(std::lround(input_size.second * _scale));
+	output_size.first  = static_cast<uint32_t>(std::lround(static_cast<float>(input_size.first) * _scale));
+	output_size.second = static_cast<uint32_t>(std::lround(static_cast<float>(input_size.second) * _scale));
 
 	// Verify that this is a valid scale factor.
 	float width_mul  = (static_cast<float>(output_size.first) / static_cast<float>(input_size.first));

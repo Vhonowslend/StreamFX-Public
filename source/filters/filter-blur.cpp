@@ -331,9 +331,9 @@ void blur_instance::update(obs_data_t* settings)
 			}
 			if ((_mask.type == mask_type::Image) || (_mask.type == mask_type::Source)) {
 				uint32_t color   = static_cast<uint32_t>(obs_data_get_int(settings, ST_KEY_MASK_COLOR));
-				_mask.color.r    = ((color >> 0) & 0xFF) / 255.0f;
-				_mask.color.g    = ((color >> 8) & 0xFF) / 255.0f;
-				_mask.color.b    = ((color >> 16) & 0xFF) / 255.0f;
+				_mask.color.r    = static_cast<float>((color >> 0) & 0xFF) / 255.0f;
+				_mask.color.g    = static_cast<float>((color >> 8) & 0xFF) / 255.0f;
+				_mask.color.b    = static_cast<float>((color >> 16) & 0xFF) / 255.0f;
 				_mask.color.a    = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_MASK_ALPHA));
 				_mask.multiplier = float_t(obs_data_get_double(settings, ST_KEY_MASK_MULTIPLIER));
 			}

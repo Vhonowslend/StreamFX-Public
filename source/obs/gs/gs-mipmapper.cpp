@@ -168,7 +168,8 @@ void opengl_copy_subregion(opengl_info& info, std::shared_ptr<streamfx::obs::gs:
 	D_OPENGL_CHECK_ERROR("glBindTexture(GL_TEXTURE_2D, info.target);");
 
 	// Copy Data
-	glCopyTexSubImage2D(GL_TEXTURE_2D, mip_level, 0, 0, 0, 0, width, height);
+	glCopyTexSubImage2D(GL_TEXTURE_2D, static_cast<GLint>(mip_level), 0, 0, 0, 0, static_cast<GLsizei>(width),
+						static_cast<GLsizei>(height));
 	D_OPENGL_CHECK_ERROR("glCopyTexSubImage2D(GL_TEXTURE_2D, mip_level, 0, 0, 0, 0, width, height);");
 
 	// Target -/-> Texture Unit 1
@@ -212,7 +213,8 @@ streamfx::obs::gs::mipmapper::mipmapper()
 
 uint32_t streamfx::obs::gs::mipmapper::calculate_max_mip_level(uint32_t width, uint32_t height)
 {
-	return static_cast<uint32_t>(1 + std::lroundl(floor(log2(std::max<GLint>(width, height)))));
+	return static_cast<uint32_t>(
+		1 + std::lroundl(floor(log2(std::max<GLint>(static_cast<GLint>(width), static_cast<GLint>(height))))));
 }
 
 void streamfx::obs::gs::mipmapper::rebuild(std::shared_ptr<streamfx::obs::gs::texture> source,

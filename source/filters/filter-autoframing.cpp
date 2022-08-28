@@ -212,7 +212,7 @@ autoframing_instance::autoframing_instance(obs_data_t* data, obs_source_t* self)
 			std::make_shared<::streamfx::obs::gs::effect>(::streamfx::data_file_path("effects/standard.effect"));
 
 		// Create the Vertex Buffer for rendering.
-		_vb = std::make_shared<::streamfx::obs::gs::vertex_buffer>(4u, 1u);
+		_vb = std::make_shared<::streamfx::obs::gs::vertex_buffer>(uint32_t{4}, uint8_t{1});
 		vec3_set(_vb->at(0).position, 0, 0, 0);
 		vec3_set(_vb->at(1).position, 1, 0, 0);
 		vec3_set(_vb->at(2).position, 0, 1, 0);
@@ -432,9 +432,13 @@ void autoframing_instance::video_tick(float_t seconds)
 		_out_size = _size;
 		if (_frame_aspect_ratio > 0.0) {
 			if (width > height) {
-				_out_size.first = std::lroundf(static_cast<float>(_out_size.second) * _frame_aspect_ratio);
+				_out_size.first =
+					static_cast<uint32_t>(std::lroundf(static_cast<float>(_out_size.second) * _frame_aspect_ratio), 0,
+										  std::numeric_limits<uint32_t>::max());
 			} else {
-				_out_size.second = std::lroundf(static_cast<float>(_out_size.first) * _frame_aspect_ratio);
+				_out_size.second =
+					static_cast<uint32_t>(std::lroundf(static_cast<float>(_out_size.first) * _frame_aspect_ratio), 0,
+										  std::numeric_limits<uint32_t>::max());
 			}
 		}
 	}
