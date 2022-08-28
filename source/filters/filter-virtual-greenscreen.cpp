@@ -325,6 +325,8 @@ void virtual_greenscreen_instance::video_render(gs_effect_t* effect)
 				nvvfxgs_process(_output_color, _output_alpha);
 				break;
 #endif
+			default:
+				break;
 			}
 		} catch (...) {
 			obs_source_skip_video_filter(_self);
