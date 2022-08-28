@@ -1725,6 +1725,37 @@ if(D_PLATFORM_WINDOWS AND ((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR (CMAKE_CXX
 
 	# - Disable useless warnings
 	set(DISABLED_WARNINGS
+		# Don't warn about unused variables, parameters, labels, functions, or typedefs.
+		"4100"
+		"4101"
+		"4102"
+		"4505"
+		"4514"
+		"5245"
+		# Don't warn about unreferenced variables or parameters which are assigned/initialized.
+		"4189"
+		# Don't warn about not-explicitly-handled enumeration identifiers
+		"4061"
+		# Ignore automatic padding warnings.
+		"4820"
+		# Ignore assignment/move/copy being implicit '= delete;'.
+		"4623"
+		"4625"
+		"4626"
+		"5026"
+		"5027"
+		# Relative include paths are fine.
+		"4464"
+		# Buggy warning: printf expects string literal
+		"4774"
+		# Buggy warning: subobject initialization should be wrapped in braces
+		"5246"
+		# Ignore undefined, unused or unreferenced pre-processor macros
+		"4688"
+		# Ignore non-inlined functions
+		"4710"
+		# Ignore Spectre mitigation insertions
+		"5045"
 	)
 	foreach(WARN ${DISABLED_WARNINGS})
 		target_compile_options(${PROJECT_NAME} PRIVATE "/wd${WARN}")
@@ -1796,6 +1827,27 @@ elseif(D_PLATFORM_LINUX AND ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_
 
 	# - Disable useless warnings
 	set(DISABLED_WARNINGS
+		# Don't warn about unused variables, parameters, labels, functions, or typedefs.
+		"unused-function"
+		"unused-label"
+		"unused-local-typedefs"
+		"unused-parameter"
+		"unused-result"
+		"unused-const-variable"
+		"unused-variable"
+		"unused-value"
+		# Don't warn about unreferenced variables or parameters which are assigned/initialized.
+		"unused-but-set-parameter"
+		"unused-but-set-variable"
+		# Don't warn about not-explicitly-handled enumeration identifiers
+		"switch"
+		# Ignore automatic padding warnings.
+		"padded"
+		# Ignore implicit '= delete;'.
+		# Ignore extra arguments for printf
+		"format-extra-args"
+		# Ignore undefined, unused or unreferenced pre-processor macros
+		"unused-macros"
 	)
 	foreach(WARN ${DISABLED_WARNINGS})
 		target_compile_options(${PROJECT_NAME} PRIVATE "-Wno-${WARN}")
