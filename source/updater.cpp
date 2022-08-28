@@ -215,12 +215,12 @@ streamfx::version_info::operator std::string()
 {
 	std::vector<char> buffer(25, 0);
 	if (stage != version_stage::STABLE) {
-		auto   types = stage_to_string(stage);
-		size_t len   = snprintf(buffer.data(), buffer.size(), "%" PRIu16 ".%" PRIu16 ".%" PRIu16 "%.1s%" PRIu16, major,
-								minor, patch, types.data(), tweak);
+		auto types = stage_to_string(stage);
+		int  len   = snprintf(buffer.data(), buffer.size(), "%" PRIu16 ".%" PRIu16 ".%" PRIu16 "%.1s%" PRIu16, major,
+							  minor, patch, types.data(), tweak);
 		return std::string(buffer.data(), buffer.data() + len);
 	} else {
-		size_t len = snprintf(buffer.data(), buffer.size(), "%" PRIu16 ".%" PRIu16 ".%" PRIu16, major, minor, patch);
+		int len = snprintf(buffer.data(), buffer.size(), "%" PRIu16 ".%" PRIu16 ".%" PRIu16, major, minor, patch);
 		return std::string(buffer.data(), buffer.data() + len);
 	}
 }

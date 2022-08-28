@@ -80,7 +80,7 @@ void streamfx::gfx::debug::draw_point(float x, float y, uint32_t color)
 	obs::gs::context gctx{};
 
 	if (!_point_vb) {
-		_point_vb = std::make_shared<obs::gs::vertex_buffer>(1u, 1u);
+		_point_vb = std::make_shared<obs::gs::vertex_buffer>(uint32_t{1}, uint8_t{1});
 	}
 
 	{
@@ -102,7 +102,7 @@ void streamfx::gfx::debug::draw_line(float x, float y, float x2, float y2, uint3
 	obs::gs::context gctx{};
 
 	if (!_line_vb) {
-		_line_vb = std::make_shared<obs::gs::vertex_buffer>(2u, 1u);
+		_line_vb = std::make_shared<obs::gs::vertex_buffer>(uint32_t{2}, uint8_t{1});
 	}
 
 	{
@@ -130,7 +130,7 @@ void streamfx::gfx::debug::draw_arrow(float x, float y, float x2, float y2, floa
 	obs::gs::context gctx{};
 
 	if (!_arrow_vb) {
-		_arrow_vb = std::make_shared<obs::gs::vertex_buffer>(5u, 1u);
+		_arrow_vb = std::make_shared<obs::gs::vertex_buffer>(uint32_t{5}, uint8_t{1});
 	}
 
 	float dx  = x2 - x;
@@ -198,7 +198,7 @@ void streamfx::gfx::debug::draw_rectangle(float x, float y, float w, float h, bo
 	obs::gs::context gctx{};
 
 	if (!_quad_vb) {
-		_quad_vb = std::make_shared<obs::gs::vertex_buffer>(5u, 1u);
+		_quad_vb = std::make_shared<obs::gs::vertex_buffer>(uint32_t{5}, uint8_t{1});
 	}
 
 	if (frame) {
