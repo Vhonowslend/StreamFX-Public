@@ -256,7 +256,7 @@ void nvenc::get_properties_pre(obs_properties_t* props, const AVCodec*, const AV
 										 OBS_COMBO_FORMAT_STRING);
 		streamfx::ffmpeg::tools::avoption_list_add_entries(context->priv_data, "preset", [&p](const AVOption* opt) {
 			char buffer[1024];
-			snprintf(buffer, sizeof(buffer), "%s.%s\0", ST_I18N_PRESET, opt->name);
+			snprintf(buffer, sizeof(buffer), "%s.%s", ST_I18N_PRESET, opt->name);
 			obs_property_list_add_string(p, D_TRANSLATE(buffer), opt->name);
 		});
 	}
@@ -266,7 +266,7 @@ void nvenc::get_properties_pre(obs_properties_t* props, const AVCodec*, const AV
 										 OBS_COMBO_FORMAT_STRING);
 		streamfx::ffmpeg::tools::avoption_list_add_entries(context->priv_data, "tune", [&p](const AVOption* opt) {
 			char buffer[1024];
-			snprintf(buffer, sizeof(buffer), "%s.%s\0", ST_I18N_TUNE, opt->name);
+			snprintf(buffer, sizeof(buffer), "%s.%s", ST_I18N_TUNE, opt->name);
 			obs_property_list_add_string(p, D_TRANSLATE(buffer), opt->name);
 		});
 	}
@@ -293,7 +293,7 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec, c
 					return;
 
 				char buffer[1024];
-				snprintf(buffer, sizeof(buffer), "%s.%s\0", ST_I18N_RATECONTROL_MODE, opt->name);
+				snprintf(buffer, sizeof(buffer), "%s.%s", ST_I18N_RATECONTROL_MODE, opt->name);
 				obs_property_list_add_string(p, D_TRANSLATE(buffer), opt->name);
 			});
 		}
@@ -306,7 +306,7 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec, c
 			streamfx::ffmpeg::tools::avoption_list_add_entries(
 				context->priv_data, "multipass", [&p](const AVOption* opt) {
 					char buffer[1024];
-					snprintf(buffer, sizeof(buffer), "%s.%s\0", ST_I18N_RATECONTROL_MULTIPASS, opt->name);
+					snprintf(buffer, sizeof(buffer), "%s.%s", ST_I18N_RATECONTROL_MULTIPASS, opt->name);
 					obs_property_list_add_string(p, D_TRANSLATE(buffer), opt->name);
 				});
 		} else {
@@ -441,7 +441,7 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec, c
 			streamfx::ffmpeg::tools::avoption_list_add_entries(
 				context->priv_data, "b_ref_mode", [&p](const AVOption* opt) {
 					char buffer[1024];
-					snprintf(buffer, sizeof(buffer), "%s.%s\0", ST_I18N_OTHER_BFRAMEREFERENCEMODE, opt->name);
+					snprintf(buffer, sizeof(buffer), "%s.%s", ST_I18N_OTHER_BFRAMEREFERENCEMODE, opt->name);
 					obs_property_list_add_string(p, D_TRANSLATE(buffer), opt->name);
 				});
 		}
