@@ -18,21 +18,11 @@
 */
 
 #include "utility.hpp"
+#include "common.hpp"
 #include <sstream>
 #include <stdexcept>
 #include <unordered_map>
 #include "plugin.hpp"
-
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#pragma warning(disable : 5039)
-#endif
-#include <obs.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 obs_property_t* streamfx::util::obs_properties_add_tristate(obs_properties_t* props, const char* name, const char* desc)
 {

@@ -20,6 +20,7 @@
 // SOFTWARE.
 
 #include "nvenc_h264_handler.hpp"
+#include "common.hpp"
 #include "strings.hpp"
 #include "../codecs/h264.hpp"
 #include "../encoder-ffmpeg.hpp"
@@ -30,12 +31,19 @@
 extern "C" {
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4242 4244 4365)
+#pragma warning(disable : 4464)
+#pragma warning(disable : 4820)
+#pragma warning(disable : 5220)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wextra"
 #endif
-#include <obs-module.h>
 #include <libavutil/opt.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
 #endif
 }
 

@@ -22,6 +22,7 @@
 //--------------------------------------------------------------------------------//
 
 #include "amf_hevc_handler.hpp"
+#include "common.hpp"
 #include "strings.hpp"
 #include "../codecs/hevc.hpp"
 #include "../encoder-ffmpeg.hpp"
@@ -30,11 +31,19 @@
 #include "plugin.hpp"
 
 extern "C" {
-#include <obs-module.h>
+#ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4242 4244 4365)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wextra"
+#endif
 #include <libavutil/opt.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
 }
 
 // Settings

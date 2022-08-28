@@ -18,14 +18,12 @@
  */
 
 #include "ui.hpp"
-#include "common.hpp"
 #include "strings.hpp"
+#include "ui-common.hpp"
 #include <string_view>
 #include "configuration.hpp"
 #include "obs/obs-tools.hpp"
 #include "plugin.hpp"
-
-#include <obs-frontend-api.h>
 
 // Translation Keys
 constexpr std::string_view _i18n_prefix       = "StreamFX::";

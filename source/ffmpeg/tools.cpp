@@ -25,13 +25,22 @@
 #include "plugin.hpp"
 
 extern "C" {
+#ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4244)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wextra"
+#endif
 #include <libavcodec/avcodec.h>
 #include <libavutil/error.h>
 #include <libavutil/opt.h>
 #include <libavutil/pixdesc.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
 }
 
 using namespace streamfx::ffmpeg;

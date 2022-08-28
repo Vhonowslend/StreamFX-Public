@@ -25,12 +25,23 @@
 #include "util/util-library.hpp"
 
 #ifdef WIN32
+#ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4365)
-#pragma warning(disable : 5204)
+#pragma warning(disable : 4464)
+#pragma warning(disable : 4820)
+#pragma warning(disable : 5220)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wextra"
+#endif
 #include <d3d11.h>
 #include <dxgi.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
 #endif
 
 #define NVCVI_DEFINE_FUNCTION(name, ...)                                   \

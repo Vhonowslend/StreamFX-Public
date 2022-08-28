@@ -24,12 +24,27 @@
 #include "util/util-logging.hpp"
 
 // OpenGL
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4464)
+#pragma warning(disable : 4820)
+#pragma warning(disable : 5220)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wextra"
+#endif
 #include "glad/gl.h"
 #ifdef D_PLATFORM_WINDOWS
 #include "glad/wgl.h"
 #endif
 #ifdef D_PLATFORM_LINUX
 #include "glad/glx.h"
+#endif
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
 #endif
 
 #ifdef _DEBUG

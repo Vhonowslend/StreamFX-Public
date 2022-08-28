@@ -41,9 +41,24 @@
 #endif
 
 #ifdef WIN32
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4464)
+#pragma warning(disable : 4820)
+#pragma warning(disable : 5220)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wextra"
+#endif
 #include <KnownFolders.h>
 #include <ShlObj.h>
 #include <Windows.h>
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
 
 #define ST_LIBRARY_NAME "nvARPose.dll"
 #else
