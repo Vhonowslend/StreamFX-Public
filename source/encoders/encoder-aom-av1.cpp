@@ -358,7 +358,7 @@ aom_av1_instance::aom_av1_instance(obs_data_t* settings, obs_encoder_t* self, bo
 				_settings.color_format = AOM_IMG_FMT_I444;
 				break;
 			default:
-				throw std::runtime_error("Something went wrong figuring out our color format.");
+				throw std::runtime_error("Color Format is unknown.");
 			}
 
 			// Color Space
@@ -378,6 +378,8 @@ aom_av1_instance::aom_av1_instance(obs_data_t* settings, obs_encoder_t* self, bo
 				_settings.color_trc       = AOM_CICP_TC_SRGB;
 				_settings.color_matrix    = AOM_CICP_MC_BT_709;
 				break;
+			default:
+				throw std::runtime_error("Color Space is unknown.");
 			}
 
 			// Color Range
@@ -388,6 +390,8 @@ aom_av1_instance::aom_av1_instance(obs_data_t* settings, obs_encoder_t* self, bo
 			case VIDEO_RANGE_PARTIAL:
 				_settings.color_range = AOM_CR_STUDIO_RANGE;
 				break;
+			default:
+				throw std::runtime_error("Color Range is unknown.");
 			}
 
 			// Monochrome
@@ -1040,6 +1044,8 @@ void aom_av1_instance::get_video_info(struct video_scale_info* info)
 		D_LOG_WARNING("Color-format '%s' is not supported, forcing 'I444'...", obs_video_format_to_string(format));
 		info->format = VIDEO_FORMAT_I444;
 		break;
+	default:
+		throw std::runtime_error("Color Format is unknown.");
 	}
 
 	// Fix up color space.
