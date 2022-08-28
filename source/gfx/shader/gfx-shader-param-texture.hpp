@@ -1,6 +1,6 @@
 
 #pragma once
-#include <obs.h>
+#include "common.hpp"
 #include <chrono>
 #include <mutex>
 #include "gfx-shader-param.hpp"

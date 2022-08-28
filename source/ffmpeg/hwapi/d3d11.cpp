@@ -27,14 +27,19 @@
 #include "obs/gs/gs-helper.hpp"
 
 extern "C" {
+#ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4191)
-#pragma warning(disable : 4242)
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4365)
-#pragma warning(disable : 4986)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wextra"
+#endif
 #include <libavutil/hwcontext_d3d11va.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
 }
 
 using namespace streamfx::ffmpeg::hwapi;

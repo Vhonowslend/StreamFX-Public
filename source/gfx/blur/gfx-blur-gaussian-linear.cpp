@@ -16,18 +16,9 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "gfx-blur-gaussian-linear.hpp"
+#include "common.hpp"
 #include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <obs.h>
-#include <obs-module.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 // FIXME: This breaks when MAX_KERNEL_SIZE is changed, due to the way the Gaussian
 //  function first goes up at the point, and then once we pass the critical point

@@ -18,26 +18,32 @@
  */
 
 #include "ui-about.hpp"
+#include "ui-common.hpp"
 #include <algorithm>
 #include <deque>
 #include <fstream>
 #include <map>
 #include <random>
-
-#include <obs-frontend-api.h>
-#include <nlohmann/json.hpp>
 #include "plugin.hpp"
 #include "ui-about-entry.hpp"
 #include "util/util-logging.hpp"
 
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4251 4365 4371 4619 4946)
+#pragma warning(disable : 4623)
+#pragma warning(disable : 4625)
+#pragma warning(disable : 4626)
+#pragma warning(disable : 5027)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wextra"
 #endif
-#include <QLayout>
-#include <QLayoutItem>
+#include <nlohmann/json.hpp>
 #ifdef _MSC_VER
 #pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
 #endif
 
 #ifdef _DEBUG
