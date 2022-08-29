@@ -19,9 +19,12 @@
 
 #pragma once
 #include "common.hpp"
+
+#include "warning-disable.hpp"
 #include <chrono>
 #include <map>
 #include <mutex>
+#include "warning-enable.hpp"
 
 namespace streamfx::util {
 	class profiler : public std::enable_shared_from_this<streamfx::util::profiler> {

@@ -18,12 +18,15 @@
  */
 
 #include "obs-tools.hpp"
-#include <map>
-#include <set>
-#include <stdexcept>
 #include "obs-source.hpp"
 #include "obs-weak-source.hpp"
 #include "plugin.hpp"
+
+#include "warning-disable.hpp"
+#include <map>
+#include <set>
+#include <stdexcept>
+#include "warning-enable.hpp"
 
 struct __sfs_data {
 	std::set<::streamfx::obs::weak_source> sources;

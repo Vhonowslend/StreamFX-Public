@@ -19,7 +19,10 @@
 // SOFTWARE.
 
 #include "util-curl.hpp"
+
+#include "warning-disable.hpp"
 #include <sstream>
+#include "warning-enable.hpp"
 
 int32_t streamfx::util::curl::debug_helper(CURL* handle, curl_infotype type, char* data, size_t size,
 										   streamfx::util::curl* self)

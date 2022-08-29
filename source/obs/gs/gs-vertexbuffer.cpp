@@ -18,8 +18,11 @@
  */
 
 #include "gs-vertexbuffer.hpp"
-#include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
+
+#include "warning-disable.hpp"
+#include <stdexcept>
+#include "warning-enable.hpp"
 
 void streamfx::obs::gs::vertex_buffer::initialize(uint32_t capacity, uint8_t layers)
 {

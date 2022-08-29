@@ -19,10 +19,6 @@
 
 #pragma once
 #include "common.hpp"
-#include <chrono>
-#include <functional>
-#include <list>
-#include <map>
 #include "gfx/blur/gfx-blur-base.hpp"
 #include "gfx/gfx-source-texture.hpp"
 #include "obs/gs/gs-effect.hpp"
@@ -30,6 +26,13 @@
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
 #include "obs/obs-source-factory.hpp"
+
+#include "warning-disable.hpp"
+#include <chrono>
+#include <functional>
+#include <list>
+#include <map>
+#include "warning-enable.hpp"
 
 namespace streamfx::filter::blur {
 	enum class mask_type : int64_t {

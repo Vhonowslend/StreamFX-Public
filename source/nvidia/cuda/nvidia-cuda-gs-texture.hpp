@@ -18,11 +18,14 @@
  */
 
 #pragma once
-#include <cstddef>
-#include <memory>
 #include "nvidia-cuda-stream.hpp"
 #include "nvidia-cuda.hpp"
 #include "obs/gs/gs-texture.hpp"
+
+#include "warning-disable.hpp"
+#include <cstddef>
+#include <memory>
+#include "warning-enable.hpp"
 
 namespace streamfx::nvidia::cuda {
 	class gstexture {

@@ -19,9 +19,12 @@
 
 #pragma once
 #include "common.hpp"
+
+#include "warning-disable.hpp"
 #include <functional>
 #include <list>
 #include <mutex>
+#include "warning-enable.hpp"
 
 namespace streamfx::util {
 	template<typename... _args>

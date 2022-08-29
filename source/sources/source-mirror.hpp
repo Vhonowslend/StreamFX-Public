@@ -19,11 +19,6 @@
 
 #pragma once
 #include "common.hpp"
-#include <condition_variable>
-#include <mutex>
-#include <queue>
-#include <thread>
-#include <vector>
 #include "gfx/gfx-source-texture.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-sampler.hpp"
@@ -32,6 +27,14 @@
 #include "obs/obs-source-factory.hpp"
 #include "obs/obs-source.hpp"
 #include "obs/obs-tools.hpp"
+
+#include "warning-disable.hpp"
+#include <condition_variable>
+#include <mutex>
+#include <queue>
+#include <thread>
+#include <vector>
+#include "warning-enable.hpp"
 
 namespace streamfx::source::mirror {
 	struct mirror_audio_data {

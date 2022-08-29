@@ -19,8 +19,11 @@
 // SOFTWARE.
 
 #pragma once
-#include <cinttypes>
 #include "nvidia/cv/nvidia-cv.hpp"
+
+#include "warning-disable.hpp"
+#include <cinttypes>
+#include "warning-enable.hpp"
 
 #define P_NVAR_DEFINE_FUNCTION(name, ...)                           \
 	private:                                                        \

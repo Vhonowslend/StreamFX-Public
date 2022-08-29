@@ -18,29 +18,19 @@
  */
 
 #pragma once
-#include <cstddef>
-#include <tuple>
 #include "util/util-bitmask.hpp"
 #include "util/util-library.hpp"
 
+#include "warning-disable.hpp"
+#include <cstddef>
+#include <tuple>
+#include "warning-enable.hpp"
+
 #ifdef WIN32
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4464)
-#pragma warning(disable : 4820)
-#pragma warning(disable : 5220)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wextra"
-#endif
+#include "warning-disable.hpp"
 #include <d3d11.h>
 #include <dxgi.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
+#include "warning-enable.hpp"
 #endif
 
 #define P_CUDA_DEFINE_FUNCTION(name, ...)                             \

@@ -19,7 +19,6 @@
 // SOFTWARE.
 
 #include "util-library.hpp"
-#include <unordered_map>
 #include "util-platform.hpp"
 
 #if defined(_WIN32) || defined(_WIN64) || defined(__CYGWIN__) // Windows
@@ -28,11 +27,14 @@
 #define ST_UNIX
 #endif
 
+#include "warning-disable.hpp"
+#include <unordered_map>
 #if defined(ST_WINDOWS)
 #include <Windows.h>
 #elif defined(ST_UNIX)
 #include <dlfcn.h>
 #endif
+#include "warning-enable.hpp"
 
 streamfx::util::library::library(std::filesystem::path file) : _library(nullptr)
 {

@@ -24,30 +24,20 @@
 
 #pragma once
 #include "common.hpp"
-#include <memory>
-#include <queue>
 #include "encoders/codecs/av1.hpp"
 #include "obs/obs-encoder-factory.hpp"
 #include "util/util-library.hpp"
 #include "util/util-profiler.hpp"
 
+#include "warning-disable.hpp"
+#include <memory>
+#include <queue>
+#include "warning-enable.hpp"
+
 extern "C" {
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4464)
-#pragma warning(disable : 4820)
-#pragma warning(disable : 5220)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wextra"
-#endif
+#include "warning-disable.hpp"
 #include <aom/aomcx.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
+#include "warning-enable.hpp"
 };
 
 namespace streamfx::encoder::aom::av1 {

@@ -18,25 +18,15 @@
  */
 
 #include "gs-effect-pass.hpp"
+
+#include "warning-disable.hpp"
 #include <cstring>
+#include "warning-enable.hpp"
 
 extern "C" {
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4464)
-#pragma warning(disable : 4820)
-#pragma warning(disable : 5220)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wextra"
-#endif
+#include "warning-disable.hpp"
 #include <graphics/effect.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
+#include "warning-enable.hpp"
 }
 
 streamfx::obs::gs::effect_pass::effect_pass(gs_epass_t* pass, std::shared_ptr<gs_technique_t> parent) : _parent(parent)

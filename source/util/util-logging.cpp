@@ -19,7 +19,10 @@
 
 #include "util-logging.hpp"
 #include "common.hpp"
+
+#include "warning-disable.hpp"
 #include <stdarg.h>
+#include "warning-enable.hpp"
 
 void streamfx::util::logging::log(level lvl, const char* format, ...)
 {

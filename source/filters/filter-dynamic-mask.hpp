@@ -19,8 +19,6 @@
 
 #pragma once
 #include "common.hpp"
-#include <list>
-#include <map>
 #include "gfx/gfx-source-texture.hpp"
 #include "obs/gs/gs-effect.hpp"
 #include "obs/obs-source-active-reference.hpp"
@@ -29,6 +27,11 @@
 #include "obs/obs-source-tracker.hpp"
 #include "obs/obs-source.hpp"
 #include "obs/obs-tools.hpp"
+
+#include "warning-disable.hpp"
+#include <list>
+#include <map>
+#include "warning-enable.hpp"
 
 namespace streamfx::filter::dynamic_mask {
 	enum class channel : int8_t { Invalid = -1, Red, Green, Blue, Alpha };

@@ -19,11 +19,12 @@
 // SOFTWARE.
 
 #pragma once
+#include "warning-disable.hpp"
 #include <memory>
-
 #include "gfx-lut.hpp"
 #include "obs/gs/gs-effect.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
+#include "warning-enable.hpp"
 
 namespace streamfx::gfx::lut {
 	class producer {

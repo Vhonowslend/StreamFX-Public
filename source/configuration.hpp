@@ -19,8 +19,11 @@
 
 #pragma once
 #include "common.hpp"
+
+#include "warning-disable.hpp"
 #include <filesystem>
 #include <memory>
+#include "warning-enable.hpp"
 
 namespace streamfx {
 	class configuration {

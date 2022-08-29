@@ -19,9 +19,11 @@
 // SOFTWARE.
 
 #pragma once
-#include <memory>
-
 #include "obs/gs/gs-effect.hpp"
+
+#include "warning-disable.hpp"
+#include <memory>
+#include "warning-enable.hpp"
 
 namespace streamfx::gfx::lut {
 	class data {

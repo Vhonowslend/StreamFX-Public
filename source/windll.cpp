@@ -17,7 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+#include "warning-disable.hpp"
 #include <Windows.h>
+#include "warning-enable.hpp"
 
 BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID)
 {

@@ -18,9 +18,12 @@
  */
 
 #pragma once
+#include "nvidia-cuda.hpp"
+
+#include "warning-disable.hpp"
 #include <cstddef>
 #include <memory>
-#include "nvidia-cuda.hpp"
+#include "warning-enable.hpp"
 
 namespace streamfx::nvidia::cuda {
 	class memory {

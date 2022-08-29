@@ -18,8 +18,10 @@
  */
 
 #pragma once
+#include "warning-disable.hpp"
 #include <cinttypes>
 #include <cstdint>
+#include "warning-enable.hpp"
 
 #define P_LOG(...) streamfx::util::logging::log(__VA_ARGS__);
 #define P_LOG_ERROR(...) P_LOG(streamfx::util::logging::level::LEVEL_ERROR, __VA_ARGS__)

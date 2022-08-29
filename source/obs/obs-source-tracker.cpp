@@ -18,10 +18,13 @@
  */
 
 #include "obs-source-tracker.hpp"
-#include <mutex>
-#include <stdexcept>
 #include "obs/obs-tools.hpp"
 #include "util/util-logging.hpp"
+
+#include "warning-disable.hpp"
+#include <mutex>
+#include <stdexcept>
+#include "warning-enable.hpp"
 
 #ifdef _DEBUG
 #define ST_PREFIX "<%s> "
