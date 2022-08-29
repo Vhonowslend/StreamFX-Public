@@ -280,7 +280,7 @@ std::vector<AVPixelFormat> tools::get_software_formats(const AVPixelFormat* list
 
 	fmts.push_back(AV_PIX_FMT_NONE);
 
-	return std::move(fmts);
+	return fmts;
 }
 
 void tools::context_setup_from_obs(const video_output_info* voi, AVCodecContext* context)

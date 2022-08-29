@@ -99,7 +99,7 @@ std::list<device> d3d11::enumerate_adapters()
 		adapters.push_back(dev);
 	}
 
-	return std::move(adapters);
+	return adapters;
 }
 
 std::shared_ptr<instance> d3d11::create(const device& target)
