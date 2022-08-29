@@ -22,13 +22,7 @@
 #include "ui-common.hpp"
 #include "updater.hpp"
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wextra"
-#endif
+#include "warning-disable.hpp"
 #include <QAction>
 #include <QActionGroup>
 #include <QBoxLayout>
@@ -41,11 +35,7 @@
 
 Q_DECLARE_METATYPE(::streamfx::version_stage);
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
+#include "warning-enable.hpp"
 
 namespace streamfx::ui {
 	class updater_dialog : public QDialog, public Ui::Updater {

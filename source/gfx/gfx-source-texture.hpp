@@ -17,10 +17,13 @@
 
 #pragma once
 #include "common.hpp"
-#include <map>
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
 #include "obs/obs-weak-source.hpp"
+
+#include "warning-disable.hpp"
+#include <map>
+#include "warning-enable.hpp"
 
 namespace streamfx::gfx {
 	class source_texture {

@@ -18,8 +18,6 @@
 */
 
 #include "plugin.hpp"
-#include <fstream>
-#include <stdexcept>
 #include "configuration.hpp"
 #include "gfx/gfx-opengl.hpp"
 #include "obs/gs/gs-helper.hpp"
@@ -90,6 +88,11 @@
 #include "updater.hpp"
 //static std::shared_ptr<streamfx::updater> _updater;
 #endif
+
+#include "warning-disable.hpp"
+#include <fstream>
+#include <stdexcept>
+#include "warning-enable.hpp"
 
 static std::shared_ptr<streamfx::util::threadpool>       _threadpool;
 static std::shared_ptr<streamfx::obs::gs::vertex_buffer> _gs_fstri_vb;

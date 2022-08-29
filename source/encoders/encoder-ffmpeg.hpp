@@ -21,6 +21,13 @@
 
 #pragma once
 #include "common.hpp"
+#include "ffmpeg/avframe-queue.hpp"
+#include "ffmpeg/hwapi/base.hpp"
+#include "ffmpeg/swscale.hpp"
+#include "handlers/handler.hpp"
+#include "obs/obs-encoder-factory.hpp"
+
+#include "warning-disable.hpp"
 #include <condition_variable>
 #include <map>
 #include <mutex>
@@ -28,27 +35,13 @@
 #include <stack>
 #include <thread>
 #include <vector>
-#include "ffmpeg/avframe-queue.hpp"
-#include "ffmpeg/hwapi/base.hpp"
-#include "ffmpeg/swscale.hpp"
-#include "handlers/handler.hpp"
-#include "obs/obs-encoder-factory.hpp"
+#include "warning-enable.hpp"
 
 extern "C" {
-#ifdef _MSC_VER
-#pragma warning(push)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wextra"
-#endif
+#include "warning-disable.hpp"
 #include <libavcodec/avcodec.h>
 #include <libavutil/frame.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
+#include "warning-enable.hpp"
 }
 
 namespace streamfx::encoder::ffmpeg {

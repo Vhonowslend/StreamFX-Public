@@ -18,9 +18,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <memory>
 #include "obs/gs/gs-effect.hpp"
 #include "obs/gs/gs-vertexbuffer.hpp"
+
+#include "warning-disable.hpp"
+#include <memory>
+#include "warning-enable.hpp"
 
 namespace streamfx::gfx {
 	class debug {

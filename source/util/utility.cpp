@@ -19,10 +19,13 @@
 
 #include "utility.hpp"
 #include "common.hpp"
+#include "plugin.hpp"
+
+#include "warning-disable.hpp"
 #include <sstream>
 #include <stdexcept>
 #include <unordered_map>
-#include "plugin.hpp"
+#include "warning-enable.hpp"
 
 obs_property_t* streamfx::util::obs_properties_add_tristate(obs_properties_t* props, const char* name, const char* desc)
 {

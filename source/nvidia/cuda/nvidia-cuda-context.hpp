@@ -18,8 +18,11 @@
  */
 
 #pragma once
-#include <memory>
 #include "nvidia-cuda.hpp"
+
+#include "warning-disable.hpp"
+#include <memory>
+#include "warning-enable.hpp"
 
 namespace streamfx::nvidia::cuda {
 	class context_stack;

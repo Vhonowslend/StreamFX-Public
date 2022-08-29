@@ -18,10 +18,13 @@
  */
 
 #pragma once
-#include <memory>
 #include "nvidia-cuda-context.hpp"
 #include "nvidia-cuda-stream.hpp"
 #include "nvidia-cuda.hpp"
+
+#include "warning-disable.hpp"
+#include <memory>
+#include "warning-enable.hpp"
 
 namespace streamfx::nvidia::cuda {
 	class obs {

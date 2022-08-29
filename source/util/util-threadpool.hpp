@@ -18,6 +18,7 @@
  */
 
 #pragma once
+#include "warning-disable.hpp"
 #include <atomic>
 #include <condition_variable>
 #include <functional>
@@ -26,6 +27,7 @@
 #include <mutex>
 #include <stdexcept>
 #include <thread>
+#include "warning-enable.hpp"
 
 namespace streamfx::util {
 	typedef std::shared_ptr<void>                  threadpool_data_t;

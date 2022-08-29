@@ -21,12 +21,29 @@
 
 #include "encoder-ffmpeg.hpp"
 #include "strings.hpp"
-#include <sstream>
 #include "codecs/hevc.hpp"
 #include "ffmpeg/tools.hpp"
 #include "handlers/debug_handler.hpp"
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
+
+#include "warning-disable.hpp"
+#include <sstream>
+#include "warning-enable.hpp"
+
+extern "C" {
+#include "warning-disable.hpp"
+#include <obs-avc.h>
+#include "warning-enable.hpp"
+
+#include "warning-disable.hpp"
+#include <libavcodec/avcodec.h>
+#include <libavutil/dict.h>
+#include <libavutil/frame.h>
+#include <libavutil/opt.h>
+#include <libavutil/pixdesc.h>
+#include "warning-enable.hpp"
+}
 
 #ifdef ENABLE_ENCODER_FFMPEG_AMF
 #include "handlers/amf_h264_handler.hpp"
@@ -45,46 +62,6 @@
 #ifdef ENABLE_ENCODER_FFMPEG_DNXHR
 #include "handlers/dnxhd_handler.hpp"
 #endif
-
-extern "C" {
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4464)
-#pragma warning(disable : 4820)
-#pragma warning(disable : 5220)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wextra"
-#endif
-#include <obs-avc.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4464)
-#pragma warning(disable : 4820)
-#pragma warning(disable : 5220)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wextra"
-#endif
-#include <libavcodec/avcodec.h>
-#include <libavutil/dict.h>
-#include <libavutil/frame.h>
-#include <libavutil/opt.h>
-#include <libavutil/pixdesc.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
-}
 
 #ifdef WIN32
 #include "ffmpeg/hwapi/d3d11.hpp"

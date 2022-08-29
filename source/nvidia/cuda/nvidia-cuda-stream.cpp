@@ -18,8 +18,11 @@
  */
 
 #include "nvidia-cuda-stream.hpp"
-#include <stdexcept>
 #include "util/util-logging.hpp"
+
+#include "warning-disable.hpp"
+#include <stdexcept>
+#include "warning-enable.hpp"
 
 #ifdef _DEBUG
 #define ST_PREFIX "<%s> "

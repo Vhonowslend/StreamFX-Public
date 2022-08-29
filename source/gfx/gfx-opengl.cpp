@@ -19,21 +19,15 @@
 // SOFTWARE.
 
 #include "gfx-opengl.hpp"
-#include <mutex>
 #include "plugin.hpp"
 #include "util/util-logging.hpp"
 
+#include "warning-disable.hpp"
+#include <mutex>
+#include "warning-enable.hpp"
+
 // OpenGL
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4464)
-#pragma warning(disable : 4820)
-#pragma warning(disable : 5220)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wextra"
-#endif
+#include "warning-disable.hpp"
 #include "glad/gl.h"
 #ifdef D_PLATFORM_WINDOWS
 #include "glad/wgl.h"
@@ -41,11 +35,7 @@
 #ifdef D_PLATFORM_LINUX
 #include "glad/glx.h"
 #endif
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
+#include "warning-enable.hpp"
 
 #ifdef _DEBUG
 #define ST_PREFIX "<%s> "

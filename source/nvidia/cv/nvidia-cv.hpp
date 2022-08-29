@@ -19,30 +19,17 @@
 // SOFTWARE.
 
 #pragma once
-#include <cinttypes>
 #include "nvidia/cuda/nvidia-cuda.hpp"
 #include "util/util-bitmask.hpp"
 #include "util/util-library.hpp"
 
+#include "warning-disable.hpp"
+#include <cinttypes>
 #ifdef WIN32
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4464)
-#pragma warning(disable : 4820)
-#pragma warning(disable : 5220)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wextra"
-#endif
 #include <d3d11.h>
 #include <dxgi.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
 #endif
-#endif
+#include "warning-enable.hpp"
 
 #define NVCVI_DEFINE_FUNCTION(name, ...)                                   \
 	private:                                                               \

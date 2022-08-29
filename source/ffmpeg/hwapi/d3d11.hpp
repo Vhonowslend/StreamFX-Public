@@ -22,22 +22,12 @@
 #pragma once
 #include "base.hpp"
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wextra"
-#endif
+#include "warning-disable.hpp"
 #include <atlutil.h>
 #include <d3d11.h>
 #include <d3d11_1.h>
 #include <dxgi.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
+#include "warning-enable.hpp"
 
 namespace streamfx::ffmpeg::hwapi {
 	class d3d11 : public streamfx::ffmpeg::hwapi::base {

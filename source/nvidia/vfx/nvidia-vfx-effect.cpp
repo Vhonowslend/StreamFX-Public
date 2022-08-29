@@ -19,9 +19,12 @@
 // SOFTWARE.
 
 #include "nvidia-vfx-effect.hpp"
-#include <string_view>
 #include "obs/gs/gs-helper.hpp"
 #include "util/util-logging.hpp"
+
+#include "warning-disable.hpp"
+#include <string_view>
+#include "warning-enable.hpp"
 
 #ifdef _DEBUG
 #define ST_PREFIX "<%s> "

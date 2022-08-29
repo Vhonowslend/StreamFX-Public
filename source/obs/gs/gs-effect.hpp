@@ -19,10 +19,13 @@
 
 #pragma once
 #include "common.hpp"
-#include <filesystem>
-#include <list>
 #include "gs-effect-parameter.hpp"
 #include "gs-effect-technique.hpp"
+
+#include "warning-disable.hpp"
+#include <filesystem>
+#include <list>
+#include "warning-enable.hpp"
 
 namespace streamfx::obs::gs {
 	class effect : public std::shared_ptr<gs_effect_t> {

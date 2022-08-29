@@ -19,12 +19,15 @@
 
 #pragma once
 #include "common.hpp"
-#include <vector>
 #include "obs/gs/gs-mipmapper.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
 #include "obs/gs/gs-vertexbuffer.hpp"
 #include "obs/obs-source-factory.hpp"
+
+#include "warning-disable.hpp"
+#include <vector>
+#include "warning-enable.hpp"
 
 namespace streamfx::filter::transform {
 	enum class transform_mode {

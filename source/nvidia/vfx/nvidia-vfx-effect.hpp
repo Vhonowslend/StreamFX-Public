@@ -19,9 +19,6 @@
 // SOFTWARE.
 
 #pragma once
-#include <memory>
-#include <string>
-#include <string_view>
 #include "nvidia-vfx.hpp"
 #include "nvidia/cuda/nvidia-cuda-obs.hpp"
 #include "nvidia/cuda/nvidia-cuda-stream.hpp"
@@ -30,6 +27,12 @@
 #include "nvidia/cv/nvidia-cv-texture.hpp"
 #include "nvidia/cv/nvidia-cv.hpp"
 #include "nvidia/vfx/nvidia-vfx.hpp"
+
+#include "warning-disable.hpp"
+#include <memory>
+#include <string>
+#include <string_view>
+#include "warning-enable.hpp"
 
 namespace streamfx::nvidia::vfx {
 	using namespace ::streamfx::nvidia;

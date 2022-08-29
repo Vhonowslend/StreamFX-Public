@@ -16,10 +16,13 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "gfx-shader-param.hpp"
-#include <algorithm>
-#include <sstream>
 #include "gfx-shader-param-basic.hpp"
 #include "gfx-shader-param-texture.hpp"
+
+#include "warning-disable.hpp"
+#include <algorithm>
+#include <sstream>
+#include "warning-enable.hpp"
 
 #define ST_ANNO_ORDER "order"
 #define ST_ANNO_VISIBILITY "visible"

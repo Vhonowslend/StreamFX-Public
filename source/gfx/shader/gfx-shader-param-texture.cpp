@@ -17,14 +17,17 @@
 
 #include "gfx-shader-param-texture.hpp"
 #include "strings.hpp"
-#include <map>
-#include <sstream>
-#include <stdexcept>
 #include "gfx-shader.hpp"
 #include "gfx/gfx-debug.hpp"
 #include "obs/gs/gs-helper.hpp"
 #include "obs/obs-source-tracker.hpp"
 #include "util/util-platform.hpp"
+
+#include "warning-disable.hpp"
+#include <map>
+#include <sstream>
+#include <stdexcept>
+#include "warning-enable.hpp"
 
 // TODO:
 // - FFT Audio Conversion
