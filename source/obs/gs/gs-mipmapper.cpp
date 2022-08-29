@@ -18,28 +18,22 @@
  */
 
 #include "gs-mipmapper.hpp"
-#include <sstream>
-#include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
 
+#include "warning-disable.hpp"
+#include <sstream>
+#include <stdexcept>
 // Direct3D 11
 #ifdef _WIN32
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4191 4242 4244 4365 4777 4986 5039 5204)
-#endif
 #include <Windows.h>
 #include <atlutil.h>
 #include <d3d11.h>
 #include <dxgi.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
 #endif
-#endif
-
 // OpenGL
 #include "glad/gl.h"
+#include "warning-enable.hpp"
 
 #ifdef _WIN32
 struct d3d_info {

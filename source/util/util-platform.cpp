@@ -39,7 +39,9 @@
 #endif
 
 #ifdef WIN32
+#include "warning-disable.hpp"
 #include <Windows.h>
+#include "warning-enable.hpp"
 
 std::string streamfx::util::platform::native_to_utf8(std::wstring const& v)
 {

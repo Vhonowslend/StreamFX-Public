@@ -19,11 +19,14 @@
 
 #include "filter-dynamic-mask.hpp"
 #include "strings.hpp"
+#include "obs/gs/gs-helper.hpp"
+#include "util/util-logging.hpp"
+
+#include "warning-disable.hpp"
 #include <sstream>
 #include <stdexcept>
 #include <vector>
-#include "obs/gs/gs-helper.hpp"
-#include "util/util-logging.hpp"
+#include "warning-enable.hpp"
 
 #ifdef _DEBUG
 #define ST_PREFIX "<%s> "

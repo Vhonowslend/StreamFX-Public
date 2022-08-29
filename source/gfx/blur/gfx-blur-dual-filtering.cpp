@@ -17,10 +17,13 @@
 
 #include "gfx-blur-dual-filtering.hpp"
 #include "common.hpp"
-#include <algorithm>
-#include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
+
+#include "warning-disable.hpp"
+#include <algorithm>
+#include <stdexcept>
+#include "warning-enable.hpp"
 
 // Dual Filtering Blur
 //

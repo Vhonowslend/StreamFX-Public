@@ -17,13 +17,16 @@
 
 #pragma once
 #include "common.hpp"
+#include "gfx/shader/gfx-shader-param.hpp"
+#include "obs/gs/gs-effect.hpp"
+#include "obs/gs/gs-rendertarget.hpp"
+
+#include "warning-disable.hpp"
 #include <filesystem>
 #include <list>
 #include <map>
 #include <random>
-#include "gfx/shader/gfx-shader-param.hpp"
-#include "obs/gs/gs-effect.hpp"
-#include "obs/gs/gs-rendertarget.hpp"
+#include "warning-enable.hpp"
 
 namespace streamfx::gfx {
 	namespace shader {

@@ -16,9 +16,12 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "gfx-source-texture.hpp"
-#include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
 #include "obs/obs-tools.hpp"
+
+#include "warning-disable.hpp"
+#include <stdexcept>
+#include "warning-enable.hpp"
 
 streamfx::gfx::source_texture::~source_texture()
 {

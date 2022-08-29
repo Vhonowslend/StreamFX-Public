@@ -18,7 +18,6 @@
  */
 
 #pragma once
-#include <vector>
 #include "gfx/lut/gfx-lut-consumer.hpp"
 #include "gfx/lut/gfx-lut-producer.hpp"
 #include "gfx/lut/gfx-lut.hpp"
@@ -28,6 +27,10 @@
 #include "obs/gs/gs-vertexbuffer.hpp"
 #include "obs/obs-source-factory.hpp"
 #include "plugin.hpp"
+
+#include "warning-disable.hpp"
+#include <vector>
+#include "warning-enable.hpp"
 
 namespace streamfx::filter::color_grade {
 	enum class detection_mode {

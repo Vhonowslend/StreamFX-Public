@@ -19,9 +19,12 @@
 
 #include "source-shader.hpp"
 #include "strings.hpp"
-#include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
 #include "util/util-logging.hpp"
+
+#include "warning-disable.hpp"
+#include <stdexcept>
+#include "warning-enable.hpp"
 
 #ifdef _DEBUG
 #define ST_PREFIX "<%s> "

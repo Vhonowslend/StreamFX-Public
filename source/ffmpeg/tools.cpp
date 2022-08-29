@@ -20,27 +20,20 @@
 // SOFTWARE.
 
 #include "tools.hpp"
-#include <list>
-#include <sstream>
 #include "plugin.hpp"
 
+#include "warning-disable.hpp"
+#include <list>
+#include <sstream>
+#include "warning-enable.hpp"
+
 extern "C" {
-#ifdef _MSC_VER
-#pragma warning(push)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wextra"
-#endif
+#include "warning-disable.hpp"
 #include <libavcodec/avcodec.h>
 #include <libavutil/error.h>
 #include <libavutil/opt.h>
 #include <libavutil/pixdesc.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
+#include "warning-enable.hpp"
 }
 
 using namespace streamfx::ffmpeg;

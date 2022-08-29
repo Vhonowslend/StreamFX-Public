@@ -18,7 +18,10 @@
  */
 
 #include "gs-vertex.hpp"
+
+#include "warning-disable.hpp"
 #include <stdexcept>
+#include "warning-enable.hpp"
 
 streamfx::obs::gs::vertex::vertex()
 	: position(nullptr), normal(nullptr), tangent(nullptr), color(nullptr), _has_store(true), _store(nullptr)

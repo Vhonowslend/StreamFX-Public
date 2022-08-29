@@ -18,7 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "warning-disable.hpp"
 #include <memory>
+#include "warning-enable.hpp"
 
 namespace streamfx::gfx {
 	class opengl {

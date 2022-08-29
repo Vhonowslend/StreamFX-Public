@@ -20,6 +20,8 @@ NamespaceIndentation: All
 # Includes
 #IncludeBlocks: Regroup
 IncludeCategories:
+  - Regex: '^"warning-disable.hpp"$'
+    Priority: 50
   - Regex: '^(<|")(config.hpp|common.hpp|ui-common.hpp|strings.hpp|version.hpp|obs.h)("|>)'
     Priority: 100
   - Regex: '^<obs-'
@@ -32,6 +34,8 @@ IncludeCategories:
     Priority: 300
   - Regex: '.moc"$'
     Priority: 300
+  - Regex: '^"warning-enable.hpp"$'
+    Priority: 500
 SortIncludes: true
 
 # Alignment

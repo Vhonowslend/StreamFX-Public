@@ -23,9 +23,12 @@
 //--------------------------------------------------------------------------------//
 
 #include "encoder-aom-av1.hpp"
+#include "util/util-logging.hpp"
+
+#include "warning-disable.hpp"
 #include <filesystem>
 #include <thread>
-#include "util/util-logging.hpp"
+#include "warning-enable.hpp"
 
 #ifdef _DEBUG
 #define ST_PREFIX "<%s> "

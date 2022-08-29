@@ -19,7 +19,6 @@
 // SOFTWARE.
 
 #include "gfx-lut-consumer.hpp"
-
 #include "obs/gs/gs-helper.hpp"
 
 streamfx::gfx::lut::consumer::consumer()

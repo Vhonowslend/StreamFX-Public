@@ -20,10 +20,13 @@
 #include "ui.hpp"
 #include "strings.hpp"
 #include "ui-common.hpp"
-#include <string_view>
 #include "configuration.hpp"
 #include "obs/obs-tools.hpp"
 #include "plugin.hpp"
+
+#include "warning-disable.hpp"
+#include <string_view>
+#include "warning-enable.hpp"
 
 // Translation Keys
 constexpr std::string_view _i18n_prefix       = "StreamFX::";

@@ -18,9 +18,12 @@
  */
 
 #include "gs-indexbuffer.hpp"
-#include <stdexcept>
 #include "gs-limits.hpp"
 #include "obs/gs/gs-helper.hpp"
+
+#include "warning-disable.hpp"
+#include <stdexcept>
+#include "warning-enable.hpp"
 
 streamfx::obs::gs::index_buffer::index_buffer(uint32_t maximumVertices)
 {

@@ -18,8 +18,11 @@
  */
 
 #include "gs-rendertarget.hpp"
-#include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
+
+#include "warning-disable.hpp"
+#include <stdexcept>
+#include "warning-enable.hpp"
 
 streamfx::obs::gs::rendertarget::~rendertarget()
 {

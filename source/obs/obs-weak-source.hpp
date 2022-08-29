@@ -18,8 +18,11 @@
 
 #pragma once
 #include "common.hpp"
-#include <string_view>
 #include "obs-source.hpp"
+
+#include "warning-disable.hpp"
+#include <string_view>
+#include "warning-enable.hpp"
 
 // ToDo:
 // - Is FORCE_INLINE necessary for optimal performance, or can LTO handle this?

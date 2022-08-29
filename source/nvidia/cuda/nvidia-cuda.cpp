@@ -18,8 +18,11 @@
  */
 
 #include "nvidia-cuda.hpp"
-#include <mutex>
 #include "util/util-logging.hpp"
+
+#include "warning-disable.hpp"
+#include <mutex>
+#include "warning-enable.hpp"
 
 #ifdef _DEBUG
 #define ST_PREFIX "<%s> "

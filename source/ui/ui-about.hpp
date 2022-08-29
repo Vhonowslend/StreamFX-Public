@@ -21,19 +21,9 @@
 #include "common.hpp"
 #include "ui-common.hpp"
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wextra"
-#endif
+#include "warning-disable.hpp"
 #include "ui_about.h"
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
+#include "warning-enable.hpp"
 
 namespace streamfx::ui {
 	class about : public QDialog, public Ui::About {

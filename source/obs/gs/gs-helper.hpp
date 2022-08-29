@@ -19,8 +19,11 @@
 
 #pragma once
 #include "common.hpp"
-#include <vector>
 #include "plugin.hpp"
+
+#include "warning-disable.hpp"
+#include <vector>
+#include "warning-enable.hpp"
 
 namespace streamfx::obs::gs {
 	class context {

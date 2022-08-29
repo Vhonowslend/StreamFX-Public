@@ -17,8 +17,11 @@
 
 #include "gfx-blur-gaussian-linear.hpp"
 #include "common.hpp"
-#include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
+
+#include "warning-disable.hpp"
+#include <stdexcept>
+#include "warning-enable.hpp"
 
 // FIXME: This breaks when MAX_KERNEL_SIZE is changed, due to the way the Gaussian
 //  function first goes up at the point, and then once we pass the critical point

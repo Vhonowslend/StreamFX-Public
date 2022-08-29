@@ -1,9 +1,12 @@
 #include "dnxhd_handler.hpp"
 #include "common.hpp"
-#include <array>
 #include "../codecs/dnxhr.hpp"
 #include "ffmpeg/tools.hpp"
 #include "plugin.hpp"
+
+#include "warning-disable.hpp"
+#include <array>
+#include "warning-enable.hpp"
 
 using namespace streamfx::encoder::ffmpeg::handler;
 using namespace streamfx::encoder::codec::dnxhr;

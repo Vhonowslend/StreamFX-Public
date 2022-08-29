@@ -17,11 +17,14 @@
 
 #include "gfx-blur-box.hpp"
 #include "common.hpp"
+#include "obs/gs/gs-helper.hpp"
+#include "plugin.hpp"
+
+#include "warning-disable.hpp"
 #include <cmath>
 #include <memory>
 #include <stdexcept>
-#include "obs/gs/gs-helper.hpp"
-#include "plugin.hpp"
+#include "warning-enable.hpp"
 
 #define ST_MAX_BLUR_SIZE 128 // Also change this in box.effect if modified.
 

@@ -1,3 +1,5 @@
+#include "warning-disable.hpp"
+
 #include "common.hpp"
 
 OBS_DECLARE_MODULE()
@@ -14,3 +16,4 @@ MODULE_EXPORT const char* obs_module_description()
 	return "@PROJECT_DESCRIPTION@";
 }
 
+#include "warning-enable.hpp"

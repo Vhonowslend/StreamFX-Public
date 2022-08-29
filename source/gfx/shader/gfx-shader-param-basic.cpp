@@ -17,10 +17,13 @@
 
 #include "gfx-shader-param-basic.hpp"
 #include "strings.hpp"
+
+#include "warning-disable.hpp"
 #include <algorithm>
 #include <map>
 #include <sstream>
 #include <stdexcept>
+#include "warning-enable.hpp"
 
 static const std::string_view _annotation_field_type      = "field_type";
 static const std::string_view _annotation_suffix          = "suffix";

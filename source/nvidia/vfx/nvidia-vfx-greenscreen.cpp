@@ -19,12 +19,15 @@
 // SOFTWARE.
 
 #include "nvidia-vfx-greenscreen.hpp"
-#include <cmath>
-#include <utility>
 #include "nvidia/cv/nvidia-cv.hpp"
 #include "obs/gs/gs-helper.hpp"
 #include "util/util-logging.hpp"
 #include "util/utility.hpp"
+
+#include "warning-disable.hpp"
+#include <cmath>
+#include <utility>
+#include "warning-enable.hpp"
 
 #ifdef _DEBUG
 #define ST_PREFIX "<%s> "

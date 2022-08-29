@@ -18,7 +18,10 @@
  */
 
 #include "util-profiler.hpp"
+
+#include "warning-disable.hpp"
 #include <iterator>
+#include "warning-enable.hpp"
 
 streamfx::util::profiler::profiler() {}
 

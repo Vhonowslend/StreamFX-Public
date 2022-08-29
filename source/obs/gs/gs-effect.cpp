@@ -18,12 +18,15 @@
  */
 
 #include "gs-effect.hpp"
+#include "obs/gs/gs-helper.hpp"
+#include "util/util-platform.hpp"
+
+#include "warning-disable.hpp"
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
-#include "obs/gs/gs-helper.hpp"
-#include "util/util-platform.hpp"
+#include "warning-enable.hpp"
 
 #define MAX_EFFECT_SIZE 32 * 1024 * 1024 // 32 MiB, big enough for everything.
 
