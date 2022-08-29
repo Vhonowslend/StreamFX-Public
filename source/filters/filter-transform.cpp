@@ -108,8 +108,8 @@ enum RotationOrder : int64_t {
 };
 
 transform_instance::transform_instance(obs_data_t* data, obs_source_t* context)
-	: obs::source_instance(data, context), _camera_mode(), _camera_fov(), _standard_effect(), _transform_effect(),
-	  _sampler(), _params(), _corners(), _cache_rendered(), _mipmap_enabled(), _source_rendered(), _source_size(),
+	: obs::source_instance(data, context), _camera_mode(), _camera_fov(), _params(), _corners(), _standard_effect(),
+	  _transform_effect(), _sampler(), _cache_rendered(), _mipmap_enabled(), _source_rendered(), _source_size(),
 	  _update_mesh(true)
 {
 	{

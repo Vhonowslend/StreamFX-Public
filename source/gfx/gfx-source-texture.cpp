@@ -31,7 +31,7 @@ streamfx::gfx::source_texture::~source_texture()
 }
 
 streamfx::gfx::source_texture::source_texture(streamfx::obs::weak_source child, streamfx::obs::weak_source parent)
-	: _child(child.lock()), _parent(parent.lock())
+	: _parent(parent.lock()), _child(child.lock())
 {
 	// Verify that 'child' and 'parent' exist.
 	if (!_child || !_parent) {

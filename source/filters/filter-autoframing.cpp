@@ -183,8 +183,8 @@ autoframing_instance::autoframing_instance(obs_data_t* data, obs_source_t* self)
 
 	  _track_mode(tracking_mode::SOLO), _track_frequency(1),
 
-	  _motion_prediction(0.0), _motion_smoothing(0.0), _motion_smoothing_kalman_pnc(1.),
-	  _motion_smoothing_kalman_mnc(1.),
+	  _motion_smoothing(0.0), _motion_smoothing_kalman_pnc(1.), _motion_smoothing_kalman_mnc(1.),
+	  _motion_prediction(0.0),
 
 	  _frame_stability(0.), _frame_stability_kalman(1.), _frame_padding_prc(), _frame_padding(), _frame_offset_prc(),
 	  _frame_offset(), _frame_aspect_ratio(0.0),
