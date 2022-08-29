@@ -93,10 +93,9 @@ std::string streamfx::filter::upscaling::string(upscaling_provider provider)
 // Instance
 //------------------------------------------------------------------------------
 upscaling_instance::upscaling_instance(obs_data_t* data, obs_source_t* self)
-	: obs::source_instance(data, self),
-
-	  _in_size(1, 1), _out_size(1, 1), _provider_ready(false), _provider(upscaling_provider::INVALID), _provider_lock(),
-	  _provider_task(), _input(), _output(), _dirty(false)
+	: obs::source_instance(data, self), _in_size(1, 1), _out_size(1, 1), _provider(upscaling_provider::INVALID),
+	  _provider_ui(upscaling_provider::INVALID), _provider_ready(false), _provider_lock(), _provider_task(), _input(),
+	  _output(), _dirty(false)
 {
 	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
 
