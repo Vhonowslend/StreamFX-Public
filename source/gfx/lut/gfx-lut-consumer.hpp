@@ -19,11 +19,13 @@
 // SOFTWARE.
 
 #pragma once
-#include <memory>
-
 #include "gfx-lut.hpp"
 #include "obs/gs/gs-effect.hpp"
 #include "obs/gs/gs-texture.hpp"
+
+#include "warning-disable.hpp"
+#include <memory>
+#include "warning-enable.hpp"
 
 namespace streamfx::gfx::lut {
 	class consumer {

@@ -20,13 +20,7 @@
 #pragma once
 #include "common.hpp"
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wextra"
-#endif
+#include "warning-disable.hpp"
 #include <QAction>
 #include <QDesktopServices>
 #include <QDialog>
@@ -40,27 +34,10 @@
 #include <QTranslator>
 #include <QUrl>
 #include <QWidget>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
+#include "warning-enable.hpp"
 
 extern "C" {
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4464)
-#pragma warning(disable : 4820)
-#pragma warning(disable : 5220)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wextra"
-#endif
+#include "warning-disable.hpp"
 #include <obs-frontend-api.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
+#include "warning-enable.hpp"
 }

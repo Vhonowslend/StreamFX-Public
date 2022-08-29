@@ -1036,6 +1036,8 @@ endif()
 
 # Core
 list(APPEND PROJECT_PRIVATE_SOURCE
+	"source/warning-disable.hpp"
+	"source/warning-enable.hpp"
 	"source/configuration.hpp"
 	"source/configuration.cpp"
 	"source/common.hpp"

@@ -19,9 +19,11 @@
 // SOFTWARE.
 
 #pragma once
+#include "warning-disable.hpp"
 #include <filesystem>
 #include <memory>
 #include <string_view>
+#include "warning-enable.hpp"
 
 namespace streamfx::util {
 	class library {

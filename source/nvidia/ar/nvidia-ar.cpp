@@ -19,12 +19,15 @@
 // SOFTWARE.
 
 #include "nvidia-ar.hpp"
-#include <filesystem>
-#include <mutex>
 #include "nvidia/cuda/nvidia-cuda-obs.hpp"
 #include "obs/gs/gs-helper.hpp"
 #include "util/util-logging.hpp"
 #include "util/util-platform.hpp"
+
+#include "warning-disable.hpp"
+#include <filesystem>
+#include <mutex>
+#include "warning-enable.hpp"
 
 #ifdef _DEBUG
 #define ST_PREFIX "<%s> "
@@ -41,24 +44,11 @@
 #endif
 
 #ifdef WIN32
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4464)
-#pragma warning(disable : 4820)
-#pragma warning(disable : 5220)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wextra"
-#endif
+#include "warning-disable.hpp"
 #include <KnownFolders.h>
 #include <ShlObj.h>
 #include <Windows.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
+#include "warning-enable.hpp"
 
 #define ST_LIBRARY_NAME "nvARPose.dll"
 #else

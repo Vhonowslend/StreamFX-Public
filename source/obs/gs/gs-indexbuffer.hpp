@@ -19,7 +19,10 @@
 
 #pragma once
 #include "common.hpp"
+
+#include "warning-disable.hpp"
 #include <vector>
+#include "warning-enable.hpp"
 
 namespace streamfx::obs::gs {
 	class index_buffer : public std::vector<uint32_t> {

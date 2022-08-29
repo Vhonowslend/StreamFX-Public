@@ -22,8 +22,10 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
+#include "warning-disable.hpp"
 #include <filesystem>
 #include <string>
+#include "warning-enable.hpp"
 
 namespace streamfx::util::platform {
 #ifdef WIN32

@@ -19,15 +19,18 @@
 // SOFTWARE.
 
 #pragma once
-#include <atomic>
-#include <memory>
-#include <mutex>
 #include "obs/gs/gs-effect.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
 #include "obs/obs-source-factory.hpp"
 #include "plugin.hpp"
 #include "util/util-threadpool.hpp"
+
+#include "warning-disable.hpp"
+#include <atomic>
+#include <memory>
+#include <mutex>
+#include "warning-enable.hpp"
 
 #ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
 #include "nvidia/vfx/nvidia-vfx-greenscreen.hpp"

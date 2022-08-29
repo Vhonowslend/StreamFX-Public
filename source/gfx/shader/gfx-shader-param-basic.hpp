@@ -17,9 +17,12 @@
 
 #pragma once
 #include "common.hpp"
-#include <vector>
 #include "gfx-shader-param.hpp"
 #include "obs/gs/gs-effect-parameter.hpp"
+
+#include "warning-disable.hpp"
+#include <vector>
+#include "warning-enable.hpp"
 
 namespace streamfx::gfx {
 	namespace shader {

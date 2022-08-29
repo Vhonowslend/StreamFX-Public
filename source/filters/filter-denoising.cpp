@@ -19,10 +19,13 @@
 // SOFTWARE.
 
 #include "filter-denoising.hpp"
-#include <algorithm>
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
 #include "util/util-logging.hpp"
+
+#include "warning-disable.hpp"
+#include <algorithm>
+#include "warning-enable.hpp"
 
 #ifdef _DEBUG
 #define ST_PREFIX "<%s> "

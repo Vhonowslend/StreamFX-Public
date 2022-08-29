@@ -19,9 +19,12 @@
 
 #pragma once
 #include "common.hpp"
+
+#include "warning-disable.hpp"
 #include <functional>
 #include <map>
 #include <mutex>
+#include "warning-enable.hpp"
 
 namespace streamfx::obs {
 	class source_tracker {

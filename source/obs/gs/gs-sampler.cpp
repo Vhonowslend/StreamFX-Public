@@ -18,7 +18,10 @@
  */
 
 #include "gs-sampler.hpp"
+
+#include "warning-disable.hpp"
 #include <stdexcept>
+#include "warning-enable.hpp"
 
 streamfx::obs::gs::sampler::sampler()
 {

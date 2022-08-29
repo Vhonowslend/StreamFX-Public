@@ -16,12 +16,15 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "gfx-shader.hpp"
-#include <algorithm>
-#include <cstdio>
-#include <cstring>
 #include "obs/gs/gs-helper.hpp"
 #include "obs/obs-tools.hpp"
 #include "plugin.hpp"
+
+#include "warning-disable.hpp"
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include "warning-enable.hpp"
 
 #define ST_I18N "Shader"
 #define ST_I18N_REFRESH ST_I18N ".Refresh"

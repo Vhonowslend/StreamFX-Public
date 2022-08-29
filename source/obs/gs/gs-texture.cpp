@@ -18,10 +18,13 @@
  */
 
 #include "gs-texture.hpp"
+#include "obs/gs/gs-helper.hpp"
+
+#include "warning-disable.hpp"
 #include <fstream>
 #include <stdexcept>
 #include <sys/stat.h>
-#include "obs/gs/gs-helper.hpp"
+#include "warning-enable.hpp"
 
 static uint32_t decode_flags(streamfx::obs::gs::texture::flags texture_flags)
 {

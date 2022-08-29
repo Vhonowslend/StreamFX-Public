@@ -19,8 +19,10 @@
 // SOFTWARE.
 
 #pragma once
+#include "warning-disable.hpp"
 #include <cinttypes>
 #include <cstddef>
+#include "warning-enable.hpp"
 
 #define STREAMFX_MAKE_VERSION(major, minor, patch, tweak)                                \
 	(((uint64_t(major) & 0xFFFFull) << 48ull) | ((uint64_t(minor) & 0xFFFFull) << 32ull) \

@@ -19,9 +19,12 @@
 // SOFTWARE.
 
 #pragma once
-#include <cinttypes>
 #include "nvidia/cv/nvidia-cv-image.hpp"
 #include "obs/gs/gs-texture.hpp"
+
+#include "warning-disable.hpp"
+#include <cinttypes>
+#include "warning-enable.hpp"
 
 namespace streamfx::nvidia::cv {
 	using ::streamfx::nvidia::cv::component_layout;

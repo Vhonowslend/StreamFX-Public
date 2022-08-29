@@ -18,10 +18,6 @@
  */
 
 #pragma once
-#include <atomic>
-#include <list>
-#include <memory>
-#include <mutex>
 #include "gfx/gfx-debug.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
@@ -30,6 +26,13 @@
 #include "plugin.hpp"
 #include "util/util-threadpool.hpp"
 #include "util/utility.hpp"
+
+#include "warning-disable.hpp"
+#include <atomic>
+#include <list>
+#include <memory>
+#include <mutex>
+#include "warning-enable.hpp"
 
 #ifdef ENABLE_FILTER_AUTOFRAMING_NVIDIA
 #include "nvidia/ar/nvidia-ar-facedetection.hpp"

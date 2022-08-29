@@ -19,12 +19,15 @@
 // SOFTWARE.
 
 #pragma once
-#include <string_view>
 #include "nvidia/ar/nvidia-ar.hpp"
 #include "nvidia/cuda/nvidia-cuda-obs.hpp"
 #include "nvidia/cv/nvidia-cv-image.hpp"
 #include "nvidia/cv/nvidia-cv-texture.hpp"
 #include "nvidia/cv/nvidia-cv.hpp"
+
+#include "warning-disable.hpp"
+#include <string_view>
+#include "warning-enable.hpp"
 
 namespace streamfx::nvidia::ar {
 	class feature {

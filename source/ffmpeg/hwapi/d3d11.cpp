@@ -22,24 +22,17 @@
 #ifdef WIN32
 
 #include "d3d11.hpp"
-#include <sstream>
-#include <vector>
 #include "obs/gs/gs-helper.hpp"
 
+#include "warning-disable.hpp"
+#include <sstream>
+#include <vector>
+#include "warning-enable.hpp"
+
 extern "C" {
-#ifdef _MSC_VER
-#pragma warning(push)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wextra"
-#endif
+#include "warning-disable.hpp"
 #include <libavutil/hwcontext_d3d11va.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
+#include "warning-enable.hpp"
 }
 
 using namespace streamfx::ffmpeg::hwapi;

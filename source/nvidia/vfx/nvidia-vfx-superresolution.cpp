@@ -19,12 +19,15 @@
 // SOFTWARE.
 
 #include "nvidia-vfx-superresolution.hpp"
-#include <cmath>
-#include <utility>
-#include <vector>
 #include "obs/gs/gs-helper.hpp"
 #include "util/util-logging.hpp"
 #include "util/utility.hpp"
+
+#include "warning-disable.hpp"
+#include <cmath>
+#include <utility>
+#include <vector>
+#include "warning-enable.hpp"
 
 #ifdef _DEBUG
 #define ST_PREFIX "<%s> "

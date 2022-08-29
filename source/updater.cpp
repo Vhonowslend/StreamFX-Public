@@ -20,13 +20,16 @@
 
 #include "updater.hpp"
 #include "version.hpp"
+#include "configuration.hpp"
+#include "plugin.hpp"
+#include "util/util-logging.hpp"
+
+#include "warning-disable.hpp"
 #include <fstream>
 #include <mutex>
 #include <regex>
 #include <string_view>
-#include "configuration.hpp"
-#include "plugin.hpp"
-#include "util/util-logging.hpp"
+#include "warning-enable.hpp"
 
 #ifdef _DEBUG
 #define ST_PREFIX "<%s> "

@@ -16,9 +16,12 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #pragma once
+#include "obs/gs/gs-effect-parameter.hpp"
+
+#include "warning-disable.hpp"
 #include <list>
 #include <string>
-#include "obs/gs/gs-effect-parameter.hpp"
+#include "warning-enable.hpp"
 
 namespace streamfx::gfx {
 	namespace shader {

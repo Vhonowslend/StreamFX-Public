@@ -19,11 +19,14 @@
 // SOFTWARE.
 
 #include "gfx-debug.hpp"
-#include <mutex>
 #include "graphics/matrix4.h"
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
 #include "util/util-logging.hpp"
+
+#include "warning-disable.hpp"
+#include <mutex>
+#include "warning-enable.hpp"
 
 #ifdef _DEBUG
 #define ST_PREFIX "<%s> "

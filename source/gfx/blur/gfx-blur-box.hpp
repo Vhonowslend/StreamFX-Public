@@ -17,11 +17,14 @@
 
 #pragma once
 #include "common.hpp"
-#include <mutex>
 #include "gfx-blur-base.hpp"
 #include "obs/gs/gs-effect.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
+
+#include "warning-disable.hpp"
+#include <mutex>
+#include "warning-enable.hpp"
 
 namespace streamfx::gfx {
 	namespace blur {

@@ -19,9 +19,21 @@
 
 #include "filter-color-grade.hpp"
 #include "strings.hpp"
-#include <stdexcept>
 #include "obs/gs/gs-helper.hpp"
 #include "util/util-logging.hpp"
+
+#include "warning-disable.hpp"
+#include <stdexcept>
+#include "warning-enable.hpp"
+
+// OBS
+#include "warning-disable.hpp"
+extern "C" {
+#include <graphics/graphics.h>
+#include <graphics/matrix4.h>
+#include <util/platform.h>
+}
+#include "warning-enable.hpp"
 
 #ifdef _DEBUG
 #define ST_PREFIX "<%s> "
@@ -35,18 +47,6 @@
 #define D_LOG_WARNING(...) P_LOG_WARN(ST_PREFIX __VA_ARGS__)
 #define D_LOG_INFO(...) P_LOG_INFO(ST_PREFIX __VA_ARGS__)
 #define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
-#endif
-
-// OBS
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4201)
-#endif
-#include <graphics/graphics.h>
-#include <graphics/matrix4.h>
-#include <util/platform.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
 #endif
 
 #define ST_I18N "Filter.ColorGrade"

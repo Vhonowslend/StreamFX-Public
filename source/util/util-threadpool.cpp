@@ -19,8 +19,11 @@
 
 #include "util-threadpool.hpp"
 #include "common.hpp"
-#include <cstddef>
 #include "util/util-logging.hpp"
+
+#include "warning-disable.hpp"
+#include <cstddef>
+#include "warning-enable.hpp"
 
 #ifdef _DEBUG
 #define ST_PREFIX "<%s> "

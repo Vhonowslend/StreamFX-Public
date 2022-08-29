@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include "warning-disable.hpp"
+
 // Common C includes
 #include <cfloat>
 #include <cinttypes>
@@ -44,6 +46,8 @@
 #include <utility>
 #include <vector>
 
+#include "warning-enable.hpp"
+
 // Common Plugin includes
 #include "config.hpp"
 #include "strings.hpp"
@@ -56,17 +60,8 @@
 #include "util/utility.hpp"
 
 // Common OBS includes
+#include "warning-disable.hpp"
 extern "C" {
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4464)
-#pragma warning(disable : 4820)
-#pragma warning(disable : 5220)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wextra"
-#endif
 #include <obs.h>
 
 #include <obs-config.h>
@@ -85,15 +80,11 @@ extern "C" {
 #include <graphics/vec4.h>
 
 #include <util/platform.h>
-#ifdef _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
 
 // Fix libOBS's global defines
 #undef strtoll
 }
+#include "warning-enable.hpp"
 
 // Common Global defines
 /// Logging
