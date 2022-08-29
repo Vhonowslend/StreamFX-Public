@@ -90,8 +90,8 @@ std::string streamfx::filter::denoising::string(denoising_provider provider)
 denoising_instance::denoising_instance(obs_data_t* data, obs_source_t* self)
 	: obs::source_instance(data, self),
 
-	  _size(1, 1), _provider_ready(false), _provider(denoising_provider::INVALID), _provider_lock(), _provider_task(),
-	  _input(), _output()
+	  _size(1, 1), _provider(denoising_provider::INVALID), _provider_ui(denoising_provider::INVALID),
+	  _provider_ready(false), _provider_lock(), _provider_task(), _input(), _output()
 {
 	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
 

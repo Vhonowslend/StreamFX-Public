@@ -128,14 +128,10 @@ static constexpr std::string_view HELP_URL = "https://github.com/Xaymar/obs-Stre
 color_grade_instance::~color_grade_instance() {}
 
 color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self)
-	: obs::source_instance(data, self), _effect(),
-
-	  _lift(), _gamma(), _gain(), _offset(), _tint_detection(), _tint_luma(), _tint_exponent(), _tint_low(),
-	  _tint_mid(), _tint_hig(), _correction(), _lut_enabled(true), _lut_depth(),
-
-	  _cache_rt(), _cache_texture(), _cache_fresh(false),
-
-	  _lut_initialized(false), _lut_dirty(true), _lut_producer(), _lut_consumer()
+	: obs::source_instance(data, self), _effect(), _lift(), _gamma(), _gain(), _offset(), _tint_detection(),
+	  _tint_luma(), _tint_exponent(), _tint_low(), _tint_mid(), _tint_hig(), _correction(), _lut_enabled(true),
+	  _lut_depth(), _ccache_rt(), _ccache_texture(), _ccache_fresh(false), _lut_initialized(false), _lut_dirty(true),
+	  _lut_producer(), _lut_consumer(), _lut_rt(), _lut_texture(), _cache_rt(), _cache_texture(), _cache_fresh(false)
 {
 	{
 		auto gctx = streamfx::obs::gs::context();
