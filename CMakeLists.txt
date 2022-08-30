@@ -1916,13 +1916,11 @@ elseif(D_PLATFORM_LINUX AND ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_
 		else()
 			target_compile_options(${PROJECT_NAME} PRIVATE
 				"-ffp-model=fast"
-				"-ffp-contract=on"
 			)
 		endif()
 	else()
 		target_compile_options(${PROJECT_NAME} PRIVATE
 			"-ffp-model=precise"
-			"-ffp-contract=on"
 		)
 	endif()
 
