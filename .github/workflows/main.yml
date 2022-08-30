@@ -195,7 +195,7 @@ jobs:
               qtbase5-dev qtbase5-private-dev libqt5svg5-dev
           elif [[ ${{ matrix.qt }} -eq 6 ]]; then
             sudo apt-get -y install -V \
-              qt6-base-dev qt6-base-private-dev libqt6svg6-dev
+              qt6-base-dev qt6-base-private-dev libqt6svg6-dev libgles2-mesa-dev libegl1-mesa-dev libgl1-mesa-dev
           fi
         fi
 
