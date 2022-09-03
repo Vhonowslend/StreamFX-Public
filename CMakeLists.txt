@@ -24,6 +24,13 @@ else()
 	set(LOGPREFIX "")
 endif()
 
+# MacOSX: Require at least MacOSX 10.15 for C++17 support.
+if(APPLE)
+	if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 10.15)
+		CacheSet(CMAKE_OSX_DEPLOYMENT_TARGET "10.15")
+	endif()
+endif()
+
 ################################################################################
 # Modules
 ################################################################################
