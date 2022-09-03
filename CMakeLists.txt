@@ -872,6 +872,9 @@ file(GLOB_RECURSE PROJECT_DATA "data/*")
 # Media
 file(GLOB_RECURSE PROJECT_MEDIA "media/*")
 
+# Templates
+file(GLOB_RECURSE PROJECT_TEMPLATES "templates/*")
+
 # Configure Files
 configure_file(
 	"templates/config.hpp.in"
@@ -905,7 +908,6 @@ if(D_PLATFORM_WINDOWS) # Windows Support
 		"templates/windows/version.rc.in"
 		"generated/version.rc"
 	)
-	LIST(APPEND PROJECT_TEMPLATES "templates/windows/version.rc.in")
 	LIST(APPEND PROJECT_PRIVATE_GENERATED "${PROJECT_BINARY_DIR}/generated/version.rc")
 endif()
 
