@@ -37,14 +37,63 @@
 													<key>CHILDREN</key>
 													<array>
 														<dict>
+															<key>BUNDLE_CAN_DOWNGRADE</key>
+															<true/>
+															<key>BUNDLE_POSTINSTALL_PATH</key>
+															<dict>
+																<key>PATH_TYPE</key>
+																<integer>0</integer>
+															</dict>
+															<key>BUNDLE_PREINSTALL_PATH</key>
+															<dict>
+																<key>PATH_TYPE</key>
+																<integer>0</integer>
+															</dict>
 															<key>CHILDREN</key>
 															<array/>
 															<key>GID</key>
 															<integer>80</integer>
+															<key>LOCATORS</key>
+															<array>
+																<dict>
+																	<key>DICTIONARY</key>
+																	<dict>
+																		<key>BUNDLE_IDENTIFIER</key>
+																		<string>com.xaymar.StreamFX.obs</string>
+																		<key>DEFAULT_PATH</key>
+																		<string>/Library/Application Support/obs-studio/plugins</string>
+																		<key>PREFER_DEFAULT_PATH</key>
+																		<integer>0</integer>
+																	</dict>
+																	<key>IDENTIFIER</key>
+																	<string>fr.whitebox.Packages.locator.standard</string>
+																	<key>NAME</key>
+																	<string>com.xaymar.StreamFX.obs</string>
+																	<key>STATE</key>
+																	<true/>
+																</dict>
+																<dict>
+																	<key>DICTIONARY</key>
+																	<dict>
+																		<key>BUNDLE_IDENTIFIER</key>
+																		<string>com.xaymar.StreamFX</string>
+																		<key>DEFAULT_PATH</key>
+																		<string>/Library/Application Support/obs-studio/plugins</string>
+																		<key>PREFER_DEFAULT_PATH</key>
+																		<integer>0</integer>
+																	</dict>
+																	<key>IDENTIFIER</key>
+																	<string>fr.whitebox.Packages.locator.standard</string>
+																	<key>NAME</key>
+																	<string>com.xaymar.StreamFX</string>
+																	<key>STATE</key>
+																	<true/>
+																</dict>
+															</array>
 															<key>PATH</key>
-															<string>@CMAKE_INSTALL_PREFIX@/StreamFX</string>
+															<string>@CMAKE_INSTALL_PREFIX@/@PACKAGES_PATH_NAME@</string>
 															<key>PATH_TYPE</key>
-															<integer>3</integer>
+															<integer>1</integer>
 															<key>PERMISSIONS</key>
 															<integer>493</integer>
 															<key>TYPE</key>
@@ -58,9 +107,9 @@
 													<key>PATH</key>
 													<string>plugins</string>
 													<key>PATH_TYPE</key>
-													<integer>0</integer>
+													<integer>2</integer>
 													<key>PERMISSIONS</key>
-													<integer>493</integer>
+													<integer>509</integer>
 													<key>TYPE</key>
 													<integer>2</integer>
 													<key>UID</key>
@@ -72,9 +121,9 @@
 											<key>PATH</key>
 											<string>obs-studio</string>
 											<key>PATH_TYPE</key>
-											<integer>0</integer>
+											<integer>2</integer>
 											<key>PERMISSIONS</key>
-											<integer>493</integer>
+											<integer>509</integer>
 											<key>TYPE</key>
 											<integer>2</integer>
 											<key>UID</key>
@@ -445,22 +494,6 @@
 							<key>UID</key>
 							<integer>0</integer>
 						</dict>
-						<dict>
-							<key>CHILDREN</key>
-							<array/>
-							<key>GID</key>
-							<integer>80</integer>
-							<key>PATH</key>
-							<string>Applications</string>
-							<key>PATH_TYPE</key>
-							<integer>0</integer>
-							<key>PERMISSIONS</key>
-							<integer>509</integer>
-							<key>TYPE</key>
-							<integer>1</integer>
-							<key>UID</key>
-							<integer>0</integer>
-						</dict>
 					</array>
 					<key>GID</key>
 					<integer>0</integer>
@@ -506,19 +539,19 @@
 			<key>PACKAGE_SETTINGS</key>
 			<dict>
 				<key>AUTHENTICATION</key>
-				<integer>1</integer>
+				<integer>0</integer>
 				<key>CONCLUSION_ACTION</key>
 				<integer>0</integer>
 				<key>FOLLOW_SYMBOLIC_LINKS</key>
 				<false/>
 				<key>IDENTIFIER</key>
-				<string>com.xaymar.@PROJECT_NAME@</string>
+				<string>${PROJECT_IDENTIFER}</string>
 				<key>LOCATION</key>
 				<integer>0</integer>
 				<key>NAME</key>
 				<string>@PROJECT_NAME@</string>
 				<key>OVERWRITE_PERMISSIONS</key>
-				<true/>
+				<false/>
 				<key>PAYLOAD_SIZE</key>
 				<integer>-1</integer>
 				<key>REFERENCE_PATH</key>
@@ -526,7 +559,7 @@
 				<key>RELOCATABLE</key>
 				<false/>
 				<key>USE_HFS+_COMPRESSION</key>
-				<false/>
+				<true/>
 				<key>VERSION</key>
 				<string>@PROJECT_VERSION@</string>
 			</dict>
@@ -574,7 +607,7 @@
 								<key>OPTIONS</key>
 								<dict>
 									<key>HIDDEN</key>
-									<true/>
+									<false/>
 									<key>STATE</key>
 									<integer>1</integer>
 								</dict>
@@ -593,7 +626,7 @@
 					</dict>
 				</dict>
 				<key>MODE</key>
-				<integer>1</integer>
+				<integer>0</integer>
 			</dict>
 			<key>INSTALLATION_STEPS</key>
 			<array>
@@ -669,7 +702,7 @@
 						<key>VALUE</key>
 						<dict>
 							<key>PATH</key>
-							<string>@PROJECT_SOURCE_DIR@/license</string>
+							<string>@PROJECT_SOURCE_DIR@/LICENSE</string>
 							<key>PATH_TYPE</key>
 							<integer>0</integer>
 						</dict>
@@ -706,14 +739,14 @@
 					<key>DICTIONARY</key>
 					<dict>
 						<key>IC_REQUIREMENT_OS_DISK_TYPE</key>
-						<integer>0</integer>
+						<integer>1</integer>
 						<key>IC_REQUIREMENT_OS_DISTRIBUTION_TYPE</key>
 						<integer>0</integer>
 						<key>IC_REQUIREMENT_OS_MINIMUM_VERSION</key>
 						<integer>101500</integer>
 					</dict>
 					<key>IC_REQUIREMENT_CHECK_TYPE</key>
-					<integer>1</integer>
+					<integer>0</integer>
 					<key>IDENTIFIER</key>
 					<string>fr.whitebox.Packages.requirement.os</string>
 					<key>MESSAGE</key>
