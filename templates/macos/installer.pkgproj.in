@@ -750,7 +750,16 @@
 					<key>IDENTIFIER</key>
 					<string>fr.whitebox.Packages.requirement.os</string>
 					<key>MESSAGE</key>
-					<array/>
+					<array>
+						<dict>
+							<key>LANGUAGE</key>
+							<string>English</string>
+							<key>SECONDARY_VALUE</key>
+							<string></string>
+							<key>VALUE</key>
+							<string>StreamFX requires at least MacOSX 10.15, and will not work properly without it. Please update or upgrade your System!</string>
+						</dict>
+					</array>
 					<key>NAME</key>
 					<string>Operating System</string>
 					<key>STATE</key>
