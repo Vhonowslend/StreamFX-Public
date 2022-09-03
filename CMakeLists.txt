@@ -902,11 +902,10 @@ if(D_PLATFORM_WINDOWS) # Windows Support
 	set(PROJECT_LEGAL_TRADEMARKS_2 "")
 
 	configure_file(
-		"templates/version.rc.in"
+		"templates/windows/version.rc.in"
 		"generated/version.rc"
-		@ONLY
 	)
-	LIST(APPEND PROJECT_TEMPLATES "templates/version.rc.in")
+	LIST(APPEND PROJECT_TEMPLATES "templates/windows/version.rc.in")
 	LIST(APPEND PROJECT_PRIVATE_GENERATED "${PROJECT_BINARY_DIR}/generated/version.rc")
 endif()
 
@@ -1976,18 +1975,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 	VERSION ${PROJECT_VERSION}
 )
 
-# Delay-Loading on Microsoft Visual C++
-if(D_PLATFORM_WINDOWS)
-	foreach(DELAYLOAD ${PROJECT_LIBRARIES_DELAYED})
-		get_target_property(_lf ${PROJECT_NAME} LINK_FLAGS)
-		if(NOT _lf)
-			set(_lf "")
-		endif()
-		set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${_lf} /DELAYLOAD:${DELAYLOAD}")
-		add_link_options("/DELAYLOAD:${DELAYLOAD}")
-	endforeach()
-endif()
-
 # Enable Qt if needed
 if(Qt5_FOUND OR Qt6_FOUND)
 	set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -1997,6 +1984,18 @@ if(Qt5_FOUND OR Qt6_FOUND)
 		AUTORCC ON
 		AUTOGEN_BUILD_DIR "${PROJECT_BINARY_DIR}/generated"
 	)
+endif()
+
+# Windows exclusive changes
+if(D_PLATFORM_WINDOWS)
+	foreach(DELAYLOAD ${PROJECT_LIBRARIES_DELAYED})
+		get_target_property(_lf ${PROJECT_NAME} LINK_FLAGS)
+		if(NOT _lf)
+			set(_lf "")
+		endif()
+		set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${_lf} /DELAYLOAD:${DELAYLOAD}")
+		add_link_options("/DELAYLOAD:${DELAYLOAD}")
+	endforeach()
 endif()
 
 # MacOS: Disable automatic Code Signing in Xcode
@@ -2338,12 +2337,12 @@ if(STANDALONE)
 				list(JOIN ISS_CODESIGN_CMD_SHA2 " " ISS_CODESIGN_CMD_SHA2)
 
 				configure_file(
-					"templates/installer-signed.iss.in"
+					"templates/windows/installer-signed.iss.in"
 					"installer.iss"
 				)
 			else()
 				configure_file(
-					"templates/installer.iss.in"
+					"templates/windows/installer.iss.in"
 					"installer.iss"
 				)
 			endif()
