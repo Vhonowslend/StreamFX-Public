@@ -847,9 +847,7 @@ feature_updater(ON)
 ################################################################################
 # Code
 ################################################################################
-set(PROJECT_DATA_LOCALE )
-set(PROJECT_DATA_EFFECTS )
-set(PROJECT_DATA_SHADERS )
+set(PROJECT_DATA )
 set(PROJECT_LIBRARIES )
 set(PROJECT_LIBRARIES_DELAYED )
 set(PROJECT_INCLUDE_DIRS )
@@ -859,6 +857,10 @@ set(PROJECT_PRIVATE_SOURCE )
 set(PROJECT_UI )
 set(PROJECT_UI_SOURCE )
 set(PROJECT_DEFINITIONS )
+set(PROJECT_MEDIA )
+
+# Media
+file(GLOB_RECURSE PROJECT_MEDIA "media/*")
 
 # Configure Files
 configure_file(
@@ -1659,6 +1661,8 @@ set(PROJECT_FILES
 	# UI-only (empty if not enabled)
 	${PROJECT_UI}
 	${PROJECT_UI_SOURCE}
+	# Media
+	${PROJECT_MEDIA}
 )
 
 # Set source groups for IDE generators.
@@ -1667,15 +1671,16 @@ source_group(TREE "${PROJECT_SOURCE_DIR}/source" PREFIX "Source" FILES ${PROJECT
 source_group(TREE "${PROJECT_BINARY_DIR}/generated" PREFIX "Source" FILES ${PROJECT_PRIVATE_GENERATED})
 source_group(TREE "${PROJECT_SOURCE_DIR}/templates" PREFIX "Templates" FILES ${PROJECT_TEMPLATES})
 source_group(TREE "${PROJECT_SOURCE_DIR}/ui" PREFIX "User Interface" FILES ${PROJECT_UI})
+source_group(TREE "${PROJECT_SOURCE_DIR}/media" PREFIX "Media" FILES ${PROJECT_MEDIA})
 
 # Prevent unwanted files from being built as source.
-set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} ${PROJECT_UI} PROPERTIES
+set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} ${PROJECT_UI} ${PROJECT_MEDIA} PROPERTIES
 	HEADER_FILE_ONLY ON
 )
 
 # Prevent non-UI files from being Qt'd
 if(Qt5_Found OR Qt6_FOUND)
-	set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} ${PROJECT_PRIVATE_GENERATED} ${PROJECT_PRIVATE_SOURCE} PROPERTIES
+	set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} ${PROJECT_MEDIA} ${PROJECT_PRIVATE_GENERATED} ${PROJECT_PRIVATE_SOURCE} PROPERTIES
 		SKIP_AUTOGEN ON
 		SKIP_AUTOMOC ON
 		SKIP_AUTORCC ON
