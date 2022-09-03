@@ -2352,9 +2352,8 @@ if(STANDALONE)
 		if(D_PLATFORM_MAC)
 			# .pkg Installer
 			configure_file(
-				"templates/installer.pkgproj.in"
+				"templates/macos/installer.pkgproj.in"
 				"installer.pkgproj"
-				@ONLY
 			)
 		endif()
 	endif()
