@@ -1998,12 +1998,21 @@ if(D_PLATFORM_WINDOWS)
 	endforeach()
 endif()
 
-# MacOS: Disable automatic Code Signing in Xcode
+# MacOS exclusive Changes
 if(D_PLATFORM_MAC)
 	set_target_properties(${PROJECT_NAME} PROPERTIES
+		# No automatic code signing in XCode
 		XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ""
 		XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO"
+		# @rpath in installed binaries
+		INSTALL_RPATH "@executable_path/../Frameworks/;@loader_path/../Frameworks/;@loader_path/../Resources/"
 	)
+	if(STANDALONE)
+		set_target_properties(${PROJECT_NAME} PROPERTIES
+			# @rpath in built binaries
+			BUILD_WITH_INSTALL_RPATH ON
+		)
+	endif()
 endif()
 
 ################################################################################
@@ -2025,72 +2034,6 @@ if(T_CHECK AND HAVE_CLANG)
 		DEPENDENCY
 		VERSION 14.0.0
 	)
-endif()
-
-# Apple otool
-if(D_PLATFORM_MAC)
-	# OBS
-	mac_get_linker_id(TARGET OBS::libobs OUTPUT T_OBS_LINK)
-	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-		COMMAND install_name_tool ARGS -change "${T_OBS_LINK}" "@executable_path/../Frameworks/libobs.0.dylib" $<TARGET_FILE:${PROJECT_NAME}>
-	)
-	message(STATUS "${LOGPREFIX}Added post-build step for adjusting libobs linking path.")
-
-	# OBS Front-End API
-	if(REQUIRE_OBS_FRONTEND_API AND obs-frontend-api_FOUND)
-		mac_get_linker_id(TARGET OBS::obs-frontend-api OUTPUT T_OBSFE_LINK)
-		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-			COMMAND install_name_tool ARGS -change "${T_OBSFE_LINK}" "@executable_path/../Frameworks/libobs-frontend-api.dylib" $<TARGET_FILE:${PROJECT_NAME}>
-		)
-		message(STATUS "${LOGPREFIX}Added post-build step for adjusting libobs-frontend-api linking path.")
-	endif()
-
-	# Qt
-	if(REQUIRE_QT)
-		if(Qt5_FOUND)
-			# Figure out the linker location for Qt5::Core
-			mac_get_linker_id(TARGET Qt5::Core OUTPUT T_QT5CORE_LINK)
-
-			# Figure out the linker location for Qt5::Gui
-			mac_get_linker_id(TARGET Qt5::Gui OUTPUT T_QT5GUI_LINK)
-
-			# Figure out the linker location for Qt5::Widsgets
-			mac_get_linker_id(TARGET Qt5::Widgets OUTPUT T_QT5WIDGETS_LINK)
-
-			add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-			# - QtCore
-				COMMAND install_name_tool ARGS -change "${T_QT5CORE_LINK}" "@executable_path/../Frameworks/QtCore.framework/Versions/5/QtCore" $<TARGET_FILE:${PROJECT_NAME}>
-			# - QtGui
-				COMMAND install_name_tool ARGS -change "${T_QT5GUI_LINK}" "@executable_path/../Frameworks/QtGui.framework/Versions/5/QtGui" $<TARGET_FILE:${PROJECT_NAME}>
-			# - QtWidgets
-				COMMAND install_name_tool ARGS -change "${T_QT5WIDGETS_LINK}" "@executable_path/../Frameworks/QtWidgets.framework/Versions/5/QtWidgets" $<TARGET_FILE:${PROJECT_NAME}>
-			)
-			message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt5::Core linking path (Found: ${Qt5_DIR} resolved to ${T_QT5CORE_LINK}).")
-			message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt5::Gui linking path (Found: ${Qt5_DIR} resolved to ${T_QT5GUI_LINK}).")
-			message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt5::Widgets linking path (Found: ${Qt5_DIR} resolved to ${T_QT5WIDGETS_LINK}).")
-		elseif(Qt6_FOUND)
-			# Figure out the linker location for Qt6::Core
-			mac_get_linker_id(TARGET Qt6::Core OUTPUT T_QT6CORE_LINK)
-
-			# Figure out the linker location for Qt6::Gui
-			mac_get_linker_id(TARGET Qt6::Gui OUTPUT T_QT6GUI_LINK)
-
-			# Figure out the linker location for Qt6::Widsgets
-			mac_get_linker_id(TARGET Qt6::Widgets OUTPUT T_QT6WIDGETS_LINK)
-
-			add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-			# - QtCore
-				COMMAND install_name_tool ARGS -change "${T_QT6CORE_LINK}" "@executable_path/../Frameworks/QtCore.framework/Versions/A/QtCore" $<TARGET_FILE:${PROJECT_NAME}>
-			# - QtGui
-				COMMAND install_name_tool ARGS -change "${T_QT6GUI_LINK}" "@executable_path/../Frameworks/QtGui.framework/Versions/A/QtGui" $<TARGET_FILE:${PROJECT_NAME}>
-			# - QtWidgets
-				COMMAND install_name_tool ARGS -change "${T_QT6WIDGETS_LINK}" "@executable_path/../Frameworks/QtWidgets.framework/Versions/A/QtWidgets" $<TARGET_FILE:${PROJECT_NAME}>
-			)
-			message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt6::Core linking path (Found: ${Qt6_DIR} resolved to ${T_QT6CORE_LINK}).")
-			message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt6::Gui linking path (Found: ${Qt6_DIR} resolved to ${T_QT6GUI_LINK}).")
-			message(STATUS "${LOGPREFIX}Added post-build step for adjusting Qt6::Widgets linking path (Found: ${Qt6_DIR} resolved to ${T_QT6WIDGETS_LINK}).")
-		endif()
-	endif()
 endif()
 
 # Code Sign
