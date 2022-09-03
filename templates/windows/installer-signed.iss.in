@@ -72,7 +72,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "@ISS_FILES_DIR@/*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "@PROJECT_SOURCE_DIR@/templates/msvc-redist-helper.exe"; DestDir: "{app}"; DestName: "msvc-redist-helper.exe"; Flags: ignoreversion dontcopy noencryption
+Source: "@PROJECT_SOURCE_DIR@/templates/windows/msvc-redist-helper.exe"; DestDir: "{app}"; DestName: "msvc-redist-helper.exe"; Flags: ignoreversion dontcopy noencryption
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
