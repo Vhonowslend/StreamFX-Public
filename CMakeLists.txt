@@ -1,4 +1,5 @@
 # Copyright (C) 2017 Michael Fabian Dirks
+# Copyright (C) 2022 Romain Vigier
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -653,10 +654,14 @@ function(feature_frontend RESOLVE)
 		elseif(NOT obs-frontend-api_FOUND)
 			message(WARNING "${LOGPREFIX}Front-End requires OBS FrontEnd API. Disabling...")
 			set_feature_disabled(FRONTEND ON)
+		elseif(NOT HAVE_JSON)
+			message(WARNING "${LOGPREFIX}Front-End requires nlohmann::json. Disabling...")
+			set_feature_disabled(FRONTEND ON)
 		endif()
 	elseif(T_CHECK)
 		set(REQUIRE_QT ON PARENT_SCOPE)
 		set(REQUIRE_OBS_FRONTEND_API ON PARENT_SCOPE)
+		set(REQUIRE_JSON ON PARENT_SCOPE)
 	endif()
 endfunction()
 
