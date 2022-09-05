@@ -859,6 +859,9 @@ set(PROJECT_UI_SOURCE )
 set(PROJECT_DEFINITIONS )
 set(PROJECT_MEDIA )
 
+# Data
+file(GLOB_RECURSE PROJECT_DATA "data/*")
+
 # Media
 file(GLOB_RECURSE PROJECT_MEDIA "media/*")
 
@@ -1130,8 +1133,6 @@ list(APPEND PROJECT_INCLUDE_DIRS
 	"${PROJECT_BINARY_DIR}/generated"
 	"${PROJECT_SOURCE_DIR}/source"
 )
-file(GLOB_RECURSE PROJECT_EXAMPLES "data/examples/*")
-list(APPEND PROJECT_DATA ${PROJECT_EXAMPLES})
 
 # Encoder/FFmpeg
 is_feature_enabled(ENCODER_FFMPEG T_CHECK)
