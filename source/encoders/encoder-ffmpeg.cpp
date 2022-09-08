@@ -583,7 +583,7 @@ std::shared_ptr<AVFrame> ffmpeg_instance::pop_used_frame()
 
 bool ffmpeg_instance::get_extra_data(uint8_t** data, size_t* size)
 {
-	if (_extra_data.size() == 0)
+	if (!_have_first_frame)
 		return false;
 
 	*data = _extra_data.data();
@@ -593,7 +593,7 @@ bool ffmpeg_instance::get_extra_data(uint8_t** data, size_t* size)
 
 bool ffmpeg_instance::get_sei_data(uint8_t** data, size_t* size)
 {
-	if (_sei_data.size() == 0)
+	if (!_have_first_frame)
 		return false;
 
 	*data = _sei_data.data();
@@ -678,7 +678,10 @@ int ffmpeg_instance::receive_packet(bool* received_packet, struct encoder_packet
 	packet->drop_priority = 3;
 	for (size_t idx = 0, edx = static_cast<size_t>(_packet->side_data_elems); idx < edx; idx++) {
 		auto& side_data = _packet->side_data[idx];
-		if (side_data.type == AV_PKT_DATA_QUALITY_STATS) {
+		if (side_data.type == AV_PKT_DATA_NEW_EXTRADATA) {
+			_extra_data.resize(side_data.size);
+			std::memcpy(_extra_data.data(), side_data.data, side_data.size);
+		} else if (side_data.type == AV_PKT_DATA_QUALITY_STATS) {
 			// Decisions based on picture type, if present.
 			switch (side_data.data[sizeof(uint32_t)]) {
 			case AV_PICTURE_TYPE_I:  // I-Frame
