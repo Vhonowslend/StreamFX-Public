@@ -1,5 +1,5 @@
 // FFMPEG Video Encoder Integration for OBS Studio
-// Copyright (c) 2019 Michael Fabian Dirks <info@xaymar.com>
+// Copyright (c) 2019-2022 Michael Fabian Dirks <info@xaymar.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -88,22 +88,28 @@ const char* tools::get_error_description(int error)
 }
 
 static std::map<video_format, AVPixelFormat> const obs_to_av_format_map = {
-	{VIDEO_FORMAT_I420, AV_PIX_FMT_YUV420P},  // YUV 4:2:0
-	{VIDEO_FORMAT_NV12, AV_PIX_FMT_NV12},     // NV12 Packed YUV
-	{VIDEO_FORMAT_YVYU, AV_PIX_FMT_YVYU422},  // YVYU Packed YUV
-	{VIDEO_FORMAT_YUY2, AV_PIX_FMT_YUYV422},  // YUYV Packed YUV
-	{VIDEO_FORMAT_UYVY, AV_PIX_FMT_UYVY422},  // UYVY Packed YUV
-	{VIDEO_FORMAT_RGBA, AV_PIX_FMT_RGBA},     //
-	{VIDEO_FORMAT_BGRA, AV_PIX_FMT_BGRA},     //
-	{VIDEO_FORMAT_BGRX, AV_PIX_FMT_BGR0},     //
-	{VIDEO_FORMAT_Y800, AV_PIX_FMT_GRAY8},    //
-	{VIDEO_FORMAT_I444, AV_PIX_FMT_YUV444P},  //
-	{VIDEO_FORMAT_BGR3, AV_PIX_FMT_BGR24},    //
-	{VIDEO_FORMAT_I422, AV_PIX_FMT_YUV422P},  //
-	{VIDEO_FORMAT_I40A, AV_PIX_FMT_YUVA420P}, //
-	{VIDEO_FORMAT_I42A, AV_PIX_FMT_YUVA422P}, //
-	{VIDEO_FORMAT_YUVA, AV_PIX_FMT_YUVA444P}, //
-											  //{VIDEO_FORMAT_AYUV, AV_PIX_FMT_AYUV444P}, //
+	{VIDEO_FORMAT_I420, AV_PIX_FMT_YUV420P},    // 4:2:0 YUV, 8bit, Planar
+	{VIDEO_FORMAT_NV12, AV_PIX_FMT_NV12},       // 4:2:0 YUV, 8bit, Packed (Y+UV)
+	{VIDEO_FORMAT_YVYU, AV_PIX_FMT_YVYU422},    // 4:2:0 YUV, 8bit, Packed (Y+UV)
+	{VIDEO_FORMAT_YUY2, AV_PIX_FMT_YUYV422},    // 4:2:2 YUV, 8bit, Packed (Y+UV)
+	{VIDEO_FORMAT_UYVY, AV_PIX_FMT_UYVY422},    // 4:2:2 YUV, 8bit, Packed (Y+UV)
+	{VIDEO_FORMAT_RGBA, AV_PIX_FMT_RGBA},       // 4:4:4:4 RGBA, 8bit, Planar
+	{VIDEO_FORMAT_BGRA, AV_PIX_FMT_BGRA},       // 4:4:4:4 BGRA, 8bit, Planar
+	{VIDEO_FORMAT_BGRX, AV_PIX_FMT_BGR0},       // 4:4:4 BGR, 8bit, Planar
+	{VIDEO_FORMAT_Y800, AV_PIX_FMT_GRAY8},      // 4:0:0 Y, 8bit, Planar
+	{VIDEO_FORMAT_I444, AV_PIX_FMT_YUV444P},    // 4:4:4 YUV, 8bit, Planar
+	{VIDEO_FORMAT_BGR3, AV_PIX_FMT_BGR24},      // 4:4:4 BGR, 8bit, Planar
+	{VIDEO_FORMAT_I422, AV_PIX_FMT_YUV422P},    // 4:2:2 YUV, 8bit, Planar
+	{VIDEO_FORMAT_I40A, AV_PIX_FMT_YUVA420P},   // 4:2:0:4 YUVA, 8bit, Planar
+	{VIDEO_FORMAT_I42A, AV_PIX_FMT_YUVA422P},   // 4:2:2:4 YUVA, 8bit, Planar
+	{VIDEO_FORMAT_YUVA, AV_PIX_FMT_YUVA444P},   // 4:4:4:4 YUVA, 8bit, Planar
+	{VIDEO_FORMAT_AYUV, AV_PIX_FMT_NONE},       // No compatible format known
+	{VIDEO_FORMAT_I010, AV_PIX_FMT_YUV420P10},  // 4:2:0, 10bit, Planar
+	{VIDEO_FORMAT_P010, AV_PIX_FMT_P010},       // 4:2:0, 10bit, Packed (Y+UV)
+	{VIDEO_FORMAT_I210, AV_PIX_FMT_YUV422P10},  // 4:2:2 YUV, 10bit, Planar
+	{VIDEO_FORMAT_I412, AV_PIX_FMT_YUV444P12},  // 4:4:4 YUV, 12bit, Planar
+	{VIDEO_FORMAT_YA2L, AV_PIX_FMT_YUVA444P12}, // 4:4:4:4 YUVA, 12bit, Planar
+
 };
 
 AVPixelFormat tools::obs_videoformat_to_avpixelformat(video_format v)
@@ -151,6 +157,9 @@ AVColorSpace tools::obs_to_av_color_space(video_colorspace v)
 	case VIDEO_CS_709:  // BT.709
 	case VIDEO_CS_SRGB: // sRGB
 		return AVCOL_SPC_BT709;
+	case VIDEO_CS_2100_PQ:
+	case VIDEO_CS_2100_HLG:
+		return AVCOL_SPC_ICTCP;
 	default:
 		throw std::invalid_argument("Unknown Color Space");
 	}
@@ -165,6 +174,9 @@ AVColorPrimaries streamfx::ffmpeg::tools::obs_to_av_color_primary(video_colorspa
 	case VIDEO_CS_709:  // BT.709
 	case VIDEO_CS_SRGB: // sRGB
 		return AVCOL_PRI_BT709;
+	case VIDEO_CS_2100_PQ:
+	case VIDEO_CS_2100_HLG:
+		return AVCOL_PRI_BT2020;
 	default:
 		throw std::invalid_argument("Unknown Color Primaries");
 	}
@@ -180,6 +192,10 @@ AVColorTransferCharacteristic streamfx::ffmpeg::tools::obs_to_av_color_transfer_
 		return AVCOL_TRC_BT709;
 	case VIDEO_CS_SRGB: // sRGB with IEC 61966-2-1
 		return AVCOL_TRC_IEC61966_2_1;
+	case VIDEO_CS_2100_PQ:
+		return AVCOL_TRC_SMPTE2084;
+	case VIDEO_CS_2100_HLG:
+		return AVCOL_TRC_ARIB_STD_B67;
 	default:
 		throw std::invalid_argument("Unknown Color Transfer Characteristics");
 	}
