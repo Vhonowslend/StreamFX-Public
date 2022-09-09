@@ -1,5 +1,5 @@
 // FFMPEG Video Encoder Integration for OBS Studio
-// Copyright (c) 2019 Michael Fabian Dirks <info@xaymar.com>
+// Copyright (c) 2019-2022 Michael Fabian Dirks <info@xaymar.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -43,6 +43,8 @@ namespace streamfx::encoder::ffmpeg::handler {
 
 		public /*support tests*/:
 		bool has_pixel_format_support(ffmpeg_factory* instance) override;
+
+		bool has_keyframe_support(ffmpeg_factory* instance) override;
 
 		public /*settings*/:
 		void get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context,
