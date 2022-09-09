@@ -1,5 +1,5 @@
 // FFMPEG Video Encoder Integration for OBS Studio
-// Copyright (c) 2019 Michael Fabian Dirks <info@xaymar.com>
+// Copyright (c) 2019-2022 Michael Fabian Dirks <info@xaymar.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -477,7 +477,7 @@ void ffmpeg_instance::initialize_sw(obs_data_t* settings)
 		_scaler.set_target_format(pix_fmt_target);
 
 		// Create Scaler
-		if (!_scaler.initialize(SWS_POINT)) {
+		if (!_scaler.initialize(SWS_SINC | SWS_FULL_CHR_H_INT | SWS_FULL_CHR_H_INP | SWS_ACCURATE_RND | SWS_BITEXACT)) {
 			std::stringstream sstr;
 			sstr << "Initializing scaler failed for conversion from '"
 				 << ::streamfx::ffmpeg::tools::get_pixel_format_name(_scaler.get_source_format()) << "' to '"
