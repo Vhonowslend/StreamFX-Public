@@ -1,5 +1,5 @@
 // FFMPEG Video Encoder Integration for OBS Studio
-// Copyright (c) 2019 Michael Fabian Dirks <info@xaymar.com>
+// Copyright (c) 2019-2022 Michael Fabian Dirks <info@xaymar.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -111,4 +111,9 @@ void prores_aw_handler::log_options(obs_data_t* settings, const AVCodec* codec, 
 		}
 		return std::string("<Unknown>");
 	});
+}
+
+bool prores_aw_handler::has_keyframe_support(ffmpeg_factory* instance)
+{
+	return false;
 }
