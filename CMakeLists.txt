@@ -318,6 +318,7 @@ set(${PREFIX}ENABLE_ENCODER_FFMPEG_NVENC ON CACHE BOOL "Enable NVENC Encoder in 
 set(${PREFIX}ENABLE_ENCODER_FFMPEG_PRORES ON CACHE BOOL "Enable ProRes Encoder in FFmpeg.")
 set(${PREFIX}ENABLE_ENCODER_FFMPEG_DNXHR ON CACHE BOOL "Enable DNXHR Encoder in FFmpeg.")
 set(${PREFIX}ENABLE_ENCODER_AOM_AV1 ON CACHE BOOL "Enable AOM AV1 Encoder.")
+set(${PREFIX}ENABLE_ENCODER_NVIDIA_NVENC ON CACHE BOOL "Enable NVIDIA NVENC Encoder.")
 
 ## Filters
 set(${PREFIX}ENABLE_FILTER_AUTOFRAMING ON CACHE BOOL "Enable Auto-Framing Filter")
@@ -523,6 +524,18 @@ function(feature_encoder_aom_av1 RESOLVE)
 	endif()
 endfunction()
 
+function(feature_encoder_nvidia_nvenc RESOLVE)
+	is_feature_enabled(ENCODER_NVIDIA_NVENC T_CHECK)
+	if(RESOLVE AND T_CHECK)
+		if(NOT HAVE_NVIDIA_VIDEO_CODEC_SDK)
+			message(WARNING "${LOGPREFIX}NVIDIA NVENC encoder missing NVIDIA Video Codec SDK. Disabling...")
+			set_feature_disabled(ENCODER_NVIDIA_NVENC ON)
+		endif()
+	elseif(T_CHECK)
+		set(REQUIRE_NVIDIA_VIDEO_CODEC_SDK ON PARENT_SCOPE)
+	endif()
+endfunction()
+
 function(feature_filter_autoframing RESOLVE)
 	is_feature_enabled(FILTER_AUTOFRAMING T_CHECK)
 	if(RESOLVE AND T_CHECK)
@@ -679,6 +692,7 @@ endfunction()
 # Set Requirements
 feature_encoder_ffmpeg(OFF)
 feature_encoder_aom_av1(OFF)
+feature_encoder_nvidia_nvenc(OFF)
 feature_filter_autoframing(OFF)
 feature_filter_blur(OFF)
 feature_filter_color_grade(OFF)
@@ -837,6 +851,7 @@ endif()
 # Verify Requirements
 feature_encoder_ffmpeg(ON)
 feature_encoder_aom_av1(ON)
+feature_encoder_nvidia_nvenc(ON)
 feature_filter_autoframing(ON)
 feature_filter_blur(ON)
 feature_filter_color_grade(ON)
@@ -1256,6 +1271,20 @@ if(T_CHECK)
 	)
 	list(APPEND PROJECT_DEFINITIONS
 		ENABLE_ENCODER_AOM_AV1
+	)
+endif()
+
+# Encoder/NVIDIA NVENC
+is_feature_enabled(ENCODER_NVIDIA_NVENC T_CHECK)
+if(T_CHECK)
+	list(APPEND PROJECT_PRIVATE_SOURCE
+		"source/encoders/encoder-nvidia-nvenc.hpp"
+		"source/encoders/encoder-nvidia-nvenc.cpp"
+	)
+	list(APPEND PROJECT_INCLUDE_DIRS
+	)
+	list(APPEND PROJECT_DEFINITIONS
+		ENABLE_ENCODER_NVIDIA_NVENC
 	)
 endif()
 
