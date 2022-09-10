@@ -1,5 +1,5 @@
 // FFMPEG Video Encoder Integration for OBS Studio
-// Copyright (c) 2019 Michael Fabian Dirks <info@xaymar.com>
+// Copyright (c) 2019-2022 Michael Fabian Dirks <info@xaymar.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -62,6 +62,7 @@ namespace streamfx::encoder::ffmpeg {
 
 		std::size_t _lag_in_frames;
 		std::size_t _sent_frames;
+		std::size_t _framerate_divisor;
 
 		// Extra Data
 		bool                 _have_first_frame;
