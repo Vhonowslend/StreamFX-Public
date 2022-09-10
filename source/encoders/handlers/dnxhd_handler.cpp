@@ -1,3 +1,5 @@
+// Copyright (c) 2022 Michael Fabian Dirks <info@xaymar.com>
+
 #include "dnxhd_handler.hpp"
 #include "common.hpp"
 #include "../codecs/dnxhr.hpp"
@@ -23,8 +25,8 @@ void dnxhd_handler::override_colorformat(AVPixelFormat& target_format, obs_data_
 {
 	static const std::array<std::pair<const char*, AVPixelFormat>, static_cast<size_t>(5)> profile_to_format_map{
 		std::pair{"dnxhr_lb", AV_PIX_FMT_YUV422P}, std::pair{"dnxhr_sq", AV_PIX_FMT_YUV422P},
-		std::pair{"dnxhr_hq", AV_PIX_FMT_YUV422P}, std::pair{"dnxhr_hqx", AV_PIX_FMT_YUV422P10LE},
-		std::pair{"dnxhr_444", AV_PIX_FMT_YUV444P10LE}};
+		std::pair{"dnxhr_hq", AV_PIX_FMT_YUV422P}, std::pair{"dnxhr_hqx", AV_PIX_FMT_YUV422P10},
+		std::pair{"dnxhr_444", AV_PIX_FMT_YUV444P10}};
 
 	const char* selected_profile = obs_data_get_string(settings, S_CODEC_DNXHR_PROFILE);
 	for (const auto& kv : profile_to_format_map) {
@@ -34,7 +36,7 @@ void dnxhd_handler::override_colorformat(AVPixelFormat& target_format, obs_data_
 		}
 	}
 
-	//Fallback for (yet) unknown formats
+	// Fallback for (yet) unknown formats
 	target_format = AV_PIX_FMT_YUV422P;
 }
 
