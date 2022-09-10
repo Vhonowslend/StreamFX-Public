@@ -1,5 +1,5 @@
 // FFMPEG Video Encoder Integration for OBS Studio
-// Copyright (c) 2019 Michael Fabian Dirks <info@xaymar.com>
+// Copyright (c) 2019-2022 Michael Fabian Dirks <info@xaymar.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -74,6 +74,8 @@ extern "C" {
 #define ST_KEY_FFMPEG_CUSTOMSETTINGS "FFmpeg.CustomSettings"
 #define ST_I18N_FFMPEG_THREADS ST_I18N_FFMPEG ".Threads"
 #define ST_KEY_FFMPEG_THREADS "FFmpeg.Threads"
+#define ST_I18N_FFMPEG_FRAMERATE ST_I18N_FFMPEG ".Framerate"
+#define ST_KEY_FFMPEG_FRAMERATE "FFmpeg.Framerate"
 #define ST_I18N_FFMPEG_GPU ST_I18N_FFMPEG ".GPU"
 #define ST_KEY_FFMPEG_GPU "FFmpeg.GPU"
 
@@ -143,6 +145,14 @@ ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* self, bool
 		initialize_hw(settings);
 	} else {
 		initialize_sw(settings);
+	}
+
+	{ // Set up framerate division.
+		_framerate_divisor = obs_data_get_int(settings, ST_KEY_FFMPEG_FRAMERATE);
+
+		_context->ticks_per_frame = 1;
+		_context->time_base.num *= _framerate_divisor;
+		_context->framerate.den *= _framerate_divisor;
 	}
 
 	// Update settings
@@ -263,8 +273,10 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 			bool    is_seconds = (kf_type == 0);
 
 			if (is_seconds) {
-				_context->gop_size = static_cast<int>(obs_data_get_double(settings, ST_KEY_KEYFRAMES_INTERVAL_SECONDS)
-													  * (ovi.fps_num / ovi.fps_den));
+				double framerate =
+					static_cast<double>(ovi.fps_num) / (static_cast<double>(ovi.fps_den) * _framerate_divisor);
+				_context->gop_size =
+					static_cast<int>(obs_data_get_double(settings, ST_KEY_KEYFRAMES_INTERVAL_SECONDS) * framerate);
 			} else {
 				_context->gop_size = static_cast<int>(obs_data_get_int(settings, ST_KEY_KEYFRAMES_INTERVAL_FRAMES));
 			}
@@ -377,6 +389,10 @@ bool ffmpeg_instance::encode_audio(struct encoder_frame* frame, struct encoder_p
 
 bool ffmpeg_instance::encode_video(struct encoder_frame* frame, struct encoder_packet* packet, bool* received_packet)
 {
+	if ((_framerate_divisor > 1) && (frame->pts % _framerate_divisor != 0)) {
+		return true;
+	}
+
 	std::shared_ptr<AVFrame> vframe = pop_free_frame(); // Retrieve an empty frame.
 
 	// Convert frame.
@@ -413,6 +429,11 @@ bool ffmpeg_instance::encode_video(struct encoder_frame* frame, struct encoder_p
 bool ffmpeg_instance::encode_video(uint32_t handle, int64_t pts, uint64_t lock_key, uint64_t* next_key,
 								   struct encoder_packet* packet, bool* received_packet)
 {
+	if ((_framerate_divisor > 1) && (pts % _framerate_divisor != 0)) {
+		*next_key = lock_key;
+		return true;
+	}
+
 #ifdef D_PLATFORM_WINDOWS
 	if (handle == GS_INVALID_HANDLE) {
 		DLOG_ERROR("Received invalid handle.");
@@ -1144,6 +1165,25 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 		if (_handler && _handler->has_threading_support(this)) {
 			auto p = obs_properties_add_int_slider(grp, ST_KEY_FFMPEG_THREADS, D_TRANSLATE(ST_I18N_FFMPEG_THREADS), 0,
 												   static_cast<int64_t>(std::thread::hardware_concurrency()) * 2, 1);
+		}
+
+		{ // Frame Skipping
+			obs_video_info ovi;
+			if (!obs_get_video_info(&ovi)) {
+				throw std::runtime_error("obs_get_video_info failed unexpectedly.");
+			}
+
+			auto p = obs_properties_add_list(grp, ST_KEY_FFMPEG_FRAMERATE, D_TRANSLATE(ST_I18N_FFMPEG_FRAMERATE),
+											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			// For now, an arbitrary limit of 1/10th the Framerate should be fine.
+			std::vector<char> buf{size_t{256}, 0, std::allocator<char>()};
+			for (uint32_t divisor = 1; divisor <= 10; divisor++) {
+				double fps_num = static_cast<double>(ovi.fps_num) / static_cast<double>(divisor);
+				double fps     = fps_num / static_cast<double>(ovi.fps_den);
+				snprintf(buf.data(), buf.size(), "%8.2f (%" PRIu32 "/%" PRIu32 ")", fps, ovi.fps_num,
+						 ovi.fps_den * divisor);
+				obs_property_list_add_int(p, buf.data(), divisor);
+			}
 		}
 	};
 
