@@ -21,7 +21,7 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-AppMutex={#MyAppName}
+AppMutex=@PROJECT_NAME@,Global\@PROJECT_NAME@
 
 ; Versioning
 VersionInfoProductName={#MyAppName}
@@ -46,6 +46,7 @@ PrivilegesRequiredOverridesAllowed=dialog commandline
 WizardStyle=modern
 WizardResizable=yes
 SetupIconFile="@PROJECT_SOURCE_DIR@/media/icon.ico"
+SetupMutex=@PROJECT_NAME@-Setup,Global\@PROJECT_NAME@-Setup
 UninstallDisplayIcon={uninstallexe}
 
 ; Other Information
