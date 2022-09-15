@@ -61,6 +61,7 @@ AppendDefaultGroupName=yes
 ; Other Information
 Uninstallable=yes
 CreateUninstallRegKey=not IsPortableMode()
+ChangesEnvironment=yes
 AllowNoIcons=yes
 LicenseFile="@ISS_SOURCE_DIR@/LICENSE"
 OutputDir="@ISS_PACKAGE_DIR@"
@@ -84,9 +85,77 @@ Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 
 [Code]
 // ------------------------------------------------------------------------------------------------------------------ //
+#ifdef UNICODE
+  #define AW "W"
+#else
+  #define AW "A"
+#endif
+
+type
+	WPARAM = UINT_PTR;
+	LPARAM = INT_PTR;
+	LRESULT = INT_PTR;
+	LSTATUS = DWord;
+	LPCVOID = UINT_PTR;
+	HKEY = DWord;
+	PHKEY = UINT_PTR;
+
+const
+	SMTO_ABORTIFHUNG = 2;
+	WM_WININICHANGE = $001A;
+	WM_SETTINGCHANGE = WM_WININICHANGE;
+//	HKEY_CURRENT_USER = $80000001;
+//	HKEY_LOCAL_MACHINE = $80000002;
+
+function advapi32_RegSetKeyValue(
+	hKey: HKEY;
+	lpSubKey: string;
+	lpValueName: string;
+	dwType: DWord;
+	lpData: string;
+	dwData: DWord
+): LRESULT;
+	external 'RegSetKeyValue{#AW}@advapi32.dll stdcall';
+
+function SetRegistryKeyValueString(
+	Root: HKEY;
+	Key: string;
+	Name: string;
+	Value: string
+): BOOL;
+begin
+	advapi32_RegSetKeyValue(Root, Key, Name, 2, Value, Length(Value) * 2);
+	Result := True;
+end;
+
+function user32_SendTextMessageTimeout(
+	hWnd: HWND;
+	Msg: UINT;
+	wParam: WPARAM;
+	lParam: PAnsiChar;
+	fuFlags: UINT;
+	uTimeout: UINT;
+	out lpdwResult: DWORD): LRESULT;
+	external 'SendMessageTimeoutA@user32.dll stdcall';
+	
+procedure RefreshEnvironment();
 var
-	oPortablePageStaticChoice: TNewRadioButton;
-	oPortablePagePortableChoice: TNewRadioButton;
+	S: AnsiString;
+	MsgResult: DWORD;
+begin
+	S := 'Environment';
+	user32_SendTextMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, 0,
+		PAnsiChar(S), SMTO_ABORTIFHUNG, 5000, MsgResult);
+end;
+
+// ------------------------------------------------------------------------------------------------------------------ //
+var
+	oModePageSystemChoice: TNewRadioButton;
+	oModePageUserChoice: TNewRadioButton;
+	oModePagePortableChoice: TNewRadioButton;
+	bIsPortableMode: Boolean;
+	bIsUserMode: Boolean;
+	bIsSystemMode: Boolean;
 
 // InnoSetup
 procedure InitializeWizard; forward;
@@ -96,7 +165,15 @@ function GetDefaultDirectory(Value: String): String; forward;
 function GetOutputBinaryDir(Value: String): String; forward;
 function GetOutputDataDir(Value: String): String; forward;
 
+// Which installation is present?
+function IsSystemInstallPresent(): Boolean; forward;
+function GetSystemUninstaller(): String; forward;
+function IsUserInstallPresent(): Boolean; forward;
+function GetUserUninstaller(): String; forward;
+
 // Which installation mode is selected?
+function IsSystemMode(): Boolean; forward;
+function IsUserMode(): Boolean; forward;
 function IsPortableMode(): Boolean; forward;
 
 // Other Metadata
@@ -106,17 +183,26 @@ function IsUpgrade(): Boolean; forward;
 function UninstallOldVersion(): Integer; forward;
 
 // Mode Page
-function CreatePortablePage: TWizardPage; forward;
-procedure OnPortablePagePortableChoiceClick(Sender: TObject); forward;
-procedure OnPortablePageStaticChoiceClick(Sender: TObject); forward;
+function CreateModePage: TWizardPage; forward;
+procedure OnModePagePortableChoiceClick(Sender: TObject); forward;
+procedure OnModePageSystemChoiceClick(Sender: TObject); forward;
 
+// ------------------------------------------------------------------------------------------------------------------ //
+function InitializeSetup(): Boolean;
+begin
+	bIsSystemMode := IsAdmin();
+	bIsUsermode := not IsAdmin();
+	bIsPortableMode := False;
+
+	Result := True;
+end;
 
 // ------------------------------------------------------------------------------------------------------------------ //
 procedure InitializeWizard;
 var
-	oPortablePage: TWizardPage;
+	oModePage: TWizardPage;
 begin
-	oPortablePage := CreatePortablePage();
+	oModePage := CreateModePage();
 end;
 
 // ------------------------------------------------------------------------------------------------------------------ //
@@ -129,6 +215,8 @@ end;
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 var
 	iResultCode: Integer;
+	sPluginsPath: String;
+	sPluginsDataPath: String;
 begin
 	// Attempt to remove old version if it exists.
 	if (IsUpgrade()) then begin
@@ -138,6 +226,19 @@ begin
 	// Also ensure that we have the necessary prerequisites installed to run the program.
 	ExtractTemporaryFile('msvc-redist-helper.exe');
 	Exec(ExpandConstant('{tmp}\msvc-redist-helper.exe'), '2019', '', SW_HIDE, ewWaitUntilTerminated, iResultCode);
+
+	// If this is a User install, register the necessary environment changes.
+	if (IsUserMode()) then begin
+		sPluginsPath := ExpandConstant('{userpf}\obs-studio\plugins\%module%\bin\');
+		StringChangeEx(sPluginsPath, '\', '/', True);
+		SetRegistryKeyValueString(HKEY_CURRENT_USER, 'Environment', 'OBS_PLUGINS_PATH', sPluginsPath);
+
+		sPluginsDataPath := ExpandConstant('{userpf}\obs-studio\plugins\%module%\data\');
+		StringChangeEx(sPluginsDataPath, '\', '/', True);
+		SetRegistryKeyValueString(HKEY_CURRENT_USER, 'Environment', 'OBS_PLUGINS_DATA_PATH', sPluginsDataPath);
+
+		RefreshEnvironment();
+	end;
 end;
 
 // ------------------------------------------------------------------------------------------------------------------ //
@@ -145,14 +246,25 @@ function GetDefaultDirectory(Value: String): String;
 var
 	sPath: String;
 begin
+	// If a path was given as an argument, use it.
+	if (Value <> '') then begin
+		Result := Value;
+		exit;
+	end;
+
 	// Otherwise, try and figure out where the previous installation of the same type went to.
 	if (RegQueryStringValue(HKA64, AppRegistryKey(), 'InstallLocation', sPath)) then begin
 		Result := sPath;
 		exit;
 	end;
 
-	// Install to ProgramData.
-	Result := ExpandConstant('{commonappdata}\obs-studio\plugins\@PROJECT_NAME@');
+	// In all other cases, change depending on the chosen install method.
+	if (IsSystemMode()) then begin
+		// Default to ProgramData/obs-studio/@PROJECT_NAME@
+		Result := ExpandConstant('{commonappdata}\obs-studio\plugins\@PROJECT_NAME@');
+	end else begin 
+		Result := ExpandConstant('{userpf}\obs-studio\plugins\@PROJECT_NAME@')
+	end;
 
 	exit;
 end;
@@ -162,10 +274,12 @@ function GetOutputBinaryDir(Value: String): String;
 var
 	sPath: String;
 begin
-	if (IsPortableMode()) then begin
-		sPath := ExpandConstant('{app}\obs-plugins\@D_PLATFORM_BITS@bit\');
-	end else begin
+	if (IsSystemMode()) then begin
 		sPath := ExpandConstant('{app}\bin\@D_PLATFORM_BITS@bit\');
+	end else if (IsUserMode()) then begin
+		sPath := ExpandConstant('{app}\bin\');
+	end else if (IsPortableMode()) then begin
+		sPath := ExpandConstant('{app}\obs-plugins\@D_PLATFORM_BITS@bit\');
 	end;
 	Result := sPath;
 end;
@@ -174,40 +288,86 @@ function GetOutputDataDir(Value: String): String;
 var
 	sPath: String;
 begin
-	if (IsPortableMode()) then begin
-		sPath := ExpandConstant('{app}\data\obs-plugins\@PROJECT_NAME@\');
-	end else begin
+	if (IsSystemMode()) then begin
 		sPath := ExpandConstant('{app}\data\');
+	end else if (IsUserMode()) then begin
+		sPath := ExpandConstant('{app}\data\@PROJECT_NAME@\');
+	end else if (IsPortableMode()) then begin
+		sPath := ExpandConstant('{app}\data\obs-plugins\@PROJECT_NAME@\');
 	end;
 	Result := sPath;
 end;
 
 // ------------------------------------------------------------------------------------------------------------------ //
-function GetUninstallerPath(): String;
+function GetSystemUninstaller(): String;
 var
-	sRegistryKey: String;
-	sUninstallerPath: String;
+	sPath : String;
 begin
-	sRegistryKey := AppRegistryKey();
+	Result := '';
+	if (RegQueryStringValue(HKLM64, AppRegistryKey(), 'UninstallString', sPath)) then begin
+		Result := sPath;
+	end;
+end;
 
-	RegQueryStringValue(HKLM64, sRegistryKey, 'UninstallString', sUninstallerPath);
+function IsSystemInstallPresent(): Boolean;
+var
+	sPath : String;
+begin
+	sPath := GetSystemUninstaller();
+	if (sPath <> '') then begin
+		Result := True;
+	end else begin
+		Result := False;
+	end;
+end;
 
-	if (sUninstallerPath = '') then
-		RegQueryStringValue(HKCU64, sRegistryKey, 'UninstallString', sUninstallerPath);
+function GetUserUninstaller(): String;
+var
+	sPath : String;
+begin
+	Result := '';
+	if (RegQueryStringValue(HKCU64, AppRegistryKey(), 'UninstallString', sPath)) then begin
+		Result := sPath;
+	end;	
+end;
 
-	if (sUninstallerPath = '') then
-		RegQueryStringValue(HKLM32, sRegistryKey, 'UninstallString', sUninstallerPath);
+function IsUserInstallPresent(): Boolean;
+var
+	sPath : String;
+begin
+	sPath := GetUserUninstaller();
+	if (sPath <> '') then begin
+		Result := True;
+	end else begin
+		Result := False;
+	end;
+end;
 
-	if (sUninstallerPath = '') then
-		RegQueryStringValue(HKCU32, sRegistryKey, 'UninstallString', sUninstallerPath);
-
-	Result := sUninstallerPath;
+function GetUninstallerPath(): String;
+begin
+	if (IsSystemMode()) then begin
+		Result := GetSystemUninstaller();
+	end else if (IsUserMode()) then begin
+		Result := GetUserUninstaller();
+	end else begin
+		Result := '';
+	end;
 end;
 
 // ------------------------------------------------------------------------------------------------------------------ //
+function IsSystemMode(): Boolean;
+begin
+	Result := bIsSystemMode;
+end;
+
+function IsUserMode(): Boolean;
+begin
+	Result := bIsUserMode;
+end;
+
 function IsPortableMode(): Boolean;
 begin
-	Result := oPortablePagePortableChoice.Checked;
+	Result := bIsPortableMode;
 end;
 
 // ------------------------------------------------------------------------------------------------------------------ //
@@ -241,143 +401,288 @@ begin
 end;
 
 // ------------------------------------------------------------------------------------------------------------------ //
-procedure OnPortablePagePortableChoiceClick(Sender: TObject);
+procedure OnModePageSystemChoiceClick(Sender: TObject);
 begin
-	oPortablePageStaticChoice.Checked := False;
-	oPortablePagePortableChoice.Checked := True;
-end;
-
-procedure OnPortablePageStaticChoiceClick(Sender: TObject);
-begin
-	if (not oPortablePageStaticChoice.Enabled) then begin
-		OnPortablePagePortableChoiceClick(Sender);
+	if (not oModePageSystemChoice.Enabled) then begin
+		OnModePagePortableChoiceClick(Sender);
 	end else begin
-		oPortablePageStaticChoice.Checked := True;
-		oPortablePagePortableChoice.Checked := False;
+		oModePageSystemChoice.Checked := True;
+		oModePageUserChoice.Checked := False;
+		oModePagePortableChoice.Checked := False;
+		bIsSystemMode := True;
+		bIsUserMode := False;
+		bIsPortableMode := False;
 	end;
 end;
 
-function CreatePortablePage: TWizardPage;
+procedure onModePageUserChoiceClick(Sender: TObject);
+begin
+	if (not oModePageUserChoice.Enabled) then begin
+		OnModePagePortableChoiceClick(Sender);
+	end else begin
+		oModePageSystemChoice.Checked := False;
+		oModePageUserChoice.Checked := True;
+		oModePagePortableChoice.Checked := False;
+		bIsSystemMode := False;
+		bIsUserMode := True;
+		bIsPortableMode := False;
+	end;
+end;
+
+procedure OnModePagePortableChoiceClick(Sender: TObject);
+begin
+	oModePageSystemChoice.Checked := False;
+	oModePageUserChoice.Checked := False;
+	oModePagePortableChoice.Checked := True;
+	bIsSystemMode := False;
+	bIsUserMode := False;
+	bIsPortableMode := True;
+end;
+
+function CreateModePage: TWizardPage;
 var
 	oPage: TWizardPage;
-	oStaticPanel: TPanel;
-	oStaticChoice: TNewRadioButton;
-	oStaticText: TLabel;
-	oStaticWarningText: TLabel;
+	oSystemPanel: TPanel;
+	oSystemChoice: TNewRadioButton;
+	oSystemText: TLabel;
+	oSystemWarningText: TLabel;
+	oUserPanel: TPanel;
+	oUserChoice: TNewRadioButton;
+	oUserText: TLabel;
+	oUserWarningText: TLabel;
 	oPortablePanel: TPanel;
 	oPortableChoice: TNewRadioButton;
 	oPortableText: TLabel;
+	oPortableWarningText: TLabel;
+	oFractionalHeight: Integer;
 begin
 	// Build a page that asks a user if they want to use Movable or Static installation.
 	oPage := CreateCustomPage(wpLicense,
-		'Installation Type',
+		'Installation Mode',
 		'Select how to install StreamFX on your System');
+	oFractionalHeight := ScaleY((oPage.SurfaceHeight - 10) / 3);
 
-	oStaticPanel := TPanel.Create(oPage);
-	oStaticPanel.Parent := oPage.Surface;
-	oStaticPanel.ParentBackground := False;
-	oStaticPanel.Left := ScaleX(5);
-	oStaticPanel.Top := ScaleY(5);
-	oStaticPanel.Width := oPage.SurfaceWidth - ScaleX(10);
-	oStaticPanel.Height := ScaleY(100);
-	oStaticPanel.Anchors := [akLeft, akTop, akRight];
-	oStaticPanel.Color := clWindow;
-	oStaticPanel.BevelKind := bkTile;
-	oStaticPanel.BevelInner := bvNone;
-	oStaticPanel.BevelOuter := bvRaised;
-	oStaticPanel.BevelWidth := 1;
-	oStaticPanel.OnClick := @OnPortablePageStaticChoiceClick;
+	// System-Wide installation
+	if (True) then begin
+		oSystemPanel := TPanel.Create(oPage);
+		oSystemPanel.Parent := oPage.Surface;
+		oSystemPanel.ParentBackground := False;
+		oSystemPanel.Left := ScaleX(5);
+		oSystemPanel.Top := ScaleY(5);
+		oSystemPanel.Width := oPage.SurfaceWidth - ScaleX(10);
+		oSystemPanel.Height := oFractionalHeight;
+		oSystemPanel.Anchors := [akLeft, akTop, akRight];
+		oSystemPanel.Color := clWindow;
+		oSystemPanel.BevelKind := bkTile;
+		oSystemPanel.BevelInner := bvNone;
+		oSystemPanel.BevelOuter := bvRaised;
+		oSystemPanel.BevelWidth := 1;
+		oSystemPanel.OnClick := @OnModePageSystemChoiceClick;
 
-	oStaticChoice := TNewRadioButton.Create(oStaticPanel);
-	oPortablePageStaticChoice := oStaticChoice;
-	oStaticChoice.Parent := oStaticPanel;
-	oStaticChoice.ParentBackground := False;
-	oStaticChoice.Left := ScaleX(5);
-	oStaticChoice.Top := ScaleY(5);
-	oStaticChoice.Width := oStaticPanel.Width - ScaleX(10);
-	oStaticChoice.Height := ScaleY(20);
-	oStaticChoice.Anchors := [akLeft, akTop, akRight];
-	oStaticChoice.Caption := 'Static';
-	oStaticChoice.Font.Style := [fsBold];
-	oStaticChoice.OnClick := @OnPortablePageStaticChoiceClick;
+		oSystemChoice := TNewRadioButton.Create(oSystemPanel);
+		oModePageSystemChoice := oSystemChoice;
+		oSystemChoice.Parent := oSystemPanel;
+		oSystemChoice.ParentBackground := False;
+		oSystemChoice.Left := ScaleX(5);
+		oSystemChoice.Top := ScaleY(5);
+		oSystemChoice.Width := oSystemPanel.Width - ScaleX(10);
+		oSystemChoice.Height := ScaleY(20);
+		oSystemChoice.Anchors := [akLeft, akTop, akRight];
+		oSystemChoice.Caption := 'All Users';
+		oSystemChoice.Font.Style := [fsBold];
+		oSystemChoice.OnClick := @OnModePageSystemChoiceClick;
 
-	oStaticText := TLabel.Create(oStaticPanel);
-	oStaticText.Parent := oStaticPanel;
-	oStaticText.AutoSize := False;
-	oStaticText.Left := ScaleX(5);
-	oStaticText.Top := ScaleY(5) + oStaticChoice.Top + oStaticChoice.Height;
-	oStaticText.Width := oStaticPanel.Width - ScaleX(10);
-	oStaticText.Height := oStaticPanel.Height - ScaleX(5) - oStaticText.Top;
-	oStaticText.Anchors := [akLeft, akTop, akRight];
-	oStaticText.WordWrap := True
-	oStaticText.Caption := 'Install for use in a static version of OBS Studio, with all necessary features to support it.';
-	oStaticText.OnClick := @OnPortablePageStaticChoiceClick;
+		oSystemText := TLabel.Create(oSystemPanel);
+		oSystemText.Parent := oSystemPanel;
+		oSystemText.AutoSize := False;
+		oSystemText.Left := ScaleX(5);
+		oSystemText.Top := ScaleY(5) + oSystemChoice.Top + oSystemChoice.Height;
+		oSystemText.Width := oSystemPanel.Width - ScaleX(10);
+		oSystemText.Height := oSystemPanel.Height - ScaleX(5) - oSystemText.Top;
+		oSystemText.Anchors := [akLeft, akTop, akRight];
+		oSystemText.WordWrap := True
+		oSystemText.Caption := 'Install for all users of this System, which will require Administrator rights for future updates. May cause problems with Portable and Current User installations.';
+		oSystemText.OnClick := @OnModePageSystemChoiceClick;
+		
+		// Not available without Administrator rights.
+		if (not IsAdmin()) then begin
+			oSystemWarningText := TLabel.Create(oSystemPanel);
+			oSystemWarningText.Parent := oSystemPanel;
+			oSystemWarningText.AutoSize := False;
+			oSystemWarningText.Left := ScaleX(5);
+			oSystemWarningText.Top := oSystemPanel.Height - ScaleY(5) - ScaleY(15);
+			oSystemWarningText.Width := oSystemPanel.Width - ScaleX(10);
+			oSystemWarningText.Height := ScaleY(15);
+			oSystemWarningText.Anchors := [akLeft, akBottom, akRight];
+			oSystemWarningText.WordWrap := True
+			oSystemWarningText.Font.Color := clRed;
+			oSystemWarningText.Font.Style := [fsBold];
+			oSystemWarningText.Caption := 'Please launch the installer with Administrator rights.';
 
-	oPortablePanel := TPanel.Create(oPage);
-	oPortablePanel.Parent := oPage.Surface;
-	oPortablePanel.ParentBackground := False;
-	oPortablePanel.Left := ScaleX(5);
-	oPortablePanel.Top := ScaleY(5) + oStaticPanel.Top + oStaticPanel.Height;
-	oPortablePanel.Width := oPage.SurfaceWidth - ScaleX(10);
-	oPortablePanel.Height := ScaleY(100);
-	oPortablePanel.Anchors := [akLeft, akTop, akRight];
-	oPortablePanel.Color := clWindow;
-	oPortablePanel.BevelKind := bkTile;
-	oPortablePanel.BevelInner := bvNone;
-	oPortablePanel.BevelOuter := bvRaised;
-	oPortablePanel.BevelWidth := 1;
-	oPortablePanel.OnClick := @OnPortablePagePortableChoiceClick;
-
-	oPortableChoice := TNewRadioButton.Create(oPortablePanel);
-	oPortablePagePortableChoice := oPortableChoice;
-	oPortableChoice.Parent := oPortablePanel;
-	oPortableChoice.ParentBackground := False;
-	oPortableChoice.Left := ScaleX(5);
-	oPortableChoice.Top := ScaleY(5);
-	oPortableChoice.Width := oPortablePanel.Width - ScaleX(10);
-	oPortableChoice.Height := ScaleY(20);
-	oPortableChoice.Anchors := [akLeft, akTop, akRight];
-	oPortableChoice.Caption := 'Portable';
-	oPortableChoice.Font.Style := [fsBold];
-	oPortableChoice.OnClick := @OnPortablePagePortableChoiceClick;
-
-	oPortableText := TLabel.Create(oPortablePanel);
-	oPortableText.Parent := oPortablePanel;
-	oPortableText.AutoSize := False;
-	oPortableText.Left := ScaleX(5);
-	oPortableText.Top := ScaleY(5) + oPortableChoice.Top + oPortableChoice.Height;
-	oPortableText.Width := oPortablePanel.Width - ScaleX(10);
-	oPortableText.Height := oPortablePanel.Height - ScaleX(5) - oPortableText.Top;
-	oPortableText.Anchors := [akLeft, akTop, akRight];
-	oPortableText.WordWrap := True
-	oPortableText.Caption := 'Install for use in portable or multi-environment scenarios, which require StreamFX to not be tied to the System itself. The uninstaller, automatic updates and other system-dependent features will be unavailable.';
-	oPortableText.OnClick := @OnPortablePagePortableChoiceClick;
-
-	if (not IsAdmin()) then begin
-		oStaticWarningText := TLabel.Create(oStaticPanel);
-		oStaticWarningText.Parent := oStaticPanel;
-		oStaticWarningText.AutoSize := False;
-		oStaticWarningText.Left := ScaleX(5);
-		oStaticWarningText.Top := oPortablePanel.Height - ScaleY(5) - ScaleY(15);
-		oStaticWarningText.Width := oPortablePanel.Width - ScaleX(10);
-		oStaticWarningText.Height := ScaleY(15);
-		oStaticWarningText.Anchors := [akLeft, akBottom, akRight];
-		oStaticWarningText.WordWrap := True
-		oStaticWarningText.Font.Color := clRed;
-		oStaticWarningText.Font.Style := [fsBold];
-		oStaticWarningText.Caption := 'Please launch the Installer as Administrator for static installations.';
-
-		oStaticPanel.Enabled := False;
-		oStaticChoice.Enabled := False;
-		oStaticText.Enabled := False;
-
-		oStaticChoice.Checked := False;
-		oPortableChoice.Checked := True;
-	end else begin
-		oStaticChoice.Checked := True;
-		oPortableChoice.Checked := False;
+			oSystemPanel.Enabled := False;
+			oSystemChoice.Enabled := False;
+			oSystemChoice.Checked := False;
+			oSystemText.Enabled := False;
+		end else if (IsUserInstallPresent()) then begin
+			oSystemWarningText := TLabel.Create(oSystemPanel);
+			oSystemWarningText.Parent := oSystemPanel;
+			oSystemWarningText.AutoSize := False;
+			oSystemWarningText.Left := ScaleX(5);
+			oSystemWarningText.Top := oSystemPanel.Height - ScaleY(5) - ScaleY(15);
+			oSystemWarningText.Width := oSystemPanel.Width - ScaleX(10);
+			oSystemWarningText.Height := ScaleY(15);
+			oSystemWarningText.Anchors := [akLeft, akBottom, akRight];
+			oSystemWarningText.WordWrap := True
+			oSystemWarningText.Font.Color := $007EFF;
+			oSystemWarningText.Font.Style := [fsBold];
+			oSystemWarningText.Caption := 'A conflicting installation was detected which may cause issues.';
+		end;
 	end;
+
+	// Local-User installation
+	if (True) then begin
+		oUserPanel := TPanel.Create(oPage);
+		oUserPanel.Parent := oPage.Surface;
+		oUserPanel.ParentBackground := False;
+		oUserPanel.Left := ScaleX(5);
+		oUserPanel.Top := ScaleY(5) + oSystemPanel.Top + oSystemPanel.Height;
+		oUserPanel.Width := oPage.SurfaceWidth - ScaleX(10);
+		oUserPanel.Height := oFractionalHeight;
+		oUserPanel.Anchors := [akLeft, akTop, akRight];
+		oUserPanel.Color := clWindow;
+		oUserPanel.BevelKind := bkTile;
+		oUserPanel.BevelInner := bvNone;
+		oUserPanel.BevelOuter := bvRaised;
+		oUserPanel.BevelWidth := 1;
+		oUserPanel.OnClick := @OnModePageUserChoiceClick;
+
+		oUserChoice := TNewRadioButton.Create(oUserPanel);
+		oModePageUserChoice := oUserChoice;
+		oUserChoice.Parent := oUserPanel;
+		oUserChoice.ParentBackground := False;
+		oUserChoice.Left := ScaleX(5);
+		oUserChoice.Top := ScaleY(5);
+		oUserChoice.Width := oUserPanel.Width - ScaleX(10);
+		oUserChoice.Height := ScaleY(20);
+		oUserChoice.Anchors := [akLeft, akTop, akRight];
+		oUserChoice.Caption := 'Current User';
+		oUserChoice.Font.Style := [fsBold];
+		oUserChoice.OnClick := @OnModePageUserChoiceClick;
+
+		oUserText := TLabel.Create(oUserPanel);
+		oUserText.Parent := oUserPanel;
+		oUserText.AutoSize := False;
+		oUserText.Left := ScaleX(5);
+		oUserText.Top := ScaleY(5) + oUserChoice.Top + oUserChoice.Height;
+		oUserText.Width := oUserPanel.Width - ScaleX(10);
+		oUserText.Height := oUserPanel.Height - ScaleX(5) - oUserText.Top;
+		oUserText.Anchors := [akLeft, akTop, akRight];
+		oUserText.WordWrap := True
+		oUserText.Caption := 'Install for the current user only, which will allow you to use @PROJECT_NAME@. Updating will not require Administrator rights.';
+		oUserText.OnClick := @OnModePageUserChoiceClick;
+		
+		// Not available with Administrator rights.
+		if (IsAdmin()) then begin
+			oUserWarningText := TLabel.Create(oUserPanel);
+			oUserWarningText.Parent := oUserPanel;
+			oUserWarningText.AutoSize := False;
+			oUserWarningText.Left := ScaleX(5);
+			oUserWarningText.Top := oUserPanel.Height - ScaleY(5) - ScaleY(15);
+			oUserWarningText.Width := oUserPanel.Width - ScaleX(10);
+			oUserWarningText.Height := ScaleY(15);
+			oUserWarningText.Anchors := [akLeft, akBottom, akRight];
+			oUserWarningText.WordWrap := True
+			oUserWarningText.Font.Color := clRed;
+			oUserWarningText.Font.Style := [fsBold];
+			oUserWarningText.Caption := 'Please launch the Installer without Administrator rights.';
+
+			oUserPanel.Enabled := False;
+			oUserChoice.Enabled := False;
+			oUserChoice.Checked := False;
+			oUserText.Enabled := False;
+		end else if (IsSystemInstallPresent()) then begin
+			oUserWarningText := TLabel.Create(oUserPanel);
+			oUserWarningText.Parent := oUserPanel;
+			oUserWarningText.AutoSize := False;
+			oUserWarningText.Left := ScaleX(5);
+			oUserWarningText.Top := oUserPanel.Height - ScaleY(5) - ScaleY(15);
+			oUserWarningText.Width := oUserPanel.Width - ScaleX(10);
+			oUserWarningText.Height := ScaleY(15);
+			oUserWarningText.Anchors := [akLeft, akBottom, akRight];
+			oUserWarningText.WordWrap := True
+			oUserWarningText.Font.Color := $007EFF;
+			oUserWarningText.Font.Style := [fsBold];
+			oUserWarningText.Caption := 'A conflicting system wide installation was detected.';
+
+			oUserPanel.Enabled := False;
+			oUserChoice.Enabled := False;
+			oUserChoice.Checked := False;
+			oUserText.Enabled := False;
+		end;
+	end;
+
+	// Portable
+	if (True) then begin
+		oPortablePanel := TPanel.Create(oPage);
+		oPortablePanel.Parent := oPage.Surface;
+		oPortablePanel.ParentBackground := False;
+		oPortablePanel.Left := ScaleX(5);
+		oPortablePanel.Top := ScaleY(5) + oUserPanel.Top + oUserPanel.Height;
+		oPortablePanel.Width := oPage.SurfaceWidth - ScaleX(10);
+		oPortablePanel.Height := oFractionalHeight;
+		oPortablePanel.Anchors := [akLeft, akTop, akRight];
+		oPortablePanel.Color := clWindow;
+		oPortablePanel.BevelKind := bkTile;
+		oPortablePanel.BevelInner := bvNone;
+		oPortablePanel.BevelOuter := bvRaised;
+		oPortablePanel.BevelWidth := 1;
+		oPortablePanel.OnClick := @OnModePagePortableChoiceClick;
+
+		oPortableChoice := TNewRadioButton.Create(oPortablePanel);
+		oModePagePortableChoice := oPortableChoice;
+		oPortableChoice.Parent := oPortablePanel;
+		oPortableChoice.ParentBackground := False;
+		oPortableChoice.Left := ScaleX(5);
+		oPortableChoice.Top := ScaleY(5);
+		oPortableChoice.Width := oPortablePanel.Width - ScaleX(10);
+		oPortableChoice.Height := ScaleY(20);
+		oPortableChoice.Anchors := [akLeft, akTop, akRight];
+		oPortableChoice.Caption := 'Portable';
+		oPortableChoice.Font.Style := [fsBold];
+		oPortableChoice.OnClick := @OnModePagePortableChoiceClick;
+
+		oPortableText := TLabel.Create(oPortablePanel);
+		oPortableText.Parent := oPortablePanel;
+		oPortableText.AutoSize := False;
+		oPortableText.Left := ScaleX(5);
+		oPortableText.Top := ScaleY(5) + oPortableChoice.Top + oPortableChoice.Height;
+		oPortableText.Width := oPortablePanel.Width - ScaleX(10);
+		oPortableText.Height := oPortablePanel.Height - ScaleX(5) - oPortableText.Top;
+		oPortableText.Anchors := [akLeft, akTop, akRight];
+		oPortableText.WordWrap := True
+		oPortableText.Caption := 'Install for a portable OBS Studio environment.';
+		oPortableText.OnClick := @OnModePagePortableChoiceClick;
+		
+		// Warn about Administrator rights
+		if (IsAdmin()) then begin
+			oPortableWarningText := TLabel.Create(oPortablePanel);
+			oPortableWarningText.Parent := oPortablePanel;
+			oPortableWarningText.AutoSize := False;
+			oPortableWarningText.Left := ScaleX(5);
+			oPortableWarningText.Top := oPortablePanel.Height - ScaleY(5) - ScaleY(15);
+			oPortableWarningText.Width := oPortablePanel.Width - ScaleX(10);
+			oPortableWarningText.Height := ScaleY(15);
+			oPortableWarningText.Anchors := [akLeft, akBottom, akRight];
+			oPortableWarningText.WordWrap := True
+			oPortableWarningText.Font.Color := $007EFF;
+			oPortableWarningText.Font.Style := [fsBold];
+			oPortableWarningText.Caption := 'Portable installation with Administrator rights may cause unforeseen consequences. Proceed with caution.';
+		end;
+	end;
+
+	oSystemChoice.Checked := bIsSystemMode;
+	oUserChoice.Checked := bIsUserMode;
+	oPortableChoice.Checked := bIsPortableMode;
 
 	Result := oPage;
 end;
-
