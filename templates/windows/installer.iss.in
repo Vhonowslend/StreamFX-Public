@@ -51,7 +51,8 @@ UninstallDisplayIcon={uninstallexe}
 
 ; Other Information
 UsePreviousAppDir=no
-Uninstallable=not IsPortablePagePortableChoiceChecked()
+Uninstallable=yes
+CreateUninstallRegKey=not IsPortablePagePortableChoiceChecked()
 DefaultDirName={code:GetDefaultDirectory}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
