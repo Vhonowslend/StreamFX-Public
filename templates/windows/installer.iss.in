@@ -49,12 +49,18 @@ SetupIconFile="@PROJECT_SOURCE_DIR@/media/icon.ico"
 SetupMutex=@PROJECT_NAME@-Setup,Global\@PROJECT_NAME@-Setup
 UninstallDisplayIcon={uninstallexe}
 
-; Other Information
+; Directory Choices
 UsePreviousAppDir=no
+DisableDirPage=no
+DirExistsWarning=no
+DefaultDirName={code:GetDefaultDirectory}
+AppendDefaultDirName=no
+DefaultGroupName={#MyAppName}
+AppendDefaultGroupName=yes
+
+; Other Information
 Uninstallable=yes
 CreateUninstallRegKey=not IsPortablePagePortableChoiceChecked()
-DefaultDirName={code:GetDefaultDirectory}
-DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 LicenseFile="@ISS_SOURCE_DIR@/LICENSE"
 OutputDir="@ISS_PACKAGE_DIR@"
