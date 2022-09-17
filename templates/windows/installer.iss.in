@@ -60,7 +60,7 @@ AppendDefaultGroupName=yes
 
 ; Other Information
 Uninstallable=yes
-CreateUninstallRegKey=not IsPortablePagePortableChoiceChecked()
+CreateUninstallRegKey=not IsPortableMode()
 AllowNoIcons=yes
 LicenseFile="@ISS_SOURCE_DIR@/LICENSE"
 OutputDir="@ISS_PACKAGE_DIR@"
@@ -97,10 +97,10 @@ function GetOutputBinaryDir(Value: String): String; forward;
 function GetOutputDataDir(Value: String): String; forward;
 
 // Which installation mode is selected?
-function IsPortablePagePortableChoiceChecked(): Boolean; forward;
+function IsPortableMode(): Boolean; forward;
 
 // Other Metadata
-function FindRegistryKey(): String; forward;
+function AppRegistryKey(): String; forward;
 function GetUninstallerPath(): String; forward;
 function IsUpgrade(): Boolean; forward;
 function UninstallOldVersion(): Integer; forward;
@@ -146,16 +146,13 @@ var
 	sPath: String;
 begin
 	// Otherwise, try and figure out where the previous installation of the same type went to.
-	if (RegQueryStringValue(HKA64, FindRegistryKey(), 'InstallLocation', sPath)) then begin
+	if (RegQueryStringValue(HKA64, AppRegistryKey(), 'InstallLocation', sPath)) then begin
 		Result := sPath;
 		exit;
 	end;
 
-	// Install to OBS Studio by default.
-	if (RegQueryStringValue(HKLM64, 'SOFTWARE\OBS Studio', '', sPath)) then begin
-		Result := sPath;
-		exit;
-	end;
+	// Install to ProgramData.
+	Result := ExpandConstant('{commonappdata}\obs-studio\plugins\@PROJECT_NAME@');
 
 	exit;
 end;
@@ -165,7 +162,11 @@ function GetOutputBinaryDir(Value: String): String;
 var
 	sPath: String;
 begin
-	sPath := ExpandConstant('{app}\obs-plugins\@D_PLATFORM_BITS@bit\');
+	if (IsPortableMode()) then begin
+		sPath := ExpandConstant('{app}\obs-plugins\@D_PLATFORM_BITS@bit\');
+	end else begin
+		sPath := ExpandConstant('{app}\bin\@D_PLATFORM_BITS@bit\');
+	end;
 	Result := sPath;
 end;
 
@@ -173,14 +174,12 @@ function GetOutputDataDir(Value: String): String;
 var
 	sPath: String;
 begin
-	sPath := ExpandConstant('{app}\data\obs-plugins\@PROJECT_NAME@\');
+	if (IsPortableMode()) then begin
+		sPath := ExpandConstant('{app}\data\obs-plugins\@PROJECT_NAME@\');
+	end else begin
+		sPath := ExpandConstant('{app}\data\');
+	end;
 	Result := sPath;
-end;
-
-// ------------------------------------------------------------------------------------------------------------------ //
-function FindRegistryKey(): String;
-begin
-	Result := ExpandConstant('Software\Microsoft\Windows\CurrentVersion\Uninstall\{#emit SetupSetting('AppId')}_is1');
 end;
 
 // ------------------------------------------------------------------------------------------------------------------ //
@@ -189,7 +188,7 @@ var
 	sRegistryKey: String;
 	sUninstallerPath: String;
 begin
-	sRegistryKey := FindRegistryKey();
+	sRegistryKey := AppRegistryKey();
 
 	RegQueryStringValue(HKLM64, sRegistryKey, 'UninstallString', sUninstallerPath);
 
@@ -206,9 +205,21 @@ begin
 end;
 
 // ------------------------------------------------------------------------------------------------------------------ //
+function IsPortableMode(): Boolean;
+begin
+	Result := oPortablePagePortableChoice.Checked;
+end;
+
+// ------------------------------------------------------------------------------------------------------------------ //
+function AppRegistryKey(): String;
+begin
+	Result := ExpandConstant('Software\Microsoft\Windows\CurrentVersion\Uninstall\{#emit SetupSetting('AppId')}_is1');
+end;
+
+// ------------------------------------------------------------------------------------------------------------------ //
 function IsUpgrade(): Boolean;
 begin
-	Result := (not IsPortablePagePortableChoiceChecked()) and (GetUninstallerPath() <> '');
+	Result := (not IsPortableMode()) and (GetUninstallerPath() <> '');
 end;
 
 // ------------------------------------------------------------------------------------------------------------------ //
@@ -244,11 +255,6 @@ begin
 		oPortablePageStaticChoice.Checked := True;
 		oPortablePagePortableChoice.Checked := False;
 	end;
-end;
-
-function IsPortablePagePortableChoiceChecked(): Boolean;
-begin
-	Result := oPortablePagePortableChoice.Checked;
 end;
 
 function CreatePortablePage: TWizardPage;
