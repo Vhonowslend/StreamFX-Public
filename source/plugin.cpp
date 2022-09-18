@@ -94,10 +94,10 @@
 #include <stdexcept>
 #include "warning-enable.hpp"
 
-static std::shared_ptr<streamfx::util::threadpool>       _threadpool;
-static std::shared_ptr<streamfx::obs::gs::vertex_buffer> _gs_fstri_vb;
-static std::shared_ptr<streamfx::gfx::opengl>            _streamfx_gfx_opengl;
-static std::shared_ptr<streamfx::obs::source_tracker>    _source_tracker;
+static std::shared_ptr<streamfx::util::threadpool::threadpool> _threadpool;
+static std::shared_ptr<streamfx::obs::gs::vertex_buffer>       _gs_fstri_vb;
+static std::shared_ptr<streamfx::gfx::opengl>                  _streamfx_gfx_opengl;
+static std::shared_ptr<streamfx::obs::source_tracker>          _source_tracker;
 
 MODULE_EXPORT bool obs_module_load(void)
 {
@@ -108,7 +108,7 @@ MODULE_EXPORT bool obs_module_load(void)
 		streamfx::configuration::initialize();
 
 		// Initialize global Thread Pool.
-		_threadpool = std::make_shared<streamfx::util::threadpool>();
+		_threadpool = std::make_shared<streamfx::util::threadpool::threadpool>();
 
 		// Initialize Source Tracker
 		_source_tracker = streamfx::obs::source_tracker::get();
@@ -338,7 +338,7 @@ MODULE_EXPORT void obs_module_unload(void)
 	}
 }
 
-std::shared_ptr<streamfx::util::threadpool> streamfx::threadpool()
+std::shared_ptr<streamfx::util::threadpool::threadpool> streamfx::threadpool()
 {
 	return _threadpool;
 }

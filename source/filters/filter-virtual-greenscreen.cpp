@@ -406,7 +406,7 @@ void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::switch
 }
 
 void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::task_switch_provider(
-	util::threadpool_data_t data)
+	util::threadpool::task_data_t data)
 {
 	std::shared_ptr<switch_provider_data_t> spd = std::static_pointer_cast<switch_provider_data_t>(data);
 

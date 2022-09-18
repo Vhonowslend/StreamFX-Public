@@ -86,7 +86,7 @@ namespace streamfx::filter::virtual_greenscreen {
 
 		private:
 		void switch_provider(virtual_greenscreen_provider provider);
-		void task_switch_provider(util::threadpool_data_t data);
+		void task_switch_provider(util::threadpool::task_data_t data);
 
 #ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
 		void nvvfxgs_load();

@@ -1,75 +1,148 @@
-/*
- * Modern effects for a modern Streamer
- * Copyright (C) 2020 Michael Fabian Dirks
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
- */
+// Copyright (C) 2020-2022 Michael Fabian Dirks
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #pragma once
 #include "warning-disable.hpp"
 #include <atomic>
+#include <chrono>
+#include <cinttypes>
 #include <condition_variable>
+#include <cstddef>
 #include <functional>
 #include <list>
 #include <memory>
 #include <mutex>
+#include <new>
 #include <stdexcept>
 #include <thread>
 #include "warning-enable.hpp"
 
-namespace streamfx::util {
-	typedef std::shared_ptr<void>                  threadpool_data_t;
-	typedef std::function<void(threadpool_data_t)> threadpool_callback_t;
+namespace streamfx::util::threadpool {
+	typedef std::shared_ptr<void>            task_data_t;
+	typedef std::function<void(task_data_t)> task_callback_t;
+
+	struct worker_info {
+#if __cpp_lib_hardware_interference_size >= 201603
+		alignas(std::hardware_destructive_interference_size)
+#endif
+			std::atomic<bool> stop;
+
+#if __cpp_lib_hardware_interference_size >= 201603
+		alignas(std::hardware_destructive_interference_size)
+#endif
+			std::mutex lifeline;
+
+		std::chrono::high_resolution_clock::time_point last_work_time;
+
+		std::thread thread;
+	};
+
+	class task {
+		task_callback_t _callback;
+		task_data_t     _data;
+		std::mutex      _lock;
+
+#if __cpp_lib_hardware_interference_size >= 201603
+		alignas(std::hardware_destructive_interference_size)
+#endif
+			std::condition_variable _status_changed;
+#if __cpp_lib_hardware_interference_size >= 201603
+		alignas(std::hardware_destructive_interference_size)
+#endif
+			std::atomic<bool> _cancelled;
+#if __cpp_lib_hardware_interference_size >= 201603
+		alignas(std::hardware_destructive_interference_size)
+#endif
+			std::atomic<bool> _completed;
+#if __cpp_lib_hardware_interference_size >= 201603
+		alignas(std::hardware_destructive_interference_size)
+#endif
+			std::atomic<bool> _failed;
+
+		public:
+		task(task_callback_t callback, task_data_t data);
+
+		public:
+		~task();
+
+		public:
+		void run();
+
+		public:
+		void cancel();
+
+		public:
+		bool is_cancelled();
+
+		public:
+		bool is_completed();
+
+		public:
+		bool has_failed();
+
+		public:
+		void wait();
+
+		public:
+		void await_completion();
+	};
 
 	class threadpool {
-		public:
-		class task {
-			protected:
-			std::mutex              _mutex;
-			std::condition_variable _is_complete;
-			std::atomic<bool>       _is_dead;
-			threadpool_callback_t   _callback;
-			threadpool_data_t       _data;
+		std::pair<size_t, size_t> _limits;
 
-			public:
-			task();
-			task(threadpool_callback_t callback_function, threadpool_data_t data);
+#if __cpp_lib_hardware_interference_size >= 201603
+		alignas(std::hardware_destructive_interference_size)
+#endif
+			std::mutex _workers_lock;
+		std::list<std::shared_ptr<worker_info>> _workers;
+#if __cpp_lib_hardware_interference_size >= 201603
+		alignas(std::hardware_destructive_interference_size)
+#endif
+			std::atomic<size_t> _worker_count;
+		std::chrono::high_resolution_clock::time_point _last_worker_death;
 
-			void await_completion();
-
-			friend class streamfx::util::threadpool;
-		};
-
-		private:
-		std::list<std::thread>                                         _workers;
-		std::atomic<bool>                                              _worker_stop;
-		std::atomic<uint32_t>                                          _worker_idx;
-		std::list<std::shared_ptr<::streamfx::util::threadpool::task>> _tasks;
-		std::mutex                                                     _tasks_lock;
-		std::condition_variable                                        _tasks_cv;
+#if __cpp_lib_hardware_interference_size >= 201603
+		alignas(std::hardware_destructive_interference_size)
+#endif
+			std::mutex _tasks_lock;
+#if __cpp_lib_hardware_interference_size >= 201603
+		alignas(std::hardware_destructive_interference_size)
+#endif
+			std::condition_variable _tasks_cv;
+		std::list<std::shared_ptr<task>> _tasks;
 
 		public:
-		threadpool();
 		~threadpool();
 
-		std::shared_ptr<::streamfx::util::threadpool::task> push(threadpool_callback_t callback_function,
-																 threadpool_data_t     data);
+		public:
+		threadpool(size_t minimum = 2, size_t maximum = std::thread::hardware_concurrency());
 
-		void pop(std::shared_ptr<::streamfx::util::threadpool::task> work);
+		public:
+		std::shared_ptr<task> push(task_callback_t callback, task_data_t data = nullptr);
+
+		public:
+		void pop(std::shared_ptr<task> task);
 
 		private:
-		void work();
+		void spawn(size_t count = 1);
+
+		private:
+		bool die(std::shared_ptr<worker_info>);
+
+		private:
+		void work(std::shared_ptr<worker_info>);
 	};
-} // namespace streamfx::util
+} // namespace streamfx::util::threadpool
