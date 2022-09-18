@@ -86,7 +86,7 @@ namespace streamfx::filter::upscaling {
 
 		private:
 		void switch_provider(upscaling_provider provider);
-		void task_switch_provider(util::threadpool_data_t data);
+		void task_switch_provider(util::threadpool::task_data_t data);
 
 #ifdef ENABLE_FILTER_UPSCALING_NVIDIA
 		void nvvfxsr_load();

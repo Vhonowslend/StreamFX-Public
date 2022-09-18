@@ -22,7 +22,7 @@
 
 namespace streamfx {
 	// Threadpool
-	std::shared_ptr<streamfx::util::threadpool> threadpool();
+	std::shared_ptr<streamfx::util::threadpool::threadpool> threadpool();
 
 	void gs_draw_fullscreen_tri();
 
