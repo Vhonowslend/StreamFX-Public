@@ -85,7 +85,7 @@ namespace streamfx::filter::denoising {
 
 		private:
 		void switch_provider(denoising_provider provider);
-		void task_switch_provider(util::threadpool_data_t data);
+		void task_switch_provider(util::threadpool::task_data_t data);
 
 #ifdef ENABLE_FILTER_DENOISING_NVIDIA
 		void nvvfx_denoising_load();

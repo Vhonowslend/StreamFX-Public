@@ -228,7 +228,7 @@ streamfx::version_info::operator std::string()
 	}
 }
 
-void streamfx::updater::task(streamfx::util::threadpool_data_t)
+void streamfx::updater::task(streamfx::util::threadpool::task_data_t)
 {
 	try {
 		auto query_fn = [](std::vector<char>& buffer) {
