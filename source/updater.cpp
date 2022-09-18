@@ -402,6 +402,8 @@ void streamfx::updater::save()
 		obs_data_set_bool(dataptr.get(), ST_CFG_AUTOMATION, _automation);
 		obs_data_set_int(dataptr.get(), ST_CFG_CHANNEL, static_cast<long long>(_channel));
 		obs_data_set_int(dataptr.get(), ST_CFG_LASTCHECKEDAT, static_cast<long long>(_lastcheckedat.count()));
+
+		config->save();
 	}
 }
 

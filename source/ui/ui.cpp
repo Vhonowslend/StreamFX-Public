@@ -67,6 +67,7 @@ bool streamfx::ui::handler::have_shown_about_streamfx(bool shown)
 	auto data   = config->get();
 	if (shown) {
 		obs_data_set_bool(data.get(), _cfg_have_shown_about.data(), true);
+		config->save();
 	}
 	if (config->is_different_version()) {
 		return false;
