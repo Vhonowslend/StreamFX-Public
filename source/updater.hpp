@@ -82,7 +82,7 @@ namespace streamfx {
 		bool                                  _dirty;
 
 		private:
-		void task(streamfx::util::threadpool_data_t);
+		void task(streamfx::util::threadpool::task_data_t);
 
 		bool can_check();
 

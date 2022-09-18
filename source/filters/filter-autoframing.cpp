@@ -897,7 +897,7 @@ void streamfx::filter::autoframing::autoframing_instance::switch_provider(tracki
 		std::bind(&autoframing_instance::task_switch_provider, this, std::placeholders::_1), spd);
 }
 
-void streamfx::filter::autoframing::autoframing_instance::task_switch_provider(util::threadpool_data_t data)
+void streamfx::filter::autoframing::autoframing_instance::task_switch_provider(util::threadpool::task_data_t data)
 {
 	std::shared_ptr<switch_provider_data_t> spd = std::static_pointer_cast<switch_provider_data_t>(data);
 
