@@ -324,11 +324,11 @@ MODULE_EXPORT void obs_module_unload(void)
 		//	_updater.reset();
 		//#endif
 
-		// Finalize Thread Pool
-		_threadpool.reset();
-
 		// Finalize Configuration
 		streamfx::configuration::finalize();
+
+		// Finalize Thread Pool
+		_threadpool.reset();
 
 		DLOG_INFO("Unloaded Version %s", STREAMFX_VERSION_STRING);
 	} catch (std::exception const& ex) {
