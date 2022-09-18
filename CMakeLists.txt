@@ -1,4 +1,4 @@
-# Copyright (C) 2017 Michael Fabian Dirks
+# Copyright (C) 2017-2022 Michael Fabian Dirks
 # Copyright (C) 2022 Romain Vigier
 #
 # This program is free software; you can redistribute it and/or modify
@@ -1780,6 +1780,8 @@ if(D_PLATFORM_WINDOWS AND ((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR (CMAKE_CXX
 		"4710"
 		# Ignore Spectre mitigation insertions
 		"5045"
+		# Ignore inserted padding.
+		"4324"
 	)
 	foreach(WARN ${DISABLED_WARNINGS})
 		target_compile_options(${PROJECT_NAME} PRIVATE "/wd${WARN}")
