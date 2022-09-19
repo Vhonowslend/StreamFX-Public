@@ -57,7 +57,8 @@ UsePreviousAppDir=no
 DisableDirPage=no
 DirExistsWarning=no
 DefaultDirName={code:GetDefaultDirectory}
-AppendDefaultDirName=no
+AppendDefaultDirName=yes
+DisableProgramGroupPage=no
 DefaultGroupName={#MyAppName}
 AppendDefaultGroupName=yes
 
