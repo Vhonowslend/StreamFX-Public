@@ -38,6 +38,9 @@ ArchitecturesInstallIn64BitMode=x64 arm64 ia64
 ArchitecturesAllowed=@ARCH@
 
 ; Installation Modes
+AlwaysShowComponentsList=no
+UsePreviousTasks=no
+UsePreviousSetupType=no
 UsePreviousPrivileges=no
 PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=dialog commandline
@@ -73,6 +76,9 @@ LZMAAlgorithm=1
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
+[Components]
+name: "startmenu"; Description: "Start Menu Entries"
+
 [Files]
 Source: "@ISS_FILES_DIR@/data/obs-plugins/@PROJECT_NAME@/*"; DestDir: "{code:GetOutputDataDir}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "@ISS_FILES_DIR@/obs-plugins/@D_PLATFORM_BITS@bit/*"; DestDir: "{code:GetOutputBinaryDir}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -80,8 +86,8 @@ Source: "@PROJECT_SOURCE_DIR@/templates/windows/msvc-redist-helper.exe"; DestDir
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: "{group}\{cm:ProgramOnTheWeb,{#MyAppName}}"; Filename: "{#MyAppURL}"
-Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
+Name: "{group}\{cm:ProgramOnTheWeb,{#MyAppName}}"; Filename: "{#MyAppURL}"; Components: startmenu
+Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"; Components: startmenu
 
 [Code]
 // ------------------------------------------------------------------------------------------------------------------ //
@@ -203,12 +209,23 @@ var
 	oModePage: TWizardPage;
 begin
 	oModePage := CreateModePage();
+
+	if (IsPortableMode()) then begin
+		WizardSelectComponents('!startmenu');
+	end else begin
+		WizardSelectComponents('startmenu');
+	end;
 end;
 
 // ------------------------------------------------------------------------------------------------------------------ //
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
 	Result := False;
+	if (PageID = wpSelectComponents) then begin
+		Result := True;
+	end else if (PageID = wpSelectProgramGroup) then begin
+		Result := not WizardIsComponentSelected('startmenu');
+	end;
 end;
 
 // ------------------------------------------------------------------------------------------------------------------ //
@@ -412,6 +429,8 @@ begin
 		bIsSystemMode := True;
 		bIsUserMode := False;
 		bIsPortableMode := False;
+
+		WizardSelectComponents('startmenu');
 	end;
 end;
 
@@ -426,6 +445,8 @@ begin
 		bIsSystemMode := False;
 		bIsUserMode := True;
 		bIsPortableMode := False;
+		
+		WizardSelectComponents('startmenu');
 	end;
 end;
 
@@ -437,6 +458,8 @@ begin
 	bIsSystemMode := False;
 	bIsUserMode := False;
 	bIsPortableMode := True;
+	
+	WizardSelectComponents('!startmenu');
 end;
 
 function CreateModePage: TWizardPage;
