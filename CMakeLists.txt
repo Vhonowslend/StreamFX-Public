@@ -40,7 +40,6 @@ endif()
 set(CMAKE_MODULE_PATH
 	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/clang"
-	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/codesign"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/version"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cmake"
 )
@@ -350,7 +349,6 @@ set(${PREFIX}ENABLE_UPDATER ON CACHE BOOL "Enable automatic update checks.")
 
 ## Code Related
 set(${PREFIX}ENABLE_CLANG OFF CACHE BOOL "Enable Clang integration for supported compilers.")
-set(${PREFIX}ENABLE_CODESIGN OFF CACHE BOOL "Enable Code Signing integration for supported environments.")
 set(${PREFIX}ENABLE_PROFILING OFF CACHE BOOL "Enable CPU and GPU performance tracking, which has a non-zero overhead at all times. Do not enable this for release builds.")
 
 ## Compile/Link Related
@@ -388,35 +386,6 @@ endif()
 if(${PREFIX}ENABLE_CLANG AND (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/clang/Clang.cmake"))
 	include("cmake/clang/Clang.cmake")
 	set(HAVE_CLANG ON)
-endif()
-
-################################################################################
-# Codesign
-################################################################################
-
-if(${PREFIX}ENABLE_CODESIGN AND (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/codesign/CodeSign.cmake"))
-	include("cmake/codesign/CodeSign.cmake")
-	set(HAVE_CODESIGN ON)
-
-	set(${PREFIX}CODESIGN_FILE "" CACHE FILEPATH "Path to Code-Signing certificate.")
-	if(WIN32)
-		set(${PREFIX}CODESIGN_NAME "" CACHE STRING "Name of Code-Signing certificate in Windows's certificate storage.")
-	endif()
-	set(${PREFIX}CODESIGN_PASS "" CACHE STRING "Password for Code-Signing certificate.")
-	set(${PREFIX}CODESIGN_TIMESTAMPS ON CACHE BOOL "Should the resulting binary be timestamped?")
-
-	set(_CODESIGN_FILE "$ENV{${PREFIX}CODESIGN_FILE}")
-	if(${PREFIX}CODESIGN_FILE)
-		set(_CODESIGN_FILE "${${PREFIX}CODESIGN_FILE}")
-	endif()
-	set(_CODESIGN_NAME "$ENV{${PREFIX}CODESIGN_NAME}")
-	if(${PREFIX}CODESIGN_NAME)
-		set(_CODESIGN_NAME "${${PREFIX}CODESIGN_NAME}")
-	endif()
-	set(_CODESIGN_PASS "$ENV{${PREFIX}CODESIGN_PASS}")
-	if(${PREFIX}CODESIGN_PASS)
-		set(_CODESIGN_PASS "${${PREFIX}CODESIGN_PASS}")
-	endif()
 endif()
 
 ################################################################################
@@ -2083,21 +2052,6 @@ if(T_CHECK AND HAVE_CLANG)
 	)
 endif()
 
-# Code Sign
-if(HAVE_CODESIGN)
-	set(_CODESIGN_TIMESTAMP "")
-	if(${PREFIX}CODESIGN_TIMESTAMPS)
-		set(_CODESIGN_TIMESTAMP "TIMESTAMPS")
-	endif()
-	codesign(
-		TARGETS ${PROJECT_NAME}
-		CERTIFICATE_FILE "${_CODESIGN_FILE}"
-		CERTIFICATE_NAME "${_CODESIGN_NAME}"
-		CERTIFICATE_PASS "${_CODESIGN_PASS}"
-		${_CODESIGN_TIMESTAMP}
-	)
-endif()
-
 ################################################################################
 # Installation
 ################################################################################
@@ -2314,38 +2268,10 @@ if(STANDALONE)
 			get_filename_component(ISS_MSVCHELPER_PATH "${msvc-redist-helper_BUILD_DIR}" ABSOLUTE)
 			file(TO_NATIVE_PATH "${ISS_MSVCHELPER_PATH}" ISS_MSVCHELPER_PATH)
 
-			if(HAVE_CODESIGN)
-				codesign_command_win32(
-					SHA1
-					RETURN_BIN ISS_CODESIGN_BIN_SHA1
-					RETURN_ARGS ISS_CODESIGN_CMD_SHA1
-					CERTIFICATE_FILE "${_CODESIGN_FILE}"
-					CERTIFICATE_NAME "${_CODESIGN_NAME}"
-					CERTIFICATE_PASS "${_CODESIGN_PASS}"
-					${_CODESIGN_TIMESTAMP}
-				)
-				codesign_command_win32(
-					SHA2 APPEND
-					RETURN_BIN ISS_CODESIGN_BIN_SHA2
-					RETURN_ARGS ISS_CODESIGN_CMD_SHA2
-					CERTIFICATE_FILE "${_CODESIGN_FILE}"
-					CERTIFICATE_NAME "${_CODESIGN_NAME}"
-					CERTIFICATE_PASS "${_CODESIGN_PASS}"
-					${_CODESIGN_TIMESTAMP}
-				)
-				list(JOIN ISS_CODESIGN_CMD_SHA1 " " ISS_CODESIGN_CMD_SHA1)
-				list(JOIN ISS_CODESIGN_CMD_SHA2 " " ISS_CODESIGN_CMD_SHA2)
-
-				configure_file(
-					"templates/windows/installer-signed.iss.in"
-					"installer.iss"
-				)
-			else()
-				configure_file(
-					"templates/windows/installer.iss.in"
-					"installer.iss"
-				)
-			endif()
+			configure_file(
+				"templates/windows/installer.iss.in"
+				"installer.iss"
+			)
 		endif()
 
 		# Apple MacOS
