@@ -101,40 +101,13 @@ type
 	WPARAM = UINT_PTR;
 	LPARAM = INT_PTR;
 	LRESULT = INT_PTR;
-	LSTATUS = DWord;
-	LPCVOID = UINT_PTR;
-	HKEY = DWord;
-	PHKEY = UINT_PTR;
 
 const
 	SMTO_ABORTIFHUNG = 2;
 	WM_WININICHANGE = $001A;
 	WM_SETTINGCHANGE = WM_WININICHANGE;
-//	HKEY_CURRENT_USER = $80000001;
-//	HKEY_LOCAL_MACHINE = $80000002;
 
-function advapi32_RegSetKeyValue(
-	hKey: HKEY;
-	lpSubKey: string;
-	lpValueName: string;
-	dwType: DWord;
-	lpData: string;
-	dwData: DWord
-): LRESULT;
-	external 'RegSetKeyValue{#AW}@advapi32.dll stdcall';
-
-function SetRegistryKeyValueString(
-	Root: HKEY;
-	Key: string;
-	Name: string;
-	Value: string
-): BOOL;
-begin
-	advapi32_RegSetKeyValue(Root, Key, Name, 2, Value, Length(Value) * 2);
-	Result := True;
-end;
-
-function user32_SendTextMessageTimeout(
+function user32_SendTextMessageTimeoutA(
 	hWnd: HWND;
 	Msg: UINT;
 	wParam: WPARAM;
@@ -150,7 +123,7 @@ var
 	MsgResult: DWORD;
 begin
 	S := 'Environment';
-	user32_SendTextMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, 0,
+	user32_SendTextMessageTimeoutA(HWND_BROADCAST, WM_SETTINGCHANGE, 0,
 		PAnsiChar(S), SMTO_ABORTIFHUNG, 5000, MsgResult);
 end;
 
@@ -272,11 +245,11 @@ begin
 	if (IsUserMode()) then begin
 		sPluginsPath := ExpandConstant('{userpf}\obs-studio\plugins\%module%\bin\');
 		StringChangeEx(sPluginsPath, '\', '/', True);
-		SetRegistryKeyValueString(HKEY_CURRENT_USER, 'Environment', 'OBS_PLUGINS_PATH', sPluginsPath);
+		RegWriteExpandStringValue(HKEY_CURRENT_USER, 'Environment', 'OBS_PLUGINS_PATH', sPluginsPath);
 
 		sPluginsDataPath := ExpandConstant('{userpf}\obs-studio\plugins\%module%\data\');
 		StringChangeEx(sPluginsDataPath, '\', '/', True);
-		SetRegistryKeyValueString(HKEY_CURRENT_USER, 'Environment', 'OBS_PLUGINS_DATA_PATH', sPluginsDataPath);
+		RegWriteExpandStringValue(HKEY_CURRENT_USER, 'Environment', 'OBS_PLUGINS_DATA_PATH', sPluginsDataPath);
 
 		RefreshEnvironment();
 	end;
