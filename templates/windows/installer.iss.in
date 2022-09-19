@@ -155,6 +155,24 @@ begin
 end;
 
 // ------------------------------------------------------------------------------------------------------------------ //
+function ParamExists(Name: String): Boolean;
+var
+	Idx: Integer;
+	Limit: Integer;
+	Param: String;
+begin
+	Limit := ParamCount()
+	for Idx := 1 to Limit do begin
+		Param := ParamStr(Idx);
+		if SameText(Param, '/' + Name) then begin
+			Result := True;
+			exit;
+		end;
+	end;
+	Result := False;
+end;
+
+// ------------------------------------------------------------------------------------------------------------------ //
 var
 	oModePageSystemChoice: TNewRadioButton;
 	oModePageUserChoice: TNewRadioButton;
@@ -196,9 +214,15 @@ procedure OnModePageSystemChoiceClick(Sender: TObject); forward;
 // ------------------------------------------------------------------------------------------------------------------ //
 function InitializeSetup(): Boolean;
 begin
-	bIsSystemMode := IsAdmin();
-	bIsUsermode := not IsAdmin();
-	bIsPortableMode := False;
+	if ParamExists('Portable') then begin
+		bIsSystemMode := False;
+		bIsUserMode := False;
+		bIsPortableMode := True;
+	end else begin
+		bIsSystemMode := IsAdmin();
+		bIsUserMode := not IsAdmin();
+		bIsPortableMode := False;
+	end;
 
 	Result := True;
 end;
