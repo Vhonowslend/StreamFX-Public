@@ -219,7 +219,9 @@ end;
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
 	Result := False;
-	if (PageID = wpSelectComponents) then begin
+	if (PageID = wpSelectDir) then begin
+		Result := not IsPortableMode();
+	end else if (PageID = wpSelectComponents) then begin
 		Result := True;
 	end else if (PageID = wpSelectProgramGroup) then begin
 		Result := not WizardIsComponentSelected('startmenu');
@@ -261,27 +263,21 @@ function GetDefaultDirectory(Value: String): String;
 var
 	sPath: String;
 begin
-	// If a path was given as an argument, use it.
-	if (Value <> '') then begin
-		Result := Value;
-		exit;
-	end;
-
-	// Otherwise, try and figure out where the previous installation of the same type went to.
-	if (RegQueryStringValue(HKA64, AppRegistryKey(), 'InstallLocation', sPath)) then begin
-		Result := sPath;
-		exit;
-	end;
-
 	// In all other cases, change depending on the chosen install method.
 	if (IsSystemMode()) then begin
 		// Default to ProgramData/obs-studio/@PROJECT_NAME@
 		Result := ExpandConstant('{commonappdata}\obs-studio\plugins\@PROJECT_NAME@');
-	end else begin 
-		Result := ExpandConstant('{userpf}\obs-studio\plugins\@PROJECT_NAME@')
-	end;
+	end else if (IsUserMode()) then begin 
+		Result := ExpandConstant('{userpf}\obs-studio\plugins\@PROJECT_NAME@');
+	end else begin
+		// If a path was given as an argument, use it.
+		if (Value <> '') then begin
+			Result := Value;
+			exit;
+		end;
 
-	exit;
+		Result := ExpandConstant('{userdesktop}\obs-studio');
+	end;
 end;
 
 // ------------------------------------------------------------------------------------------------------------------ //
