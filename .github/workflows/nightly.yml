@@ -1,0 +1,79 @@
+name: "Tag Nightly Release"
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  push:
+    branches:
+      - 'patch/nightly'
+      - 'patch/automation'
+
+jobs:
+  release-nightly:
+    name: "Nightly"
+    runs-on: "ubuntu-22.04"
+    continue-on-error: true
+    steps:
+    - name: "Clone"
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    - name: "Dependencies"
+      shell: bash
+      run: |
+        sudo apt-get -qq update
+        sudo apt-get purge libjpeg9-dev:amd64 libjpeg8-dev:amd64 libjpeg-turbo8-dev:amd64
+        sudo apt-get install \
+          build-essential \
+          checkinstall \
+          pkg-config \
+          cmake \
+          ninja-build \
+          git
+
+        # Compiler
+        sudo apt-get install gcc-10 g++10
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 800 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+        echo "CC=gcc-10" >> "${GITHUB_ENV}"
+        echo "CXX=gcc-10" >> "${GITHUB_ENV}"
+        echo "LD=ld" >> "${GITHUB_ENV}"
+        
+    - name: "Identify Version"
+      shell: bash
+      env:
+        CMAKE_BUILD_TYPE: "RelWithDebInfo"
+      run: |
+        cmake \
+          -S "${{ github.workspace }}" \
+          -B "${{ github.workspace }}/build" \
+          -G "Ninja" \
+          -DCMAKE_BUILD_TYPE="${{ env.CMAKE_BUILD_TYPE }}" \
+          -DCI_VERSION_ONLY=ON
+        echo "VERSION=${cat ${{ github.workspace }}/build/version}} }" >> "${GITHUB_ENV}"
+
+    - name: "Check if Tag already exists"
+      shell: bash
+      run: |
+        TAGNAME="${ git describe --exact-match --tags HEAD }"
+        if [ "$?" == "0" ]; then
+          echo "Already tagged."
+          exit 1
+        fi
+
+    - name: "Tag current commit"
+      shell: bash
+      run: |
+        git tag "${VERSION}"
+        git push origin refs/tags/${VERSION}
+
+    - name: "Create Release"
+      shell: bash
+      run: |
+        curl \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \ 
+          -H "Authorization: token ${{ secrets.AUTH_TOKEN_GITHUB }}" \
+          https://api.github.com/repos/${{ github.repository }}/releases \
+          -d '{"tag_name":"${VERSION}","name":"StreamFX ${VERSION} (Nightly)","draft":true,"prerelease":true,"generate_release_notes":true}'
