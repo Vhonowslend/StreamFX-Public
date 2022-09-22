@@ -180,7 +180,6 @@ ffmpeg_instance::~ffmpeg_instance()
 		}
 
 		// Close and free context.
-		avcodec_close(_context);
 		avcodec_free_context(&_context);
 	}
 
