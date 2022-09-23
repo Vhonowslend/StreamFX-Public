@@ -188,10 +188,7 @@ std::shared_ptr<AVFrame> d3d11_instance::allocate_frame(AVBufferRef* frames)
 	auto gctx = streamfx::obs::gs::context();
 
 	// Allocate a frame.
-	auto frame = std::shared_ptr<AVFrame>(av_frame_alloc(), [](AVFrame* frame) {
-		av_frame_unref(frame);
-		av_frame_free(&frame);
-	});
+	auto frame = std::shared_ptr<AVFrame>(av_frame_alloc(), [](AVFrame* frame) { av_frame_free(&frame); });
 
 	// Create the necessary buffers.
 	if (av_hwframe_get_buffer(frames, frame.get(), 0) < 0) {
