@@ -62,7 +62,7 @@ namespace streamfx::ffmpeg::hwapi {
 		ATL::CComPtr<ID3D11DeviceContext> _context;
 
 		public:
-		d3d11_instance(ATL::CComPtr<ID3D11Device> device, ATL::CComPtr<ID3D11DeviceContext> context);
+		d3d11_instance(ATL::CComPtr<ID3D11Device> device);
 		virtual ~d3d11_instance();
 
 		virtual AVBufferRef* create_device_context() override;
