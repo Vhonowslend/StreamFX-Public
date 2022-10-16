@@ -124,8 +124,10 @@ jobs:
       shell: bash
       run: |
         sudo apt-get -qq update
-        sudo apt-get purge libjpeg9-dev:amd64 libjpeg8-dev:amd64 libjpeg-turbo8-dev:amd64
-        sudo apt-get install \
+        sudo apt-get -y purge libjpeg9-dev:amd64 libjpeg8-dev:amd64 libjpeg-turbo8-dev:amd64
+        sudo apt-get -y upgrade
+        sudo apt-get -y dist-upgrade
+        sudo apt-get -y install \
           build-essential \
           checkinstall \
           pkg-config \
