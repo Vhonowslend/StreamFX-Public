@@ -38,6 +38,8 @@ jobs:
             generator: MSVC
           - runner: ubuntu-20.04
             generator: MSVC
+          - runner: ubuntu-22.04
+            qt: 5
           - runner: ubuntu-20.04
             qt: 6
         include:
