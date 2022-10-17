@@ -89,6 +89,8 @@ jobs:
       id: info
       shell: bash
       run: |
+        apt-cache policy libc6
+        apt-cache policy libc6-dev
         # Dependency Versioning
         if [[ "${{ matrix.runner }}" = windows* ]]; then
           [[ $(cat "${{ github.workspace }}/third-party/obs-studio/.github/workflows/main.yml") =~ DEPS_VERSION_WIN:\ \'([0-9a-zA-Z\-]+)\' ]]
