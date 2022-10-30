@@ -21,6 +21,7 @@
 #include "common.hpp"
 #include "gfx/gfx-source-texture.hpp"
 #include "obs/gs/gs-effect.hpp"
+#include "obs/obs-source-active-child.hpp"
 #include "obs/obs-source-active-reference.hpp"
 #include "obs/obs-source-factory.hpp"
 #include "obs/obs-source-showing-reference.hpp"
@@ -36,25 +37,52 @@
 namespace streamfx::filter::dynamic_mask {
 	enum class channel : int8_t { Invalid = -1, Red, Green, Blue, Alpha };
 
+	class data {
+		streamfx::obs::gs::effect _channel_mask_fx;
+
+		private:
+		data();
+
+		public:
+		~data();
+
+		streamfx::obs::gs::effect channel_mask_fx();
+
+		public:
+		static std::shared_ptr<streamfx::filter::dynamic_mask::data> get();
+	};
+
 	class dynamic_mask_instance : public obs::source_instance {
+		std::shared_ptr<streamfx::filter::dynamic_mask::data> _data;
+
 		std::map<std::tuple<channel, channel, std::string>, std::string> _translation_map;
 
-		streamfx::obs::gs::effect _effect;
+		streamfx::obs::weak_source                               _input;
+		std::unique_ptr<streamfx::obs::source_active_child>      _input_child;
+		std::shared_ptr<streamfx::obs::source_showing_reference> _input_vs;
+		std::shared_ptr<streamfx::obs::source_active_reference>  _input_ac;
 
-		bool                                             _have_filter_texture;
-		std::shared_ptr<streamfx::obs::gs::rendertarget> _filter_rt;
-		std::shared_ptr<streamfx::obs::gs::texture>      _filter_texture;
+		// Base texture for filtering
+		bool                                             _have_base;
+		std::shared_ptr<streamfx::obs::gs::rendertarget> _base_rt;
+		std::shared_ptr<streamfx::obs::gs::texture>      _base_tex;
+		gs_color_space                                   _base_color_space;
+		gs_color_format                                  _base_color_format;
+		bool                                             _base_srgb;
 
-		bool                                                       _have_input_texture;
-		::streamfx::obs::weak_source                               _input;
-		std::shared_ptr<streamfx::gfx::source_texture>             _input_capture;
-		std::shared_ptr<streamfx::obs::gs::texture>                _input_texture;
-		std::shared_ptr<::streamfx::obs::source_showing_reference> _input_vs;
-		std::shared_ptr<::streamfx::obs::source_active_reference>  _input_ac;
+		bool                                             _have_input;
+		std::shared_ptr<streamfx::obs::gs::rendertarget> _input_rt;
+		std::shared_ptr<streamfx::obs::gs::texture>      _input_tex;
+		gs_color_space                                   _input_color_space;
+		gs_color_format                                  _input_color_format;
+		bool                                             _input_srgb;
 
-		bool                                             _have_final_texture;
+		bool                                             _have_final;
 		std::shared_ptr<streamfx::obs::gs::rendertarget> _final_rt;
-		std::shared_ptr<streamfx::obs::gs::texture>      _final_texture;
+		std::shared_ptr<streamfx::obs::gs::texture>      _final_tex;
+		bool                                             _final_srgb;
+
+		int64_t _debug_texture;
 
 		struct channel_data {
 			float_t value  = 0.0;
@@ -78,8 +106,9 @@ namespace streamfx::filter::dynamic_mask {
 		virtual void update(obs_data_t* settings) override;
 		virtual void save(obs_data_t* settings) override;
 
-		virtual void video_tick(float_t _time) override;
-		virtual void video_render(gs_effect_t* effect) override;
+		virtual gs_color_space video_get_color_space(size_t count, const gs_color_space* preferred_spaces) override;
+		virtual void           video_tick(float_t time) override;
+		virtual void           video_render(gs_effect_t* effect) override;
 
 		void enum_active_sources(obs_source_enum_proc_t enum_callback, void* param) override;
 		void enum_all_sources(obs_source_enum_proc_t enum_callback, void* param) override;
