@@ -23,6 +23,7 @@
 #include "util/util-logging.hpp"
 
 #include "warning-disable.hpp"
+#include <array>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
@@ -63,6 +64,10 @@
 #define ST_KEY_CHANNEL_MULTIPLIER "Filter.DynamicMask.Channel.Multiplier"
 #define ST_I18N_CHANNEL_INPUT "Filter.DynamicMask.Channel.Input"
 #define ST_KEY_CHANNEL_INPUT "Filter.DynamicMask.Channel.Input"
+#define ST_KEY_DEBUG_TEXTURE "Debug.Texture"
+#define ST_I18N_DEBUG_TEXTURE ST_I18N ".Debug.Texture"
+#define ST_I18N_DEBUG_TEXTURE_BASE ST_I18N_DEBUG_TEXTURE ".Base"
+#define ST_I18N_DEBUG_TEXTURE_INPUT ST_I18N_DEBUG_TEXTURE ".Input"
 
 using namespace streamfx::filter::dynamic_mask;
 
@@ -75,28 +80,59 @@ static std::pair<channel, const char*> channel_translations[] = {
 	{channel::Alpha, S_CHANNEL_ALPHA},
 };
 
-dynamic_mask_instance::dynamic_mask_instance(obs_data_t* settings, obs_source_t* self)
-	: obs::source_instance(settings, self), _translation_map(), _effect(), _have_filter_texture(false), _filter_rt(),
-	  _filter_texture(), _have_input_texture(false), _input(), _input_capture(), _input_texture(),
-	  _have_final_texture(false), _final_rt(), _final_texture(), _channels(), _precalc()
+data::data()
 {
-	{
-		auto gctx = streamfx::obs::gs::context();
+	auto gctx = streamfx::obs::gs::context();
 
-		_filter_rt = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
-		_final_rt  = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
+	_channel_mask_fx = streamfx::obs::gs::effect::create(streamfx::data_file_path("effects/channel-mask.effect"));
+}
 
-		{
-			auto file = streamfx::data_file_path("effects/channel-mask.effect");
-			try {
-				_effect = streamfx::obs::gs::effect::create(file);
-			} catch (std::exception& ex) {
-				D_LOG_ERROR("Error loading '%s': %s", file.u8string().c_str(), ex.what());
-				throw;
-			}
-		}
+data::~data() {}
+
+streamfx::obs::gs::effect data::channel_mask_fx()
+{
+	return _channel_mask_fx;
+}
+
+std::shared_ptr<streamfx::filter::dynamic_mask::data> data::get()
+{
+	static std::mutex                                          instance_lock;
+	static std::weak_ptr<streamfx::filter::dynamic_mask::data> weak_instance;
+
+	std::lock_guard<std::mutex> lock(instance_lock);
+	auto                        instance = weak_instance.lock();
+	if (!instance) {
+		instance = std::shared_ptr<streamfx::filter::dynamic_mask::data>{new streamfx::filter::dynamic_mask::data()};
+		weak_instance = instance;
 	}
+	return instance;
+}
 
+dynamic_mask_instance::dynamic_mask_instance(obs_data_t* settings, obs_source_t* self)
+	: obs::source_instance(settings, self),               //
+	  _data(streamfx::filter::dynamic_mask::data::get()), //
+	  _translation_map(),                                 //
+	  _input(),                                           //
+	  _input_child(),                                     //
+	  _input_vs(),                                        //
+	  _input_ac(),                                        //
+	  _have_base(false),                                  //
+	  _base_rt(),                                         //
+	  _base_tex(),                                        //
+	  _base_color_space(GS_CS_SRGB),                      //
+	  _base_color_format(GS_RGBA),                        //
+	  _have_input(false),                                 //
+	  _input_rt(),                                        //
+	  _input_tex(),                                       //
+	  _input_color_space(GS_CS_SRGB),                     //
+	  _input_color_format(GS_RGBA),                       //
+	  _have_final(false),                                 //
+	  _final_rt(),                                        //
+	  _final_tex(),                                       //
+	  _channels(),                                        //
+	  _precalc(),                                         //
+	  _debug_texture(-1)                                  //
+{
 	update(settings);
 }
 
@@ -167,12 +203,14 @@ void dynamic_mask_instance::update(obs_data_t* settings)
 			ch->ptr[static_cast<size_t>(kv2.first)] = found->second.values.ptr[static_cast<size_t>(kv2.first)];
 		}
 	}
+
+	_debug_texture = obs_data_get_int(settings, ST_KEY_DEBUG_TEXTURE);
 }
 
 void dynamic_mask_instance::save(obs_data_t* settings)
 {
-	if (_input) {
-		obs_data_set_string(settings, ST_KEY_INPUT, _input.lock().name().data());
+	if (auto source = _input.lock(); source) {
+		obs_data_set_string(settings, ST_KEY_INPUT, source.name().data());
 	}
 
 	for (auto kv1 : channel_translations) {
@@ -200,136 +238,349 @@ void dynamic_mask_instance::save(obs_data_t* settings)
 	}
 }
 
-void dynamic_mask_instance::video_tick(float)
+gs_color_space dynamic_mask_instance::video_get_color_space(size_t count, const gs_color_space* preferred_spaces)
 {
-	_have_input_texture  = false;
-	_have_filter_texture = false;
-	_have_final_texture  = false;
+	return _base_color_space;
+}
+
+void dynamic_mask_instance::video_tick(float time)
+{
+	{ // Base Information
+		_have_base = false;
+
+		std::array<gs_color_space, 1> preferred_formats = {GS_CS_SRGB};
+		_base_color_space = obs_source_get_color_space(obs_filter_get_target(_self), preferred_formats.size(),
+													   preferred_formats.data());
+		switch (_base_color_space) {
+		case GS_CS_SRGB:
+			_base_color_format = GS_RGBA;
+			break;
+		case GS_CS_SRGB_16F:
+		case GS_CS_709_EXTENDED:
+		case GS_CS_709_SCRGB:
+			_base_color_format = GS_RGBA16F;
+			break;
+		default:
+			_base_color_format = GS_RGBA_UNORM;
+		}
+
+		if ((obs_source_get_output_flags(obs_filter_get_target(_self)) & OBS_SOURCE_SRGB) == OBS_SOURCE_SRGB) {
+			_base_srgb = (_base_color_space <= GS_CS_SRGB_16F);
+		} else {
+			_base_srgb = false;
+		}
+	}
+
+	if (auto input = _input.lock(); input) { // Input Information
+		_have_input = false;
+
+		std::array<gs_color_space, 1> preferred_formats = {GS_CS_SRGB};
+		_input_color_space = obs_source_get_color_space(input, preferred_formats.size(), preferred_formats.data());
+		switch (_input_color_space) {
+		case GS_CS_SRGB:
+			_input_color_format = GS_RGBA;
+			break;
+		case GS_CS_SRGB_16F:
+		case GS_CS_709_EXTENDED:
+		case GS_CS_709_SCRGB:
+			_input_color_format = GS_RGBA16F;
+			break;
+		default:
+			_input_color_format = GS_RGBA_UNORM;
+		}
+
+		if ((input.output_flags() & OBS_SOURCE_SRGB) == OBS_SOURCE_SRGB) {
+			_input_srgb = (_base_color_space <= GS_CS_SRGB_16F);
+		} else {
+			_input_srgb = false;
+		}
+	} else {
+		_have_input = false;
+	}
+
+	_have_final = false;
+	_final_srgb = _base_srgb;
 }
 
 void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 {
-	obs_source_t* parent = obs_filter_get_parent(_self);
-	obs_source_t* target = obs_filter_get_target(_self);
-	uint32_t      width  = obs_source_get_base_width(target);
-	uint32_t      height = obs_source_get_base_height(target);
-	auto          input  = _input.lock();
-
-	if (!_self || !parent || !target || !width || !height || !_input || !_input_capture || !_effect) {
-		obs_source_skip_video_filter(_self);
-		return;
-	} else if (!input.width() || !input.height()) {
-		obs_source_skip_video_filter(_self);
-		return;
-	}
+	gs_effect_t*  default_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
+	auto          effect         = _data->channel_mask_fx();
+	obs_source_t* parent         = obs_filter_get_parent(_self);
+	obs_source_t* target         = obs_filter_get_target(_self);
+	uint32_t      width          = obs_source_get_base_width(target);
+	uint32_t      height         = obs_source_get_base_height(target);
+	auto          input          = _input.lock();
 
 #ifdef ENABLE_PROFILING
 	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Dynamic Mask '%s' on '%s'",
 										 obs_source_get_name(_self), obs_source_get_name(obs_filter_get_parent(_self))};
 #endif
 
-	gs_effect_t* default_effect = obs_get_base_effect(obs_base_effect::OBS_EFFECT_DEFAULT);
+	// If there's some issue acquiring information, skip rendering entirely.
+	if (!_self || !parent || !target || !width || !height) {
+		_self.skip_video_filter();
+		return;
+	} else if (input && (!input.width() || !input.height())) {
+		_self.skip_video_filter();
+		return;
+	}
 
-	try { // Capture filter and input
-		if (!_have_filter_texture) {
+	// Capture the base texture for later rendering.
+	if (!_have_base) {
 #ifdef ENABLE_PROFILING
-			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_cache, "Cache"};
+		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_cache, "Base Texture"};
 #endif
+		// Ensure the Render Target matches the expected format.
+		if (!_base_rt || (_base_rt->get_color_format() != _base_color_format)) {
+			_base_rt = std::make_shared<streamfx::obs::gs::rendertarget>(_base_color_format, GS_ZS_NONE);
+		}
 
-			if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
-				auto op = _filter_rt->render(width, height);
+		bool previous_srgb  = gs_framebuffer_srgb_enabled();
+		auto previous_lsrgb = gs_get_linear_srgb();
+		gs_set_linear_srgb(_base_srgb);
+		gs_enable_framebuffer_srgb(false);
 
-				gs_blend_state_push();
-				gs_reset_blend_state();
-				gs_enable_blending(false);
-				gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
+		// Begin rendering the source with a certain color space.
+		if (obs_source_process_filter_begin_with_color_space(_self, _base_color_format, _base_color_space,
+															 OBS_ALLOW_DIRECT_RENDERING)) {
+			try {
+				{
+					auto op = _base_rt->render(width, height, _base_color_space);
 
-				gs_set_cull_mode(GS_NEITHER);
-				gs_enable_color(true, true, true, true);
+					// Push a new blend state to stack.
+					gs_blend_state_push();
+					gs_reset_blend_state();
+					gs_enable_blending(false);
+					gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
+					try {
+						// Enable all channels.
+						gs_enable_color(true, true, true, true);
 
-				gs_enable_depth_test(false);
-				gs_depth_function(GS_ALWAYS);
+						// Disable culling.
+						gs_set_cull_mode(GS_NEITHER);
 
-				gs_enable_stencil_test(false);
-				gs_enable_stencil_write(false);
-				gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
-				gs_stencil_op(GS_STENCIL_BOTH, GS_KEEP, GS_KEEP, GS_KEEP);
-				gs_ortho(0, static_cast<float>(width), 0, static_cast<float>(height), -1., 1.);
+						// Disable depth testing.
+						gs_enable_depth_test(false);
+						gs_depth_function(GS_ALWAYS);
 
-				obs_source_process_filter_end(_self, default_effect, width, height);
+						// Disable stencil testing
+						gs_enable_stencil_test(false);
+						gs_enable_stencil_write(false);
+						gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
+						gs_stencil_op(GS_STENCIL_BOTH, GS_KEEP, GS_KEEP, GS_KEEP);
 
-				gs_blend_state_pop();
-			} else {
-				throw std::runtime_error("Failed to render filter.");
+						// Set up rendering matrix.
+						gs_ortho(0, static_cast<float>(width), 0, static_cast<float>(height), -1., 1.);
+
+						{ // Clear to black.
+							vec4 clr = {0., 0., 0., 0.};
+							gs_clear(GS_CLEAR_COLOR, &clr, 0., 0);
+						}
+
+						// Render the source.
+						_self.process_filter_end(default_effect, width, height);
+
+						// Pop the old blend state.
+						gs_blend_state_pop();
+
+					} catch (...) {
+						gs_blend_state_pop();
+						throw;
+					}
+				}
+
+				_have_base = true;
+				_base_rt->get_texture(_base_tex);
+			} catch (const std::exception& ex) {
+				_self.process_filter_end(default_effect, width, height);
+				DLOG_ERROR("Failed to capture base texture: %s", ex.what());
+			} catch (...) {
+				_self.process_filter_end(default_effect, width, height);
+				DLOG_ERROR("Failed to capture base texture.", nullptr);
+			}
+		}
+
+		gs_set_linear_srgb(previous_lsrgb);
+		gs_enable_framebuffer_srgb(previous_srgb);
+	}
+
+	// Capture the input texture for later rendering.
+	if (!_have_input) {
+		if (!input) {
+			// Treat no selection as selecting the target filter.
+			_have_input         = _have_base;
+			_input_tex          = _base_tex;
+			_input_color_format = _base_color_format;
+			_input_color_space  = _base_color_space;
+		} else {
+#ifdef ENABLE_PROFILING
+			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_source, "Input '%s'",
+												input.name().data()};
+#endif
+			// Ensure the Render Target matches the expected format.
+			if (!_input_rt || (_input_rt->get_color_format() != _input_color_format)) {
+				_input_rt = std::make_shared<streamfx::obs::gs::rendertarget>(_input_color_format, GS_ZS_NONE);
 			}
 
-			_filter_texture      = _filter_rt->get_texture();
-			_have_filter_texture = true;
-		}
+			auto previous_lsrgb = gs_get_linear_srgb();
+			gs_set_linear_srgb(_input_srgb);
+			bool previous_srgb = gs_framebuffer_srgb_enabled();
+			gs_enable_framebuffer_srgb(false);
 
-		if (!_have_input_texture) {
+			try {
+				{
+					auto op = _input_rt->render(input.width(), input.height(), _input_color_space);
+
+					// Push a new blend state to stack.
+					gs_blend_state_push();
+					gs_reset_blend_state();
+					gs_enable_blending(false);
+					gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
+					try {
+						// Enable all channels.
+						gs_enable_color(true, true, true, true);
+
+						// Disable culling.
+						gs_set_cull_mode(GS_NEITHER);
+
+						// Disable depth testing.
+						gs_enable_depth_test(false);
+						gs_depth_function(GS_ALWAYS);
+
+						// Disable stencil testing
+						gs_enable_stencil_test(false);
+						gs_enable_stencil_write(false);
+						gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
+						gs_stencil_op(GS_STENCIL_BOTH, GS_KEEP, GS_KEEP, GS_KEEP);
+
+						// Set up rendering matrix.
+						gs_ortho(0, static_cast<float>(input.width()), 0, static_cast<float>(input.height()), -1., 1.);
+
+						{ // Clear to black.
+							vec4 clr = {0., 0., 0., 0.};
+							gs_clear(GS_CLEAR_COLOR, &clr, 0., 0);
+						}
+
+						// Render the source.
+						obs_source_video_render(input);
+
+						// Pop the old blend state.
+						gs_blend_state_pop();
+					} catch (...) {
+						gs_blend_state_pop();
+						throw;
+					}
+				}
+
+				_have_input = true;
+				_input_rt->get_texture(_input_tex);
+			} catch (const std::exception& ex) {
+				DLOG_ERROR("Failed to capture input texture: %s", ex.what());
+			} catch (...) {
+				DLOG_ERROR("Failed to capture input texture.", nullptr);
+			}
+
+			gs_enable_framebuffer_srgb(previous_srgb);
+			gs_set_linear_srgb(previous_lsrgb);
+		}
+	}
+
+	// Capture the final texture.
+	if (!_have_final && _have_base) {
 #ifdef ENABLE_PROFILING
-			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_capture, "Capture '%s'",
-												obs_source_get_name(_input_capture->get_object())};
+		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_render, "Final Calculation"};
 #endif
 
-			_input_texture      = _input_capture->render(input.width(), input.height());
-			_have_input_texture = true;
+		// Ensure the Render Target matches the expected format.
+		if (!_final_rt || (_final_rt->get_color_format() != _base_color_format)) {
+			_final_rt = std::make_shared<streamfx::obs::gs::rendertarget>(_base_color_format, GS_ZS_NONE);
 		}
 
-		// Draw source
-		if (!_have_final_texture) {
-#ifdef ENABLE_PROFILING
-			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert, "Masking"};
-#endif
+		bool previous_srgb  = gs_framebuffer_srgb_enabled();
+		auto previous_lsrgb = gs_get_linear_srgb();
+		gs_enable_framebuffer_srgb(_final_srgb);
+		gs_set_linear_srgb(_final_srgb);
 
+		try {
 			{
 				auto op = _final_rt->render(width, height);
 
+				// Push a new blend state to stack.
 				gs_blend_state_push();
 				gs_reset_blend_state();
 				gs_enable_blending(false);
 				gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
+				try {
+					// Enable all channels.
+					gs_enable_color(true, true, true, true);
 
-				gs_set_cull_mode(GS_NEITHER);
-				gs_enable_color(true, true, true, true);
+					// Disable culling.
+					gs_set_cull_mode(GS_NEITHER);
 
-				gs_enable_depth_test(false);
-				gs_depth_function(GS_ALWAYS);
+					// Disable depth testing.
+					gs_enable_depth_test(false);
+					gs_depth_function(GS_ALWAYS);
 
-				gs_enable_stencil_test(false);
-				gs_enable_stencil_write(false);
-				gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
-				gs_stencil_op(GS_STENCIL_BOTH, GS_KEEP, GS_KEEP, GS_KEEP);
-				gs_ortho(0, 1, 0, 1, -1., 1.);
+					// Disable stencil testing
+					gs_enable_stencil_test(false);
+					gs_enable_stencil_write(false);
+					gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
+					gs_stencil_op(GS_STENCIL_BOTH, GS_KEEP, GS_KEEP, GS_KEEP);
 
-				_effect.get_parameter("pMaskInputA").set_texture(_filter_texture);
-				_effect.get_parameter("pMaskInputB").set_texture(_input_texture);
+					// Set up rendering matrix.
+					gs_ortho(0, 1, 0, 1, -1., 1.);
 
-				_effect.get_parameter("pMaskBase").set_float4(_precalc.base);
-				_effect.get_parameter("pMaskMatrix").set_matrix(_precalc.matrix);
-				_effect.get_parameter("pMaskMultiplier").set_float4(_precalc.scale);
+					{ // Clear to black.
+						vec4 clr = {0., 0., 0., 0.};
+						gs_clear(GS_CLEAR_COLOR, &clr, 0., 0);
+					}
 
-				while (gs_effect_loop(_effect.get(), "Mask")) {
-					streamfx::gs_draw_fullscreen_tri();
+					effect.get_parameter("pMaskInputA").set_texture(_base_tex, _base_srgb);
+					effect.get_parameter("pMaskInputB").set_texture(_input_tex, _input_srgb);
+
+					effect.get_parameter("pMaskBase").set_float4(_precalc.base);
+					effect.get_parameter("pMaskMatrix").set_matrix(_precalc.matrix);
+					effect.get_parameter("pMaskMultiplier").set_float4(_precalc.scale);
+
+					while (gs_effect_loop(effect.get(), "Mask")) {
+						streamfx::gs_draw_fullscreen_tri();
+					}
+
+					// Pop the old blend state.
+					gs_blend_state_pop();
+				} catch (...) {
+					gs_blend_state_pop();
+					throw;
 				}
-
-				gs_blend_state_pop();
 			}
 
-			_final_texture      = _final_rt->get_texture();
-			_have_final_texture = true;
+			_final_tex  = _final_rt->get_texture();
+			_have_final = true;
+		} catch (const std::exception& ex) {
+			DLOG_ERROR("Failed to render final texture: %s", ex.what());
+		} catch (...) {
+			DLOG_ERROR("Failed to render final texture.", nullptr);
 		}
-	} catch (...) {
-		obs_source_skip_video_filter(_self);
-		return;
+
+		gs_set_linear_srgb(previous_lsrgb);
+		gs_enable_framebuffer_srgb(previous_srgb);
 	}
 
-	if (!_have_filter_texture || !_have_input_texture || !_have_final_texture) {
-		obs_source_skip_video_filter(_self);
-		return;
+	// Enable texture debugging
+	switch (_debug_texture) {
+	case 0:
+		_have_final = _have_base;
+		_final_tex  = _base_tex;
+		break;
+	case 1:
+		_have_final = _have_input;
+		_final_tex  = _input_tex;
+		break;
 	}
-	if (!_filter_texture->get_object() || !_input_texture->get_object() || !_final_texture->get_object()) {
+
+	// Abort if we don't have a final render.
+	if (!_have_final || !_final_tex->get_object()) {
 		obs_source_skip_video_filter(_self);
 		return;
 	}
@@ -350,18 +601,28 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 		gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
 		gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
+		const bool previous_srgb = gs_framebuffer_srgb_enabled();
+		gs_enable_framebuffer_srgb(gs_get_linear_srgb());
+
 		gs_effect_t* final_effect = in_effect ? in_effect : default_effect;
 		gs_eparam_t* param        = gs_effect_get_param_by_name(final_effect, "image");
 		if (!param) {
 			DLOG_ERROR("<filter-dynamic-mask:%s> Failed to set image param.", obs_source_get_name(_self));
+			gs_enable_framebuffer_srgb(previous_srgb);
 			obs_source_skip_video_filter(_self);
 			return;
 		} else {
-			gs_effect_set_texture(param, _final_texture->get_object());
+			if (gs_get_linear_srgb()) {
+				gs_effect_set_texture_srgb(param, _final_tex->get_object());
+			} else {
+				gs_effect_set_texture(param, _final_tex->get_object());
+			}
 		}
 		while (gs_effect_loop(final_effect, "Draw")) {
 			gs_draw_sprite(0, 0, width, height);
 		}
+
+		gs_enable_framebuffer_srgb(previous_srgb);
 	}
 }
 
@@ -383,7 +644,7 @@ void streamfx::filter::dynamic_mask::dynamic_mask_instance::show()
 		return;
 
 	auto input = _input.lock();
-	_input_vs  = ::streamfx::obs::source_showing_reference::add_showing_reference(input);
+	_input_vs  = streamfx::obs::source_showing_reference::add_showing_reference(input);
 }
 
 void streamfx::filter::dynamic_mask::dynamic_mask_instance::hide()
@@ -397,7 +658,7 @@ void streamfx::filter::dynamic_mask::dynamic_mask_instance::activate()
 		return;
 
 	auto input = _input.lock();
-	_input_ac  = ::streamfx::obs::source_active_reference::add_active_reference(input);
+	_input_ac  = streamfx::obs::source_active_reference::add_active_reference(input);
 }
 
 void streamfx::filter::dynamic_mask::dynamic_mask_instance::deactivate()
@@ -408,29 +669,17 @@ void streamfx::filter::dynamic_mask::dynamic_mask_instance::deactivate()
 bool dynamic_mask_instance::acquire(std::string_view name)
 {
 	try {
-		// Prevent us from creating a circle.
-		if (auto v = obs_source_get_name(obs_filter_get_parent(_self)); (v != nullptr) && (name == v)) {
-			return false;
-		}
+		// Try and acquire the source.
+		_input = streamfx::obs::weak_source(name);
 
-		// Acquire a reference to the actual source.
-		::streamfx::obs::source input = name;
+		// Ensure that this wouldn't cause recursion.
+		_input_child = std::make_unique<streamfx::obs::source_active_child>(_self, _input.lock());
 
-		// Acquire a texture renderer for the source, with the parent source as the parent.
-		auto capture = std::make_shared<streamfx::gfx::source_texture>(input, obs_filter_get_parent(_self));
-
-		// Update our local storage.
-		_input         = input;
-		_input_capture = capture;
-
-		// Do the necessary things.
+		// Handle the active and showing stuff.
 		activate();
 		show();
 
 		return true;
-	} catch (const std::exception&) {
-		release();
-		return false;
 	} catch (...) {
 		release();
 		return false;
@@ -439,24 +688,27 @@ bool dynamic_mask_instance::acquire(std::string_view name)
 
 void dynamic_mask_instance::release()
 {
-	_input.reset();
-	_input_capture.reset();
-
+	// Handle the active and showing stuff.
 	deactivate();
 	hide();
+
+	// Release any references.
+	_input_child.reset();
+	_input.reset();
 }
 
 dynamic_mask_factory::dynamic_mask_factory()
 {
 	_info.id           = S_PREFIX "filter-dynamic-mask";
 	_info.type         = OBS_SOURCE_TYPE_FILTER;
-	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
+	_info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_SRGB;
 
 	support_active_child_sources(true);
 	support_child_sources(true);
 	support_size(false);
 	support_activity_tracking(true);
 	support_visibility_tracking(true);
+	support_color_space(true);
 	finish_setup();
 	register_proxy("obs-stream-effects-filter-dynamic-mask");
 }
@@ -479,6 +731,7 @@ void dynamic_mask_factory::get_defaults2(obs_data_t* data)
 				data, (std::string(ST_KEY_CHANNEL_INPUT) + "." + kv.second + "." + kv2.second).c_str(), 0.0);
 		}
 	}
+	obs_data_set_default_int(data, ST_KEY_DEBUG_TEXTURE, -1);
 }
 
 obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* data)
@@ -552,6 +805,19 @@ obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* d
 			std::string buf = std::string(ST_KEY_CHANNEL) + "." + pri_ch;
 			obs_properties_add_group(props, buf.c_str(), _translation_cache.back().c_str(),
 									 obs_group_type::OBS_GROUP_NORMAL, grp);
+		}
+	}
+
+	{
+		auto grp = obs_properties_create();
+		obs_properties_add_group(props, "Debug", D_TRANSLATE(S_ADVANCED), OBS_GROUP_NORMAL, grp);
+
+		{
+			auto p = obs_properties_add_list(grp, ST_KEY_DEBUG_TEXTURE, D_TRANSLATE(ST_I18N_DEBUG_TEXTURE),
+											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DISABLED), -1);
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_DEBUG_TEXTURE_BASE), 0);
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_DEBUG_TEXTURE_INPUT), 1);
 		}
 	}
 
