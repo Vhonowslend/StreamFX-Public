@@ -18,7 +18,7 @@
  */
 
 #pragma once
-#include "gfx/gfx-debug.hpp"
+#include "gfx/gfx-util.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
 #include "obs/gs/gs-vertexbuffer.hpp"
@@ -85,7 +85,7 @@ namespace streamfx::filter::autoframing {
 		std::pair<uint32_t, uint32_t> _size;
 		std::pair<uint32_t, uint32_t> _out_size;
 
-		std::shared_ptr<::streamfx::gfx::debug>             _gfx_debug;
+		std::shared_ptr<::streamfx::gfx::util>              _gfx_debug;
 		std::shared_ptr<::streamfx::obs::gs::effect>        _standard_effect;
 		std::shared_ptr<::streamfx::obs::gs::rendertarget>  _input;
 		std::shared_ptr<::streamfx::obs::gs::vertex_buffer> _vb;

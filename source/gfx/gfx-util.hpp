@@ -26,7 +26,7 @@
 #include "warning-enable.hpp"
 
 namespace streamfx::gfx {
-	class debug {
+	class util {
 		std::shared_ptr<::streamfx::obs::gs::effect>        _effect;
 		std::shared_ptr<::streamfx::obs::gs::vertex_buffer> _point_vb;
 		std::shared_ptr<::streamfx::obs::gs::vertex_buffer> _line_vb;
@@ -34,13 +34,13 @@ namespace streamfx::gfx {
 		std::shared_ptr<::streamfx::obs::gs::vertex_buffer> _quad_vb;
 
 		public /* Singleton */:
-		static std::shared_ptr<streamfx::gfx::debug> get();
+		static std::shared_ptr<streamfx::gfx::util> get();
 
 		private:
-		debug();
+		util();
 
 		public:
-		~debug();
+		~util();
 
 		void draw_point(float x, float y, uint32_t color = 0xFFFFFFFF);
 
