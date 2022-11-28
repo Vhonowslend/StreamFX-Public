@@ -17,6 +17,7 @@
 
 #pragma once
 #include "common.hpp"
+#include "gfx/gfx-util.hpp"
 #include "gfx/shader/gfx-shader-param.hpp"
 #include "obs/gs/gs-effect.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
@@ -45,6 +46,8 @@ namespace streamfx::gfx {
 
 		class shader {
 			obs_source_t* _self;
+
+			std::shared_ptr<streamfx::gfx::util> _gfx_util;
 
 			// Inputs
 			shader_mode _mode;

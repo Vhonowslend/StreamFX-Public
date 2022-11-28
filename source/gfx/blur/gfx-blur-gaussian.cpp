@@ -17,6 +17,7 @@
 
 #include "gfx-blur-gaussian.hpp"
 #include "common.hpp"
+#include "gfx/gfx-util.hpp"
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
 
@@ -31,7 +32,7 @@
 #define ST_OVERSAMPLE_MULTIPLIER 2
 #define ST_MAX_BLUR_SIZE ST_KERNEL_SIZE / ST_OVERSAMPLE_MULTIPLIER
 
-streamfx::gfx::blur::gaussian_data::gaussian_data()
+streamfx::gfx::blur::gaussian_data::gaussian_data() : _gfx_util(::streamfx::gfx::util::get())
 {
 	using namespace streamfx::util;
 
@@ -112,6 +113,11 @@ streamfx::gfx::blur::gaussian_data::~gaussian_data()
 streamfx::obs::gs::effect streamfx::gfx::blur::gaussian_data::get_effect()
 {
 	return _effect;
+}
+
+std::shared_ptr<streamfx::gfx::util> streamfx::gfx::blur::gaussian_data::get_gfx_util()
+{
+	return _gfx_util;
 }
 
 std::vector<float_t> const& streamfx::gfx::blur::gaussian_data::get_kernel(std::size_t width)
@@ -364,7 +370,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian::ren
 			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect.get_object(), "Draw")) {
-				streamfx::gs_draw_fullscreen_tri();
+				_data->get_gfx_util()->draw_fullscreen_triangle();
 			}
 		}
 
@@ -384,7 +390,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian::ren
 			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect.get_object(), "Draw")) {
-				streamfx::gs_draw_fullscreen_tri();
+				_data->get_gfx_util()->draw_fullscreen_triangle();
 			}
 		}
 
@@ -464,7 +470,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_dire
 		auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
 		gs_ortho(0, 1., 0, 1., 0, 1.);
 		while (gs_effect_loop(effect.get_object(), "Draw")) {
-			streamfx::gs_draw_fullscreen_tri();
+			_data->get_gfx_util()->draw_fullscreen_triangle();
 		}
 	}
 
@@ -524,7 +530,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_rota
 		auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
 		gs_ortho(0, 1., 0, 1., 0, 1.);
 		while (gs_effect_loop(effect.get_object(), "Rotate")) {
-			streamfx::gs_draw_fullscreen_tri();
+			_data->get_gfx_util()->draw_fullscreen_triangle();
 		}
 	}
 
@@ -604,7 +610,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_zoom
 		auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
 		gs_ortho(0, 1., 0, 1., 0, 1.);
 		while (gs_effect_loop(effect.get_object(), "Zoom")) {
-			streamfx::gs_draw_fullscreen_tri();
+			_data->get_gfx_util()->draw_fullscreen_triangle();
 		}
 	}
 

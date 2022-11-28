@@ -22,6 +22,7 @@
 #include "warning-disable.hpp"
 #include <memory>
 #include "gfx-lut.hpp"
+#include "gfx/gfx-util.hpp"
 #include "obs/gs/gs-effect.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "warning-enable.hpp"
@@ -30,6 +31,7 @@ namespace streamfx::gfx::lut {
 	class producer {
 		std::shared_ptr<streamfx::gfx::lut::data>        _data;
 		std::shared_ptr<streamfx::obs::gs::rendertarget> _rt;
+		std::shared_ptr<streamfx::gfx::util>             _gfx_util;
 
 		public:
 		producer();

@@ -45,7 +45,7 @@
 
 #define ST_MAX_LEVELS 16
 
-streamfx::gfx::blur::dual_filtering_data::dual_filtering_data()
+streamfx::gfx::blur::dual_filtering_data::dual_filtering_data() : _gfx_util(::streamfx::gfx::util::get())
 {
 	auto gctx = streamfx::obs::gs::context();
 	{
@@ -62,6 +62,11 @@ streamfx::gfx::blur::dual_filtering_data::~dual_filtering_data()
 {
 	auto gctx = streamfx::obs::gs::context();
 	_effect.reset();
+}
+
+std::shared_ptr<streamfx::gfx::util> streamfx::gfx::blur::dual_filtering_data::get_gfx_util()
+{
+	return _gfx_util;
 }
 
 streamfx::obs::gs::effect streamfx::gfx::blur::dual_filtering_data::get_effect()
@@ -281,7 +286,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::dual_filterin
 			auto op = _rts[n]->render(owidth, oheight);
 			gs_ortho(0., 1., 0., 1., 0., 1.);
 			while (gs_effect_loop(effect.get_object(), "Down")) {
-				streamfx::gs_draw_fullscreen_tri();
+				_data->get_gfx_util()->draw_fullscreen_triangle();
 			}
 		}
 	}
@@ -311,7 +316,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::dual_filterin
 			auto op = _rts[n - 1]->render(owidth, oheight);
 			gs_ortho(0., 1., 0., 1., 0., 1.);
 			while (gs_effect_loop(effect.get_object(), "Up")) {
-				streamfx::gs_draw_fullscreen_tri();
+				_data->get_gfx_util()->draw_fullscreen_triangle();
 			}
 		}
 	}

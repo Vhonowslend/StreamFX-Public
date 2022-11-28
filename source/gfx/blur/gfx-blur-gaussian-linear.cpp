@@ -34,7 +34,7 @@
 #define ST_SEARCH_EXTENSION 1
 #define ST_SEARCH_RANGE ST_MAX_KERNEL_SIZE * 2
 
-streamfx::gfx::blur::gaussian_linear_data::gaussian_linear_data()
+streamfx::gfx::blur::gaussian_linear_data::gaussian_linear_data() : _gfx_util(::streamfx::gfx::util::get())
 {
 	{
 		auto gctx = streamfx::obs::gs::context();
@@ -99,6 +99,11 @@ std::vector<float_t> const& streamfx::gfx::blur::gaussian_linear_data::get_kerne
 		width = ST_MAX_BLUR_SIZE;
 	width -= 1;
 	return _kernels[width];
+}
+
+std::shared_ptr<streamfx::gfx::util> streamfx::gfx::blur::gaussian_linear_data::get_gfx_util()
+{
+	return _gfx_util;
 }
 
 streamfx::gfx::blur::gaussian_linear_factory::gaussian_linear_factory() {}
@@ -337,7 +342,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_line
 			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect.get_object(), "Draw")) {
-				streamfx::gs_draw_fullscreen_tri();
+				_data->get_gfx_util()->draw_fullscreen_triangle();
 			}
 		}
 
@@ -357,7 +362,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_line
 			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect.get_object(), "Draw")) {
-				streamfx::gs_draw_fullscreen_tri();
+				_data->get_gfx_util()->draw_fullscreen_triangle();
 			}
 		}
 
@@ -438,7 +443,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_line
 		auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
 		gs_ortho(0, 1., 0, 1., 0, 1.);
 		while (gs_effect_loop(effect.get_object(), "Draw")) {
-			streamfx::gs_draw_fullscreen_tri();
+			_data->get_gfx_util()->draw_fullscreen_triangle();
 		}
 	}
 
