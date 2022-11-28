@@ -20,6 +20,7 @@
 #pragma once
 #include "common.hpp"
 #include "gfx/gfx-source-texture.hpp"
+#include "gfx/gfx-util.hpp"
 #include "obs/gs/gs-effect.hpp"
 #include "obs/obs-source-active-child.hpp"
 #include "obs/obs-source-active-reference.hpp"
@@ -54,6 +55,7 @@ namespace streamfx::filter::dynamic_mask {
 
 	class dynamic_mask_instance : public obs::source_instance {
 		std::shared_ptr<streamfx::filter::dynamic_mask::data> _data;
+		std::shared_ptr<streamfx::gfx::util>                  _gfx_util;
 
 		std::map<std::tuple<channel, channel, std::string>, std::string> _translation_map;
 

@@ -108,9 +108,9 @@ enum RotationOrder : int64_t {
 };
 
 transform_instance::transform_instance(obs_data_t* data, obs_source_t* context)
-	: obs::source_instance(data, context), _camera_mode(), _camera_fov(), _params(), _corners(), _standard_effect(),
-	  _transform_effect(), _sampler(), _cache_rendered(), _mipmap_enabled(), _source_rendered(), _source_size(),
-	  _update_mesh(true)
+	: obs::source_instance(data, context), _gfx_util(::streamfx::gfx::util::get()), _camera_mode(), _camera_fov(),
+	  _params(), _corners(), _standard_effect(), _transform_effect(), _sampler(), _cache_rendered(), _mipmap_enabled(),
+	  _source_rendered(), _source_size(), _update_mesh(true)
 {
 	{
 		auto gctx = obs::gs::context();
@@ -565,7 +565,7 @@ void transform_instance::video_render(gs_effect_t* effect)
 				v.set_float2(_corners.br);
 			}
 			while (gs_effect_loop(_transform_effect.get_object(), "CornerPin")) {
-				::streamfx::gs_draw_fullscreen_tri();
+				_gfx_util->draw_fullscreen_triangle();
 			}
 		}
 

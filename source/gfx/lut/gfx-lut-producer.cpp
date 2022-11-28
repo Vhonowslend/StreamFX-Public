@@ -41,7 +41,7 @@ gs_color_format format_from_depth(streamfx::gfx::lut::color_depth depth)
 	}
 }
 
-streamfx::gfx::lut::producer::producer()
+streamfx::gfx::lut::producer::producer() : _gfx_util(::streamfx::gfx::util::get())
 {
 	_data = streamfx::gfx::lut::data::instance();
 	if (!_data->producer_effect())
@@ -80,7 +80,7 @@ std::shared_ptr<streamfx::obs::gs::texture> streamfx::gfx::lut::producer::produc
 		}
 
 		while (gs_effect_loop(effect->get_object(), "Draw")) {
-			streamfx::gs_draw_fullscreen_tri();
+			_gfx_util->draw_fullscreen_triangle();
 		}
 
 		gs_enable_color(true, true, true, true);

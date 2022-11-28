@@ -21,6 +21,7 @@
 #include "common.hpp"
 #include "gfx/blur/gfx-blur-base.hpp"
 #include "gfx/gfx-source-texture.hpp"
+#include "gfx/gfx-util.hpp"
 #include "obs/gs/gs-effect.hpp"
 #include "obs/gs/gs-helper.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
@@ -43,7 +44,8 @@ namespace streamfx::filter::blur {
 
 	class blur_instance : public obs::source_instance {
 		// Effects
-		streamfx::obs::gs::effect _effect_mask;
+		streamfx::obs::gs::effect            _effect_mask;
+		std::shared_ptr<streamfx::gfx::util> _gfx_util;
 
 		// Input
 		std::shared_ptr<streamfx::obs::gs::rendertarget> _source_rt;

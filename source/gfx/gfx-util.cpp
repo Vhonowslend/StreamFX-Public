@@ -267,3 +267,31 @@ void streamfx::gfx::util::draw_rectangle(float x, float y, float w, float h, boo
 		gs_load_vertexbuffer(nullptr);
 	}
 }
+
+void streamfx::gfx::util::draw_fullscreen_triangle()
+{
+	if (!_fstri_vb) {
+		_fstri_vb = std::make_shared<streamfx::obs::gs::vertex_buffer>(uint32_t(3), uint8_t(1));
+		{
+			auto vtx = _fstri_vb->at(0);
+			vec3_set(vtx.position, 0, 0, 0);
+			vec4_set(vtx.uv[0], 0, 0, 0, 0);
+		}
+		{
+			auto vtx = _fstri_vb->at(1);
+			vec3_set(vtx.position, 2, 0, 0);
+			vec4_set(vtx.uv[0], 2, 0, 0, 0);
+		}
+		{
+			auto vtx = _fstri_vb->at(2);
+			vec3_set(vtx.position, 0, 2, 0);
+			vec4_set(vtx.uv[0], 0, 2, 0, 0);
+		}
+		_fstri_vb->update();
+	}
+
+	gs_load_indexbuffer(nullptr);
+	gs_load_vertexbuffer(_fstri_vb->update(false));
+	gs_draw(GS_TRIS, 0, 3); //_gs_fstri_vb->size());
+	gs_load_vertexbuffer(nullptr);
+}

@@ -19,6 +19,7 @@
 
 #include "filter-color-grade.hpp"
 #include "strings.hpp"
+#include "gfx/gfx-util.hpp"
 #include "obs/gs/gs-helper.hpp"
 #include "util/util-logging.hpp"
 
@@ -128,10 +129,11 @@ static constexpr std::string_view HELP_URL = "https://github.com/Xaymar/obs-Stre
 color_grade_instance::~color_grade_instance() {}
 
 color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self)
-	: obs::source_instance(data, self), _effect(), _lift(), _gamma(), _gain(), _offset(), _tint_detection(),
-	  _tint_luma(), _tint_exponent(), _tint_low(), _tint_mid(), _tint_hig(), _correction(), _lut_enabled(true),
-	  _lut_depth(), _ccache_rt(), _ccache_texture(), _ccache_fresh(false), _lut_initialized(false), _lut_dirty(true),
-	  _lut_producer(), _lut_consumer(), _lut_rt(), _lut_texture(), _cache_rt(), _cache_texture(), _cache_fresh(false)
+	: obs::source_instance(data, self), _effect(), _gfx_util(::streamfx::gfx::util::get()), _lift(), _gamma(), _gain(),
+	  _offset(), _tint_detection(), _tint_luma(), _tint_exponent(), _tint_low(), _tint_mid(), _tint_hig(),
+	  _correction(), _lut_enabled(true), _lut_depth(), _ccache_rt(), _ccache_texture(), _ccache_fresh(false),
+	  _lut_initialized(false), _lut_dirty(true), _lut_producer(), _lut_consumer(), _lut_rt(), _lut_texture(),
+	  _cache_rt(), _cache_texture(), _cache_fresh(false)
 {
 	{
 		auto gctx = streamfx::obs::gs::context();
@@ -330,7 +332,7 @@ void color_grade_instance::rebuild_lut()
 			gs_enable_stencil_write(false);
 
 			while (gs_effect_loop(_effect.get_object(), "Draw")) {
-				streamfx::gs_draw_fullscreen_tri();
+				_gfx_util->draw_fullscreen_triangle();
 			}
 
 			gs_blend_state_pop();
@@ -479,7 +481,7 @@ void color_grade_instance::video_render(gs_effect_t* shader)
 					auto effect = _lut_consumer->prepare(_lut_depth, _lut_texture);
 					effect->get_parameter("image").set_texture(_ccache_texture);
 					while (gs_effect_loop(effect->get_object(), "Draw")) {
-						streamfx::gs_draw_fullscreen_tri();
+						_gfx_util->draw_fullscreen_triangle();
 					}
 
 					// Restore original blend mode.
@@ -538,7 +540,7 @@ void color_grade_instance::video_render(gs_effect_t* shader)
 			// Render the effect.
 			_effect.get_parameter("image").set_texture(_ccache_texture);
 			while (gs_effect_loop(_effect.get_object(), "Draw")) {
-				streamfx::gs_draw_fullscreen_tri();
+				_gfx_util->draw_fullscreen_triangle();
 			}
 
 			// Restore original blend mode.

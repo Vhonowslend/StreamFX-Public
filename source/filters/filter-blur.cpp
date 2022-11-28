@@ -140,7 +140,8 @@ static std::map<std::string, local_blur_subtype_t> list_of_subtypes = {
 };
 
 blur_instance::blur_instance(obs_data_t* settings, obs_source_t* self)
-	: obs::source_instance(settings, self), _source_rendered(false), _output_rendered(false)
+	: obs::source_instance(settings, self), _gfx_util(::streamfx::gfx::util::get()), _source_rendered(false),
+	  _output_rendered(false)
 {
 	{
 		auto gctx = streamfx::obs::gs::context();
@@ -546,7 +547,7 @@ void blur_instance::video_render(gs_effect_t* effect)
 
 				// Render
 				while (gs_effect_loop(_effect_mask.get_object(), technique.c_str())) {
-					streamfx::gs_draw_fullscreen_tri();
+					_gfx_util->draw_fullscreen_triangle();
 				}
 			} catch (const std::exception&) {
 				gs_blend_state_pop();

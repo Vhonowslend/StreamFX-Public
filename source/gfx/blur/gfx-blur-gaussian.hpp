@@ -18,6 +18,7 @@
 #pragma once
 #include "common.hpp"
 #include "gfx-blur-base.hpp"
+#include "gfx/gfx-util.hpp"
 #include "obs/gs/gs-effect.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
@@ -31,6 +32,7 @@ namespace streamfx::gfx {
 	namespace blur {
 		class gaussian_data {
 			streamfx::obs::gs::effect            _effect;
+			std::shared_ptr<streamfx::gfx::util> _gfx_util;
 			std::map<size_t, std::vector<float>> _kernels;
 
 			public:
@@ -38,6 +40,8 @@ namespace streamfx::gfx {
 			virtual ~gaussian_data();
 
 			streamfx::obs::gs::effect get_effect();
+
+			std::shared_ptr<streamfx::gfx::util> get_gfx_util();
 
 			std::vector<float_t> const& get_kernel(std::size_t width);
 		};
