@@ -47,7 +47,7 @@
 #define ST_KEY_PARAMETERS "Shader.Parameters"
 
 streamfx::gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
-	: _self(self), _mode(mode), _base_width(1), _base_height(1), _active(true),
+	: _self(self), _gfx_util(::streamfx::gfx::util::get()), _mode(mode), _base_width(1), _base_height(1), _active(true),
 
 	  _shader(), _shader_file(), _shader_tech("Draw"), _shader_file_mt(), _shader_file_sz(), _shader_file_tick(0),
 
@@ -534,7 +534,7 @@ void streamfx::gfx::shader::shader::render(gs_effect* effect)
 		gs_enable_framebuffer_srgb(false);
 
 		while (gs_effect_loop(_shader.get_object(), _shader_tech.c_str())) {
-			streamfx::gs_draw_fullscreen_tri();
+			_gfx_util->draw_fullscreen_triangle();
 		}
 
 		// Restore sRGB Status

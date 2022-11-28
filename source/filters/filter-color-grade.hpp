@@ -48,7 +48,8 @@ namespace streamfx::filter::color_grade {
 	};
 
 	class color_grade_instance : public obs::source_instance {
-		streamfx::obs::gs::effect _effect;
+		streamfx::obs::gs::effect            _effect;
+		std::shared_ptr<streamfx::gfx::util> _gfx_util;
 
 		// User Configuration
 		vec4                            _lift;

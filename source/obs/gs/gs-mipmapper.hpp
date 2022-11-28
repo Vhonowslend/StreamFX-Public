@@ -19,6 +19,7 @@
 
 #pragma once
 #include "common.hpp"
+#include "gfx/gfx-util.hpp"
 #include "gs-effect.hpp"
 #include "gs-rendertarget.hpp"
 #include "gs-texture.hpp"
@@ -40,6 +41,7 @@ namespace streamfx::obs::gs {
 	class mipmapper {
 		std::unique_ptr<streamfx::obs::gs::rendertarget> _rt;
 		streamfx::obs::gs::effect                        _effect;
+		std::shared_ptr<streamfx::gfx::util>             _gfx_util;
 
 		public:
 		~mipmapper();

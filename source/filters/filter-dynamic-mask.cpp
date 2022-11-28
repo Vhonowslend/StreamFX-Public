@@ -111,6 +111,7 @@ std::shared_ptr<streamfx::filter::dynamic_mask::data> data::get()
 dynamic_mask_instance::dynamic_mask_instance(obs_data_t* settings, obs_source_t* self)
 	: obs::source_instance(settings, self),               //
 	  _data(streamfx::filter::dynamic_mask::data::get()), //
+	  _gfx_util(::streamfx::gfx::util::get()),            //
 	  _translation_map(),                                 //
 	  _input(),                                           //
 	  _input_child(),                                     //
@@ -544,7 +545,7 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 					effect.get_parameter("pMaskMultiplier").set_float4(_precalc.scale);
 
 					while (gs_effect_loop(effect.get(), "Mask")) {
-						streamfx::gs_draw_fullscreen_tri();
+						_gfx_util->draw_fullscreen_triangle();
 					}
 
 					// Pop the old blend state.

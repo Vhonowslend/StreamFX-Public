@@ -24,8 +24,6 @@ namespace streamfx {
 	// Threadpool
 	std::shared_ptr<streamfx::util::threadpool::threadpool> threadpool();
 
-	void gs_draw_fullscreen_tri();
-
 	std::filesystem::path data_file_path(std::string_view file);
 	std::filesystem::path config_file_path(std::string_view file);
 

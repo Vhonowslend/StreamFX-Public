@@ -191,7 +191,7 @@ streamfx::obs::gs::mipmapper::~mipmapper()
 	_effect.reset();
 }
 
-streamfx::obs::gs::mipmapper::mipmapper()
+streamfx::obs::gs::mipmapper::mipmapper() : _gfx_util(::streamfx::gfx::util::get())
 {
 	auto gctx = streamfx::obs::gs::context();
 
@@ -315,7 +315,7 @@ void streamfx::obs::gs::mipmapper::rebuild(std::shared_ptr<streamfx::obs::gs::te
 				_effect.get_parameter("imageTexel").set_float2(iwidth, iheight);
 				_effect.get_parameter("level").set_int(int32_t(mip - 1));
 				while (gs_effect_loop(_effect.get_object(), "Draw")) {
-					streamfx::gs_draw_fullscreen_tri();
+					_gfx_util->draw_fullscreen_triangle();
 				}
 			} catch (...) {
 			}

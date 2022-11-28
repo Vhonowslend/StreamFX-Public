@@ -28,7 +28,7 @@
 
 #define ST_MAX_BLUR_SIZE 128 // Also change this in box-linear.effect if modified.
 
-streamfx::gfx::blur::box_linear_data::box_linear_data()
+streamfx::gfx::blur::box_linear_data::box_linear_data() : _gfx_util(::streamfx::gfx::util::get())
 {
 	auto gctx = streamfx::obs::gs::context();
 	{
@@ -45,6 +45,11 @@ streamfx::gfx::blur::box_linear_data::~box_linear_data()
 {
 	auto gctx = streamfx::obs::gs::context();
 	_effect.reset();
+}
+
+std::shared_ptr<streamfx::gfx::util> streamfx::gfx::blur::box_linear_data::get_gfx_util()
+{
+	return _gfx_util;
 }
 
 streamfx::obs::gs::effect streamfx::gfx::blur::box_linear_data::get_effect()
@@ -279,7 +284,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_linear::r
 			auto op = _rendertarget2->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect.get_object(), "Draw")) {
-				streamfx::gs_draw_fullscreen_tri();
+				_data->get_gfx_util()->draw_fullscreen_triangle();
 			}
 		}
 
@@ -295,7 +300,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_linear::r
 			auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect.get_object(), "Draw")) {
-				streamfx::gs_draw_fullscreen_tri();
+				_data->get_gfx_util()->draw_fullscreen_triangle();
 			}
 		}
 	}
@@ -366,7 +371,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_linear_di
 			auto op = _rendertarget->render(uint32_t(width), uint32_t(height));
 			gs_ortho(0, 1., 0, 1., 0, 1.);
 			while (gs_effect_loop(effect.get_object(), "Draw")) {
-				streamfx::gs_draw_fullscreen_tri();
+				_data->get_gfx_util()->draw_fullscreen_triangle();
 			}
 		}
 	}

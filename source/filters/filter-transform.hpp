@@ -19,6 +19,7 @@
 
 #pragma once
 #include "common.hpp"
+#include "gfx/gfx-util.hpp"
 #include "obs/gs/gs-mipmapper.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
@@ -37,6 +38,8 @@ namespace streamfx::filter::transform {
 	};
 
 	class transform_instance : public obs::source_instance {
+		std::shared_ptr<streamfx::gfx::util> _gfx_util;
+
 		// Settings
 		transform_mode _camera_mode;
 		float          _camera_fov;
