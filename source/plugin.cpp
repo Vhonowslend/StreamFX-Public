@@ -116,7 +116,9 @@ MODULE_EXPORT bool obs_module_load(void)
 		// Initialize GLAD (OpenGL)
 		{
 			streamfx::obs::gs::context gctx{};
-			_streamfx_gfx_opengl = streamfx::gfx::opengl::get();
+			if (gs_get_device_type() == GS_DEVICE_OPENGL) {
+				_streamfx_gfx_opengl = streamfx::gfx::opengl::get();
+			}
 		}
 
 #ifdef ENABLE_NVIDIA_CUDA
