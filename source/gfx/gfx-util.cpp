@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "gfx-debug.hpp"
+#include "gfx-util.hpp"
 #include "graphics/matrix4.h"
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
@@ -42,21 +42,21 @@
 #define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
 #endif
 
-std::shared_ptr<streamfx::gfx::debug> streamfx::gfx::debug::get()
+std::shared_ptr<streamfx::gfx::util> streamfx::gfx::util::get()
 {
-	static std::weak_ptr<streamfx::gfx::debug> instance;
-	static std::mutex                          lock;
+	static std::weak_ptr<streamfx::gfx::util> instance;
+	static std::mutex                         lock;
 
 	std::unique_lock<std::mutex> ul(lock);
 	if (instance.expired()) {
-		auto hard_instance = std::shared_ptr<streamfx::gfx::debug>(new streamfx::gfx::debug());
+		auto hard_instance = std::shared_ptr<streamfx::gfx::util>(new streamfx::gfx::util());
 		instance           = hard_instance;
 		return hard_instance;
 	}
 	return instance.lock();
 }
 
-streamfx::gfx::debug::debug()
+streamfx::gfx::util::util()
 {
 	{
 		std::filesystem::path file = ::streamfx::data_file_path("effects/standard.effect");
@@ -68,7 +68,7 @@ streamfx::gfx::debug::debug()
 	}
 }
 
-streamfx::gfx::debug::~debug()
+streamfx::gfx::util::~util()
 {
 	obs::gs::context gctx{};
 
@@ -78,7 +78,7 @@ streamfx::gfx::debug::~debug()
 	_quad_vb.reset();
 }
 
-void streamfx::gfx::debug::draw_point(float x, float y, uint32_t color)
+void streamfx::gfx::util::draw_point(float x, float y, uint32_t color)
 {
 	obs::gs::context gctx{};
 
@@ -100,7 +100,7 @@ void streamfx::gfx::debug::draw_point(float x, float y, uint32_t color)
 	gs_load_vertexbuffer(nullptr);
 }
 
-void streamfx::gfx::debug::draw_line(float x, float y, float x2, float y2, uint32_t color /*= 0xFFFFFFFF*/)
+void streamfx::gfx::util::draw_line(float x, float y, float x2, float y2, uint32_t color /*= 0xFFFFFFFF*/)
 {
 	obs::gs::context gctx{};
 
@@ -127,8 +127,8 @@ void streamfx::gfx::debug::draw_line(float x, float y, float x2, float y2, uint3
 	gs_load_vertexbuffer(nullptr);
 }
 
-void streamfx::gfx::debug::draw_arrow(float x, float y, float x2, float y2, float w /*= 0.*/,
-									  uint32_t color /*= 0xFFFFFFFF*/)
+void streamfx::gfx::util::draw_arrow(float x, float y, float x2, float y2, float w /*= 0.*/,
+									 uint32_t color /*= 0xFFFFFFFF*/)
 {
 	obs::gs::context gctx{};
 
@@ -195,8 +195,8 @@ void streamfx::gfx::debug::draw_arrow(float x, float y, float x2, float y2, floa
 	gs_load_vertexbuffer(nullptr);
 }
 
-void streamfx::gfx::debug::draw_rectangle(float x, float y, float w, float h, bool frame,
-										  uint32_t color /*= 0xFFFFFFFF*/)
+void streamfx::gfx::util::draw_rectangle(float x, float y, float w, float h, bool frame,
+										 uint32_t color /*= 0xFFFFFFFF*/)
 {
 	obs::gs::context gctx{};
 
