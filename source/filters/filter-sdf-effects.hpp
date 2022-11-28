@@ -19,6 +19,7 @@
 
 #pragma once
 #include "common.hpp"
+#include "gfx/gfx-util.hpp"
 #include "obs/gs/gs-effect.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-sampler.hpp"
@@ -28,8 +29,9 @@
 
 namespace streamfx::filter::sdf_effects {
 	class sdf_effects_instance : public obs::source_instance {
-		streamfx::obs::gs::effect _sdf_producer_effect;
-		streamfx::obs::gs::effect _sdf_consumer_effect;
+		streamfx::obs::gs::effect            _sdf_producer_effect;
+		streamfx::obs::gs::effect            _sdf_consumer_effect;
+		std::shared_ptr<streamfx::gfx::util> _gfx_util;
 
 		// Input
 		std::shared_ptr<streamfx::obs::gs::rendertarget> _source_rt;

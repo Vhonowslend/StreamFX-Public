@@ -18,6 +18,7 @@
 #pragma once
 #include "common.hpp"
 #include "gfx-blur-base.hpp"
+#include "gfx/gfx-util.hpp"
 #include "obs/gs/gs-effect.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
@@ -29,11 +30,14 @@
 namespace streamfx::gfx {
 	namespace blur {
 		class box_linear_data {
-			streamfx::obs::gs::effect _effect;
+			streamfx::obs::gs::effect            _effect;
+			std::shared_ptr<streamfx::gfx::util> _gfx_util;
 
 			public:
 			box_linear_data();
 			virtual ~box_linear_data();
+
+			std::shared_ptr<streamfx::gfx::util> get_gfx_util();
 
 			streamfx::obs::gs::effect get_effect();
 		};

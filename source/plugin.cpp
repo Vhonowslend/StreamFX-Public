@@ -95,7 +95,6 @@
 #include "warning-enable.hpp"
 
 static std::shared_ptr<streamfx::util::threadpool::threadpool> _threadpool;
-static std::shared_ptr<streamfx::obs::gs::vertex_buffer>       _gs_fstri_vb;
 static std::shared_ptr<streamfx::gfx::opengl>                  _streamfx_gfx_opengl;
 static std::shared_ptr<streamfx::obs::source_tracker>          _source_tracker;
 
@@ -130,27 +129,6 @@ MODULE_EXPORT bool obs_module_load(void)
 			// If CUDA failed to load, it is considered safe to ignore.
 		}
 #endif
-
-		// GS Stuff
-		{
-			_gs_fstri_vb = std::make_shared<streamfx::obs::gs::vertex_buffer>(uint32_t(3), uint8_t(1));
-			{
-				auto vtx = _gs_fstri_vb->at(0);
-				vec3_set(vtx.position, 0, 0, 0);
-				vec4_set(vtx.uv[0], 0, 0, 0, 0);
-			}
-			{
-				auto vtx = _gs_fstri_vb->at(1);
-				vec3_set(vtx.position, 2, 0, 0);
-				vec4_set(vtx.uv[0], 2, 0, 0, 0);
-			}
-			{
-				auto vtx = _gs_fstri_vb->at(2);
-				vec3_set(vtx.position, 0, 2, 0);
-				vec4_set(vtx.uv[0], 0, 2, 0, 0);
-			}
-			_gs_fstri_vb->update();
-		}
 
 		// Encoders
 		{
@@ -307,11 +285,6 @@ MODULE_EXPORT void obs_module_unload(void)
 #endif
 		}
 
-		// GS Stuff
-		{
-			_gs_fstri_vb.reset();
-		}
-
 		// Finalize GLAD (OpenGL)
 		{
 			streamfx::obs::gs::context gctx{};
@@ -343,12 +316,6 @@ MODULE_EXPORT void obs_module_unload(void)
 std::shared_ptr<streamfx::util::threadpool::threadpool> streamfx::threadpool()
 {
 	return _threadpool;
-}
-
-void streamfx::gs_draw_fullscreen_tri()
-{
-	gs_load_vertexbuffer(_gs_fstri_vb->update(false));
-	gs_draw(GS_TRIS, 0, 3); //_gs_fstri_vb->size());
 }
 
 std::filesystem::path streamfx::data_file_path(std::string_view file)

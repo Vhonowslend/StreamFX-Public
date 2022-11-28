@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#pragma once
 #include "obs/gs/gs-effect.hpp"
 #include "obs/gs/gs-vertexbuffer.hpp"
 
@@ -32,6 +33,7 @@ namespace streamfx::gfx {
 		std::shared_ptr<::streamfx::obs::gs::vertex_buffer> _line_vb;
 		std::shared_ptr<::streamfx::obs::gs::vertex_buffer> _arrow_vb;
 		std::shared_ptr<::streamfx::obs::gs::vertex_buffer> _quad_vb;
+		std::shared_ptr<::streamfx::obs::gs::vertex_buffer> _fstri_vb;
 
 		public /* Singleton */:
 		static std::shared_ptr<streamfx::gfx::util> get();
@@ -49,5 +51,7 @@ namespace streamfx::gfx {
 		void draw_arrow(float x, float y, float x2, float y2, float w = 0., uint32_t color = 0xFFFFFFFF);
 
 		void draw_rectangle(float x, float y, float w, float h, bool frame, uint32_t color = 0xFFFFFFFF);
+
+		void draw_fullscreen_triangle();
 	};
 } // namespace streamfx::gfx
