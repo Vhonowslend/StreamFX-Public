@@ -1,43 +1,15 @@
-name: "File an Issue Report"
-title: "Replace Me Or Have Your Report Closed"
-description: "Use this if you've encountered a Bug, Crash or Freeze with StreamFX."
+---
+name: "File an Bug or Crash report"
+title: "REPLACE ME"
+description: "This form is for bug and crash reports only, primarily used by developers. Abuse of this form will lead to a permanent interaction ban."
 labels: ["bug"]
 body:
-- type: dropdown
-  attributes:
-    label: "Operating System"
-    description: "What Operating System do you use for OBS Studio and StreamFX? Select 'Other' if your Operating System is not listed"
-    options:
-      - "Windows 10 1903 and higher"
-      - "MacOS 10.15 and higher"
-      - "Linux (like Debian/Ubuntu)"
-      - "Linux (like Arch Linux)"
-      - "Linux (like FreeBSD)"
-      - "(Other)"
-  validations:
-    required: true
-- type: input
-  attributes:
-    label: "OBS Studio Version"
-    description: "Which OBS Studio version are you using to run StreamFX? Versions include all patches (the third element in 'A.B.C'), and release candidates for that version. Select 'Other' if you are using a custom build."
-  validations:
-    required: true
-- type: input
-  attributes:
-    label: "StreamFX Version"
-    description: "On which StreamFX version did you first encounter this issue?"
-  validations:
-    required: true
-- type: input
-  attributes:
-    label: "OBS Studio Log"
-    description: "Upload a normal log file that showcases the issue happening. If you encountered a crash, also fill out the next field."
-  validations:
-    required: true
 - type: textarea
   attributes:
-    label: "OBS Studio Crash Log"
-    description: "If OBS Studio crashed (not froze) paste the crash log here, or upload it somewhere and paste the link here."
+    label: "OBS Studio Logs"
+    description: "Paste the content or attach the log files from OBS Studio here. In the event of a crash, paste or attach both the crash log and the normal log file."
+  validations:
+    required: true
 - type: textarea
   attributes:
     label: "Current and Expected Behavior"
@@ -53,4 +25,3 @@ body:
 - type: textarea
   attributes:
     label: "Any additional Information we need to know?"
-    description: "If you answered '(Other)' to any system relevant information, explain what you mean by that here."
