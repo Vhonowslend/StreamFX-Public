@@ -1,18 +1,12 @@
 ---
-name: "File an Improvement Request"
-title: "Replace Me Or Have Your Request Closed"
-description: "Requests without an accompanying discussion thread will be closed and locked."
+name: "File an Feature or Improvement request"
+title: "REPLACE ME"
+description: "This form is for developers only. Abuse of this form will be met with a permanent interaction ban."
 labels: ["enhancement"]
 body:
 - type: input
   attributes:
     label: "Discussion Thread"
-    description: "Please paste the direct link to the discussion thread"
-  validations:
-    required: true
-- type: textarea
-  attributes:
-    label: "Provide a summary of the Improvement"
-    description: "This should only include parts that were agreed upon."
+    description: "Please paste the direct link to the discussion thread discussing this feature or improvement."
   validations:
     required: true
