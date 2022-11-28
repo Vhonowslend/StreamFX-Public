@@ -201,7 +201,7 @@ autoframing_instance::autoframing_instance(obs_data_t* data, obs_source_t* self)
 		::streamfx::obs::gs::context gctx;
 
 		// Get debug renderer.
-		_gfx_debug = ::streamfx::gfx::debug::get();
+		_gfx_debug = ::streamfx::gfx::util::get();
 
 		// Create the render target for the input buffering.
 		_input = std::make_shared<::streamfx::obs::gs::rendertarget>(GS_RGBA_UNORM, GS_ZS_NONE);

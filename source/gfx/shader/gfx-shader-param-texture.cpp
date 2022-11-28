@@ -18,7 +18,7 @@
 #include "gfx-shader-param-texture.hpp"
 #include "strings.hpp"
 #include "gfx-shader.hpp"
-#include "gfx/gfx-debug.hpp"
+#include "gfx/gfx-util.hpp"
 #include "obs/gs/gs-helper.hpp"
 #include "obs/obs-source-tracker.hpp"
 #include "util/util-platform.hpp"
