@@ -19,6 +19,7 @@
 #include "common.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
+#include "obs/obs-source.hpp"
 #include "obs/obs-weak-source.hpp"
 
 #include "warning-disable.hpp"
@@ -34,7 +35,7 @@ namespace streamfx::gfx {
 
 		public:
 		~source_texture();
-		source_texture(streamfx::obs::weak_source child, streamfx::obs::weak_source parent);
+		source_texture(streamfx::obs::source child, streamfx::obs::source parent);
 
 		public /*copy*/:
 		source_texture(source_texture const& other)            = delete;
