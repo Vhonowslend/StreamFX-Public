@@ -377,7 +377,7 @@ void blur_instance::video_tick(float)
 		if (_mask.source.name_old != _mask.source.name) {
 			try {
 				_mask.source.source_texture = std::make_shared<streamfx::gfx::source_texture>(
-					::streamfx::obs::weak_source(_mask.source.name), ::streamfx::obs::weak_source(_self));
+					::streamfx::obs::source{_mask.source.name}, ::streamfx::obs::source{_self, false});
 				_mask.source.is_scene = (obs_scene_from_source(_mask.source.source_texture->get_object()) != nullptr);
 				_mask.source.name_old = _mask.source.name;
 			} catch (...) {
