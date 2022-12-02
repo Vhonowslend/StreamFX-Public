@@ -19,8 +19,8 @@
 
 #pragma once
 #include "common.hpp"
+#include "gfx/gfx-mipmapper.hpp"
 #include "gfx/gfx-util.hpp"
-#include "obs/gs/gs-mipmapper.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
 #include "obs/gs/gs-vertexbuffer.hpp"
@@ -70,7 +70,7 @@ namespace streamfx::filter::transform {
 		// Mip-mapping
 		bool                                        _mipmap_enabled;
 		bool                                        _mipmap_rendered;
-		streamfx::obs::gs::mipmapper                _mipmapper;
+		streamfx::gfx::mipmapper                    _mipmapper;
 		std::shared_ptr<streamfx::obs::gs::texture> _mipmap_texture;
 
 		// Input
