@@ -30,8 +30,8 @@ streamfx::gfx::source_texture::~source_texture()
 	}
 }
 
-streamfx::gfx::source_texture::source_texture(streamfx::obs::weak_source child, streamfx::obs::weak_source parent)
-	: _parent(parent.lock()), _child(child.lock())
+streamfx::gfx::source_texture::source_texture(streamfx::obs::source child, streamfx::obs::source parent)
+	: _parent(parent), _child(child)
 {
 	// Verify that 'child' and 'parent' exist.
 	if (!_child || !_parent) {
@@ -39,9 +39,9 @@ streamfx::gfx::source_texture::source_texture(streamfx::obs::weak_source child, 
 	}
 
 	// Verify that 'child' does not contain 'parent'.
-	if (::streamfx::obs::tools::source_find_source(_child, _parent)) {
+	if (::streamfx::obs::tools::source_find_source(child, parent)) {
 		throw std::runtime_error("Child contains Parent");
-	} else if (!obs_source_add_active_child(_parent.get(), _child.get())) {
+	} else if (!obs_source_add_active_child(parent, child)) {
 		throw std::runtime_error("Child contains Parent");
 	}
 
