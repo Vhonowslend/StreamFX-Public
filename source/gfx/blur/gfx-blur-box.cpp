@@ -28,7 +28,7 @@
 
 #define ST_MAX_BLUR_SIZE 128 // Also change this in box.effect if modified.
 
-streamfx::gfx::blur::box_data::box_data()
+streamfx::gfx::blur::box_data::box_data() : _gfx_util(::streamfx::gfx::util::get())
 {
 	auto gctx = streamfx::obs::gs::context();
 	{
