@@ -18,10 +18,10 @@
  */
 
 #pragma once
+#include "gfx/gfx-mipmapper.hpp"
 #include "gfx/lut/gfx-lut-consumer.hpp"
 #include "gfx/lut/gfx-lut-producer.hpp"
 #include "gfx/lut/gfx-lut.hpp"
-#include "obs/gs/gs-mipmapper.hpp"
 #include "obs/gs/gs-rendertarget.hpp"
 #include "obs/gs/gs-texture.hpp"
 #include "obs/gs/gs-vertexbuffer.hpp"
