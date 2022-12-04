@@ -1,0 +1,91 @@
+// Written by f3flight in 2022
+//
+// I wrote this just to test the idea.
+//
+// This filter is a Difference Mask - basically allows masking (and soft-masking, and negative-masking) based on RGB difference
+// between Mask (file for ex.) pixels and Source pixels.
+// Example use-case: instead of using green screen, ensure that any foreground objects have different color than background,
+// then take a screnshot of only background and use as Mask.
+// For best results, disable automatic exposure / wb / etc in your camera to have consistentcy between screenshot and live feed,
+// and have enough light to reduce noise.
+//
+// Enjoy =)
+//
+//------------------------------------------------------------------------------
+// Uniforms
+//------------------------------------------------------------------------------
+uniform float4x4 ViewProj<
+	bool automatic = true;
+>;
+
+uniform float4 ViewSize<
+	bool automatic = true;
+>;
+
+uniform texture2d InputA<
+	bool automatic = true;
+>;
+
+uniform texture2d Mask;
+
+uniform float lower_threshold<
+	string name = "Lower Threshold";
+	string field_type = "slider";
+	float minimum = 0.0;
+	float maximum = 1.0;
+	float step = 0.01;
+	float scale = 1;
+> = 0.1;
+
+uniform float upper_threshold<
+	string name = "Upper Threshold";
+	string field_type = "slider";
+	float minimum = 0.0;
+	float maximum = 1.0;
+	float step = 0.01;
+	float scale = 1;
+> = 0.3;
+
+//------------------------------------------------------------------------------
+// Structs
+//------------------------------------------------------------------------------
+struct VertFragData {
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD0;
+};
+
+//------------------------------------------------------------------------------
+// Samplers
+//------------------------------------------------------------------------------
+sampler_state DefaultSampler {
+	Filter    = Point;
+	AddressU  = Clamp;
+	AddressV  = Clamp;
+};
+
+//------------------------------------------------------------------------------
+// Functionality
+//------------------------------------------------------------------------------
+VertFragData VSDefault(VertFragData vtx) {
+	vtx.pos = mul(float4(vtx.pos.xyz, 1.0), ViewProj);
+	return vtx;
+};
+
+float4 PSDefault(VertFragData vtx) : TARGET {
+	float4 source = InputA.Sample(DefaultSampler, vtx.uv);
+	float3 mask_rgb = Mask.Sample(DefaultSampler, vtx.uv).rgb;
+	float3 diff = abs(source.rgb - mask_rgb);
+	float diff_flat = (diff.r + diff.g + diff.b) / 3;
+	float mask = smoothstep(lower_threshold, upper_threshold, diff_flat);
+	source.a = mask;
+	return source;
+}
+
+technique Draw
+{
+	pass
+	{
+		vertex_shader = VSDefault(vtx);
+		pixel_shader  = PSDefault(vtx);
+	}
+}
