@@ -223,6 +223,16 @@ list(APPEND PROJECT_TRADEMARKS
 	"NVIDIA is a trademark of Nvidia Corporation"
 )
 
+# CI: Only generate version information and nothing else.
+if(CI_VERSION_ONLY)
+	set(_VERSION_CI "${_VERSION_MAJOR}.${_VERSION_MINOR}.${_VERSION_PATCH}")
+	if(NOT (_VERSION_PRERELEASE STREQUAL ""))
+		set(_VERSION_CI "${_VERSION_CI}${_VERSION_PRERELEASE}${_VERSION_TWEAK}")
+	endif()
+	file(WRITE "${PROJECT_BINARY_DIR}/version" "${_VERSION_CI}")
+	return()
+endif()
+
 ################################################################################
 # Platform Setup
 ################################################################################
