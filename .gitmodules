@@ -19,3 +19,12 @@
 [submodule "third-party/obs-studio"]
 	path = third-party/obs-studio
 	url = https://github.com/obsproject/obs-studio.git
+[submodule "third-party/intel-onevpl"]
+	path = third-party/intel-onevpl
+	url = https://github.com/oneapi-src/oneVPL.git
+[submodule "third-party/intel-onevpl-intel-gpu"]
+	path = third-party/intel-onevpl-intel-gpu
+	url = https://github.com/oneapi-src/oneVPL-intel-gpu.git
+[submodule "third-party/intel-mediasdk"]
+	path = third-party/intel-mediasdk
+	url = https://github.com/Intel-Media-SDK/MediaSDK.git
