@@ -89,25 +89,33 @@ jobs:
       run: |
         # Dependency Versioning
         if [[ "${{ matrix.runner }}" = windows* ]]; then
-          [[ $(cat "${{ github.workspace }}/third-party/obs-studio/.github/workflows/main.yml") =~ DEPS_VERSION_WIN:\ \'([0-9a-zA-Z\-]+)\' ]]
-          echo "::set-output name=obs_deps_version::${BASH_REMATCH[1]}"
+          if [[ -f "${{ github.workspace }}/third-party/DEPS_VERSION_WIN" ]]; then
+            echo "obs_deps_version=$(cat "${{ github.workspace }}/third-party/DEPS_VERSION_WIN")" >> $GITHUB_ENV
+          else
+            [[ $(cat "${{ github.workspace }}/third-party/obs-studio/.github/workflows/main.yml") =~ DEPS_VERSION_WIN:\ \'([0-9a-zA-Z\-]+)\' ]]
+            echo "obs_deps_version=${BASH_REMATCH[1]}" >> $GITHUB_ENV
+          fi
         elif [[ "${{ matrix.runner }}" = macos* ]]; then
-          [[ $(cat "${{ github.workspace }}/third-party/obs-studio/.github/workflows/main.yml") =~ DEPS_VERSION_MAC:\ \'([0-9a-zA-Z\-]+)\' ]]
-          echo "::set-output name=obs_deps_version::${BASH_REMATCH[1]}"
+          if [[ -f "${{ github.workspace }}/third-party/DEPS_VERSION_MAC" ]]; then
+            echo "obs_deps_version=$(cat "${{ github.workspace }}/third-party/DEPS_VERSION_MAC")" >> $GITHUB_ENV
+          else
+            [[ $(cat "${{ github.workspace }}/third-party/obs-studio/.github/workflows/main.yml") =~ DEPS_VERSION_MAC:\ \'([0-9a-zA-Z\-]+)\' ]]
+            echo "obs_deps_version=${BASH_REMATCH[1]}" >> $GITHUB_ENV
+          fi
         else
-          echo "::set-output name=obs_deps_version::BADVALUE"
+          echo "obs_deps_version=BADVALUE" >> $GITHUB_ENV
         fi
-        echo "::set-output name=obs_version::$(cd "${{ github.workspace }}/third-party/obs-studio" && git describe --tags --long)"
+        echo "obs_version::$(cd "${{ github.workspace }}/third-party/obs-studio" && git describe --tags --long)"
 
         # CMake Flags
         if [[ "${{ matrix.CMAKE_GENERATOR }}" != "" ]]; then
-          echo "::set-output name=cmake_generator::-G \"${{ matrix.CMAKE_GENERATOR }}\""
+          echo "cmake_generator=-G \"${{ matrix.CMAKE_GENERATOR }}\"" >> $GITHUB_ENV
         fi
         if [[ "${{ matrix.CMAKE_GENERATOR_TOOLSET }}" != "" ]]; then
-          echo "::set-output name=cmake_generator_toolset::-T \"${{ matrix.CMAKE_GENERATOR_TOOLSET }}\""
+          echo "cmake_generator_toolset=-T \"${{ matrix.CMAKE_GENERATOR_TOOLSET }}\"" >> $GITHUB_ENV
         fi
         if [[ "${{ matrix.CMAKE_GENERATOR_PLATFORM }}" != "" ]]; then
-          echo "::set-output name=cmake_generator_platform::-A \"${{ matrix.CMAKE_GENERATOR_PLATFORM }}\""
+          echo "cmake_generator_platform=-A \"${{ matrix.CMAKE_GENERATOR_PLATFORM }}\"" >> $GITHUB_ENV
         fi
 
     - name: "Dependencies: Windows"
@@ -175,18 +183,18 @@ jobs:
       uses: actions/cache@v3
       with:
         path: "${{ github.workspace }}/build/qt"
-        key: "${{ matrix.runner }}-obsdeps${{ steps.info.outputs.obs_deps_version }}-qt${{ matrix.qt }}-${{ env.CACHE_VERSION }}"
+        key: "${{ matrix.runner }}-obsdeps${{ env.obs_deps_version }}-qt${{ matrix.qt }}-${{ env.CACHE_VERSION }}"
     - name: "Dependency: Qt "
       id: qt
       if: ${{ startsWith( matrix.runner, 'ubuntu' ) || (steps.qt-cache.outputs.cache-hit != 'true') }}
       shell: bash
       run: |
         if [[ "${{ matrix.runner }}" = windows* ]]; then
-          curl --retry 5 --retry-delay 30 -jLo /tmp/qt.zip "https://github.com/obsproject/obs-deps/releases/download/${{ steps.info.outputs.obs_deps_version }}/windows-deps-qt${{ matrix.qt }}-${{ steps.info.outputs.obs_deps_version }}-x64.zip"
+          curl --retry 5 --retry-delay 30 -jLo /tmp/qt.zip "https://github.com/obsproject/obs-deps/releases/download/${{ env.obs_deps_version }}/windows-deps-qt${{ matrix.qt }}-${{ env.obs_deps_version }}-x64.zip"
           if [[ ! -f "${{ github.workspace }}/build/qt" ]]; then mkdir -p "${{ github.workspace }}/build/qt"; fi
           7z x -y -o"${{ github.workspace }}/build/qt" -- "/tmp/qt.zip"
         elif [[ "${{ matrix.runner }}" = macos* ]]; then
-          curl --retry 5 --retry-delay 30 -jLo /tmp/qt.tar.xz "https://github.com/obsproject/obs-deps/releases/download/${{ steps.info.outputs.obs_deps_version }}/macos-deps-qt${{ matrix.qt }}-${{ steps.info.outputs.obs_deps_version }}-universal.tar.xz"
+          curl --retry 5 --retry-delay 30 -jLo /tmp/qt.tar.xz "https://github.com/obsproject/obs-deps/releases/download/${{ env.obs_deps_version }}/macos-deps-qt${{ matrix.qt }}-${{ env.obs_deps_version }}-universal.tar.xz"
           if [[ ! -f "${{ github.workspace }}/build/qt" ]]; then mkdir -p "${{ github.workspace }}/build/qt"; fi
           tar -xvf "/tmp/qt.tar.xz" -C "${{ github.workspace }}/build/qt"
         elif [[ "${{ matrix.runner }}" = ubuntu* ]]; then
@@ -205,18 +213,18 @@ jobs:
       uses: actions/cache@v3
       with:
         path: "${{ github.workspace }}/build/obsdeps"
-        key: "${{ matrix.runner }}-obsdeps${{ steps.info.outputs.obs_deps_version }}-${{ env.CACHE_VERSION }}"
+        key: "${{ matrix.runner }}-obsdeps${{ env.obs_deps_version }}-${{ env.CACHE_VERSION }}"
     - name: "Dependency: OBS Dependencies (FFmpeg, CURL, ...)"
       id: obsdeps
       if: ${{ startsWith( matrix.runner, 'ubuntu' ) || (steps.obsdeps-cache.outputs.cache-hit != 'true') }}
       shell: bash
       run: |
         if [[ "${{ matrix.runner }}" = windows* ]]; then
-          curl --retry 5 --retry-delay 30 -jLo /tmp/obsdeps.zip "https://github.com/obsproject/obs-deps/releases/download/${{ steps.info.outputs.obs_deps_version }}/windows-deps-${{ steps.info.outputs.obs_deps_version }}-x64.zip"
+          curl --retry 5 --retry-delay 30 -jLo /tmp/obsdeps.zip "https://github.com/obsproject/obs-deps/releases/download/${{ env.obs_deps_version }}/windows-deps-${{ env.obs_deps_version }}-x64.zip"
           if [[ ! -f "${{ github.workspace }}/build/obsdeps" ]]; then mkdir -p "${{ github.workspace }}/build/obsdeps"; fi
           7z x -y -o"${{ github.workspace }}/build/obsdeps" -- "/tmp/obsdeps.zip"
         elif [[ "${{ matrix.runner }}" = macos* ]]; then
-          curl --retry 5 --retry-delay 30 -jLo /tmp/obsdeps.tar.xz "https://github.com/obsproject/obs-deps/releases/download/${{ steps.info.outputs.obs_deps_version }}/macos-deps-${{ steps.info.outputs.obs_deps_version }}-universal.tar.xz"
+          curl --retry 5 --retry-delay 30 -jLo /tmp/obsdeps.tar.xz "https://github.com/obsproject/obs-deps/releases/download/${{ env.obs_deps_version }}/macos-deps-${{ env.obs_deps_version }}-universal.tar.xz"
           if [[ ! -f "${{ github.workspace }}/build/obsdeps" ]]; then mkdir -p "${{ github.workspace }}/build/obsdeps"; fi
           tar -xvf "/tmp/obsdeps.tar.xz" -C "${{ github.workspace }}/build/obsdeps"
         elif [[ "${{ matrix.runner }}" = ubuntu* ]]; then
@@ -230,7 +238,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: "${{ github.workspace }}/build/obs"
-        key: "${{ matrix.runner }}-${{ matrix.generator }}-obs${{ steps.info.outputs.obs_version }}-obsdeps${{ steps.info.outputs.obs_deps_version }}-qt${{ matrix.qt }}-${{ env.CACHE_VERSION }}"
+        key: "${{ matrix.runner }}-${{ matrix.generator }}-obs${{ env.obs_version }}-obsdeps${{ env.obs_deps_version }}-qt${{ matrix.qt }}-${{ env.CACHE_VERSION }}"
     - name: "Dependency: OBS Libraries"
       id: obs
       if: ${{ steps.obs-cache.outputs.cache-hit != 'true' }}
@@ -252,9 +260,9 @@ jobs:
         cmake \
           -S "${{ github.workspace }}/third-party/obs-studio" \
           -B "${{ github.workspace }}/build/obs" \
-          ${{ steps.info.outputs.cmake_generator }} \
-          ${{ steps.info.outputs.cmake_generator_toolset }} \
-          ${{ steps.info.outputs.cmake_generator_platform }} \
+          ${{ env.cmake_generator }} \
+          ${{ env.cmake_generator_toolset }} \
+          ${{ env.cmake_generator_platform }} \
           -DCMAKE_OSX_ARCHITECTURES="${{ matrix.CMAKE_OSX_ARCHITECTURES }}" \
           -DCMAKE_OSX_DEPLOYMENT_TARGET="${{ matrix.CMAKE_OSX_DEPLOYMENT_TARGET }}" \
           -DCMAKE_SYSTEM_VERSION="${{ matrix.CMAKE_SYSTEM_VERSION }}" \
@@ -282,9 +290,9 @@ jobs:
         cmake \
           -S "${{ github.workspace }}" \
           -B "${{ github.workspace }}/build/debug" \
-          ${{ steps.info.outputs.cmake_generator }} \
-          ${{ steps.info.outputs.cmake_generator_toolset }} \
-          ${{ steps.info.outputs.cmake_generator_platform }} \
+          ${{ env.cmake_generator }} \
+          ${{ env.cmake_generator_toolset }} \
+          ${{ env.cmake_generator_platform }} \
           -DCMAKE_OSX_ARCHITECTURES="${{ matrix.CMAKE_OSX_ARCHITECTURES }}" \
           -DCMAKE_OSX_DEPLOYMENT_TARGET="${{ matrix.CMAKE_OSX_DEPLOYMENT_TARGET }}" \
           -DCMAKE_SYSTEM_VERSION="${{ matrix.CMAKE_SYSTEM_VERSION }}" \
@@ -314,9 +322,9 @@ jobs:
         cmake \
           -S "${{ github.workspace }}" \
           -B "${{ github.workspace }}/build/release" \
-          ${{ steps.info.outputs.cmake_generator }} \
-          ${{ steps.info.outputs.cmake_generator_toolset }} \
-          ${{ steps.info.outputs.cmake_generator_platform }} \
+          ${{ env.cmake_generator }} \
+          ${{ env.cmake_generator_toolset }} \
+          ${{ env.cmake_generator_platform }} \
           -DCMAKE_OSX_ARCHITECTURES="${{ matrix.CMAKE_OSX_ARCHITECTURES }}" \
           -DCMAKE_OSX_DEPLOYMENT_TARGET="${{ matrix.CMAKE_OSX_DEPLOYMENT_TARGET }}" \
           -DCMAKE_SYSTEM_VERSION="${{ matrix.CMAKE_SYSTEM_VERSION }}" \
