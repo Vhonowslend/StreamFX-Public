@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Michael Fabian Dirks <info@xaymar.com>
+// Copyright (c) 2020-2023 Michael Fabian Dirks <info@xaymar.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -168,49 +168,63 @@ void streamfx::from_json(const nlohmann::json& json, version_info& info)
 bool streamfx::version_info::is_older_than(const version_info other)
 {
 	// 'true' if other is newer, otherwise false.
+	// Except for stable releases, this simply compares the numbers of the version.
 
-	// 1. Compare Major version:
-	//     A. Ours is greater: Remote is older.
-	//     B. Theirs is greater: Remote is newer.
-	//     C. Continue the check.
-	if (major > other.major)
-		return false;
+	// Compare Major version:
+	// - Theirs is greater: Remote is newer.
+	// - Ours is greater: Remote is older.
+	// - Continue the check.
 	if (major < other.major)
 		return true;
-
-	// 2. Compare Minor version:
-	//     A. Ours is greater: Remote is older.
-	//     B. Theirs is greater: Remote is newer.
-	//     C. Continue the check.
-	if (minor > other.minor)
+	if (major > other.major)
 		return false;
+
+	// Compare Minor version:
+	// - Theirs is greater: Remote is newer.
+	// - Ours is greater: Remote is older.
+	// - Continue the check.
 	if (minor < other.minor)
 		return true;
-
-	// 3. Compare Patch version:
-	//     A. Ours is greater: Remote is older.
-	//     B. Theirs is greater: Remote is newer.
-	//     C. Continue the check.
-	if (patch > other.patch)
+	if (minor > other.minor)
 		return false;
+
+	// Compare Patch version:
+	// - Theirs is greater: Remote is newer.
+	// - Ours is greater: Remote is older.
+	// - Continue the check.
 	if (patch < other.patch)
 		return true;
+	if (patch > other.patch)
+		return false;
 
-	// 4. Compare Type:
-	//     A. Outs is smaller: Remote is older.
-	//     B. Theirs is smaller: Remote is newer.
-	//     C. Continue the check.
+	// Compare Tweak and Stage version:
+	// - Theirs is greater: Remote is newer.
+	// - Ours is greater: Special logic.
+	// - Continue the check.
+	if (tweak < other.tweak)
+		return true;
+	if ((tweak > other.tweak) && (other.stage != version_stage::STABLE)) {
+		// If the remote isn't a stable release, it's always considered older.
+		return false;
+
+		// 0.12.0 vs 0.12.0
+		// Major: equal, continue
+		// Minor: equal, continue
+		// Patch: equal, continue
+		// Tweak: equal, continue
+		// Ours is older?
+	}
+
+	// As a last effort, compare the stage.
+	// - Theirs is greater: Remote is older.
+	// - Ours is greater: Remote is newer.
+	// - Continue the check.
 	if (stage < other.stage)
 		return false;
 	if (stage > other.stage)
 		return true;
 
-	// 5. Compare Tweak:
-	//    A. Ours is greater or equal: Remote is older or identical.
-	//    B. Remote is newer
-	if (tweak >= other.tweak)
-		return false;
-
+	// If there are no further tests, assume this version is older.
 	return true;
 }
 
