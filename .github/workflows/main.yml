@@ -171,7 +171,7 @@ jobs:
       if: startsWith( matrix.runner, 'macos' )
       shell: bash
       run: |
-        curl -kL http://cdn.xaymar.com/ci/Packages-1.2.10.dmg -f --retry 5 -o "Packages.dmg"
+        curl -kL https://cdn.xaymar.com/ci/Packages-1.2.10.dmg -f --retry 5 -o "Packages.dmg"
         sudo hdiutil attach ./Packages.dmg
         pushd /Volumes/Packages*
         sudo installer -pkg ./Install\ Packages.pkg -target /
