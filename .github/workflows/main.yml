@@ -83,7 +83,67 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - name: "Gather Information"
+    - name: "Install Build Tools (Ubuntu)"
+      if: startsWith( matrix.runner, 'ubuntu' )
+      shell: bash
+      run: |
+        sudo apt-get -qq update
+        sudo apt-get purge libjpeg9-dev:amd64 libjpeg8-dev:amd64 libjpeg-turbo8-dev:amd64
+        sudo apt-get install \
+          build-essential \
+          checkinstall \
+          pkg-config \
+          cmake \
+          ninja-build \
+          git \
+          gcc-10 g++10
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 800 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+
+    - name: "Install LLVM/Clang (Windows)"
+      if: startsWith( matrix.runner, 'windows' )
+      run: |
+        curl "-kL" "https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.4/LLVM-14.0.4-win64.exe" "-f" "--retry" "5" "-o" "llvm.exe"
+        7z x -y -o"C:\Program Files\LLVM" llvm.exe "bin" "include" "lib" "libexec" "share" "Uninstall.exe"
+        echo "CLANG_PATH=\"C:\\Program Files\\LLVM\\bin\"" >> "${GITHUB_ENV}"
+    - name: "Install LLVM/Clang (Ubuntu)"
+      if: startsWith( matrix.runner, 'ubuntu' )
+      shell: bash
+      run: |
+        curl -jLo /tmp/llvm.sh "https://apt.llvm.org/llvm.sh"
+        chmod +x /tmp/llvm.sh
+        sudo /tmp/llvm.sh 14 all
+        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-14 800
+        sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-14 800
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-14 800
+        sudo update-alternatives --install /usr/bin/lld lld /usr/bin/lld-14 800
+        sudo update-alternatives --install /usr/bin/lldb lldb /usr/bin/lldb-14 800
+        sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-14 800
+        sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-14 800
+        echo "CLANG_PATH=/usr/bin" >> "${GITHUB_ENV}"
+    - name: "Install LLVM/Clang (MacOS)"
+      if: startsWith( matrix.runner, 'macos' )
+      shell: bash
+      run: |
+        brew install llvm@14
+        LLVM_LOC=$(brew --prefix llvm@14)
+        echo "CLANG_PATH=${LLVM_LOC}/bin/" >> "${GITHUB_ENV}"
+
+    - name: "Install InnoSetup (Windows)"
+      if: startsWith( matrix.runner, 'windows' )
+      run: |
+        curl "-kL" "https://cdn.xaymar.com/ci/innosetup-6.2.1.exe" "-f" "--retry" "5" "-o" "inno.exe"
+        .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
+
+    - name: 'Install Packages (MacOS)'
+      if: startsWith( matrix.runner, 'macos' )
+      shell: bash
+      run: |
+        curl -kL https://cdn.xaymar.com/ci/Packages-1.2.10.dmg -f --retry 5 -o "Packages.dmg"
+        sudo hdiutil attach ./Packages.dmg
+        pushd /Volumes/Packages*
+        sudo installer -pkg ./Install\ Packages.pkg -target /
+
+    - name: "Setup build Tools and gather Information"
       id: info
       shell: bash
       run: |
@@ -118,64 +178,18 @@ jobs:
           echo "cmake_generator_platform=-A \"${{ matrix.CMAKE_GENERATOR_PLATFORM }}\"" >> $GITHUB_ENV
         fi
 
-    - name: "Dependencies: Windows"
-      if: startsWith( matrix.runner, 'windows' )
-      run: |
-        curl "-kL" "https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.4/LLVM-14.0.4-win64.exe" "-f" "--retry" "5" "-o" "llvm.exe"
-        7z x -y -o"C:\Program Files\LLVM" llvm.exe "bin" "include" "lib" "libexec" "share" "Uninstall.exe"
-        echo "CLANG_PATH=\"C:\\Program Files\\LLVM\\bin\"" >> "${GITHUB_ENV}"
-        curl "-kL" "https://cdn.xaymar.com/ci/innosetup-6.2.1.exe" "-f" "--retry" "5" "-o" "inno.exe"
-        .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
-
-    - name: "Dependencies: Linux"
-      if: startsWith( matrix.runner, 'ubuntu' )
-      shell: bash
-      run: |
-        sudo apt-get -qq update
-        sudo apt-get purge libjpeg9-dev:amd64 libjpeg8-dev:amd64 libjpeg-turbo8-dev:amd64
-        sudo apt-get install \
-          build-essential \
-          checkinstall \
-          pkg-config \
-          cmake \
-          ninja-build \
-          git
-
-        # clang-format, clang-tidy
-        curl -jLo /tmp/llvm.sh "https://apt.llvm.org/llvm.sh"
-        chmod +x /tmp/llvm.sh
-        sudo /tmp/llvm.sh 14 all
-        sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-14 800
-        sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-14 800
-        echo "CLANG_PATH=/usr/bin" >> "${GITHUB_ENV}"
-
-        # Compiler
-        if [[ "${{ matrix.generator }}" = "GCC" ]]; then
-          sudo apt-get install gcc-10 g++10
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 800 --slave /usr/bin/g++ g++ /usr/bin/g++-10
-          echo "CC=gcc-10" >> "${GITHUB_ENV}"
-          echo "CXX=gcc-10" >> "${GITHUB_ENV}"
-          echo "LD=ld" >> "${GITHUB_ENV}"
-        elif [[ "${{ matrix.generator }}" = "Clang" ]]; then
-          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-14 800
-          sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-14 800
-          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-14 800
-          sudo update-alternatives --install /usr/bin/lld lld /usr/bin/lld-14 800
-          sudo update-alternatives --install /usr/bin/lldb lldb /usr/bin/lldb-14 800
-          echo "CC=clang-14" >> "${GITHUB_ENV}"
-          echo "CXX=clang++-14" >> "${GITHUB_ENV}"
-          echo "LD=lld" >> "${GITHUB_ENV}"
+        # Compiler Setup
+        if [[ "${{ matrix.runner }}" = ubuntu* ]]; then
+          if [[ "${{ matrix.generator }}" = "GCC" ]]; then
+            echo "CC=gcc-10" >> "${GITHUB_ENV}"
+            echo "CXX=g++-10" >> "${GITHUB_ENV}"
+            echo "LD=ld" >> "${GITHUB_ENV}"
+          elif [[ "${{ matrix.generator }}" = "Clang" ]]; then
+            echo "CC=clang-14" >> "${GITHUB_ENV}"
+            echo "CXX=clang++-14" >> "${GITHUB_ENV}"
+            echo "LD=lld" >> "${GITHUB_ENV}"
+          fi
         fi
-
-    - name: 'Dependencies: MacOS'
-      if: startsWith( matrix.runner, 'macos' )
-      shell: bash
-      run: |
-        curl -kL https://cdn.xaymar.com/ci/Packages-1.2.10.dmg -f --retry 5 -o "Packages.dmg"
-        sudo hdiutil attach ./Packages.dmg
-        pushd /Volumes/Packages*
-        sudo installer -pkg ./Install\ Packages.pkg -target /
-        echo "CLANG_PATH=$(brew --prefix llvm@14)/bin/" >> "${GITHUB_ENV}"
 
     - name: "Dependency: Qt (Cache)"
       id: qt-cache
@@ -263,6 +277,9 @@ jobs:
           ${{ env.cmake_generator }} \
           ${{ env.cmake_generator_toolset }} \
           ${{ env.cmake_generator_platform }} \
+          -DCMAKE_C_COMPILER="${{ env.CC }}" \
+          -DCMAKE_CXX_COMPILER="${{ env.CXX }}" \
+          -DCMAKE_LINKER="${{ env.LD }}" \
           -DCMAKE_OSX_ARCHITECTURES="${{ matrix.CMAKE_OSX_ARCHITECTURES }}" \
           -DCMAKE_OSX_DEPLOYMENT_TARGET="${{ matrix.CMAKE_OSX_DEPLOYMENT_TARGET }}" \
           -DCMAKE_SYSTEM_VERSION="${{ matrix.CMAKE_SYSTEM_VERSION }}" \
@@ -293,6 +310,9 @@ jobs:
           ${{ env.cmake_generator }} \
           ${{ env.cmake_generator_toolset }} \
           ${{ env.cmake_generator_platform }} \
+          -DCMAKE_C_COMPILER="${{ env.CC }}" \
+          -DCMAKE_CXX_COMPILER="${{ env.CXX }}" \
+          -DCMAKE_LINKER="${{ env.LD }}" \
           -DCMAKE_OSX_ARCHITECTURES="${{ matrix.CMAKE_OSX_ARCHITECTURES }}" \
           -DCMAKE_OSX_DEPLOYMENT_TARGET="${{ matrix.CMAKE_OSX_DEPLOYMENT_TARGET }}" \
           -DCMAKE_SYSTEM_VERSION="${{ matrix.CMAKE_SYSTEM_VERSION }}" \
@@ -313,7 +333,6 @@ jobs:
         elif [[ "${{ matrix.runner }}" = macos* ]]; then
           cmake --build "build/debug" --config ${{ env.CMAKE_BUILD_TYPE }} --target install
         fi
-
     - name: "Configure & Build (Release)"
       shell: bash
       env:
@@ -325,6 +344,9 @@ jobs:
           ${{ env.cmake_generator }} \
           ${{ env.cmake_generator_toolset }} \
           ${{ env.cmake_generator_platform }} \
+          -DCMAKE_C_COMPILER="${{ env.CC }}" \
+          -DCMAKE_CXX_COMPILER="${{ env.CXX }}" \
+          -DCMAKE_LINKER="${{ env.LD }}" \
           -DCMAKE_OSX_ARCHITECTURES="${{ matrix.CMAKE_OSX_ARCHITECTURES }}" \
           -DCMAKE_OSX_DEPLOYMENT_TARGET="${{ matrix.CMAKE_OSX_DEPLOYMENT_TARGET }}" \
           -DCMAKE_SYSTEM_VERSION="${{ matrix.CMAKE_SYSTEM_VERSION }}" \
@@ -346,30 +368,19 @@ jobs:
           cmake --build "build/release" --config ${{ env.CMAKE_BUILD_TYPE }} --target install
         fi
 
-    - name: "Validate Formatting"
-      shell: bash
-      run: |
-        cmake --build "${{ github.workspace }}/build/debug" --config Debug --target StreamFX_clang-format
-        cmake --build "${{ github.workspace }}/build/release" --config RelWithDebInfo --target StreamFX_clang-format
-        git --no-pager diff --patch --minimal HEAD --
-        git update-index --refresh
-        git diff-index --quiet HEAD --
-
-    - name: "Package: Archives"
+    - name: "Packages"
       shell: bash
       run: |
         mkdir "${{ github.workspace }}/build/package"
         cmake --build "${{ github.workspace }}/build/debug" --config Debug --target PACKAGE_7Z
         cmake --build "${{ github.workspace }}/build/release" --config RelWithDebInfo --target PACKAGE_7Z
-
-    - name: "Package: Installer (Windows)"
+    - name: "Packages (Windows)"
       if: startsWith( matrix.runner, 'windows' )
       shell: cmd
       run: |
         "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 ".\build\debug\installer.iss"
         "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 ".\build\release\installer.iss"
-
-    - name: "Package: Installer (MacOS)"
+    - name: "Packages (MacOS)"
       if: startsWith( matrix.runner, 'macos' )
       shell: bash
       run: |
@@ -381,3 +392,21 @@ jobs:
       with:
         name: "${{ matrix.runner }}-${{ matrix.generator }}-qt${{ matrix.qt }}"
         path: "${{ github.workspace }}/build/package"
+
+    - name: "Validate clang-format"
+      shell: bash
+      run: |
+        cmake --build "${{ github.workspace }}/build/debug" --config Debug --target clang-format
+        cmake --build "${{ github.workspace }}/build/release" --config RelWithDebInfo --target clang-format
+        git --no-pager diff --patch --minimal HEAD --
+        git update-index --refresh
+        git diff-index --quiet HEAD --
+    - name: "Validate clang-tidy"
+      continue-on-error: true
+      shell: bash
+      run: |
+        cmake --build "${{ github.workspace }}/build/debug" --config Debug --target clang-tidy
+        cmake --build "${{ github.workspace }}/build/release" --config RelWithDebInfo --target clang-tidy
+        git --no-pager diff --patch --minimal HEAD --
+        git update-index --refresh
+        git diff-index --quiet HEAD --
