@@ -1,8 +1,8 @@
-Checks:          '-*,clang-diagnostic-*,clang-analyzer-*,cppcoreguidelines-*,portability-*,readability-*,performance-*'
-WarningsAsErrors: ''
+Checks:          '-*,clang-diagnostic-*,clang-analyzer-*,readability-*,performance-*,portability-*,-portability-simd-intrinsics'
+WarningsAsErrors: false
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false
-FormatStyle:     none
+FormatStyle:     file
 User:            Xaymar
 CheckOptions:
   - key:             cert-dcl16-c.NewSuffixes
