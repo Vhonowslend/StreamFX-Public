@@ -36,6 +36,7 @@ namespace streamfx::nvidia::ar {
 		std::vector<rect_t> _rects;
 		std::vector<float>  _rects_confidence;
 		bounds_t            _bboxes;
+		bool                _temporal;
 
 		bool _dirty;
 
@@ -53,6 +54,8 @@ namespace streamfx::nvidia::ar {
 		size_t tracking_limit();
 
 		void set_tracking_limit(size_t v);
+
+		bool is_temporal();
 
 		void process(std::shared_ptr<::streamfx::obs::gs::texture> in);
 

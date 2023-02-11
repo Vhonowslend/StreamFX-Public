@@ -107,7 +107,10 @@ void ar::facedetection::set_tracking_limit(size_t v)
 		throw cv::exception("BoundingBoxesConfidence", err);
 	}
 	if (auto err = set(P_NVAR_CONFIG "Temporal", (v == 1) ? 1u : 0u); err != cv::result::SUCCESS) {
-		throw cv::exception("Temporal", err);
+		D_LOG_WARNING("Temporal tracking not supported, error code: %lX", err);
+		_temporal = false;
+	} else {
+		_temporal = (v == 1);
 	}
 
 	// Mark effect dirty for reload.
@@ -237,4 +240,9 @@ void streamfx::nvidia::ar::facedetection::load()
 	}
 
 	_dirty = false;
+}
+
+bool ar::facedetection::is_temporal()
+{
+	return _temporal;
 }
