@@ -51,7 +51,7 @@ streamfx::nvidia::ar::facedetection::~facedetection()
 }
 
 streamfx::nvidia::ar::facedetection::facedetection()
-	: feature(FEATURE_FACE_DETECTION), _input(), _source(), _tmp(), _rects(), _rects_confidence(), _bboxes(),
+	: feature(FEATURE_FACE_BOX_DETECTION), _input(), _source(), _tmp(), _rects(), _rects_confidence(), _bboxes(),
 	  _dirty(true)
 {
 	D_LOG_DEBUG("Initializing... (Addr: 0x%" PRIuPTR ")", this);
