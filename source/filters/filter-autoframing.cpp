@@ -1042,6 +1042,9 @@ void streamfx::filter::autoframing::autoframing_instance::nvar_facedetection_upd
 	switch (_track_mode) {
 	case tracking_mode::SOLO:
 		_nvidia_fx->set_tracking_limit(1);
+		if (!_nvidia_fx->is_temporal()) {
+			_track_mode = tracking_mode::GROUP;
+		}
 		break;
 	case tracking_mode::GROUP:
 		_nvidia_fx->set_tracking_limit(_nvidia_fx->tracking_limit_range().second);
