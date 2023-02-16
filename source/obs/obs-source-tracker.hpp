@@ -1,6 +1,6 @@
 /*
  * Modern effects for a modern Streamer
- * Copyright (C) 2017-2018 Michael Fabian Dirks
+ * Copyright (C) 2017-2023 Michael Fabian Dirks
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 
 #pragma once
 #include "common.hpp"
+#include "obs/obs-weak-source.hpp"
 
 #include "warning-disable.hpp"
 #include <functional>
@@ -28,17 +29,8 @@
 
 namespace streamfx::obs {
 	class source_tracker {
-		std::map<std::string, std::shared_ptr<obs_weak_source_t>> _sources;
-		std::mutex                                                _mutex;
-
-		static void source_create_handler(void* ptr, calldata_t* data) noexcept;
-		static void source_destroy_handler(void* ptr, calldata_t* data) noexcept;
-		static void source_rename_handler(void* ptr, calldata_t* data) noexcept;
-
-		protected:
-		void insert_source(obs_source_t* source);
-		void remove_source(obs_source_t* source);
-		void rename_source(std::string_view old_name, std::string_view new_name, obs_source_t* source);
+		std::map<std::string, ::streamfx::obs::weak_source> _sources;
+		std::mutex                                          _mutex;
 
 		public:
 		// Callback function for enumerating sources.
@@ -46,14 +38,14 @@ namespace streamfx::obs {
 		// @param std::string Name of the Source
 		// @param obs_source_t* Source
 		// @return true to abort enumeration, false to keep going.
-		typedef std::function<bool(std::string, obs_source_t*)> enumerate_cb_t;
+		typedef std::function<bool(std::string, ::streamfx::obs::source)> enumerate_cb_t;
 
 		// Filter function for enumerating sources.
 		//
 		// @param std::string Name of the Source
 		// @param obs_source_t* Source
 		// @return true to skip, false to pass along.
-		typedef std::function<bool(std::string, obs_source_t*)> filter_cb_t;
+		typedef std::function<bool(std::string, ::streamfx::obs::source)> filter_cb_t;
 
 		protected:
 		source_tracker();
@@ -67,12 +59,22 @@ namespace streamfx::obs {
 		// @param filter_cb Filter function to narrow down results.
 		void enumerate(enumerate_cb_t enumerate_cb, filter_cb_t filter_cb = nullptr);
 
+		protected:
+		void insert_source(obs_source_t* source);
+		void remove_source(obs_source_t* source);
+		void rename_source(std::string_view old_name, std::string_view new_name, obs_source_t* source);
+
 		public:
-		static bool filter_sources(std::string name, obs_source_t* source);
-		static bool filter_audio_sources(std::string name, obs_source_t* source);
-		static bool filter_video_sources(std::string name, obs_source_t* source);
-		static bool filter_transitions(std::string name, obs_source_t* source);
-		static bool filter_scenes(std::string name, obs_source_t* source);
+		static bool filter_sources(std::string name, ::streamfx::obs::source source);
+		static bool filter_audio_sources(std::string name, ::streamfx::obs::source source);
+		static bool filter_video_sources(std::string name, ::streamfx::obs::source source);
+		static bool filter_transitions(std::string name, ::streamfx::obs::source source);
+		static bool filter_scenes(std::string name, ::streamfx::obs::source source);
+
+		private:
+		static void source_create_handler(void* ptr, calldata_t* data) noexcept;
+		static void source_destroy_handler(void* ptr, calldata_t* data) noexcept;
+		static void source_rename_handler(void* ptr, calldata_t* data) noexcept;
 
 		public: // Singleton
 		static std::shared_ptr<streamfx::obs::source_tracker> get();

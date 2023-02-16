@@ -1,5 +1,5 @@
 // Modern effects for a modern Streamer
-// Copyright (C) 2019 Michael Fabian Dirks
+// Copyright (C) 2019-2023 Michael Fabian Dirks
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -215,7 +215,7 @@ void streamfx::gfx::shader::texture_parameter::properties(obs_properties_t* prop
 											 OBS_COMBO_FORMAT_STRING);
 			obs_property_list_add_string(p, "", "");
 			obs::source_tracker::get()->enumerate(
-				[&p](std::string name, obs_source_t*) {
+				[&p](std::string name, ::streamfx::obs::source) {
 					std::stringstream sstr;
 					sstr << name << " (" << D_TRANSLATE(S_SOURCETYPE_SOURCE) << ")";
 					obs_property_list_add_string(p, sstr.str().c_str(), name.c_str());
@@ -223,7 +223,7 @@ void streamfx::gfx::shader::texture_parameter::properties(obs_properties_t* prop
 				},
 				obs::source_tracker::filter_video_sources);
 			obs::source_tracker::get()->enumerate(
-				[&p](std::string name, obs_source_t*) {
+				[&p](std::string name, ::streamfx::obs::source) {
 					std::stringstream sstr;
 					sstr << name << " (" << D_TRANSLATE(S_SOURCETYPE_SCENE) << ")";
 					obs_property_list_add_string(p, sstr.str().c_str(), name.c_str());
