@@ -1,6 +1,6 @@
 /*
  * Modern effects for a modern Streamer
- * Copyright (C) 2017-2018 Michael Fabian Dirks
+ * Copyright (C) 2017-2023 Michael Fabian Dirks
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -863,13 +863,13 @@ obs_properties_t* blur_factory::get_properties2(blur_instance* data)
 									OBS_COMBO_FORMAT_STRING);
 		obs_property_list_add_string(p, "", "");
 		obs::source_tracker::get()->enumerate(
-			[&p](std::string name, obs_source_t*) {
+			[&p](std::string name, ::streamfx::obs::source) {
 				obs_property_list_add_string(p, std::string(name + " (Source)").c_str(), name.c_str());
 				return false;
 			},
 			obs::source_tracker::filter_video_sources);
 		obs::source_tracker::get()->enumerate(
-			[&p](std::string name, obs_source_t*) {
+			[&p](std::string name, ::streamfx::obs::source) {
 				obs_property_list_add_string(p, std::string(name + " (Scene)").c_str(), name.c_str());
 				return false;
 			},

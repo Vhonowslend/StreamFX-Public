@@ -1,6 +1,6 @@
 /*
  * Modern effects for a modern Streamer
- * Copyright (C) 2019 Michael Fabian Dirks
+ * Copyright (C) 2019-2023 Michael Fabian Dirks
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -754,7 +754,7 @@ obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* d
 									OBS_COMBO_FORMAT_STRING);
 		obs_property_list_add_string(p, "", "");
 		obs::source_tracker::get()->enumerate(
-			[&p](std::string name, obs_source_t*) {
+			[&p](std::string name, ::streamfx::obs::source) {
 				std::stringstream sstr;
 				sstr << name << " (" << D_TRANSLATE(S_SOURCETYPE_SOURCE) << ")";
 				obs_property_list_add_string(p, sstr.str().c_str(), name.c_str());
@@ -762,7 +762,7 @@ obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* d
 			},
 			obs::source_tracker::filter_video_sources);
 		obs::source_tracker::get()->enumerate(
-			[&p](std::string name, obs_source_t*) {
+			[&p](std::string name, ::streamfx::obs::source) {
 				std::stringstream sstr;
 				sstr << name << " (" << D_TRANSLATE(S_SOURCETYPE_SCENE) << ")";
 				obs_property_list_add_string(p, sstr.str().c_str(), name.c_str());
