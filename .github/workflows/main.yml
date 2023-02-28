@@ -407,12 +407,3 @@ jobs:
         git --no-pager diff --patch --minimal HEAD --
         git update-index --refresh
         git diff-index --quiet HEAD --
-    - name: "Validate clang-tidy"
-      continue-on-error: true
-      shell: bash
-      run: |
-        cmake --build "${{ github.workspace }}/build/debug" --config Debug --target clang-tidy
-        cmake --build "${{ github.workspace }}/build/release" --config RelWithDebInfo --target clang-tidy
-        git --no-pager diff --patch --minimal HEAD --
-        git update-index --refresh
-        git diff-index --quiet HEAD --
