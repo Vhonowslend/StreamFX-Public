@@ -11,7 +11,7 @@ on:
       - '*'
 
 concurrency:
-  group: build-${{ github.ref }}
+  group: build-${{ github.ref_name }}
   cancel-in-progress: true
 
 env:
@@ -304,6 +304,16 @@ jobs:
           --config Release \
           --component obs_libraries
 
+    - name: "Configure (Cache)"
+      if: ${{ ! startsWith( github.ref, 'refs/tags/' ) }}
+      id: streamfx-cache
+      uses: actions/cache@v3
+      with:
+        path: "${{ github.workspace }}/build/ci"
+        key: "${{ matrix.runner }}-${{ matrix.generator }}-${{ github.ref_name }}-obs${{ env.obs_version }}-obsdeps${{ env.obs_deps_version }}-qt${{ matrix.qt }}-${{ env.CACHE_VERSION }}"
+        restore-keys: |
+          "${{ matrix.runner }}-${{ matrix.generator }}-${{ github.ref_name }}-obs${{ env.obs_version }}-obsdeps${{ env.obs_deps_version }}-qt${{ matrix.qt }}-${{ env.CACHE_VERSION }}"
+          "${{ matrix.runner }}-${{ matrix.generator }}-main-obs${{ env.obs_version }}-obsdeps${{ env.obs_deps_version }}-qt${{ matrix.qt }}-${{ env.CACHE_VERSION }}"
     - name: "Configure"
       continue-on-error: true
       shell: bash
