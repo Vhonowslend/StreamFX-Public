@@ -104,8 +104,8 @@ a:focus {
      </property>
      <property name="font">
       <font>
+       <family>MS Shell Dlg 2</family>
        <pointsize>12</pointsize>
-       <kerning>true</kerning>
       </font>
      </property>
      <property name="text">
@@ -142,7 +142,7 @@ a:focus {
         <x>0</x>
         <y>0</y>
         <width>492</width>
-        <height>280</height>
+        <height>292</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout">
