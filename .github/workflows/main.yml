@@ -30,12 +30,18 @@ jobs:
             generator: GCC
           - runner: windows-2022
             generator: Clang
+          - runner: windows-2022
+            qt: 5
           - runner: macos-12
             generator: MSVC
           - runner: macos-12
             generator: GCC
+          - runner: macos-12
+            qt: 5
           - runner: ubuntu-22.04
             generator: MSVC
+          - runner: ubuntu-22.04
+            qt: 5
           - runner: ubuntu-20.04
             generator: MSVC
           - runner: ubuntu-20.04
@@ -368,19 +374,19 @@ jobs:
           cmake --build "build/release" --config ${{ env.CMAKE_BUILD_TYPE }} --target install
         fi
 
-    - name: "Packages"
+    - name: "Packaging"
       shell: bash
       run: |
         mkdir "${{ github.workspace }}/build/package"
         cmake --build "${{ github.workspace }}/build/debug" --config Debug --target PACKAGE_7Z
         cmake --build "${{ github.workspace }}/build/release" --config RelWithDebInfo --target PACKAGE_7Z
-    - name: "Packages (Windows)"
+    - name: "Packaging (Windows)"
       if: startsWith( matrix.runner, 'windows' )
       shell: cmd
       run: |
         "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 ".\build\debug\installer.iss"
         "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 ".\build\release\installer.iss"
-    - name: "Packages (MacOS)"
+    - name: "Packaging (MacOS)"
       if: startsWith( matrix.runner, 'macos' )
       shell: bash
       run: |
