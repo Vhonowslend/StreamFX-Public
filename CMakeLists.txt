@@ -1092,8 +1092,6 @@ list(APPEND PROJECT_PRIVATE_SOURCE
 	# obs_source_info_t, obs_source_t, obs_weak_source_t
 	"source/obs/obs-source-factory.hpp"
 	"source/obs/obs-source-factory.cpp"
-	"source/obs/obs-source-info.hpp"
-	"source/obs/obs-source-info.cpp"
 	"source/obs/obs-source.hpp"
 	"source/obs/obs-source.cpp"
 	"source/obs/obs-source-active-child.hpp"

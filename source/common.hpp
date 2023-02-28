@@ -54,7 +54,6 @@
 #include "version.hpp"
 #include "util/util-bitmask.hpp"
 #include "util/util-library.hpp"
-#include "util/util-math.hpp"
 #include "util/util-profiler.hpp"
 #include "util/util-threadpool.hpp"
 #include "util/utility.hpp"
