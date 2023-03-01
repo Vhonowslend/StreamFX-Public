@@ -1,14 +1,11 @@
 ![StreamFX Logo](https://raw.githubusercontent.com/Xaymar/obs-StreamFX/master/media/logo.png)
-# StreamFX 
-StreamFX is a plugin to libOBS (OBS Studio, StreamElements OBS Live) that adds new sources, filters and transitions to give you the ability to drastically improve your stream and recording setup past what was possible in OBS Studio until now. Whether it is blurring out a region, moving something in 3D, or just writing your own shaders as a new transition, source or filter - StreamFX has it all.
+# StreamFX
+Bring your setup to the modern day with StreamFX! With several super fast filters, new ways to build your scenes, and new encoders you can now take your stream even further. Create cool new scenes with 3D effects, make something glow or have a shadow, or blur out content - the choice is yours!
 
-[![CI](https://github.com/Xaymar/obs-StreamFX/workflows/CI/badge.svg)](https://github.com/Xaymar/obs-StreamFX/actions) [![Crowdin](https://badges.crowdin.net/obs-stream-effects/localized.svg)](https://crowdin.com/project/obs-stream-effects)
+[![CI](https://github.com/Xaymar/obs-StreamFX/actions/workflows/main.yml/badge.svg)](https://github.com/Xaymar/obs-StreamFX/actions) [![Crowdin](https://badges.crowdin.net/obs-stream-effects/localized.svg)](https://crowdin.com/project/obs-stream-effects)
 
-## Support the StreamFX project!
-Like any other free project, StreamFX relies on donations to be continuously developed and stay free. If StreamFX helped you, consider helping the StreamFX project by making a one time donation via [PayPal](https://www.paypal.me/xaymar), or a continuous donation via [Patreon](https://www.patreon.com/Xaymar) or [Github Sponsors](https://github.com/sponsors/Xaymar)!
-
-## Contributing
-There's two ways you can directly contribute to the project. One is by [submitting translations into your language on Crowdin](https://crowdin.com/project/obs-stream-effects), and the other is [by contributing code to the project](https://github.com/Xaymar/obs-StreamFX/blob/master/CONTRIBUTING.md).
+# Support the development of StreamFX!
+[<img align="right" alt="Patreon" src="https://user-images.githubusercontent.com/437395/106462708-bd602980-6496-11eb-8f35-038577cf8fd7.jpg" height="70px"/>](https://patreon.com/join/xaymar) Maintaining a project like StreamFX requires time and money, of which both are in short supply. If you use any feature of StreamFX, please consider supporting StreamFX via [Patreon](https://patreon.com/xaymar). Even as little as 1€ per month matters a lot, plus you get a number of benefits!
 
 ## Further Links
 * [Wiki](https://github.com/Xaymar/obs-StreamFX/wiki)
