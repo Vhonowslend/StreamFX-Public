@@ -418,9 +418,9 @@ async function addCopyrights(path) {
 
     let pathStat = await FSPROMISES.stat(path);
     if (pathStat.isDirectory()) {
-        await addCopyrights(PATH.resolve(path));
+        await addCopyrights(path);
     } else {
-        await addCopyright(PATH.resolve(path));
+        await addCopyright(path);
     }
     console.log("Done");
 })();
