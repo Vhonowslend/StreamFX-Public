@@ -438,7 +438,7 @@ macro(is_feature_enabled FEATURE OUTPUT)
 endmacro()
 
 macro(set_feature_disabled FEATURE DISABLED)
-	set(${PREFIX}DISABLE_${FEATURE} ${DISABLED} CACHE INTERNAL "" FORCE)
+	set(${PREFIX}DISABLE_${FEATURE} ${DISABLED})
 endmacro()
 
 # Features
