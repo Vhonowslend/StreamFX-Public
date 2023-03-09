@@ -110,8 +110,13 @@ void streamfx::ui::handler::on_obs_loaded()
 	_translator = new streamfx::ui::translator(this);
 	QCoreApplication::installTranslator(_translator);
 
-	// Pre-load CEF.
-	_obs_browser_cef = streamfx::ui::obs_browser_cef::instance();
+	// Pre-load CEF if available.
+	if (streamfx::ui::obs_browser_widget::is_available()) {
+		try {
+			_obs_browser_cef = streamfx::ui::obs_browser_cef::instance();
+		} catch (...) {
+		}
+	}
 
 	// Create the 'About StreamFX' dialog.
 	_about_dialog = new streamfx::ui::about();
