@@ -9,6 +9,7 @@
 #include "configuration.hpp"
 #include "obs/obs-tools.hpp"
 #include "plugin.hpp"
+#include "ui/ui-obs-browser-widget.hpp"
 
 #include "warning-disable.hpp"
 #include <string_view>
@@ -36,6 +37,8 @@ constexpr std::string_view _url_website = "https://streamfx.xaymar.com";
 constexpr std::string_view _url_discord = "https://s.xaymar.com/streamfx-dc";
 constexpr std::string_view _url_twitter = "https://s.xaymar.com/streamfx-tw";
 constexpr std::string_view _url_youtube = "https://s.xaymar.com/streamfx-yt";
+
+static std::shared_ptr<streamfx::ui::obs_browser_cef> _obs_browser_cef;
 
 inline void qt_init_resource()
 {
@@ -106,6 +109,9 @@ void streamfx::ui::handler::on_obs_loaded()
 	// Add our own translation helper to the Qt Application.
 	_translator = new streamfx::ui::translator(this);
 	QCoreApplication::installTranslator(_translator);
+
+	// Pre-load CEF.
+	_obs_browser_cef = streamfx::ui::obs_browser_cef::instance();
 
 	// Create the 'About StreamFX' dialog.
 	_about_dialog = new streamfx::ui::about();
@@ -201,6 +207,9 @@ void streamfx::ui::handler::on_obs_loaded()
 
 void streamfx::ui::handler::on_obs_exit()
 {
+	// Release CEF
+	_obs_browser_cef.reset();
+
 	// Remove translator.
 	QCoreApplication::removeTranslator(_translator);
 

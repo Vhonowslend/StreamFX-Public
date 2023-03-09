@@ -1494,6 +1494,8 @@ if(T_CHECK)
 		"source/ui/ui-about.cpp"
 		"source/ui/ui-about-entry.hpp"
 		"source/ui/ui-about-entry.cpp"
+		"source/ui/ui-obs-browser-widget.hpp"
+		"source/ui/ui-obs-browser-widget.cpp"
 	)
 	list(APPEND PROJECT_INCLUDE_DIRS
 		"source/ui"
