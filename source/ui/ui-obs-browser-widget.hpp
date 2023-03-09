@@ -45,5 +45,8 @@ namespace streamfx::ui {
 		virtual ~obs_browser_widget();
 
 		void set_url(QUrl url);
+
+		public:
+		static bool is_available();
 	};
 } // namespace streamfx::ui
