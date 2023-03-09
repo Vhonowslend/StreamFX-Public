@@ -91,6 +91,11 @@ streamfx::ui::obs_browser_widget::obs_browser_widget(QUrl url, QWidget* parent) 
 
 streamfx::ui::obs_browser_widget::~obs_browser_widget() {}
 
+QWidget* streamfx::ui::obs_browser_widget::cefwidget()
+{
+	return _widget;
+}
+
 void streamfx::ui::obs_browser_widget::set_url(QUrl url)
 {
 	dynamic_cast<QCefWidget*>(_widget)->setURL(url.toString().toStdString());
