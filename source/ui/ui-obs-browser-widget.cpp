@@ -6,9 +6,13 @@
 #include "plugin.hpp"
 
 #include "warning-disable.hpp"
-#include <mutex>
-
 #include <../plugins/obs-browser/panel/browser-panel.hpp>
+
+#include <mutex>
+#ifdef D_PLATFORM_LINUX
+#include <errno.h>
+#include <stdlib.h>
+#endif
 #include "warning-enable.hpp"
 
 streamfx::ui::obs_browser_cef::obs_browser_cef()
@@ -17,13 +21,13 @@ streamfx::ui::obs_browser_cef::obs_browser_cef()
 	_module = util::library::load(obs_get_module("obs-browser"));
 	auto fn = reinterpret_cast<QCef* (*)(void)>(_module->load_symbol("obs_browser_create_qcef"));
 	if (!fn) {
-		throw std::runtime_error("Unable to create Browser Panel.");
+		throw std::runtime_error("Failed to load obs-browser module.");
 	}
 
 	// Create a QCef instance and initialize it.
 	_cef = fn();
 	if (!_cef) {
-		throw std::runtime_error("Unable to initialize for CEF-based Browser Panel.");
+		throw std::runtime_error("Failed to create or get QCef instance.");
 	}
 	reinterpret_cast<QCef*>(_cef)->init_browser();
 	reinterpret_cast<QCef*>(_cef)->wait_for_browser_init();
@@ -90,4 +94,29 @@ streamfx::ui::obs_browser_widget::~obs_browser_widget() {}
 void streamfx::ui::obs_browser_widget::set_url(QUrl url)
 {
 	dynamic_cast<QCefWidget*>(_widget)->setURL(url.toString().toStdString());
+}
+
+bool streamfx::ui::obs_browser_widget::is_available()
+{
+#ifdef D_PLATFORM_LINUX
+	const char env_key[] = "XDG_SESSION_TYPE";
+	const char wayland[] = "wayland";
+#ifdef __STDC_LIB_EXT1__
+	char   env_value[2048];
+	size_t env_value_len = sizeof(env_value);
+	if (getenv_s(&env_value_len, env_value, sizeof(env_key), env_key) == 0) {
+		if (sizeof(wayland) == env_value_len) {
+			if (strncmp(wayland, env_value, sizeof(wayland)) == 0) {
+				return false;
+			}
+		}
+	}
+#else
+	const char* env_value = getenv(env_key);
+	if (strncmp(env_value, wayland, sizeof(wayland)) == 0) {
+		return false;
+	}
+#endif
+#endif
+	return true;
 }
