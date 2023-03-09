@@ -46,6 +46,8 @@ namespace streamfx::ui {
 
 		void set_url(QUrl url);
 
+		QWidget* cefwidget();
+
 		public:
 		static bool is_available();
 	};
