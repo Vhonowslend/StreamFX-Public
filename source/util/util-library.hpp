@@ -7,20 +7,27 @@
 #include <filesystem>
 #include <memory>
 #include <string_view>
+
+#include <obs.h>
 #include "warning-enable.hpp"
 
 namespace streamfx::util {
 	class library {
 		void* _library;
+		bool  _owner;
 
 		public:
 		library(std::filesystem::path file);
+		library(obs_module_t* library);
 		~library();
 
 		void* load_symbol(std::string_view name);
 
+		public:
 		static std::shared_ptr<::streamfx::util::library> load(std::filesystem::path file);
 
 		static std::shared_ptr<::streamfx::util::library> load(std::string_view name);
+
+		static std::shared_ptr<::streamfx::util::library> load(obs_module_t* instance);
 	};
 } // namespace streamfx::util
