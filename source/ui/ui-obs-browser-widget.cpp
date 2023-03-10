@@ -9,6 +9,7 @@
 #include "../third-party/obs-studio/plugins/obs-browser/panel/browser-panel.hpp"
 
 #include <mutex>
+#include <stdexcept>
 #ifdef D_PLATFORM_LINUX
 #include <errno.h>
 #include <stdlib.h>
@@ -111,12 +112,12 @@ void streamfx::ui::obs_browser_widget::set_url(QUrl url)
 
 bool streamfx::ui::obs_browser_widget::is_available()
 {
-#ifdef D_PLATFORM_LINUX
+	#ifdef D_PLATFORM_LINUX
 	const char env_key[] = "XDG_SESSION_TYPE";
 	const char wayland[] = "wayland";
 #ifdef __STDC_LIB_EXT1__
-	char   env_value[2048];
-	size_t env_value_len = sizeof(env_value);
+	char       env_value[2048];
+	size_t     env_value_len = sizeof(env_value);
 	if (getenv_s(&env_value_len, env_value, sizeof(env_key), env_key) == 0) {
 		if (sizeof(wayland) == env_value_len) {
 			if (strncmp(wayland, env_value, sizeof(wayland)) == 0) {
@@ -124,12 +125,12 @@ bool streamfx::ui::obs_browser_widget::is_available()
 			}
 		}
 	}
-#else
+	#else
 	const char* env_value = getenv(env_key);
 	if (strncmp(env_value, wayland, sizeof(wayland)) == 0) {
 		return false;
 	}
-#endif
-#endif
+	#endif
+	#endif
 	return true;
 }
