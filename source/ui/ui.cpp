@@ -10,6 +10,7 @@
 #include "obs/obs-tools.hpp"
 #include "plugin.hpp"
 #include "ui/ui-obs-browser-widget.hpp"
+#include "ui/ui-setup.hpp"
 
 #include "warning-disable.hpp"
 #include <string_view>
@@ -120,6 +121,9 @@ void streamfx::ui::handler::on_obs_loaded()
 
 	// Create the 'About StreamFX' dialog.
 	_about_dialog = new streamfx::ui::about();
+
+	auto ptr = new streamfx::ui::setup(reinterpret_cast<QWidget*>(obs_frontend_get_main_window()));
+	ptr->show();
 
 	{ // Create and build the StreamFX menu
 		_menu = new QMenu(reinterpret_cast<QWidget*>(obs_frontend_get_main_window()));
