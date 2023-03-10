@@ -13,6 +13,9 @@
 #include <errno.h>
 #include <stdlib.h>
 #endif
+
+#include <QGridLayout>
+#include <QLabel>
 #include "warning-enable.hpp"
 
 streamfx::ui::obs_browser_cef::obs_browser_cef()
@@ -70,23 +73,28 @@ std::shared_ptr<streamfx::ui::obs_browser_cef> streamfx::ui::obs_browser_cef::in
 
 streamfx::ui::obs_browser_widget::obs_browser_widget(QUrl url, QWidget* parent) : QWidget(parent)
 {
+	// Create Layout
+	auto layout = new QGridLayout(this);
+	layout->setContentsMargins(0, 0, 0, 0);
+	layout->setSpacing(0);
+
+	// Create CEF Widget
 	_cef    = obs_browser_cef::instance();
 	_widget = reinterpret_cast<QCef*>(_cef->cef())
 				  ->create_widget(this, url.toString().toStdString(),
 								  reinterpret_cast<QCefCookieManager*>(_cef->cookie_manager()));
 	if (!_widget) {
-		throw std::runtime_error("Failed to create QCefWidget.");
+		throw std::runtime_error("Failed to create CEF Widget.");
 	}
-
-	// Add a proper layout.
-	_layout = new QHBoxLayout();
-	_layout->setContentsMargins(0, 0, 0, 0);
-	_layout->setSpacing(0);
-	this->setLayout(_layout);
-	_layout->addWidget(_widget);
-
-	// Disable all popups.
 	dynamic_cast<QCefWidget*>(_widget)->allowAllPopups(false);
+	_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+	layout->addWidget(_widget, 0, 0);
+
+	// This fixes a strange issue where Qt just does not update the size of the QCefWidget.
+	// I do not know why this is, all I know is that this is absolutely necessary for QCefWidget.
+	auto test = new QWidget(this);
+	test->setFixedSize(0, 0);
+	layout->addWidget(test, 1, 0);
 }
 
 streamfx::ui::obs_browser_widget::~obs_browser_widget() {}
