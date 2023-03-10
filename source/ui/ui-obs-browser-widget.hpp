@@ -6,8 +6,6 @@
 #include "util/util-library.hpp"
 
 #include "warning-disable.hpp"
-#include <QHBoxLayout>
-#include <QSharedPointer>
 #include <QUrl>
 #include <QWidget>
 #include "warning-enable.hpp"
@@ -38,7 +36,6 @@ namespace streamfx::ui {
 
 		std::shared_ptr<obs_browser_cef> _cef;
 		QWidget*                         _widget;
-		QHBoxLayout*                     _layout;
 
 		public:
 		obs_browser_widget(QUrl url, QWidget* parent = nullptr);
