@@ -6,7 +6,7 @@
 #include "plugin.hpp"
 
 #include "warning-disable.hpp"
-#include <../plugins/obs-browser/panel/browser-panel.hpp>
+#include "../third-party/obs-studio/plugins/obs-browser/panel/browser-panel.hpp"
 
 #include <mutex>
 #ifdef D_PLATFORM_LINUX
