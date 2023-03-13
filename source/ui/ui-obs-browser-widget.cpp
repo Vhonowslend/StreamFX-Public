@@ -8,8 +8,6 @@
 #include <QGridLayout>
 #include <QLabel>
 
-#include "../third-party/obs-studio/plugins/obs-browser/panel/browser-panel.hpp"
-
 #include <mutex>
 #include <stdexcept>
 #ifdef D_PLATFORM_LINUX
@@ -24,7 +22,7 @@ streamfx::ui::obs_browser_cef::obs_browser_cef()
 {
 	// Load the "obs-browser" module.
 	_module = util::library::load(obs_get_module("obs-browser"));
-	auto fn = reinterpret_cast<QCef* (*)(void)>(_module->load_symbol("obs_browser_create_qcef"));
+	auto fn = reinterpret_cast<streamfx::obs::QCef* (*)(void)>(_module->load_symbol("obs_browser_create_qcef"));
 	if (!fn) {
 		throw std::runtime_error("Failed to load obs-browser module.");
 	}
@@ -34,26 +32,25 @@ streamfx::ui::obs_browser_cef::obs_browser_cef()
 	if (!_cef) {
 		throw std::runtime_error("Failed to create or get QCef instance.");
 	}
-	reinterpret_cast<QCef*>(_cef)->init_browser();
-	reinterpret_cast<QCef*>(_cef)->wait_for_browser_init();
+	_cef->init_browser();
+	_cef->wait_for_browser_init();
 
 	// Create a generic Cookie manager for widgets.
-	_cookie =
-		reinterpret_cast<QCef*>(_cef)->create_cookie_manager(streamfx::config_file_path("cookies").u8string(), false);
+	_cookie = _cef->create_cookie_manager(streamfx::config_file_path("cookies").u8string(), false);
 }
 
 streamfx::ui::obs_browser_cef::~obs_browser_cef()
 {
-	delete reinterpret_cast<QCefCookieManager*>(_cookie);
-	delete reinterpret_cast<QCef*>(_cef);
+	delete _cookie;
+	delete _cef;
 }
 
-void* streamfx::ui::obs_browser_cef::cef()
+streamfx::obs::QCef* streamfx::ui::obs_browser_cef::cef()
 {
 	return _cef;
 }
 
-void* streamfx::ui::obs_browser_cef::cookie_manager()
+streamfx::obs::QCefCookieManager* streamfx::ui::obs_browser_cef::cookie_manager()
 {
 	return _cookie;
 }
@@ -82,13 +79,11 @@ streamfx::ui::obs_browser_widget::obs_browser_widget(QUrl url, QWidget* parent) 
 
 	// Create CEF Widget
 	_cef    = obs_browser_cef::instance();
-	_widget = reinterpret_cast<QCef*>(_cef->cef())
-				  ->create_widget(this, url.toString().toStdString(),
-								  reinterpret_cast<QCefCookieManager*>(_cef->cookie_manager()));
+	_widget = _cef->cef()->create_widget(this, url.toString().toStdString(), _cef->cookie_manager());
 	if (!_widget) {
 		throw std::runtime_error("Failed to create CEF Widget.");
 	}
-	dynamic_cast<QCefWidget*>(_widget)->allowAllPopups(false);
+	_widget->allowAllPopups(false);
 	_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	layout->addWidget(_widget, 0, 0);
 
@@ -101,24 +96,24 @@ streamfx::ui::obs_browser_widget::obs_browser_widget(QUrl url, QWidget* parent) 
 
 streamfx::ui::obs_browser_widget::~obs_browser_widget() {}
 
-QWidget* streamfx::ui::obs_browser_widget::cefwidget()
+streamfx::obs::QCefWidget* streamfx::ui::obs_browser_widget::cefwidget()
 {
 	return _widget;
 }
 
 void streamfx::ui::obs_browser_widget::set_url(QUrl url)
 {
-	dynamic_cast<QCefWidget*>(_widget)->setURL(url.toString().toStdString());
+	_widget->setURL(url.toString().toStdString());
 }
 
 bool streamfx::ui::obs_browser_widget::is_available()
 {
-	#ifdef D_PLATFORM_LINUX
+#ifdef D_PLATFORM_LINUX
 	const char env_key[] = "XDG_SESSION_TYPE";
 	const char wayland[] = "wayland";
 #ifdef __STDC_LIB_EXT1__
-	char       env_value[2048];
-	size_t     env_value_len = sizeof(env_value);
+	char   env_value[2048];
+	size_t env_value_len = sizeof(env_value);
 	if (getenv_s(&env_value_len, env_value, sizeof(env_key), env_key) == 0) {
 		if (sizeof(wayland) == env_value_len) {
 			if (strncmp(wayland, env_value, sizeof(wayland)) == 0) {
@@ -126,12 +121,12 @@ bool streamfx::ui::obs_browser_widget::is_available()
 			}
 		}
 	}
-	#else
+#else
 	const char* env_value = getenv(env_key);
 	if (strncmp(env_value, wayland, sizeof(wayland)) == 0) {
 		return false;
 	}
-	#endif
-	#endif
+#endif
+#endif
 	return true;
 }
