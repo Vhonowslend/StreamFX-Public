@@ -1680,9 +1680,14 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 # Set C++ Standard and Extensions
 set_target_properties(${PROJECT_NAME} PROPERTIES
+	C_STANDARD 17
+	C_STANDARD_REQUIRED ON
 	CXX_STANDARD 17
 	CXX_STANDARD_REQUIRED ON
 	CXX_EXTENSIONS OFF
+)
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+	__STDC_WANT_LIB_EXT1__=1
 )
 
 # Link-Time/Interprocedural Optimization
