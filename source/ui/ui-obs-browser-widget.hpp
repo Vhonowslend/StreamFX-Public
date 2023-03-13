@@ -10,14 +10,15 @@
 #include <memory>
 #include "warning-enable.hpp"
 
+#include "obs/browser/obs-browser-panel.hpp"
 #include "util/util-library.hpp"
 
 namespace streamfx::ui {
 	class obs_browser_cef {
 		std::shared_ptr<::streamfx::util::library> _module;
 
-		void* _cef;
-		void* _cookie;
+		streamfx::obs::QCef*              _cef;
+		streamfx::obs::QCefCookieManager* _cookie;
 
 		private:
 		obs_browser_cef();
@@ -25,9 +26,9 @@ namespace streamfx::ui {
 		public:
 		~obs_browser_cef();
 
-		void* cef();
+		streamfx::obs::QCef* cef();
 
-		void* cookie_manager();
+		streamfx::obs::QCefCookieManager* cookie_manager();
 
 		public: // Singleton
 		static std::shared_ptr<obs_browser_cef> instance();
@@ -38,7 +39,7 @@ namespace streamfx::ui {
 
 		private:
 		std::shared_ptr<obs_browser_cef> _cef;
-		QWidget*                         _widget;
+		streamfx::obs::QCefWidget*       _widget;
 
 		public:
 		obs_browser_widget(QUrl url, QWidget* parent = nullptr);
@@ -46,7 +47,7 @@ namespace streamfx::ui {
 
 		void set_url(QUrl url);
 
-		QWidget* cefwidget();
+		streamfx::obs::QCefWidget* cefwidget();
 
 		public:
 		static bool is_available();
