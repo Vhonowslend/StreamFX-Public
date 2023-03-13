@@ -1003,6 +1003,9 @@ endif()
 
 if(REQUIRE_OBS_FRONTEND_API AND obs-frontend-api_FOUND)
 	list(APPEND PROJECT_LIBRARIES OBS::obs-frontend-api)
+	list(APPEND PROJECT_UI_SOURCE
+		"source/obs/browser/obs-browser-panel.hpp"
+	)
 endif()
 
 if(REQUIRE_QT)
