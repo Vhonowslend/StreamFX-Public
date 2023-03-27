@@ -34,83 +34,96 @@ streamfx::ui::setup::setup(QWidget* parent) : QDialog(parent)
 	families.append(QString::fromUtf8("Malgun Gothic"));
 
 	{ // Set up header.
-		auto header_layout = new QVBoxLayout();
-		header_layout->setContentsMargins(0, 0, 0, 0);
-		header_layout->setSpacing(10);
+		auto container_layout = new QHBoxLayout();
+		container_layout->setContentsMargins(0, 0, 0, 0);
+		container_layout->setSpacing(0);
 
+		container_layout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
 		{
-			_header_logo = new QLabel(this);
-			_header_logo->setObjectName(QString::fromUtf8("logo"));
-			QSizePolicy size_policy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-			size_policy.setHorizontalStretch(0);
-			size_policy.setVerticalStretch(0);
-			size_policy.setHeightForWidth(_header_logo->sizePolicy().hasHeightForWidth());
-			_header_logo->setSizePolicy(size_policy);
+			auto header_layout = new QVBoxLayout();
+			header_layout->setContentsMargins(0, 0, 0, 0);
+			header_layout->setSpacing(10);
+
 			{
-				QPixmap logo{QString::fromUtf8(":/logos/streamfx_logo")};
-				_header_logo->setPixmap(logo);
-				_header_logo->setMinimumSize(logo.size());
-				_header_logo->setMaximumSize(logo.size());
+				_header_logo = new QLabel(this);
+				_header_logo->setObjectName(QString::fromUtf8("logo"));
+				QSizePolicy size_policy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+				size_policy.setHorizontalStretch(0);
+				size_policy.setVerticalStretch(0);
+				size_policy.setHeightForWidth(_header_logo->sizePolicy().hasHeightForWidth());
+				_header_logo->setSizePolicy(size_policy);
+				{
+					QPixmap logo{QString::fromUtf8(":/logos/streamfx_logo")};
+					_header_logo->setPixmap(logo);
+					_header_logo->setMinimumSize(logo.size());
+					_header_logo->setMaximumSize(logo.size());
+				}
+				_header_logo->setScaledContents(false);
+				header_layout->addWidget(_header_logo, 0, Qt::AlignCenter);
 			}
-			_header_logo->setScaledContents(false);
-			header_layout->addWidget(_header_logo, 0, Qt::AlignCenter);
+
+			{
+				auto links_layout = new QHBoxLayout();
+				links_layout->setContentsMargins(0, 0, 0, 0);
+				links_layout->setSpacing(10);
+				header_layout->addLayout(links_layout);
+
+				QFont font;
+				font.setFamilies(families);
+				font.setPointSize(12);
+
+				QSizePolicy size_policy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+				size_policy.setHorizontalStretch(0);
+				size_policy.setVerticalStretch(0);
+
+				{
+					_header_website = new QLabel(this);
+					_header_website->setObjectName(QString::fromUtf8("website"));
+					size_policy.setHeightForWidth(_header_website->sizePolicy().hasHeightForWidth());
+					_header_website->setSizePolicy(size_policy);
+					_header_website->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+					_header_website->setWordWrap(false);
+					_header_website->setOpenExternalLinks(true);
+					_header_website->setTextInteractionFlags(Qt::LinksAccessibleByKeyboard
+															 | Qt::LinksAccessibleByMouse);
+					_header_website->setFont(font);
+					links_layout->addWidget(_header_website);
+				}
+
+				{
+					_header_patreon = new QLabel(this);
+					_header_patreon->setObjectName(QString::fromUtf8("patreon"));
+					size_policy.setHeightForWidth(_header_patreon->sizePolicy().hasHeightForWidth());
+					_header_patreon->setSizePolicy(size_policy);
+					_header_patreon->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+					_header_patreon->setWordWrap(false);
+					_header_patreon->setOpenExternalLinks(true);
+					_header_patreon->setTextInteractionFlags(Qt::LinksAccessibleByKeyboard
+															 | Qt::LinksAccessibleByMouse);
+					_header_patreon->setFont(font);
+					links_layout->addWidget(_header_patreon);
+				}
+
+				{
+					_header_discord = new QLabel(this);
+					_header_discord->setObjectName(QString::fromUtf8("discord"));
+					size_policy.setHeightForWidth(_header_discord->sizePolicy().hasHeightForWidth());
+					_header_discord->setSizePolicy(size_policy);
+					_header_discord->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+					_header_discord->setWordWrap(false);
+					_header_discord->setOpenExternalLinks(true);
+					_header_discord->setTextInteractionFlags(Qt::LinksAccessibleByKeyboard
+															 | Qt::LinksAccessibleByMouse);
+					_header_discord->setFont(font);
+					links_layout->addWidget(_header_discord);
+				}
+			}
+
+			container_layout->addLayout(header_layout);
 		}
+		container_layout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
 
-		{
-			auto links_layout = new QHBoxLayout();
-			links_layout->setContentsMargins(0, 0, 0, 0);
-			links_layout->setSpacing(10);
-			header_layout->addLayout(links_layout);
-
-			QFont font;
-			font.setFamilies(families);
-			font.setPointSize(12);
-
-			QSizePolicy size_policy(QSizePolicy::Expanding, QSizePolicy::Maximum);
-			size_policy.setHorizontalStretch(0);
-			size_policy.setVerticalStretch(0);
-
-			{
-				_header_website = new QLabel(this);
-				_header_website->setObjectName(QString::fromUtf8("website"));
-				size_policy.setHeightForWidth(_header_website->sizePolicy().hasHeightForWidth());
-				_header_website->setSizePolicy(size_policy);
-				_header_website->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-				_header_website->setWordWrap(false);
-				_header_website->setOpenExternalLinks(true);
-				_header_website->setTextInteractionFlags(Qt::LinksAccessibleByKeyboard | Qt::LinksAccessibleByMouse);
-				_header_website->setFont(font);
-				links_layout->addWidget(_header_website);
-			}
-
-			{
-				_header_patreon = new QLabel(this);
-				_header_patreon->setObjectName(QString::fromUtf8("patreon"));
-				size_policy.setHeightForWidth(_header_patreon->sizePolicy().hasHeightForWidth());
-				_header_patreon->setSizePolicy(size_policy);
-				_header_patreon->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-				_header_patreon->setWordWrap(false);
-				_header_patreon->setOpenExternalLinks(true);
-				_header_patreon->setTextInteractionFlags(Qt::LinksAccessibleByKeyboard | Qt::LinksAccessibleByMouse);
-				_header_patreon->setFont(font);
-				links_layout->addWidget(_header_patreon);
-			}
-
-			{
-				_header_discord = new QLabel(this);
-				_header_discord->setObjectName(QString::fromUtf8("discord"));
-				size_policy.setHeightForWidth(_header_discord->sizePolicy().hasHeightForWidth());
-				_header_discord->setSizePolicy(size_policy);
-				_header_discord->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-				_header_discord->setWordWrap(false);
-				_header_discord->setOpenExternalLinks(true);
-				_header_discord->setTextInteractionFlags(Qt::LinksAccessibleByKeyboard | Qt::LinksAccessibleByMouse);
-				_header_discord->setFont(font);
-				links_layout->addWidget(_header_discord);
-			}
-		}
-
-		layout->addLayout(header_layout);
+		layout->addLayout(container_layout);
 	}
 
 	layout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
@@ -125,37 +138,39 @@ streamfx::ui::setup::setup(QWidget* parent) : QDialog(parent)
 			container_layout->setContentsMargins(0, 0, 0, 0);
 			container_layout->setSpacing(0);
 
-			auto banner_layout = new QVBoxLayout();
-			banner_layout->setContentsMargins(0, 0, 0, 0);
-			banner_layout->setSpacing(10);
+			{
+				auto banner_layout = new QVBoxLayout();
+				banner_layout->setContentsMargins(0, 0, 0, 0);
+				banner_layout->setSpacing(10);
 
-			{ // Title
-				QFont font;
-				font.setFamilies(families);
-				font.setPointSize(9);
+				{ // Title
+					QFont font;
+					font.setFamilies(families);
+					font.setPointSize(9);
 
-				_banner_title = new QLabel(this);
-				_banner_title->setObjectName(QString::fromUtf8("banner_title"));
-				_banner_title->setFont(font);
-				banner_layout->addWidget(_banner_title, 0, Qt::AlignLeft | Qt::AlignVCenter);
-			}
-
-			{ // Content
-				if (streamfx::ui::obs_browser_widget::is_available()) {
-					_banner_content =
-						new streamfx::ui::obs_browser_widget(QUrl(QString::fromUtf8("https://www.xaymar.com/")), this);
-				} else {
-					_banner_content = new QLabel(this);
+					_banner_title = new QLabel(this);
+					_banner_title->setObjectName(QString::fromUtf8("banner_title"));
+					_banner_title->setFont(font);
+					banner_layout->addWidget(_banner_title, 0, Qt::AlignLeft | Qt::AlignVCenter);
 				}
-				_banner_content->setObjectName(QString::fromUtf8("banner_content"));
-				_banner_content->setFixedSize(728, 90);
-				_banner_content->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-				banner_layout->addWidget(_banner_content, 0, Qt::AlignCenter);
-			}
 
-			container_layout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
-			container_layout->addLayout(banner_layout);
-			container_layout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
+				{ // Content
+					if (streamfx::ui::obs_browser_widget::is_available()) {
+						_banner_content = new streamfx::ui::obs_browser_widget(
+							QUrl(QString::fromUtf8("about:blank")), this);
+					} else {
+						_banner_content = new QLabel(this);
+					}
+					_banner_content->setObjectName(QString::fromUtf8("banner_content"));
+					_banner_content->setFixedSize(728, 90);
+					_banner_content->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+					banner_layout->addWidget(_banner_content, 0, Qt::AlignCenter);
+				}
+
+				container_layout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
+				container_layout->addLayout(banner_layout);
+				container_layout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
+			}
 
 			footer_layout->addLayout(container_layout);
 		}
@@ -169,48 +184,32 @@ streamfx::ui::setup::setup(QWidget* parent) : QDialog(parent)
 
 			{ // Cancel
 				_control_cancel = new QPushButton(this);
-				QSizePolicy size_policy(QSizePolicy::MinimumExpanding, QSizePolicy::Maximum);
-				size_policy.setHorizontalStretch(1);
-				size_policy.setVerticalStretch(0);
-				size_policy.setHeightForWidth(_control_cancel->sizePolicy().hasHeightForWidth());
-				_control_cancel->setSizePolicy(size_policy);
+				_control_cancel->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
 				_control_cancel->setFont(font);
-				control_layout->addWidget(_control_cancel, 2, Qt::AlignLeft);
+				control_layout->addWidget(_control_cancel);
 			}
 
 			{ // Previous
 				_control_prev = new QPushButton(this);
-				QSizePolicy size_policy(QSizePolicy::MinimumExpanding, QSizePolicy::Maximum);
-				size_policy.setHorizontalStretch(1);
-				size_policy.setVerticalStretch(0);
-				size_policy.setHeightForWidth(_control_prev->sizePolicy().hasHeightForWidth());
-				_control_prev->setSizePolicy(size_policy);
+				_control_prev->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
 				_control_prev->setFont(font);
-				control_layout->addWidget(_control_prev, 2, Qt::AlignLeft);
+				control_layout->addWidget(_control_prev);
 			}
 
-			control_layout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
+			control_layout->addSpacerItem(new QSpacerItem(100, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
 
 			{ // Next
 				_control_next = new QPushButton(this);
-				QSizePolicy size_policy(QSizePolicy::MinimumExpanding, QSizePolicy::Maximum);
-				size_policy.setHorizontalStretch(1);
-				size_policy.setVerticalStretch(0);
-				size_policy.setHeightForWidth(_control_next->sizePolicy().hasHeightForWidth());
-				_control_next->setSizePolicy(size_policy);
+				_control_next->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
 				_control_next->setFont(font);
-				control_layout->addWidget(_control_next, 3, Qt::AlignRight);
+				control_layout->addWidget(_control_next);
 			}
 
 			{ // Finish
 				_control_finish = new QPushButton(this);
-				QSizePolicy size_policy(QSizePolicy::MinimumExpanding, QSizePolicy::Maximum);
-				size_policy.setHorizontalStretch(1);
-				size_policy.setVerticalStretch(0);
-				size_policy.setHeightForWidth(_control_finish->sizePolicy().hasHeightForWidth());
-				_control_finish->setSizePolicy(size_policy);
+				_control_finish->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
 				_control_finish->setFont(font);
-				control_layout->addWidget(_control_finish, 3, Qt::AlignRight);
+				control_layout->addWidget(_control_finish);
 			}
 
 			footer_layout->addLayout(control_layout);
