@@ -106,7 +106,7 @@ void ar::facedetection::process(std::shared_ptr<::streamfx::obs::gs::texture> in
 	auto gctx = ::streamfx::obs::gs::context();
 	auto cctx = _nvcuda->get_context()->enter();
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_magenta, "NvAR Face Detection"};
 #endif
 
@@ -119,14 +119,14 @@ void ar::facedetection::process(std::shared_ptr<::streamfx::obs::gs::texture> in
 	}
 
 	{ // Copy parameter to input.
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_copy, "Copy In -> Input"};
 #endif
 		gs_copy_texture(_input->get_texture()->get_object(), in->get_object());
 	}
 
 	{ // Convert Input to Source format
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_convert, "Copy Input -> Source"};
 #endif
 		if (auto res = _nvcv->NvCVImage_Transfer(_input->get_image(), _source->get_image(), 1.f,
@@ -139,7 +139,7 @@ void ar::facedetection::process(std::shared_ptr<::streamfx::obs::gs::texture> in
 	}
 
 	{ // Run
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_cache, "Run"};
 #endif
 		if (auto err = run(); err != cv::result::SUCCESS) {

@@ -249,7 +249,7 @@ void streamfx::gfx::mipmapper::rebuild(std::shared_ptr<streamfx::obs::gs::textur
 		size_t   max_mip_level = calculate_max_mip_level(width, height);
 
 		{
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 			auto cctr = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance,
 														"Mip Level %" PRId64 "", 0);
 #endif
@@ -282,7 +282,7 @@ void streamfx::gfx::mipmapper::rebuild(std::shared_ptr<streamfx::obs::gs::textur
 
 		// Render each mip map level.
 		for (size_t mip = 1; mip < max_mip_level; mip++) {
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 			auto cctr = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance,
 														"Mip Level %" PRIuMAX, mip);
 #endif

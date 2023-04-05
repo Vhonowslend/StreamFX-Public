@@ -282,7 +282,7 @@ void color_grade_instance::prepare_effect()
 
 void color_grade_instance::rebuild_lut()
 {
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_cache, "Rebuild LUT"};
 #endif
 
@@ -356,7 +356,7 @@ void color_grade_instance::video_render(gs_effect_t* shader)
 		return;
 	}
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Color Grading '%s'",
 										 obs_source_get_name(_self)};
 #endif
@@ -366,7 +366,7 @@ void color_grade_instance::video_render(gs_effect_t* shader)
 
 	// 1. Capture the filter/source rendered above this.
 	if (!_ccache_fresh || !_ccache_texture) {
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_cache, "Cache '%s'",
 											 obs_source_get_name(target)};
 #endif
@@ -422,7 +422,7 @@ void color_grade_instance::video_render(gs_effect_t* shader)
 	// 2. Apply one of the two rendering methods (LUT or Direct).
 	if (_lut_initialized && _lut_enabled) { // Try to apply with the LUT based method.
 		try {
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert, "LUT Rendering"};
 #endif
 			// If the LUT was changed, rebuild the LUT first.
@@ -488,7 +488,7 @@ void color_grade_instance::video_render(gs_effect_t* shader)
 		}
 	}
 	if ((!_lut_initialized || !_lut_enabled) && !_cache_fresh) {
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert, "Direct Rendering"};
 #endif
 		// Reallocate the rendertarget if necessary.
@@ -544,7 +544,7 @@ void color_grade_instance::video_render(gs_effect_t* shader)
 
 	// 3. Render the output cache.
 	{
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_cache_render, "Draw Cache"};
 #endif
 		// Revert GPU status to what OBS Studio expects.

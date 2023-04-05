@@ -390,7 +390,7 @@ void blur_instance::video_render(gs_effect_t* effect)
 		return;
 	}
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Blur '%s'",
 										 obs_source_get_name(_self)};
 #endif
@@ -398,7 +398,7 @@ void blur_instance::video_render(gs_effect_t* effect)
 	if (!_source_rendered) {
 		// Source To Texture
 		{
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_cache, "Cache"};
 #endif
 
@@ -448,7 +448,7 @@ void blur_instance::video_render(gs_effect_t* effect)
 
 	if (!_output_rendered) {
 		{
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert, "Blur"};
 #endif
 
@@ -458,7 +458,7 @@ void blur_instance::video_render(gs_effect_t* effect)
 
 		// Mask
 		if (_mask.enabled) {
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert, "Mask"};
 #endif
 
@@ -516,7 +516,7 @@ void blur_instance::video_render(gs_effect_t* effect)
 					}
 				}
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 				streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_capture, "Capture '%s'",
 													obs_source_get_name(_mask.source.source_texture->get_object())};
 #endif
@@ -552,7 +552,7 @@ void blur_instance::video_render(gs_effect_t* effect)
 
 	// Draw source
 	{
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_render, "Render"};
 #endif
 

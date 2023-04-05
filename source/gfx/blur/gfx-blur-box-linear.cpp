@@ -234,7 +234,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_linear::r
 {
 	auto gctx = streamfx::obs::gs::context();
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	auto gdmp = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Box Linear Blur");
 #endif
 
@@ -265,7 +265,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_linear::r
 		effect.get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(_size) * 2.0f + 1.0f)));
 
 		{
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 			auto gdm = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Horizontal");
 #endif
 
@@ -281,7 +281,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_linear::r
 		effect.get_parameter("pImageTexel").set_float2(0., float_t(1.f / height));
 
 		{
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 			auto gdm = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Vertical");
 #endif
 
@@ -324,7 +324,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_linear_di
 {
 	auto gctx = streamfx::obs::gs::context();
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	auto gdmp =
 		streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Box Linear Directional Blur");
 #endif

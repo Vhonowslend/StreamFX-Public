@@ -87,7 +87,7 @@ void shader_instance::video_render(gs_effect_t* effect)
 		return;
 	}
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Shader Transition '%s'",
 										 obs_source_get_name(_self)};
 #endif

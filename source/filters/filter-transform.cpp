@@ -383,7 +383,7 @@ void transform_instance::video_render(gs_effect_t* effect)
 		return;
 	}
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "3D Transform '%s' on '%s'",
 										 obs_source_get_name(_self), obs_source_get_name(obs_filter_get_parent(_self))};
 #endif
@@ -411,7 +411,7 @@ void transform_instance::video_render(gs_effect_t* effect)
 	}
 
 	if (!_cache_rendered) {
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_cache, "Cache"};
 #endif
 
@@ -451,13 +451,13 @@ void transform_instance::video_render(gs_effect_t* effect)
 	}
 
 	if (_mipmap_enabled) {
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert, "Mipmap"};
 #endif
 
 		if (!_mipmap_texture || (_mipmap_texture->get_width() != cache_width)
 			|| (_mipmap_texture->get_height() != cache_height)) {
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 			streamfx::obs::gs::debug_marker gdr{streamfx::obs::gs::debug_color_allocate, "Allocate Mipmapped Texture"};
 #endif
 
@@ -476,7 +476,7 @@ void transform_instance::video_render(gs_effect_t* effect)
 	}
 
 	{
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert, "Transform"};
 #endif
 
@@ -564,7 +564,7 @@ void transform_instance::video_render(gs_effect_t* effect)
 	}
 
 	{
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_render, "Render"};
 #endif
 

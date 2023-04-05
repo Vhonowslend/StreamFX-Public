@@ -151,7 +151,7 @@ void mirror_instance::video_render(gs_effect_t* effect)
 	if ((obs_source_get_output_flags(_source.get()) & OBS_SOURCE_VIDEO) == 0)
 		return;
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Source Mirror '%s' for '%s'",
 										 obs_source_get_name(_self), obs_source_get_name(_source.get())};
 #endif

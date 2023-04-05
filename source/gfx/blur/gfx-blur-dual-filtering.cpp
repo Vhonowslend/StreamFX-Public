@@ -216,7 +216,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::dual_filterin
 {
 	auto gctx = streamfx::obs::gs::context();
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	auto gdmp = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Dual-Filtering Blur");
 #endif
 
@@ -244,7 +244,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::dual_filterin
 
 	// Downsample
 	for (std::size_t n = 1; n <= iterations; n++) {
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		auto gdm = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Down %" PRIuMAX, n);
 #endif
 
@@ -281,7 +281,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::dual_filterin
 
 	// Upsample
 	for (std::size_t n = iterations; n > 0; n--) {
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		auto gdm = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Up %" PRIuMAX, n);
 #endif
 

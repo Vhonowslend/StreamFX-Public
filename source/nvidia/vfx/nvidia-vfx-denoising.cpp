@@ -111,7 +111,7 @@ std::shared_ptr<::streamfx::obs::gs::texture>
 	auto gctx = ::streamfx::obs::gs::context();
 	auto cctx = _nvcuda->get_context()->enter();
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_magenta, "NvVFX Denoising"};
 #endif
 
@@ -124,14 +124,14 @@ std::shared_ptr<::streamfx::obs::gs::texture>
 	}
 
 	{ // Copy parameter to input.
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_copy, "Copy In -> Input"};
 #endif
 		gs_copy_texture(_input->get_texture()->get_object(), in->get_object());
 	}
 
 	{ // Convert Input to Source format
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_convert,
 													"Convert Input -> Source"};
 #endif
@@ -145,7 +145,7 @@ std::shared_ptr<::streamfx::obs::gs::texture>
 	}
 
 	{ // Copy input to source.
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_copy, "Copy Input -> Source"};
 #endif
 		if (auto res = _nvcvi->NvCVImage_Transfer(_convert_to_fp32->get_image(), _source->get_image(), 1.f,
@@ -158,7 +158,7 @@ std::shared_ptr<::streamfx::obs::gs::texture>
 	}
 
 	{ // Process source to destination.
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_cache, "Process"};
 #endif
 		if (auto res = _nvvfx->NvVFX_Run(_fx.get(), 0); res != ::streamfx::nvidia::cv::result::SUCCESS) {
@@ -168,7 +168,7 @@ std::shared_ptr<::streamfx::obs::gs::texture>
 	}
 
 	{ // Convert Destination to Output format
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_convert,
 													"Convert Destination -> Output"};
 #endif
@@ -182,7 +182,7 @@ std::shared_ptr<::streamfx::obs::gs::texture>
 	}
 
 	{ // Copy destination to output.
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_copy,
 													"Copy Destination -> Output"};
 #endif

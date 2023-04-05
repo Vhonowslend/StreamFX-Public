@@ -113,7 +113,7 @@ void displacement_instance::video_render(gs_effect_t*)
 		return;
 	}
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Displacement Mapping '%s' on '%s'",
 										 obs_source_get_name(_self), obs_source_get_name(obs_filter_get_parent(_self))};
 #endif

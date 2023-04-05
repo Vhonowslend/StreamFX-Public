@@ -244,7 +244,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box::render()
 {
 	auto gctx = streamfx::obs::gs::context();
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	auto gdmp = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Box Blur");
 #endif
 
@@ -275,7 +275,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box::render()
 		effect.get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(_size) * 2.0f + 1.0f)));
 
 		{
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 			auto gdm = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Horizontal");
 #endif
 
@@ -291,7 +291,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box::render()
 		effect.get_parameter("pImageTexel").set_float2(0.f, float_t(1.f / height));
 
 		{
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 			auto gdm = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Vertical");
 #endif
 
@@ -334,7 +334,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_direction
 {
 	auto gctx = streamfx::obs::gs::context();
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	auto gdmp = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Box Directional Blur");
 #endif
 
@@ -409,7 +409,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_rotationa
 {
 	auto gctx = streamfx::obs::gs::context();
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	auto gdmp = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Box Rotational Blur");
 #endif
 
@@ -475,7 +475,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_zoom::ren
 {
 	auto gctx = streamfx::obs::gs::context();
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	auto gdmp = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Box Zoom Blur");
 #endif
 
