@@ -299,7 +299,7 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 	uint32_t      height         = obs_source_get_base_height(target);
 	auto          input          = _input.lock();
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Dynamic Mask '%s' on '%s'",
 										 obs_source_get_name(_self), obs_source_get_name(obs_filter_get_parent(_self))};
 #endif
@@ -315,7 +315,7 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 
 	// Capture the base texture for later rendering.
 	if (!_have_base) {
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_cache, "Base Texture"};
 #endif
 		// Ensure the Render Target matches the expected format.
@@ -401,7 +401,7 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 			_input_color_format = _base_color_format;
 			_input_color_space  = _base_color_space;
 		} else {
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_source, "Input '%s'",
 												input.name().data()};
 #endif
@@ -475,7 +475,7 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 
 	// Capture the final texture.
 	if (!_have_final && _have_base) {
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_render, "Final Calculation"};
 #endif
 
@@ -574,7 +574,7 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 
 	// Draw source
 	{
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_render, "Render"};
 #endif
 

@@ -314,7 +314,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 		return;
 	}
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "SDF Effects '%s' on '%s'",
 										 obs_source_get_name(_self), obs_source_get_name(obs_filter_get_parent(_self))};
 #endif
@@ -340,7 +340,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 		if (!_source_rendered) {
 			// Store input texture.
 			{
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 				streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_cache, "Cache"};
 #endif
 
@@ -382,7 +382,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 				}
 
 				{
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 					streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert,
 														"Update Distance Field"};
 #endif
@@ -441,7 +441,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 
 		// Optimized Render path.
 		try {
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert, "Calculate"};
 #endif
 
@@ -538,7 +538,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 	}
 
 	{
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_render, "Render"};
 #endif
 

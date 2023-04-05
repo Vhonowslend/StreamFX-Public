@@ -500,7 +500,7 @@ void streamfx::gfx::shader::shader::render(gs_effect* effect)
 		effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
 
 	if (!_rt_up_to_date) {
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_cache, "Render Cache"};
 #endif
 
@@ -536,7 +536,7 @@ void streamfx::gfx::shader::shader::render(gs_effect* effect)
 	}
 
 	if (auto tex = _rt->get_texture(); tex) {
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_render, "Draw Cache"};
 #endif
 

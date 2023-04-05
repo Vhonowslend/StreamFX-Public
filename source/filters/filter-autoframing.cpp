@@ -457,7 +457,7 @@ void autoframing_instance::video_render(gs_effect_t* effect)
 		return;
 	}
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	::streamfx::obs::gs::debug_marker profiler0{::streamfx::obs::gs::debug_color_source, "StreamFX Auto-Framing"};
 	::streamfx::obs::gs::debug_marker profiler0_0{::streamfx::obs::gs::debug_color_gray, "'%s' on '%s'",
 												  obs_source_get_name(_self), obs_source_get_name(parent)};
@@ -516,7 +516,7 @@ void autoframing_instance::video_render(gs_effect_t* effect)
 	}
 
 	{ // Draw the result for the next filter to use.
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_render, "Render"};
 #endif
 

@@ -69,7 +69,7 @@ std::shared_ptr<streamfx::obs::gs::texture> streamfx::gfx::source_texture::rende
 	}
 
 	if (_child) {
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		auto cctr = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_capture, "gfx::source_texture '%s'",
 													obs_source_get_name(_child.get()));
 #endif

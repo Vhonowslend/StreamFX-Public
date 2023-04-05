@@ -92,14 +92,14 @@ void shader_instance::video_render(gs_effect_t* effect)
 			throw std::runtime_error("No effect, or invalid base size.");
 		}
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Shader Filter '%s' on '%s'",
 											 obs_source_get_name(_self),
 											 obs_source_get_name(obs_filter_get_parent(_self))};
 #endif
 
 		{
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_source, "Cache"};
 #endif
 
@@ -128,7 +128,7 @@ void shader_instance::video_render(gs_effect_t* effect)
 		}
 
 		{
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_render, "Render"};
 #endif
 

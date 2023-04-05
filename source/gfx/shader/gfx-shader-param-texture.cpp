@@ -329,7 +329,7 @@ void streamfx::gfx::shader::texture_parameter::assign()
 	// If this is a source and active or visible, capture it.
 	if ((_type == texture_type::Source) && (_active || _visible) && _source_rendertarget) {
 		auto source = _source.lock();
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_capture, "Parameter '%s'",
 													get_key().data()};
 		::streamfx::obs::gs::debug_marker profiler2{::streamfx::obs::gs::debug_color_capture, "Capture '%s'",

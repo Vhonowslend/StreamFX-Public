@@ -25,7 +25,7 @@ namespace streamfx::obs::gs {
 		}
 	};
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	static constexpr float_t debug_color_white[4]           = {1.f, 1.f, 1.f, 1.f};
 	static constexpr float_t debug_color_gray[4]            = {.5f, .5f, .5f, 1.f};
 	static constexpr float_t debug_color_black[4]           = {0.f, 0.f, 0.f, 1.f};

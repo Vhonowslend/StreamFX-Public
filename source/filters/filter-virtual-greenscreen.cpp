@@ -251,7 +251,7 @@ void virtual_greenscreen_instance::video_render(gs_effect_t* effect)
 		return;
 	}
 
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	::streamfx::obs::gs::debug_marker profiler0{::streamfx::obs::gs::debug_color_source,
 												"StreamFX Virtual Green-Screen"};
 	::streamfx::obs::gs::debug_marker profiler0_0{::streamfx::obs::gs::debug_color_gray, "'%s' on '%s'",
@@ -263,7 +263,7 @@ void virtual_greenscreen_instance::video_render(gs_effect_t* effect)
 		std::unique_lock<std::mutex> ul(_provider_lock);
 
 		{ // Capture the incoming frame.
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 			::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_capture, "Capture"};
 #endif
 			if (obs_source_process_filter_begin(_self, GS_RGBA, OBS_ALLOW_DIRECT_RENDERING)) {
@@ -285,7 +285,7 @@ void virtual_greenscreen_instance::video_render(gs_effect_t* effect)
 				gs_set_cull_mode(GS_NEITHER);
 
 				// Render
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 				::streamfx::obs::gs::debug_marker profiler2{::streamfx::obs::gs::debug_color_capture, "Storage"};
 #endif
 				obs_source_process_filter_end(_self, obs_get_base_effect(OBS_EFFECT_DEFAULT), 1, 1);
@@ -303,7 +303,7 @@ void virtual_greenscreen_instance::video_render(gs_effect_t* effect)
 		}
 
 		try { // Process the captured input with the provider.
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 			::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_convert, "Process"};
 #endif
 			switch (_provider) {
@@ -324,7 +324,7 @@ void virtual_greenscreen_instance::video_render(gs_effect_t* effect)
 	}
 
 	{ // Draw the result for the next filter to use.
-#ifdef ENABLE_PROFILING
+#if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_render, "Render"};
 #endif
 		if (_effect->has_parameter("InputA", ::streamfx::obs::gs::effect_parameter::type::Texture)) {
