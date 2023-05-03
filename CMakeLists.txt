@@ -2057,13 +2057,11 @@ if(T_CHECK)
 	)
 	clang_tidy(
 		TARGETS ${PROJECT_NAME}
-		GLOBAL
 		VERSION 14.0.0
 	)
 	clang_format(
 		TARGETS ${PROJECT_NAME}
 		DEPENDENCY
-		GLOBAL
 		VERSION 14.0.0
 	)
 endif()
