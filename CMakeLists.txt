@@ -327,7 +327,6 @@ set(${PREFIX}ENABLE_FILTER_BLUR ${FEATURE_UNSTABLE} CACHE BOOL "Enable Blur Filt
 set(${PREFIX}ENABLE_FILTER_COLOR_GRADE ${FEATURE_STABLE} CACHE BOOL "Enable Color Grade Filter")
 set(${PREFIX}ENABLE_FILTER_DENOISING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Denoising filter")
 set(${PREFIX}ENABLE_FILTER_DENOISING_NVIDIA ON CACHE BOOL "Enable NVIDIA provider(s) for Denoising Filter")
-set(${PREFIX}ENABLE_FILTER_DISPLACEMENT OFF CACHE BOOL "Enable Displacement Filter")
 set(${PREFIX}ENABLE_FILTER_DYNAMIC_MASK ${FEATURE_STABLE} CACHE BOOL "Enable Dynamic Mask Filter")
 set(${PREFIX}ENABLE_FILTER_SDF_EFFECTS ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable SDF Effects Filter")
 set(${PREFIX}ENABLE_FILTER_SHADER ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Shader Filter")
@@ -570,10 +569,6 @@ function(feature_filter_denoising RESOLVE)
 	endif()
 endfunction()
 
-function(feature_filter_displacement RESOLVE)
-	is_feature_enabled(FILTER_DISPLACEMENT T_CHECK)
-endfunction()
-
 function(feature_filter_dynamic_mask RESOLVE)
 	is_feature_enabled(FILTER_DYNAMIC_MASK T_CHECK)
 endfunction()
@@ -685,7 +680,6 @@ feature_filter_autoframing(OFF)
 feature_filter_blur(OFF)
 feature_filter_color_grade(OFF)
 feature_filter_denoising(OFF)
-feature_filter_displacement(OFF)
 feature_filter_dynamic_mask(OFF)
 feature_filter_sdf_effects(OFF)
 feature_filter_shader(OFF)
@@ -843,7 +837,6 @@ feature_filter_autoframing(ON)
 feature_filter_blur(ON)
 feature_filter_color_grade(ON)
 feature_filter_denoising(ON)
-feature_filter_displacement(ON)
 feature_filter_dynamic_mask(ON)
 feature_filter_sdf_effects(ON)
 feature_filter_shader(ON)
@@ -1327,21 +1320,6 @@ if(T_CHECK)
 		ENABLE_FILTER_COLOR_GRADE
 	)
 	set(REQUIRE_LUT ON)
-endif()
-
-# Filter/Displacement
-is_feature_enabled(FILTER_DISPLACEMENT T_CHECK)
-if(T_CHECK)
-	list(APPEND PROJECT_DATA
-		"data/effects/displace.effect"
-	)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/filters/filter-displacement.hpp"
-		"source/filters/filter-displacement.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_FILTER_DISPLACEMENT
-	)
 endif()
 
 # Filter/Dynamic Mask
