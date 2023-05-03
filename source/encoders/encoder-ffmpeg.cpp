@@ -709,17 +709,17 @@ int ffmpeg_instance::receive_packet(bool* received_packet, struct encoder_packet
 				packet->priority      = 1; // OBS_NAL_PRIORITY_LOW
 				packet->drop_priority = 2; // OBS_NAL_PRIORITY_HIGH
 				break;
-			case AV_PICTURE_TYPE_B: // B-Frame
+			case AV_PICTURE_TYPE_B:        // B-Frame
 				// Recovery via I- or IDR-Frame.
 				packet->priority      = 0; // OBS_NAL_PRIORITY_DISPOSABLE
 				packet->drop_priority = 2; // OBS_NAL_PRIORITY_HIGH
 				break;
-			case AV_PICTURE_TYPE_BI: // BI-Frame, theoretically identical to I-Frame.
+			case AV_PICTURE_TYPE_BI:       // BI-Frame, theoretically identical to I-Frame.
 				// Recovery via I- or IDR-Frame.
 				packet->priority      = 2; // OBS_NAL_PRIORITY_HIGH
 				packet->drop_priority = 2; // OBS_NAL_PRIORITY_HIGH
 				break;
-			default: // Unknown picture type.
+			default:                       // Unknown picture type.
 				// Recovery only via IDR-Frame
 				packet->priority      = 2; // OBS_NAL_PRIORITY_HIGH
 				packet->drop_priority = 3; // OBS_NAL_PRIORITY_HIGHEST
@@ -1042,13 +1042,14 @@ const char* ffmpeg_factory::get_name()
 
 void ffmpeg_factory::get_defaults2(obs_data_t* settings)
 {
-	if (_handler)
+	if (_handler) {
 		_handler->get_defaults(settings, _avcodec, nullptr, _handler->is_hardware_encoder(this));
 
-	if ((_avcodec->capabilities & AV_CODEC_CAP_INTRA_ONLY) == 0) {
-		obs_data_set_default_int(settings, ST_KEY_KEYFRAMES_INTERVALTYPE, 0);
-		obs_data_set_default_double(settings, ST_KEY_KEYFRAMES_INTERVAL_SECONDS, 2.0);
-		obs_data_set_default_int(settings, ST_KEY_KEYFRAMES_INTERVAL_FRAMES, 300);
+		if (_handler->has_keyframe_support(this)) {
+			obs_data_set_default_int(settings, ST_KEY_KEYFRAMES_INTERVALTYPE, 0);
+			obs_data_set_default_double(settings, ST_KEY_KEYFRAMES_INTERVAL_SECONDS, 2.0);
+			obs_data_set_default_int(settings, ST_KEY_KEYFRAMES_INTERVAL_FRAMES, 300);
+		}
 	}
 
 	{ // Integrated Options

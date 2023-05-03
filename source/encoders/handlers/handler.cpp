@@ -9,7 +9,15 @@ using namespace streamfx::encoder::ffmpeg;
 
 bool handler::handler::has_keyframe_support(ffmpeg_factory* instance)
 {
+#if LIBAVCODEC_VERSION_MAJOR > 58
+	if (auto* desc = avcodec_descriptor_get(instance->get_avcodec()->id); desc) {
+		return (desc->props & AV_CODEC_PROP_INTRA_ONLY) == 0;
+	} else {
+		return false;
+	}
+#else
 	return (instance->get_avcodec()->capabilities & AV_CODEC_CAP_INTRA_ONLY) == 0;
+#endif
 }
 
 bool handler::handler::is_hardware_encoder(ffmpeg_factory* instance)
