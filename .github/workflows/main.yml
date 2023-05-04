@@ -257,12 +257,6 @@ jobs:
             libcurl4-openssl-dev
         fi
 
-    - name: "Dependency: OBS Libraries (Cache)"
-      id: obs-cache
-      uses: actions/cache@v3
-      with:
-        path: "${{ github.workspace }}/build/obs"
-        key: "${{ matrix.runner }}-${{ matrix.generator }}-obs${{ env.obs_version }}-obsdeps${{ env.obs_deps_version }}-qt${{ matrix.qt }}-${{ env.CACHE_VERSION }}"
     - name: "Dependency: OBS Libraries"
       id: obs
       if: ${{ steps.obs-cache.outputs.cache-hit != 'true' }}
@@ -270,8 +264,8 @@ jobs:
       env:
         CMAKE_BUILD_TYPE: "Release"
       run: |
-        # Extra requirements by libobs on Linux.
         if [[ "${{ matrix.runner }}" = ubuntu* ]]; then
+          # Extra requirements by libobs on Linux.
           sudo apt-get install \
             libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev \
             libx264-dev libcurl4-openssl-dev libmbedtls-dev libgl1-mesa-dev libjansson-dev libluajit-5.1-dev python3-dev \
