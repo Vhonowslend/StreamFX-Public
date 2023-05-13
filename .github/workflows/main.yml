@@ -26,16 +26,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: "windows-2022"
-        name: "Windows"
-        package_name: "windows"
+        runner: [ "windows-2022" ]
+        name: [ "Windows" ]
         compiler: [ "MSVC", "Clang" ]
         include:
           - compiler: "MSVC"
+            package_name: "windows"
             CMAKE_SYSTEM_VERSION: "10.0.20348.0"
             CMAKE_GENERATOR: "Visual Studio 17 2022"
             CMAKE_GENERATOR_PLATFORM: "x64"
           - compiler: "Clang"
+            package_name: "windows-clang"
             CMAKE_SYSTEM_VERSION: "10.0.20348.0"
             CMAKE_GENERATOR: "Visual Studio 17 2022"
             CMAKE_GENERATOR_TOOLSET: "ClangCL"
@@ -173,11 +174,11 @@ jobs:
       fail-fast: false
       matrix:
         runner: "macos-12"
-        name: "MacOS"
-        package_name: "macos"
         compiler: [ "Clang" ]
         include:
           - compiler: "Clang"
+            name: "MacOS"
+            package_name: "macos"
             CMAKE_GENERATOR: "Xcode"
             CMAKE_OSX_DEPLOYMENT_TARGET: "10.15"
             CMAKE_OSX_ARCHITECTURES: "x86_64;arm64"
@@ -317,8 +318,6 @@ jobs:
       fail-fast: false
       matrix:
         runner: [ "ubuntu-22.04", "ubuntu-20.04" ]
-        name: "Ubuntu"
-        package_name: "windows"
         compiler: [ "GCC", "Clang" ]
         qt: [ 5, 6 ]
         exclude:
@@ -329,6 +328,7 @@ jobs:
         include:
           - runner: "ubuntu-22.04"
             compiler: "GCC"
+            qt: 6
             name: "Ubuntu 22.04"
             package_name: "ubuntu22.04-qt6"
             CMAKE_GENERATOR: "Ninja"
@@ -336,6 +336,8 @@ jobs:
             CMAKE_CXX_COMPILER: "g++-12"
             CMAKE_LINKER_COMPILER: "ld"
           - runner: "ubuntu-22.04"
+            compiler: "Clang"
+            qt: 6
             name: "Ubuntu 22.04 (Clang)"
             package_name: "ubuntu22.04-qt6-clang"
             CMAKE_GENERATOR: "Ninja"
@@ -344,6 +346,7 @@ jobs:
             CMAKE_LINKER_COMPILER: "lld"
           - runner: "ubuntu-20.04"
             compiler: "GCC"
+            qt: 5
             name: "Ubuntu 20.04"
             package_name: "ubuntu20.04-qt5"
             CMAKE_GENERATOR: "Ninja"
@@ -351,6 +354,8 @@ jobs:
             CMAKE_CXX_COMPILER: "g++-11"
             CMAKE_LINKER_COMPILER: "ld"
           - runner: "ubuntu-20.04"
+            compiler: "Clang"
+            qt: 5
             name: "Ubuntu 20.04 (Clang)"
             package_name: "ubuntu20.04-qt5-clang"
             CMAKE_GENERATOR: "Ninja"
