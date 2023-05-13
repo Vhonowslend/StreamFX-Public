@@ -64,18 +64,18 @@ jobs:
 
         # Prebuilt Dependencies Version
         IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "prebuilt" "windows-x64"))
-        echo "obs_deps_version=${buildspecdata[0]}" >> $GITHUB_ENV
-        echo "obs_deps_hash=${buildspecdata[1]}" >> $GITHUB_ENV
-        echo "obs_deps_url=${buildspecdata[2]}" >> $GITHUB_ENV
+        echo "obs_deps_version=${buildspecdata[0]}" >> "$GITHUB_ENV"
+        echo "obs_deps_hash=${buildspecdata[1]}" >> "$GITHUB_ENV"
+        echo "obs_deps_url=${buildspecdata[2]}" >> "$GITHUB_ENV"
 
         # Qt Version
         IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "qt${{ matrix.qt }}" "windows-x64"))
-        echo "qt_version=${buildspecdata[0]}" >> $GITHUB_ENV
-        echo "qt_hash=${buildspecdata[1]}" >> $GITHUB_ENV
-        echo "qt_url=${buildspecdata[2]}" >> $GITHUB_ENV
+        echo "qt_version=${buildspecdata[0]}" >> "$GITHUB_ENV"
+        echo "qt_hash=${buildspecdata[1]}" >> "$GITHUB_ENV"
+        echo "qt_url=${buildspecdata[2]}" >> "$GITHUB_ENV"
 
         # libOBS Version
-        echo "obs_version=$(cd "${{ github.workspace }}/third-party/obs-studio" && git describe --tags --long)" >> $GITHUB_ENV
+        echo "obs_version=$(cd "${{ github.workspace }}/third-party/obs-studio" && git describe --tags --long)" >> "$GITHUB_ENV"
     - name: "Dependency: Qt (Cache)"
       id: qt-cache
       uses: actions/cache@v3
@@ -208,18 +208,18 @@ jobs:
 
         # Prebuilt Dependencies Version
         IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "prebuilt" "macos-universal"))
-        echo "obs_deps_version=${buildspecdata[0]}" >> $GITHUB_ENV
-        echo "obs_deps_hash=${buildspecdata[1]}" >> $GITHUB_ENV
-        echo "obs_deps_url=${buildspecdata[2]}" >> $GITHUB_ENV
+        echo "obs_deps_version=${buildspecdata[0]}" >> "$GITHUB_ENV"
+        echo "obs_deps_hash=${buildspecdata[1]}" >> "$GITHUB_ENV"
+        echo "obs_deps_url=${buildspecdata[2]}" >> "$GITHUB_ENV"
 
         # Qt Version
         IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "qt${{ matrix.qt }}" "macos-universal"))
-        echo "qt_version=${buildspecdata[0]}" >> $GITHUB_ENV
-        echo "qt_hash=${buildspecdata[1]}" >> $GITHUB_ENV
-        echo "qt_url=${buildspecdata[2]}" >> $GITHUB_ENV
+        echo "qt_version=${buildspecdata[0]}" >> "$GITHUB_ENV"
+        echo "qt_hash=${buildspecdata[1]}" >> "$GITHUB_ENV"
+        echo "qt_url=${buildspecdata[2]}" >> "$GITHUB_ENV"
 
         # libOBS Version
-        echo "obs_version=$(cd "${{ github.workspace }}/third-party/obs-studio" && git describe --tags --long)" >> $GITHUB_ENV
+        echo "obs_version=$(cd "${{ github.workspace }}/third-party/obs-studio" && git describe --tags --long)" >> "$GITHUB_ENV"
     - name: "Dependency: Qt (Cache)"
       id: qt-cache
       uses: actions/cache@v3
@@ -368,13 +368,14 @@ jobs:
         IFS=$'-' compiler=($(echo "${{ matrix.compiler }}")) # ToDo: Can this be done without invoking a sub-shell?
         if [[ "${compiler[0]}" == "GCC" ]]; then
           sudo apt-get install \
-            binutils gcc-${compiler[1]} g++${compiler[1]}
+            binutils gcc-${compiler[1]} g++-${compiler[1]}
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${compiler[1]} 800 --slave /usr/bin/g++ g++ /usr/bin/g++-${compiler[1]}
-          echo "CMAKE_C_COMPILER=gcc-${compiler[1]}" >> $GITHUB_ENV
-          echo "CMAKE_CXX_COMPILER=g++-${compiler[1]}" >> $GITHUB_ENV
-          echo "CMAKE_C_FLAGS=-fuse-ld=ld" >> $GITHUB_ENV
-          echo "CMAKE_CXX_FLAGS=-fuse-ld=ld" >> $GITHUB_ENV
+          echo "CMAKE_C_COMPILER=gcc-${compiler[1]}" >> "$GITHUB_ENV"
+          echo "CMAKE_CXX_COMPILER=g++-${compiler[1]}" >> "$GITHUB_ENV"
+          echo "CMAKE_C_FLAGS=-fuse-ld=ld" >> "$GITHUB_ENV"
+          echo "CMAKE_CXX_FLAGS=-fuse-ld=ld" >> "$GITHUB_ENV"
         elif [[ "${compiler[0]}" == "Clang" ]]; then
+          sudo apt-get purge clang clangd clang++ lld lldb clang-format clang-tidy
           curl -jLo /tmp/llvm.sh "https://apt.llvm.org/llvm.sh"
           chmod +x /tmp/llvm.sh
           sudo /tmp/llvm.sh ${compiler[1]} all
@@ -385,17 +386,17 @@ jobs:
           sudo update-alternatives --install /usr/bin/lldb lldb /usr/bin/lldb-${compiler[1]} 800
           sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-${compiler[1]} 800
           sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-${compiler[1]} 800
-          echo "CMAKE_C_COMPILER=clang-${compiler[1]}" >> $GITHUB_ENV
-          echo "CMAKE_CXX_COMPILER=clang++-${compiler[1]}" >> $GITHUB_ENV
-          echo "CMAKE_C_FLAGS=-fuse-ld=ld.lld" >> $GITHUB_ENV
-          echo "CMAKE_CXX_FLAGS=-fuse-ld=ld.lld" >> $GITHUB_ENV
+          echo "CMAKE_C_COMPILER=clang-${compiler[1]}" >> "$GITHUB_ENV"
+          echo "CMAKE_CXX_COMPILER=clang++-${compiler[1]}" >> "$GITHUB_ENV"
+          echo "CMAKE_C_FLAGS=-fuse-ld=ld.lld" >> "$GITHUB_ENV"
+          echo "CMAKE_CXX_FLAGS=-fuse-ld=ld.lld" >> "$GITHUB_ENV"
         else
           echo "Unknown Compiler"
           exit 1
         fi
 
         # Adjust package name
-        echo "PACKAGE_NAME=${{ env.PACKAGE_NAME }}-${compiler[0]}${compiler[1]}" >> $GITHUB_ENV
+        echo "PACKAGE_NAME=${{ env.PACKAGE_NAME }}-${compiler[0]}${compiler[1]}" >> "$GITHUB_ENV"
     - name: "Dependency: Qt"
       id: qt
       shell: bash
