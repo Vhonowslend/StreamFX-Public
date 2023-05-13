@@ -75,7 +75,7 @@ jobs:
         echo "qt_url=${buildspecdata[2]}" >> $GITHUB_ENV
 
         # libOBS Version
-        echo "obs_version=$(cd "${{ github.workspace }}/third-party/obs-studio" && git describe --tags --long)"
+        echo "obs_version=$(cd "${{ github.workspace }}/third-party/obs-studio" && git describe --tags --long)" >> $GITHUB_ENV
     - name: "Dependency: Qt (Cache)"
       id: qt-cache
       uses: actions/cache@v3
@@ -219,7 +219,7 @@ jobs:
         echo "qt_url=${buildspecdata[2]}" >> $GITHUB_ENV
 
         # libOBS Version
-        echo "obs_version=$(cd "${{ github.workspace }}/third-party/obs-studio" && git describe --tags --long)"
+        echo "obs_version=$(cd "${{ github.workspace }}/third-party/obs-studio" && git describe --tags --long)" >> $GITHUB_ENV
     - name: "Dependency: Qt (Cache)"
       id: qt-cache
       uses: actions/cache@v3
