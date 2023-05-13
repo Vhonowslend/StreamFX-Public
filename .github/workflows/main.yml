@@ -162,9 +162,9 @@ jobs:
 
         # Prebuilt Dependencies Version
         if [[ "${{ matrix.runner }}" = windows* ]]; then
-          $IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "prebuilt" "windows-x64"))
+          IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "prebuilt" "windows-x64"))
         elif [[ "${{ matrix.runner }}" = macos* ]]; then
-          $IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "prebuilt" "macos-universal"))
+          IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "prebuilt" "macos-universal"))
         else
           buildspecdata=(0000-00-00 "about:blank" "00000000000000000000000000000000")
         fi
@@ -174,9 +174,9 @@ jobs:
 
         # Qt Version
         if [[ "${{ matrix.runner }}" = windows* ]]; then
-          $IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "qt${{ matrix.qt }}" "windows-x64"))
+          IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "qt${{ matrix.qt }}" "windows-x64"))
         elif [[ "${{ matrix.runner }}" = macos* ]]; then
-          $IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "qt${{ matrix.qt }}" "macos-universal"))
+          IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "qt${{ matrix.qt }}" "macos-universal"))
         else
           buildspecdata=(0000-00-00 "about:blank" "00000000000000000000000000000000")
         fi
