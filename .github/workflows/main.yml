@@ -365,7 +365,7 @@ jobs:
           cmake \
           ninja-build \
           git
-        IFS=$'-' compiler=(${{ matrix.compiler }})
+        IFS=$'-' compiler=($(echo "${{ matrix.compiler }}")) # ToDo: Can this be done without invoking a sub-shell?
         if [[ "${compiler[0]}" == "GCC" ]]; then
           sudo apt-get install \
             binutils gcc-${compiler[1]} g++${compiler[1]}
