@@ -173,7 +173,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: "macos-12"
+        runner: [ "macos-12" ]
         compiler: [ "Clang" ]
         include:
           - compiler: "Clang"
