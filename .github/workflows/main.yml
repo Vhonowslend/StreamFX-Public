@@ -356,11 +356,13 @@ jobs:
     - name: "Install Build Tools"
       shell: bash
       run: |
+        echo "Installing essential tools..."
         sudo apt-get -qq update
         sudo apt-get install build-essential checkinstall pkg-config cmake ninja-build git
 
         # Install the appropriate compiler
         IFS=$'-' compiler=($(echo "${{ matrix.compiler }}")) # ToDo: Can this be done without invoking a sub-shell?
+        echo "Installing '${compiler[0]}' version ${compiler[1]}..."
         if [[ "${compiler[0]}" == "GCC" ]]; then
           sudo apt-get install binutils gcc-${compiler[1]} g++-${compiler[1]}
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${compiler[1]} 800 --slave /usr/bin/g++ g++ /usr/bin/g++-${compiler[1]}
