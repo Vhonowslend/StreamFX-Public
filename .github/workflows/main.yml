@@ -112,7 +112,7 @@ jobs:
     - name: "Install LLVM/Clang (Windows)"
       if: startsWith( matrix.runner, 'windows' )
       run: |
-        curl "-kL" "https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.4/LLVM-14.0.4-win64.exe" "-f" "--retry" "5" "-o" "llvm.exe"
+        curl "-kL" "https://github.com/llvm/llvm-project/releases/download/llvmorg-16.0.3/LLVM-16.0.3-win64.exe" "-f" "--retry" "5" "-o" "llvm.exe"
         7z x -y -o"C:\Program Files\LLVM" llvm.exe "bin" "include" "lib" "libexec" "share" "Uninstall.exe"
         echo "CLANG_PATH=\"C:\\Program Files\\LLVM\\bin\"" >> "${GITHUB_ENV}"
     - name: "Install LLVM/Clang (Ubuntu)"
@@ -121,21 +121,21 @@ jobs:
       run: |
         curl -jLo /tmp/llvm.sh "https://apt.llvm.org/llvm.sh"
         chmod +x /tmp/llvm.sh
-        sudo /tmp/llvm.sh 14 all
-        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-14 800
-        sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-14 800
-        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-14 800
-        sudo update-alternatives --install /usr/bin/lld lld /usr/bin/lld-14 800
-        sudo update-alternatives --install /usr/bin/lldb lldb /usr/bin/lldb-14 800
-        sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-14 800
-        sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-14 800
+        sudo /tmp/llvm.sh 16 all
+        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-16 800
+        sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-16 800
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-16 800
+        sudo update-alternatives --install /usr/bin/lld lld /usr/bin/lld-16 800
+        sudo update-alternatives --install /usr/bin/lldb lldb /usr/bin/lldb-16 800
+        sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-16 800
+        sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-16 800
         echo "CLANG_PATH=/usr/bin" >> "${GITHUB_ENV}"
     - name: "Install LLVM/Clang (MacOS)"
       if: startsWith( matrix.runner, 'macos' )
       shell: bash
       run: |
-        brew install llvm@14
-        LLVM_LOC=$(brew --prefix llvm@14)
+        brew install llvm@16
+        LLVM_LOC=$(brew --prefix llvm@16)
         echo "CLANG_PATH=${LLVM_LOC}/bin/" >> "${GITHUB_ENV}"
 
     - name: "Install InnoSetup (Windows)"
@@ -205,8 +205,8 @@ jobs:
             echo "CXX=g++-10" >> "${GITHUB_ENV}"
             echo "LD=ld" >> "${GITHUB_ENV}"
           elif [[ "${{ matrix.generator }}" = "Clang" ]]; then
-            echo "CC=clang-14" >> "${GITHUB_ENV}"
-            echo "CXX=clang++-14" >> "${GITHUB_ENV}"
+            echo "CC=clang-16" >> "${GITHUB_ENV}"
+            echo "CXX=clang++-16" >> "${GITHUB_ENV}"
             echo "LD=lld" >> "${GITHUB_ENV}"
           fi
         fi
