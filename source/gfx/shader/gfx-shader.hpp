@@ -67,7 +67,7 @@ namespace streamfx::gfx {
 			int32_t         _loops;
 			std::mt19937_64 _random;
 			int32_t         _random_seed;
-			float_t _random_values[16]; // 0..4 Per-Instance-Random, 4..8 Per-Activation-Random 9..15 Per-Frame-Random
+			float_t         _random_values[16]; // 0..4 Per-Instance-Random, 4..8 Per-Activation-Random 9..15 Per-Frame-Random
 
 			// Rendering
 			bool                                             _rt_up_to_date;
@@ -81,8 +81,7 @@ namespace streamfx::gfx {
 
 			bool is_technique_different(std::string_view tech);
 
-			bool load_shader(const std::filesystem::path& file, std::string_view tech, bool& shader_dirty,
-							 bool& param_dirty);
+			bool load_shader(const std::filesystem::path& file, std::string_view tech, bool& shader_dirty, bool& param_dirty);
 
 			static void defaults(obs_data_t* data);
 

@@ -44,7 +44,6 @@ namespace streamfx::util {
 		}
 
 		public /* operators */:
-
 		/* Copy Operator */
 		event<_args...>& operator=(const event<_args...>&) = delete;
 
@@ -78,7 +77,6 @@ namespace streamfx::util {
 		}
 
 		public /* functions: listeners */:
-
 		/** Add a new listener to the event.
 		 * @param listener A listener bound with std::bind or a std::function.
 		 */
@@ -147,7 +145,6 @@ namespace streamfx::util {
 		}
 
 		public /* callbacks */:
-
 		void set_listen_callback(std::function<void()> cb)
 		{
 			std::lock_guard<std::recursive_mutex> lg(_lock);

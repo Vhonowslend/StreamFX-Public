@@ -37,8 +37,7 @@ streamfx::nvidia::vfx::effect::~effect()
 	_nvcuda.reset();
 }
 
-streamfx::nvidia::vfx::effect::effect(effect_t effect)
-	: _nvcuda(cuda::obs::get()), _nvcvi(cv::cv::get()), _nvvfx(vfx::vfx::get()), _fx()
+streamfx::nvidia::vfx::effect::effect(effect_t effect) : _nvcuda(cuda::obs::get()), _nvcvi(cv::cv::get()), _nvvfx(vfx::vfx::get()), _fx()
 {
 	auto gctx = ::streamfx::obs::gs::context();
 	auto cctx = cuda::obs::get()->get_context()->enter();

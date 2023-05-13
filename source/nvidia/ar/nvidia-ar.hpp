@@ -152,16 +152,12 @@ namespace streamfx::nvidia::ar {
 		P_NVAR_DEFINE_FUNCTION(NvAR_SetF64, handle_t ptr, parameter_t parameter, double value);
 		P_NVAR_DEFINE_FUNCTION(NvAR_GetString, handle_t ptr, parameter_t parameter, const char** value);
 		P_NVAR_DEFINE_FUNCTION(NvAR_SetString, handle_t ptr, parameter_t parameter, const char* value);
-		P_NVAR_DEFINE_FUNCTION(NvAR_GetCudaStream, handle_t ptr, parameter_t parameter,
-							   ::streamfx::nvidia::cuda::stream_t* value);
-		P_NVAR_DEFINE_FUNCTION(NvAR_SetCudaStream, handle_t ptr, parameter_t parameter,
-							   ::streamfx::nvidia::cuda::stream_t value);
+		P_NVAR_DEFINE_FUNCTION(NvAR_GetCudaStream, handle_t ptr, parameter_t parameter, ::streamfx::nvidia::cuda::stream_t* value);
+		P_NVAR_DEFINE_FUNCTION(NvAR_SetCudaStream, handle_t ptr, parameter_t parameter, ::streamfx::nvidia::cuda::stream_t value);
 		P_NVAR_DEFINE_FUNCTION(NvAR_GetObject, handle_t ptr, parameter_t parameter, object_t* value, uint32_t size);
 		P_NVAR_DEFINE_FUNCTION(NvAR_SetObject, handle_t ptr, parameter_t parameter, object_t value, uint32_t size);
-		P_NVAR_DEFINE_FUNCTION(NvAR_GetF32Array, handle_t ptr, parameter_t parameter, const float** values,
-							   int32_t* size);
-		P_NVAR_DEFINE_FUNCTION(NvAR_SetF32Array, handle_t ptr, parameter_t parameter, const float* values,
-							   int32_t size);
+		P_NVAR_DEFINE_FUNCTION(NvAR_GetF32Array, handle_t ptr, parameter_t parameter, const float** values, int32_t* size);
+		P_NVAR_DEFINE_FUNCTION(NvAR_SetF32Array, handle_t ptr, parameter_t parameter, const float* values, int32_t size);
 
 		public:
 		static std::shared_ptr<::streamfx::nvidia::ar::ar> get();

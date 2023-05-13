@@ -44,9 +44,7 @@ streamfx::nvidia::vfx::denoising::~denoising()
 	_tmp.reset();
 }
 
-streamfx::nvidia::vfx::denoising::denoising()
-	: effect(EFFECT_DENOISING), _dirty(true), _input(), _convert_to_fp32(), _source(), _destination(), _convert_to_u8(),
-	  _output(), _tmp(), _state(0), _state_size(0), _strength(1.)
+streamfx::nvidia::vfx::denoising::denoising() : effect(EFFECT_DENOISING), _dirty(true), _input(), _convert_to_fp32(), _source(), _destination(), _convert_to_u8(), _output(), _tmp(), _state(0), _state_size(0), _strength(1.)
 {
 	// Enter Graphics and CUDA context.
 	auto gctx = ::streamfx::obs::gs::context();
@@ -93,19 +91,16 @@ void streamfx::nvidia::vfx::denoising::size(std::pair<uint32_t, uint32_t>& size)
 		// Dominant Width
 		double ar   = static_cast<double>(size.second) / static_cast<double>(size.first);
 		size.first  = std::clamp<uint32_t>(size.first, min_width, max_width);
-		size.second = std::clamp<uint32_t>(static_cast<uint32_t>(std::lround(static_cast<double>(size.first) * ar)),
-										   min_height, max_height);
+		size.second = std::clamp<uint32_t>(static_cast<uint32_t>(std::lround(static_cast<double>(size.first) * ar)), min_height, max_height);
 	} else {
 		// Dominant Height
 		double ar   = static_cast<double>(size.first) / static_cast<double>(size.second);
 		size.second = std::clamp<uint32_t>(size.second, min_height, max_height);
-		size.first  = std::clamp<uint32_t>(static_cast<uint32_t>(std::lround(static_cast<double>(size.second) * ar)),
-                                          min_width, max_width);
+		size.first  = std::clamp<uint32_t>(static_cast<uint32_t>(std::lround(static_cast<double>(size.second) * ar)), min_width, max_width);
 	}
 }
 
-std::shared_ptr<::streamfx::obs::gs::texture>
-	streamfx::nvidia::vfx::denoising::process(std::shared_ptr<::streamfx::obs::gs::texture> in)
+std::shared_ptr<::streamfx::obs::gs::texture> streamfx::nvidia::vfx::denoising::process(std::shared_ptr<::streamfx::obs::gs::texture> in)
 {
 	// Enter Graphics and CUDA context.
 	auto gctx = ::streamfx::obs::gs::context();
@@ -132,14 +127,10 @@ std::shared_ptr<::streamfx::obs::gs::texture>
 
 	{ // Convert Input to Source format
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_convert,
-													"Convert Input -> Source"};
+		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_convert, "Convert Input -> Source"};
 #endif
-		if (auto res = _nvcvi->NvCVImage_Transfer(_input->get_image(), _convert_to_fp32->get_image(), 1.f / 255.f,
-												  _nvcuda->get_stream()->get(), _tmp->get_image());
-			res != ::streamfx::nvidia::cv::result::SUCCESS) {
-			D_LOG_ERROR("Failed to transfer input to processing source due to error: %s",
-						_nvcvi->NvCV_GetErrorStringFromCode(res));
+		if (auto res = _nvcvi->NvCVImage_Transfer(_input->get_image(), _convert_to_fp32->get_image(), 1.f / 255.f, _nvcuda->get_stream()->get(), _tmp->get_image()); res != ::streamfx::nvidia::cv::result::SUCCESS) {
+			D_LOG_ERROR("Failed to transfer input to processing source due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 			throw std::runtime_error("Transfer failed.");
 		}
 	}
@@ -148,11 +139,8 @@ std::shared_ptr<::streamfx::obs::gs::texture>
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_copy, "Copy Input -> Source"};
 #endif
-		if (auto res = _nvcvi->NvCVImage_Transfer(_convert_to_fp32->get_image(), _source->get_image(), 1.f,
-												  _nvcuda->get_stream()->get(), _tmp->get_image());
-			res != ::streamfx::nvidia::cv::result::SUCCESS) {
-			D_LOG_ERROR("Failed to transfer input to processing source due to error: %s",
-						_nvcvi->NvCV_GetErrorStringFromCode(res));
+		if (auto res = _nvcvi->NvCVImage_Transfer(_convert_to_fp32->get_image(), _source->get_image(), 1.f, _nvcuda->get_stream()->get(), _tmp->get_image()); res != ::streamfx::nvidia::cv::result::SUCCESS) {
+			D_LOG_ERROR("Failed to transfer input to processing source due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 			throw std::runtime_error("Transfer failed.");
 		}
 	}
@@ -169,28 +157,20 @@ std::shared_ptr<::streamfx::obs::gs::texture>
 
 	{ // Convert Destination to Output format
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_convert,
-													"Convert Destination -> Output"};
+		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_convert, "Convert Destination -> Output"};
 #endif
-		if (auto res = _nvcvi->NvCVImage_Transfer(_destination->get_image(), _convert_to_u8->get_image(), 255.f,
-												  _nvcuda->get_stream()->get(), _tmp->get_image());
-			res != ::streamfx::nvidia::cv::result::SUCCESS) {
-			D_LOG_ERROR("Failed to transfer processing result to output due to error: %s",
-						_nvcvi->NvCV_GetErrorStringFromCode(res));
+		if (auto res = _nvcvi->NvCVImage_Transfer(_destination->get_image(), _convert_to_u8->get_image(), 255.f, _nvcuda->get_stream()->get(), _tmp->get_image()); res != ::streamfx::nvidia::cv::result::SUCCESS) {
+			D_LOG_ERROR("Failed to transfer processing result to output due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 			throw std::runtime_error("Transfer failed.");
 		}
 	}
 
 	{ // Copy destination to output.
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_copy,
-													"Copy Destination -> Output"};
+		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_copy, "Copy Destination -> Output"};
 #endif
-		if (auto res = _nvcvi->NvCVImage_Transfer(_convert_to_u8->get_image(), _output->get_image(), 1.,
-												  _nvcuda->get_stream()->get(), _tmp->get_image());
-			res != ::streamfx::nvidia::cv::result::SUCCESS) {
-			D_LOG_ERROR("Failed to transfer processing result to output due to error: %s",
-						_nvcvi->NvCV_GetErrorStringFromCode(res));
+		if (auto res = _nvcvi->NvCVImage_Transfer(_convert_to_u8->get_image(), _output->get_image(), 1., _nvcuda->get_stream()->get(), _tmp->get_image()); res != ::streamfx::nvidia::cv::result::SUCCESS) {
+			D_LOG_ERROR("Failed to transfer processing result to output due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 			throw std::runtime_error("Transfer failed.");
 		}
 	}
@@ -205,9 +185,7 @@ void streamfx::nvidia::vfx::denoising::resize(uint32_t width, uint32_t height)
 	auto cctx = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
 
 	if (!_tmp) {
-		_tmp = std::make_shared<::streamfx::nvidia::cv::image>(
-			width, height, ::streamfx::nvidia::cv::pixel_format::RGBA, ::streamfx::nvidia::cv::component_type::UINT8,
-			::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
+		_tmp = std::make_shared<::streamfx::nvidia::cv::image>(width, height, ::streamfx::nvidia::cv::pixel_format::RGBA, ::streamfx::nvidia::cv::component_type::UINT8, ::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 	}
 
 	if (!_input || (_input->get_image()->width != width) || (_input->get_image()->height != height)) {
@@ -218,14 +196,11 @@ void streamfx::nvidia::vfx::denoising::resize(uint32_t width, uint32_t height)
 		}
 	}
 
-	if (!_convert_to_fp32 || (_convert_to_fp32->get_image()->width != width)
-		|| (_convert_to_fp32->get_image()->height != height)) {
+	if (!_convert_to_fp32 || (_convert_to_fp32->get_image()->width != width) || (_convert_to_fp32->get_image()->height != height)) {
 		if (_convert_to_fp32) {
 			_convert_to_fp32->resize(width, height);
 		} else {
-			_convert_to_fp32 = std::make_shared<::streamfx::nvidia::cv::image>(
-				width, height, ::streamfx::nvidia::cv::pixel_format::RGBA, ::streamfx::nvidia::cv::component_type::FP32,
-				::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
+			_convert_to_fp32 = std::make_shared<::streamfx::nvidia::cv::image>(width, height, ::streamfx::nvidia::cv::pixel_format::RGBA, ::streamfx::nvidia::cv::component_type::FP32, ::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 	}
 
@@ -233,13 +208,10 @@ void streamfx::nvidia::vfx::denoising::resize(uint32_t width, uint32_t height)
 		if (_source) {
 			_source->resize(width, height);
 		} else {
-			_source = std::make_shared<::streamfx::nvidia::cv::image>(
-				width, height, ::streamfx::nvidia::cv::pixel_format::BGR, ::streamfx::nvidia::cv::component_type::FP32,
-				::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
+			_source = std::make_shared<::streamfx::nvidia::cv::image>(width, height, ::streamfx::nvidia::cv::pixel_format::BGR, ::streamfx::nvidia::cv::component_type::FP32, ::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 
-		if (auto res = set(::streamfx::nvidia::vfx::PARAMETER_INPUT_IMAGE_0, _source);
-			res != ::streamfx::nvidia::cv::result::SUCCESS) {
+		if (auto res = set(::streamfx::nvidia::vfx::PARAMETER_INPUT_IMAGE_0, _source); res != ::streamfx::nvidia::cv::result::SUCCESS) {
 			D_LOG_ERROR("Failed to set input image due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 			_source.reset();
 			throw std::runtime_error("SetImage failed.");
@@ -252,13 +224,10 @@ void streamfx::nvidia::vfx::denoising::resize(uint32_t width, uint32_t height)
 		if (_destination) {
 			_destination->resize(width, height);
 		} else {
-			_destination = std::make_shared<::streamfx::nvidia::cv::image>(
-				width, height, ::streamfx::nvidia::cv::pixel_format::BGR, ::streamfx::nvidia::cv::component_type::FP32,
-				::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
+			_destination = std::make_shared<::streamfx::nvidia::cv::image>(width, height, ::streamfx::nvidia::cv::pixel_format::BGR, ::streamfx::nvidia::cv::component_type::FP32, ::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 
-		if (auto res = set(::streamfx::nvidia::vfx::PARAMETER_OUTPUT_IMAGE_0, _destination);
-			res != ::streamfx::nvidia::cv::result::SUCCESS) {
+		if (auto res = set(::streamfx::nvidia::vfx::PARAMETER_OUTPUT_IMAGE_0, _destination); res != ::streamfx::nvidia::cv::result::SUCCESS) {
 			D_LOG_ERROR("Failed to set output image due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 			_destination.reset();
 			throw std::runtime_error("SetImage failed.");
@@ -267,15 +236,11 @@ void streamfx::nvidia::vfx::denoising::resize(uint32_t width, uint32_t height)
 		_dirty = true;
 	}
 
-	if (!_convert_to_u8 || (_convert_to_u8->get_image()->width != width)
-		|| (_convert_to_u8->get_image()->height != height)) {
+	if (!_convert_to_u8 || (_convert_to_u8->get_image()->width != width) || (_convert_to_u8->get_image()->height != height)) {
 		if (_convert_to_u8) {
 			_convert_to_u8->resize(width, height);
 		} else {
-			_convert_to_u8 = std::make_shared<::streamfx::nvidia::cv::image>(
-				width, height, ::streamfx::nvidia::cv::pixel_format::RGBA,
-				::streamfx::nvidia::cv::component_type::UINT8, ::streamfx::nvidia::cv::component_layout::INTERLEAVED,
-				::streamfx::nvidia::cv::memory_location::GPU, 1);
+			_convert_to_u8 = std::make_shared<::streamfx::nvidia::cv::image>(width, height, ::streamfx::nvidia::cv::pixel_format::RGBA, ::streamfx::nvidia::cv::component_type::UINT8, ::streamfx::nvidia::cv::component_layout::INTERLEAVED, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 	}
 
@@ -297,9 +262,7 @@ void streamfx::nvidia::vfx::denoising::resize(uint32_t width, uint32_t height)
 		_nvcuda->get_cuda()->cuMemsetD8(_state, 0, _state_size);
 
 		_states[0] = reinterpret_cast<void*>(_state);
-		if (auto res = _nvvfx->NvVFX_SetObject(_fx.get(), ::streamfx::nvidia::vfx::PARAMETER_STATE,
-											   reinterpret_cast<void*>(_states));
-			res != ::streamfx::nvidia::cv::result::SUCCESS) {
+		if (auto res = _nvvfx->NvVFX_SetObject(_fx.get(), ::streamfx::nvidia::vfx::PARAMETER_STATE, reinterpret_cast<void*>(_states)); res != ::streamfx::nvidia::cv::result::SUCCESS) {
 			D_LOG_ERROR("Failed to set state due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 			throw std::runtime_error("SetObject failed.");
 		}

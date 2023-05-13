@@ -46,29 +46,21 @@ namespace streamfx::ffmpeg::tools {
 	const char* get_thread_type_name(int thread_type);
 
 	void print_av_option_bool(AVCodecContext* context, const char* option, std::string_view text, bool inverse = false);
-	void print_av_option_bool(AVCodecContext* ctx_codec, void* ctx_option, const char* option, std::string_view text,
-							  bool inverse = false);
+	void print_av_option_bool(AVCodecContext* ctx_codec, void* ctx_option, const char* option, std::string_view text, bool inverse = false);
 
-	void print_av_option_int(AVCodecContext* context, const char* option, std::string_view text,
-							 std::string_view suffix);
-	void print_av_option_int(AVCodecContext* ctx_codec, void* ctx_option, const char* option, std::string_view text,
-							 std::string_view suffix);
+	void print_av_option_int(AVCodecContext* context, const char* option, std::string_view text, std::string_view suffix);
+	void print_av_option_int(AVCodecContext* ctx_codec, void* ctx_option, const char* option, std::string_view text, std::string_view suffix);
 
-	void print_av_option_string(AVCodecContext* context, const char* option, std::string_view text,
-								std::function<std::string(int64_t)> decoder);
-	void print_av_option_string(AVCodecContext* ctx_codec, void* ctx_option, const char* option, std::string_view text,
-								std::function<std::string(int64_t)> decoder);
+	void print_av_option_string(AVCodecContext* context, const char* option, std::string_view text, std::function<std::string(int64_t)> decoder);
+	void print_av_option_string(AVCodecContext* ctx_codec, void* ctx_option, const char* option, std::string_view text, std::function<std::string(int64_t)> decoder);
 
-	void print_av_option_string2(AVCodecContext* context, std::string_view option, std::string_view text,
-								 std::function<std::string(int64_t, std::string_view)> decoder);
-	void print_av_option_string2(AVCodecContext* ctx_codec, void* ctx_option, std::string_view option,
-								 std::string_view text, std::function<std::string(int64_t, std::string_view)> decoder);
+	void print_av_option_string2(AVCodecContext* context, std::string_view option, std::string_view text, std::function<std::string(int64_t, std::string_view)> decoder);
+	void print_av_option_string2(AVCodecContext* ctx_codec, void* ctx_option, std::string_view option, std::string_view text, std::function<std::string(int64_t, std::string_view)> decoder);
 
 	bool avoption_exists(const void* obj, std::string_view name);
 
 	const char* avoption_name_from_unit_value(const void* obj, std::string_view unit, int64_t value);
 
-	void avoption_list_add_entries(const void* obj, std::string_view unit,
-								   std::function<void(const AVOption*)> inserter = nullptr);
+	void avoption_list_add_entries(const void* obj, std::string_view unit, std::function<void(const AVOption*)> inserter = nullptr);
 
 } // namespace streamfx::ffmpeg::tools

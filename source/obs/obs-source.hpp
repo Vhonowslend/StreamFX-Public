@@ -26,8 +26,7 @@ namespace streamfx::obs {
 		 * @param source The source object to reference.
 		 * @param add_reference Should we increment the reference counter (duplicate ownership) or leave as it is (transfer ownership)?
 		 */
-		FORCE_INLINE source(obs_source_t* source, bool duplicate_reference = false, bool take_ownership = true)
-			: _is_owner(take_ownership)
+		FORCE_INLINE source(obs_source_t* source, bool duplicate_reference = false, bool take_ownership = true) : _is_owner(take_ownership)
 		{
 			if (duplicate_reference) {
 				_ref = obs_source_get_ref(source);
@@ -49,8 +48,7 @@ namespace streamfx::obs {
 		 *
 		 * Attention: May fail.
 		 */
-		FORCE_INLINE source(std::string_view id, std::string_view name, obs_data_t* settings, obs_data_t* hotkeys)
-			: _is_owner(true)
+		FORCE_INLINE source(std::string_view id, std::string_view name, obs_data_t* settings, obs_data_t* hotkeys) : _is_owner(true)
 		{
 			_ref = obs_source_create(id.data(), name.data(), settings, hotkeys);
 			if (!_ref) {
@@ -541,8 +539,7 @@ namespace streamfx::obs {
 		 *
 		 * EXPORT void obs_source_process_filter_tech_end(obs_source_t *filter, gs_effect_t *effect, uint32_t width, uint32_t height, const char *tech_name);
 		 */
-		FORCE_INLINE void process_filter_tech_end(gs_effect_t* effect, uint32_t width, uint32_t height,
-												  std::string_view tech_name)
+		FORCE_INLINE void process_filter_tech_end(gs_effect_t* effect, uint32_t width, uint32_t height, std::string_view tech_name)
 		{
 			obs_source_process_filter_tech_end(_ref, effect, width, height, tech_name.data());
 		};
@@ -605,7 +602,6 @@ namespace streamfx::obs {
 		}
 
 		public /* ToDo */:
-
 		/** 
 		 *
 		 * EXPORT obs_missing_files_t* obs_source_get_missing_files(const obs_source_t *source);

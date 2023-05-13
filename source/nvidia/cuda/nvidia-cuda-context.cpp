@@ -43,8 +43,7 @@ streamfx::nvidia::cuda::context::~context()
 	}
 }
 
-streamfx::nvidia::cuda::context::context()
-	: _cuda(::streamfx::nvidia::cuda::cuda::get()), _ctx(), _has_device(false), _device()
+streamfx::nvidia::cuda::context::context() : _cuda(::streamfx::nvidia::cuda::cuda::get()), _ctx(), _has_device(false), _device()
 {
 	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
 }
@@ -94,10 +93,7 @@ streamfx::nvidia::cuda::context::context(ID3D11Device* device) : context()
 		_cuda->cuDeviceGetUuid(&device_uuid, _device);
 	}
 
-	D_LOG_INFO("Initialized CUDA on device '%s' (%08" PRIx32 "-%04" PRIx16 "-%04" PRIx16 "-%04" PRIx16 "-%04" PRIx16
-			   "%08" PRIx32 ", %08" PRIx64 ", %" PRIu32 ").",
-			   device_name.c_str(), device_uuid.uuid.a, device_uuid.uuid.b, device_uuid.uuid.c, device_uuid.uuid.d,
-			   device_uuid.uuid.e, device_uuid.uuid.f, device_luid.luid, device_luid_mask);
+	D_LOG_INFO("Initialized CUDA on device '%s' (%08" PRIx32 "-%04" PRIx16 "-%04" PRIx16 "-%04" PRIx16 "-%04" PRIx16 "%08" PRIx32 ", %08" PRIx64 ", %" PRIu32 ").", device_name.c_str(), device_uuid.uuid.a, device_uuid.uuid.b, device_uuid.uuid.c, device_uuid.uuid.d, device_uuid.uuid.e, device_uuid.uuid.f, device_luid.luid, device_luid_mask);
 
 	_has_device = true;
 }

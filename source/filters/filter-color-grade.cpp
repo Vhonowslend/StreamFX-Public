@@ -113,12 +113,7 @@ static constexpr std::string_view HELP_URL = "https://github.com/Xaymar/obs-Stre
 
 color_grade_instance::~color_grade_instance() {}
 
-color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self)
-	: obs::source_instance(data, self), _effect(), _gfx_util(::streamfx::gfx::util::get()), _lift(), _gamma(), _gain(),
-	  _offset(), _tint_detection(), _tint_luma(), _tint_exponent(), _tint_low(), _tint_mid(), _tint_hig(),
-	  _correction(), _lut_enabled(true), _lut_depth(), _ccache_rt(), _ccache_texture(), _ccache_fresh(false),
-	  _lut_initialized(false), _lut_dirty(true), _lut_producer(), _lut_consumer(), _lut_rt(), _lut_texture(),
-	  _cache_rt(), _cache_texture(), _cache_fresh(false)
+color_grade_instance::color_grade_instance(obs_data_t* data, obs_source_t* self) : obs::source_instance(data, self), _effect(), _gfx_util(::streamfx::gfx::util::get()), _lift(), _gamma(), _gain(), _offset(), _tint_detection(), _tint_luma(), _tint_exponent(), _tint_low(), _tint_mid(), _tint_hig(), _correction(), _lut_enabled(true), _lut_depth(), _ccache_rt(), _ccache_texture(), _ccache_fresh(false), _lut_initialized(false), _lut_dirty(true), _lut_producer(), _lut_consumer(), _lut_rt(), _lut_texture(), _cache_rt(), _cache_texture(), _cache_fresh(false)
 {
 	{
 		auto gctx = streamfx::obs::gs::context();
@@ -357,8 +352,7 @@ void color_grade_instance::video_render(gs_effect_t* shader)
 	}
 
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Color Grading '%s'",
-										 obs_source_get_name(_self)};
+	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Color Grading '%s'", obs_source_get_name(_self)};
 #endif
 
 	// TODO: Optimize this once (https://github.com/obsproject/obs-studio/pull/4199) is merged.
@@ -367,8 +361,7 @@ void color_grade_instance::video_render(gs_effect_t* shader)
 	// 1. Capture the filter/source rendered above this.
 	if (!_ccache_fresh || !_ccache_texture) {
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-		streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_cache, "Cache '%s'",
-											 obs_source_get_name(target)};
+		streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_cache, "Cache '%s'", obs_source_get_name(target)};
 #endif
 		// If the input cache render target doesn't exist, create it.
 		if (!_ccache_rt) {
@@ -554,8 +547,7 @@ void color_grade_instance::video_render(gs_effect_t* shader)
 
 		// Draw the render cache.
 		while (gs_effect_loop(shader, "Draw")) {
-			gs_effect_set_texture(gs_effect_get_param_by_name(shader, "image"),
-								  _cache_texture ? _cache_texture->get_object() : nullptr);
+			gs_effect_set_texture(gs_effect_get_param_by_name(shader, "image"), _cache_texture ? _cache_texture->get_object() : nullptr);
 			gs_draw_sprite(nullptr, 0, width, height);
 		}
 	}
@@ -623,8 +615,7 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 
 #ifdef ENABLE_FRONTEND
 	{
-		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN),
-								   streamfx::filter::color_grade::color_grade_factory::on_manual_open, nullptr);
+		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), streamfx::filter::color_grade::color_grade_factory::on_manual_open, nullptr);
 	}
 #endif
 
@@ -633,23 +624,19 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 		obs_properties_add_group(pr, ST_KEY_LIFT, D_TRANSLATE(ST_I18N_LIFT), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_LIFT_(ST_RED), D_TRANSLATE(ST_I18N_LIFT_(ST_RED)),
-													 -1000., 100., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_LIFT_(ST_RED), D_TRANSLATE(ST_I18N_LIFT_(ST_RED)), -1000., 100., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_LIFT_(ST_GREEN), D_TRANSLATE(ST_I18N_LIFT_(ST_GREEN)),
-													 -1000., 100., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_LIFT_(ST_GREEN), D_TRANSLATE(ST_I18N_LIFT_(ST_GREEN)), -1000., 100., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_LIFT_(ST_BLUE), D_TRANSLATE(ST_I18N_LIFT_(ST_BLUE)),
-													 -1000., 100., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_LIFT_(ST_BLUE), D_TRANSLATE(ST_I18N_LIFT_(ST_BLUE)), -1000., 100., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_LIFT_(ST_ALL), D_TRANSLATE(ST_I18N_LIFT_(ST_ALL)),
-													 -1000., 100., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_LIFT_(ST_ALL), D_TRANSLATE(ST_I18N_LIFT_(ST_ALL)), -1000., 100., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 	}
@@ -659,23 +646,19 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 		obs_properties_add_group(pr, ST_KEY_GAMMA, D_TRANSLATE(ST_I18N_GAMMA), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAMMA_(ST_RED), D_TRANSLATE(ST_I18N_GAMMA_(ST_RED)),
-													 -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAMMA_(ST_RED), D_TRANSLATE(ST_I18N_GAMMA_(ST_RED)), -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAMMA_(ST_GREEN),
-													 D_TRANSLATE(ST_I18N_GAMMA_(ST_GREEN)), -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAMMA_(ST_GREEN), D_TRANSLATE(ST_I18N_GAMMA_(ST_GREEN)), -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAMMA_(ST_BLUE), D_TRANSLATE(ST_I18N_GAMMA_(ST_BLUE)),
-													 -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAMMA_(ST_BLUE), D_TRANSLATE(ST_I18N_GAMMA_(ST_BLUE)), -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAMMA_(ST_ALL), D_TRANSLATE(ST_I18N_GAMMA_(ST_ALL)),
-													 -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAMMA_(ST_ALL), D_TRANSLATE(ST_I18N_GAMMA_(ST_ALL)), -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 	}
@@ -685,23 +668,19 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 		obs_properties_add_group(pr, ST_KEY_GAIN, D_TRANSLATE(ST_I18N_GAIN), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAIN_(ST_RED), D_TRANSLATE(ST_I18N_GAIN_(ST_RED)),
-													 -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAIN_(ST_RED), D_TRANSLATE(ST_I18N_GAIN_(ST_RED)), -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAIN_(ST_GREEN), D_TRANSLATE(ST_I18N_GAIN_(ST_GREEN)),
-													 -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAIN_(ST_GREEN), D_TRANSLATE(ST_I18N_GAIN_(ST_GREEN)), -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAIN_(ST_BLUE), D_TRANSLATE(ST_I18N_GAIN_(ST_BLUE)),
-													 -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAIN_(ST_BLUE), D_TRANSLATE(ST_I18N_GAIN_(ST_BLUE)), -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAIN_(ST_ALL), D_TRANSLATE(ST_I18N_GAIN_(ST_ALL)),
-													 -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_GAIN_(ST_ALL), D_TRANSLATE(ST_I18N_GAIN_(ST_ALL)), -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 	}
@@ -711,23 +690,19 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 		obs_properties_add_group(pr, ST_KEY_OFFSET, D_TRANSLATE(ST_I18N_OFFSET), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_OFFSET_(ST_RED), D_TRANSLATE(ST_I18N_OFFSET_(ST_RED)),
-													 -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_OFFSET_(ST_RED), D_TRANSLATE(ST_I18N_OFFSET_(ST_RED)), -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_OFFSET_(ST_GREEN),
-													 D_TRANSLATE(ST_I18N_OFFSET_(ST_GREEN)), -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_OFFSET_(ST_GREEN), D_TRANSLATE(ST_I18N_OFFSET_(ST_GREEN)), -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_OFFSET_(ST_BLUE),
-													 D_TRANSLATE(ST_I18N_OFFSET_(ST_BLUE)), -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_OFFSET_(ST_BLUE), D_TRANSLATE(ST_I18N_OFFSET_(ST_BLUE)), -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_OFFSET_(ST_ALL), D_TRANSLATE(ST_I18N_OFFSET_(ST_ALL)),
-													 -1000., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_OFFSET_(ST_ALL), D_TRANSLATE(ST_I18N_OFFSET_(ST_ALL)), -1000., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 	}
@@ -737,50 +712,41 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 		obs_properties_add_group(pr, ST_KEY_TINT, D_TRANSLATE(ST_I18N_TINT), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_LOW, ST_RED),
-													 D_TRANSLATE(ST_I18N_TINT_(ST_TONE_LOW, ST_RED)), 0, 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_LOW, ST_RED), D_TRANSLATE(ST_I18N_TINT_(ST_TONE_LOW, ST_RED)), 0, 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_LOW, ST_GREEN),
-													 D_TRANSLATE(ST_I18N_TINT_(ST_TONE_LOW, ST_GREEN)), 0, 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_LOW, ST_GREEN), D_TRANSLATE(ST_I18N_TINT_(ST_TONE_LOW, ST_GREEN)), 0, 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_LOW, ST_BLUE),
-													 D_TRANSLATE(ST_I18N_TINT_(ST_TONE_LOW, ST_BLUE)), 0, 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_LOW, ST_BLUE), D_TRANSLATE(ST_I18N_TINT_(ST_TONE_LOW, ST_BLUE)), 0, 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_MID, ST_RED),
-													 D_TRANSLATE(ST_I18N_TINT_(ST_TONE_MID, ST_RED)), 0, 1000., 0.01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_MID, ST_RED), D_TRANSLATE(ST_I18N_TINT_(ST_TONE_MID, ST_RED)), 0, 1000., 0.01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_MID, ST_GREEN),
-													 D_TRANSLATE(ST_I18N_TINT_(ST_TONE_MID, ST_GREEN)), 0, 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_MID, ST_GREEN), D_TRANSLATE(ST_I18N_TINT_(ST_TONE_MID, ST_GREEN)), 0, 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_MID, ST_BLUE),
-													 D_TRANSLATE(ST_I18N_TINT_(ST_TONE_MID, ST_BLUE)), 0, 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_MID, ST_BLUE), D_TRANSLATE(ST_I18N_TINT_(ST_TONE_MID, ST_BLUE)), 0, 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_HIGH, ST_RED),
-													 D_TRANSLATE(ST_I18N_TINT_(ST_TONE_HIGH, ST_RED)), 0, 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_HIGH, ST_RED), D_TRANSLATE(ST_I18N_TINT_(ST_TONE_HIGH, ST_RED)), 0, 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_HIGH, ST_GREEN),
-													 D_TRANSLATE(ST_I18N_TINT_(ST_TONE_HIGH, ST_GREEN)), 0, 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_HIGH, ST_GREEN), D_TRANSLATE(ST_I18N_TINT_(ST_TONE_HIGH, ST_GREEN)), 0, 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_HIGH, ST_BLUE),
-													 D_TRANSLATE(ST_I18N_TINT_(ST_TONE_HIGH, ST_BLUE)), 0, 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_TINT_(ST_TONE_HIGH, ST_BLUE), D_TRANSLATE(ST_I18N_TINT_(ST_TONE_HIGH, ST_BLUE)), 0, 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 	}
@@ -790,23 +756,19 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 		obs_properties_add_group(pr, ST_KEY_CORRECTION, D_TRANSLATE(ST_I18N_CORRECTION), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_CORRECTION_(ST_HUE),
-													 D_TRANSLATE(ST_I18N_CORRECTION_(ST_HUE)), -180., 180., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_CORRECTION_(ST_HUE), D_TRANSLATE(ST_I18N_CORRECTION_(ST_HUE)), -180., 180., .01);
 			obs_property_float_set_suffix(p, " °");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_CORRECTION_(ST_SATURATION),
-													 D_TRANSLATE(ST_I18N_CORRECTION_(ST_SATURATION)), 0., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_CORRECTION_(ST_SATURATION), D_TRANSLATE(ST_I18N_CORRECTION_(ST_SATURATION)), 0., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_CORRECTION_(ST_LIGHTNESS),
-													 D_TRANSLATE(ST_I18N_CORRECTION_(ST_LIGHTNESS)), 0., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_CORRECTION_(ST_LIGHTNESS), D_TRANSLATE(ST_I18N_CORRECTION_(ST_LIGHTNESS)), 0., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_CORRECTION_(ST_CONTRAST),
-													 D_TRANSLATE(ST_I18N_CORRECTION_(ST_CONTRAST)), 0., 1000., .01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_CORRECTION_(ST_CONTRAST), D_TRANSLATE(ST_I18N_CORRECTION_(ST_CONTRAST)), 0., 1000., .01);
 			obs_property_float_set_suffix(p, " %");
 		}
 	}
@@ -816,25 +778,16 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 		obs_properties_add_group(pr, S_ADVANCED, D_TRANSLATE(S_ADVANCED), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_TINT_MODE, D_TRANSLATE(ST_I18N_TINT_MODE), OBS_COMBO_TYPE_LIST,
-											 OBS_COMBO_FORMAT_INT);
-			std::pair<const char*, luma_mode> els[] = {{ST_I18N_TINT_MODE_(ST_MODE_LINEAR), luma_mode::Linear},
-													   {ST_I18N_TINT_MODE_(ST_MODE_EXP), luma_mode::Exp},
-													   {ST_I18N_TINT_MODE_(ST_MODE_EXP2), luma_mode::Exp2},
-													   {ST_I18N_TINT_MODE_(ST_MODE_LOG), luma_mode::Log},
-													   {ST_I18N_TINT_MODE_(ST_MODE_LOG10), luma_mode::Log10}};
+			auto                              p     = obs_properties_add_list(grp, ST_KEY_TINT_MODE, D_TRANSLATE(ST_I18N_TINT_MODE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			std::pair<const char*, luma_mode> els[] = {{ST_I18N_TINT_MODE_(ST_MODE_LINEAR), luma_mode::Linear}, {ST_I18N_TINT_MODE_(ST_MODE_EXP), luma_mode::Exp}, {ST_I18N_TINT_MODE_(ST_MODE_EXP2), luma_mode::Exp2}, {ST_I18N_TINT_MODE_(ST_MODE_LOG), luma_mode::Log}, {ST_I18N_TINT_MODE_(ST_MODE_LOG10), luma_mode::Log10}};
 			for (auto kv : els) {
 				obs_property_list_add_int(p, D_TRANSLATE(kv.first), static_cast<int64_t>(kv.second));
 			}
 		}
 
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_TINT_DETECTION, D_TRANSLATE(ST_I18N_TINT_DETECTION),
-											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			std::pair<const char*, detection_mode> els[] = {
-				{ST_I18N_TINT_DETECTION_(ST_DETECTION_HSV), detection_mode::HSV},
-				{ST_I18N_TINT_DETECTION_(ST_DETECTION_HSL), detection_mode::HSL},
-				{ST_I18N_TINT_DETECTION_(ST_DETECTION_YUV_SDR), detection_mode::YUV_SDR}};
+			auto                                   p     = obs_properties_add_list(grp, ST_KEY_TINT_DETECTION, D_TRANSLATE(ST_I18N_TINT_DETECTION), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			std::pair<const char*, detection_mode> els[] = {{ST_I18N_TINT_DETECTION_(ST_DETECTION_HSV), detection_mode::HSV}, {ST_I18N_TINT_DETECTION_(ST_DETECTION_HSL), detection_mode::HSL}, {ST_I18N_TINT_DETECTION_(ST_DETECTION_YUV_SDR), detection_mode::YUV_SDR}};
 			for (auto kv : els) {
 				obs_property_list_add_int(p, D_TRANSLATE(kv.first), static_cast<int64_t>(kv.second));
 			}
@@ -843,15 +796,9 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 		obs_properties_add_float_slider(grp, ST_KEY_TINT_EXPONENT, D_TRANSLATE(ST_I18N_TINT_EXPONENT), 0., 10., .01);
 
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_RENDERMODE, D_TRANSLATE(ST_I18N_RENDERMODE),
-											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			auto                            p     = obs_properties_add_list(grp, ST_KEY_RENDERMODE, D_TRANSLATE(ST_I18N_RENDERMODE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			std::pair<const char*, int64_t> els[] = {
-				{S_STATE_AUTOMATIC, -1},
-				{ST_I18N_RENDERMODE_DIRECT, 0},
-				{ST_I18N_RENDERMODE_LUT_2BIT, static_cast<int64_t>(streamfx::gfx::lut::color_depth::_2)},
-				{ST_I18N_RENDERMODE_LUT_4BIT, static_cast<int64_t>(streamfx::gfx::lut::color_depth::_4)},
-				{ST_I18N_RENDERMODE_LUT_6BIT, static_cast<int64_t>(streamfx::gfx::lut::color_depth::_6)},
-				{ST_I18N_RENDERMODE_LUT_8BIT, static_cast<int64_t>(streamfx::gfx::lut::color_depth::_8)},
+				{S_STATE_AUTOMATIC, -1}, {ST_I18N_RENDERMODE_DIRECT, 0}, {ST_I18N_RENDERMODE_LUT_2BIT, static_cast<int64_t>(streamfx::gfx::lut::color_depth::_2)}, {ST_I18N_RENDERMODE_LUT_4BIT, static_cast<int64_t>(streamfx::gfx::lut::color_depth::_4)}, {ST_I18N_RENDERMODE_LUT_6BIT, static_cast<int64_t>(streamfx::gfx::lut::color_depth::_6)}, {ST_I18N_RENDERMODE_LUT_8BIT, static_cast<int64_t>(streamfx::gfx::lut::color_depth::_8)},
 				//{ST_RENDERMODE_LUT_10BIT, static_cast<int64_t>(gfx::lut::color_depth::_10)},
 			};
 			for (auto kv : els) {

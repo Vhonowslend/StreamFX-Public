@@ -76,8 +76,7 @@ bool streamfx::gfx::blur::dual_filtering_factory::is_type_supported(::streamfx::
 	}
 }
 
-std::shared_ptr<::streamfx::gfx::blur::base>
-	streamfx::gfx::blur::dual_filtering_factory::create(::streamfx::gfx::blur::type type)
+std::shared_ptr<::streamfx::gfx::blur::base> streamfx::gfx::blur::dual_filtering_factory::create(::streamfx::gfx::blur::type type)
 {
 	switch (type) {
 	case ::streamfx::gfx::blur::type::Area:
@@ -169,8 +168,7 @@ std::shared_ptr<::streamfx::gfx::blur::dual_filtering_data> streamfx::gfx::blur:
 	return instance;
 }
 
-streamfx::gfx::blur::dual_filtering::dual_filtering()
-	: _data(::streamfx::gfx::blur::dual_filtering_factory::get().data()), _size(0), _iterations(0)
+streamfx::gfx::blur::dual_filtering::dual_filtering() : _data(::streamfx::gfx::blur::dual_filtering_factory::get().data()), _size(0), _iterations(0)
 {
 	auto gctx = streamfx::obs::gs::context();
 	_rts.resize(ST_MAX_LEVELS + 1);
@@ -267,8 +265,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::dual_filterin
 		// Apply
 		effect.get_parameter("pImage").set_texture(tex);
 		effect.get_parameter("pImageSize").set_float2(static_cast<float>(owidth), static_cast<float>(oheight));
-		effect.get_parameter("pImageTexel")
-			.set_float2(0.5f / static_cast<float>(owidth), 0.5f / static_cast<float>(oheight));
+		effect.get_parameter("pImageTexel").set_float2(0.5f / static_cast<float>(owidth), 0.5f / static_cast<float>(oheight));
 
 		{
 			auto op = _rts[n]->render(owidth, oheight);
@@ -297,8 +294,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::dual_filterin
 		// Apply
 		effect.get_parameter("pImage").set_texture(tex);
 		effect.get_parameter("pImageSize").set_float2(static_cast<float>(iwidth), static_cast<float>(iheight));
-		effect.get_parameter("pImageTexel")
-			.set_float2(0.5f / static_cast<float>(iwidth), 0.5f / static_cast<float>(iheight));
+		effect.get_parameter("pImageTexel").set_float2(0.5f / static_cast<float>(iwidth), 0.5f / static_cast<float>(iheight));
 
 		{
 			auto op = _rts[n - 1]->render(owidth, oheight);

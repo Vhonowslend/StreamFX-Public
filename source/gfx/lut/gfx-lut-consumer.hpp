@@ -19,10 +19,8 @@ namespace streamfx::gfx::lut {
 		consumer();
 		~consumer();
 
-		std::shared_ptr<streamfx::obs::gs::effect> prepare(streamfx::gfx::lut::color_depth             depth,
-														   std::shared_ptr<streamfx::obs::gs::texture> lut);
+		std::shared_ptr<streamfx::obs::gs::effect> prepare(streamfx::gfx::lut::color_depth depth, std::shared_ptr<streamfx::obs::gs::texture> lut);
 
-		void consume(streamfx::gfx::lut::color_depth depth, std::shared_ptr<streamfx::obs::gs::texture> lut,
-					 std::shared_ptr<streamfx::obs::gs::texture> texture);
+		void consume(streamfx::gfx::lut::color_depth depth, std::shared_ptr<streamfx::obs::gs::texture> lut, std::shared_ptr<streamfx::obs::gs::texture> texture);
 	};
 } // namespace streamfx::gfx::lut

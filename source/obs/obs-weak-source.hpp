@@ -67,8 +67,7 @@ namespace streamfx::obs {
 		 */
 		FORCE_INLINE weak_source(std::string_view name)
 		{
-			std::shared_ptr<obs_source_t> ref{obs_get_source_by_name(name.data()),
-											  [](obs_source_t* v) { obs_source_release(v); }};
+			std::shared_ptr<obs_source_t> ref{obs_get_source_by_name(name.data()), [](obs_source_t* v) { obs_source_release(v); }};
 			if (!ref) {
 				throw std::invalid_argument("Parameter 'name' does not define an valid source.");
 			}

@@ -28,11 +28,9 @@ namespace streamfx::nvidia::cv {
 		image();
 
 		public:
-		image(uint32_t width, uint32_t height, pixel_format pix_fmt, component_type cmp_type,
-			  component_layout cmp_layout, memory_location location, uint32_t alignment);
+		image(uint32_t width, uint32_t height, pixel_format pix_fmt, component_type cmp_type, component_layout cmp_layout, memory_location location, uint32_t alignment);
 
-		virtual void reallocate(uint32_t width, uint32_t height, pixel_format pix_fmt, component_type cmp_type,
-								component_layout cmp_layout, memory_location location, uint32_t alignment);
+		virtual void reallocate(uint32_t width, uint32_t height, pixel_format pix_fmt, component_type cmp_type, component_layout cmp_layout, memory_location location, uint32_t alignment);
 
 		virtual void resize(uint32_t width, uint32_t height);
 

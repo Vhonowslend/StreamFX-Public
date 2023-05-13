@@ -41,31 +41,23 @@ image::image() : _cv(::streamfx::nvidia::cv::cv::get()), _image(), _alignment(1)
 	memset(&_image, sizeof(_image), 0);
 }
 
-image::image(uint32_t width, uint32_t height, pixel_format pix_fmt, component_type cmp_type,
-			 component_layout cmp_layout, memory_location location, uint32_t alignment)
-	: image()
+image::image(uint32_t width, uint32_t height, pixel_format pix_fmt, component_type cmp_type, component_layout cmp_layout, memory_location location, uint32_t alignment) : image()
 {
 	auto gctx = ::streamfx::obs::gs::context();
 	auto cctx = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
 
 	_alignment = alignment;
-	if (auto res = _cv->NvCVImage_Alloc(&_image, width, height, pix_fmt, cmp_type, static_cast<uint32_t>(cmp_layout),
-										static_cast<uint32_t>(location), _alignment);
-		res != result::SUCCESS) {
+	if (auto res = _cv->NvCVImage_Alloc(&_image, width, height, pix_fmt, cmp_type, static_cast<uint32_t>(cmp_layout), static_cast<uint32_t>(location), _alignment); res != result::SUCCESS) {
 		throw std::runtime_error(_cv->NvCV_GetErrorStringFromCode(res));
 	}
 }
 
-void streamfx::nvidia::cv::image::reallocate(uint32_t width, uint32_t height, pixel_format pix_fmt,
-											 component_type cmp_type, component_layout cmp_layout,
-											 memory_location location, uint32_t alignment)
+void streamfx::nvidia::cv::image::reallocate(uint32_t width, uint32_t height, pixel_format pix_fmt, component_type cmp_type, component_layout cmp_layout, memory_location location, uint32_t alignment)
 {
 	auto gctx = ::streamfx::obs::gs::context();
 	auto cctx = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
 
-	if (auto res = _cv->NvCVImage_Realloc(&_image, width, height, pix_fmt, cmp_type, static_cast<uint32_t>(cmp_layout),
-										  static_cast<uint32_t>(location), alignment);
-		res != result::SUCCESS) {
+	if (auto res = _cv->NvCVImage_Realloc(&_image, width, height, pix_fmt, cmp_type, static_cast<uint32_t>(cmp_layout), static_cast<uint32_t>(location), alignment); res != result::SUCCESS) {
 		throw std::runtime_error(_cv->NvCV_GetErrorStringFromCode(res));
 	}
 	_alignment = alignment;
@@ -73,8 +65,7 @@ void streamfx::nvidia::cv::image::reallocate(uint32_t width, uint32_t height, pi
 
 void streamfx::nvidia::cv::image::resize(uint32_t width, uint32_t height)
 {
-	reallocate(width, height, _image.pxl_format, _image.comp_type, static_cast<component_layout>(_image.comp_layout),
-			   static_cast<memory_location>(_image.mem_location), _alignment);
+	reallocate(width, height, _image.pxl_format, _image.comp_type, static_cast<component_layout>(_image.comp_layout), static_cast<memory_location>(_image.mem_location), _alignment);
 }
 
 streamfx::nvidia::cv::image_t* streamfx::nvidia::cv::image::get_image()

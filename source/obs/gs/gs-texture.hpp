@@ -36,8 +36,7 @@ namespace streamfx::obs::gs {
 		 * \param mip_data Texture data including mipmaps
 		 * \param texture_flags Texture Flags
 		 */
-		texture(uint32_t width, uint32_t height, gs_color_format format, uint32_t mip_levels, const uint8_t** mip_data,
-				streamfx::obs::gs::texture::flags texture_flags);
+		texture(uint32_t width, uint32_t height, gs_color_format format, uint32_t mip_levels, const uint8_t** mip_data, streamfx::obs::gs::texture::flags texture_flags);
 
 		/*!
 		 * \brief Create a 3D Texture
@@ -50,8 +49,7 @@ namespace streamfx::obs::gs {
 		 * \param mip_data Texture data including mipmaps
 		 * \param texture_flags Texture Flags
 		 */
-		texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_format format, uint32_t mip_levels,
-				const uint8_t** mip_data, streamfx::obs::gs::texture::flags texture_flags);
+		texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_format format, uint32_t mip_levels, const uint8_t** mip_data, streamfx::obs::gs::texture::flags texture_flags);
 
 		/*!
 		 * \brief Create a Cube Texture
@@ -62,8 +60,7 @@ namespace streamfx::obs::gs {
 		 * \param mip_data Texture data including mipmaps
 		 * \param texture_flags Texture Flags
 		 */
-		texture(uint32_t size, gs_color_format format, uint32_t mip_levels, const uint8_t** mip_data,
-				streamfx::obs::gs::texture::flags texture_flags);
+		texture(uint32_t size, gs_color_format format, uint32_t mip_levels, const uint8_t** mip_data, streamfx::obs::gs::texture::flags texture_flags);
 
 		/*!
 		* \brief Load a texture from a file

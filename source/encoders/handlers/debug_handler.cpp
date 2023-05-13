@@ -69,25 +69,7 @@ void debug_handler::get_properties(obs_properties_t*, const AVCodec* codec, AVCo
 	DLOG_INFO("Options for '%s':", codec->name);
 
 	std::pair<AVOptionType, std::string> opt_type_name[] = {
-		{AV_OPT_TYPE_FLAGS, "Flags"},
-		{AV_OPT_TYPE_INT, "Int"},
-		{AV_OPT_TYPE_INT64, "Int64"},
-		{AV_OPT_TYPE_DOUBLE, "Double"},
-		{AV_OPT_TYPE_FLOAT, "Float"},
-		{AV_OPT_TYPE_STRING, "String"},
-		{AV_OPT_TYPE_RATIONAL, "Rational"},
-		{AV_OPT_TYPE_BINARY, "Binary"},
-		{AV_OPT_TYPE_DICT, "Dictionary"},
-		{AV_OPT_TYPE_UINT64, "Unsigned Int64"},
-		{AV_OPT_TYPE_CONST, "Constant"},
-		{AV_OPT_TYPE_IMAGE_SIZE, "Image Size"},
-		{AV_OPT_TYPE_PIXEL_FMT, "Pixel Format"},
-		{AV_OPT_TYPE_SAMPLE_FMT, "Sample Format"},
-		{AV_OPT_TYPE_VIDEO_RATE, "Video Rate"},
-		{AV_OPT_TYPE_DURATION, "Duration"},
-		{AV_OPT_TYPE_COLOR, "Color"},
-		{AV_OPT_TYPE_CHANNEL_LAYOUT, "Layout"},
-		{AV_OPT_TYPE_BOOL, "Bool"},
+		{AV_OPT_TYPE_FLAGS, "Flags"}, {AV_OPT_TYPE_INT, "Int"}, {AV_OPT_TYPE_INT64, "Int64"}, {AV_OPT_TYPE_DOUBLE, "Double"}, {AV_OPT_TYPE_FLOAT, "Float"}, {AV_OPT_TYPE_STRING, "String"}, {AV_OPT_TYPE_RATIONAL, "Rational"}, {AV_OPT_TYPE_BINARY, "Binary"}, {AV_OPT_TYPE_DICT, "Dictionary"}, {AV_OPT_TYPE_UINT64, "Unsigned Int64"}, {AV_OPT_TYPE_CONST, "Constant"}, {AV_OPT_TYPE_IMAGE_SIZE, "Image Size"}, {AV_OPT_TYPE_PIXEL_FMT, "Pixel Format"}, {AV_OPT_TYPE_SAMPLE_FMT, "Sample Format"}, {AV_OPT_TYPE_VIDEO_RATE, "Video Rate"}, {AV_OPT_TYPE_DURATION, "Duration"}, {AV_OPT_TYPE_COLOR, "Color"}, {AV_OPT_TYPE_CHANNEL_LAYOUT, "Layout"}, {AV_OPT_TYPE_BOOL, "Bool"},
 	};
 	std::map<std::string, AVOptionType> unit_types;
 
@@ -107,8 +89,7 @@ void debug_handler::get_properties(obs_properties_t*, const AVCodec* codec, AVCo
 			} else {
 				auto unit_type = unit_types.find(opt->unit);
 				if (unit_type == unit_types.end()) {
-					DLOG_INFO("  [%s] Flag '%s' and help text '%s' with value '%" PRId64 "'.", opt->unit, opt->name,
-							  opt->help, opt->default_val.i64);
+					DLOG_INFO("  [%s] Flag '%s' and help text '%s' with value '%" PRId64 "'.", opt->unit, opt->name, opt->help, opt->default_val.i64);
 				} else {
 					std::string out;
 					switch (unit_type->second) {
@@ -135,8 +116,7 @@ void debug_handler::get_properties(obs_properties_t*, const AVCodec* codec, AVCo
 						break;
 					}
 
-					DLOG_INFO("  [%s] Constant '%s' and help text '%s' with value '%s'.", opt->unit, opt->name,
-							  opt->help, out.c_str());
+					DLOG_INFO("  [%s] Constant '%s' and help text '%s' with value '%s'.", opt->unit, opt->name, opt->help, out.c_str());
 				}
 			}
 		} else {
@@ -176,8 +156,7 @@ void debug_handler::get_properties(obs_properties_t*, const AVCodec* codec, AVCo
 			DLOG_INFO(
 				"  Option '%s'%s%s%s with help '%s' of type '%s' with default value '%s', minimum '%s' and maximum "
 				"'%s'.",
-				opt->name, opt->unit ? " with unit (" : "", opt->unit ? opt->unit : "", opt->unit ? ")" : "", opt->help,
-				type_name.c_str(), out.c_str(), minimum.c_str(), maximum.c_str());
+				opt->name, opt->unit ? " with unit (" : "", opt->unit ? opt->unit : "", opt->unit ? ")" : "", opt->help, type_name.c_str(), out.c_str(), minimum.c_str(), maximum.c_str());
 		}
 	}
 }

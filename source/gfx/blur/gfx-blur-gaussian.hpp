@@ -129,9 +129,7 @@ namespace streamfx::gfx {
 			virtual std::shared_ptr<::streamfx::obs::gs::texture> render() override;
 		};
 
-		class gaussian_rotational : public ::streamfx::gfx::blur::gaussian,
-									public ::streamfx::gfx::blur::base_angle,
-									public ::streamfx::gfx::blur::base_center {
+		class gaussian_rotational : public ::streamfx::gfx::blur::gaussian, public ::streamfx::gfx::blur::base_angle, public ::streamfx::gfx::blur::base_center {
 			std::pair<double_t, double_t> m_center;
 			double_t                      m_angle;
 

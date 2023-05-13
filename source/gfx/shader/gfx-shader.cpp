@@ -49,8 +49,7 @@ streamfx::gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
 	// Initialize random values.
 	_random.seed(static_cast<unsigned long long>(_random_seed));
 	for (size_t idx = 0; idx < 16; idx++) {
-		_random_values[idx] =
-			static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
+		_random_values[idx] = static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
 	}
 }
 
@@ -91,8 +90,7 @@ bool streamfx::gfx::shader::shader::is_technique_different(std::string_view tech
 	return false;
 }
 
-bool streamfx::gfx::shader::shader::load_shader(const std::filesystem::path& file, std::string_view tech,
-												bool& shader_dirty, bool& param_dirty)
+bool streamfx::gfx::shader::shader::load_shader(const std::filesystem::path& file, std::string_view tech, bool& shader_dirty, bool& param_dirty)
 {
 	try {
 		if (!std::filesystem::exists(file))
@@ -112,8 +110,7 @@ bool streamfx::gfx::shader::shader::load_shader(const std::filesystem::path& fil
 
 		// Update Params
 		if (param_dirty) {
-			auto settings =
-				std::shared_ptr<obs_data_t>(obs_source_get_settings(_self), [](obs_data_t* p) { obs_data_release(p); });
+			auto settings = std::shared_ptr<obs_data_t>(obs_source_get_settings(_self), [](obs_data_t* p) { obs_data_release(p); });
 
 			bool have_valid_tech = false;
 			for (std::size_t idx = 0; idx < _shader.count_techniques(); idx++) {
@@ -136,8 +133,7 @@ bool streamfx::gfx::shader::shader::load_shader(const std::filesystem::path& fil
 			auto etech = _shader.get_technique(_shader_tech);
 			for (std::size_t idx = 0; idx < etech.count_passes(); idx++) {
 				auto pass         = etech.get_pass(idx);
-				auto fetch_params = [&](std::size_t                                                     count,
-										std::function<streamfx::obs::gs::effect_parameter(std::size_t)> get_func) {
+				auto fetch_params = [&](std::size_t count, std::function<streamfx::obs::gs::effect_parameter(std::size_t)> get_func) {
 					for (std::size_t vidx = 0; vidx < count; vidx++) {
 						auto el = get_func(vidx);
 						if (!el)
@@ -198,21 +194,15 @@ void streamfx::gfx::shader::shader::properties(obs_properties_t* pr)
 			} else {
 				path = streamfx::data_file_path("examples/").u8string();
 			}
-			auto p = obs_properties_add_path(grp, ST_KEY_SHADER_FILE, D_TRANSLATE(ST_I18N_SHADER_FILE), OBS_PATH_FILE,
-											 "*.*", path.c_str());
+			auto p = obs_properties_add_path(grp, ST_KEY_SHADER_FILE, D_TRANSLATE(ST_I18N_SHADER_FILE), OBS_PATH_FILE, "*.*", path.c_str());
 		}
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_SHADER_TECHNIQUE, D_TRANSLATE(ST_I18N_SHADER_TECHNIQUE),
-											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+			auto p = obs_properties_add_list(grp, ST_KEY_SHADER_TECHNIQUE, D_TRANSLATE(ST_I18N_SHADER_TECHNIQUE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 		}
 
 		{
 			obs_properties_add_button2(
-				grp, ST_KEY_REFRESH, D_TRANSLATE(ST_I18N_REFRESH),
-				[](obs_properties_t* props, obs_property_t* prop, void* priv) {
-					return reinterpret_cast<streamfx::gfx::shader::shader*>(priv)->on_refresh_properties(props, prop);
-				},
-				this);
+				grp, ST_KEY_REFRESH, D_TRANSLATE(ST_I18N_REFRESH), [](obs_properties_t* props, obs_property_t* prop, void* priv) { return reinterpret_cast<streamfx::gfx::shader::shader*>(priv)->on_refresh_properties(props, prop); }, this);
 		}
 
 		if (_mode != shader_mode::Transition) {
@@ -220,18 +210,15 @@ void streamfx::gfx::shader::shader::properties(obs_properties_t* pr)
 			obs_properties_add_group(grp, ST_KEY_SHADER_SIZE, D_TRANSLATE(ST_I18N_SHADER_SIZE), OBS_GROUP_NORMAL, grp2);
 
 			{
-				auto p = obs_properties_add_text(grp2, ST_KEY_SHADER_SIZE_WIDTH, D_TRANSLATE(ST_I18N_SHADER_SIZE_WIDTH),
-												 OBS_TEXT_DEFAULT);
+				auto p = obs_properties_add_text(grp2, ST_KEY_SHADER_SIZE_WIDTH, D_TRANSLATE(ST_I18N_SHADER_SIZE_WIDTH), OBS_TEXT_DEFAULT);
 			}
 			{
-				auto p = obs_properties_add_text(grp2, ST_KEY_SHADER_SIZE_HEIGHT,
-												 D_TRANSLATE(ST_I18N_SHADER_SIZE_HEIGHT), OBS_TEXT_DEFAULT);
+				auto p = obs_properties_add_text(grp2, ST_KEY_SHADER_SIZE_HEIGHT, D_TRANSLATE(ST_I18N_SHADER_SIZE_HEIGHT), OBS_TEXT_DEFAULT);
 			}
 		}
 
 		{
-			auto p = obs_properties_add_int_slider(grp, ST_KEY_SHADER_SEED, D_TRANSLATE(ST_I18N_SHADER_SEED),
-												   std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), 1);
+			auto p = obs_properties_add_int_slider(grp, ST_KEY_SHADER_SEED, D_TRANSLATE(ST_I18N_SHADER_SEED), std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), 1);
 		}
 	}
 	{
@@ -277,8 +264,7 @@ bool streamfx::gfx::shader::shader::on_refresh_properties(obs_properties_t* prop
 	return true;
 }
 
-bool streamfx::gfx::shader::shader::on_shader_or_technique_modified(obs_properties_t* props, obs_property_t* prop,
-																	obs_data_t* data)
+bool streamfx::gfx::shader::shader::on_shader_or_technique_modified(obs_properties_t* props, obs_property_t* prop, obs_data_t* data)
 {
 	bool shader_dirty = false;
 	bool param_dirty  = false;
@@ -357,8 +343,7 @@ void streamfx::gfx::shader::shader::update(obs_data_t* data)
 		_random_seed = seed;
 		_random.seed(static_cast<unsigned long long>(_random_seed));
 		for (size_t idx = 0; idx < 16; idx++) {
-			_random_values[idx] =
-				static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
+			_random_values[idx] = static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
 		}
 	}
 
@@ -437,8 +422,7 @@ bool streamfx::gfx::shader::shader::tick(float_t time)
 
 	// Recreate Per-Activation-Random values.
 	for (size_t idx = 0; idx < 8; idx++) {
-		_random_values[8 + idx] =
-			static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
+		_random_values[8 + idx] = static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
 	}
 
 	// Flag Render Target as outdated.
@@ -460,17 +444,14 @@ void streamfx::gfx::shader::shader::prepare_render()
 	// float4 Time: (Time in Seconds), (Time in Current Second), (Time in Seconds only), (Random Value)
 	if (streamfx::obs::gs::effect_parameter el = _shader.get_parameter("Time"); el != nullptr) {
 		if (el.get_type() == streamfx::obs::gs::effect_parameter::type::Float4) {
-			el.set_float4(
-				_time, _time_loop, static_cast<float_t>(_loops),
-				static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max())));
+			el.set_float4(_time, _time_loop, static_cast<float_t>(_loops), static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max())));
 		}
 	}
 
 	// float4 ViewSize: (Width), (Height), (1.0 / Width), (1.0 / Height)
 	if (auto el = _shader.get_parameter("ViewSize"); el != nullptr) {
 		if (el.get_type() == streamfx::obs::gs::effect_parameter::type::Float4) {
-			el.set_float4(static_cast<float_t>(width()), static_cast<float_t>(height()),
-						  1.0f / static_cast<float_t>(width()), 1.0f / static_cast<float_t>(height()));
+			el.set_float4(static_cast<float_t>(width()), static_cast<float_t>(height()), 1.0f / static_cast<float_t>(width()), 1.0f / static_cast<float_t>(height()));
 		}
 	}
 
@@ -635,8 +616,7 @@ void streamfx::gfx::shader::shader::set_active(bool active)
 
 	// Recreate Per-Activation-Random values.
 	for (size_t idx = 0; idx < 4; idx++) {
-		_random_values[4 + idx] =
-			static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
+		_random_values[4 + idx] = static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
 	}
 }
 

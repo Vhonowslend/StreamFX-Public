@@ -23,11 +23,9 @@ namespace streamfx::encoder::ffmpeg {
 			virtual ~handler(){};
 
 			public /*factory*/:
-			virtual void adjust_info(ffmpeg_factory* factory, const AVCodec* codec, std::string& id, std::string& name,
-									 std::string& codec_id){};
+			virtual void adjust_info(ffmpeg_factory* factory, const AVCodec* codec, std::string& id, std::string& name, std::string& codec_id){};
 
-			virtual void get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context,
-									  bool hw_encode){};
+			virtual void get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context, bool hw_encode){};
 
 			virtual std::string_view get_help_url(const AVCodec* codec)
 			{
@@ -46,11 +44,9 @@ namespace streamfx::encoder::ffmpeg {
 			virtual bool supports_reconfigure(ffmpeg_factory* instance, bool& threads, bool& gpu, bool& keyframes);
 
 			public /*settings*/:
-			virtual void get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context,
-										bool hw_encode){};
+			virtual void get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context, bool hw_encode){};
 
-			virtual void migrate(obs_data_t* settings, uint64_t version, const AVCodec* codec,
-								 AVCodecContext* context){};
+			virtual void migrate(obs_data_t* settings, uint64_t version, const AVCodec* codec, AVCodecContext* context){};
 
 			virtual void update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context){};
 
@@ -59,12 +55,9 @@ namespace streamfx::encoder::ffmpeg {
 			virtual void log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context){};
 
 			public /*instance*/:
+			virtual void override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec, AVCodecContext* context){};
 
-			virtual void override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec,
-											  AVCodecContext* context){};
-
-			virtual void process_avpacket(std::shared_ptr<AVPacket> packet, const AVCodec* codec,
-										  AVCodecContext* context){};
+			virtual void process_avpacket(std::shared_ptr<AVPacket> packet, const AVCodec* codec, AVCodecContext* context){};
 		};
 	} // namespace handler
 } // namespace streamfx::encoder::ffmpeg

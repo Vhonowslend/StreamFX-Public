@@ -45,8 +45,7 @@ streamfx::gfx::blur::gaussian_linear_data::gaussian_linear_data() : _gfx_util(::
 
 		// Find actual kernel width.
 		for (double_t h = ST_SEARCH_DENSITY; h < ST_SEARCH_RANGE; h += ST_SEARCH_DENSITY) {
-			if (streamfx::util::math::gaussian<double_t>(double_t(kernel_size + ST_SEARCH_EXTENSION), h)
-				> ST_SEARCH_THRESHOLD) {
+			if (streamfx::util::math::gaussian<double_t>(double_t(kernel_size + ST_SEARCH_EXTENSION), h) > ST_SEARCH_THRESHOLD) {
 				actual_width = h;
 				break;
 			}
@@ -109,15 +108,13 @@ bool streamfx::gfx::blur::gaussian_linear_factory::is_type_supported(::streamfx:
 	}
 }
 
-std::shared_ptr<::streamfx::gfx::blur::base>
-	streamfx::gfx::blur::gaussian_linear_factory::create(::streamfx::gfx::blur::type v)
+std::shared_ptr<::streamfx::gfx::blur::base> streamfx::gfx::blur::gaussian_linear_factory::create(::streamfx::gfx::blur::type v)
 {
 	switch (v) {
 	case ::streamfx::gfx::blur::type::Area:
 		return std::make_shared<::streamfx::gfx::blur::gaussian_linear>();
 	case ::streamfx::gfx::blur::type::Directional:
-		return std::static_pointer_cast<::streamfx::gfx::blur::gaussian_linear>(
-			std::make_shared<::streamfx::gfx::blur::gaussian_linear_directional>());
+		return std::static_pointer_cast<::streamfx::gfx::blur::gaussian_linear>(std::make_shared<::streamfx::gfx::blur::gaussian_linear_directional>());
 	default:
 		throw std::runtime_error("Invalid type.");
 	}
@@ -224,8 +221,7 @@ std::shared_ptr<::streamfx::gfx::blur::gaussian_linear_data> streamfx::gfx::blur
 	return instance;
 }
 
-streamfx::gfx::blur::gaussian_linear::gaussian_linear()
-	: _data(::streamfx::gfx::blur::gaussian_linear_factory::get().data()), _size(1.), _step_scale({1., 1.})
+streamfx::gfx::blur::gaussian_linear::gaussian_linear() : _data(::streamfx::gfx::blur::gaussian_linear_factory::get().data()), _size(1.), _step_scale({1., 1.})
 {
 	auto gctx = streamfx::obs::gs::context();
 
@@ -391,8 +387,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_line
 	auto gctx = streamfx::obs::gs::context();
 
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-	auto gdmp = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance,
-												"Gaussian Linear Directional Blur");
+	auto gdmp = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Gaussian Linear Directional Blur");
 #endif
 
 	streamfx::obs::gs::effect effect = _data->get_effect();
@@ -420,8 +415,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_line
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
 	effect.get_parameter("pImage").set_texture(_input_texture);
-	effect.get_parameter("pImageTexel")
-		.set_float2(float_t(1.f / width * cos(_angle)), float_t(1.f / height * sin(_angle)));
+	effect.get_parameter("pImageTexel").set_float2(float_t(1.f / width * cos(_angle)), float_t(1.f / height * sin(_angle)));
 	effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
 	effect.get_parameter("pSize").set_float(float_t(_size));
 	effect.get_parameter("pKernel").set_value(kernel.data(), ST_MAX_KERNEL_SIZE);

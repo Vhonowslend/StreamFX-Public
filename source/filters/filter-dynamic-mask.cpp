@@ -88,37 +88,37 @@ std::shared_ptr<streamfx::filter::dynamic_mask::data> data::get()
 	std::lock_guard<std::mutex> lock(instance_lock);
 	auto                        instance = weak_instance.lock();
 	if (!instance) {
-		instance = std::shared_ptr<streamfx::filter::dynamic_mask::data>{new streamfx::filter::dynamic_mask::data()};
+		instance      = std::shared_ptr<streamfx::filter::dynamic_mask::data>{new streamfx::filter::dynamic_mask::data()};
 		weak_instance = instance;
 	}
 	return instance;
 }
 
 dynamic_mask_instance::dynamic_mask_instance(obs_data_t* settings, obs_source_t* self)
-	: obs::source_instance(settings, self),               //
+	: obs::source_instance(settings, self), //
 	  _data(streamfx::filter::dynamic_mask::data::get()), //
-	  _gfx_util(::streamfx::gfx::util::get()),            //
-	  _translation_map(),                                 //
-	  _input(),                                           //
-	  _input_child(),                                     //
-	  _input_vs(),                                        //
-	  _input_ac(),                                        //
-	  _have_base(false),                                  //
-	  _base_rt(),                                         //
-	  _base_tex(),                                        //
-	  _base_color_space(GS_CS_SRGB),                      //
-	  _base_color_format(GS_RGBA),                        //
-	  _have_input(false),                                 //
-	  _input_rt(),                                        //
-	  _input_tex(),                                       //
-	  _input_color_space(GS_CS_SRGB),                     //
-	  _input_color_format(GS_RGBA),                       //
-	  _have_final(false),                                 //
-	  _final_rt(),                                        //
-	  _final_tex(),                                       //
-	  _channels(),                                        //
-	  _precalc(),                                         //
-	  _debug_texture(-1)                                  //
+	  _gfx_util(::streamfx::gfx::util::get()), //
+	  _translation_map(), //
+	  _input(), //
+	  _input_child(), //
+	  _input_vs(), //
+	  _input_ac(), //
+	  _have_base(false), //
+	  _base_rt(), //
+	  _base_tex(), //
+	  _base_color_space(GS_CS_SRGB), //
+	  _base_color_format(GS_RGBA), //
+	  _have_input(false), //
+	  _input_rt(), //
+	  _input_tex(), //
+	  _input_color_space(GS_CS_SRGB), //
+	  _input_color_format(GS_RGBA), //
+	  _have_final(false), //
+	  _final_rt(), //
+	  _final_tex(), //
+	  _channels(), //
+	  _precalc(), //
+	  _debug_texture(-1) //
 {
 	update(settings);
 }
@@ -157,12 +157,12 @@ void dynamic_mask_instance::update(obs_data_t* settings)
 			}
 		}
 
-		std::string chv_key = std::string(ST_KEY_CHANNEL_VALUE) + "." + kv1.second;
-		found->second.value = static_cast<float_t>(obs_data_get_double(settings, chv_key.c_str()));
+		std::string chv_key                               = std::string(ST_KEY_CHANNEL_VALUE) + "." + kv1.second;
+		found->second.value                               = static_cast<float_t>(obs_data_get_double(settings, chv_key.c_str()));
 		_precalc.base.ptr[static_cast<size_t>(kv1.first)] = found->second.value;
 
-		std::string chm_key = std::string(ST_KEY_CHANNEL_MULTIPLIER) + "." + kv1.second;
-		found->second.scale = static_cast<float_t>(obs_data_get_double(settings, chm_key.c_str()));
+		std::string chm_key                                = std::string(ST_KEY_CHANNEL_MULTIPLIER) + "." + kv1.second;
+		found->second.scale                                = static_cast<float_t>(obs_data_get_double(settings, chm_key.c_str()));
 		_precalc.scale.ptr[static_cast<size_t>(kv1.first)] = found->second.scale;
 
 		vec4* ch = &_precalc.matrix.x;
@@ -184,10 +184,9 @@ void dynamic_mask_instance::update(obs_data_t* settings)
 		}
 
 		for (auto kv2 : channel_translations) {
-			std::string ab_key = std::string(ST_KEY_CHANNEL_INPUT) + "." + kv1.second + "." + kv2.second;
-			found->second.values.ptr[static_cast<size_t>(kv2.first)] =
-				static_cast<float_t>(obs_data_get_double(settings, ab_key.c_str()));
-			ch->ptr[static_cast<size_t>(kv2.first)] = found->second.values.ptr[static_cast<size_t>(kv2.first)];
+			std::string ab_key                                       = std::string(ST_KEY_CHANNEL_INPUT) + "." + kv1.second + "." + kv2.second;
+			found->second.values.ptr[static_cast<size_t>(kv2.first)] = static_cast<float_t>(obs_data_get_double(settings, ab_key.c_str()));
+			ch->ptr[static_cast<size_t>(kv2.first)]                  = found->second.values.ptr[static_cast<size_t>(kv2.first)];
 		}
 	}
 
@@ -219,8 +218,7 @@ void dynamic_mask_instance::save(obs_data_t* settings)
 
 		for (auto kv2 : channel_translations) {
 			std::string ab_key = std::string(ST_KEY_CHANNEL_INPUT) + "." + kv1.second + "." + kv2.second;
-			obs_data_set_double(settings, ab_key.c_str(),
-								static_cast<double_t>(found->second.values.ptr[static_cast<size_t>(kv2.first)]));
+			obs_data_set_double(settings, ab_key.c_str(), static_cast<double_t>(found->second.values.ptr[static_cast<size_t>(kv2.first)]));
 		}
 	}
 }
@@ -236,8 +234,7 @@ void dynamic_mask_instance::video_tick(float time)
 		_have_base = false;
 
 		std::array<gs_color_space, 1> preferred_formats = {GS_CS_SRGB};
-		_base_color_space = obs_source_get_color_space(obs_filter_get_target(_self), preferred_formats.size(),
-													   preferred_formats.data());
+		_base_color_space                               = obs_source_get_color_space(obs_filter_get_target(_self), preferred_formats.size(), preferred_formats.data());
 		switch (_base_color_space) {
 		case GS_CS_SRGB:
 			_base_color_format = GS_RGBA;
@@ -262,7 +259,7 @@ void dynamic_mask_instance::video_tick(float time)
 		_have_input = false;
 
 		std::array<gs_color_space, 1> preferred_formats = {GS_CS_SRGB};
-		_input_color_space = obs_source_get_color_space(input, preferred_formats.size(), preferred_formats.data());
+		_input_color_space                              = obs_source_get_color_space(input, preferred_formats.size(), preferred_formats.data());
 		switch (_input_color_space) {
 		case GS_CS_SRGB:
 			_input_color_format = GS_RGBA;
@@ -300,8 +297,7 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 	auto          input          = _input.lock();
 
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Dynamic Mask '%s' on '%s'",
-										 obs_source_get_name(_self), obs_source_get_name(obs_filter_get_parent(_self))};
+	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Dynamic Mask '%s' on '%s'", obs_source_get_name(_self), obs_source_get_name(obs_filter_get_parent(_self))};
 #endif
 
 	// If there's some issue acquiring information, skip rendering entirely.
@@ -329,8 +325,7 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 		gs_enable_framebuffer_srgb(false);
 
 		// Begin rendering the source with a certain color space.
-		if (obs_source_process_filter_begin_with_color_space(_self, _base_color_format, _base_color_space,
-															 OBS_ALLOW_DIRECT_RENDERING)) {
+		if (obs_source_process_filter_begin_with_color_space(_self, _base_color_format, _base_color_space, OBS_ALLOW_DIRECT_RENDERING)) {
 			try {
 				{
 					auto op = _base_rt->render(width, height, _base_color_space);
@@ -402,8 +397,7 @@ void dynamic_mask_instance::video_render(gs_effect_t* in_effect)
 			_input_color_space  = _base_color_space;
 		} else {
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_source, "Input '%s'",
-												input.name().data()};
+			streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_source, "Input '%s'", input.name().data()};
 #endif
 			// Ensure the Render Target matches the expected format.
 			if (!_input_rt || (_input_rt->get_color_format() != _input_color_format)) {
@@ -714,8 +708,7 @@ void dynamic_mask_factory::get_defaults2(obs_data_t* data)
 		obs_data_set_default_double(data, (std::string(ST_KEY_CHANNEL_VALUE) + "." + kv.second).c_str(), 1.0);
 		obs_data_set_default_double(data, (std::string(ST_KEY_CHANNEL_MULTIPLIER) + "." + kv.second).c_str(), 1.0);
 		for (auto kv2 : channel_translations) {
-			obs_data_set_default_double(
-				data, (std::string(ST_KEY_CHANNEL_INPUT) + "." + kv.second + "." + kv2.second).c_str(), 0.0);
+			obs_data_set_default_double(data, (std::string(ST_KEY_CHANNEL_INPUT) + "." + kv.second + "." + kv2.second).c_str(), 0.0);
 		}
 	}
 	obs_data_set_default_int(data, ST_KEY_DEBUG_TEXTURE, -1);
@@ -730,14 +723,12 @@ obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* d
 
 #ifdef ENABLE_FRONTEND
 	{
-		obs_properties_add_button2(props, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN),
-								   streamfx::filter::dynamic_mask::dynamic_mask_factory::on_manual_open, nullptr);
+		obs_properties_add_button2(props, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), streamfx::filter::dynamic_mask::dynamic_mask_factory::on_manual_open, nullptr);
 	}
 #endif
 
 	{ // Input
-		p = obs_properties_add_list(props, ST_KEY_INPUT, D_TRANSLATE(ST_I18N_INPUT), OBS_COMBO_TYPE_LIST,
-									OBS_COMBO_FORMAT_STRING);
+		p = obs_properties_add_list(props, ST_KEY_INPUT, D_TRANSLATE(ST_I18N_INPUT), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 		obs_property_list_add_string(p, "", "");
 		obs::source_tracker::get()->enumerate(
 			[&p](std::string name, ::streamfx::obs::source) {
@@ -764,8 +755,7 @@ obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* d
 		{
 			_translation_cache.push_back(translate_string(D_TRANSLATE(ST_I18N_CHANNEL_VALUE), D_TRANSLATE(pri_ch)));
 			std::string buf = std::string(ST_KEY_CHANNEL_VALUE) + "." + pri_ch;
-			p = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0,
-												0.01);
+			p               = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0, 0.01);
 			obs_property_set_long_description(p, _translation_cache.back().c_str());
 		}
 
@@ -773,25 +763,21 @@ obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* d
 		for (auto sec_ch : sec_chs) {
 			_translation_cache.push_back(translate_string(D_TRANSLATE(ST_I18N_CHANNEL_INPUT), D_TRANSLATE(sec_ch)));
 			std::string buf = std::string(ST_KEY_CHANNEL_INPUT) + "." + pri_ch + "." + sec_ch;
-			p = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0,
-												0.01);
+			p               = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0, 0.01);
 			obs_property_set_long_description(p, _translation_cache.back().c_str());
 		}
 
 		{
-			_translation_cache.push_back(
-				translate_string(D_TRANSLATE(ST_I18N_CHANNEL_MULTIPLIER), D_TRANSLATE(pri_ch)));
+			_translation_cache.push_back(translate_string(D_TRANSLATE(ST_I18N_CHANNEL_MULTIPLIER), D_TRANSLATE(pri_ch)));
 			std::string buf = std::string(ST_KEY_CHANNEL_MULTIPLIER) + "." + pri_ch;
-			p = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0,
-												0.01);
+			p               = obs_properties_add_float_slider(grp, buf.c_str(), _translation_cache.back().c_str(), -100.0, 100.0, 0.01);
 			obs_property_set_long_description(p, _translation_cache.back().c_str());
 		}
 
 		{
 			_translation_cache.push_back(translate_string(D_TRANSLATE(ST_I18N_CHANNEL), D_TRANSLATE(pri_ch)));
 			std::string buf = std::string(ST_KEY_CHANNEL) + "." + pri_ch;
-			obs_properties_add_group(props, buf.c_str(), _translation_cache.back().c_str(),
-									 obs_group_type::OBS_GROUP_NORMAL, grp);
+			obs_properties_add_group(props, buf.c_str(), _translation_cache.back().c_str(), obs_group_type::OBS_GROUP_NORMAL, grp);
 		}
 	}
 
@@ -800,8 +786,7 @@ obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* d
 		obs_properties_add_group(props, "Debug", D_TRANSLATE(S_ADVANCED), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_DEBUG_TEXTURE, D_TRANSLATE(ST_I18N_DEBUG_TEXTURE),
-											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			auto p = obs_properties_add_list(grp, ST_KEY_DEBUG_TEXTURE, D_TRANSLATE(ST_I18N_DEBUG_TEXTURE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DISABLED), -1);
 			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_DEBUG_TEXTURE_BASE), 0);
 			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_DEBUG_TEXTURE_INPUT), 1);

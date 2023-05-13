@@ -77,9 +77,7 @@ void streamfx::from_json(const nlohmann::json& json, version_stage& stage)
 	stage = stage_from_string(json.get<std::string>());
 }
 
-streamfx::version_info::version_info()
-	: major(0), minor(0), patch(0), tweak(0), stage(version_stage::STABLE), url(""), name("")
-{}
+streamfx::version_info::version_info() : major(0), minor(0), patch(0), tweak(0), stage(version_stage::STABLE), url(""), name("") {}
 
 streamfx::version_info::version_info(const std::string text) : version_info()
 {
@@ -89,11 +87,9 @@ streamfx::version_info::version_info(const std::string text) : version_info()
 	// 0.0.0b0 (Testing)
 	// 0.0.0c0 (Testing)
 	// 0.0.0_0 (Development)
-	static const std::regex re_version(
-		"([0-9]+)\\.([0-9]+)\\.([0-9]+)(([\\._abc]{1,1})([0-9]+|)|)(-g([0-9a-fA-F]{8,8})|)");
-	std::smatch matches;
-	if (std::regex_match(text, matches, re_version,
-						 std::regex_constants::match_any | std::regex_constants::match_continuous)) {
+	static const std::regex re_version("([0-9]+)\\.([0-9]+)\\.([0-9]+)(([\\._abc]{1,1})([0-9]+|)|)(-g([0-9a-fA-F]{8,8})|)");
+	std::smatch             matches;
+	if (std::regex_match(text, matches, re_version, std::regex_constants::match_any | std::regex_constants::match_continuous)) {
 		major = static_cast<uint16_t>(strtoul(matches[1].str().c_str(), nullptr, 10));
 		minor = static_cast<uint16_t>(strtoul(matches[2].str().c_str(), nullptr, 10));
 		patch = static_cast<uint16_t>(strtoul(matches[3].str().c_str(), nullptr, 10));
@@ -217,8 +213,7 @@ streamfx::version_info::operator std::string()
 	std::vector<char> buffer(25, 0);
 	if (stage != version_stage::STABLE) {
 		auto types = stage_to_string(stage);
-		int  len   = snprintf(buffer.data(), buffer.size(), "%" PRIu16 ".%" PRIu16 ".%" PRIu16 "%.1s%" PRIu16, major,
-							  minor, patch, types.data(), tweak);
+		int  len   = snprintf(buffer.data(), buffer.size(), "%" PRIu16 ".%" PRIu16 ".%" PRIu16 "%.1s%" PRIu16, major, minor, patch, types.data(), tweak);
 		return std::string(buffer.data(), buffer.data() + len);
 	} else {
 		int len = snprintf(buffer.data(), buffer.size(), "%" PRIu16 ".%" PRIu16 ".%" PRIu16, major, minor, patch);
@@ -230,8 +225,7 @@ void streamfx::updater::task(streamfx::util::threadpool::task_data_t)
 {
 	try {
 		auto query_fn = [](std::vector<char>& buffer) {
-			static constexpr std::string_view ST_API_URL =
-				"https://api.github.com/repos/Xaymar/obs-StreamFX/releases?per_page=25&page=1";
+			static constexpr std::string_view ST_API_URL = "https://api.github.com/repos/Xaymar/obs-StreamFX/releases?per_page=25&page=1";
 
 			streamfx::util::curl curl;
 			size_t               buffer_offset = 0;
@@ -242,7 +236,7 @@ void streamfx::updater::task(streamfx::util::threadpool::task_data_t)
 
 			// Set up request.
 			curl.set_option(CURLOPT_HTTPGET, true); // GET
-			curl.set_option(CURLOPT_POST, false);   // Not POST
+			curl.set_option(CURLOPT_POST, false); // Not POST
 			curl.set_option(CURLOPT_URL, ST_API_URL);
 			curl.set_option(CURLOPT_TIMEOUT, 30); // 10s until we fail.
 
@@ -344,10 +338,8 @@ void streamfx::updater::task(streamfx::util::threadpool::task_data_t)
 
 		// Print all update information to the log file.
 		D_LOG_INFO("Current Version: %s", static_cast<std::string>(_current_info).c_str());
-		D_LOG_INFO("Latest Stable Version: %s",
-				   static_cast<std::string>(get_update_info(version_stage::STABLE)).c_str());
-		D_LOG_INFO("Latest Candidate Version: %s",
-				   static_cast<std::string>(get_update_info(version_stage::CANDIDATE)).c_str());
+		D_LOG_INFO("Latest Stable Version: %s", static_cast<std::string>(get_update_info(version_stage::STABLE)).c_str());
+		D_LOG_INFO("Latest Candidate Version: %s", static_cast<std::string>(get_update_info(version_stage::CANDIDATE)).c_str());
 		D_LOG_INFO("Latest Beta Version: %s", static_cast<std::string>(get_update_info(version_stage::BETA)).c_str());
 		D_LOG_INFO("Latest Alpha Version: %s", static_cast<std::string>(get_update_info(version_stage::ALPHA)).c_str());
 		if (is_update_available()) {
@@ -368,7 +360,7 @@ bool streamfx::updater::can_check()
 #ifdef _DEBUG
 	return true;
 #else
-	auto now = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch());
+	auto now       = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch());
 	auto threshold = (_lastcheckedat + std::chrono::minutes(10));
 	return (now > threshold);
 #endif
@@ -493,8 +485,7 @@ void streamfx::updater::refresh()
 		std::lock_guard<decltype(_lock)> lock(_lock);
 
 		// Update last checked time.
-		_lastcheckedat =
-			std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch());
+		_lastcheckedat = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch());
 		save();
 
 		// Spawn a new task.

@@ -46,8 +46,7 @@ texture::texture(uint32_t width, uint32_t height, gs_color_format pix_fmt)
 	auto cctx = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
 
 	// Allocate a new Texture
-	_texture = std::make_shared<::streamfx::obs::gs::texture>(width, height, pix_fmt, 1, nullptr,
-															  ::streamfx::obs::gs::texture::flags::None);
+	_texture = std::make_shared<::streamfx::obs::gs::texture>(width, height, pix_fmt, 1, nullptr, ::streamfx::obs::gs::texture::flags::None);
 	alloc();
 }
 
@@ -60,8 +59,7 @@ void texture::resize(uint32_t width, uint32_t height)
 
 	// Allocate a new Texture
 	free();
-	_texture = std::make_shared<::streamfx::obs::gs::texture>(width, height, _texture->get_color_format(), 1, nullptr,
-															  ::streamfx::obs::gs::texture::flags::None);
+	_texture = std::make_shared<::streamfx::obs::gs::texture>(width, height, _texture->get_color_format(), 1, nullptr, ::streamfx::obs::gs::texture::flags::None);
 	alloc();
 }
 
@@ -77,16 +75,12 @@ void streamfx::nvidia::cv::texture::alloc()
 	auto nvobs = ::streamfx::nvidia::cuda::obs::get();
 
 	// Allocate any relevant CV buffers and Map it.
-	if (auto res = _cv->NvCVImage_InitFromD3D11Texture(
-			&_image, reinterpret_cast<ID3D11Texture2D*>(gs_texture_get_obj(_texture->get_object())));
-		res != result::SUCCESS) {
-		D_LOG_ERROR("Object 0x%" PRIxPTR " failed NvCVImage_InitFromD3D11Texture call with error: %s", this,
-					_cv->NvCV_GetErrorStringFromCode(res));
+	if (auto res = _cv->NvCVImage_InitFromD3D11Texture(&_image, reinterpret_cast<ID3D11Texture2D*>(gs_texture_get_obj(_texture->get_object()))); res != result::SUCCESS) {
+		D_LOG_ERROR("Object 0x%" PRIxPTR " failed NvCVImage_InitFromD3D11Texture call with error: %s", this, _cv->NvCV_GetErrorStringFromCode(res));
 		throw std::runtime_error("NvCVImage_InitFromD3D11Texture");
 	}
 	if (auto res = _cv->NvCVImage_MapResource(&_image, nvobs->get_stream()->get()); res != result::SUCCESS) {
-		D_LOG_ERROR("Object 0x%" PRIxPTR " failed NvCVImage_MapResource call with error: %s", this,
-					_cv->NvCV_GetErrorStringFromCode(res));
+		D_LOG_ERROR("Object 0x%" PRIxPTR " failed NvCVImage_MapResource call with error: %s", this, _cv->NvCV_GetErrorStringFromCode(res));
 		throw std::runtime_error("NvCVImage_MapResource");
 	}
 }
@@ -99,8 +93,7 @@ void streamfx::nvidia::cv::texture::free()
 
 	// Unmap and deallocate any relevant CV buffers.
 	if (auto res = _cv->NvCVImage_UnmapResource(&_image, nvobs->get_stream()->get()); res != result::SUCCESS) {
-		D_LOG_ERROR("Object 0x%" PRIxPTR " failed NvCVImage_UnmapResource call with error: %s", this,
-					_cv->NvCV_GetErrorStringFromCode(res));
+		D_LOG_ERROR("Object 0x%" PRIxPTR " failed NvCVImage_UnmapResource call with error: %s", this, _cv->NvCV_GetErrorStringFromCode(res));
 		throw std::runtime_error("NvCVImage_UnmapResource");
 	}
 	_cv->NvCVImage_Dealloc(&_image);

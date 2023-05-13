@@ -73,8 +73,7 @@ streamfx::ui::about::about() : QDialog(reinterpret_cast<QWidget*>(obs_frontend_g
 			auto kvs = iter->items();
 			for (auto kv : kvs) {
 				D_LOG_DEBUG("    '%s' => '%s'", kv.key().c_str(), kv.value().get<std::string>().c_str());
-				entries.push_back(
-					ui::about::entry{kv.key(), role_type::CONTRIBUTOR, "", kv.value().get<std::string>()});
+				entries.push_back(ui::about::entry{kv.key(), role_type::CONTRIBUTOR, "", kv.value().get<std::string>()});
 			}
 		}
 		if (auto iter = data.find("translator"); iter != data.end()) {
@@ -92,8 +91,7 @@ streamfx::ui::about::about() : QDialog(reinterpret_cast<QWidget*>(obs_frontend_g
 				auto kvs = iter2->items();
 				for (auto kv : kvs) {
 					D_LOG_DEBUG("    '%s' => '%s'", kv.key().c_str(), kv.value().get<std::string>().c_str());
-					entries.push_back(
-						ui::about::entry{kv.key(), role_type::SUPPORTER, "GitHub", kv.value().get<std::string>()});
+					entries.push_back(ui::about::entry{kv.key(), role_type::SUPPORTER, "GitHub", kv.value().get<std::string>()});
 				}
 			}
 			if (auto iter2 = data2.find("patreon"); iter2 != data2.end()) {
@@ -101,8 +99,7 @@ streamfx::ui::about::about() : QDialog(reinterpret_cast<QWidget*>(obs_frontend_g
 				auto kvs = iter2->items();
 				for (auto kv : kvs) {
 					D_LOG_DEBUG("    '%s' => '%s'", kv.key().c_str(), kv.value().get<std::string>().c_str());
-					entries.push_back(
-						ui::about::entry{kv.key(), role_type::SUPPORTER, "Patreon", kv.value().get<std::string>()});
+					entries.push_back(ui::about::entry{kv.key(), role_type::SUPPORTER, "Patreon", kv.value().get<std::string>()});
 				}
 			}
 		}

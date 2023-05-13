@@ -16,10 +16,10 @@
 
 namespace streamfx {
 	enum class version_stage : uint8_t {
-		STABLE,    // A.B.C
+		STABLE, // A.B.C
 		CANDIDATE, // A.B.CcD
-		BETA,      // A.B.CbD
-		ALPHA,     // A.B.CaD
+		BETA, // A.B.CbD
+		ALPHA, // A.B.CaD
 	};
 	version_stage    stage_from_string(std::string_view str);
 	std::string_view stage_to_string(version_stage t);

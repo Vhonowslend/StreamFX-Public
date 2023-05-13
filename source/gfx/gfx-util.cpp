@@ -111,8 +111,7 @@ void streamfx::gfx::util::draw_line(float x, float y, float x2, float y2, uint32
 	gs_load_vertexbuffer(nullptr);
 }
 
-void streamfx::gfx::util::draw_arrow(float x, float y, float x2, float y2, float w /*= 0.*/,
-									 uint32_t color /*= 0xFFFFFFFF*/)
+void streamfx::gfx::util::draw_arrow(float x, float y, float x2, float y2, float w /*= 0.*/, uint32_t color /*= 0xFFFFFFFF*/)
 {
 	obs::gs::context gctx{};
 
@@ -179,8 +178,7 @@ void streamfx::gfx::util::draw_arrow(float x, float y, float x2, float y2, float
 	gs_load_vertexbuffer(nullptr);
 }
 
-void streamfx::gfx::util::draw_rectangle(float x, float y, float w, float h, bool frame,
-										 uint32_t color /*= 0xFFFFFFFF*/)
+void streamfx::gfx::util::draw_rectangle(float x, float y, float w, float h, bool frame, uint32_t color /*= 0xFFFFFFFF*/)
 {
 	obs::gs::context gctx{};
 

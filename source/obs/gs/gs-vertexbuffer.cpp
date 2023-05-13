@@ -39,12 +39,10 @@ void streamfx::obs::gs::vertex_buffer::initialize(uint32_t capacity, uint8_t lay
 	if (_layers == 0) {
 		_data->tvarray = nullptr;
 	} else {
-		_data->tvarray = _uv_layers =
-			static_cast<gs_tvertarray*>(streamfx::util::malloc_aligned(16, sizeof(gs_tvertarray) * _layers));
+		_data->tvarray = _uv_layers = static_cast<gs_tvertarray*>(streamfx::util::malloc_aligned(16, sizeof(gs_tvertarray) * _layers));
 		for (uint8_t n = 0; n < _layers; n++) {
-			_uv_layers[n].array = _uvs[n] =
-				static_cast<vec4*>(streamfx::util::malloc_aligned(16, sizeof(vec4) * _capacity));
-			_uv_layers[n].width = 4;
+			_uv_layers[n].array = _uvs[n] = static_cast<vec4*>(streamfx::util::malloc_aligned(16, sizeof(vec4) * _capacity));
+			_uv_layers[n].width           = 4;
 			memset(_uvs[n], 0, sizeof(vec4) * _capacity);
 		}
 	}
@@ -52,18 +50,17 @@ void streamfx::obs::gs::vertex_buffer::initialize(uint32_t capacity, uint8_t lay
 	// Allocate actual GPU vertex buffer.
 	{
 		auto gctx = streamfx::obs::gs::context();
-		_buffer   = decltype(_buffer)(gs_vertexbuffer_create(_data.get(), GS_DYNAMIC | GS_DUP_BUFFER),
-                                    [this](gs_vertbuffer_t* v) {
-                                        try {
-                                            auto gctx = streamfx::obs::gs::context();
-                                            gs_vertexbuffer_destroy(v);
-                                        } catch (...) {
-                                            if (obs_get_version() < MAKE_SEMANTIC_VERSION(26, 0, 0)) {
-                                                // Fixes a memory leak with OBS Studio versions older than 26.x.
-                                                gs_vbdata_destroy(_obs_data);
-                                            }
-                                        }
-                                    });
+		_buffer   = decltype(_buffer)(gs_vertexbuffer_create(_data.get(), GS_DYNAMIC | GS_DUP_BUFFER), [this](gs_vertbuffer_t* v) {
+            try {
+                auto gctx = streamfx::obs::gs::context();
+                gs_vertexbuffer_destroy(v);
+            } catch (...) {
+                if (obs_get_version() < MAKE_SEMANTIC_VERSION(26, 0, 0)) {
+                    // Fixes a memory leak with OBS Studio versions older than 26.x.
+                    gs_vbdata_destroy(_obs_data);
+                }
+            }
+        });
 		_obs_data = gs_vertexbuffer_get_data(_buffer.get());
 	}
 
@@ -146,8 +143,7 @@ streamfx::obs::gs::vertex_buffer::vertex_buffer(gs_vertbuffer_t* vb)
 	}
 }
 
-streamfx::obs::gs::vertex_buffer::vertex_buffer(vertex_buffer const& other)
-	: vertex_buffer(other._capacity, other._layers)
+streamfx::obs::gs::vertex_buffer::vertex_buffer(vertex_buffer const& other) : vertex_buffer(other._capacity, other._layers)
 { // Copy Constructor
 	memcpy(_positions, other._positions, _capacity * sizeof(vec3));
 	memcpy(_normals, other._normals, _capacity * sizeof(vec3));

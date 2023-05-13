@@ -127,15 +127,11 @@ streamfx::nvidia::ar::ar::ar() : _library(), _model_path()
 			std::string error;
 			{
 				LPWSTR str;
-				FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER
-								   | FORMAT_MESSAGE_IGNORE_INSERTS,
-							   nullptr, ec, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
-							   reinterpret_cast<LPWSTR>(&str), 0, nullptr);
+				FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, ec, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), reinterpret_cast<LPWSTR>(&str), 0, nullptr);
 				error = ::streamfx::util::platform::native_to_utf8(std::wstring(str));
 				LocalFree(str);
 			}
-			D_LOG_WARNING("Failed to add '%'s to the library loader paths with error: %s (Code %" PRIu32 ")",
-						  sdk_path.string().c_str(), error.c_str(), ec);
+			D_LOG_WARNING("Failed to add '%'s to the library loader paths with error: %s (Code %" PRIu32 ")", sdk_path.string().c_str(), error.c_str(), ec);
 		}
 #endif
 

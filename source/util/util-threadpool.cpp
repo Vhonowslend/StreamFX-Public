@@ -34,9 +34,7 @@
 #define D_LOG_DEBUG(...) P_LOG_DEBUG(ST_PREFIX __VA_ARGS__)
 #endif
 
-streamfx::util::threadpool::task::task(task_callback_t callback, task_data_t data)
-	: _callback(callback), _data(data), _lock(), _status_changed(), _cancelled(false), _completed(false), _failed(false)
-{}
+streamfx::util::threadpool::task::task(task_callback_t callback, task_data_t data) : _callback(callback), _data(data), _lock(), _status_changed(), _cancelled(false), _completed(false), _failed(false) {}
 
 streamfx::util::threadpool::task::~task() {}
 
@@ -85,8 +83,7 @@ void streamfx::util::threadpool::task::wait()
 {
 	std::unique_lock<std::mutex> ul(_lock);
 	if (!_cancelled && !_completed && !_failed) {
-		_status_changed.wait(ul,
-							 [this]() { return this->is_completed() || this->is_cancelled() || this->has_failed(); });
+		_status_changed.wait(ul, [this]() { return this->is_completed() || this->is_cancelled() || this->has_failed(); });
 	}
 }
 
@@ -122,15 +119,13 @@ streamfx::util::threadpool::threadpool::~threadpool()
 	}
 }
 
-streamfx::util::threadpool::threadpool::threadpool(size_t minimum, size_t maximum)
-	: _limits{minimum, maximum}, _workers_lock(), _worker_count(0), _workers(), _tasks_lock(), _tasks_cv(), _tasks()
+streamfx::util::threadpool::threadpool::threadpool(size_t minimum, size_t maximum) : _limits{minimum, maximum}, _workers_lock(), _worker_count(0), _workers(), _tasks_lock(), _tasks_cv(), _tasks()
 {
 	// Spawn the minimum number of threads.
 	spawn(_limits.first);
 }
 
-std::shared_ptr<streamfx::util::threadpool::task>
-	streamfx::util::threadpool::threadpool::push(task_callback_t callback, task_data_t data /*= nullptr*/)
+std::shared_ptr<streamfx::util::threadpool::task> streamfx::util::threadpool::threadpool::push(task_callback_t callback, task_data_t data /*= nullptr*/)
 {
 	std::lock_guard<std::mutex> lg(_tasks_lock);
 	constexpr size_t            threshold = 3;
@@ -168,8 +163,7 @@ void streamfx::util::threadpool::threadpool::spawn(size_t count)
 		wi->thread.detach();
 		_workers.emplace_back(wi);
 		++_worker_count;
-		D_LOG_DEBUG("Spawning new worker thread (%zu < %zu < %zu).", _limits.first, _worker_count.load(),
-					_limits.second);
+		D_LOG_DEBUG("Spawning new worker thread (%zu < %zu < %zu).", _limits.first, _worker_count.load(), _limits.second);
 	}
 }
 
@@ -188,8 +182,7 @@ bool streamfx::util::threadpool::threadpool::die(std::shared_ptr<worker_info> wi
 			_last_worker_death = now;
 			--_worker_count;
 			_workers.remove(wi);
-			D_LOG_DEBUG("Terminated idle worker thread (%zu < %zu < %zu).", _limits.first, _worker_count.load(),
-						_limits.second);
+			D_LOG_DEBUG("Terminated idle worker thread (%zu < %zu < %zu).", _limits.first, _worker_count.load(), _limits.second);
 		}
 	}
 
@@ -218,10 +211,7 @@ void streamfx::util::threadpool::threadpool::work(std::shared_ptr<worker_info> w
 			// Is there any work available right now?
 			if (_tasks.size() == 0) { // If not:
 				// Block this thread until it is notified of a change.
-				_tasks_cv.wait_until(
-					ul,
-					std::chrono::time_point(std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(250)),
-					[this, wi]() { return wi->stop || _tasks.size() > 0; });
+				_tasks_cv.wait_until(ul, std::chrono::time_point(std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(250)), [this, wi]() { return wi->stop || _tasks.size() > 0; });
 			}
 
 			// If we were asked to stop, skip everything.

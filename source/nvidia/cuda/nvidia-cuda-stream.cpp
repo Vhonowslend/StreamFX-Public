@@ -30,8 +30,7 @@ streamfx::nvidia::cuda::stream::~stream()
 	_cuda->cuStreamDestroy(_stream);
 }
 
-streamfx::nvidia::cuda::stream::stream(::streamfx::nvidia::cuda::stream_flags flags, int32_t priority)
-	: _cuda(::streamfx::nvidia::cuda::cuda::get())
+streamfx::nvidia::cuda::stream::stream(::streamfx::nvidia::cuda::stream_flags flags, int32_t priority) : _cuda(::streamfx::nvidia::cuda::cuda::get())
 {
 	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
 

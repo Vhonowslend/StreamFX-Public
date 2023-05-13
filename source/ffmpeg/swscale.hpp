@@ -63,7 +63,6 @@ namespace streamfx::ffmpeg {
 		bool initialize(int flags);
 		bool finalize();
 
-		int32_t convert(const uint8_t* const source_data[], const int source_stride[], int32_t source_row,
-						int32_t source_rows, uint8_t* const target_data[], const int target_stride[]);
+		int32_t convert(const uint8_t* const source_data[], const int source_stride[], int32_t source_row, int32_t source_rows, uint8_t* const target_data[], const int target_stride[]);
 	};
 } // namespace streamfx::ffmpeg

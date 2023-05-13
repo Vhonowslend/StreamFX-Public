@@ -32,11 +32,9 @@ namespace streamfx::ffmpeg::hwapi {
 
 		virtual std::shared_ptr<AVFrame> allocate_frame(AVBufferRef* frames) = 0;
 
-		virtual void copy_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key, uint64_t* next_lock_key,
-								   std::shared_ptr<AVFrame> frame) = 0;
+		virtual void copy_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key, uint64_t* next_lock_key, std::shared_ptr<AVFrame> frame) = 0;
 
-		virtual std::shared_ptr<AVFrame> avframe_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key,
-														  uint64_t* next_lock_key) = 0;
+		virtual std::shared_ptr<AVFrame> avframe_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key, uint64_t* next_lock_key) = 0;
 	};
 
 	class base {

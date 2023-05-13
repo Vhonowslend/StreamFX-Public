@@ -5,11 +5,12 @@
 # Basic Formatting
 TabWidth: 4
 UseTab: ForContinuationAndIndentation
-ColumnLimit: 120
+ColumnLimit: 65535
+#- 0 does not respect the original line breaks!
 
 # Language
 Language: Cpp
-Standard: Cpp11
+Standard: c++17
 
 # Indentation
 AccessModifierOffset: 0
@@ -48,7 +49,7 @@ AlignConsecutiveAssignments: true
 AlignConsecutiveDeclarations: true
 AlignEscapedNewlines: Left
 AlignOperands: true
-AlignTrailingComments: true
+AlignTrailingComments: false
 DerivePointerAlignment: false
 PointerAlignment: Left
 

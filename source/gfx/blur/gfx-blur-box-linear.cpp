@@ -60,8 +60,7 @@ bool streamfx::gfx::blur::box_linear_factory::is_type_supported(::streamfx::gfx:
 	}
 }
 
-std::shared_ptr<::streamfx::gfx::blur::base>
-	streamfx::gfx::blur::box_linear_factory::create(::streamfx::gfx::blur::type type)
+std::shared_ptr<::streamfx::gfx::blur::base> streamfx::gfx::blur::box_linear_factory::create(::streamfx::gfx::blur::type type)
 {
 	switch (type) {
 	case ::streamfx::gfx::blur::type::Area:
@@ -174,8 +173,7 @@ std::shared_ptr<::streamfx::gfx::blur::box_linear_data> streamfx::gfx::blur::box
 	return instance;
 }
 
-streamfx::gfx::blur::box_linear::box_linear()
-	: _data(::streamfx::gfx::blur::box_linear_factory::get().data()), _size(1.), _step_scale({1., 1.})
+streamfx::gfx::blur::box_linear::box_linear() : _data(::streamfx::gfx::blur::box_linear_factory::get().data()), _size(1.), _step_scale({1., 1.})
 {
 	_rendertarget  = std::make_shared<::streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
 	_rendertarget2 = std::make_shared<::streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
@@ -325,8 +323,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_linear_di
 	auto gctx = streamfx::obs::gs::context();
 
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-	auto gdmp =
-		streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Box Linear Directional Blur");
+	auto gdmp = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Box Linear Directional Blur");
 #endif
 
 	float_t width  = float_t(_input_texture->get_width());
@@ -349,8 +346,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_linear_di
 	streamfx::obs::gs::effect effect = _data->get_effect();
 	if (effect) {
 		effect.get_parameter("pImage").set_texture(_input_texture);
-		effect.get_parameter("pImageTexel")
-			.set_float2(float_t(1. / width * cos(_angle)), float_t(1.f / height * sin(_angle)));
+		effect.get_parameter("pImageTexel").set_float2(float_t(1. / width * cos(_angle)), float_t(1.f / height * sin(_angle)));
 		effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
 		effect.get_parameter("pSize").set_float(float_t(_size));
 		effect.get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(_size) * 2.0f + 1.0f)));

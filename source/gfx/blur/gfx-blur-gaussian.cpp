@@ -134,15 +134,13 @@ bool streamfx::gfx::blur::gaussian_factory::is_type_supported(::streamfx::gfx::b
 	}
 }
 
-std::shared_ptr<::streamfx::gfx::blur::base>
-	streamfx::gfx::blur::gaussian_factory::create(::streamfx::gfx::blur::type v)
+std::shared_ptr<::streamfx::gfx::blur::base> streamfx::gfx::blur::gaussian_factory::create(::streamfx::gfx::blur::type v)
 {
 	switch (v) {
 	case ::streamfx::gfx::blur::type::Area:
 		return std::make_shared<::streamfx::gfx::blur::gaussian>();
 	case ::streamfx::gfx::blur::type::Directional:
-		return std::static_pointer_cast<::streamfx::gfx::blur::gaussian>(
-			std::make_shared<::streamfx::gfx::blur::gaussian_directional>());
+		return std::static_pointer_cast<::streamfx::gfx::blur::gaussian>(std::make_shared<::streamfx::gfx::blur::gaussian_directional>());
 	case ::streamfx::gfx::blur::type::Rotational:
 		return std::make_shared<::streamfx::gfx::blur::gaussian_rotational>();
 	case ::streamfx::gfx::blur::type::Zoom:
@@ -253,8 +251,7 @@ std::shared_ptr<::streamfx::gfx::blur::gaussian_data> streamfx::gfx::blur::gauss
 	return instance;
 }
 
-streamfx::gfx::blur::gaussian::gaussian()
-	: _data(::streamfx::gfx::blur::gaussian_factory::get().data()), _size(1.), _step_scale({1., 1.})
+streamfx::gfx::blur::gaussian::gaussian() : _data(::streamfx::gfx::blur::gaussian_factory::get().data()), _size(1.), _step_scale({1., 1.})
 {
 	auto gctx      = streamfx::obs::gs::context();
 	_rendertarget  = std::make_shared<streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
@@ -419,8 +416,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_dire
 	auto gctx = streamfx::obs::gs::context();
 
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-	auto gdmp =
-		streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Gaussian Directional Blur");
+	auto gdmp = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Gaussian Directional Blur");
 #endif
 
 	streamfx::obs::gs::effect effect = _data->get_effect();
@@ -448,8 +444,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_dire
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
 	effect.get_parameter("pImage").set_texture(_input_texture);
-	effect.get_parameter("pImageTexel")
-		.set_float2(float_t(1.f / width * cos(m_angle)), float_t(1.f / height * sin(m_angle)));
+	effect.get_parameter("pImageTexel").set_float2(float_t(1.f / width * cos(m_angle)), float_t(1.f / height * sin(m_angle)));
 	effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
 	effect.get_parameter("pSize").set_float(float_t(_size * ST_OVERSAMPLE_MULTIPLIER));
 	effect.get_parameter("pKernel").set_value(kernel.data(), ST_KERNEL_SIZE);
@@ -477,8 +472,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_rota
 	auto gctx = streamfx::obs::gs::context();
 
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-	auto gdmp =
-		streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Gaussian Rotational Blur");
+	auto gdmp = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Gaussian Rotational Blur");
 #endif
 
 	streamfx::obs::gs::effect effect = _data->get_effect();

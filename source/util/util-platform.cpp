@@ -28,8 +28,7 @@ std::string streamfx::util::platform::native_to_utf8(std::wstring const& v)
 {
 	std::vector<char> buffer((v.length() + 1) * 4, 0);
 
-	int res = WideCharToMultiByte(CP_UTF8, 0, v.c_str(), static_cast<int>(v.length()), buffer.data(),
-								  static_cast<int>(buffer.size()), nullptr, nullptr);
+	int res = WideCharToMultiByte(CP_UTF8, 0, v.c_str(), static_cast<int>(v.length()), buffer.data(), static_cast<int>(buffer.size()), nullptr, nullptr);
 	if (res == 0) {
 		D_LOG_WARNING("Failed to convert '%ls' to UTF-8 format.", v.c_str());
 		throw std::runtime_error("Failed to convert Windows-native to UTF-8.");
@@ -49,8 +48,7 @@ std::wstring streamfx::util::platform::utf8_to_native(std::string const& v)
 {
 	std::vector<wchar_t> buffer(v.length() + 1, 0);
 
-	int res = MultiByteToWideChar(CP_UTF8, 0, v.c_str(), static_cast<int>(v.length()), buffer.data(),
-								  static_cast<int>(buffer.size()));
+	int res = MultiByteToWideChar(CP_UTF8, 0, v.c_str(), static_cast<int>(v.length()), buffer.data(), static_cast<int>(buffer.size()));
 	if (res == 0) {
 		D_LOG_WARNING("Failed to convert '%s' to native format.", v.c_str());
 		throw std::runtime_error("Failed to convert UTF-8 to Windows-native.");

@@ -17,32 +17,27 @@ extern "C" {
 #include "warning-enable.hpp"
 }
 
-streamfx::obs::gs::effect_parameter::effect_parameter()
-	: _effect_parent(nullptr), _pass_parent(nullptr), _param_parent(nullptr)
+streamfx::obs::gs::effect_parameter::effect_parameter() : _effect_parent(nullptr), _pass_parent(nullptr), _param_parent(nullptr)
 {
 	reset();
 }
 
-streamfx::obs::gs::effect_parameter::effect_parameter(gs_eparam_t* param)
-	: _effect_parent(nullptr), _pass_parent(nullptr), _param_parent(nullptr)
+streamfx::obs::gs::effect_parameter::effect_parameter(gs_eparam_t* param) : _effect_parent(nullptr), _pass_parent(nullptr), _param_parent(nullptr)
 {
 	reset(param, [](void*) {});
 }
 
-streamfx::obs::gs::effect_parameter::effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_effect_t> parent)
-	: effect_parameter(param)
+streamfx::obs::gs::effect_parameter::effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_effect_t> parent) : effect_parameter(param)
 {
 	_effect_parent = std::move(parent);
 }
 
-streamfx::obs::gs::effect_parameter::effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_epass_t> parent)
-	: effect_parameter(param)
+streamfx::obs::gs::effect_parameter::effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_epass_t> parent) : effect_parameter(param)
 {
 	_pass_parent = std::move(parent);
 }
 
-streamfx::obs::gs::effect_parameter::effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_eparam_t> parent)
-	: effect_parameter(param)
+streamfx::obs::gs::effect_parameter::effect_parameter(gs_eparam_t* param, std::shared_ptr<gs_eparam_t> parent) : effect_parameter(param)
 {
 	_param_parent = std::move(parent);
 }

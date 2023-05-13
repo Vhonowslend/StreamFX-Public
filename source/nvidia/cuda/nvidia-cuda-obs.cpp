@@ -44,8 +44,7 @@ streamfx::nvidia::cuda::obs::obs() : _cuda(::streamfx::nvidia::cuda::cuda::get()
 	// Create Context
 #ifdef WIN32
 	if (gs_get_device_type() == GS_DEVICE_DIRECT3D_11) {
-		_context =
-			std::make_shared<::streamfx::nvidia::cuda::context>(reinterpret_cast<ID3D11Device*>(gs_get_device_obj()));
+		_context = std::make_shared<::streamfx::nvidia::cuda::context>(reinterpret_cast<ID3D11Device*>(gs_get_device_obj()));
 	}
 #endif
 	if (gs_get_device_type() == GS_DEVICE_OPENGL) {

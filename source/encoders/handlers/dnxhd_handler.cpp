@@ -24,13 +24,9 @@ void dnxhd_handler::adjust_info(ffmpeg_factory* fac, const AVCodec*, std::string
 	name = "Avid DNxHR (via FFmpeg)";
 }
 
-void dnxhd_handler::override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec,
-										 AVCodecContext*)
+void dnxhd_handler::override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec, AVCodecContext*)
 {
-	static const std::array<std::pair<const char*, AVPixelFormat>, static_cast<size_t>(5)> profile_to_format_map{
-		std::pair{"dnxhr_lb", AV_PIX_FMT_YUV422P}, std::pair{"dnxhr_sq", AV_PIX_FMT_YUV422P},
-		std::pair{"dnxhr_hq", AV_PIX_FMT_YUV422P}, std::pair{"dnxhr_hqx", AV_PIX_FMT_YUV422P10},
-		std::pair{"dnxhr_444", AV_PIX_FMT_YUV444P10}};
+	static const std::array<std::pair<const char*, AVPixelFormat>, static_cast<size_t>(5)> profile_to_format_map{std::pair{"dnxhr_lb", AV_PIX_FMT_YUV422P}, std::pair{"dnxhr_sq", AV_PIX_FMT_YUV422P}, std::pair{"dnxhr_hq", AV_PIX_FMT_YUV422P}, std::pair{"dnxhr_hqx", AV_PIX_FMT_YUV422P10}, std::pair{"dnxhr_444", AV_PIX_FMT_YUV444P10}};
 
 	const char* selected_profile = obs_data_get_string(settings, S_CODEC_DNXHR_PROFILE);
 	for (const auto& kv : profile_to_format_map) {
@@ -78,8 +74,7 @@ void dnxhd_handler::get_properties(obs_properties_t* props, const AVCodec* codec
 			return;
 		}
 	}
-	auto p = obs_properties_add_list(props, S_CODEC_DNXHR_PROFILE, D_TRANSLATE(S_CODEC_DNXHR_PROFILE),
-									 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+	auto p = obs_properties_add_list(props, S_CODEC_DNXHR_PROFILE, D_TRANSLATE(S_CODEC_DNXHR_PROFILE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 
 	streamfx::ffmpeg::tools::avoption_list_add_entries(ctx->priv_data, "profile", [&p](const AVOption* opt) {
 		if (strcmp(opt->name, "dnxhd") == 0) {
@@ -109,6 +104,5 @@ void dnxhd_handler::update(obs_data_t* settings, const AVCodec* codec, AVCodecCo
 void dnxhd_handler::log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context)
 {
 	DLOG_INFO("[%s]   Avid DNxHR:", codec->name);
-	streamfx::ffmpeg::tools::print_av_option_string2(context, "profile", "    Profile",
-													 [](int64_t v, std::string_view o) { return std::string(o); });
+	streamfx::ffmpeg::tools::print_av_option_string2(context, "profile", "    Profile", [](int64_t v, std::string_view o) { return std::string(o); });
 }

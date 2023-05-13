@@ -85,9 +85,7 @@ mirror_audio_data::mirror_audio_data(const audio_data* audio, speaker_layout lay
 	}
 }
 
-mirror_instance::mirror_instance(obs_data_t* settings, obs_source_t* self)
-	: obs::source_instance(settings, self), _source(), _source_child(), _signal_rename(), _audio_enabled(false),
-	  _audio_layout(SPEAKERS_UNKNOWN)
+mirror_instance::mirror_instance(obs_data_t* settings, obs_source_t* self) : obs::source_instance(settings, self), _source(), _source_child(), _signal_rename(), _audio_enabled(false), _audio_layout(SPEAKERS_UNKNOWN)
 {
 	update(settings);
 }
@@ -152,8 +150,7 @@ void mirror_instance::video_render(gs_effect_t* effect)
 		return;
 
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Source Mirror '%s' for '%s'",
-										 obs_source_get_name(_self), obs_source_get_name(_source.get())};
+	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Source Mirror '%s' for '%s'", obs_source_get_name(_self), obs_source_get_name(_source.get())};
 #endif
 
 	_source_size.first  = obs_source_get_width(_source.get());
@@ -197,8 +194,7 @@ void mirror_instance::acquire(std::string source_name)
 		// Listen to any audio the source spews out.
 		if (_audio_enabled) {
 			_signal_audio = std::make_shared<obs::audio_signal_handler>(_source);
-			_signal_audio->event.add(std::bind(&mirror_instance::on_audio, this, std::placeholders::_1,
-											   std::placeholders::_2, std::placeholders::_3));
+			_signal_audio->event.add(std::bind(&mirror_instance::on_audio, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 		}
 	} catch (...) {
 		release();
@@ -322,14 +318,12 @@ obs_properties_t* mirror_factory::get_properties2(mirror_instance* data)
 
 #ifdef ENABLE_FRONTEND
 	{
-		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN),
-								   streamfx::source::mirror::mirror_factory::on_manual_open, nullptr);
+		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), streamfx::source::mirror::mirror_factory::on_manual_open, nullptr);
 	}
 #endif
 
 	{
-		p = obs_properties_add_list(pr, ST_KEY_SOURCE, D_TRANSLATE(ST_I18N_SOURCE), OBS_COMBO_TYPE_LIST,
-									OBS_COMBO_FORMAT_STRING);
+		p = obs_properties_add_list(pr, ST_KEY_SOURCE, D_TRANSLATE(ST_I18N_SOURCE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 		obs_property_set_modified_callback(p, modified_properties);
 
 		obs_property_list_add_string(p, "", "");
@@ -357,24 +351,15 @@ obs_properties_t* mirror_factory::get_properties2(mirror_instance* data)
 	}
 
 	{
-		p = obs_properties_add_list(pr, ST_KEY_SOURCE_AUDIO_LAYOUT, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT),
-									OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(Unknown)),
-								  static_cast<int64_t>(SPEAKERS_UNKNOWN));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(Mono)),
-								  static_cast<int64_t>(SPEAKERS_MONO));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(Stereo)),
-								  static_cast<int64_t>(SPEAKERS_STEREO));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(StereoLFE)),
-								  static_cast<int64_t>(SPEAKERS_2POINT1));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(Quadraphonic)),
-								  static_cast<int64_t>(SPEAKERS_4POINT0));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(QuadraphonicLFE)),
-								  static_cast<int64_t>(SPEAKERS_4POINT1));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(Surround)),
-								  static_cast<int64_t>(SPEAKERS_5POINT1));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(FullSurround)),
-								  static_cast<int64_t>(SPEAKERS_7POINT1));
+		p = obs_properties_add_list(pr, ST_KEY_SOURCE_AUDIO_LAYOUT, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(Unknown)), static_cast<int64_t>(SPEAKERS_UNKNOWN));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(Mono)), static_cast<int64_t>(SPEAKERS_MONO));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(Stereo)), static_cast<int64_t>(SPEAKERS_STEREO));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(StereoLFE)), static_cast<int64_t>(SPEAKERS_2POINT1));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(Quadraphonic)), static_cast<int64_t>(SPEAKERS_4POINT0));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(QuadraphonicLFE)), static_cast<int64_t>(SPEAKERS_4POINT1));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(Surround)), static_cast<int64_t>(SPEAKERS_5POINT1));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_SOURCE_AUDIO_LAYOUT_(FullSurround)), static_cast<int64_t>(SPEAKERS_7POINT1));
 	}
 
 	return pr;

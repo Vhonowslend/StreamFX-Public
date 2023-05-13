@@ -132,8 +132,7 @@ void streamfx::obs::source_tracker::remove_source(obs_source_t* source)
 	}
 }
 
-void streamfx::obs::source_tracker::rename_source(std::string_view old_name, std::string_view new_name,
-												  obs_source_t* source)
+void streamfx::obs::source_tracker::rename_source(std::string_view old_name, std::string_view new_name, obs_source_t* source)
 {
 	if (old_name == new_name) {
 		throw std::runtime_error("New and old name are identical.");

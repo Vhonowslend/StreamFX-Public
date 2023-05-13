@@ -22,8 +22,7 @@ namespace streamfx::encoder::ffmpeg::handler {
 		virtual ~amf_h264_handler(){};
 
 		public /*factory*/:
-		void adjust_info(ffmpeg_factory* factory, const AVCodec* codec, std::string& id, std::string& name,
-						 std::string& codec_id) override;
+		void adjust_info(ffmpeg_factory* factory, const AVCodec* codec, std::string& id, std::string& name, std::string& codec_id) override;
 
 		void get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context, bool hw_encode) override;
 
@@ -42,11 +41,9 @@ namespace streamfx::encoder::ffmpeg::handler {
 		bool has_pixel_format_support(ffmpeg_factory* instance) override;
 
 		public /*settings*/:
-		void get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context,
-							bool hw_encode) override;
+		void get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context, bool hw_encode) override;
 
-		void migrate(obs_data_t* settings, std::uint64_t version, const AVCodec* codec,
-					 AVCodecContext* context) override;
+		void migrate(obs_data_t* settings, std::uint64_t version, const AVCodec* codec, AVCodecContext* context) override;
 
 		void update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context) override;
 
@@ -55,9 +52,7 @@ namespace streamfx::encoder::ffmpeg::handler {
 		void log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context) override;
 
 		public /*instance*/:
-
-		void override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec,
-								  AVCodecContext* context) override;
+		void override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec, AVCodecContext* context) override;
 
 		private:
 		void get_encoder_properties(obs_properties_t* props, const AVCodec* codec);

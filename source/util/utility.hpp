@@ -22,11 +22,11 @@ extern "C" {
 }
 
 // Constants
-#define S_PI 3.1415926535897932384626433832795        // PI = pi
-#define S_PI2 6.283185307179586476925286766559        // 2PI = 2 * pi
+#define S_PI 3.1415926535897932384626433832795 // PI = pi
+#define S_PI2 6.283185307179586476925286766559 // 2PI = 2 * pi
 #define S_PI2_SQROOT 2.506628274631000502415765284811 // sqrt(2 * pi)
-#define S_RAD 57.295779513082320876798154814105       // 180/pi
-#define S_DEG 0.01745329251994329576923690768489      // pi/180
+#define S_RAD 57.295779513082320876798154814105 // 180/pi
+#define S_DEG 0.01745329251994329576923690768489 // pi/180
 #define D_DEG_TO_RAD(x) (x * S_DEG)
 #define D_RAD_TO_DEG(x) (x * S_RAD)
 
@@ -160,8 +160,7 @@ namespace streamfx::util {
 		template<typename T, typename C>
 		inline bool is_equal(T target, C value)
 		{
-			return (target > (value - std::numeric_limits<T>::epsilon()))
-				   && (target < (value + std::numeric_limits<T>::epsilon()));
+			return (target > (value - std::numeric_limits<T>::epsilon())) && (target < (value + std::numeric_limits<T>::epsilon()));
 		}
 
 		template<typename T>
@@ -218,21 +217,14 @@ namespace streamfx::util {
 			T _k_kalman_gain;
 
 			public:
-			kalman1D()
-				: _q_process_noise_covariance(0), _r_measurement_noise_covariance(0), _x_value_of_interest(0),
-				  _p_estimation_error_covariance(0), _k_kalman_gain(0.0)
-			{}
-			kalman1D(T pnc, T mnc, T eec, T value)
-				: _q_process_noise_covariance(pnc), _r_measurement_noise_covariance(mnc), _x_value_of_interest(value),
-				  _p_estimation_error_covariance(eec), _k_kalman_gain(0.0)
-			{}
+			kalman1D() : _q_process_noise_covariance(0), _r_measurement_noise_covariance(0), _x_value_of_interest(0), _p_estimation_error_covariance(0), _k_kalman_gain(0.0) {}
+			kalman1D(T pnc, T mnc, T eec, T value) : _q_process_noise_covariance(pnc), _r_measurement_noise_covariance(mnc), _x_value_of_interest(value), _p_estimation_error_covariance(eec), _k_kalman_gain(0.0) {}
 			~kalman1D() = default;
 
 			T filter(T measurement)
 			{
 				_p_estimation_error_covariance += _q_process_noise_covariance;
-				_k_kalman_gain =
-					_p_estimation_error_covariance / (_p_estimation_error_covariance + _r_measurement_noise_covariance);
+				_k_kalman_gain = _p_estimation_error_covariance / (_p_estimation_error_covariance + _r_measurement_noise_covariance);
 				_x_value_of_interest += _k_kalman_gain * (measurement - _x_value_of_interest);
 				_p_estimation_error_covariance = (1 - _k_kalman_gain) * _p_estimation_error_covariance;
 				return _x_value_of_interest;

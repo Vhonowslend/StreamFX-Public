@@ -97,9 +97,7 @@ std::shared_ptr<AVFrame> avframe_queue::pop()
 				ret = create_frame();
 			} else {
 				_frames.pop_front();
-				if ((static_cast<int32_t>(ret->width) != this->_resolution.first)
-					|| (static_cast<int32_t>(ret->height) != this->_resolution.second)
-					|| (ret->format != this->_format)) {
+				if ((static_cast<int32_t>(ret->width) != this->_resolution.first) || (static_cast<int32_t>(ret->height) != this->_resolution.second) || (ret->format != this->_format)) {
 					ret = nullptr;
 				}
 			}

@@ -26,9 +26,7 @@ streamfx::nvidia::ar::feature::~feature()
 	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
 }
 
-streamfx::nvidia::ar::feature::feature(feature_t feature)
-	: _nvcuda(::streamfx::nvidia::cuda::obs::get()), _nvcv(::streamfx::nvidia::cv::cv::get()),
-	  _nvar(::streamfx::nvidia::ar::ar::get()), _fx()
+streamfx::nvidia::ar::feature::feature(feature_t feature) : _nvcuda(::streamfx::nvidia::cuda::obs::get()), _nvcv(::streamfx::nvidia::cv::cv::get()), _nvar(::streamfx::nvidia::ar::ar::get()), _fx()
 {
 	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
 	auto gctx = ::streamfx::obs::gs::context();
@@ -39,8 +37,7 @@ streamfx::nvidia::ar::feature::feature(feature_t feature)
 	if (cv::result res = _nvar->NvAR_Create(feature, &handle); res != cv::result::SUCCESS) {
 		throw cv::exception("Failed to create feature.", res);
 	}
-	_fx =
-		std::shared_ptr<void>(handle, [this](::streamfx::nvidia::ar::handle_t handle) { _nvar->NvAR_Destroy(handle); });
+	_fx = std::shared_ptr<void>(handle, [this](::streamfx::nvidia::ar::handle_t handle) { _nvar->NvAR_Destroy(handle); });
 
 	// Set CUDA stream and model directory.
 	set(P_NVAR_CONFIG "CUDAStream", _nvcuda->get_stream());

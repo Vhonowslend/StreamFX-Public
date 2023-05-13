@@ -74,10 +74,7 @@ streamfx::nvidia::vfx::superresolution::~superresolution()
 	_tmp.reset();
 }
 
-streamfx::nvidia::vfx::superresolution::superresolution()
-	: effect(EFFECT_SUPERRESOLUTION), _dirty(true), _input(), _convert_to_fp32(), _source(), _destination(),
-	  _convert_to_u8(), _output(), _tmp(), _strength(1.), _scale(1.5), _cache_input_size(), _cache_output_size(),
-	  _cache_scale()
+streamfx::nvidia::vfx::superresolution::superresolution() : effect(EFFECT_SUPERRESOLUTION), _dirty(true), _input(), _convert_to_fp32(), _source(), _destination(), _convert_to_u8(), _output(), _tmp(), _strength(1.), _scale(1.5), _cache_input_size(), _cache_output_size(), _cache_scale()
 {
 	// Enter Graphics and CUDA context.
 	auto gctx = ::streamfx::obs::gs::context();
@@ -105,8 +102,7 @@ void streamfx::nvidia::vfx::superresolution::set_strength(float strength)
 	uint32_t value = (_strength >= .5f) ? 1u : 0u;
 	auto     gctx  = ::streamfx::obs::gs::context();
 	auto     cctx  = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
-	if (auto res = set(::streamfx::nvidia::vfx::PARAMETER_STRENGTH, value);
-		res != ::streamfx::nvidia::cv::result::SUCCESS) {
+	if (auto res = set(::streamfx::nvidia::vfx::PARAMETER_STRENGTH, value); res != ::streamfx::nvidia::cv::result::SUCCESS) {
 		D_LOG_ERROR("Failed to set '%s' to %lu.", ::streamfx::nvidia::vfx::PARAMETER_STRENGTH, value);
 	};
 }
@@ -137,13 +133,10 @@ float streamfx::nvidia::vfx::superresolution::scale()
 	return _scale;
 }
 
-void streamfx::nvidia::vfx::superresolution::size(std::pair<uint32_t, uint32_t> const& size,
-												  std::pair<uint32_t, uint32_t>&       input_size,
-												  std::pair<uint32_t, uint32_t>&       output_size)
+void streamfx::nvidia::vfx::superresolution::size(std::pair<uint32_t, uint32_t> const& size, std::pair<uint32_t, uint32_t>& input_size, std::pair<uint32_t, uint32_t>& output_size)
 {
 	// Check if the size has actually changed at all.
-	if ((input_size.first == _cache_input_size.first) && (input_size.second == _cache_input_size.second)
-		&& (_scale == _cache_scale)) {
+	if ((input_size.first == _cache_input_size.first) && (input_size.second == _cache_input_size.second) && (_scale == _cache_scale)) {
 		input_size  = _cache_input_size;
 		output_size = _cache_output_size;
 		_scale      = _cache_scale;
@@ -175,14 +168,12 @@ void streamfx::nvidia::vfx::superresolution::size(std::pair<uint32_t, uint32_t> 
 		// Dominant Width
 		double ar         = static_cast<double>(input_size.second) / static_cast<double>(input_size.first);
 		input_size.first  = std::clamp<uint32_t>(input_size.first, min_width, max_width);
-		input_size.second = std::clamp<uint32_t>(
-			static_cast<uint32_t>(std::lround(static_cast<double>(input_size.first) * ar)), min_height, max_height);
+		input_size.second = std::clamp<uint32_t>(static_cast<uint32_t>(std::lround(static_cast<double>(input_size.first) * ar)), min_height, max_height);
 	} else {
 		// Dominant Height
 		double ar         = static_cast<double>(input_size.first) / static_cast<double>(input_size.second);
 		input_size.second = std::clamp<uint32_t>(input_size.second, min_height, max_height);
-		input_size.first  = std::clamp<uint32_t>(
-            static_cast<uint32_t>(std::lround(static_cast<double>(input_size.second) * ar)), min_width, max_width);
+		input_size.first  = std::clamp<uint32_t>(static_cast<uint32_t>(std::lround(static_cast<double>(input_size.second) * ar)), min_width, max_width);
 	}
 
 	// Calculate Output Size.
@@ -192,8 +183,7 @@ void streamfx::nvidia::vfx::superresolution::size(std::pair<uint32_t, uint32_t> 
 	// Verify that this is a valid scale factor.
 	float width_mul  = (static_cast<float>(output_size.first) / static_cast<float>(input_size.first));
 	float height_mul = (static_cast<float>(output_size.second) / static_cast<float>(input_size.second));
-	if (!::streamfx::util::math::is_close<float>(width_mul, _scale, 0.00001)
-		|| !::streamfx::util::math::is_close<float>(height_mul, _scale, 0.00001)) {
+	if (!::streamfx::util::math::is_close<float>(width_mul, _scale, 0.00001) || !::streamfx::util::math::is_close<float>(height_mul, _scale, 0.00001)) {
 		size_t scale_idx = find_closest_scale_factor_index(_scale);
 		if (scale_idx < supported_scale_factors.size()) {
 			_scale = supported_scale_factors[scale_idx + 1];
@@ -207,8 +197,7 @@ void streamfx::nvidia::vfx::superresolution::size(std::pair<uint32_t, uint32_t> 
 	_cache_scale       = _scale;
 }
 
-std::shared_ptr<::streamfx::obs::gs::texture>
-	streamfx::nvidia::vfx::superresolution::process(std::shared_ptr<::streamfx::obs::gs::texture> in)
+std::shared_ptr<::streamfx::obs::gs::texture> streamfx::nvidia::vfx::superresolution::process(std::shared_ptr<::streamfx::obs::gs::texture> in)
 {
 	// Enter Graphics and CUDA context.
 	auto gctx = ::streamfx::obs::gs::context();
@@ -235,14 +224,10 @@ std::shared_ptr<::streamfx::obs::gs::texture>
 
 	{ // Convert Input to Source format
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_convert,
-													"Convert Input -> Source"};
+		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_convert, "Convert Input -> Source"};
 #endif
-		if (auto res = _nvcvi->NvCVImage_Transfer(_input->get_image(), _convert_to_fp32->get_image(), 1.f,
-												  _nvcuda->get_stream()->get(), _tmp->get_image());
-			res != ::streamfx::nvidia::cv::result::SUCCESS) {
-			D_LOG_ERROR("Failed to transfer processing result to output due to error: %s",
-						_nvcvi->NvCV_GetErrorStringFromCode(res));
+		if (auto res = _nvcvi->NvCVImage_Transfer(_input->get_image(), _convert_to_fp32->get_image(), 1.f, _nvcuda->get_stream()->get(), _tmp->get_image()); res != ::streamfx::nvidia::cv::result::SUCCESS) {
+			D_LOG_ERROR("Failed to transfer processing result to output due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 			throw std::runtime_error("Transfer failed.");
 		}
 	}
@@ -251,11 +236,8 @@ std::shared_ptr<::streamfx::obs::gs::texture>
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_copy, "Copy Input -> Source"};
 #endif
-		if (auto res = _nvcvi->NvCVImage_Transfer(_convert_to_fp32->get_image(), _source->get_image(), 1.f,
-												  _nvcuda->get_stream()->get(), _tmp->get_image());
-			res != ::streamfx::nvidia::cv::result::SUCCESS) {
-			D_LOG_ERROR("Failed to transfer input to processing source due to error: %s",
-						_nvcvi->NvCV_GetErrorStringFromCode(res));
+		if (auto res = _nvcvi->NvCVImage_Transfer(_convert_to_fp32->get_image(), _source->get_image(), 1.f, _nvcuda->get_stream()->get(), _tmp->get_image()); res != ::streamfx::nvidia::cv::result::SUCCESS) {
+			D_LOG_ERROR("Failed to transfer input to processing source due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 			throw std::runtime_error("Transfer failed.");
 		}
 	}
@@ -272,28 +254,20 @@ std::shared_ptr<::streamfx::obs::gs::texture>
 
 	{ // Convert Destination to Output format
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_convert,
-													"Convert Destination -> Output"};
+		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_convert, "Convert Destination -> Output"};
 #endif
-		if (auto res = _nvcvi->NvCVImage_Transfer(_destination->get_image(), _convert_to_u8->get_image(), 1.f,
-												  _nvcuda->get_stream()->get(), _tmp->get_image());
-			res != ::streamfx::nvidia::cv::result::SUCCESS) {
-			D_LOG_ERROR("Failed to transfer processing result to output due to error: %s",
-						_nvcvi->NvCV_GetErrorStringFromCode(res));
+		if (auto res = _nvcvi->NvCVImage_Transfer(_destination->get_image(), _convert_to_u8->get_image(), 1.f, _nvcuda->get_stream()->get(), _tmp->get_image()); res != ::streamfx::nvidia::cv::result::SUCCESS) {
+			D_LOG_ERROR("Failed to transfer processing result to output due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 			throw std::runtime_error("Transfer failed.");
 		}
 	}
 
 	{ // Copy destination to output.
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_copy,
-													"Copy Destination -> Output"};
+		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_copy, "Copy Destination -> Output"};
 #endif
-		if (auto res = _nvcvi->NvCVImage_Transfer(_convert_to_u8->get_image(), _output->get_image(), 1.,
-												  _nvcuda->get_stream()->get(), _tmp->get_image());
-			res != ::streamfx::nvidia::cv::result::SUCCESS) {
-			D_LOG_ERROR("Failed to transfer processing result to output due to error: %s",
-						_nvcvi->NvCV_GetErrorStringFromCode(res));
+		if (auto res = _nvcvi->NvCVImage_Transfer(_convert_to_u8->get_image(), _output->get_image(), 1., _nvcuda->get_stream()->get(), _tmp->get_image()); res != ::streamfx::nvidia::cv::result::SUCCESS) {
+			D_LOG_ERROR("Failed to transfer processing result to output due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 			throw std::runtime_error("Transfer failed.");
 		}
 	}
@@ -311,47 +285,33 @@ void streamfx::nvidia::vfx::superresolution::resize(uint32_t width, uint32_t hei
 	this->size(_cache_input_size, _cache_input_size, _cache_output_size);
 
 	if (!_tmp) {
-		_tmp = std::make_shared<::streamfx::nvidia::cv::image>(
-			_cache_output_size.first, _cache_output_size.second, ::streamfx::nvidia::cv::pixel_format::RGBA,
-			::streamfx::nvidia::cv::component_type::UINT8, ::streamfx::nvidia::cv::component_layout::PLANAR,
-			::streamfx::nvidia::cv::memory_location::GPU, 1);
+		_tmp = std::make_shared<::streamfx::nvidia::cv::image>(_cache_output_size.first, _cache_output_size.second, ::streamfx::nvidia::cv::pixel_format::RGBA, ::streamfx::nvidia::cv::component_type::UINT8, ::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 	}
 
-	if (!_input || (_input->get_image()->width != _cache_input_size.first)
-		|| (_input->get_image()->height != _cache_input_size.second)) {
+	if (!_input || (_input->get_image()->width != _cache_input_size.first) || (_input->get_image()->height != _cache_input_size.second)) {
 		if (_input) {
 			_input->resize(_cache_input_size.first, _cache_input_size.second);
 		} else {
-			_input = std::make_shared<::streamfx::nvidia::cv::texture>(_cache_input_size.first,
-																	   _cache_input_size.second, GS_RGBA_UNORM);
+			_input = std::make_shared<::streamfx::nvidia::cv::texture>(_cache_input_size.first, _cache_input_size.second, GS_RGBA_UNORM);
 		}
 	}
 
-	if (!_convert_to_fp32 || (_convert_to_fp32->get_image()->width != _cache_input_size.first)
-		|| (_convert_to_fp32->get_image()->height != _cache_input_size.second)) {
+	if (!_convert_to_fp32 || (_convert_to_fp32->get_image()->width != _cache_input_size.first) || (_convert_to_fp32->get_image()->height != _cache_input_size.second)) {
 		if (_convert_to_fp32) {
 			_convert_to_fp32->resize(_cache_input_size.first, _cache_input_size.second);
 		} else {
-			_convert_to_fp32 = std::make_shared<::streamfx::nvidia::cv::image>(
-				_cache_input_size.first, _cache_input_size.second, ::streamfx::nvidia::cv::pixel_format::RGBA,
-				::streamfx::nvidia::cv::component_type::FP32, ::streamfx::nvidia::cv::component_layout::PLANAR,
-				::streamfx::nvidia::cv::memory_location::GPU, 1);
+			_convert_to_fp32 = std::make_shared<::streamfx::nvidia::cv::image>(_cache_input_size.first, _cache_input_size.second, ::streamfx::nvidia::cv::pixel_format::RGBA, ::streamfx::nvidia::cv::component_type::FP32, ::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 	}
 
-	if (!_source || (_source->get_image()->width != _cache_input_size.first)
-		|| (_source->get_image()->height != _cache_input_size.second)) {
+	if (!_source || (_source->get_image()->width != _cache_input_size.first) || (_source->get_image()->height != _cache_input_size.second)) {
 		if (_source) {
 			_source->resize(_cache_input_size.first, _cache_input_size.second);
 		} else {
-			_source = std::make_shared<::streamfx::nvidia::cv::image>(
-				_cache_input_size.first, _cache_input_size.second, ::streamfx::nvidia::cv::pixel_format::BGR,
-				::streamfx::nvidia::cv::component_type::FP32, ::streamfx::nvidia::cv::component_layout::PLANAR,
-				::streamfx::nvidia::cv::memory_location::GPU, 1);
+			_source = std::make_shared<::streamfx::nvidia::cv::image>(_cache_input_size.first, _cache_input_size.second, ::streamfx::nvidia::cv::pixel_format::BGR, ::streamfx::nvidia::cv::component_type::FP32, ::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 
-		if (auto res = set(::streamfx::nvidia::vfx::PARAMETER_INPUT_IMAGE_0, _source);
-			res != ::streamfx::nvidia::cv::result::SUCCESS) {
+		if (auto res = set(::streamfx::nvidia::vfx::PARAMETER_INPUT_IMAGE_0, _source); res != ::streamfx::nvidia::cv::result::SUCCESS) {
 			D_LOG_ERROR("Failed to set input image due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 			throw std::runtime_error("SetImage failed.");
 		}
@@ -359,19 +319,14 @@ void streamfx::nvidia::vfx::superresolution::resize(uint32_t width, uint32_t hei
 		_dirty = true;
 	}
 
-	if (!_destination || (_destination->get_image()->width != _cache_output_size.first)
-		|| (_destination->get_image()->height != _cache_output_size.second)) {
+	if (!_destination || (_destination->get_image()->width != _cache_output_size.first) || (_destination->get_image()->height != _cache_output_size.second)) {
 		if (_destination) {
 			_destination->resize(_cache_output_size.first, _cache_output_size.second);
 		} else {
-			_destination = std::make_shared<::streamfx::nvidia::cv::image>(
-				_cache_output_size.first, _cache_output_size.second, ::streamfx::nvidia::cv::pixel_format::BGR,
-				::streamfx::nvidia::cv::component_type::FP32, ::streamfx::nvidia::cv::component_layout::PLANAR,
-				::streamfx::nvidia::cv::memory_location::GPU, 1);
+			_destination = std::make_shared<::streamfx::nvidia::cv::image>(_cache_output_size.first, _cache_output_size.second, ::streamfx::nvidia::cv::pixel_format::BGR, ::streamfx::nvidia::cv::component_type::FP32, ::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 
-		if (auto res = set(::streamfx::nvidia::vfx::PARAMETER_OUTPUT_IMAGE_0, _destination);
-			res != ::streamfx::nvidia::cv::result::SUCCESS) {
+		if (auto res = set(::streamfx::nvidia::vfx::PARAMETER_OUTPUT_IMAGE_0, _destination); res != ::streamfx::nvidia::cv::result::SUCCESS) {
 			D_LOG_ERROR("Failed to set output image due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 			throw std::runtime_error("SetImage failed.");
 		}
@@ -379,25 +334,19 @@ void streamfx::nvidia::vfx::superresolution::resize(uint32_t width, uint32_t hei
 		_dirty = true;
 	}
 
-	if (!_convert_to_u8 || (_convert_to_u8->get_image()->width != _cache_output_size.first)
-		|| (_convert_to_u8->get_image()->height != _cache_output_size.second)) {
+	if (!_convert_to_u8 || (_convert_to_u8->get_image()->width != _cache_output_size.first) || (_convert_to_u8->get_image()->height != _cache_output_size.second)) {
 		if (_convert_to_u8) {
 			_convert_to_u8->resize(_cache_output_size.first, _cache_output_size.second);
 		} else {
-			_convert_to_u8 = std::make_shared<::streamfx::nvidia::cv::image>(
-				_cache_output_size.first, _cache_output_size.second, ::streamfx::nvidia::cv::pixel_format::RGBA,
-				::streamfx::nvidia::cv::component_type::UINT8, ::streamfx::nvidia::cv::component_layout::INTERLEAVED,
-				::streamfx::nvidia::cv::memory_location::GPU, 1);
+			_convert_to_u8 = std::make_shared<::streamfx::nvidia::cv::image>(_cache_output_size.first, _cache_output_size.second, ::streamfx::nvidia::cv::pixel_format::RGBA, ::streamfx::nvidia::cv::component_type::UINT8, ::streamfx::nvidia::cv::component_layout::INTERLEAVED, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 	}
 
-	if (!_output || (_output->get_image()->width != _cache_output_size.first)
-		|| (_output->get_image()->height != _cache_output_size.second)) {
+	if (!_output || (_output->get_image()->width != _cache_output_size.first) || (_output->get_image()->height != _cache_output_size.second)) {
 		if (_output) {
 			_output->resize(_cache_output_size.first, _cache_output_size.second);
 		} else {
-			_output = std::make_shared<::streamfx::nvidia::cv::texture>(_cache_output_size.first,
-																		_cache_output_size.second, GS_RGBA_UNORM);
+			_output = std::make_shared<::streamfx::nvidia::cv::texture>(_cache_output_size.first, _cache_output_size.second, GS_RGBA_UNORM);
 		}
 	}
 }

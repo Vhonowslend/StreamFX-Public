@@ -24,8 +24,7 @@ streamfx::obs::gs::index_buffer::index_buffer(index_buffer& other) : index_buffe
 	std::copy(other.begin(), other.end(), this->end());
 }
 
-streamfx::obs::gs::index_buffer::index_buffer(std::vector<uint32_t>& other)
-	: index_buffer(static_cast<uint32_t>(other.size()))
+streamfx::obs::gs::index_buffer::index_buffer(std::vector<uint32_t>& other) : index_buffer(static_cast<uint32_t>(other.size()))
 {
 	std::copy(other.begin(), other.end(), this->end());
 }

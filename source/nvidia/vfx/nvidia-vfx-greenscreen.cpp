@@ -44,8 +44,7 @@ streamfx::nvidia::vfx::greenscreen::~greenscreen()
 	_buffer.clear();
 }
 
-streamfx::nvidia::vfx::greenscreen::greenscreen()
-	: effect(EFFECT_GREEN_SCREEN), _dirty(true), _input(), _source(), _destination(), _output(), _tmp()
+streamfx::nvidia::vfx::greenscreen::greenscreen() : effect(EFFECT_GREEN_SCREEN), _dirty(true), _input(), _source(), _destination(), _output(), _tmp()
 {
 	// Enter Contexts.
 	auto gctx = ::streamfx::obs::gs::context();
@@ -66,16 +65,14 @@ void streamfx::nvidia::vfx::greenscreen::size(std::pair<uint32_t, uint32_t>& siz
 	// Calculate Size
 	if (size.first > size.second) {
 		// Dominant Width
-		double ar  = static_cast<double>(size.second) / static_cast<double>(size.first);
-		size.first = std::max<uint32_t>(size.first, min_width);
-		size.second =
-			std::max<uint32_t>(static_cast<uint32_t>(std::lround(static_cast<double>(size.first) * ar)), min_height);
+		double ar   = static_cast<double>(size.second) / static_cast<double>(size.first);
+		size.first  = std::max<uint32_t>(size.first, min_width);
+		size.second = std::max<uint32_t>(static_cast<uint32_t>(std::lround(static_cast<double>(size.first) * ar)), min_height);
 	} else {
 		// Dominant Height
 		double ar   = static_cast<double>(size.first) / static_cast<double>(size.second);
 		size.second = std::max<uint32_t>(size.second, min_height);
-		size.first =
-			std::max<uint32_t>(static_cast<uint32_t>(std::lround(static_cast<double>(size.second) * ar)), min_width);
+		size.first  = std::max<uint32_t>(static_cast<uint32_t>(std::lround(static_cast<double>(size.second) * ar)), min_width);
 	}
 }
 
@@ -85,8 +82,7 @@ void streamfx::nvidia::vfx::greenscreen::set_mode(greenscreen_mode mode)
 	_dirty = true;
 }
 
-std::shared_ptr<streamfx::obs::gs::texture>
-	streamfx::nvidia::vfx::greenscreen::process(std::shared_ptr<::streamfx::obs::gs::texture> in)
+std::shared_ptr<streamfx::obs::gs::texture> streamfx::nvidia::vfx::greenscreen::process(std::shared_ptr<::streamfx::obs::gs::texture> in)
 {
 	// Enter Graphics and CUDA context.
 	auto gctx = ::streamfx::obs::gs::context();
@@ -122,11 +118,8 @@ std::shared_ptr<streamfx::obs::gs::texture>
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_copy, "Copy Input -> Source"};
 #endif
-		if (auto res = _nvcvi->NvCVImage_Transfer(_input->get_image(), _source->get_image(), 1.f,
-												  _nvcuda->get_stream()->get(), _tmp->get_image());
-			res != ::streamfx::nvidia::cv::result::SUCCESS) {
-			D_LOG_ERROR("Failed to transfer input to processing source due to error: %s",
-						_nvcvi->NvCV_GetErrorStringFromCode(res));
+		if (auto res = _nvcvi->NvCVImage_Transfer(_input->get_image(), _source->get_image(), 1.f, _nvcuda->get_stream()->get(), _tmp->get_image()); res != ::streamfx::nvidia::cv::result::SUCCESS) {
+			D_LOG_ERROR("Failed to transfer input to processing source due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 			throw std::runtime_error("Transfer failed.");
 		}
 	}
@@ -143,14 +136,10 @@ std::shared_ptr<streamfx::obs::gs::texture>
 
 	{ // Copy destination to output.
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_copy,
-													"Copy Destination -> Output"};
+		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_copy, "Copy Destination -> Output"};
 #endif
-		if (auto res = _nvcvi->NvCVImage_Transfer(_destination->get_image(), _output->get_image(), 1.,
-												  _nvcuda->get_stream()->get(), _tmp->get_image());
-			res != ::streamfx::nvidia::cv::result::SUCCESS) {
-			D_LOG_ERROR("Failed to transfer processing result to output due to error: %s",
-						_nvcvi->NvCV_GetErrorStringFromCode(res));
+		if (auto res = _nvcvi->NvCVImage_Transfer(_destination->get_image(), _output->get_image(), 1., _nvcuda->get_stream()->get(), _tmp->get_image()); res != ::streamfx::nvidia::cv::result::SUCCESS) {
+			D_LOG_ERROR("Failed to transfer processing result to output due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 			throw std::runtime_error("Transfer failed.");
 		}
 	}
@@ -179,18 +168,14 @@ void streamfx::nvidia::vfx::greenscreen::resize(uint32_t width, uint32_t height)
 	size(in_size);
 
 	if (!_tmp) {
-		_tmp = std::make_shared<::streamfx::nvidia::cv::image>(
-			width, height, ::streamfx::nvidia::cv::pixel_format::RGBA, ::streamfx::nvidia::cv::component_type::UINT8,
-			::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
+		_tmp = std::make_shared<::streamfx::nvidia::cv::image>(width, height, ::streamfx::nvidia::cv::pixel_format::RGBA, ::streamfx::nvidia::cv::component_type::UINT8, ::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 	}
 
-	if (!_input || (in_size.first != _input->get_texture()->get_width())
-		|| (in_size.second != _input->get_texture()->get_height())) {
+	if (!_input || (in_size.first != _input->get_texture()->get_width()) || (in_size.second != _input->get_texture()->get_height())) {
 		{
 			_buffer.clear();
 			for (size_t idx = 0; idx < LATENCY_BUFFER; idx++) {
-				auto el = std::make_shared<::streamfx::obs::gs::texture>(width, height, GS_RGBA_UNORM, 1, nullptr,
-																		 ::streamfx::obs::gs::texture::flags::None);
+				auto el = std::make_shared<::streamfx::obs::gs::texture>(width, height, GS_RGBA_UNORM, 1, nullptr, ::streamfx::obs::gs::texture::flags::None);
 				_buffer.push_back(el);
 			}
 		}
@@ -204,15 +189,11 @@ void streamfx::nvidia::vfx::greenscreen::resize(uint32_t width, uint32_t height)
 		_dirty = true;
 	}
 
-	if (!_source || (in_size.first != _source->get_image()->width)
-		|| (in_size.second != _source->get_image()->height)) {
+	if (!_source || (in_size.first != _source->get_image()->width) || (in_size.second != _source->get_image()->height)) {
 		if (_source) {
 			_source->resize(in_size.first, in_size.second);
 		} else {
-			_source = std::make_shared<::streamfx::nvidia::cv::image>(
-				in_size.first, in_size.second, ::streamfx::nvidia::cv::pixel_format::BGR,
-				::streamfx::nvidia::cv::component_type::UINT8, ::streamfx::nvidia::cv::component_layout::INTERLEAVED,
-				::streamfx::nvidia::cv::memory_location::GPU, 1);
+			_source = std::make_shared<::streamfx::nvidia::cv::image>(in_size.first, in_size.second, ::streamfx::nvidia::cv::pixel_format::BGR, ::streamfx::nvidia::cv::component_type::UINT8, ::streamfx::nvidia::cv::component_layout::INTERLEAVED, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 
 		if (auto v = set(PARAMETER_INPUT_IMAGE_0, _source); v != ::streamfx::nvidia::cv::result::SUCCESS) {
@@ -222,15 +203,11 @@ void streamfx::nvidia::vfx::greenscreen::resize(uint32_t width, uint32_t height)
 		_dirty = true;
 	}
 
-	if (!_destination || (in_size.first != _destination->get_image()->width)
-		|| (in_size.second != _destination->get_image()->height)) {
+	if (!_destination || (in_size.first != _destination->get_image()->width) || (in_size.second != _destination->get_image()->height)) {
 		if (_destination) {
 			_destination->resize(in_size.first, in_size.second);
 		} else {
-			_destination = std::make_shared<::streamfx::nvidia::cv::image>(
-				in_size.first, in_size.second, ::streamfx::nvidia::cv::pixel_format::A,
-				::streamfx::nvidia::cv::component_type::UINT8, ::streamfx::nvidia::cv::component_layout::INTERLEAVED,
-				::streamfx::nvidia::cv::memory_location::GPU, 1);
+			_destination = std::make_shared<::streamfx::nvidia::cv::image>(in_size.first, in_size.second, ::streamfx::nvidia::cv::pixel_format::A, ::streamfx::nvidia::cv::component_type::UINT8, ::streamfx::nvidia::cv::component_layout::INTERLEAVED, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 
 		if (auto v = set(PARAMETER_OUTPUT_IMAGE_0, _destination); v != ::streamfx::nvidia::cv::result::SUCCESS) {
@@ -240,8 +217,7 @@ void streamfx::nvidia::vfx::greenscreen::resize(uint32_t width, uint32_t height)
 		_dirty = true;
 	}
 
-	if (!_output || (in_size.first != _output->get_texture()->get_width())
-		|| (in_size.second != _output->get_texture()->get_height())) {
+	if (!_output || (in_size.first != _output->get_texture()->get_width()) || (in_size.second != _output->get_texture()->get_height())) {
 		if (_output) {
 			_output->resize(in_size.first, in_size.second);
 		} else {

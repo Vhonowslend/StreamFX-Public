@@ -8,8 +8,7 @@ constexpr std::string_view i18n_role_contributor = "UI.About.Role.Contributor";
 constexpr std::string_view i18n_role_translator  = "UI.About.Role.Translator";
 constexpr std::string_view i18n_role_supporter   = "UI.About.Role.Supporter";
 
-streamfx::ui::about_entry::about_entry(QWidget* parent, const streamfx::ui::about::entry& entry)
-	: QWidget(parent), _link()
+streamfx::ui::about_entry::about_entry(QWidget* parent, const streamfx::ui::about::entry& entry) : QWidget(parent), _link()
 {
 	setupUi(this);
 

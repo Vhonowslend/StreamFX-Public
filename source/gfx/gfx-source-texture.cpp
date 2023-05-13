@@ -17,8 +17,7 @@ streamfx::gfx::source_texture::~source_texture()
 	}
 }
 
-streamfx::gfx::source_texture::source_texture(streamfx::obs::source child, streamfx::obs::source parent)
-	: _parent(parent), _child(child)
+streamfx::gfx::source_texture::source_texture(streamfx::obs::source child, streamfx::obs::source parent) : _parent(parent), _child(child)
 {
 	// Verify that 'child' and 'parent' exist.
 	if (!_child || !_parent) {
@@ -70,8 +69,7 @@ std::shared_ptr<streamfx::obs::gs::texture> streamfx::gfx::source_texture::rende
 
 	if (_child) {
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-		auto cctr = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_capture, "gfx::source_texture '%s'",
-													obs_source_get_name(_child.get()));
+		auto cctr = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_capture, "gfx::source_texture '%s'", obs_source_get_name(_child.get()));
 #endif
 		auto op = _rt->render(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 		vec4 black;

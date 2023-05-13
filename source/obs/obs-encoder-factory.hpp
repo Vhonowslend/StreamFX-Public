@@ -44,8 +44,7 @@ namespace streamfx::obs {
 			return false;
 		};
 
-		virtual bool encode_video(uint32_t handle, int64_t pts, uint64_t lock_key, uint64_t* next_key,
-								  struct encoder_packet* packet, bool* received_packet)
+		virtual bool encode_video(uint32_t handle, int64_t pts, uint64_t lock_key, uint64_t* next_key, struct encoder_packet* packet, bool* received_packet)
 		{
 			return false;
 		};
@@ -118,10 +117,9 @@ namespace streamfx::obs {
 				_info.encode_texture = _encode_texture;
 
 				memcpy(&_info_fallback, &_info, sizeof(obs_encoder_info));
-				_info_fallback_id = std::string(_info.id) + "_sw";
-				_info_fallback.id = _info_fallback_id.c_str();
-				_info_fallback.caps =
-					(_info_fallback.caps & ~OBS_ENCODER_CAP_PASS_TEXTURE) | OBS_ENCODER_CAP_DEPRECATED;
+				_info_fallback_id             = std::string(_info.id) + "_sw";
+				_info_fallback.id             = _info_fallback_id.c_str();
+				_info_fallback.caps           = (_info_fallback.caps & ~OBS_ENCODER_CAP_PASS_TEXTURE) | OBS_ENCODER_CAP_DEPRECATED;
 				_info_fallback.create         = _create;
 				_info_fallback.encode_texture = nullptr;
 				obs_register_encoder(&_info_fallback);
@@ -218,8 +216,7 @@ namespace streamfx::obs {
 			}
 		}
 
-		static bool _properties_migrate_settings(void* priv, obs_properties_t*, obs_property_t* p,
-												 obs_data_t* settings) noexcept
+		static bool _properties_migrate_settings(void* priv, obs_properties_t*, obs_property_t* p, obs_data_t* settings) noexcept
 		{
 			try {
 				obs_property_set_visible(p, false);
@@ -238,13 +235,10 @@ namespace streamfx::obs {
 		{
 			try {
 				if (type_data) {
-					auto props =
-						reinterpret_cast<factory_t*>(type_data)->get_properties2(reinterpret_cast<instance_t*>(data));
+					auto props = reinterpret_cast<factory_t*>(type_data)->get_properties2(reinterpret_cast<instance_t*>(data));
 
 					{ // Support for permanent settings migration.
-						auto p = obs_properties_add_int(
-							props, S_VERSION, "If you can see this, something went horribly wrong.",
-							std::numeric_limits<int32_t>::lowest(), std::numeric_limits<int32_t>::max(), 1);
+						auto p = obs_properties_add_int(props, S_VERSION, "If you can see this, something went horribly wrong.", std::numeric_limits<int32_t>::lowest(), std::numeric_limits<int32_t>::max(), 1);
 						obs_property_set_modified_callback2(p, _properties_migrate_settings, type_data);
 					}
 
@@ -291,8 +285,7 @@ namespace streamfx::obs {
 			}
 		}
 
-		static bool _encode(void* data, struct encoder_frame* frame, struct encoder_packet* packet,
-							bool* received_packet) noexcept
+		static bool _encode(void* data, struct encoder_frame* frame, struct encoder_packet* packet, bool* received_packet) noexcept
 		{
 			try {
 				if (data)
@@ -307,13 +300,11 @@ namespace streamfx::obs {
 			}
 		}
 
-		static bool _encode_texture(void* data, uint32_t handle, int64_t pts, uint64_t lock_key, uint64_t* next_key,
-									struct encoder_packet* packet, bool* received_packet) noexcept
+		static bool _encode_texture(void* data, uint32_t handle, int64_t pts, uint64_t lock_key, uint64_t* next_key, struct encoder_packet* packet, bool* received_packet) noexcept
 		{
 			try {
 				if (data)
-					return reinterpret_cast<encoder_instance*>(data)->encode_video(handle, pts, lock_key, next_key,
-																				   packet, received_packet);
+					return reinterpret_cast<encoder_instance*>(data)->encode_video(handle, pts, lock_key, next_key, packet, received_packet);
 				return false;
 			} catch (const std::exception& ex) {
 				DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());

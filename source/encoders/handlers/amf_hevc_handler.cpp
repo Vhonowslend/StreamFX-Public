@@ -39,13 +39,10 @@ static std::map<tier, std::string> tiers{
 };
 
 static std::map<level, std::string> levels{
-	{level::L1_0, "1.0"}, {level::L2_0, "2.0"}, {level::L2_1, "2.1"}, {level::L3_0, "3.0"}, {level::L3_1, "3.1"},
-	{level::L4_0, "4.0"}, {level::L4_1, "4.1"}, {level::L5_0, "5.0"}, {level::L5_1, "5.1"}, {level::L5_2, "5.2"},
-	{level::L6_0, "6.0"}, {level::L6_1, "6.1"}, {level::L6_2, "6.2"},
+	{level::L1_0, "1.0"}, {level::L2_0, "2.0"}, {level::L2_1, "2.1"}, {level::L3_0, "3.0"}, {level::L3_1, "3.1"}, {level::L4_0, "4.0"}, {level::L4_1, "4.1"}, {level::L5_0, "5.0"}, {level::L5_1, "5.1"}, {level::L5_2, "5.2"}, {level::L6_0, "6.0"}, {level::L6_1, "6.1"}, {level::L6_2, "6.2"},
 };
 
-void amf_hevc_handler::adjust_info(ffmpeg_factory* factory, const AVCodec* codec, std::string& id, std::string& name,
-								   std::string& codec_id)
+void amf_hevc_handler::adjust_info(ffmpeg_factory* factory, const AVCodec* codec, std::string& id, std::string& name, std::string& codec_id)
 {
 	name = "AMD AMF H.265/HEVC (via FFmpeg)";
 	if (!amf::is_available())
@@ -127,12 +124,9 @@ void amf_hevc_handler::log_options(obs_data_t* settings, const AVCodec* codec, A
 	amf::log_options(settings, codec, context);
 
 	DLOG_INFO("[%s]     H.265/HEVC:", codec->name);
-	::streamfx::ffmpeg::tools::print_av_option_string2(context, "profile", "      Profile",
-													   [](int64_t v, std::string_view o) { return std::string(o); });
-	::streamfx::ffmpeg::tools::print_av_option_string2(context, "level", "      Level",
-													   [](int64_t v, std::string_view o) { return std::string(o); });
-	::streamfx::ffmpeg::tools::print_av_option_string2(context, "tier", "      Tier",
-													   [](int64_t v, std::string_view o) { return std::string(o); });
+	::streamfx::ffmpeg::tools::print_av_option_string2(context, "profile", "      Profile", [](int64_t v, std::string_view o) { return std::string(o); });
+	::streamfx::ffmpeg::tools::print_av_option_string2(context, "level", "      Level", [](int64_t v, std::string_view o) { return std::string(o); });
+	::streamfx::ffmpeg::tools::print_av_option_string2(context, "tier", "      Tier", [](int64_t v, std::string_view o) { return std::string(o); });
 }
 
 void amf_hevc_handler::get_encoder_properties(obs_properties_t* props, const AVCodec* codec)
@@ -144,8 +138,7 @@ void amf_hevc_handler::get_encoder_properties(obs_properties_t* props, const AVC
 		obs_properties_add_group(props, S_CODEC_HEVC, D_TRANSLATE(S_CODEC_HEVC), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_PROFILE, D_TRANSLATE(S_CODEC_HEVC_PROFILE),
-											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			auto p = obs_properties_add_list(grp, ST_KEY_PROFILE, D_TRANSLATE(S_CODEC_HEVC_PROFILE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), static_cast<int64_t>(profile::UNKNOWN));
 			for (auto const kv : profiles) {
 				std::string trans = std::string(S_CODEC_HEVC_PROFILE) + "." + kv.second;
@@ -153,8 +146,7 @@ void amf_hevc_handler::get_encoder_properties(obs_properties_t* props, const AVC
 			}
 		}
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_TIER, D_TRANSLATE(S_CODEC_HEVC_TIER), OBS_COMBO_TYPE_LIST,
-											 OBS_COMBO_FORMAT_INT);
+			auto p = obs_properties_add_list(grp, ST_KEY_TIER, D_TRANSLATE(S_CODEC_HEVC_TIER), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), static_cast<int64_t>(tier::UNKNOWN));
 			for (auto const kv : tiers) {
 				std::string trans = std::string(S_CODEC_HEVC_TIER) + "." + kv.second;
@@ -162,8 +154,7 @@ void amf_hevc_handler::get_encoder_properties(obs_properties_t* props, const AVC
 			}
 		}
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_LEVEL, D_TRANSLATE(S_CODEC_HEVC_LEVEL), OBS_COMBO_TYPE_LIST,
-											 OBS_COMBO_FORMAT_INT);
+			auto p = obs_properties_add_list(grp, ST_KEY_LEVEL, D_TRANSLATE(S_CODEC_HEVC_LEVEL), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), static_cast<int64_t>(level::UNKNOWN));
 			for (auto const kv : levels) {
 				obs_property_list_add_int(p, kv.second.c_str(), static_cast<int64_t>(kv.first));
@@ -179,8 +170,7 @@ void amf_hevc_handler::get_runtime_properties(obs_properties_t* props, const AVC
 	amf::get_runtime_properties(props, codec, context);
 }
 
-void streamfx::encoder::ffmpeg::handler::amf_hevc_handler::migrate(obs_data_t* settings, std::uint64_t version,
-																   const AVCodec* codec, AVCodecContext* context)
+void streamfx::encoder::ffmpeg::handler::amf_hevc_handler::migrate(obs_data_t* settings, std::uint64_t version, const AVCodec* codec, AVCodecContext* context)
 {
 	amf::migrate(settings, version, codec, context);
 }

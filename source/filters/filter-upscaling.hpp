@@ -82,9 +82,7 @@ namespace streamfx::filter::upscaling {
 #endif
 	};
 
-	class upscaling_factory
-		: public ::streamfx::obs::source_factory<::streamfx::filter::upscaling::upscaling_factory,
-												 ::streamfx::filter::upscaling::upscaling_instance> {
+	class upscaling_factory : public ::streamfx::obs::source_factory<::streamfx::filter::upscaling::upscaling_factory, ::streamfx::filter::upscaling::upscaling_instance> {
 #ifdef ENABLE_FILTER_UPSCALING_NVIDIA
 		bool                                           _nvidia_available;
 		std::shared_ptr<::streamfx::nvidia::cuda::obs> _nvcuda;

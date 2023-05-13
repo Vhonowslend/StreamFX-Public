@@ -229,21 +229,17 @@ namespace streamfx::nvidia::cuda {
 		// Memory Management
 		P_CUDA_DEFINE_FUNCTION(cuArrayGetDescriptor, array_descriptor_v2_t* pArrayDescripter, array_t array);
 		P_CUDA_DEFINE_FUNCTION(cuMemAlloc, device_ptr_t* ptr, std::size_t bytes);
-		P_CUDA_DEFINE_FUNCTION(cuMemAllocPitch, device_ptr_t* ptr, std::size_t* pitch, std::size_t width_in_bytes,
-							   std::size_t height, uint32_t element_size_bytes);
+		P_CUDA_DEFINE_FUNCTION(cuMemAllocPitch, device_ptr_t* ptr, std::size_t* pitch, std::size_t width_in_bytes, std::size_t height, uint32_t element_size_bytes);
 		P_CUDA_DEFINE_FUNCTION(cuMemFree, device_ptr_t ptr);
 		P_CUDA_DEFINE_FUNCTION(cuMemHostGetDevicePointer, device_ptr_t* devptr, void* ptr, uint32_t flags);
 		P_CUDA_DEFINE_FUNCTION(cuMemcpy, device_ptr_t dst, device_ptr_t src, std::size_t bytes);
 		P_CUDA_DEFINE_FUNCTION(cuMemcpy2D, const memcpy2d_v2_t* copy);
 		P_CUDA_DEFINE_FUNCTION(cuMemcpy2DAsync, const memcpy2d_v2_t* copy, stream_t stream);
-		P_CUDA_DEFINE_FUNCTION(cuMemcpyAtoA, array_t dst, std::size_t dstOffset, array_t src, std::size_t srcOffset,
-							   std::size_t byteCount);
-		P_CUDA_DEFINE_FUNCTION(cuMemcpyAtoD, device_ptr_t dst, array_t src, std::size_t srcOffset,
-							   std::size_t byteCount);
+		P_CUDA_DEFINE_FUNCTION(cuMemcpyAtoA, array_t dst, std::size_t dstOffset, array_t src, std::size_t srcOffset, std::size_t byteCount);
+		P_CUDA_DEFINE_FUNCTION(cuMemcpyAtoD, device_ptr_t dst, array_t src, std::size_t srcOffset, std::size_t byteCount);
 		P_CUDA_DEFINE_FUNCTION(cuMemcpyAtoH, void* dst, array_t src, std::size_t srcOffset, std::size_t byteCount);
 		P_CUDA_DEFINE_FUNCTION(cuMemcpyAtoHAsync, void* dst, array_t src, std::size_t srcOffset, std::size_t byteCount);
-		P_CUDA_DEFINE_FUNCTION(cuMemcpyDtoA, array_t dst, std::size_t dstOffset, device_ptr_t src,
-							   std::size_t byteCount);
+		P_CUDA_DEFINE_FUNCTION(cuMemcpyDtoA, array_t dst, std::size_t dstOffset, device_ptr_t src, std::size_t byteCount);
 		P_CUDA_DEFINE_FUNCTION(cuMemcpyDtoD, device_ptr_t dst, array_t srcArray, std::size_t byteCount);
 		P_CUDA_DEFINE_FUNCTION(cuMemcpyDtoH, void* dst, array_t src, std::size_t byteCount);
 		P_CUDA_DEFINE_FUNCTION(cuMemcpyDtoHAsync, void* dst, array_t src, std::size_t byteCount);
@@ -303,10 +299,8 @@ namespace streamfx::nvidia::cuda {
 
 		// Graphics Interoperability
 		P_CUDA_DEFINE_FUNCTION(cuGraphicsMapResources, uint32_t count, graphics_resource_t* resources, stream_t stream);
-		P_CUDA_DEFINE_FUNCTION(cuGraphicsSubResourceGetMappedArray, array_t* array, graphics_resource_t resource,
-							   uint32_t index, uint32_t level);
-		P_CUDA_DEFINE_FUNCTION(cuGraphicsUnmapResources, uint32_t count, graphics_resource_t* resources,
-							   stream_t stream);
+		P_CUDA_DEFINE_FUNCTION(cuGraphicsSubResourceGetMappedArray, array_t* array, graphics_resource_t resource, uint32_t index, uint32_t level);
+		P_CUDA_DEFINE_FUNCTION(cuGraphicsUnmapResources, uint32_t count, graphics_resource_t* resources, stream_t stream);
 		P_CUDA_DEFINE_FUNCTION(cuGraphicsUnregisterResource, graphics_resource_t resource);
 
 		// Driver Entry Point Access
@@ -330,13 +324,11 @@ namespace streamfx::nvidia::cuda {
 
 		// Direct3D10 Interoperability
 		P_CUDA_DEFINE_FUNCTION(cuD3D10GetDevice, device_t* device, IDXGIAdapter* adapter);
-		P_CUDA_DEFINE_FUNCTION(cuGraphicsD3D10RegisterResource, graphics_resource_t* resource,
-							   ID3D10Resource* d3dresource, uint32_t flags);
+		P_CUDA_DEFINE_FUNCTION(cuGraphicsD3D10RegisterResource, graphics_resource_t* resource, ID3D10Resource* d3dresource, uint32_t flags);
 
 		// Direct3D11 Interoperability
 		P_CUDA_DEFINE_FUNCTION(cuD3D11GetDevice, device_t* device, IDXGIAdapter* adapter);
-		P_CUDA_DEFINE_FUNCTION(cuGraphicsD3D11RegisterResource, graphics_resource_t* resource,
-							   ID3D11Resource* d3dresource, uint32_t flags);
+		P_CUDA_DEFINE_FUNCTION(cuGraphicsD3D11RegisterResource, graphics_resource_t* resource, ID3D11Resource* d3dresource, uint32_t flags);
 #endif
 		public:
 		static std::shared_ptr<::streamfx::nvidia::cuda::cuda> get();
