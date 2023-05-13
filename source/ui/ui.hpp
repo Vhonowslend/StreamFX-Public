@@ -75,8 +75,7 @@ namespace streamfx::ui {
 		translator(QObject* parent = nullptr);
 		~translator();
 
-		virtual QString translate(const char* context, const char* sourceText, const char* disambiguation = nullptr,
-								  int n = -1) const override;
+		virtual QString translate(const char* context, const char* sourceText, const char* disambiguation = nullptr, int n = -1) const override;
 	};
 
 } // namespace streamfx::ui

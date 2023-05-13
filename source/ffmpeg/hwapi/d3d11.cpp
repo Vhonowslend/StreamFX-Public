@@ -69,9 +69,7 @@ std::list<device> d3d11::enumerate_adapters()
 		dxgi_adapter->GetDesc1(&desc);
 
 		std::vector<char> buf(1024);
-		std::size_t       len =
-			static_cast<size_t>(snprintf(buf.data(), buf.size(), "%ls (VEN_%04x/DEV_%04x/SUB_%04x/REV_%04x)",
-										 desc.Description, desc.VendorId, desc.DeviceId, desc.SubSysId, desc.Revision));
+		std::size_t       len = static_cast<size_t>(snprintf(buf.data(), buf.size(), "%ls (VEN_%04x/DEV_%04x/SUB_%04x/REV_%04x)", desc.Description, desc.VendorId, desc.DeviceId, desc.SubSysId, desc.Revision));
 
 		device dev;
 		dev.name      = std::string(buf.data(), buf.data() + len);
@@ -104,11 +102,9 @@ std::shared_ptr<instance> d3d11::create(const device& target)
 
 	// Create a D3D11 Device
 	UINT                           device_flags   = D3D11_CREATE_DEVICE_VIDEO_SUPPORT;
-	std::vector<D3D_FEATURE_LEVEL> feature_levels = {D3D_FEATURE_LEVEL_12_1, D3D_FEATURE_LEVEL_12_0,
-													 D3D_FEATURE_LEVEL_11_1};
+	std::vector<D3D_FEATURE_LEVEL> feature_levels = {D3D_FEATURE_LEVEL_12_1, D3D_FEATURE_LEVEL_12_0, D3D_FEATURE_LEVEL_11_1};
 
-	if (FAILED(_D3D11CreateDevice(adapter, D3D_DRIVER_TYPE_HARDWARE, NULL, device_flags, feature_levels.data(),
-								  static_cast<UINT>(feature_levels.size()), D3D11_SDK_VERSION, &device, NULL, NULL))) {
+	if (FAILED(_D3D11CreateDevice(adapter, D3D_DRIVER_TYPE_HARDWARE, NULL, device_flags, feature_levels.data(), static_cast<UINT>(feature_levels.size()), D3D11_SDK_VERSION, &device, NULL, NULL))) {
 		throw std::runtime_error("Failed to create D3D11 device for target.");
 	}
 
@@ -123,8 +119,7 @@ std::shared_ptr<instance> d3d11::create_from_obs()
 		throw std::runtime_error("OBS Device is not a D3D11 Device.");
 	}
 
-	ATL::CComPtr<ID3D11Device> device =
-		ATL::CComPtr<ID3D11Device>(reinterpret_cast<ID3D11Device*>(gs_get_device_obj()));
+	ATL::CComPtr<ID3D11Device> device = ATL::CComPtr<ID3D11Device>(reinterpret_cast<ID3D11Device*>(gs_get_device_obj()));
 
 	return std::make_shared<d3d11_instance>(device);
 }
@@ -187,15 +182,13 @@ std::shared_ptr<AVFrame> d3d11_instance::allocate_frame(AVBufferRef* frames)
 	return frame;
 }
 
-void d3d11_instance::copy_from_obs(AVBufferRef*, uint32_t handle, uint64_t lock_key, uint64_t* next_lock_key,
-								   std::shared_ptr<AVFrame> frame)
+void d3d11_instance::copy_from_obs(AVBufferRef*, uint32_t handle, uint64_t lock_key, uint64_t* next_lock_key, std::shared_ptr<AVFrame> frame)
 {
 	auto gctx = streamfx::obs::gs::context();
 
 	// Attempt to acquire shared texture.
 	ATL::CComPtr<ID3D11Texture2D> input;
-	if (FAILED(_device->OpenSharedResource(reinterpret_cast<HANDLE>(static_cast<uintptr_t>(handle)),
-										   __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&input)))) {
+	if (FAILED(_device->OpenSharedResource(reinterpret_cast<HANDLE>(static_cast<uintptr_t>(handle)), __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&input)))) {
 		throw std::runtime_error("Failed to open shared texture resource.");
 	}
 
@@ -230,8 +223,7 @@ void d3d11_instance::copy_from_obs(AVBufferRef*, uint32_t handle, uint64_t lock_
 	mutex->ReleaseSync(*next_lock_key);
 }
 
-std::shared_ptr<AVFrame> d3d11_instance::avframe_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key,
-														  uint64_t* next_lock_key)
+std::shared_ptr<AVFrame> d3d11_instance::avframe_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key, uint64_t* next_lock_key)
 {
 	auto gctx = streamfx::obs::gs::context();
 

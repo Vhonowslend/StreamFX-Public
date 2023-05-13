@@ -83,10 +83,7 @@ void streamfx::ui::updater_dialog::on_cancel()
 	reject();
 }
 
-streamfx::ui::updater::updater(QMenu* menu)
-	: _updater(), _dialog(nullptr), _gdpr(nullptr), _cfu(nullptr), _cfu_auto(nullptr), _channel(nullptr),
-	  _channel_menu(nullptr), _channel_stable(nullptr), _channel_candidate(nullptr), _channel_beta(nullptr),
-	  _channel_alpha(nullptr), _channel_group(nullptr)
+streamfx::ui::updater::updater(QMenu* menu) : _updater(), _dialog(nullptr), _gdpr(nullptr), _cfu(nullptr), _cfu_auto(nullptr), _channel(nullptr), _channel_menu(nullptr), _channel_stable(nullptr), _channel_candidate(nullptr), _channel_beta(nullptr), _channel_alpha(nullptr), _channel_group(nullptr)
 {
 	// Create dialog.
 	_dialog = new updater_dialog();
@@ -134,23 +131,16 @@ streamfx::ui::updater::updater(QMenu* menu)
 	}
 
 	// Connect internal signals.
-	connect(this, &streamfx::ui::updater::autoupdate_changed, this, &streamfx::ui::updater::on_autoupdate_changed,
-			Qt::QueuedConnection);
-	connect(this, &streamfx::ui::updater::channel_changed, this, &streamfx::ui::updater::on_channel_changed,
-			Qt::QueuedConnection);
-	connect(this, &streamfx::ui::updater::update_detected, this, &streamfx::ui::updater::on_update_detected,
-			Qt::QueuedConnection);
-	connect(this, &streamfx::ui::updater::check_active, this, &streamfx::ui::updater::on_check_active,
-			Qt::QueuedConnection);
+	connect(this, &streamfx::ui::updater::autoupdate_changed, this, &streamfx::ui::updater::on_autoupdate_changed, Qt::QueuedConnection);
+	connect(this, &streamfx::ui::updater::channel_changed, this, &streamfx::ui::updater::on_channel_changed, Qt::QueuedConnection);
+	connect(this, &streamfx::ui::updater::update_detected, this, &streamfx::ui::updater::on_update_detected, Qt::QueuedConnection);
+	connect(this, &streamfx::ui::updater::check_active, this, &streamfx::ui::updater::on_check_active, Qt::QueuedConnection);
 
 	{ // Retrieve the updater object and listen to it.
 		_updater = streamfx::updater::instance();
-		_updater->events.automation_changed.add(std::bind(&streamfx::ui::updater::on_updater_automation_changed, this,
-														  std::placeholders::_1, std::placeholders::_2));
-		_updater->events.channel_changed.add(std::bind(&streamfx::ui::updater::on_updater_channel_changed, this,
-													   std::placeholders::_1, std::placeholders::_2));
-		_updater->events.refreshed.add(
-			std::bind(&streamfx::ui::updater::on_updater_refreshed, this, std::placeholders::_1));
+		_updater->events.automation_changed.add(std::bind(&streamfx::ui::updater::on_updater_automation_changed, this, std::placeholders::_1, std::placeholders::_2));
+		_updater->events.channel_changed.add(std::bind(&streamfx::ui::updater::on_updater_channel_changed, this, std::placeholders::_1, std::placeholders::_2));
+		_updater->events.refreshed.add(std::bind(&streamfx::ui::updater::on_updater_refreshed, this, std::placeholders::_1));
 
 		// Sync with updater information.
 		emit autoupdate_changed(_updater->is_automated());

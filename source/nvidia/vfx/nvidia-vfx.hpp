@@ -70,10 +70,8 @@ namespace streamfx::nvidia::vfx {
 		NVVFX_DEFINE_FUNCTION(NvVFX_SetF64, handle_t effect, parameter_t paramName, double val);
 		NVVFX_DEFINE_FUNCTION(NvVFX_SetU64, handle_t effect, parameter_t paramName, uint64_t val);
 		NVVFX_DEFINE_FUNCTION(NvVFX_SetObject, handle_t effect, parameter_t paramName, void* ptr);
-		NVVFX_DEFINE_FUNCTION(NvVFX_SetCudaStream, handle_t effect, parameter_t paramName,
-							  ::streamfx::nvidia::cuda::stream_t stream);
-		NVVFX_DEFINE_FUNCTION(NvVFX_SetImage, handle_t effect, parameter_t paramName,
-							  ::streamfx::nvidia::cv::image_t* im);
+		NVVFX_DEFINE_FUNCTION(NvVFX_SetCudaStream, handle_t effect, parameter_t paramName, ::streamfx::nvidia::cuda::stream_t stream);
+		NVVFX_DEFINE_FUNCTION(NvVFX_SetImage, handle_t effect, parameter_t paramName, ::streamfx::nvidia::cv::image_t* im);
 		NVVFX_DEFINE_FUNCTION(NvVFX_SetString, handle_t effect, parameter_t paramName, const char* str);
 		NVVFX_DEFINE_FUNCTION(NvVFX_GetU32, handle_t effect, parameter_t paramName, uint32_t* val);
 		NVVFX_DEFINE_FUNCTION(NvVFX_GetS32, handle_t effect, parameter_t paramName, int32_t* val);
@@ -81,10 +79,8 @@ namespace streamfx::nvidia::vfx {
 		NVVFX_DEFINE_FUNCTION(NvVFX_GetF64, handle_t effect, parameter_t paramName, double* val);
 		NVVFX_DEFINE_FUNCTION(NvVFX_GetU64, handle_t effect, parameter_t paramName, uint64_t* val);
 		NVVFX_DEFINE_FUNCTION(NvVFX_GetObject, handle_t effect, parameter_t paramName, void** ptr);
-		NVVFX_DEFINE_FUNCTION(NvVFX_GetCudaStream, handle_t effect, parameter_t paramName,
-							  ::streamfx::nvidia::cuda::stream_t stream);
-		NVVFX_DEFINE_FUNCTION(NvVFX_GetImage, handle_t effect, parameter_t paramName,
-							  ::streamfx::nvidia::cv::image_t* im);
+		NVVFX_DEFINE_FUNCTION(NvVFX_GetCudaStream, handle_t effect, parameter_t paramName, ::streamfx::nvidia::cuda::stream_t stream);
+		NVVFX_DEFINE_FUNCTION(NvVFX_GetImage, handle_t effect, parameter_t paramName, ::streamfx::nvidia::cv::image_t* im);
 		NVVFX_DEFINE_FUNCTION(NvVFX_GetString, handle_t effect, parameter_t paramName, const char** str);
 		NVVFX_DEFINE_FUNCTION(NvVFX_Run, handle_t effect, int32_t async);
 		NVVFX_DEFINE_FUNCTION(NvVFX_Load, handle_t effect);

@@ -30,15 +30,13 @@ namespace streamfx::encoder::ffmpeg::handler {
 		bool has_keyframe_support(ffmpeg_factory* instance) override;
 
 		public /*settings*/:
-		void get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context,
-							bool hw_encode) override;
+		void get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context, bool hw_encode) override;
 
 		void update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context) override;
 
 		void log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context) override;
 
 		public /*instance*/:
-		void override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec,
-								  AVCodecContext* context) override;
+		void override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec, AVCodecContext* context) override;
 	};
 } // namespace streamfx::encoder::ffmpeg::handler

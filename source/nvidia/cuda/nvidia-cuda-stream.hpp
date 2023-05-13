@@ -16,8 +16,7 @@ namespace streamfx::nvidia::cuda {
 
 		public:
 		~stream();
-		stream(::streamfx::nvidia::cuda::stream_flags flags    = ::streamfx::nvidia::cuda::stream_flags::DEFAULT,
-			   int32_t                                priority = 0);
+		stream(::streamfx::nvidia::cuda::stream_flags flags = ::streamfx::nvidia::cuda::stream_flags::DEFAULT, int32_t priority = 0);
 
 		::streamfx::nvidia::cuda::stream_t get();
 

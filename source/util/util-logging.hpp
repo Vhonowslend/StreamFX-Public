@@ -36,8 +36,8 @@
 namespace streamfx::util::logging {
 	enum class level {
 		LEVEL_DEBUG, // Debug information, which is not necessary to know at runtime.
-		LEVEL_INFO,  // Runtime information, which may or may not be needed for support.
-		LEVEL_WARN,  // Warnings, which should be respected and fixed.
+		LEVEL_INFO, // Runtime information, which may or may not be needed for support.
+		LEVEL_WARN, // Warnings, which should be respected and fixed.
 		LEVEL_ERROR, // Errors that must be fixed.
 	};
 

@@ -36,9 +36,7 @@ streamfx::nvidia::ar::facedetection::~facedetection()
 	D_LOG_DEBUG("Finalizing... (Addr: 0x%" PRIuPTR ")", this);
 }
 
-streamfx::nvidia::ar::facedetection::facedetection()
-	: feature(FEATURE_FACE_DETECTION), _input(), _source(), _tmp(), _rects(), _rects_confidence(), _bboxes(),
-	  _dirty(true)
+streamfx::nvidia::ar::facedetection::facedetection() : feature(FEATURE_FACE_DETECTION), _input(), _source(), _tmp(), _rects(), _rects_confidence(), _bboxes(), _dirty(true)
 {
 	D_LOG_DEBUG("Initializing... (Addr: 0x%" PRIuPTR ")", this);
 
@@ -85,8 +83,7 @@ void ar::facedetection::set_tracking_limit(size_t v)
 	_bboxes.current = 0;
 
 	// Update feature.
-	if (auto err = set_object(P_NVAR_OUTPUT "BoundingBoxes", reinterpret_cast<void*>(&_bboxes), sizeof(bounds_t));
-		err != cv::result::SUCCESS) {
+	if (auto err = set_object(P_NVAR_OUTPUT "BoundingBoxes", reinterpret_cast<void*>(&_bboxes), sizeof(bounds_t)); err != cv::result::SUCCESS) {
 		throw cv::exception("BoundingBoxes", err);
 	}
 	if (auto err = set(P_NVAR_OUTPUT "BoundingBoxesConfidence", _rects_confidence); err != cv::result::SUCCESS) {
@@ -129,11 +126,8 @@ void ar::facedetection::process(std::shared_ptr<::streamfx::obs::gs::texture> in
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 		::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_convert, "Copy Input -> Source"};
 #endif
-		if (auto res = _nvcv->NvCVImage_Transfer(_input->get_image(), _source->get_image(), 1.f,
-												 _nvcuda->get_stream()->get(), _tmp->get_image());
-			res != ::streamfx::nvidia::cv::result::SUCCESS) {
-			D_LOG_ERROR("Failed to transfer input to processing source due to error: %s",
-						_nvcv->NvCV_GetErrorStringFromCode(res));
+		if (auto res = _nvcv->NvCVImage_Transfer(_input->get_image(), _source->get_image(), 1.f, _nvcuda->get_stream()->get(), _tmp->get_image()); res != ::streamfx::nvidia::cv::result::SUCCESS) {
+			D_LOG_ERROR("Failed to transfer input to processing source due to error: %s", _nvcv->NvCV_GetErrorStringFromCode(res));
 			throw std::runtime_error("Transfer failed.");
 		}
 	}
@@ -176,9 +170,7 @@ void ar::facedetection::resize(uint32_t width, uint32_t height)
 	auto cctx = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
 
 	if (!_tmp) {
-		_tmp = std::make_shared<::streamfx::nvidia::cv::image>(
-			width, height, ::streamfx::nvidia::cv::pixel_format::RGBA, ::streamfx::nvidia::cv::component_type::UINT8,
-			::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
+		_tmp = std::make_shared<::streamfx::nvidia::cv::image>(width, height, ::streamfx::nvidia::cv::pixel_format::RGBA, ::streamfx::nvidia::cv::component_type::UINT8, ::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 	}
 
 	if (!_input || (width != _input->get_texture()->get_width()) || (height != _input->get_texture()->get_height())) {
@@ -194,9 +186,7 @@ void ar::facedetection::resize(uint32_t width, uint32_t height)
 		if (_source) {
 			_source->resize(width, height);
 		} else {
-			_source = std::make_shared<::streamfx::nvidia::cv::image>(
-				width, height, ::streamfx::nvidia::cv::pixel_format::BGR, ::streamfx::nvidia::cv::component_type::UINT8,
-				::streamfx::nvidia::cv::component_layout::INTERLEAVED, ::streamfx::nvidia::cv::memory_location::GPU, 1);
+			_source = std::make_shared<::streamfx::nvidia::cv::image>(width, height, ::streamfx::nvidia::cv::pixel_format::BGR, ::streamfx::nvidia::cv::component_type::UINT8, ::streamfx::nvidia::cv::component_layout::INTERLEAVED, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 
 		if (auto err = set(P_NVAR_INPUT "Image", _source); err != cv::result::SUCCESS) {

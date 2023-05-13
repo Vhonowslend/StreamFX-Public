@@ -30,8 +30,7 @@ streamfx::nvidia::cuda::memory::~memory()
 	_cuda->cuMemFree(_pointer);
 }
 
-streamfx::nvidia::cuda::memory::memory(size_t size)
-	: _cuda(::streamfx::nvidia::cuda::cuda::get()), _pointer(), _size(size)
+streamfx::nvidia::cuda::memory::memory(size_t size) : _cuda(::streamfx::nvidia::cuda::cuda::get()), _pointer(), _size(size)
 {
 	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
 

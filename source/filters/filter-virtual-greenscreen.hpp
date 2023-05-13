@@ -76,16 +76,13 @@ namespace streamfx::filter::virtual_greenscreen {
 		void nvvfxgs_load();
 		void nvvfxgs_unload();
 		void nvvfxgs_size();
-		void nvvfxgs_process(std::shared_ptr<::streamfx::obs::gs::texture>& color,
-							 std::shared_ptr<::streamfx::obs::gs::texture>& alpha);
+		void nvvfxgs_process(std::shared_ptr<::streamfx::obs::gs::texture>& color, std::shared_ptr<::streamfx::obs::gs::texture>& alpha);
 		void nvvfxgs_properties(obs_properties_t* props);
 		void nvvfxgs_update(obs_data_t* data);
 #endif
 	};
 
-	class virtual_greenscreen_factory : public ::streamfx::obs::source_factory<
-											::streamfx::filter::virtual_greenscreen::virtual_greenscreen_factory,
-											::streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance> {
+	class virtual_greenscreen_factory : public ::streamfx::obs::source_factory<::streamfx::filter::virtual_greenscreen::virtual_greenscreen_factory, ::streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance> {
 #ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
 		bool                                           _nvidia_available;
 		std::shared_ptr<::streamfx::nvidia::cuda::obs> _nvcuda;

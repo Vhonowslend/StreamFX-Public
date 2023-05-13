@@ -21,8 +21,7 @@ namespace streamfx::encoder::ffmpeg::handler {
 		virtual ~amf_hevc_handler(){};
 
 		public /*factory*/:
-		virtual void adjust_info(ffmpeg_factory* factory, const AVCodec* codec, std::string& id, std::string& name,
-								 std::string& codec_id);
+		virtual void adjust_info(ffmpeg_factory* factory, const AVCodec* codec, std::string& id, std::string& name, std::string& codec_id);
 
 		virtual void get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context, bool hw_encode);
 
@@ -41,11 +40,9 @@ namespace streamfx::encoder::ffmpeg::handler {
 		virtual bool has_pixel_format_support(ffmpeg_factory* instance);
 
 		public /*settings*/:
-		virtual void get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context,
-									bool hw_encode);
+		virtual void get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context, bool hw_encode);
 
-		virtual void migrate(obs_data_t* settings, std::uint64_t version, const AVCodec* codec,
-							 AVCodecContext* context);
+		virtual void migrate(obs_data_t* settings, std::uint64_t version, const AVCodec* codec, AVCodecContext* context);
 
 		virtual void update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context);
 

@@ -73,8 +73,7 @@ namespace streamfx::encoder::ffmpeg {
 
 		bool encode_video(struct encoder_frame* frame, struct encoder_packet* packet, bool* received_packet) override;
 
-		bool encode_video(uint32_t handle, int64_t pts, uint64_t lock_key, uint64_t* next_key,
-						  struct encoder_packet* packet, bool* received_packet) override;
+		bool encode_video(uint32_t handle, int64_t pts, uint64_t lock_key, uint64_t* next_key, struct encoder_packet* packet, bool* received_packet) override;
 
 		bool get_extra_data(uint8_t** extra_data, size_t* size) override;
 

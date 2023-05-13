@@ -74,8 +74,7 @@ std::string streamfx::filter::denoising::string(denoising_provider provider)
 denoising_instance::denoising_instance(obs_data_t* data, obs_source_t* self)
 	: obs::source_instance(data, self),
 
-	  _size(1, 1), _provider(denoising_provider::INVALID), _provider_ui(denoising_provider::INVALID),
-	  _provider_ready(false), _provider_lock(), _provider_task(), _input(), _output()
+	  _size(1, 1), _provider(denoising_provider::INVALID), _provider_ui(denoising_provider::INVALID), _provider_ready(false), _provider_lock(), _provider_task(), _input(), _output()
 {
 	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
 
@@ -88,8 +87,7 @@ denoising_instance::denoising_instance(obs_data_t* data, obs_source_t* self)
 		_output = _input->get_texture();
 
 		// Load the required effect.
-		_standard_effect =
-			std::make_shared<::streamfx::obs::gs::effect>(::streamfx::data_file_path("effects/standard.effect"));
+		_standard_effect = std::make_shared<::streamfx::obs::gs::effect>(::streamfx::data_file_path("effects/standard.effect"));
 
 		// Create Samplers
 		_channel0_sampler = std::make_shared<::streamfx::obs::gs::sampler>();
@@ -246,8 +244,7 @@ void denoising_instance::video_render(gs_effect_t* effect)
 
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	::streamfx::obs::gs::debug_marker profiler0{::streamfx::obs::gs::debug_color_source, "StreamFX Denoising"};
-	::streamfx::obs::gs::debug_marker profiler0_0{::streamfx::obs::gs::debug_color_gray, "'%s' on '%s'",
-												  obs_source_get_name(_self), obs_source_get_name(parent)};
+	::streamfx::obs::gs::debug_marker profiler0_0{::streamfx::obs::gs::debug_color_gray, "'%s' on '%s'", obs_source_get_name(_self), obs_source_get_name(parent)};
 #endif
 
 	if (_dirty) { // Lock the provider from being changed.
@@ -368,8 +365,7 @@ void streamfx::filter::denoising::denoising_instance::switch_provider(denoising_
 	// - Doesn't guarantee that the task is properly killed off.
 
 	// Log information.
-	D_LOG_INFO("Instance '%s' is switching provider from '%s' to '%s'.", obs_source_get_name(_self), cstring(_provider),
-			   cstring(provider));
+	D_LOG_INFO("Instance '%s' is switching provider from '%s' to '%s'.", obs_source_get_name(_self), cstring(_provider), cstring(provider));
 
 	// If there is an existing task, attempt to cancel it.
 	if (_provider_task) {
@@ -389,8 +385,7 @@ void streamfx::filter::denoising::denoising_instance::switch_provider(denoising_
 	_provider     = provider;
 
 	// Then spawn a new task to switch provider.
-	_provider_task = streamfx::threadpool()->push(
-		std::bind(&denoising_instance::task_switch_provider, this, std::placeholders::_1), spd);
+	_provider_task = streamfx::threadpool()->push(std::bind(&denoising_instance::task_switch_provider, this, std::placeholders::_1), spd);
 }
 
 void streamfx::filter::denoising::denoising_instance::task_switch_provider(util::threadpool::task_data_t data)
@@ -427,8 +422,7 @@ void streamfx::filter::denoising::denoising_instance::task_switch_provider(util:
 		}
 
 		// Log information.
-		D_LOG_INFO("Instance '%s' switched provider from '%s' to '%s'.", obs_source_get_name(_self),
-				   cstring(spd->provider), cstring(_provider));
+		D_LOG_INFO("Instance '%s' switched provider from '%s' to '%s'.", obs_source_get_name(_self), cstring(spd->provider), cstring(_provider));
 
 		_provider_ready = true;
 	} catch (std::exception const& ex) {
@@ -470,13 +464,10 @@ void streamfx::filter::denoising::denoising_instance::nvvfx_denoising_process()
 void streamfx::filter::denoising::denoising_instance::nvvfx_denoising_properties(obs_properties_t* props)
 {
 	obs_properties_t* grp = obs_properties_create();
-	obs_properties_add_group(props, ST_KEY_NVIDIA_DENOISING, D_TRANSLATE(ST_I18N_NVIDIA_DENOISING), OBS_GROUP_NORMAL,
-							 grp);
+	obs_properties_add_group(props, ST_KEY_NVIDIA_DENOISING, D_TRANSLATE(ST_I18N_NVIDIA_DENOISING), OBS_GROUP_NORMAL, grp);
 
 	{
-		auto p = obs_properties_add_list(grp, ST_KEY_NVIDIA_DENOISING_STRENGTH,
-										 D_TRANSLATE(ST_I18N_NVIDIA_DENOISING_STRENGTH), OBS_COMBO_TYPE_LIST,
-										 OBS_COMBO_FORMAT_INT);
+		auto p = obs_properties_add_list(grp, ST_KEY_NVIDIA_DENOISING_STRENGTH, D_TRANSLATE(ST_I18N_NVIDIA_DENOISING_STRENGTH), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_NVIDIA_DENOISING_STRENGTH_WEAK), 0);
 		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_NVIDIA_DENOISING_STRENGTH_STRONG), 1);
 	}
@@ -487,8 +478,7 @@ void streamfx::filter::denoising::denoising_instance::nvvfx_denoising_update(obs
 	if (!_nvidia_fx)
 		return;
 
-	_nvidia_fx->set_strength(
-		static_cast<float>(obs_data_get_int(data, ST_KEY_NVIDIA_DENOISING_STRENGTH) == 0 ? 0. : 1.));
+	_nvidia_fx->set_strength(static_cast<float>(obs_data_get_int(data, ST_KEY_NVIDIA_DENOISING_STRENGTH) == 0 ? 0. : 1.));
 }
 
 #endif
@@ -577,8 +567,7 @@ obs_properties_t* denoising_factory::get_properties2(denoising_instance* data)
 
 #ifdef ENABLE_FRONTEND
 	{
-		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), denoising_factory::on_manual_open,
-								   nullptr);
+		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), denoising_factory::on_manual_open, nullptr);
 	}
 #endif
 
@@ -591,13 +580,10 @@ obs_properties_t* denoising_factory::get_properties2(denoising_instance* data)
 		obs_properties_add_group(pr, S_ADVANCED, D_TRANSLATE(S_ADVANCED), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_PROVIDER, D_TRANSLATE(ST_I18N_PROVIDER), OBS_COMBO_TYPE_LIST,
-											 OBS_COMBO_FORMAT_INT);
+			auto p = obs_properties_add_list(grp, ST_KEY_PROVIDER, D_TRANSLATE(ST_I18N_PROVIDER), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_set_modified_callback(p, modified_provider);
-			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC),
-									  static_cast<int64_t>(denoising_provider::AUTOMATIC));
-			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_PROVIDER_NVIDIA_DENOISING),
-									  static_cast<int64_t>(denoising_provider::NVIDIA_DENOISING));
+			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), static_cast<int64_t>(denoising_provider::AUTOMATIC));
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_PROVIDER_NVIDIA_DENOISING), static_cast<int64_t>(denoising_provider::NVIDIA_DENOISING));
 		}
 	}
 

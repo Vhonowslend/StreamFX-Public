@@ -17,9 +17,7 @@ namespace streamfx::ffmpeg::hwapi {
 	class d3d11 : public streamfx::ffmpeg::hwapi::base {
 		typedef HRESULT(__stdcall* CreateDXGIFactory_t)(REFIID, void**);
 		typedef HRESULT(__stdcall* CreateDXGIFactory1_t)(REFIID, void**);
-		typedef HRESULT(__stdcall* D3D11CreateDevice_t)(IDXGIAdapter*, D3D_DRIVER_TYPE, HMODULE, UINT,
-														CONST D3D_FEATURE_LEVEL*, UINT, UINT, ID3D11Device**,
-														D3D_FEATURE_LEVEL*, ID3D11DeviceContext**);
+		typedef HRESULT(__stdcall* D3D11CreateDevice_t)(IDXGIAdapter*, D3D_DRIVER_TYPE, HMODULE, UINT, CONST D3D_FEATURE_LEVEL*, UINT, UINT, ID3D11Device**, D3D_FEATURE_LEVEL*, ID3D11DeviceContext**);
 
 		HMODULE              _dxgi_module;
 		CreateDXGIFactory_t  _CreateDXGIFactory;
@@ -53,10 +51,8 @@ namespace streamfx::ffmpeg::hwapi {
 
 		virtual std::shared_ptr<AVFrame> allocate_frame(AVBufferRef* frames) override;
 
-		virtual void copy_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key, uint64_t* next_lock_key,
-								   std::shared_ptr<AVFrame> frame) override;
+		virtual void copy_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key, uint64_t* next_lock_key, std::shared_ptr<AVFrame> frame) override;
 
-		virtual std::shared_ptr<AVFrame> avframe_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key,
-														  uint64_t* next_lock_key) override;
+		virtual std::shared_ptr<AVFrame> avframe_from_obs(AVBufferRef* frames, uint32_t handle, uint64_t lock_key, uint64_t* next_lock_key) override;
 	};
 } // namespace streamfx::ffmpeg::hwapi

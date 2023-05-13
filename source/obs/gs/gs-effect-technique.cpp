@@ -16,8 +16,7 @@ extern "C" {
 #include "warning-enable.hpp"
 }
 
-streamfx::obs::gs::effect_technique::effect_technique(gs_technique_t* technique, std::shared_ptr<gs_effect_t> parent)
-	: _parent(parent)
+streamfx::obs::gs::effect_technique::effect_technique(gs_technique_t* technique, std::shared_ptr<gs_effect_t> parent) : _parent(parent)
 {
 	reset(technique, [](void*) {});
 }

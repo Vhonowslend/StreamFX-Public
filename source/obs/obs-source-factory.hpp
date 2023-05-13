@@ -302,13 +302,11 @@ namespace streamfx::obs {
 			}
 		}
 
-		static bool _audio_render(void* data, uint64_t* ts_out, struct obs_source_audio_mix* audio_output,
-								  uint32_t mixers, std::size_t channels, std::size_t sample_rate) noexcept
+		static bool _audio_render(void* data, uint64_t* ts_out, struct obs_source_audio_mix* audio_output, uint32_t mixers, std::size_t channels, std::size_t sample_rate) noexcept
 		{
 			try {
 				if (data)
-					return reinterpret_cast<_instance*>(data)->audio_render(ts_out, audio_output, mixers, channels,
-																			sample_rate);
+					return reinterpret_cast<_instance*>(data)->audio_render(ts_out, audio_output, mixers, channels, sample_rate);
 				return false;
 			} catch (const std::exception& ex) {
 				DLOG_ERROR("Unexpected exception in function '%s': %s.", __FUNCTION_NAME__, ex.what());
@@ -319,8 +317,7 @@ namespace streamfx::obs {
 			}
 		}
 
-		static bool _audio_mix(void* data, uint64_t* ts_out, struct audio_output_data* audio_output,
-							   std::size_t channels, std::size_t sample_rate) noexcept
+		static bool _audio_mix(void* data, uint64_t* ts_out, struct audio_output_data* audio_output, std::size_t channels, std::size_t sample_rate) noexcept
 		{
 			try {
 				if (data)
@@ -583,8 +580,7 @@ namespace streamfx::obs {
 			}
 		}
 
-		static void _mouse_click(void* data, const obs_mouse_event* event, int32_t type, bool mouse_up,
-								 uint32_t click_count) noexcept
+		static void _mouse_click(void* data, const obs_mouse_event* event, int32_t type, bool mouse_up, uint32_t click_count) noexcept
 		{
 			try {
 				if (data)
@@ -869,14 +865,12 @@ namespace streamfx::obs {
 			return audio;
 		}
 
-		virtual bool audio_render(uint64_t* ts_out, struct obs_source_audio_mix* audio_output, uint32_t mixers,
-								  std::size_t channels, std::size_t sample_rate)
+		virtual bool audio_render(uint64_t* ts_out, struct obs_source_audio_mix* audio_output, uint32_t mixers, std::size_t channels, std::size_t sample_rate)
 		{
 			return false;
 		}
 
-		virtual bool audio_mix(uint64_t* ts_out, struct audio_output_data* audio_output, std::size_t channels,
-							   std::size_t sample_rate)
+		virtual bool audio_mix(uint64_t* ts_out, struct audio_output_data* audio_output, std::size_t channels, std::size_t sample_rate)
 		{
 			return false;
 		}

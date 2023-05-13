@@ -114,8 +114,7 @@ namespace streamfx::gfx {
 			virtual std::shared_ptr<::streamfx::obs::gs::texture> get() override;
 		};
 
-		class gaussian_linear_directional : public ::streamfx::gfx::blur::gaussian_linear,
-											public ::streamfx::gfx::blur::base_angle {
+		class gaussian_linear_directional : public ::streamfx::gfx::blur::gaussian_linear, public ::streamfx::gfx::blur::base_angle {
 			double_t _angle;
 
 			public:

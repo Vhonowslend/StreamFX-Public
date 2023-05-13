@@ -57,8 +57,7 @@ bool streamfx::obs::gs::effect_pass::has_vertex_parameter(std::string_view name)
 	return (get_vertex_parameter(name) != nullptr);
 }
 
-bool streamfx::obs::gs::effect_pass::has_vertex_parameter(std::string_view                          name,
-														  streamfx::obs::gs::effect_parameter::type type)
+bool streamfx::obs::gs::effect_pass::has_vertex_parameter(std::string_view name, streamfx::obs::gs::effect_parameter::type type)
 {
 	if (auto el = get_vertex_parameter(name); el != nullptr) {
 		return el.get_type() == type;
@@ -94,8 +93,7 @@ bool streamfx::obs::gs::effect_pass::has_pixel_parameter(std::string_view name)
 	return (get_pixel_parameter(name) != nullptr);
 }
 
-bool streamfx::obs::gs::effect_pass::has_pixel_parameter(std::string_view                          name,
-														 streamfx::obs::gs::effect_parameter::type type)
+bool streamfx::obs::gs::effect_pass::has_pixel_parameter(std::string_view name, streamfx::obs::gs::effect_parameter::type type)
 {
 	if (auto el = get_pixel_parameter(name); el != nullptr) {
 		return el.get_type() == type;

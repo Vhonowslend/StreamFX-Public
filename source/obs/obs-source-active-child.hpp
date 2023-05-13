@@ -22,8 +22,7 @@ namespace streamfx::obs {
 				obs_source_remove_active_child(parent, child);
 			}
 		}
-		source_active_child(::streamfx::obs::source const& parent, ::streamfx::obs::source const& child)
-			: _parent(parent), _child(child)
+		source_active_child(::streamfx::obs::source const& parent, ::streamfx::obs::source const& child) : _parent(parent), _child(child)
 		{
 			if (::streamfx::obs::tools::source_find_source(child, parent)) {
 				throw std::runtime_error("Child contains Parent");

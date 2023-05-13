@@ -15,15 +15,11 @@
 using namespace streamfx::encoder::ffmpeg::handler;
 using namespace streamfx::encoder::codec::prores;
 
-void prores_aw_handler::override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec,
-											 AVCodecContext*)
+void prores_aw_handler::override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec, AVCodecContext*)
 {
-	static const std::array<std::pair<profile, AVPixelFormat>, static_cast<size_t>(profile::_COUNT)>
-		profile_to_format_map{
-			std::pair{profile::APCO, AV_PIX_FMT_YUV422P10}, std::pair{profile::APCS, AV_PIX_FMT_YUV422P10},
-			std::pair{profile::APCN, AV_PIX_FMT_YUV422P10}, std::pair{profile::APCH, AV_PIX_FMT_YUV422P10},
-			std::pair{profile::AP4H, AV_PIX_FMT_YUV444P10}, std::pair{profile::AP4X, AV_PIX_FMT_YUV444P10},
-		};
+	static const std::array<std::pair<profile, AVPixelFormat>, static_cast<size_t>(profile::_COUNT)> profile_to_format_map{
+		std::pair{profile::APCO, AV_PIX_FMT_YUV422P10}, std::pair{profile::APCS, AV_PIX_FMT_YUV422P10}, std::pair{profile::APCN, AV_PIX_FMT_YUV422P10}, std::pair{profile::APCH, AV_PIX_FMT_YUV422P10}, std::pair{profile::AP4H, AV_PIX_FMT_YUV444P10}, std::pair{profile::AP4X, AV_PIX_FMT_YUV444P10},
+	};
 
 	const int64_t profile_id = obs_data_get_int(settings, S_CODEC_PRORES_PROFILE);
 	for (auto kv : profile_to_format_map) {
@@ -67,8 +63,7 @@ inline const char* profile_to_name(const AVProfile* ptr)
 void prores_aw_handler::get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context, bool)
 {
 	if (!context) {
-		auto p = obs_properties_add_list(props, S_CODEC_PRORES_PROFILE, D_TRANSLATE(S_CODEC_PRORES_PROFILE),
-										 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+		auto p = obs_properties_add_list(props, S_CODEC_PRORES_PROFILE, D_TRANSLATE(S_CODEC_PRORES_PROFILE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 		for (auto ptr = codec->profiles; ptr->profile != FF_PROFILE_UNKNOWN; ptr++) {
 			obs_property_list_add_int(p, profile_to_name(ptr), static_cast<int64_t>(ptr->profile));
 		}

@@ -30,8 +30,7 @@
 
 using namespace streamfx::transition::shader;
 
-static constexpr std::string_view HELP_URL =
-	"https://github.com/Xaymar/obs-StreamFX/wiki/Source-Filter-Transition-Shader";
+static constexpr std::string_view HELP_URL = "https://github.com/Xaymar/obs-StreamFX/wiki/Source-Filter-Transition-Shader";
 
 shader_instance::shader_instance(obs_data_t* data, obs_source_t* self) : obs::source_instance(data, self)
 {
@@ -88,14 +87,10 @@ void shader_instance::video_render(gs_effect_t* effect)
 	}
 
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Shader Transition '%s'",
-										 obs_source_get_name(_self)};
+	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Shader Transition '%s'", obs_source_get_name(_self)};
 #endif
 
-	obs_transition_video_render(_self,
-								[](void* data, gs_texture_t* a, gs_texture_t* b, float t, uint32_t cx, uint32_t cy) {
-									reinterpret_cast<shader_instance*>(data)->transition_render(a, b, t, cx, cy);
-								});
+	obs_transition_video_render(_self, [](void* data, gs_texture_t* a, gs_texture_t* b, float t, uint32_t cx, uint32_t cy) { reinterpret_cast<shader_instance*>(data)->transition_render(a, b, t, cx, cy); });
 }
 
 void shader_instance::transition_render(gs_texture_t* a, gs_texture_t* b, float_t t, uint32_t cx, uint32_t cy)
@@ -108,12 +103,10 @@ void shader_instance::transition_render(gs_texture_t* a, gs_texture_t* b, float_
 	_fx->render(nullptr);
 }
 
-bool shader_instance::audio_render(uint64_t* ts_out, obs_source_audio_mix* audio_output, uint32_t mixers,
-								   std::size_t channels, std::size_t sample_rate)
+bool shader_instance::audio_render(uint64_t* ts_out, obs_source_audio_mix* audio_output, uint32_t mixers, std::size_t channels, std::size_t sample_rate)
 {
 	return obs_transition_audio_render(
-		_self, ts_out, audio_output, mixers, channels, sample_rate, [](void*, float_t t) { return 1.0f - t; },
-		[](void*, float_t t) { return t; });
+		_self, ts_out, audio_output, mixers, channels, sample_rate, [](void*, float_t t) { return 1.0f - t; }, [](void*, float_t t) { return t; });
 }
 
 void shader_instance::transition_start()
@@ -158,8 +151,7 @@ obs_properties_t* shader_factory::get_properties2(shader::shader_instance* data)
 
 #ifdef ENABLE_FRONTEND
 	{
-		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN),
-								   streamfx::transition::shader::shader_factory::on_manual_open, nullptr);
+		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), streamfx::transition::shader::shader_factory::on_manual_open, nullptr);
 	}
 #endif
 

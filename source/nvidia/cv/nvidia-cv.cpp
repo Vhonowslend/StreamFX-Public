@@ -84,8 +84,7 @@ streamfx::nvidia::cv::cv::cv()
 		env_size = GetEnvironmentVariableW(ST_ENV_NVIDIA_VIDEO_EFFECTS_SDK_PATH, nullptr, 0);
 		if (env_size > 0) {
 			buffer.resize(static_cast<size_t>(env_size) + 1);
-			env_size     = GetEnvironmentVariableW(ST_ENV_NVIDIA_VIDEO_EFFECTS_SDK_PATH, buffer.data(),
-												   static_cast<DWORD>(buffer.size()));
+			env_size     = GetEnvironmentVariableW(ST_ENV_NVIDIA_VIDEO_EFFECTS_SDK_PATH, buffer.data(), static_cast<DWORD>(buffer.size()));
 			vfx_sdk_path = std::wstring(buffer.data(), buffer.size());
 		} else {
 			PWSTR   str = nullptr;
@@ -113,8 +112,7 @@ streamfx::nvidia::cv::cv::cv()
 		env_size = GetEnvironmentVariableW(ST_ENV_NVIDIA_AR_SDK_PATH, nullptr, 0);
 		if (env_size > 0) {
 			buffer.resize(static_cast<size_t>(env_size) + 1);
-			env_size =
-				GetEnvironmentVariableW(ST_ENV_NVIDIA_AR_SDK_PATH, buffer.data(), static_cast<DWORD>(buffer.size()));
+			env_size    = GetEnvironmentVariableW(ST_ENV_NVIDIA_AR_SDK_PATH, buffer.data(), static_cast<DWORD>(buffer.size()));
 			ar_sdk_path = std::wstring(buffer.data(), buffer.size());
 		} else {
 			PWSTR   str = nullptr;
@@ -153,15 +151,11 @@ streamfx::nvidia::cv::cv::cv()
 			std::string error;
 			{
 				LPWSTR str;
-				FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER
-								   | FORMAT_MESSAGE_IGNORE_INSERTS,
-							   nullptr, ec, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
-							   reinterpret_cast<LPWSTR>(&str), 0, nullptr);
+				FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, ec, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), reinterpret_cast<LPWSTR>(&str), 0, nullptr);
 				error = ::streamfx::util::platform::native_to_utf8(std::wstring(str));
 				LocalFree(str);
 			}
-			D_LOG_WARNING("Failed to add '%'s to the library loader paths with error: %s (Code %" PRIu32 ")",
-						  vfx_sdk_path.string().c_str(), error.c_str(), ec);
+			D_LOG_WARNING("Failed to add '%'s to the library loader paths with error: %s (Code %" PRIu32 ")", vfx_sdk_path.string().c_str(), error.c_str(), ec);
 		}
 #endif
 

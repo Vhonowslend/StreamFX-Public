@@ -22,8 +22,7 @@ static const std::string_view _annotation_scale           = "scale";
 static const std::string_view _annotation_enum_entry      = "enum_%zu";
 static const std::string_view _annotation_enum_entry_name = "enum_%zu_name";
 
-inline bool get_annotation_string(streamfx::obs::gs::effect_parameter param, std::string_view anno_name,
-								  std::string& out)
+inline bool get_annotation_string(streamfx::obs::gs::effect_parameter param, std::string_view anno_name, std::string& out)
 {
 	if (!param)
 		return false;
@@ -68,10 +67,7 @@ streamfx::gfx::shader::basic_field_type streamfx::gfx::shader::get_field_type_fr
 	return basic_field_type::Input;
 }
 
-streamfx::gfx::shader::basic_parameter::basic_parameter(streamfx::gfx::shader::shader*      parent,
-														streamfx::obs::gs::effect_parameter param, std::string prefix)
-	: parameter(parent, param, prefix), _field_type(basic_field_type::Input), _suffix(), _keys(), _names(), _min(),
-	  _max(), _step(), _values()
+streamfx::gfx::shader::basic_parameter::basic_parameter(streamfx::gfx::shader::shader* parent, streamfx::obs::gs::effect_parameter param, std::string prefix) : parameter(parent, param, prefix), _field_type(basic_field_type::Input), _suffix(), _keys(), _names(), _min(), _max(), _step(), _values()
 {
 	char string_buffer[256];
 
@@ -91,8 +87,7 @@ streamfx::gfx::shader::basic_parameter::basic_parameter(streamfx::gfx::shader::s
 		for (std::size_t idx = 0; idx < get_size(); idx++) {
 			snprintf(string_buffer, sizeof(string_buffer), "[%" PRId32 "]", static_cast<int32_t>(idx));
 			_names[idx] = std::string(string_buffer, string_buffer + strnlen(string_buffer, sizeof(string_buffer)));
-			snprintf(string_buffer, sizeof(string_buffer), "%s[%" PRId32 "]", get_key().data(),
-					 static_cast<int32_t>(idx));
+			snprintf(string_buffer, sizeof(string_buffer), "%s[%" PRId32 "]", get_key().data(), static_cast<int32_t>(idx));
 			_keys[idx] = std::string(string_buffer, string_buffer + strnlen(string_buffer, sizeof(string_buffer)));
 		}
 	}
@@ -122,13 +117,11 @@ streamfx::gfx::shader::basic_parameter::basic_parameter(streamfx::gfx::shader::s
 			}
 
 			// Value must be given, name is optional.
-			if (auto eanno = get_parameter().get_annotation(key_value);
-				eanno && (get_type_from_effect_type(eanno.get_type()) == get_type())) {
+			if (auto eanno = get_parameter().get_annotation(key_value); eanno && (get_type_from_effect_type(eanno.get_type()) == get_type())) {
 				basic_enum_data entry;
 
 				load_parameter_data(eanno, entry.data);
-				if (auto nanno = get_parameter().get_annotation(key_name);
-					nanno && (nanno.get_type() == streamfx::obs::gs::effect_parameter::type::String)) {
+				if (auto nanno = get_parameter().get_annotation(key_name); nanno && (nanno.get_type() == streamfx::obs::gs::effect_parameter::type::String)) {
 					entry.name = nanno.get_default_string();
 				} else {
 					entry.name = "Unnamed Entry";
@@ -148,15 +141,12 @@ streamfx::gfx::shader::basic_parameter::basic_parameter(streamfx::gfx::shader::s
 
 streamfx::gfx::shader::basic_parameter::~basic_parameter() {}
 
-void streamfx::gfx::shader::basic_parameter::load_parameter_data(streamfx::obs::gs::effect_parameter parameter,
-																 basic_data&                         data)
+void streamfx::gfx::shader::basic_parameter::load_parameter_data(streamfx::obs::gs::effect_parameter parameter, basic_data& data)
 {
 	parameter.get_default_value(&data.i32, 1);
 }
 
-streamfx::gfx::shader::bool_parameter::bool_parameter(streamfx::gfx::shader::shader*      parent,
-													  streamfx::obs::gs::effect_parameter param, std::string prefix)
-	: basic_parameter(parent, param, prefix)
+streamfx::gfx::shader::bool_parameter::bool_parameter(streamfx::gfx::shader::shader* parent, streamfx::obs::gs::effect_parameter param, std::string prefix) : basic_parameter(parent, param, prefix)
 {
 	_min.resize(0);
 	_max.resize(0);
@@ -183,8 +173,7 @@ void streamfx::gfx::shader::bool_parameter::properties(obs_properties_t* props, 
 
 	// TODO: Support for bool[]
 	if (get_size() == 1) {
-		auto p = obs_properties_add_list(props, get_key().data(), get_name().data(), OBS_COMBO_TYPE_LIST,
-										 OBS_COMBO_FORMAT_INT);
+		auto p = obs_properties_add_list(props, get_key().data(), get_name().data(), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 		if (has_description())
 			obs_property_set_long_description(p, get_description().data());
 		obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DISABLED), 0);
@@ -208,9 +197,7 @@ void streamfx::gfx::shader::bool_parameter::assign()
 	get_parameter().set_value(_data.data(), _data.size());
 }
 
-streamfx::gfx::shader::float_parameter::float_parameter(streamfx::gfx::shader::shader*      parent,
-														streamfx::obs::gs::effect_parameter param, std::string prefix)
-	: basic_parameter(parent, param, prefix)
+streamfx::gfx::shader::float_parameter::float_parameter(streamfx::gfx::shader::shader* parent, streamfx::obs::gs::effect_parameter param, std::string prefix) : basic_parameter(parent, param, prefix)
 {
 	_data.resize(get_size());
 
@@ -258,10 +245,7 @@ void streamfx::gfx::shader::float_parameter::defaults(obs_data_t* settings)
 	}
 }
 
-static inline obs_property_t* build_float_property(streamfx::gfx::shader::basic_field_type ft, obs_properties_t* props,
-												   const char* key, const char* name, float_t min, float_t max,
-												   float_t                                           step,
-												   std::list<streamfx::gfx::shader::basic_enum_data> edata)
+static inline obs_property_t* build_float_property(streamfx::gfx::shader::basic_field_type ft, obs_properties_t* props, const char* key, const char* name, float_t min, float_t max, float_t step, std::list<streamfx::gfx::shader::basic_enum_data> edata)
 {
 	switch (ft) {
 	case streamfx::gfx::shader::basic_field_type::Enum: {
@@ -287,15 +271,13 @@ void streamfx::gfx::shader::float_parameter::properties(obs_properties_t* props,
 	obs_properties_t* pr = props;
 	if (get_size() > 1) {
 		pr     = obs_properties_create();
-		auto p = obs_properties_add_group(props, get_key().data(), has_name() ? get_name().data() : get_key().data(),
-										  OBS_GROUP_NORMAL, pr);
+		auto p = obs_properties_add_group(props, get_key().data(), has_name() ? get_name().data() : get_key().data(), OBS_GROUP_NORMAL, pr);
 		if (has_description())
 			obs_property_set_long_description(p, get_description().data());
 	}
 
 	for (std::size_t idx = 0; idx < get_size(); idx++) {
-		auto p = build_float_property(field_type(), pr, key_at(idx).data(), name_at(idx).data(), _min[idx].f32,
-									  _max[idx].f32, _step[idx].f32, _values);
+		auto p = build_float_property(field_type(), pr, key_at(idx).data(), name_at(idx).data(), _min[idx].f32, _max[idx].f32, _step[idx].f32, _values);
 		if (has_description())
 			obs_property_set_long_description(p, get_description().data());
 		obs_property_float_set_suffix(p, suffix().data());
@@ -316,9 +298,7 @@ void streamfx::gfx::shader::float_parameter::assign()
 
 	get_parameter().set_value(_data.data(), get_size());
 }
-static inline obs_property_t* build_int_property(streamfx::gfx::shader::basic_field_type ft, obs_properties_t* props,
-												 const char* key, const char* name, int32_t min, int32_t max,
-												 int32_t step, std::list<streamfx::gfx::shader::basic_enum_data> edata)
+static inline obs_property_t* build_int_property(streamfx::gfx::shader::basic_field_type ft, obs_properties_t* props, const char* key, const char* name, int32_t min, int32_t max, int32_t step, std::list<streamfx::gfx::shader::basic_enum_data> edata)
 {
 	switch (ft) {
 	case streamfx::gfx::shader::basic_field_type::Enum: {
@@ -336,9 +316,7 @@ static inline obs_property_t* build_int_property(streamfx::gfx::shader::basic_fi
 	}
 }
 
-streamfx::gfx::shader::int_parameter::int_parameter(streamfx::gfx::shader::shader*      parent,
-													streamfx::obs::gs::effect_parameter param, std::string prefix)
-	: basic_parameter(parent, param, prefix)
+streamfx::gfx::shader::int_parameter::int_parameter(streamfx::gfx::shader::shader* parent, streamfx::obs::gs::effect_parameter param, std::string prefix) : basic_parameter(parent, param, prefix)
 {
 	_data.resize(get_size());
 
@@ -393,15 +371,13 @@ void streamfx::gfx::shader::int_parameter::properties(obs_properties_t* props, o
 	obs_properties_t* pr = props;
 	if (get_size() > 1) {
 		pr     = obs_properties_create();
-		auto p = obs_properties_add_group(props, get_key().data(), has_name() ? get_name().data() : get_key().data(),
-										  OBS_GROUP_NORMAL, pr);
+		auto p = obs_properties_add_group(props, get_key().data(), has_name() ? get_name().data() : get_key().data(), OBS_GROUP_NORMAL, pr);
 		if (has_description())
 			obs_property_set_long_description(p, get_description().data());
 	}
 
 	for (std::size_t idx = 0; idx < get_size(); idx++) {
-		auto p = build_int_property(field_type(), pr, key_at(idx).data(), name_at(idx).data(), _min[idx].i32,
-									_max[idx].i32, _step[idx].i32, _values);
+		auto p = build_int_property(field_type(), pr, key_at(idx).data(), name_at(idx).data(), _min[idx].i32, _max[idx].i32, _step[idx].i32, _values);
 		if (has_description())
 			obs_property_set_long_description(p, get_description().data());
 		obs_property_int_set_suffix(p, suffix().data());

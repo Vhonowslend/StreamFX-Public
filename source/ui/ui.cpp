@@ -278,8 +278,7 @@ streamfx::ui::translator::translator(QObject* parent) {}
 
 streamfx::ui::translator::~translator() {}
 
-QString streamfx::ui::translator::translate(const char* context, const char* sourceText, const char* disambiguation,
-											int n) const
+QString streamfx::ui::translator::translate(const char* context, const char* sourceText, const char* disambiguation, int n) const
 {
 	if (sourceText) {
 		std::string_view sourceView{sourceText};

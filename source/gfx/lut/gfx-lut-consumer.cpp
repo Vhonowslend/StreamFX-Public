@@ -15,9 +15,7 @@ streamfx::gfx::lut::consumer::consumer()
 
 streamfx::gfx::lut::consumer::~consumer() = default;
 
-std::shared_ptr<streamfx::obs::gs::effect>
-	streamfx::gfx::lut::consumer::prepare(streamfx::gfx::lut::color_depth             depth,
-										  std::shared_ptr<streamfx::obs::gs::texture> lut)
+std::shared_ptr<streamfx::obs::gs::effect> streamfx::gfx::lut::consumer::prepare(streamfx::gfx::lut::color_depth depth, std::shared_ptr<streamfx::obs::gs::texture> lut)
 {
 	auto gctx = streamfx::obs::gs::context();
 
@@ -47,9 +45,7 @@ std::shared_ptr<streamfx::obs::gs::effect>
 	return effect;
 }
 
-void streamfx::gfx::lut::consumer::consume(streamfx::gfx::lut::color_depth             depth,
-										   std::shared_ptr<streamfx::obs::gs::texture> lut,
-										   std::shared_ptr<streamfx::obs::gs::texture> texture)
+void streamfx::gfx::lut::consumer::consume(streamfx::gfx::lut::color_depth depth, std::shared_ptr<streamfx::obs::gs::texture> lut, std::shared_ptr<streamfx::obs::gs::texture> texture)
 {
 	auto gctx = streamfx::obs::gs::context();
 

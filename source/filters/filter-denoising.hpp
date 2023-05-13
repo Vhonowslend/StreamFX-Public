@@ -81,8 +81,7 @@ namespace streamfx::filter::denoising {
 #endif
 	};
 
-	class denoising_factory : public obs::source_factory<::streamfx::filter::denoising::denoising_factory,
-														 ::streamfx::filter::denoising::denoising_instance> {
+	class denoising_factory : public obs::source_factory<::streamfx::filter::denoising::denoising_factory, ::streamfx::filter::denoising::denoising_instance> {
 #ifdef ENABLE_FILTER_DENOISING_NVIDIA
 		bool                                           _nvidia_available;
 		std::shared_ptr<::streamfx::nvidia::cuda::obs> _nvcuda;

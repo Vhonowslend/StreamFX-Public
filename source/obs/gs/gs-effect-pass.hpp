@@ -25,12 +25,12 @@ namespace streamfx::obs::gs {
 		streamfx::obs::gs::effect_parameter get_vertex_parameter(std::size_t idx);
 		streamfx::obs::gs::effect_parameter get_vertex_parameter(std::string_view name);
 		bool                                has_vertex_parameter(std::string_view name);
-		bool has_vertex_parameter(std::string_view name, streamfx::obs::gs::effect_parameter::type type);
+		bool                                has_vertex_parameter(std::string_view name, streamfx::obs::gs::effect_parameter::type type);
 
 		std::size_t                         count_pixel_parameters();
 		streamfx::obs::gs::effect_parameter get_pixel_parameter(std::size_t idx);
 		streamfx::obs::gs::effect_parameter get_pixel_parameter(std::string_view name);
 		bool                                has_pixel_parameter(std::string_view name);
-		bool has_pixel_parameter(std::string_view name, streamfx::obs::gs::effect_parameter::type type);
+		bool                                has_pixel_parameter(std::string_view name, streamfx::obs::gs::effect_parameter::type type);
 	};
 } // namespace streamfx::obs::gs

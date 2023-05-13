@@ -40,8 +40,7 @@ namespace streamfx::nvidia::vfx {
 		void  set_scale(float scale);
 		float scale();
 
-		void size(std::pair<uint32_t, uint32_t> const& size, std::pair<uint32_t, uint32_t>& input_size,
-				  std::pair<uint32_t, uint32_t>& output_size);
+		void size(std::pair<uint32_t, uint32_t> const& size, std::pair<uint32_t, uint32_t>& input_size, std::pair<uint32_t, uint32_t>& output_size);
 
 		std::shared_ptr<::streamfx::obs::gs::texture> process(std::shared_ptr<::streamfx::obs::gs::texture> in);
 

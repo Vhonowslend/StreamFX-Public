@@ -80,8 +80,7 @@ namespace streamfx::filter::transform {
 		virtual void video_render(gs_effect_t*) override;
 	};
 
-	class transform_factory
-		: public obs::source_factory<filter::transform::transform_factory, filter::transform::transform_instance> {
+	class transform_factory : public obs::source_factory<filter::transform::transform_factory, filter::transform::transform_instance> {
 		public:
 		transform_factory();
 		virtual ~transform_factory() override;

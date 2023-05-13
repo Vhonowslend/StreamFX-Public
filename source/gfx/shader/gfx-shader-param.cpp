@@ -23,8 +23,7 @@
 
 typedef streamfx::obs::gs::effect_parameter::type eptype;
 
-streamfx::gfx::shader::parameter_type
-	streamfx::gfx::shader::get_type_from_effect_type(streamfx::obs::gs::effect_parameter::type type)
+streamfx::gfx::shader::parameter_type streamfx::gfx::shader::get_type_from_effect_type(streamfx::obs::gs::effect_parameter::type type)
 {
 	switch (type) {
 	case eptype::Boolean:
@@ -104,10 +103,7 @@ streamfx::gfx::shader::parameter_type streamfx::gfx::shader::get_type_from_strin
 	throw std::invalid_argument("Invalid parameter type string.");
 }
 
-streamfx::gfx::shader::parameter::parameter(streamfx::gfx::shader::shader*      parent,
-											streamfx::obs::gs::effect_parameter param, std::string key_prefix)
-	: _parent(parent), _param(param), _order(0), _key(_param.get_name()), _visible(true), _automatic(false),
-	  _name(_key), _description()
+streamfx::gfx::shader::parameter::parameter(streamfx::gfx::shader::shader* parent, streamfx::obs::gs::effect_parameter param, std::string key_prefix) : _parent(parent), _param(param), _order(0), _key(_param.get_name()), _visible(true), _automatic(false), _name(_key), _description()
 {
 	{
 		std::stringstream ss;
@@ -175,9 +171,7 @@ void streamfx::gfx::shader::parameter::visible(bool visible) {}
 
 void streamfx::gfx::shader::parameter::active(bool active) {}
 
-std::shared_ptr<streamfx::gfx::shader::parameter>
-	streamfx::gfx::shader::parameter::make_parameter(streamfx::gfx::shader::shader*      parent,
-													 streamfx::obs::gs::effect_parameter param, std::string prefix)
+std::shared_ptr<streamfx::gfx::shader::parameter> streamfx::gfx::shader::parameter::make_parameter(streamfx::gfx::shader::shader* parent, streamfx::obs::gs::effect_parameter param, std::string prefix)
 {
 	if (!parent || !param) {
 		throw std::runtime_error("Bad call to make_parameter. This is a bug in the plugin.");

@@ -164,16 +164,13 @@ autoframing_instance::autoframing_instance(obs_data_t* data, obs_source_t* self)
 
 	  _gfx_debug(), _standard_effect(), _input(), _vb(),
 
-	  _provider(tracking_provider::INVALID), _provider_ui(tracking_provider::INVALID), _provider_ready(false),
-	  _provider_lock(), _provider_task(),
+	  _provider(tracking_provider::INVALID), _provider_ui(tracking_provider::INVALID), _provider_ready(false), _provider_lock(), _provider_task(),
 
 	  _track_mode(tracking_mode::SOLO), _track_frequency(1),
 
-	  _motion_smoothing(0.0), _motion_smoothing_kalman_pnc(1.), _motion_smoothing_kalman_mnc(1.),
-	  _motion_prediction(0.0),
+	  _motion_smoothing(0.0), _motion_smoothing_kalman_pnc(1.), _motion_smoothing_kalman_mnc(1.), _motion_prediction(0.0),
 
-	  _frame_stability(0.), _frame_stability_kalman(1.), _frame_padding_prc(), _frame_padding(), _frame_offset_prc(),
-	  _frame_offset(), _frame_aspect_ratio(0.0),
+	  _frame_stability(0.), _frame_stability_kalman(1.), _frame_padding_prc(), _frame_padding(), _frame_offset_prc(), _frame_offset(), _frame_aspect_ratio(0.0),
 
 	  _track_frequency_counter(0), _tracked_elements(), _predicted_elements(),
 
@@ -194,8 +191,7 @@ autoframing_instance::autoframing_instance(obs_data_t* data, obs_source_t* self)
 		_input->render(1, 1); // Preallocate the RT on the driver and GPU.
 
 		// Load the required effect.
-		_standard_effect =
-			std::make_shared<::streamfx::obs::gs::effect>(::streamfx::data_file_path("effects/standard.effect"));
+		_standard_effect = std::make_shared<::streamfx::obs::gs::effect>(::streamfx::data_file_path("effects/standard.effect"));
 
 		// Create the Vertex Buffer for rendering.
 		_vb = std::make_shared<::streamfx::obs::gs::vertex_buffer>(uint32_t{4}, uint8_t{1});
@@ -253,10 +249,8 @@ void autoframing_instance::update(obs_data_t* data)
 	_motion_smoothing_kalman_mnc = streamfx::util::math::lerp<float>(0.001f, 1000.0f, _motion_smoothing);
 	for (auto kv : _predicted_elements) {
 		// Regenerate filters.
-		kv.second->filter_pos_x = {_frame_stability_kalman, _motion_smoothing_kalman_mnc, ST_KALMAN_EEC,
-								   kv.second->filter_pos_x.get()};
-		kv.second->filter_pos_y = {_frame_stability_kalman, _motion_smoothing_kalman_mnc, ST_KALMAN_EEC,
-								   kv.second->filter_pos_y.get()};
+		kv.second->filter_pos_x = {_frame_stability_kalman, _motion_smoothing_kalman_mnc, ST_KALMAN_EEC, kv.second->filter_pos_x.get()};
+		kv.second->filter_pos_y = {_frame_stability_kalman, _motion_smoothing_kalman_mnc, ST_KALMAN_EEC, kv.second->filter_pos_y.get()};
 	}
 
 	// Framing
@@ -418,13 +412,9 @@ void autoframing_instance::video_tick(float_t seconds)
 		_out_size = _size;
 		if (_frame_aspect_ratio > 0.0) {
 			if (width > height) {
-				_out_size.first =
-					static_cast<uint32_t>(std::lroundf(static_cast<float>(_out_size.second) * _frame_aspect_ratio), 0,
-										  std::numeric_limits<uint32_t>::max());
+				_out_size.first = static_cast<uint32_t>(std::lroundf(static_cast<float>(_out_size.second) * _frame_aspect_ratio), 0, std::numeric_limits<uint32_t>::max());
 			} else {
-				_out_size.second =
-					static_cast<uint32_t>(std::lroundf(static_cast<float>(_out_size.first) * _frame_aspect_ratio), 0,
-										  std::numeric_limits<uint32_t>::max());
+				_out_size.second = static_cast<uint32_t>(std::lroundf(static_cast<float>(_out_size.first) * _frame_aspect_ratio), 0, std::numeric_limits<uint32_t>::max());
 			}
 		}
 	}
@@ -459,8 +449,7 @@ void autoframing_instance::video_render(gs_effect_t* effect)
 
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 	::streamfx::obs::gs::debug_marker profiler0{::streamfx::obs::gs::debug_color_source, "StreamFX Auto-Framing"};
-	::streamfx::obs::gs::debug_marker profiler0_0{::streamfx::obs::gs::debug_color_gray, "'%s' on '%s'",
-												  obs_source_get_name(_self), obs_source_get_name(parent)};
+	::streamfx::obs::gs::debug_marker profiler0_0{::streamfx::obs::gs::debug_color_gray, "'%s' on '%s'", obs_source_get_name(_self), obs_source_get_name(parent)};
 #endif
 
 	if (_dirty) {
@@ -528,43 +517,29 @@ void autoframing_instance::video_render(gs_effect_t* effect)
 
 			for (auto kv : _predicted_elements) {
 				// Tracked Area (Red)
-				_gfx_debug->draw_rectangle(kv.first->pos.x - kv.first->size.x / 2.f,
-										   kv.first->pos.y - kv.first->size.y / 2.f, kv.first->size.x, kv.first->size.y,
-										   true, 0x7E0000FF);
+				_gfx_debug->draw_rectangle(kv.first->pos.x - kv.first->size.x / 2.f, kv.first->pos.y - kv.first->size.y / 2.f, kv.first->size.x, kv.first->size.y, true, 0x7E0000FF);
 
 				// Velocity Arrow (Black)
-				_gfx_debug->draw_arrow(kv.first->pos.x, kv.first->pos.y, kv.first->pos.x + kv.first->vel.x,
-									   kv.first->pos.y + kv.first->vel.y, 0., 0x7E000000);
+				_gfx_debug->draw_arrow(kv.first->pos.x, kv.first->pos.y, kv.first->pos.x + kv.first->vel.x, kv.first->pos.y + kv.first->vel.y, 0., 0x7E000000);
 
 				// Predicted Area (Orange)
-				_gfx_debug->draw_rectangle(kv.second->mp_pos.x - kv.first->size.x / 2.f,
-										   kv.second->mp_pos.y - kv.first->size.y / 2.f, kv.first->size.x,
-										   kv.first->size.y, true, 0x7E007EFF);
+				_gfx_debug->draw_rectangle(kv.second->mp_pos.x - kv.first->size.x / 2.f, kv.second->mp_pos.y - kv.first->size.y / 2.f, kv.first->size.x, kv.first->size.y, true, 0x7E007EFF);
 
 				// Filtered Area (Yellow)
-				_gfx_debug->draw_rectangle(kv.second->filter_pos_x.get() - kv.first->size.x / 2.f,
-										   kv.second->filter_pos_y.get() - kv.first->size.y / 2.f, kv.first->size.x,
-										   kv.first->size.y, true, 0x7E00FFFF);
+				_gfx_debug->draw_rectangle(kv.second->filter_pos_x.get() - kv.first->size.x / 2.f, kv.second->filter_pos_y.get() - kv.first->size.y / 2.f, kv.first->size.x, kv.first->size.y, true, 0x7E00FFFF);
 
 				// Offset Filtered Area (Blue)
-				_gfx_debug->draw_rectangle(kv.second->offset_pos.x - kv.first->size.x / 2.f,
-										   kv.second->offset_pos.y - kv.first->size.y / 2.f, kv.first->size.x,
-										   kv.first->size.y, true, 0x7EFF0000);
+				_gfx_debug->draw_rectangle(kv.second->offset_pos.x - kv.first->size.x / 2.f, kv.second->offset_pos.y - kv.first->size.y / 2.f, kv.first->size.x, kv.first->size.y, true, 0x7EFF0000);
 
 				// Padded Offset Filtered Area (Cyan)
-				_gfx_debug->draw_rectangle(kv.second->offset_pos.x - kv.second->pad_size.x / 2.f,
-										   kv.second->offset_pos.y - kv.second->pad_size.y / 2.f, kv.second->pad_size.x,
-										   kv.second->pad_size.y, true, 0x7EFFFF00);
+				_gfx_debug->draw_rectangle(kv.second->offset_pos.x - kv.second->pad_size.x / 2.f, kv.second->offset_pos.y - kv.second->pad_size.y / 2.f, kv.second->pad_size.x, kv.second->pad_size.y, true, 0x7EFFFF00);
 
 				// Aspect-Ratio-Corrected Padded Offset Filtered Area (Green)
-				_gfx_debug->draw_rectangle(kv.second->offset_pos.x - kv.second->aspected_size.x / 2.f,
-										   kv.second->offset_pos.y - kv.second->aspected_size.y / 2.f,
-										   kv.second->aspected_size.x, kv.second->aspected_size.y, true, 0x7E00FF00);
+				_gfx_debug->draw_rectangle(kv.second->offset_pos.x - kv.second->aspected_size.x / 2.f, kv.second->offset_pos.y - kv.second->aspected_size.y / 2.f, kv.second->aspected_size.x, kv.second->aspected_size.y, true, 0x7E00FF00);
 			}
 
 			// Final Region (White)
-			_gfx_debug->draw_rectangle(_frame_pos.x - _frame_size.x / 2.f, _frame_pos.y - _frame_size.y / 2.f,
-									   _frame_size.x, _frame_size.y, true, 0x7EFFFFFF);
+			_gfx_debug->draw_rectangle(_frame_pos.x - _frame_size.x / 2.f, _frame_pos.y - _frame_size.y / 2.f, _frame_size.x, _frame_size.y, true, 0x7EFFFFFF);
 		} else {
 			float x0 = (_frame_pos.x - _frame_size.x / 2.f) / static_cast<float>(_size.first);
 			float x1 = (_frame_pos.x + _frame_size.x / 2.f) / static_cast<float>(_size.first);
@@ -606,8 +581,7 @@ void autoframing_instance::video_render(gs_effect_t* effect)
 					gs_draw(GS_TRISTRIP, 0, 4);
 				}
 			} else {
-				gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"),
-									  _input->get_texture()->get_object());
+				gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), _input->get_texture()->get_object());
 
 				while (gs_effect_loop(effect, "Draw")) {
 					gs_draw(GS_TRISTRIP, 0, 4);
@@ -657,10 +631,8 @@ void streamfx::filter::autoframing::autoframing_instance::tracking_tick(float se
 		if (iter == _predicted_elements.end()) {
 			pred = std::make_shared<pred_el>();
 			_predicted_elements.insert_or_assign(trck, pred);
-			pred->filter_pos_x = {_motion_smoothing_kalman_pnc, _motion_smoothing_kalman_mnc, ST_KALMAN_EEC,
-								  trck->pos.x};
-			pred->filter_pos_y = {_motion_smoothing_kalman_pnc, _motion_smoothing_kalman_mnc, ST_KALMAN_EEC,
-								  trck->pos.y};
+			pred->filter_pos_x = {_motion_smoothing_kalman_pnc, _motion_smoothing_kalman_mnc, ST_KALMAN_EEC, trck->pos.x};
+			pred->filter_pos_y = {_motion_smoothing_kalman_pnc, _motion_smoothing_kalman_mnc, ST_KALMAN_EEC, trck->pos.y};
 		} else {
 			pred = iter->second;
 		}
@@ -800,9 +772,7 @@ void streamfx::filter::autoframing::autoframing_instance::tracking_tick(float se
 		}
 
 		{ // Aspect Ratio correction is a three step process:
-			float aspect = _frame_aspect_ratio > 0.
-							   ? _frame_aspect_ratio
-							   : (static_cast<float>(_size.first) / static_cast<float>(_size.second));
+			float aspect = _frame_aspect_ratio > 0. ? _frame_aspect_ratio : (static_cast<float>(_size.first) / static_cast<float>(_size.second));
 
 			{ // 1. Adjust aspect ratio so that all elements end up contained.
 				float frame_aspect = _frame_size.x / _frame_size.y;
@@ -816,12 +786,12 @@ void streamfx::filter::autoframing::autoframing_instance::tracking_tick(float se
 			// 2. Limit the size of the frame to the allowed region, and adjust it so it's inside the frame.
 			// This will move the center, which might not be a wanted side effect.
 			vec4 rect;
-			rect.x       = std::clamp<float>(_frame_pos.x - _frame_size.x / 2.f, 0.f, static_cast<float>(_size.first));
-			rect.z       = std::clamp<float>(_frame_pos.x + _frame_size.x / 2.f, 0.f, static_cast<float>(_size.first));
-			rect.y       = std::clamp<float>(_frame_pos.y - _frame_size.y / 2.f, 0.f, static_cast<float>(_size.second));
-			rect.w       = std::clamp<float>(_frame_pos.y + _frame_size.y / 2.f, 0.f, static_cast<float>(_size.second));
-			_frame_pos.x = (rect.x + rect.z) / 2.f;
-			_frame_pos.y = (rect.y + rect.w) / 2.f;
+			rect.x        = std::clamp<float>(_frame_pos.x - _frame_size.x / 2.f, 0.f, static_cast<float>(_size.first));
+			rect.z        = std::clamp<float>(_frame_pos.x + _frame_size.x / 2.f, 0.f, static_cast<float>(_size.first));
+			rect.y        = std::clamp<float>(_frame_pos.y - _frame_size.y / 2.f, 0.f, static_cast<float>(_size.second));
+			rect.w        = std::clamp<float>(_frame_pos.y + _frame_size.y / 2.f, 0.f, static_cast<float>(_size.second));
+			_frame_pos.x  = (rect.x + rect.z) / 2.f;
+			_frame_pos.y  = (rect.y + rect.w) / 2.f;
 			_frame_size.x = (rect.z - rect.x);
 			_frame_size.y = (rect.w - rect.y);
 
@@ -858,8 +828,7 @@ void streamfx::filter::autoframing::autoframing_instance::switch_provider(tracki
 	// - Doesn't guarantee that the task is properly killed off.
 
 	// Log information.
-	D_LOG_INFO("Instance '%s' is switching provider from '%s' to '%s'.", obs_source_get_name(_self), cstring(_provider),
-			   cstring(provider));
+	D_LOG_INFO("Instance '%s' is switching provider from '%s' to '%s'.", obs_source_get_name(_self), cstring(_provider), cstring(provider));
 
 	// If there is an ongoing task to switch provider, cancel it.
 	if (_provider_task) {
@@ -879,8 +848,7 @@ void streamfx::filter::autoframing::autoframing_instance::switch_provider(tracki
 	_provider     = provider;
 
 	// Then spawn a new task to switch provider.
-	_provider_task = streamfx::threadpool()->push(
-		std::bind(&autoframing_instance::task_switch_provider, this, std::placeholders::_1), spd);
+	_provider_task = streamfx::threadpool()->push(std::bind(&autoframing_instance::task_switch_provider, this, std::placeholders::_1), spd);
 }
 
 void streamfx::filter::autoframing::autoframing_instance::task_switch_provider(util::threadpool::task_data_t data)
@@ -917,8 +885,7 @@ void streamfx::filter::autoframing::autoframing_instance::task_switch_provider(u
 		}
 
 		// Log information.
-		D_LOG_INFO("Instance '%s' switched provider from '%s' to '%s'.", obs_source_get_name(_self),
-				   cstring(spd->provider), cstring(_provider));
+		D_LOG_INFO("Instance '%s' switched provider from '%s' to '%s'.", obs_source_get_name(_self), cstring(spd->provider), cstring(_provider));
 
 		_provider_ready = true;
 	} catch (std::exception const& ex) {
@@ -945,8 +912,7 @@ void streamfx::filter::autoframing::autoframing_instance::nvar_facedetection_pro
 	}
 
 	// Frames may not move more than this distance.
-	float max_dst =
-		sqrtf(static_cast<float>(_size.first * _size.first) + static_cast<float>(_size.second * _size.second)) * 0.667f;
+	float max_dst = sqrtf(static_cast<float>(_size.first * _size.first) + static_cast<float>(_size.second * _size.second)) * 0.667f;
 	max_dst *= 1.f / (1.f - _track_frequency); // Fine-tune this?
 
 	// Process the current frame (if requested).
@@ -1133,8 +1099,7 @@ obs_properties_t* autoframing_factory::get_properties2(autoframing_instance* dat
 
 #ifdef ENABLE_FRONTEND
 	{
-		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), autoframing_factory::on_manual_open,
-								   nullptr);
+		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), autoframing_factory::on_manual_open, nullptr);
 	}
 #endif
 
@@ -1143,18 +1108,14 @@ obs_properties_t* autoframing_factory::get_properties2(autoframing_instance* dat
 		obs_properties_add_group(pr, ST_I18N_TRACKING, D_TRANSLATE(ST_I18N_TRACKING), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_TRACKING_MODE, D_TRANSLATE(ST_I18N_TRACKING_MODE),
-											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			auto p = obs_properties_add_list(grp, ST_KEY_TRACKING_MODE, D_TRANSLATE(ST_I18N_TRACKING_MODE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_set_modified_callback(p, modified_provider);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_FRAMING_MODE_SOLO),
-									  static_cast<int64_t>(tracking_mode::SOLO));
-			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_FRAMING_MODE_GROUP),
-									  static_cast<int64_t>(tracking_mode::GROUP));
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_FRAMING_MODE_SOLO), static_cast<int64_t>(tracking_mode::SOLO));
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_FRAMING_MODE_GROUP), static_cast<int64_t>(tracking_mode::GROUP));
 		}
 
 		{
-			auto p = obs_properties_add_text(grp, ST_KEY_TRACKING_FREQUENCY, D_TRANSLATE(ST_I18N_TRACKING_FREQUENCY),
-											 OBS_TEXT_DEFAULT);
+			auto p = obs_properties_add_text(grp, ST_KEY_TRACKING_FREQUENCY, D_TRANSLATE(ST_I18N_TRACKING_FREQUENCY), OBS_TEXT_DEFAULT);
 		}
 	}
 
@@ -1163,14 +1124,12 @@ obs_properties_t* autoframing_factory::get_properties2(autoframing_instance* dat
 		obs_properties_add_group(pr, ST_I18N_MOTION, D_TRANSLATE(ST_I18N_MOTION), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_MOTION_SMOOTHING,
-													 D_TRANSLATE(ST_I18N_MOTION_SMOOTHING), 0.0, 100.0, 0.01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_MOTION_SMOOTHING, D_TRANSLATE(ST_I18N_MOTION_SMOOTHING), 0.0, 100.0, 0.01);
 			obs_property_float_set_suffix(p, " %");
 		}
 
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_MOTION_PREDICTION,
-													 D_TRANSLATE(ST_I18N_MOTION_PREDICTION), 0.0, 500.0, 0.01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_MOTION_PREDICTION, D_TRANSLATE(ST_I18N_MOTION_PREDICTION), 0.0, 500.0, 0.01);
 			obs_property_float_set_suffix(p, " %");
 		}
 	}
@@ -1180,15 +1139,13 @@ obs_properties_t* autoframing_factory::get_properties2(autoframing_instance* dat
 		obs_properties_add_group(pr, ST_I18N_FRAMING, D_TRANSLATE(ST_I18N_FRAMING), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_FRAMING_STABILITY,
-													 D_TRANSLATE(ST_I18N_FRAMING_STABILITY), 0.0, 100.0, 0.01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_FRAMING_STABILITY, D_TRANSLATE(ST_I18N_FRAMING_STABILITY), 0.0, 100.0, 0.01);
 			obs_property_float_set_suffix(p, " %");
 		}
 
 		{
 			auto grp2 = obs_properties_create();
-			obs_properties_add_group(grp, ST_KEY_FRAMING_PADDING, D_TRANSLATE(ST_I18N_FRAMING_PADDING),
-									 OBS_GROUP_NORMAL, grp2);
+			obs_properties_add_group(grp, ST_KEY_FRAMING_PADDING, D_TRANSLATE(ST_I18N_FRAMING_PADDING), OBS_GROUP_NORMAL, grp2);
 
 			{
 				auto p = obs_properties_add_text(grp2, ST_KEY_FRAMING_PADDING ".X", "X", OBS_TEXT_DEFAULT);
@@ -1200,8 +1157,7 @@ obs_properties_t* autoframing_factory::get_properties2(autoframing_instance* dat
 
 		{
 			auto grp2 = obs_properties_create();
-			obs_properties_add_group(grp, ST_KEY_FRAMING_OFFSET, D_TRANSLATE(ST_I18N_FRAMING_OFFSET), OBS_GROUP_NORMAL,
-									 grp2);
+			obs_properties_add_group(grp, ST_KEY_FRAMING_OFFSET, D_TRANSLATE(ST_I18N_FRAMING_OFFSET), OBS_GROUP_NORMAL, grp2);
 
 			{
 				auto p = obs_properties_add_text(grp2, ST_KEY_FRAMING_OFFSET ".X", "X", OBS_TEXT_DEFAULT);
@@ -1212,8 +1168,7 @@ obs_properties_t* autoframing_factory::get_properties2(autoframing_instance* dat
 		}
 
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_FRAMING_ASPECTRATIO, D_TRANSLATE(ST_I18N_FRAMING_ASPECTRATIO),
-											 OBS_COMBO_TYPE_EDITABLE, OBS_COMBO_FORMAT_STRING);
+			auto p = obs_properties_add_list(grp, ST_KEY_FRAMING_ASPECTRATIO, D_TRANSLATE(ST_I18N_FRAMING_ASPECTRATIO), OBS_COMBO_TYPE_EDITABLE, OBS_COMBO_FORMAT_STRING);
 			obs_property_list_add_string(p, "None", "");
 			obs_property_list_add_string(p, "1:1", "1:1");
 
@@ -1255,14 +1210,11 @@ obs_properties_t* autoframing_factory::get_properties2(autoframing_instance* dat
 		obs_properties_add_group(pr, S_ADVANCED, D_TRANSLATE(S_ADVANCED), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_ADVANCED_PROVIDER, D_TRANSLATE(ST_I18N_ADVANCED_PROVIDER),
-											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			auto p = obs_properties_add_list(grp, ST_KEY_ADVANCED_PROVIDER, D_TRANSLATE(ST_I18N_ADVANCED_PROVIDER), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_set_modified_callback(p, modified_provider);
-			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC),
-									  static_cast<int64_t>(tracking_provider::AUTOMATIC));
+			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), static_cast<int64_t>(tracking_provider::AUTOMATIC));
 #ifdef ENABLE_FILTER_AUTOFRAMING_NVIDIA
-			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_ADVANCED_PROVIDER_NVIDIA_FACEDETECTION),
-									  static_cast<int64_t>(tracking_provider::NVIDIA_FACEDETECTION));
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_ADVANCED_PROVIDER_NVIDIA_FACEDETECTION), static_cast<int64_t>(tracking_provider::NVIDIA_FACEDETECTION));
 #endif
 		}
 
@@ -1273,8 +1225,7 @@ obs_properties_t* autoframing_factory::get_properties2(autoframing_instance* dat
 }
 
 #ifdef ENABLE_FRONTEND
-bool streamfx::filter::autoframing::autoframing_factory::on_manual_open(obs_properties_t* props,
-																		obs_property_t* property, void* data)
+bool streamfx::filter::autoframing::autoframing_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
 {
 	streamfx::open_url(HELP_URL);
 	return false;

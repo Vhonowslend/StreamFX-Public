@@ -16,8 +16,7 @@ streamfx::obs::gs::rendertarget::~rendertarget()
 	gs_texrender_destroy(_render_target);
 }
 
-streamfx::obs::gs::rendertarget::rendertarget(gs_color_format colorFormat, gs_zstencil_format zsFormat)
-	: _color_format(colorFormat), _zstencil_format(zsFormat)
+streamfx::obs::gs::rendertarget::rendertarget(gs_color_format colorFormat, gs_zstencil_format zsFormat) : _color_format(colorFormat), _zstencil_format(zsFormat)
 {
 	_is_being_rendered = false;
 	auto gctx          = streamfx::obs::gs::context();
@@ -32,8 +31,7 @@ streamfx::obs::gs::rendertarget_op streamfx::obs::gs::rendertarget::render(uint3
 	return {this, width, height};
 }
 
-streamfx::obs::gs::rendertarget_op streamfx::obs::gs::rendertarget::render(uint32_t width, uint32_t height,
-																		   gs_color_space cs)
+streamfx::obs::gs::rendertarget_op streamfx::obs::gs::rendertarget::render(uint32_t width, uint32_t height, gs_color_space cs)
 {
 	return {this, width, height, cs};
 }
@@ -75,9 +73,7 @@ gs_zstencil_format streamfx::obs::gs::rendertarget::get_zstencil_format()
 	return _zstencil_format;
 }
 
-streamfx::obs::gs::rendertarget_op::rendertarget_op(streamfx::obs::gs::rendertarget* rt, uint32_t width,
-													uint32_t height)
-	: parent(rt)
+streamfx::obs::gs::rendertarget_op::rendertarget_op(streamfx::obs::gs::rendertarget* rt, uint32_t width, uint32_t height) : parent(rt)
 {
 	if (parent == nullptr)
 		throw std::invalid_argument("rt");
@@ -92,9 +88,7 @@ streamfx::obs::gs::rendertarget_op::rendertarget_op(streamfx::obs::gs::rendertar
 	parent->_is_being_rendered = true;
 }
 
-streamfx::obs::gs::rendertarget_op::rendertarget_op(streamfx::obs::gs::rendertarget* rt, uint32_t width,
-													uint32_t height, gs_color_space cs)
-	: parent(rt)
+streamfx::obs::gs::rendertarget_op::rendertarget_op(streamfx::obs::gs::rendertarget* rt, uint32_t width, uint32_t height, gs_color_space cs) : parent(rt)
 {
 	if (parent == nullptr)
 		throw std::invalid_argument("rt");

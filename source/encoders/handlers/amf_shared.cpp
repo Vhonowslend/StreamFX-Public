@@ -181,8 +181,7 @@ void amf::get_properties_pre(obs_properties_t* props, const AVCodec* codec)
 		obs_property_text_set_info_word_wrap(p, true);
 	}
 
-	auto p = obs_properties_add_list(props, ST_KEY_PRESET, D_TRANSLATE(ST_I18N_PRESET), OBS_COMBO_TYPE_LIST,
-									 OBS_COMBO_FORMAT_INT);
+	auto p = obs_properties_add_list(props, ST_KEY_PRESET, D_TRANSLATE(ST_I18N_PRESET), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	for (auto kv : presets) {
 		obs_property_list_add_int(p, D_TRANSLATE(kv.second.c_str()), static_cast<int64_t>(kv.first));
 	}
@@ -195,58 +194,46 @@ void amf::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		obs_properties_add_group(props, ST_I18N_RATECONTROL, D_TRANSLATE(ST_I18N_RATECONTROL), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_RATECONTROL_MODE, D_TRANSLATE(ST_I18N_RATECONTROL_MODE),
-											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			auto p = obs_properties_add_list(grp, ST_KEY_RATECONTROL_MODE, D_TRANSLATE(ST_I18N_RATECONTROL_MODE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_set_modified_callback(p, modified_ratecontrol);
 			for (auto kv : ratecontrolmodes) {
 				obs_property_list_add_int(p, D_TRANSLATE(kv.second.c_str()), static_cast<int64_t>(kv.first));
 			}
 		}
 
-		streamfx::util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_LOOKAHEAD,
-													D_TRANSLATE(ST_I18N_RATECONTROL_LOOKAHEAD));
-		streamfx::util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_FRAMESKIPPING,
-													D_TRANSLATE(ST_I18N_RATECONTROL_FRAMESKIPPING));
+		streamfx::util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_LOOKAHEAD, D_TRANSLATE(ST_I18N_RATECONTROL_LOOKAHEAD));
+		streamfx::util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_FRAMESKIPPING, D_TRANSLATE(ST_I18N_RATECONTROL_FRAMESKIPPING));
 	}
 
 	{
 		obs_properties_t* grp = obs_properties_create();
-		obs_properties_add_group(props, ST_I18N_RATECONTROL_LIMITS, D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS),
-								 OBS_GROUP_NORMAL, grp);
+		obs_properties_add_group(props, ST_I18N_RATECONTROL_LIMITS, D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_int(grp, ST_KEY_RATECONTROL_LIMITS_BITRATE_TARGET,
-											D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS_BITRATE_TARGET), -1,
-											std::numeric_limits<std::int32_t>::max(), 1);
+			auto p = obs_properties_add_int(grp, ST_KEY_RATECONTROL_LIMITS_BITRATE_TARGET, D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS_BITRATE_TARGET), -1, std::numeric_limits<std::int32_t>::max(), 1);
 			obs_property_int_set_suffix(p, " kbit/s");
 		}
 
 		{
-			auto p = obs_properties_add_int(grp, ST_KEY_RATECONTROL_LIMITS_BITRATE_MAXIMUM,
-											D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS_BITRATE_MAXIMUM), -1,
-											std::numeric_limits<std::int32_t>::max(), 1);
+			auto p = obs_properties_add_int(grp, ST_KEY_RATECONTROL_LIMITS_BITRATE_MAXIMUM, D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS_BITRATE_MAXIMUM), -1, std::numeric_limits<std::int32_t>::max(), 1);
 			obs_property_int_set_suffix(p, " kbit/s");
 		}
 
 		{
-			auto p = obs_properties_add_int(grp, ST_KEY_RATECONTROL_LIMITS_BUFFERSIZE,
-											D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS_BUFFERSIZE), 0,
-											std::numeric_limits<std::int32_t>::max(), 1);
+			auto p = obs_properties_add_int(grp, ST_KEY_RATECONTROL_LIMITS_BUFFERSIZE, D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS_BUFFERSIZE), 0, std::numeric_limits<std::int32_t>::max(), 1);
 			obs_property_int_set_suffix(p, " kbit");
 		}
 	}
 
 	{
 		obs_properties_t* grp = obs_properties_create();
-		obs_properties_add_group(props, ST_I18N_RATECONTROL_QP, D_TRANSLATE(ST_I18N_RATECONTROL_QP), OBS_GROUP_NORMAL,
-								 grp);
+		obs_properties_add_group(props, ST_I18N_RATECONTROL_QP, D_TRANSLATE(ST_I18N_RATECONTROL_QP), OBS_GROUP_NORMAL, grp);
 
 		obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_I, D_TRANSLATE(ST_I18N_RATECONTROL_QP_I), -1, 51, 1);
 		obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_P, D_TRANSLATE(ST_I18N_RATECONTROL_QP_P), -1, 51, 1);
 
 		if (std::string_view("amf_h264") == codec->name) {
-			obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_B, D_TRANSLATE(ST_I18N_RATECONTROL_QP_B), -1, 51,
-										  1);
+			obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_B, D_TRANSLATE(ST_I18N_RATECONTROL_QP_B), -1, 51, 1);
 		}
 	}
 
@@ -255,23 +242,18 @@ void amf::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 		obs_properties_add_group(props, ST_I18N_OTHER, D_TRANSLATE(ST_I18N_OTHER), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p =
-				obs_properties_add_int_slider(grp, ST_KEY_OTHER_BFRAMES, D_TRANSLATE(ST_I18N_OTHER_BFRAMES), -1, 4, 1);
+			auto p = obs_properties_add_int_slider(grp, ST_KEY_OTHER_BFRAMES, D_TRANSLATE(ST_I18N_OTHER_BFRAMES), -1, 4, 1);
 			obs_property_int_set_suffix(p, " frames");
 		}
 
-		streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_BFRAMEREFERENCES,
-													D_TRANSLATE(ST_I18N_OTHER_BFRAMEREFERENCES));
+		streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_BFRAMEREFERENCES, D_TRANSLATE(ST_I18N_OTHER_BFRAMEREFERENCES));
 		{
-			auto p = obs_properties_add_int_slider(grp, ST_KEY_OTHER_REFERENCEFRAMES,
-												   D_TRANSLATE(ST_I18N_OTHER_REFERENCEFRAMES), -1, 16, 1);
+			auto p = obs_properties_add_int_slider(grp, ST_KEY_OTHER_REFERENCEFRAMES, D_TRANSLATE(ST_I18N_OTHER_REFERENCEFRAMES), -1, 16, 1);
 			obs_property_int_set_suffix(p, " frames");
 		}
-		streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_ENFORCEHRD,
-													D_TRANSLATE(ST_I18N_OTHER_ENFORCEHRD));
+		streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_ENFORCEHRD, D_TRANSLATE(ST_I18N_OTHER_ENFORCEHRD));
 		streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_VBAQ, D_TRANSLATE(ST_I18N_OTHER_VBAQ));
-		streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_ACCESSUNITDELIMITER,
-													D_TRANSLATE(ST_I18N_OTHER_ACCESSUNITDELIMITER));
+		streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_ACCESSUNITDELIMITER, D_TRANSLATE(ST_I18N_OTHER_ACCESSUNITDELIMITER));
 	}
 }
 
@@ -325,14 +307,12 @@ void amf::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* con
 		}
 
 		// Look Ahead (Pre-analysis, single frame lookahead)
-		if (int la = static_cast<int>(obs_data_get_int(settings, ST_KEY_RATECONTROL_LOOKAHEAD));
-			!streamfx::util::is_tristate_default(la)) {
+		if (int la = static_cast<int>(obs_data_get_int(settings, ST_KEY_RATECONTROL_LOOKAHEAD)); !streamfx::util::is_tristate_default(la)) {
 			av_opt_set_int(context->priv_data, "preanalysis", la, AV_OPT_SEARCH_CHILDREN);
 		}
 
 		// Frame Skipping (Drop frames to maintain bitrate limits)
-		if (int la = static_cast<int>(obs_data_get_int(settings, ST_KEY_RATECONTROL_FRAMESKIPPING));
-			!streamfx::util::is_tristate_default(la)) {
+		if (int la = static_cast<int>(obs_data_get_int(settings, ST_KEY_RATECONTROL_FRAMESKIPPING)); !streamfx::util::is_tristate_default(la)) {
 			if (std::string_view("amf_h264") == codec->name) {
 				av_opt_set_int(context->priv_data, "frame_skipping", la, AV_OPT_SEARCH_CHILDREN);
 			} else {
@@ -390,8 +370,7 @@ void amf::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* con
 			if (int64_t bf = obs_data_get_int(settings, ST_KEY_OTHER_BFRAMES); bf > -1) {
 				context->max_b_frames = static_cast<int>(bf);
 			}
-			if (int64_t zl = obs_data_get_int(settings, ST_KEY_OTHER_BFRAMEREFERENCES);
-				!streamfx::util::is_tristate_default(zl)) {
+			if (int64_t zl = obs_data_get_int(settings, ST_KEY_OTHER_BFRAMEREFERENCES); !streamfx::util::is_tristate_default(zl)) {
 				av_opt_set_int(context->priv_data, "bf_ref", zl, AV_OPT_SEARCH_CHILDREN);
 			}
 		}
@@ -408,8 +387,7 @@ void amf::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* con
 			av_opt_set_int(context->priv_data, "vbaq", v, AV_OPT_SEARCH_CHILDREN);
 		}
 
-		if (int64_t v = obs_data_get_int(settings, ST_KEY_OTHER_ACCESSUNITDELIMITER);
-			!streamfx::util::is_tristate_default(v)) {
+		if (int64_t v = obs_data_get_int(settings, ST_KEY_OTHER_ACCESSUNITDELIMITER); !streamfx::util::is_tristate_default(v)) {
 			av_opt_set_int(context->priv_data, "aud", v, AV_OPT_SEARCH_CHILDREN);
 		}
 
@@ -423,12 +401,9 @@ void amf::log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext
 	using namespace ::streamfx::ffmpeg;
 
 	DLOG_INFO("[%s]   AMD AMF:", codec->name);
-	tools::print_av_option_string2(context, "usage", "    Usage",
-								   [](int64_t v, std::string_view o) { return std::string(o); });
-	tools::print_av_option_string2(context, "quality", "    Preset",
-								   [](int64_t v, std::string_view o) { return std::string(o); });
-	tools::print_av_option_string2(context, "rc", "    Rate Control",
-								   [](int64_t v, std::string_view o) { return std::string(o); });
+	tools::print_av_option_string2(context, "usage", "    Usage", [](int64_t v, std::string_view o) { return std::string(o); });
+	tools::print_av_option_string2(context, "quality", "    Preset", [](int64_t v, std::string_view o) { return std::string(o); });
+	tools::print_av_option_string2(context, "rc", "    Rate Control", [](int64_t v, std::string_view o) { return std::string(o); });
 	tools::print_av_option_bool(context, "preanalysis", "      Look-Ahead");
 	if (std::string_view("amf_h264") == codec->name) {
 		tools::print_av_option_bool(context, "frame_skipping", "      Frame Skipping");
@@ -463,12 +438,8 @@ void amf::log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext
 	tools::print_av_option_bool(context, "me_quarter_pel", "      Quarter-Pel Motion Estimation");
 }
 
-void streamfx::encoder::ffmpeg::handler::amf::get_runtime_properties(obs_properties_t* props, const AVCodec* codec,
-																	 AVCodecContext* context)
-{}
+void streamfx::encoder::ffmpeg::handler::amf::get_runtime_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context) {}
 
-void streamfx::encoder::ffmpeg::handler::amf::migrate(obs_data_t* settings, uint64_t version, const AVCodec* codec,
-													  AVCodecContext* context)
-{}
+void streamfx::encoder::ffmpeg::handler::amf::migrate(obs_data_t* settings, uint64_t version, const AVCodec* codec, AVCodecContext* context) {}
 
 void streamfx::encoder::ffmpeg::handler::amf::override_update(ffmpeg_instance* instance, obs_data_t* settings) {}

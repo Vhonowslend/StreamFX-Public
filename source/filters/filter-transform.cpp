@@ -93,10 +93,7 @@ enum RotationOrder : int64_t {
 	ZYX = 5,
 };
 
-transform_instance::transform_instance(obs_data_t* data, obs_source_t* context)
-	: obs::source_instance(data, context), _gfx_util(::streamfx::gfx::util::get()), _camera_mode(), _camera_fov(),
-	  _params(), _corners(), _standard_effect(), _transform_effect(), _sampler(), _cache_rendered(), _mipmap_enabled(),
-	  _source_rendered(), _source_size(), _update_mesh(true)
+transform_instance::transform_instance(obs_data_t* data, obs_source_t* context) : obs::source_instance(data, context), _gfx_util(::streamfx::gfx::util::get()), _camera_mode(), _camera_fov(), _params(), _corners(), _standard_effect(), _transform_effect(), _sampler(), _cache_rendered(), _mipmap_enabled(), _source_rendered(), _source_size(), _update_mesh(true)
 {
 	{
 		auto gctx = obs::gs::context();
@@ -228,10 +225,7 @@ void transform_instance::update(obs_data_t* settings)
 	}
 	{ // Corners
 		std::pair<std::string, float&> opts[] = {
-			{ST_KEY_CORNERS_TOPLEFT "X", _corners.tl.x},     {ST_KEY_CORNERS_TOPLEFT "Y", _corners.tl.y},
-			{ST_KEY_CORNERS_TOPRIGHT "X", _corners.tr.x},    {ST_KEY_CORNERS_TOPRIGHT "Y", _corners.tr.y},
-			{ST_KEY_CORNERS_BOTTOMLEFT "X", _corners.bl.x},  {ST_KEY_CORNERS_BOTTOMLEFT "Y", _corners.bl.y},
-			{ST_KEY_CORNERS_BOTTOMRIGHT "X", _corners.br.x}, {ST_KEY_CORNERS_BOTTOMRIGHT "Y", _corners.br.y},
+			{ST_KEY_CORNERS_TOPLEFT "X", _corners.tl.x}, {ST_KEY_CORNERS_TOPLEFT "Y", _corners.tl.y}, {ST_KEY_CORNERS_TOPRIGHT "X", _corners.tr.x}, {ST_KEY_CORNERS_TOPRIGHT "Y", _corners.tr.y}, {ST_KEY_CORNERS_BOTTOMLEFT "X", _corners.bl.x}, {ST_KEY_CORNERS_BOTTOMLEFT "Y", _corners.bl.y}, {ST_KEY_CORNERS_BOTTOMRIGHT "X", _corners.br.x}, {ST_KEY_CORNERS_BOTTOMRIGHT "Y", _corners.br.y},
 		};
 		for (auto opt : opts) {
 			opt.second = static_cast<float>(obs_data_get_double(settings, opt.first.c_str()) / 100.0);
@@ -377,15 +371,13 @@ void transform_instance::video_render(gs_effect_t* effect)
 	if (!effect)
 		effect = default_effect;
 
-	if (!base_width || !base_height || !parent || !target || !_standard_effect
-		|| !_transform_effect) { // Skip if something is wrong.
+	if (!base_width || !base_height || !parent || !target || !_standard_effect || !_transform_effect) { // Skip if something is wrong.
 		obs_source_skip_video_filter(_self);
 		return;
 	}
 
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "3D Transform '%s' on '%s'",
-										 obs_source_get_name(_self), obs_source_get_name(obs_filter_get_parent(_self))};
+	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "3D Transform '%s' on '%s'", obs_source_get_name(_self), obs_source_get_name(obs_filter_get_parent(_self))};
 #endif
 
 	uint32_t cache_width  = base_width;
@@ -394,19 +386,13 @@ void transform_instance::video_render(gs_effect_t* effect)
 	if (_mipmap_enabled) {
 		double_t aspect  = double_t(base_width) / double_t(base_height);
 		double_t aspect2 = 1.0 / aspect;
-		cache_width =
-			std::clamp(uint32_t(pow(2, streamfx::util::math::get_power_of_two_exponent_ceil(cache_width))), 1u, 16384u);
-		cache_height = std::clamp(uint32_t(pow(2, streamfx::util::math::get_power_of_two_exponent_ceil(cache_height))),
-								  1u, 16384u);
+		cache_width      = std::clamp(uint32_t(pow(2, streamfx::util::math::get_power_of_two_exponent_ceil(cache_width))), 1u, 16384u);
+		cache_height     = std::clamp(uint32_t(pow(2, streamfx::util::math::get_power_of_two_exponent_ceil(cache_height))), 1u, 16384u);
 
 		if (aspect > 1.0) {
-			cache_height = std::clamp(
-				uint32_t(pow(2, streamfx::util::math::get_power_of_two_exponent_ceil(uint64_t(cache_width * aspect2)))),
-				1u, 16384u);
+			cache_height = std::clamp(uint32_t(pow(2, streamfx::util::math::get_power_of_two_exponent_ceil(uint64_t(cache_width * aspect2)))), 1u, 16384u);
 		} else if (aspect < 1.0) {
-			cache_width = std::clamp(
-				uint32_t(pow(2, streamfx::util::math::get_power_of_two_exponent_ceil(uint64_t(cache_height * aspect)))),
-				1u, 16384u);
+			cache_width = std::clamp(uint32_t(pow(2, streamfx::util::math::get_power_of_two_exponent_ceil(uint64_t(cache_height * aspect)))), 1u, 16384u);
 		}
 	}
 
@@ -455,16 +441,13 @@ void transform_instance::video_render(gs_effect_t* effect)
 		streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_convert, "Mipmap"};
 #endif
 
-		if (!_mipmap_texture || (_mipmap_texture->get_width() != cache_width)
-			|| (_mipmap_texture->get_height() != cache_height)) {
+		if (!_mipmap_texture || (_mipmap_texture->get_width() != cache_width) || (_mipmap_texture->get_height() != cache_height)) {
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
 			streamfx::obs::gs::debug_marker gdr{streamfx::obs::gs::debug_color_allocate, "Allocate Mipmapped Texture"};
 #endif
 
 			std::size_t mip_levels = _mipmapper.calculate_max_mip_level(cache_width, cache_height);
-			_mipmap_texture        = std::make_shared<streamfx::obs::gs::texture>(cache_width, cache_height, GS_RGBA,
-                                                                           static_cast<uint32_t>(mip_levels), nullptr,
-                                                                           streamfx::obs::gs::texture::flags::None);
+			_mipmap_texture        = std::make_shared<streamfx::obs::gs::texture>(cache_width, cache_height, GS_RGBA, static_cast<uint32_t>(mip_levels), nullptr, streamfx::obs::gs::texture::flags::None);
 		}
 		_mipmapper.rebuild(_cache_texture, _mipmap_texture);
 
@@ -513,11 +496,8 @@ void transform_instance::video_render(gs_effect_t* effect)
 		if (_camera_mode != transform_mode::CORNER_PIN) {
 			gs_load_vertexbuffer(_vertex_buffer->update(false));
 			gs_load_indexbuffer(nullptr);
-			if (auto v = _standard_effect.get_parameter("InputA");
-				v.get_type() == ::streamfx::obs::gs::effect_parameter::type::Texture) {
-				v.set_texture(_mipmap_enabled
-								  ? (_mipmap_texture ? _mipmap_texture->get_object() : _cache_texture->get_object())
-								  : _cache_texture->get_object());
+			if (auto v = _standard_effect.get_parameter("InputA"); v.get_type() == ::streamfx::obs::gs::effect_parameter::type::Texture) {
+				v.set_texture(_mipmap_enabled ? (_mipmap_texture ? _mipmap_texture->get_object() : _cache_texture->get_object()) : _cache_texture->get_object());
 				v.set_sampler(_sampler.get_object());
 			}
 			while (gs_effect_loop(_standard_effect.get_object(), "Draw")) {
@@ -527,27 +507,20 @@ void transform_instance::video_render(gs_effect_t* effect)
 		} else {
 			gs_load_vertexbuffer(nullptr);
 			gs_load_indexbuffer(nullptr);
-			if (auto v = _transform_effect.get_parameter("InputA");
-				v.get_type() == ::streamfx::obs::gs::effect_parameter::type::Texture) {
-				v.set_texture(_mipmap_enabled
-								  ? (_mipmap_texture ? _mipmap_texture->get_object() : _cache_texture->get_object())
-								  : _cache_texture->get_object());
+			if (auto v = _transform_effect.get_parameter("InputA"); v.get_type() == ::streamfx::obs::gs::effect_parameter::type::Texture) {
+				v.set_texture(_mipmap_enabled ? (_mipmap_texture ? _mipmap_texture->get_object() : _cache_texture->get_object()) : _cache_texture->get_object());
 				v.set_sampler(_sampler.get_object());
 			}
-			if (auto v = _transform_effect.get_parameter("CornerTL");
-				v.get_type() == ::streamfx::obs::gs::effect_parameter::type::Float2) {
+			if (auto v = _transform_effect.get_parameter("CornerTL"); v.get_type() == ::streamfx::obs::gs::effect_parameter::type::Float2) {
 				v.set_float2(_corners.tl);
 			}
-			if (auto v = _transform_effect.get_parameter("CornerTR");
-				v.get_type() == ::streamfx::obs::gs::effect_parameter::type::Float2) {
+			if (auto v = _transform_effect.get_parameter("CornerTR"); v.get_type() == ::streamfx::obs::gs::effect_parameter::type::Float2) {
 				v.set_float2(_corners.tr);
 			}
-			if (auto v = _transform_effect.get_parameter("CornerBL");
-				v.get_type() == ::streamfx::obs::gs::effect_parameter::type::Float2) {
+			if (auto v = _transform_effect.get_parameter("CornerBL"); v.get_type() == ::streamfx::obs::gs::effect_parameter::type::Float2) {
 				v.set_float2(_corners.bl);
 			}
-			if (auto v = _transform_effect.get_parameter("CornerBR");
-				v.get_type() == ::streamfx::obs::gs::effect_parameter::type::Float2) {
+			if (auto v = _transform_effect.get_parameter("CornerBR"); v.get_type() == ::streamfx::obs::gs::effect_parameter::type::Float2) {
 				v.set_float2(_corners.br);
 			}
 			while (gs_effect_loop(_transform_effect.get_object(), "CornerPin")) {
@@ -652,8 +625,7 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 
 #ifdef ENABLE_FRONTEND
 	{
-		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN),
-								   streamfx::filter::transform::transform_factory::on_manual_open, nullptr);
+		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), streamfx::filter::transform::transform_factory::on_manual_open, nullptr);
 	}
 #endif
 
@@ -662,19 +634,14 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 		auto grp = obs_properties_create();
 
 		{ // Projection Mode
-			auto p = obs_properties_add_list(grp, ST_KEY_CAMERA_MODE, D_TRANSLATE(ST_I18N_CAMERA_MODE),
-											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_CAMERA_MODE_CORNER_PIN),
-									  static_cast<int64_t>(transform_mode::CORNER_PIN));
-			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_CAMERA_MODE_ORTHOGRAPHIC),
-									  static_cast<int64_t>(transform_mode::ORTHOGRAPHIC));
-			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_CAMERA_MODE_PERSPECTIVE),
-									  static_cast<int64_t>(transform_mode::PERSPECTIVE));
+			auto p = obs_properties_add_list(grp, ST_KEY_CAMERA_MODE, D_TRANSLATE(ST_I18N_CAMERA_MODE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_CAMERA_MODE_CORNER_PIN), static_cast<int64_t>(transform_mode::CORNER_PIN));
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_CAMERA_MODE_ORTHOGRAPHIC), static_cast<int64_t>(transform_mode::ORTHOGRAPHIC));
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_CAMERA_MODE_PERSPECTIVE), static_cast<int64_t>(transform_mode::PERSPECTIVE));
 			obs_property_set_modified_callback(p, modified_camera_mode);
 		}
 		{ // Field Of View
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_CAMERA_FIELDOFVIEW,
-													 D_TRANSLATE(ST_I18N_CAMERA_FIELDOFVIEW), 1.0, 179.0, 0.01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_CAMERA_FIELDOFVIEW, D_TRANSLATE(ST_I18N_CAMERA_FIELDOFVIEW), 1.0, 179.0, 0.01);
 		}
 
 		obs_properties_add_group(pr, ST_I18N_CAMERA, D_TRANSLATE(ST_I18N_CAMERA), OBS_GROUP_NORMAL, grp);
@@ -692,9 +659,7 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 				{ST_KEY_POSITION_Z, "Z"},
 			};
 			for (const auto& opt : opts) {
-				auto p = obs_properties_add_float(grp, opt.first.c_str(), D_TRANSLATE(opt.second.c_str()),
-												  std::numeric_limits<float>::lowest(),
-												  std::numeric_limits<float>::max(), 0.01);
+				auto p = obs_properties_add_float(grp, opt.first.c_str(), D_TRANSLATE(opt.second.c_str()), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max(), 0.01);
 			}
 
 			obs_properties_add_group(pr, ST_I18N_POSITION, D_TRANSLATE(ST_I18N_POSITION), OBS_GROUP_NORMAL, grp);
@@ -708,8 +673,7 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 				{ST_KEY_ROTATION_Z, D_TRANSLATE(ST_I18N_ROTATION ".Z")},
 			};
 			for (const auto& opt : opts) {
-				auto p = obs_properties_add_float_slider(grp, opt.first.c_str(), D_TRANSLATE(opt.second.c_str()),
-														 -180.0, 180.0, 0.01);
+				auto p = obs_properties_add_float_slider(grp, opt.first.c_str(), D_TRANSLATE(opt.second.c_str()), -180.0, 180.0, 0.01);
 				obs_property_float_set_suffix(p, "° Deg");
 			}
 
@@ -737,8 +701,7 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 				{ST_KEY_SHEAR_Y, "Y"},
 			};
 			for (const auto& opt : opts) {
-				auto p =
-					obs_properties_add_float_slider(grp, opt.first.c_str(), opt.second.c_str(), -200.0, 200.0, 0.01);
+				auto p = obs_properties_add_float_slider(grp, opt.first.c_str(), opt.second.c_str(), -200.0, 200.0, 0.01);
 				obs_property_float_set_suffix(p, "%");
 			}
 
@@ -757,13 +720,11 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 				{ST_KEY_CORNERS_TOPLEFT "Y", "Y"},
 			};
 			for (auto& opt : opts) {
-				auto p =
-					obs_properties_add_float_slider(grp2, opt.first.c_str(), opt.second.c_str(), -200.0, 200.0, 0.01);
+				auto p = obs_properties_add_float_slider(grp2, opt.first.c_str(), opt.second.c_str(), -200.0, 200.0, 0.01);
 				obs_property_float_set_suffix(p, "%");
 			}
 
-			obs_properties_add_group(grp, ST_I18N_CORNERS_TOPLEFT, D_TRANSLATE(ST_I18N_CORNERS_TOPLEFT),
-									 OBS_GROUP_NORMAL, grp2);
+			obs_properties_add_group(grp, ST_I18N_CORNERS_TOPLEFT, D_TRANSLATE(ST_I18N_CORNERS_TOPLEFT), OBS_GROUP_NORMAL, grp2);
 		}
 		{ // Top Right
 			auto grp2 = obs_properties_create();
@@ -773,13 +734,11 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 				{ST_KEY_CORNERS_TOPRIGHT "Y", "Y"},
 			};
 			for (auto& opt : opts) {
-				auto p =
-					obs_properties_add_float_slider(grp2, opt.first.c_str(), opt.second.c_str(), -200.0, 200.0, 0.01);
+				auto p = obs_properties_add_float_slider(grp2, opt.first.c_str(), opt.second.c_str(), -200.0, 200.0, 0.01);
 				obs_property_float_set_suffix(p, "%");
 			}
 
-			obs_properties_add_group(grp, ST_I18N_CORNERS_TOPRIGHT, D_TRANSLATE(ST_I18N_CORNERS_TOPRIGHT),
-									 OBS_GROUP_NORMAL, grp2);
+			obs_properties_add_group(grp, ST_I18N_CORNERS_TOPRIGHT, D_TRANSLATE(ST_I18N_CORNERS_TOPRIGHT), OBS_GROUP_NORMAL, grp2);
 		}
 		{ // Bottom Left
 			auto grp2 = obs_properties_create();
@@ -789,13 +748,11 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 				{ST_KEY_CORNERS_BOTTOMLEFT "Y", "Y"},
 			};
 			for (auto& opt : opts) {
-				auto p =
-					obs_properties_add_float_slider(grp2, opt.first.c_str(), opt.second.c_str(), -200.0, 200.0, 0.01);
+				auto p = obs_properties_add_float_slider(grp2, opt.first.c_str(), opt.second.c_str(), -200.0, 200.0, 0.01);
 				obs_property_float_set_suffix(p, "%");
 			}
 
-			obs_properties_add_group(grp, ST_I18N_CORNERS_BOTTOMLEFT, D_TRANSLATE(ST_I18N_CORNERS_BOTTOMLEFT),
-									 OBS_GROUP_NORMAL, grp2);
+			obs_properties_add_group(grp, ST_I18N_CORNERS_BOTTOMLEFT, D_TRANSLATE(ST_I18N_CORNERS_BOTTOMLEFT), OBS_GROUP_NORMAL, grp2);
 		}
 		{ // Bottom Right
 			auto grp2 = obs_properties_create();
@@ -805,13 +762,11 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 				{ST_KEY_CORNERS_BOTTOMRIGHT "Y", "Y"},
 			};
 			for (auto& opt : opts) {
-				auto p =
-					obs_properties_add_float_slider(grp2, opt.first.c_str(), opt.second.c_str(), -200.0, 200.0, 0.01);
+				auto p = obs_properties_add_float_slider(grp2, opt.first.c_str(), opt.second.c_str(), -200.0, 200.0, 0.01);
 				obs_property_float_set_suffix(p, "%");
 			}
 
-			obs_properties_add_group(grp, ST_I18N_CORNERS_BOTTOMRIGHT, D_TRANSLATE(ST_I18N_CORNERS_BOTTOMRIGHT),
-									 OBS_GROUP_NORMAL, grp2);
+			obs_properties_add_group(grp, ST_I18N_CORNERS_BOTTOMRIGHT, D_TRANSLATE(ST_I18N_CORNERS_BOTTOMRIGHT), OBS_GROUP_NORMAL, grp2);
 		}
 
 		obs_properties_add_group(pr, ST_I18N_CORNERS, D_TRANSLATE(ST_I18N_CORNERS), OBS_GROUP_NORMAL, grp);
@@ -826,8 +781,7 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 		}
 
 		{ // Order
-			auto p = obs_properties_add_list(grp, ST_KEY_ROTATION_ORDER, D_TRANSLATE(ST_I18N_ROTATION_ORDER),
-											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			auto p = obs_properties_add_list(grp, ST_KEY_ROTATION_ORDER, D_TRANSLATE(ST_I18N_ROTATION_ORDER), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_ROTATION_ORDER_XYZ), RotationOrder::XYZ);
 			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_ROTATION_ORDER_XZY), RotationOrder::XZY);
 			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_ROTATION_ORDER_YXZ), RotationOrder::YXZ);

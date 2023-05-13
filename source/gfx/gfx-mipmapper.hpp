@@ -34,7 +34,6 @@ namespace streamfx::gfx {
 
 		uint32_t calculate_max_mip_level(uint32_t width, uint32_t height);
 
-		void rebuild(std::shared_ptr<streamfx::obs::gs::texture> source,
-					 std::shared_ptr<streamfx::obs::gs::texture> target);
+		void rebuild(std::shared_ptr<streamfx::obs::gs::texture> source, std::shared_ptr<streamfx::obs::gs::texture> target);
 	};
 } // namespace streamfx::gfx

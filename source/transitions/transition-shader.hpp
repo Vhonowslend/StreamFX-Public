@@ -30,15 +30,13 @@ namespace streamfx::transition::shader {
 
 		void transition_render(gs_texture_t* a, gs_texture_t* b, float_t t, uint32_t cx, uint32_t cy);
 
-		virtual bool audio_render(uint64_t* ts_out, struct obs_source_audio_mix* audio_output, uint32_t mixers,
-								  std::size_t channels, std::size_t sample_rate) override;
+		virtual bool audio_render(uint64_t* ts_out, struct obs_source_audio_mix* audio_output, uint32_t mixers, std::size_t channels, std::size_t sample_rate) override;
 
 		virtual void transition_start() override;
 		virtual void transition_stop() override;
 	};
 
-	class shader_factory : public obs::source_factory<streamfx::transition::shader::shader_factory,
-													  transition::shader::shader_instance> {
+	class shader_factory : public obs::source_factory<streamfx::transition::shader::shader_factory, transition::shader::shader_instance> {
 		public:
 		shader_factory();
 		virtual ~shader_factory();

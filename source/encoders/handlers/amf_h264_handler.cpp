@@ -32,14 +32,10 @@ static std::map<profile, std::string> profiles{
 };
 
 static std::map<level, std::string> levels{
-	{level::L1_0, "1.0"}, {level::L1_0b, "1.0b"}, {level::L1_1, "1.1"}, {level::L1_2, "1.2"}, {level::L1_3, "1.3"},
-	{level::L2_0, "2.0"}, {level::L2_1, "2.1"},   {level::L2_2, "2.2"}, {level::L3_0, "3.0"}, {level::L3_1, "3.1"},
-	{level::L3_2, "3.2"}, {level::L4_0, "4.0"},   {level::L4_1, "4.1"}, {level::L4_2, "4.2"}, {level::L5_0, "5.0"},
-	{level::L5_1, "5.1"}, {level::L5_2, "5.2"},   {level::L6_0, "6.0"}, {level::L6_1, "6.1"}, {level::L6_2, "6.2"},
+	{level::L1_0, "1.0"}, {level::L1_0b, "1.0b"}, {level::L1_1, "1.1"}, {level::L1_2, "1.2"}, {level::L1_3, "1.3"}, {level::L2_0, "2.0"}, {level::L2_1, "2.1"}, {level::L2_2, "2.2"}, {level::L3_0, "3.0"}, {level::L3_1, "3.1"}, {level::L3_2, "3.2"}, {level::L4_0, "4.0"}, {level::L4_1, "4.1"}, {level::L4_2, "4.2"}, {level::L5_0, "5.0"}, {level::L5_1, "5.1"}, {level::L5_2, "5.2"}, {level::L6_0, "6.0"}, {level::L6_1, "6.1"}, {level::L6_2, "6.2"},
 };
 
-void amf_h264_handler::adjust_info(ffmpeg_factory* factory, const AVCodec* codec, std::string& id, std::string& name,
-								   std::string& codec_id)
+void amf_h264_handler::adjust_info(ffmpeg_factory* factory, const AVCodec* codec, std::string& id, std::string& name, std::string& codec_id)
 {
 	name = "AMD AMF H.264/AVC (via FFmpeg)";
 	if (!amf::is_available())
@@ -75,8 +71,7 @@ bool amf_h264_handler::has_pixel_format_support(ffmpeg_factory* instance)
 	return false;
 }
 
-void amf_h264_handler::get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context,
-									  bool hw_encode)
+void amf_h264_handler::get_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context, bool hw_encode)
 {
 	if (!context) {
 		this->get_encoder_properties(props, codec);
@@ -116,10 +111,8 @@ void amf_h264_handler::log_options(obs_data_t* settings, const AVCodec* codec, A
 	amf::log_options(settings, codec, context);
 
 	DLOG_INFO("[%s]     H.264/AVC:", codec->name);
-	::streamfx::ffmpeg::tools::print_av_option_string2(context, context->priv_data, "profile", "      Profile",
-													   [](int64_t v, std::string_view o) { return std::string(o); });
-	::streamfx::ffmpeg::tools::print_av_option_string2(context, context->priv_data, "level", "      Level",
-													   [](int64_t v, std::string_view o) { return std::string(o); });
+	::streamfx::ffmpeg::tools::print_av_option_string2(context, context->priv_data, "profile", "      Profile", [](int64_t v, std::string_view o) { return std::string(o); });
+	::streamfx::ffmpeg::tools::print_av_option_string2(context, context->priv_data, "level", "      Level", [](int64_t v, std::string_view o) { return std::string(o); });
 }
 
 void amf_h264_handler::get_encoder_properties(obs_properties_t* props, const AVCodec* codec)
@@ -131,8 +124,7 @@ void amf_h264_handler::get_encoder_properties(obs_properties_t* props, const AVC
 		obs_properties_add_group(props, S_CODEC_H264, D_TRANSLATE(S_CODEC_H264), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_PROFILE, D_TRANSLATE(S_CODEC_H264_PROFILE),
-											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			auto p = obs_properties_add_list(grp, ST_KEY_PROFILE, D_TRANSLATE(S_CODEC_H264_PROFILE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), static_cast<int64_t>(profile::UNKNOWN));
 			for (auto const kv : profiles) {
 				std::string trans = std::string(S_CODEC_H264_PROFILE) + "." + kv.second;
@@ -140,8 +132,7 @@ void amf_h264_handler::get_encoder_properties(obs_properties_t* props, const AVC
 			}
 		}
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_LEVEL, D_TRANSLATE(S_CODEC_H264_LEVEL), OBS_COMBO_TYPE_LIST,
-											 OBS_COMBO_FORMAT_INT);
+			auto p = obs_properties_add_list(grp, ST_KEY_LEVEL, D_TRANSLATE(S_CODEC_H264_LEVEL), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), static_cast<int64_t>(level::UNKNOWN));
 			for (auto const kv : levels) {
 				obs_property_list_add_int(p, kv.second.c_str(), static_cast<int64_t>(kv.first));
@@ -157,14 +148,12 @@ void amf_h264_handler::get_runtime_properties(obs_properties_t* props, const AVC
 	amf::get_runtime_properties(props, codec, context);
 }
 
-void amf_h264_handler::migrate(obs_data_t* settings, std::uint64_t version, const AVCodec* codec,
-							   AVCodecContext* context)
+void amf_h264_handler::migrate(obs_data_t* settings, std::uint64_t version, const AVCodec* codec, AVCodecContext* context)
 {
 	amf::migrate(settings, version, codec, context);
 }
 
-void amf_h264_handler::override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec,
-											AVCodecContext* context)
+void amf_h264_handler::override_colorformat(AVPixelFormat& target_format, obs_data_t* settings, const AVCodec* codec, AVCodecContext* context)
 {
 	target_format = AV_PIX_FMT_NV12;
 }

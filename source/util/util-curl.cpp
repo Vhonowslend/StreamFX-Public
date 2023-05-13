@@ -9,8 +9,7 @@
 #include <sstream>
 #include "warning-enable.hpp"
 
-int32_t streamfx::util::curl::debug_helper(CURL* handle, curl_infotype type, char* data, size_t size,
-										   streamfx::util::curl* self)
+int32_t streamfx::util::curl::debug_helper(CURL* handle, curl_infotype type, char* data, size_t size, streamfx::util::curl* self)
 {
 	if (self->_debug_callback) {
 		self->_debug_callback(handle, type, data, size);
@@ -18,8 +17,7 @@ int32_t streamfx::util::curl::debug_helper(CURL* handle, curl_infotype type, cha
 #ifdef _DEBUG_CURL
 		std::stringstream hd;
 		for (size_t n = 0; n < size; n++) {
-			hd << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << static_cast<int32_t>(data[n])
-			   << " ";
+			hd << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << static_cast<int32_t>(data[n]) << " ";
 			if (n % 16 == 15) {
 				hd << "\n  ";
 			}
@@ -72,12 +70,10 @@ size_t streamfx::util::curl::write_helper(void* ptr, size_t size, size_t count, 
 	}
 }
 
-int32_t streamfx::util::curl::xferinfo_callback(streamfx::util::curl* self, curl_off_t dlt, curl_off_t dln,
-												curl_off_t ult, curl_off_t uln)
+int32_t streamfx::util::curl::xferinfo_callback(streamfx::util::curl* self, curl_off_t dlt, curl_off_t dln, curl_off_t ult, curl_off_t uln)
 {
 	if (self->_xferinfo_callback) {
-		return self->_xferinfo_callback(static_cast<uint64_t>(dlt), static_cast<uint64_t>(dln),
-										static_cast<uint64_t>(ult), static_cast<uint64_t>(uln));
+		return self->_xferinfo_callback(static_cast<uint64_t>(dlt), static_cast<uint64_t>(dln), static_cast<uint64_t>(ult), static_cast<uint64_t>(uln));
 	} else {
 		return 0;
 	}

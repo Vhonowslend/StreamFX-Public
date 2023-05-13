@@ -92,10 +92,8 @@ void nvenc_h264_handler::log_options(obs_data_t* settings, const AVCodec* codec,
 	nvenc::log_options(settings, codec, context);
 
 	DLOG_INFO("[%s]     H.264/AVC:", codec->name);
-	::streamfx::ffmpeg::tools::print_av_option_string2(context, context->priv_data, "profile", "      Profile",
-													   [](int64_t v, std::string_view o) { return std::string(o); });
-	::streamfx::ffmpeg::tools::print_av_option_string2(context, context->priv_data, "level", "      Level",
-													   [](int64_t v, std::string_view o) { return std::string(o); });
+	::streamfx::ffmpeg::tools::print_av_option_string2(context, context->priv_data, "profile", "      Profile", [](int64_t v, std::string_view o) { return std::string(o); });
+	::streamfx::ffmpeg::tools::print_av_option_string2(context, context->priv_data, "level", "      Level", [](int64_t v, std::string_view o) { return std::string(o); });
 }
 
 void nvenc_h264_handler::get_encoder_properties(obs_properties_t* props, const AVCodec* codec)
@@ -116,19 +114,16 @@ void nvenc_h264_handler::get_encoder_properties(obs_properties_t* props, const A
 		}
 
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_PROFILE, D_TRANSLATE(S_CODEC_H264_PROFILE),
-											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+			auto p = obs_properties_add_list(grp, ST_KEY_PROFILE, D_TRANSLATE(S_CODEC_H264_PROFILE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 			obs_property_list_add_string(p, D_TRANSLATE(S_STATE_DEFAULT), "");
-			streamfx::ffmpeg::tools::avoption_list_add_entries(
-				context->priv_data, "profile", [&p](const AVOption* opt) {
-					char buffer[1024];
-					snprintf(buffer, sizeof(buffer), "%s.%s", S_CODEC_H264_PROFILE, opt->name);
-					obs_property_list_add_string(p, D_TRANSLATE(buffer), opt->name);
-				});
+			streamfx::ffmpeg::tools::avoption_list_add_entries(context->priv_data, "profile", [&p](const AVOption* opt) {
+				char buffer[1024];
+				snprintf(buffer, sizeof(buffer), "%s.%s", S_CODEC_H264_PROFILE, opt->name);
+				obs_property_list_add_string(p, D_TRANSLATE(buffer), opt->name);
+			});
 		}
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_LEVEL, D_TRANSLATE(S_CODEC_H264_LEVEL), OBS_COMBO_TYPE_LIST,
-											 OBS_COMBO_FORMAT_STRING);
+			auto p = obs_properties_add_list(grp, ST_KEY_LEVEL, D_TRANSLATE(S_CODEC_H264_LEVEL), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 
 			streamfx::ffmpeg::tools::avoption_list_add_entries(context->priv_data, "level", [&p](const AVOption* opt) {
 				if (opt->default_val.i64 == 0) {
@@ -152,8 +147,7 @@ void nvenc_h264_handler::get_runtime_properties(obs_properties_t* props, const A
 	nvenc::get_runtime_properties(props, codec, context);
 }
 
-void streamfx::encoder::ffmpeg::handler::nvenc_h264_handler::migrate(obs_data_t* settings, uint64_t version,
-																	 const AVCodec* codec, AVCodecContext* context)
+void streamfx::encoder::ffmpeg::handler::nvenc_h264_handler::migrate(obs_data_t* settings, uint64_t version, const AVCodec* codec, AVCodecContext* context)
 {
 	nvenc::migrate(settings, version, codec, context);
 

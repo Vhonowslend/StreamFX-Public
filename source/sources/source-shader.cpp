@@ -30,8 +30,7 @@
 
 using namespace streamfx::source::shader;
 
-static constexpr std::string_view HELP_URL =
-	"https://github.com/Xaymar/obs-StreamFX/wiki/Source-Filter-Transition-Shader";
+static constexpr std::string_view HELP_URL = "https://github.com/Xaymar/obs-StreamFX/wiki/Source-Filter-Transition-Shader";
 
 shader_instance::shader_instance(obs_data_t* data, obs_source_t* self) : obs::source_instance(data, self), _fx()
 {
@@ -87,8 +86,7 @@ void shader_instance::video_render(gs_effect_t* effect)
 	}
 
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Shader Source '%s'",
-										 obs_source_get_name(_self)};
+	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Shader Source '%s'", obs_source_get_name(_self)};
 #endif
 
 	_fx->prepare_render();
@@ -146,8 +144,7 @@ obs_properties_t* shader_factory::get_properties2(shader_instance* data)
 
 #ifdef ENABLE_FRONTEND
 	{
-		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN),
-								   streamfx::source::shader::shader_factory::on_manual_open, nullptr);
+		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), streamfx::source::shader::shader_factory::on_manual_open, nullptr);
 	}
 #endif
 

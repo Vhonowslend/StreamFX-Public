@@ -144,8 +144,7 @@ namespace streamfx::filter::autoframing {
 #endif
 	};
 
-	class autoframing_factory : public obs::source_factory<streamfx::filter::autoframing::autoframing_factory,
-														   streamfx::filter::autoframing::autoframing_instance> {
+	class autoframing_factory : public obs::source_factory<streamfx::filter::autoframing::autoframing_factory, streamfx::filter::autoframing::autoframing_instance> {
 #ifdef ENABLE_FILTER_AUTOFRAMING_NVIDIA
 		bool                                           _nvidia_available;
 		std::shared_ptr<::streamfx::nvidia::cuda::obs> _nvcuda;

@@ -8,11 +8,9 @@
 #include <stdexcept>
 #include "warning-enable.hpp"
 
-streamfx::obs::gs::vertex::vertex()
-	: position(nullptr), normal(nullptr), tangent(nullptr), color(nullptr), _has_store(true), _store(nullptr)
+streamfx::obs::gs::vertex::vertex() : position(nullptr), normal(nullptr), tangent(nullptr), color(nullptr), _has_store(true), _store(nullptr)
 {
-	_store =
-		streamfx::util::malloc_aligned(16, sizeof(vec3) * 3 + sizeof(uint32_t) + sizeof(vec4) * MAXIMUM_UVW_LAYERS);
+	_store = streamfx::util::malloc_aligned(16, sizeof(vec3) * 3 + sizeof(uint32_t) + sizeof(vec4) * MAXIMUM_UVW_LAYERS);
 
 	std::size_t offset = 0;
 
@@ -41,8 +39,7 @@ streamfx::obs::gs::vertex::~vertex()
 	}
 }
 
-streamfx::obs::gs::vertex::vertex(vec3* p, vec3* n, vec3* t, uint32_t* col, vec4* uvs[MAXIMUM_UVW_LAYERS])
-	: position(p), normal(n), tangent(t), color(col), _has_store(false)
+streamfx::obs::gs::vertex::vertex(vec3* p, vec3* n, vec3* t, uint32_t* col, vec4* uvs[MAXIMUM_UVW_LAYERS]) : position(p), normal(n), tangent(t), color(col), _has_store(false)
 {
 	if (uvs != nullptr) {
 		for (std::size_t idx = 0; idx < MAXIMUM_UVW_LAYERS; idx++) {

@@ -235,8 +235,7 @@ static bool modified_aq(obs_properties_t* props, obs_property_t*, obs_data_t* se
 void nvenc::get_properties_pre(obs_properties_t* props, const AVCodec*, const AVCodecContext* context)
 {
 	{
-		auto p = obs_properties_add_list(props, ST_KEY_PRESET, D_TRANSLATE(ST_I18N_PRESET), OBS_COMBO_TYPE_LIST,
-										 OBS_COMBO_FORMAT_STRING);
+		auto p = obs_properties_add_list(props, ST_KEY_PRESET, D_TRANSLATE(ST_I18N_PRESET), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 		streamfx::ffmpeg::tools::avoption_list_add_entries(context->priv_data, "preset", [&p](const AVOption* opt) {
 			char buffer[1024];
 			snprintf(buffer, sizeof(buffer), "%s.%s", ST_I18N_PRESET, opt->name);
@@ -245,8 +244,7 @@ void nvenc::get_properties_pre(obs_properties_t* props, const AVCodec*, const AV
 	}
 
 	if (streamfx::ffmpeg::tools::avoption_exists(context->priv_data, "tune")) {
-		auto p = obs_properties_add_list(props, ST_KEY_TUNE, D_TRANSLATE(ST_I18N_TUNE), OBS_COMBO_TYPE_LIST,
-										 OBS_COMBO_FORMAT_STRING);
+		auto p = obs_properties_add_list(props, ST_KEY_TUNE, D_TRANSLATE(ST_I18N_TUNE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 		streamfx::ffmpeg::tools::avoption_list_add_entries(context->priv_data, "tune", [&p](const AVOption* opt) {
 			char buffer[1024];
 			snprintf(buffer, sizeof(buffer), "%s.%s", ST_I18N_TUNE, opt->name);
@@ -261,13 +259,11 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec, c
 		obs_properties_t* grp = props;
 		if (!streamfx::util::are_property_groups_broken()) {
 			grp = obs_properties_create();
-			obs_properties_add_group(props, ST_I18N_RATECONTROL, D_TRANSLATE(ST_I18N_RATECONTROL), OBS_GROUP_NORMAL,
-									 grp);
+			obs_properties_add_group(props, ST_I18N_RATECONTROL, D_TRANSLATE(ST_I18N_RATECONTROL), OBS_GROUP_NORMAL, grp);
 		}
 
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_RATECONTROL_MODE, D_TRANSLATE(ST_I18N_RATECONTROL_MODE),
-											 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+			auto p = obs_properties_add_list(grp, ST_KEY_RATECONTROL_MODE, D_TRANSLATE(ST_I18N_RATECONTROL_MODE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 			obs_property_set_modified_callback(p, modified_ratecontrol);
 			obs_property_list_add_string(p, D_TRANSLATE(S_STATE_DEFAULT), "");
 			streamfx::ffmpeg::tools::avoption_list_add_entries(context->priv_data, "rc", [&p](const AVOption* opt) {
@@ -282,36 +278,29 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec, c
 		}
 
 		if (streamfx::ffmpeg::tools::avoption_exists(context->priv_data, "multipass")) {
-			auto p =
-				obs_properties_add_list(grp, ST_KEY_RATECONTROL_MULTIPASS, D_TRANSLATE(ST_I18N_RATECONTROL_MULTIPASS),
-										OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+			auto p = obs_properties_add_list(grp, ST_KEY_RATECONTROL_MULTIPASS, D_TRANSLATE(ST_I18N_RATECONTROL_MULTIPASS), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 			obs_property_list_add_string(p, D_TRANSLATE(S_STATE_DEFAULT), "");
-			streamfx::ffmpeg::tools::avoption_list_add_entries(
-				context->priv_data, "multipass", [&p](const AVOption* opt) {
-					char buffer[1024];
-					snprintf(buffer, sizeof(buffer), "%s.%s", ST_I18N_RATECONTROL_MULTIPASS, opt->name);
-					obs_property_list_add_string(p, D_TRANSLATE(buffer), opt->name);
-				});
+			streamfx::ffmpeg::tools::avoption_list_add_entries(context->priv_data, "multipass", [&p](const AVOption* opt) {
+				char buffer[1024];
+				snprintf(buffer, sizeof(buffer), "%s.%s", ST_I18N_RATECONTROL_MULTIPASS, opt->name);
+				obs_property_list_add_string(p, D_TRANSLATE(buffer), opt->name);
+			});
 		} else {
-			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_TWOPASS,
-																 D_TRANSLATE(ST_I18N_RATECONTROL_TWOPASS));
+			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_TWOPASS, D_TRANSLATE(ST_I18N_RATECONTROL_TWOPASS));
 		}
 
 		{
-			auto p = obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_LOOKAHEAD,
-												   D_TRANSLATE(ST_I18N_RATECONTROL_LOOKAHEAD), -1, 32, 1);
+			auto p = obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_LOOKAHEAD, D_TRANSLATE(ST_I18N_RATECONTROL_LOOKAHEAD), -1, 32, 1);
 			obs_property_int_set_suffix(p, " frames");
 			//obs_property_set_modified_callback(p, modified_lookahead);
 		}
 
 		{
-			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_ADAPTIVEI,
-																 D_TRANSLATE(ST_I18N_RATECONTROL_ADAPTIVEI));
+			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_ADAPTIVEI, D_TRANSLATE(ST_I18N_RATECONTROL_ADAPTIVEI));
 		}
 
 		if (strcmp(codec->name, "h264_nvenc") == 0) {
-			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_ADAPTIVEB,
-																 D_TRANSLATE(ST_I18N_RATECONTROL_ADAPTIVEB));
+			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_RATECONTROL_ADAPTIVEB, D_TRANSLATE(ST_I18N_RATECONTROL_ADAPTIVEB));
 		}
 	}
 
@@ -319,33 +308,25 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec, c
 		obs_properties_t* grp = props;
 		if (!streamfx::util::are_property_groups_broken()) {
 			grp = obs_properties_create();
-			obs_properties_add_group(props, ST_I18N_RATECONTROL_LIMITS, D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS),
-									 OBS_GROUP_NORMAL, grp);
+			obs_properties_add_group(props, ST_I18N_RATECONTROL_LIMITS, D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS), OBS_GROUP_NORMAL, grp);
 		}
 
 		{
-			auto p = obs_properties_add_float_slider(grp, ST_KEY_RATECONTROL_LIMITS_QUALITY,
-													 D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS_QUALITY), 0, 51, 0.01);
+			auto p = obs_properties_add_float_slider(grp, ST_KEY_RATECONTROL_LIMITS_QUALITY, D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS_QUALITY), 0, 51, 0.01);
 		}
 
 		{
-			auto p = obs_properties_add_int(grp, ST_KEY_RATECONTROL_LIMITS_BITRATE_TARGET,
-											D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS_BITRATE_TARGET), -1,
-											std::numeric_limits<int32_t>::max(), 1);
+			auto p = obs_properties_add_int(grp, ST_KEY_RATECONTROL_LIMITS_BITRATE_TARGET, D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS_BITRATE_TARGET), -1, std::numeric_limits<int32_t>::max(), 1);
 			obs_property_int_set_suffix(p, " kbit/s");
 		}
 
 		{
-			auto p = obs_properties_add_int(grp, ST_KEY_RATECONTROL_LIMITS_BITRATE_MAXIMUM,
-											D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS_BITRATE_MAXIMUM), -1,
-											std::numeric_limits<int32_t>::max(), 1);
+			auto p = obs_properties_add_int(grp, ST_KEY_RATECONTROL_LIMITS_BITRATE_MAXIMUM, D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS_BITRATE_MAXIMUM), -1, std::numeric_limits<int32_t>::max(), 1);
 			obs_property_int_set_suffix(p, " kbit/s");
 		}
 
 		{
-			auto p = obs_properties_add_int(grp, ST_KEY_RATECONTROL_LIMITS_BUFFERSIZE,
-											D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS_BUFFERSIZE), 0,
-											std::numeric_limits<int32_t>::max(), 1);
+			auto p = obs_properties_add_int(grp, ST_KEY_RATECONTROL_LIMITS_BUFFERSIZE, D_TRANSLATE(ST_I18N_RATECONTROL_LIMITS_BUFFERSIZE), 0, std::numeric_limits<int32_t>::max(), 1);
 			obs_property_int_set_suffix(p, " kbit");
 		}
 	}
@@ -354,30 +335,24 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec, c
 		obs_properties_t* grp = props;
 		if (!streamfx::util::are_property_groups_broken()) {
 			grp = obs_properties_create();
-			obs_properties_add_group(props, ST_I18N_RATECONTROL_QP, D_TRANSLATE(ST_I18N_RATECONTROL_QP),
-									 OBS_GROUP_NORMAL, grp);
+			obs_properties_add_group(props, ST_I18N_RATECONTROL_QP, D_TRANSLATE(ST_I18N_RATECONTROL_QP), OBS_GROUP_NORMAL, grp);
 		}
 
 		{
-			auto p = obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_MINIMUM,
-												   D_TRANSLATE(ST_I18N_RATECONTROL_QP_MINIMUM), -1, 51, 1);
+			auto p = obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_MINIMUM, D_TRANSLATE(ST_I18N_RATECONTROL_QP_MINIMUM), -1, 51, 1);
 		}
 		{
-			auto p = obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_MAXIMUM,
-												   D_TRANSLATE(ST_I18N_RATECONTROL_QP_MAXIMUM), -1, 51, 1);
+			auto p = obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_MAXIMUM, D_TRANSLATE(ST_I18N_RATECONTROL_QP_MAXIMUM), -1, 51, 1);
 		}
 
 		{
-			auto p = obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_I, D_TRANSLATE(ST_I18N_RATECONTROL_QP_I),
-												   -1, 51, 1);
+			auto p = obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_I, D_TRANSLATE(ST_I18N_RATECONTROL_QP_I), -1, 51, 1);
 		}
 		{
-			auto p = obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_P, D_TRANSLATE(ST_I18N_RATECONTROL_QP_P),
-												   -1, 51, 1);
+			auto p = obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_P, D_TRANSLATE(ST_I18N_RATECONTROL_QP_P), -1, 51, 1);
 		}
 		{
-			auto p = obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_B, D_TRANSLATE(ST_I18N_RATECONTROL_QP_B),
-												   -1, 51, 1);
+			auto p = obs_properties_add_int_slider(grp, ST_KEY_RATECONTROL_QP_B, D_TRANSLATE(ST_I18N_RATECONTROL_QP_B), -1, 51, 1);
 		}
 	}
 
@@ -389,17 +364,14 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec, c
 		}
 
 		{
-			auto p =
-				streamfx::util::obs_properties_add_tristate(grp, ST_KEY_AQ_SPATIAL, D_TRANSLATE(ST_I18N_AQ_SPATIAL));
+			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_AQ_SPATIAL, D_TRANSLATE(ST_I18N_AQ_SPATIAL));
 			obs_property_set_modified_callback(p, modified_aq);
 		}
 		{
-			auto p =
-				obs_properties_add_int_slider(grp, ST_KEY_AQ_STRENGTH, D_TRANSLATE(ST_I18N_AQ_STRENGTH), -1, 15, 1);
+			auto p = obs_properties_add_int_slider(grp, ST_KEY_AQ_STRENGTH, D_TRANSLATE(ST_I18N_AQ_STRENGTH), -1, 15, 1);
 		}
 		{
-			auto p =
-				streamfx::util::obs_properties_add_tristate(grp, ST_KEY_AQ_TEMPORAL, D_TRANSLATE(ST_I18N_AQ_TEMPORAL));
+			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_AQ_TEMPORAL, D_TRANSLATE(ST_I18N_AQ_TEMPORAL));
 		}
 	}
 
@@ -411,49 +383,39 @@ void nvenc::get_properties_post(obs_properties_t* props, const AVCodec* codec, c
 		}
 
 		{
-			auto p =
-				obs_properties_add_int_slider(grp, ST_KEY_OTHER_BFRAMES, D_TRANSLATE(ST_I18N_OTHER_BFRAMES), -1, 4, 1);
+			auto p = obs_properties_add_int_slider(grp, ST_KEY_OTHER_BFRAMES, D_TRANSLATE(ST_I18N_OTHER_BFRAMES), -1, 4, 1);
 			obs_property_int_set_suffix(p, " frames");
 		}
 
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_OTHER_BFRAMEREFERENCEMODE,
-											 D_TRANSLATE(ST_I18N_OTHER_BFRAMEREFERENCEMODE), OBS_COMBO_TYPE_LIST,
-											 OBS_COMBO_FORMAT_STRING);
+			auto p = obs_properties_add_list(grp, ST_KEY_OTHER_BFRAMEREFERENCEMODE, D_TRANSLATE(ST_I18N_OTHER_BFRAMEREFERENCEMODE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 			obs_property_list_add_string(p, D_TRANSLATE(S_STATE_DEFAULT), "");
-			streamfx::ffmpeg::tools::avoption_list_add_entries(
-				context->priv_data, "b_ref_mode", [&p](const AVOption* opt) {
-					char buffer[1024];
-					snprintf(buffer, sizeof(buffer), "%s.%s", ST_I18N_OTHER_BFRAMEREFERENCEMODE, opt->name);
-					obs_property_list_add_string(p, D_TRANSLATE(buffer), opt->name);
-				});
+			streamfx::ffmpeg::tools::avoption_list_add_entries(context->priv_data, "b_ref_mode", [&p](const AVOption* opt) {
+				char buffer[1024];
+				snprintf(buffer, sizeof(buffer), "%s.%s", ST_I18N_OTHER_BFRAMEREFERENCEMODE, opt->name);
+				obs_property_list_add_string(p, D_TRANSLATE(buffer), opt->name);
+			});
 		}
 
 		{
-			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_ZEROLATENCY,
-																 D_TRANSLATE(ST_I18N_OTHER_ZEROLATENCY));
+			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_ZEROLATENCY, D_TRANSLATE(ST_I18N_OTHER_ZEROLATENCY));
 		}
 
 		{
-			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_WEIGHTEDPREDICTION,
-																 D_TRANSLATE(ST_I18N_OTHER_WEIGHTEDPREDICTION));
+			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_WEIGHTEDPREDICTION, D_TRANSLATE(ST_I18N_OTHER_WEIGHTEDPREDICTION));
 		}
 
 		{
-			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_NONREFERENCEPFRAMES,
-																 D_TRANSLATE(ST_I18N_OTHER_NONREFERENCEPFRAMES));
+			auto p = streamfx::util::obs_properties_add_tristate(grp, ST_KEY_OTHER_NONREFERENCEPFRAMES, D_TRANSLATE(ST_I18N_OTHER_NONREFERENCEPFRAMES));
 		}
 
 		{
-			auto p = obs_properties_add_int_slider(grp, ST_KEY_OTHER_REFERENCEFRAMES,
-												   D_TRANSLATE(ST_I18N_OTHER_REFERENCEFRAMES), -1,
-												   (strcmp(codec->name, "h264_nvenc") == 0) ? 16 : 4, 1);
+			auto p = obs_properties_add_int_slider(grp, ST_KEY_OTHER_REFERENCEFRAMES, D_TRANSLATE(ST_I18N_OTHER_REFERENCEFRAMES), -1, (strcmp(codec->name, "h264_nvenc") == 0) ? 16 : 4, 1);
 			obs_property_int_set_suffix(p, " frames");
 		}
 
 		if (streamfx::ffmpeg::tools::avoption_exists(context->priv_data, "ldkfs")) {
-			auto p = obs_properties_add_int_slider(grp, ST_KEY_OTHER_LOWDELAYKEYFRAMESCALE,
-												   D_TRANSLATE(ST_I18N_OTHER_LOWDELAYKEYFRAMESCALE), -1, 255, 1);
+			auto p = obs_properties_add_int_slider(grp, ST_KEY_OTHER_LOWDELAYKEYFRAMESCALE, D_TRANSLATE(ST_I18N_OTHER_LOWDELAYKEYFRAMESCALE), -1, 255, 1);
 		}
 	}
 }
@@ -496,8 +458,7 @@ void nvenc::get_runtime_properties(obs_properties_t* props, const AVCodec*, AVCo
 
 void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context)
 {
-	if (const char* v = obs_data_get_string(settings, ST_KEY_PRESET);
-		!context->internal && (v != nullptr) && (v[0] != '\0')) {
+	if (const char* v = obs_data_get_string(settings, ST_KEY_PRESET); !context->internal && (v != nullptr) && (v[0] != '\0')) {
 		av_opt_set(context->priv_data, "preset", v, AV_OPT_SEARCH_CHILDREN);
 	}
 
@@ -555,8 +516,7 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 		if (!context->internal) {
 			if (streamfx::ffmpeg::tools::avoption_exists(context->priv_data, "multipass")) {
 				// Multi-Pass
-				if (const char* v = obs_data_get_string(settings, ST_KEY_RATECONTROL_MULTIPASS);
-					(v != nullptr) && (v[0] != '\0')) {
+				if (const char* v = obs_data_get_string(settings, ST_KEY_RATECONTROL_MULTIPASS); (v != nullptr) && (v[0] != '\0')) {
 					av_opt_set(context->priv_data, "multipass", v, AV_OPT_SEARCH_CHILDREN);
 					av_opt_set_int(context->priv_data, "2pass", 0, AV_OPT_SEARCH_CHILDREN);
 				}
@@ -574,16 +534,14 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			}
 
 			// Adaptive I-Frames
-			if (int64_t adapt_i = obs_data_get_int(settings, ST_KEY_RATECONTROL_ADAPTIVEI);
-				!streamfx::util::is_tristate_default(adapt_i) && (la != 0)) {
+			if (int64_t adapt_i = obs_data_get_int(settings, ST_KEY_RATECONTROL_ADAPTIVEI); !streamfx::util::is_tristate_default(adapt_i) && (la != 0)) {
 				// no-scenecut is inverted compared to our UI.
 				av_opt_set_int(context->priv_data, "no-scenecut", 1 - adapt_i, AV_OPT_SEARCH_CHILDREN);
 			}
 
 			// Adaptive B-Frames
 			if (std::string_view("h264_nvenc") == codec->name) {
-				if (int64_t adapt_b = obs_data_get_int(settings, ST_KEY_RATECONTROL_ADAPTIVEB);
-					!streamfx::util::is_tristate_default(adapt_b) && (la != 0)) {
+				if (int64_t adapt_b = obs_data_get_int(settings, ST_KEY_RATECONTROL_ADAPTIVEB); !streamfx::util::is_tristate_default(adapt_b) && (la != 0)) {
 					av_opt_set_int(context->priv_data, "b_adapt", adapt_b, AV_OPT_SEARCH_CHILDREN);
 				}
 			}
@@ -686,8 +644,7 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 
 		if (int64_t zl = obs_data_get_int(settings, ST_KEY_OTHER_ZEROLATENCY); !streamfx::util::is_tristate_default(zl))
 			av_opt_set_int(context->priv_data, "zerolatency", zl, AV_OPT_SEARCH_CHILDREN);
-		if (int64_t nrp = obs_data_get_int(settings, ST_KEY_OTHER_NONREFERENCEPFRAMES);
-			!streamfx::util::is_tristate_default(nrp))
+		if (int64_t nrp = obs_data_get_int(settings, ST_KEY_OTHER_NONREFERENCEPFRAMES); !streamfx::util::is_tristate_default(nrp))
 			av_opt_set_int(context->priv_data, "nonref_p", nrp, AV_OPT_SEARCH_CHILDREN);
 		if (int64_t v = obs_data_get_int(settings, ST_KEY_OTHER_REFERENCEFRAMES); v > -1)
 			av_opt_set_int(context, "refs", v, AV_OPT_SEARCH_CHILDREN);
@@ -700,8 +657,7 @@ void nvenc::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* c
 			av_opt_set_int(context->priv_data, "weighted_pred", wp, AV_OPT_SEARCH_CHILDREN);
 		}
 
-		if (const char* v = obs_data_get_string(settings, ST_KEY_OTHER_BFRAMEREFERENCEMODE);
-			(v != nullptr) && (v[0] != '\0')) {
+		if (const char* v = obs_data_get_string(settings, ST_KEY_OTHER_BFRAMEREFERENCEMODE); (v != nullptr) && (v[0] != '\0')) {
 			av_opt_set(context->priv_data, "b_ref_mode", v, AV_OPT_SEARCH_CHILDREN);
 		}
 
@@ -716,13 +672,10 @@ void nvenc::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* conte
 	using namespace ::streamfx::ffmpeg;
 
 	DLOG_INFO("[%s]   NVIDIA NVENC:", codec->name);
-	tools::print_av_option_string2(context, "preset", "    Preset",
-								   [](int64_t v, std::string_view o) { return std::string(o); });
-	tools::print_av_option_string2(context, "rc", "    Rate Control",
-								   [](int64_t v, std::string_view o) { return std::string(o); });
+	tools::print_av_option_string2(context, "preset", "    Preset", [](int64_t v, std::string_view o) { return std::string(o); });
+	tools::print_av_option_string2(context, "rc", "    Rate Control", [](int64_t v, std::string_view o) { return std::string(o); });
 	tools::print_av_option_bool(context, "2pass", "      Two Pass");
-	tools::print_av_option_string2(context, "multipass", "      Multi-Pass",
-								   [](int64_t v, std::string_view o) { return std::string(o); });
+	tools::print_av_option_string2(context, "multipass", "      Multi-Pass", [](int64_t v, std::string_view o) { return std::string(o); });
 	tools::print_av_option_int(context, "rc-lookahead", "      Look-Ahead", "Frames");
 	tools::print_av_option_bool(context, "no-scenecut", "      Adaptive I-Frames", true);
 	if (strcmp(codec->name, "h264_nvenc") == 0)
@@ -745,8 +698,7 @@ void nvenc::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* conte
 	tools::print_av_option_int(context, "qp_cr_offset", "        CR Offset", "");
 
 	tools::print_av_option_int(context, "bf", "    B-Frames", "Frames");
-	tools::print_av_option_string2(context, "b_ref_mode", "      Reference Mode",
-								   [](int64_t v, std::string_view o) { return std::string(o); });
+	tools::print_av_option_string2(context, "b_ref_mode", "      Reference Mode", [](int64_t v, std::string_view o) { return std::string(o); });
 
 	DLOG_INFO("[%s]     Adaptive Quantization:", codec->name);
 	if (strcmp(codec->name, "h264_nvenc") == 0) {
@@ -777,8 +729,7 @@ void nvenc::log_options(obs_data_t*, const AVCodec* codec, AVCodecContext* conte
 	tools::print_av_option_bool(context, "constrained-encoding", "      Constrained Encoding");
 }
 
-void streamfx::encoder::ffmpeg::handler::nvenc::migrate(obs_data_t* settings, uint64_t version, const AVCodec* codec,
-														AVCodecContext* context)
+void streamfx::encoder::ffmpeg::handler::nvenc::migrate(obs_data_t* settings, uint64_t version, const AVCodec* codec, AVCodecContext* context)
 {
 	// Only test for A.B.C in A.B.C.D
 	version = version & STREAMFX_MASK_UPDATE;
@@ -807,8 +758,7 @@ void streamfx::encoder::ffmpeg::handler::nvenc::migrate(obs_data_t* settings, ui
 		// Preset
 		if (auto v = obs_data_get_int(settings, ST_KEY_PRESET); v != -1) {
 			std::map<int64_t, std::string> preset{
-				{0, "default"}, {1, "slow"}, {2, "medium"}, {3, "fast"}, {4, "hp"},        {5, "hq"},
-				{6, "bd"},      {7, "ll"},   {8, "llhq"},   {9, "llhp"}, {10, "lossless"}, {11, "losslesshp"},
+				{0, "default"}, {1, "slow"}, {2, "medium"}, {3, "fast"}, {4, "hp"}, {5, "hq"}, {6, "bd"}, {7, "ll"}, {8, "llhq"}, {9, "llhp"}, {10, "lossless"}, {11, "losslesshp"},
 			};
 			if (auto k = preset.find(v); k != preset.end()) {
 				obs_data_set_string(settings, ST_KEY_PRESET, k->second.data());

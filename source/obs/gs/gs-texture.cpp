@@ -25,8 +25,7 @@ static uint32_t decode_flags(streamfx::obs::gs::texture::flags texture_flags)
 	return flags;
 }
 
-streamfx::obs::gs::texture::texture(uint32_t width, uint32_t height, gs_color_format format, uint32_t mip_levels,
-									const uint8_t** mip_data, streamfx::obs::gs::texture::flags texture_flags)
+streamfx::obs::gs::texture::texture(uint32_t width, uint32_t height, gs_color_format format, uint32_t mip_levels, const uint8_t** mip_data, streamfx::obs::gs::texture::flags texture_flags)
 {
 	if (width == 0)
 		throw std::logic_error("width must be at least 1");
@@ -52,9 +51,7 @@ streamfx::obs::gs::texture::texture(uint32_t width, uint32_t height, gs_color_fo
 	_type = type::Normal;
 }
 
-streamfx::obs::gs::texture::texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_format format,
-									uint32_t mip_levels, const uint8_t** mip_data,
-									streamfx::obs::gs::texture::flags texture_flags)
+streamfx::obs::gs::texture::texture(uint32_t width, uint32_t height, uint32_t depth, gs_color_format format, uint32_t mip_levels, const uint8_t** mip_data, streamfx::obs::gs::texture::flags texture_flags)
 {
 	if (width == 0)
 		throw std::logic_error("width must be at least 1");
@@ -66,18 +63,14 @@ streamfx::obs::gs::texture::texture(uint32_t width, uint32_t height, uint32_t de
 		throw std::logic_error("mip_levels must be at least 1");
 
 	if (mip_levels > 1 || ((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps)) {
-		bool isPOT =
-			(streamfx::util::math::is_equal(pow(2, static_cast<int64_t>(floor(log(width) / log(2)))), width)
-			 && streamfx::util::math::is_equal(pow(2, static_cast<int64_t>(floor(log(height) / log(2)))), height)
-			 && streamfx::util::math::is_equal(pow(2, static_cast<int64_t>(floor(log(depth) / log(2)))), depth));
+		bool isPOT = (streamfx::util::math::is_equal(pow(2, static_cast<int64_t>(floor(log(width) / log(2)))), width) && streamfx::util::math::is_equal(pow(2, static_cast<int64_t>(floor(log(height) / log(2)))), height) && streamfx::util::math::is_equal(pow(2, static_cast<int64_t>(floor(log(depth) / log(2)))), depth));
 		if (!isPOT)
 			throw std::logic_error("mip mapping requires power of two dimensions");
 	}
 
 	{
 		auto gctx = streamfx::obs::gs::context();
-		_texture =
-			gs_voltexture_create(width, height, depth, format, mip_levels, mip_data, decode_flags(texture_flags));
+		_texture  = gs_voltexture_create(width, height, depth, format, mip_levels, mip_data, decode_flags(texture_flags));
 	}
 
 	if (!_texture)
@@ -86,8 +79,7 @@ streamfx::obs::gs::texture::texture(uint32_t width, uint32_t height, uint32_t de
 	_type = type::Volume;
 }
 
-streamfx::obs::gs::texture::texture(uint32_t size, gs_color_format format, uint32_t mip_levels,
-									const uint8_t** mip_data, streamfx::obs::gs::texture::flags texture_flags)
+streamfx::obs::gs::texture::texture(uint32_t size, gs_color_format format, uint32_t mip_levels, const uint8_t** mip_data, streamfx::obs::gs::texture::flags texture_flags)
 {
 	if (size == 0)
 		throw std::logic_error("size must be at least 1");

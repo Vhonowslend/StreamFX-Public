@@ -36,8 +36,7 @@ streamfx::util::library::library(std::filesystem::path file) : _library(nullptr)
 		DWORD       error = GetLastError();
 		if (error != ERROR_PROC_NOT_FOUND) {
 			PSTR message = NULL;
-			FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-						   NULL, error, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), (LPSTR)&message, 0, NULL);
+			FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, error, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), (LPSTR)&message, 0, NULL);
 			if (message) {
 				ex = message;
 				LocalFree(message);

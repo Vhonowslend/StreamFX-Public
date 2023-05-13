@@ -27,16 +27,14 @@ struct d3d_info {
 	ID3D11Resource*      target  = nullptr;
 };
 
-void d3d_initialize(d3d_info& info, std::shared_ptr<streamfx::obs::gs::texture> source,
-					std::shared_ptr<streamfx::obs::gs::texture> target)
+void d3d_initialize(d3d_info& info, std::shared_ptr<streamfx::obs::gs::texture> source, std::shared_ptr<streamfx::obs::gs::texture> target)
 {
 	info.target = reinterpret_cast<ID3D11Resource*>(gs_texture_get_obj(target->get_object()));
 	info.device = reinterpret_cast<ID3D11Device*>(gs_get_device_obj());
 	info.device->GetImmediateContext(&info.context);
 }
 
-void d3d_copy_subregion(d3d_info& info, std::shared_ptr<streamfx::obs::gs::texture> source, uint32_t mip_level,
-						uint32_t width, uint32_t height)
+void d3d_copy_subregion(d3d_info& info, std::shared_ptr<streamfx::obs::gs::texture> source, uint32_t mip_level, uint32_t width, uint32_t height)
 {
 	D3D11_BOX box        = {0, 0, 0, width, height, 1};
 	auto      source_ref = reinterpret_cast<ID3D11Resource*>(gs_texture_get_obj(source->get_object()));
@@ -107,8 +105,7 @@ std::string opengl_translate_framebuffer_status(GLenum error)
 		throw std::runtime_error(sstr.str());                                          \
 	}
 
-void opengl_initialize(opengl_info& info, std::shared_ptr<streamfx::obs::gs::texture> source,
-					   std::shared_ptr<streamfx::obs::gs::texture> target)
+void opengl_initialize(opengl_info& info, std::shared_ptr<streamfx::obs::gs::texture> source, std::shared_ptr<streamfx::obs::gs::texture> target)
 {
 	info.target = *reinterpret_cast<GLuint*>(gs_texture_get_obj(target->get_object()));
 
@@ -120,8 +117,7 @@ void opengl_finalize(opengl_info& info)
 	glDeleteFramebuffers(1, &info.fbo);
 }
 
-void opengl_copy_subregion(opengl_info& info, std::shared_ptr<streamfx::obs::gs::texture> source, uint32_t mip_level,
-						   uint32_t width, uint32_t height)
+void opengl_copy_subregion(opengl_info& info, std::shared_ptr<streamfx::obs::gs::texture> source, uint32_t mip_level, uint32_t width, uint32_t height)
 {
 	GLuint source_ref = *reinterpret_cast<GLuint*>(gs_texture_get_obj(source->get_object()));
 
@@ -134,11 +130,8 @@ void opengl_copy_subregion(opengl_info& info, std::shared_ptr<streamfx::obs::gs:
 	D_OPENGL_CHECK_ERROR("glBindFramebuffer(GL_READ_FRAMEBUFFER, info.fbo);");
 	glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, source_ref,
 						   0); // Origin is a render target, not a texture
-	D_OPENGL_CHECK_ERROR(
-		"glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, origin, mip_level);");
-	D_OPENGL_CHECK_FRAMEBUFFERSTATUS(
-		GL_READ_FRAMEBUFFER,
-		"glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, origin, mip_level);");
+	D_OPENGL_CHECK_ERROR("glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, origin, mip_level);");
+	D_OPENGL_CHECK_FRAMEBUFFERSTATUS(GL_READ_FRAMEBUFFER, "glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, origin, mip_level);");
 
 	// Target -> Texture Unit 1
 	glActiveTexture(GL_TEXTURE1);
@@ -147,8 +140,7 @@ void opengl_copy_subregion(opengl_info& info, std::shared_ptr<streamfx::obs::gs:
 	D_OPENGL_CHECK_ERROR("glBindTexture(GL_TEXTURE_2D, info.target);");
 
 	// Copy Data
-	glCopyTexSubImage2D(GL_TEXTURE_2D, static_cast<GLint>(mip_level), 0, 0, 0, 0, static_cast<GLsizei>(width),
-						static_cast<GLsizei>(height));
+	glCopyTexSubImage2D(GL_TEXTURE_2D, static_cast<GLint>(mip_level), 0, 0, 0, 0, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
 	D_OPENGL_CHECK_ERROR("glCopyTexSubImage2D(GL_TEXTURE_2D, mip_level, 0, 0, 0, 0, width, height);");
 
 	// Target -/-> Texture Unit 1
@@ -192,12 +184,10 @@ streamfx::gfx::mipmapper::mipmapper() : _gfx_util(::streamfx::gfx::util::get())
 
 uint32_t streamfx::gfx::mipmapper::calculate_max_mip_level(uint32_t width, uint32_t height)
 {
-	return static_cast<uint32_t>(
-		1 + std::lroundl(floor(log2(std::max<GLint>(static_cast<GLint>(width), static_cast<GLint>(height))))));
+	return static_cast<uint32_t>(1 + std::lroundl(floor(log2(std::max<GLint>(static_cast<GLint>(width), static_cast<GLint>(height))))));
 }
 
-void streamfx::gfx::mipmapper::rebuild(std::shared_ptr<streamfx::obs::gs::texture> source,
-									   std::shared_ptr<streamfx::obs::gs::texture> target)
+void streamfx::gfx::mipmapper::rebuild(std::shared_ptr<streamfx::obs::gs::texture> source, std::shared_ptr<streamfx::obs::gs::texture> target)
 {
 	{ // Validate arguments and structure.
 		if (!source || !target)
@@ -250,8 +240,7 @@ void streamfx::gfx::mipmapper::rebuild(std::shared_ptr<streamfx::obs::gs::textur
 
 		{
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-			auto cctr = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance,
-														"Mip Level %" PRId64 "", 0);
+			auto cctr = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Mip Level %" PRId64 "", 0);
 #endif
 
 			// Retrieve maximum mip map level.
@@ -283,8 +272,7 @@ void streamfx::gfx::mipmapper::rebuild(std::shared_ptr<streamfx::obs::gs::textur
 		// Render each mip map level.
 		for (size_t mip = 1; mip < max_mip_level; mip++) {
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-			auto cctr = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance,
-														"Mip Level %" PRIuMAX, mip);
+			auto cctr = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Mip Level %" PRIuMAX, mip);
 #endif
 
 			uint32_t cwidth  = std::max<uint32_t>(width >> mip, 1);

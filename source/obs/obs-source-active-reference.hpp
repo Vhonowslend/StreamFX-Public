@@ -25,8 +25,7 @@ namespace streamfx::obs {
 		}
 
 		public:
-		static FORCE_INLINE std::shared_ptr<source_active_reference>
-							add_active_reference(::streamfx::obs::source& source)
+		static FORCE_INLINE std::shared_ptr<source_active_reference> add_active_reference(::streamfx::obs::source& source)
 		{
 			return std::make_shared<source_active_reference>(source);
 		}

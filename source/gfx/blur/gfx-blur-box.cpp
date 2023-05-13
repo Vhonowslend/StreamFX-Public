@@ -71,8 +71,7 @@ std::shared_ptr<::streamfx::gfx::blur::base> streamfx::gfx::blur::box_factory::c
 	case ::streamfx::gfx::blur::type::Area:
 		return std::make_shared<::streamfx::gfx::blur::box>();
 	case ::streamfx::gfx::blur::type::Directional:
-		return std::static_pointer_cast<::streamfx::gfx::blur::box>(
-			std::make_shared<::streamfx::gfx::blur::box_directional>());
+		return std::static_pointer_cast<::streamfx::gfx::blur::box>(std::make_shared<::streamfx::gfx::blur::box_directional>());
 	case ::streamfx::gfx::blur::type::Rotational:
 		return std::make_shared<::streamfx::gfx::blur::box_rotational>();
 	case ::streamfx::gfx::blur::type::Zoom:
@@ -183,8 +182,7 @@ std::shared_ptr<::streamfx::gfx::blur::box_data> streamfx::gfx::blur::box_factor
 	return instance;
 }
 
-streamfx::gfx::blur::box::box()
-	: _data(::streamfx::gfx::blur::box_factory::get().data()), _size(1.), _step_scale({1., 1.})
+streamfx::gfx::blur::box::box() : _data(::streamfx::gfx::blur::box_factory::get().data()), _size(1.), _step_scale({1., 1.})
 {
 	auto gctx      = streamfx::obs::gs::context();
 	_rendertarget  = std::make_shared<::streamfx::obs::gs::rendertarget>(GS_RGBA, GS_ZS_NONE);
@@ -358,8 +356,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_direction
 	streamfx::obs::gs::effect effect = _data->get_effect();
 	if (effect) {
 		effect.get_parameter("pImage").set_texture(_input_texture);
-		effect.get_parameter("pImageTexel")
-			.set_float2(float_t(1. / width * cos(_angle)), float_t(1.f / height * sin(_angle)));
+		effect.get_parameter("pImageTexel").set_float2(float_t(1. / width * cos(_angle)), float_t(1.f / height * sin(_angle)));
 		effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
 		effect.get_parameter("pSize").set_float(float_t(_size));
 		effect.get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(_size) * 2.0f + 1.0f)));

@@ -74,8 +74,7 @@ namespace streamfx::gfx {
 			std::shared_ptr<streamfx::obs::gs::rendertarget>         _source_rendertarget;
 
 			public:
-			texture_parameter(streamfx::gfx::shader::shader* parent, streamfx::obs::gs::effect_parameter param,
-							  std::string prefix);
+			texture_parameter(streamfx::gfx::shader::shader* parent, streamfx::obs::gs::effect_parameter param, std::string prefix);
 			virtual ~texture_parameter();
 
 			void defaults(obs_data_t* settings) override;

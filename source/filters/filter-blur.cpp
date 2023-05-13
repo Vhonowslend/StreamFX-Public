@@ -111,11 +111,7 @@ struct local_blur_subtype_t {
 };
 
 static std::map<std::string, local_blur_type_t> list_of_types = {
-	{"box", {&::streamfx::gfx::blur::box_factory::get, S_BLUR_TYPE_BOX}},
-	{"box_linear", {&::streamfx::gfx::blur::box_linear_factory::get, S_BLUR_TYPE_BOX_LINEAR}},
-	{"gaussian", {&::streamfx::gfx::blur::gaussian_factory::get, S_BLUR_TYPE_GAUSSIAN}},
-	{"gaussian_linear", {&::streamfx::gfx::blur::gaussian_linear_factory::get, S_BLUR_TYPE_GAUSSIAN_LINEAR}},
-	{"dual_filtering", {&::streamfx::gfx::blur::dual_filtering_factory::get, S_BLUR_TYPE_DUALFILTERING}},
+	{"box", {&::streamfx::gfx::blur::box_factory::get, S_BLUR_TYPE_BOX}}, {"box_linear", {&::streamfx::gfx::blur::box_linear_factory::get, S_BLUR_TYPE_BOX_LINEAR}}, {"gaussian", {&::streamfx::gfx::blur::gaussian_factory::get, S_BLUR_TYPE_GAUSSIAN}}, {"gaussian_linear", {&::streamfx::gfx::blur::gaussian_linear_factory::get, S_BLUR_TYPE_GAUSSIAN_LINEAR}}, {"dual_filtering", {&::streamfx::gfx::blur::dual_filtering_factory::get, S_BLUR_TYPE_DUALFILTERING}},
 };
 static std::map<std::string, local_blur_subtype_t> list_of_subtypes = {
 	{"area", {::streamfx::gfx::blur::type::Area, S_BLUR_SUBTYPE_AREA}},
@@ -124,9 +120,7 @@ static std::map<std::string, local_blur_subtype_t> list_of_subtypes = {
 	{"zoom", {::streamfx::gfx::blur::type::Zoom, S_BLUR_SUBTYPE_ZOOM}},
 };
 
-blur_instance::blur_instance(obs_data_t* settings, obs_source_t* self)
-	: obs::source_instance(settings, self), _gfx_util(::streamfx::gfx::util::get()), _source_rendered(false),
-	  _output_rendered(false)
+blur_instance::blur_instance(obs_data_t* settings, obs_source_t* self) : obs::source_instance(settings, self), _gfx_util(::streamfx::gfx::util::get()), _source_rendered(false), _output_rendered(false)
 {
 	{
 		auto gctx = streamfx::obs::gs::context();
@@ -151,8 +145,7 @@ blur_instance::blur_instance(obs_data_t* settings, obs_source_t* self)
 
 blur_instance::~blur_instance() {}
 
-bool blur_instance::apply_mask_parameters(streamfx::obs::gs::effect effect, gs_texture_t* original_texture,
-										  gs_texture_t* blurred_texture)
+bool blur_instance::apply_mask_parameters(streamfx::obs::gs::effect effect, gs_texture_t* original_texture, gs_texture_t* blurred_texture)
 {
 	if (effect.has_parameter("image_orig")) {
 		effect.get_parameter("image_orig").set_texture(original_texture);
@@ -297,14 +290,13 @@ void blur_instance::update(obs_data_t* settings)
 			_mask.type = static_cast<mask_type>(obs_data_get_int(settings, ST_KEY_MASK_TYPE));
 			switch (_mask.type) {
 			case mask_type::Region:
-				_mask.region.left    = float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_LEFT) / 100.0);
-				_mask.region.top     = float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_TOP) / 100.0);
-				_mask.region.right   = 1.0f - float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_RIGHT) / 100.0);
-				_mask.region.bottom  = 1.0f - float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_BOTTOM) / 100.0);
-				_mask.region.feather = float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_FEATHER) / 100.0);
-				_mask.region.feather_shift =
-					float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_FEATHER_SHIFT) / 100.0);
-				_mask.region.invert = obs_data_get_bool(settings, ST_KEY_MASK_REGION_INVERT);
+				_mask.region.left          = float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_LEFT) / 100.0);
+				_mask.region.top           = float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_TOP) / 100.0);
+				_mask.region.right         = 1.0f - float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_RIGHT) / 100.0);
+				_mask.region.bottom        = 1.0f - float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_BOTTOM) / 100.0);
+				_mask.region.feather       = float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_FEATHER) / 100.0);
+				_mask.region.feather_shift = float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_FEATHER_SHIFT) / 100.0);
+				_mask.region.invert        = obs_data_get_bool(settings, ST_KEY_MASK_REGION_INVERT);
 				break;
 			case mask_type::Image:
 				_mask.image.path = obs_data_get_string(settings, ST_KEY_MASK_IMAGE);
@@ -335,13 +327,11 @@ void blur_instance::video_tick(float)
 		} else {
 			_blur->set_step_scale(1.0, 1.0);
 		}
-		if ((_blur->get_type() == ::streamfx::gfx::blur::type::Directional)
-			|| (_blur->get_type() == ::streamfx::gfx::blur::type::Rotational)) {
+		if ((_blur->get_type() == ::streamfx::gfx::blur::type::Directional) || (_blur->get_type() == ::streamfx::gfx::blur::type::Rotational)) {
 			auto obj = std::dynamic_pointer_cast<::streamfx::gfx::blur::base_angle>(_blur);
 			obj->set_angle(_blur_angle);
 		}
-		if ((_blur->get_type() == ::streamfx::gfx::blur::type::Zoom)
-			|| (_blur->get_type() == ::streamfx::gfx::blur::type::Rotational)) {
+		if ((_blur->get_type() == ::streamfx::gfx::blur::type::Zoom) || (_blur->get_type() == ::streamfx::gfx::blur::type::Rotational)) {
 			auto obj = std::dynamic_pointer_cast<::streamfx::gfx::blur::base_center>(_blur);
 			obj->set_center(_blur_center.first, _blur_center.second);
 		}
@@ -354,20 +344,17 @@ void blur_instance::video_tick(float)
 				_mask.image.texture  = std::make_shared<streamfx::obs::gs::texture>(_mask.image.path);
 				_mask.image.path_old = _mask.image.path;
 			} catch (...) {
-				DLOG_ERROR("<filter-blur> Instance '%s' failed to load image '%s'.", obs_source_get_name(_self),
-						   _mask.image.path.c_str());
+				DLOG_ERROR("<filter-blur> Instance '%s' failed to load image '%s'.", obs_source_get_name(_self), _mask.image.path.c_str());
 			}
 		}
 	} else if (_mask.type == mask_type::Source) {
 		if (_mask.source.name_old != _mask.source.name) {
 			try {
-				_mask.source.source_texture = std::make_shared<streamfx::gfx::source_texture>(
-					::streamfx::obs::source{_mask.source.name}, ::streamfx::obs::source{_self, false});
-				_mask.source.is_scene = (obs_scene_from_source(_mask.source.source_texture->get_object()) != nullptr);
-				_mask.source.name_old = _mask.source.name;
+				_mask.source.source_texture = std::make_shared<streamfx::gfx::source_texture>(::streamfx::obs::source{_mask.source.name}, ::streamfx::obs::source{_self, false});
+				_mask.source.is_scene       = (obs_scene_from_source(_mask.source.source_texture->get_object()) != nullptr);
+				_mask.source.name_old       = _mask.source.name;
 			} catch (...) {
-				DLOG_ERROR("<filter-blur> Instance '%s' failed to grab source '%s'.", obs_source_get_name(_self),
-						   _mask.source.name.c_str());
+				DLOG_ERROR("<filter-blur> Instance '%s' failed to grab source '%s'.", obs_source_get_name(_self), _mask.source.name.c_str());
 			}
 		}
 	}
@@ -391,8 +378,7 @@ void blur_instance::video_render(gs_effect_t* effect)
 	}
 
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Blur '%s'",
-										 obs_source_get_name(_self)};
+	streamfx::obs::gs::debug_marker gdmp{streamfx::obs::gs::debug_color_source, "Blur '%s'", obs_source_get_name(_self)};
 #endif
 
 	if (!_source_rendered) {
@@ -517,8 +503,7 @@ void blur_instance::video_render(gs_effect_t* effect)
 				}
 
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-				streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_capture, "Capture '%s'",
-													obs_source_get_name(_mask.source.source_texture->get_object())};
+				streamfx::obs::gs::debug_marker gdm{streamfx::obs::gs::debug_color_capture, "Capture '%s'", obs_source_get_name(_mask.source.source_texture->get_object())};
 #endif
 
 				this->_mask.source.texture = this->_mask.source.source_texture->render(source_width, source_height);
@@ -697,25 +682,19 @@ bool modified_properties(void*, obs_properties_t* props, obs_property* prop, obs
 
 		// Blur Sub-Type
 		{
-			bool has_angle_support = (subtype_found->second.type == ::streamfx::gfx::blur::type::Directional)
-									 || (subtype_found->second.type == ::streamfx::gfx::blur::type::Rotational);
-			bool has_center_support = (subtype_found->second.type == ::streamfx::gfx::blur::type::Rotational)
-									  || (subtype_found->second.type == ::streamfx::gfx::blur::type::Zoom);
+			bool has_angle_support     = (subtype_found->second.type == ::streamfx::gfx::blur::type::Directional) || (subtype_found->second.type == ::streamfx::gfx::blur::type::Rotational);
+			bool has_center_support    = (subtype_found->second.type == ::streamfx::gfx::blur::type::Rotational) || (subtype_found->second.type == ::streamfx::gfx::blur::type::Zoom);
 			bool has_stepscale_support = type_found->second.fn().is_step_scale_supported(subtype_found->second.type);
 			bool show_scaling          = obs_data_get_bool(settings, ST_KEY_STEPSCALE) && has_stepscale_support;
 
 			/// Size
 			p = obs_properties_get(props, ST_KEY_SIZE);
-			obs_property_float_set_limits(p, type_found->second.fn().get_min_size(subtype_found->second.type),
-										  type_found->second.fn().get_max_size(subtype_found->second.type),
-										  type_found->second.fn().get_step_size(subtype_found->second.type));
+			obs_property_float_set_limits(p, type_found->second.fn().get_min_size(subtype_found->second.type), type_found->second.fn().get_max_size(subtype_found->second.type), type_found->second.fn().get_step_size(subtype_found->second.type));
 
 			/// Angle
 			p = obs_properties_get(props, ST_KEY_ANGLE);
 			obs_property_set_visible(p, has_angle_support);
-			obs_property_float_set_limits(p, type_found->second.fn().get_min_angle(subtype_found->second.type),
-										  type_found->second.fn().get_max_angle(subtype_found->second.type),
-										  type_found->second.fn().get_step_angle(subtype_found->second.type));
+			obs_property_float_set_limits(p, type_found->second.fn().get_min_angle(subtype_found->second.type), type_found->second.fn().get_max_angle(subtype_found->second.type), type_found->second.fn().get_step_angle(subtype_found->second.type));
 
 			/// Center, Radius
 			obs_property_set_visible(obs_properties_get(props, ST_KEY_CENTER_X), has_center_support);
@@ -725,14 +704,10 @@ bool modified_properties(void*, obs_properties_t* props, obs_property* prop, obs
 			obs_property_set_visible(obs_properties_get(props, ST_KEY_STEPSCALE), has_stepscale_support);
 			p = obs_properties_get(props, ST_KEY_STEPSCALE_X);
 			obs_property_set_visible(p, show_scaling);
-			obs_property_float_set_limits(p, type_found->second.fn().get_min_step_scale_x(subtype_found->second.type),
-										  type_found->second.fn().get_max_step_scale_x(subtype_found->second.type),
-										  type_found->second.fn().get_step_step_scale_x(subtype_found->second.type));
+			obs_property_float_set_limits(p, type_found->second.fn().get_min_step_scale_x(subtype_found->second.type), type_found->second.fn().get_max_step_scale_x(subtype_found->second.type), type_found->second.fn().get_step_step_scale_x(subtype_found->second.type));
 			p = obs_properties_get(props, ST_KEY_STEPSCALE_Y);
 			obs_property_set_visible(p, show_scaling);
-			obs_property_float_set_limits(p, type_found->second.fn().get_min_step_scale_x(subtype_found->second.type),
-										  type_found->second.fn().get_max_step_scale_x(subtype_found->second.type),
-										  type_found->second.fn().get_step_step_scale_x(subtype_found->second.type));
+			obs_property_float_set_limits(p, type_found->second.fn().get_min_step_scale_x(subtype_found->second.type), type_found->second.fn().get_max_step_scale_x(subtype_found->second.type), type_found->second.fn().get_step_step_scale_x(subtype_found->second.type));
 		}
 
 		{ // Masking
@@ -771,15 +746,13 @@ obs_properties_t* blur_factory::get_properties2(blur_instance* data)
 
 #ifdef ENABLE_FRONTEND
 	{
-		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN),
-								   streamfx::filter::blur::blur_factory::on_manual_open, nullptr);
+		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), streamfx::filter::blur::blur_factory::on_manual_open, nullptr);
 	}
 #endif
 
 	// Blur Type and Sub-Type
 	{
-		p = obs_properties_add_list(pr, ST_KEY_TYPE, D_TRANSLATE(ST_I18N_TYPE), OBS_COMBO_TYPE_LIST,
-									OBS_COMBO_FORMAT_STRING);
+		p = obs_properties_add_list(pr, ST_KEY_TYPE, D_TRANSLATE(ST_I18N_TYPE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 		obs_property_set_modified_callback2(p, modified_properties, this);
 		obs_property_list_add_string(p, D_TRANSLATE(S_BLUR_TYPE_BOX), "box");
 		obs_property_list_add_string(p, D_TRANSLATE(S_BLUR_TYPE_BOX_LINEAR), "box_linear");
@@ -787,8 +760,7 @@ obs_properties_t* blur_factory::get_properties2(blur_instance* data)
 		obs_property_list_add_string(p, D_TRANSLATE(S_BLUR_TYPE_GAUSSIAN_LINEAR), "gaussian_linear");
 		obs_property_list_add_string(p, D_TRANSLATE(S_BLUR_TYPE_DUALFILTERING), "dual_filtering");
 
-		p = obs_properties_add_list(pr, ST_KEY_SUBTYPE, D_TRANSLATE(ST_I18N_SUBTYPE), OBS_COMBO_TYPE_LIST,
-									OBS_COMBO_FORMAT_STRING);
+		p = obs_properties_add_list(pr, ST_KEY_SUBTYPE, D_TRANSLATE(ST_I18N_SUBTYPE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 		obs_property_set_modified_callback2(p, modified_properties, this);
 		obs_property_list_add_string(p, D_TRANSLATE(S_BLUR_SUBTYPE_AREA), "area");
 		obs_property_list_add_string(p, D_TRANSLATE(S_BLUR_SUBTYPE_DIRECTIONAL), "directional");
@@ -805,47 +777,35 @@ obs_properties_t* blur_factory::get_properties2(blur_instance* data)
 
 		p = obs_properties_add_bool(pr, ST_KEY_STEPSCALE, D_TRANSLATE(ST_I18N_STEPSCALE));
 		obs_property_set_modified_callback2(p, modified_properties, this);
-		p = obs_properties_add_float_slider(pr, ST_KEY_STEPSCALE_X, D_TRANSLATE(ST_I18N_STEPSCALE_X), 0.0, 1000.0,
-											0.01);
-		p = obs_properties_add_float_slider(pr, ST_KEY_STEPSCALE_Y, D_TRANSLATE(ST_I18N_STEPSCALE_Y), 0.0, 1000.0,
-											0.01);
+		p = obs_properties_add_float_slider(pr, ST_KEY_STEPSCALE_X, D_TRANSLATE(ST_I18N_STEPSCALE_X), 0.0, 1000.0, 0.01);
+		p = obs_properties_add_float_slider(pr, ST_KEY_STEPSCALE_Y, D_TRANSLATE(ST_I18N_STEPSCALE_Y), 0.0, 1000.0, 0.01);
 	}
 
 	// Masking
 	{
 		p = obs_properties_add_bool(pr, ST_KEY_MASK, D_TRANSLATE(ST_I18N_MASK));
 		obs_property_set_modified_callback2(p, modified_properties, this);
-		p = obs_properties_add_list(pr, ST_KEY_MASK_TYPE, D_TRANSLATE(ST_I18N_MASK_TYPE), OBS_COMBO_TYPE_LIST,
-									OBS_COMBO_FORMAT_INT);
+		p = obs_properties_add_list(pr, ST_KEY_MASK_TYPE, D_TRANSLATE(ST_I18N_MASK_TYPE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 		obs_property_set_modified_callback2(p, modified_properties, this);
 		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_MASK_TYPE_REGION), static_cast<int64_t>(mask_type::Region));
 		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_MASK_TYPE_IMAGE), static_cast<int64_t>(mask_type::Image));
 		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_MASK_TYPE_SOURCE), static_cast<int64_t>(mask_type::Source));
 		/// Region
-		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_REGION_LEFT, D_TRANSLATE(ST_I18N_MASK_REGION_LEFT), 0.0,
-											100.0, 0.01);
-		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_REGION_TOP, D_TRANSLATE(ST_I18N_MASK_REGION_TOP), 0.0,
-											100.0, 0.01);
-		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_REGION_RIGHT, D_TRANSLATE(ST_I18N_MASK_REGION_RIGHT), 0.0,
-											100.0, 0.01);
-		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_REGION_BOTTOM, D_TRANSLATE(ST_I18N_MASK_REGION_BOTTOM), 0.0,
-											100.0, 0.01);
-		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_REGION_FEATHER, D_TRANSLATE(ST_I18N_MASK_REGION_FEATHER),
-											0.0, 50.0, 0.01);
-		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_REGION_FEATHER_SHIFT,
-											D_TRANSLATE(ST_I18N_MASK_REGION_FEATHER_SHIFT), -100.0, 100.0, 0.01);
+		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_REGION_LEFT, D_TRANSLATE(ST_I18N_MASK_REGION_LEFT), 0.0, 100.0, 0.01);
+		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_REGION_TOP, D_TRANSLATE(ST_I18N_MASK_REGION_TOP), 0.0, 100.0, 0.01);
+		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_REGION_RIGHT, D_TRANSLATE(ST_I18N_MASK_REGION_RIGHT), 0.0, 100.0, 0.01);
+		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_REGION_BOTTOM, D_TRANSLATE(ST_I18N_MASK_REGION_BOTTOM), 0.0, 100.0, 0.01);
+		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_REGION_FEATHER, D_TRANSLATE(ST_I18N_MASK_REGION_FEATHER), 0.0, 50.0, 0.01);
+		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_REGION_FEATHER_SHIFT, D_TRANSLATE(ST_I18N_MASK_REGION_FEATHER_SHIFT), -100.0, 100.0, 0.01);
 		p = obs_properties_add_bool(pr, ST_KEY_MASK_REGION_INVERT, D_TRANSLATE(ST_I18N_MASK_REGION_INVERT));
 		/// Image
 		{
-			std::string filter =
-				translate_string("%s (%s);;* (*.*)", D_TRANSLATE(S_FILETYPE_IMAGES), S_FILEFILTERS_TEXTURE);
+			std::string filter = translate_string("%s (%s);;* (*.*)", D_TRANSLATE(S_FILETYPE_IMAGES), S_FILEFILTERS_TEXTURE);
 			_translation_cache.push_back(filter);
-			p = obs_properties_add_path(pr, ST_KEY_MASK_IMAGE, D_TRANSLATE(ST_I18N_MASK_IMAGE), OBS_PATH_FILE,
-										_translation_cache.back().c_str(), nullptr);
+			p = obs_properties_add_path(pr, ST_KEY_MASK_IMAGE, D_TRANSLATE(ST_I18N_MASK_IMAGE), OBS_PATH_FILE, _translation_cache.back().c_str(), nullptr);
 		}
 		/// Source
-		p = obs_properties_add_list(pr, ST_KEY_MASK_SOURCE, D_TRANSLATE(ST_I18N_MASK_SOURCE), OBS_COMBO_TYPE_LIST,
-									OBS_COMBO_FORMAT_STRING);
+		p = obs_properties_add_list(pr, ST_KEY_MASK_SOURCE, D_TRANSLATE(ST_I18N_MASK_SOURCE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 		obs_property_list_add_string(p, "", "");
 		obs::source_tracker::get()->enumerate(
 			[&p](std::string name, ::streamfx::obs::source) {
@@ -863,8 +823,7 @@ obs_properties_t* blur_factory::get_properties2(blur_instance* data)
 		/// Shared
 		p = obs_properties_add_color(pr, ST_KEY_MASK_COLOR, D_TRANSLATE(ST_I18N_MASK_COLOR));
 		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_ALPHA, D_TRANSLATE(ST_I18N_MASK_ALPHA), 0.0, 100.0, 0.1);
-		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_MULTIPLIER, D_TRANSLATE(ST_I18N_MASK_MULTIPLIER), 0.0, 10.0,
-											0.01);
+		p = obs_properties_add_float_slider(pr, ST_KEY_MASK_MULTIPLIER, D_TRANSLATE(ST_I18N_MASK_MULTIPLIER), 0.0, 10.0, 0.01);
 	}
 
 	return pr;

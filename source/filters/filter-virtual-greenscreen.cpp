@@ -77,9 +77,7 @@ std::string streamfx::filter::virtual_greenscreen::string(virtual_greenscreen_pr
 virtual_greenscreen_instance::virtual_greenscreen_instance(obs_data_t* data, obs_source_t* self)
 	: obs::source_instance(data, self),
 
-	  _size(1, 1), _provider(virtual_greenscreen_provider::INVALID),
-	  _provider_ui(virtual_greenscreen_provider::INVALID), _provider_ready(false), _provider_lock(), _provider_task(),
-	  _effect(), _channel0_sampler(), _channel1_sampler(), _input(), _output_color(), _output_alpha(), _dirty(true)
+	  _size(1, 1), _provider(virtual_greenscreen_provider::INVALID), _provider_ui(virtual_greenscreen_provider::INVALID), _provider_ready(false), _provider_lock(), _provider_task(), _effect(), _channel0_sampler(), _channel1_sampler(), _input(), _output_color(), _output_alpha(), _dirty(true)
 {
 	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
 
@@ -155,8 +153,7 @@ void virtual_greenscreen_instance::migrate(obs_data_t* data, uint64_t version) {
 void virtual_greenscreen_instance::update(obs_data_t* data)
 {
 	// Check if the user changed which Denoising provider we use.
-	virtual_greenscreen_provider provider =
-		static_cast<virtual_greenscreen_provider>(obs_data_get_int(data, ST_KEY_PROVIDER));
+	virtual_greenscreen_provider provider = static_cast<virtual_greenscreen_provider>(obs_data_get_int(data, ST_KEY_PROVIDER));
 	if (provider == virtual_greenscreen_provider::AUTOMATIC) {
 		provider = virtual_greenscreen_factory::get()->find_ideal_provider();
 	}
@@ -252,10 +249,8 @@ void virtual_greenscreen_instance::video_render(gs_effect_t* effect)
 	}
 
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
-	::streamfx::obs::gs::debug_marker profiler0{::streamfx::obs::gs::debug_color_source,
-												"StreamFX Virtual Green-Screen"};
-	::streamfx::obs::gs::debug_marker profiler0_0{::streamfx::obs::gs::debug_color_gray, "'%s' on '%s'",
-												  obs_source_get_name(_self), obs_source_get_name(parent)};
+	::streamfx::obs::gs::debug_marker profiler0{::streamfx::obs::gs::debug_color_source, "StreamFX Virtual Green-Screen"};
+	::streamfx::obs::gs::debug_marker profiler0_0{::streamfx::obs::gs::debug_color_gray, "'%s' on '%s'", obs_source_get_name(_self), obs_source_get_name(parent)};
 #endif
 
 	if (_dirty) {
@@ -349,8 +344,7 @@ struct switch_provider_data_t {
 	virtual_greenscreen_provider provider;
 };
 
-void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::switch_provider(
-	virtual_greenscreen_provider provider)
+void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::switch_provider(virtual_greenscreen_provider provider)
 {
 	std::unique_lock<std::mutex> ul(_provider_lock);
 
@@ -364,8 +358,7 @@ void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::switch
 	// - Doesn't guarantee that the task is properly killed off.
 
 	// Log information.
-	D_LOG_INFO("Instance '%s' is switching provider from '%s' to '%s'.", obs_source_get_name(_self), cstring(_provider),
-			   cstring(provider));
+	D_LOG_INFO("Instance '%s' is switching provider from '%s' to '%s'.", obs_source_get_name(_self), cstring(_provider), cstring(provider));
 
 	// If there is an existing task, attempt to cancel it.
 	if (_provider_task) {
@@ -385,12 +378,10 @@ void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::switch
 	_provider     = provider;
 
 	// Then spawn a new task to switch provider.
-	_provider_task = streamfx::threadpool()->push(
-		std::bind(&virtual_greenscreen_instance::task_switch_provider, this, std::placeholders::_1), spd);
+	_provider_task = streamfx::threadpool()->push(std::bind(&virtual_greenscreen_instance::task_switch_provider, this, std::placeholders::_1), spd);
 }
 
-void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::task_switch_provider(
-	util::threadpool::task_data_t data)
+void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::task_switch_provider(util::threadpool::task_data_t data)
 {
 	std::shared_ptr<switch_provider_data_t> spd = std::static_pointer_cast<switch_provider_data_t>(data);
 
@@ -429,8 +420,7 @@ void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::task_s
 		}
 
 		// Log information.
-		D_LOG_INFO("Instance '%s' switched provider from '%s' to '%s'.", obs_source_get_name(_self),
-				   cstring(spd->provider), cstring(_provider));
+		D_LOG_INFO("Instance '%s' switched provider from '%s' to '%s'.", obs_source_get_name(_self), cstring(spd->provider), cstring(_provider));
 
 		// Set the new provider as valid.
 		_provider_ready = true;
@@ -460,8 +450,7 @@ void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::nvvfxg
 	_nvidia_fx->size(_size);
 }
 
-void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::nvvfxgs_process(
-	std::shared_ptr<::streamfx::obs::gs::texture>& color, std::shared_ptr<::streamfx::obs::gs::texture>& alpha)
+void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::nvvfxgs_process(std::shared_ptr<::streamfx::obs::gs::texture>& color, std::shared_ptr<::streamfx::obs::gs::texture>& alpha)
 {
 	if (!_nvidia_fx) {
 		return;
@@ -474,17 +463,12 @@ void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::nvvfxg
 void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::nvvfxgs_properties(obs_properties_t* props)
 {
 	obs_properties_t* grp = obs_properties_create();
-	obs_properties_add_group(props, ST_KEY_NVIDIA_GREENSCREEN, D_TRANSLATE(ST_I18N_NVIDIA_GREENSCREEN),
-							 OBS_GROUP_NORMAL, grp);
+	obs_properties_add_group(props, ST_KEY_NVIDIA_GREENSCREEN, D_TRANSLATE(ST_I18N_NVIDIA_GREENSCREEN), OBS_GROUP_NORMAL, grp);
 
 	{
-		auto p =
-			obs_properties_add_list(grp, ST_KEY_NVIDIA_GREENSCREEN_MODE, D_TRANSLATE(ST_I18N_NVIDIA_GREENSCREEN_MODE),
-									OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_NVIDIA_GREENSCREEN_MODE_PERFORMANCE),
-								  static_cast<int64_t>(::streamfx::nvidia::vfx::greenscreen_mode::PERFORMANCE));
-		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_NVIDIA_GREENSCREEN_MODE_QUALITY),
-								  static_cast<int64_t>(::streamfx::nvidia::vfx::greenscreen_mode::QUALITY));
+		auto p = obs_properties_add_list(grp, ST_KEY_NVIDIA_GREENSCREEN_MODE, D_TRANSLATE(ST_I18N_NVIDIA_GREENSCREEN_MODE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_NVIDIA_GREENSCREEN_MODE_PERFORMANCE), static_cast<int64_t>(::streamfx::nvidia::vfx::greenscreen_mode::PERFORMANCE));
+		obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_NVIDIA_GREENSCREEN_MODE_QUALITY), static_cast<int64_t>(::streamfx::nvidia::vfx::greenscreen_mode::QUALITY));
 	}
 }
 
@@ -493,8 +477,7 @@ void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::nvvfxg
 	if (!_nvidia_fx)
 		return;
 
-	_nvidia_fx->set_mode(
-		static_cast<::streamfx::nvidia::vfx::greenscreen_mode>(obs_data_get_int(data, ST_KEY_NVIDIA_GREENSCREEN_MODE)));
+	_nvidia_fx->set_mode(static_cast<::streamfx::nvidia::vfx::greenscreen_mode>(obs_data_get_int(data, ST_KEY_NVIDIA_GREENSCREEN_MODE)));
 }
 
 #endif
@@ -557,8 +540,7 @@ void virtual_greenscreen_factory::get_defaults2(obs_data_t* data)
 	obs_data_set_default_int(data, ST_KEY_PROVIDER, static_cast<int64_t>(virtual_greenscreen_provider::AUTOMATIC));
 
 #ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
-	obs_data_set_default_int(data, ST_KEY_NVIDIA_GREENSCREEN_MODE,
-							 static_cast<int64_t>(::streamfx::nvidia::vfx::greenscreen_mode::QUALITY));
+	obs_data_set_default_int(data, ST_KEY_NVIDIA_GREENSCREEN_MODE, static_cast<int64_t>(::streamfx::nvidia::vfx::greenscreen_mode::QUALITY));
 #endif
 }
 
@@ -581,8 +563,7 @@ obs_properties_t* virtual_greenscreen_factory::get_properties2(virtual_greenscre
 
 #ifdef ENABLE_FRONTEND
 	{
-		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN),
-								   virtual_greenscreen_factory::on_manual_open, nullptr);
+		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), virtual_greenscreen_factory::on_manual_open, nullptr);
 	}
 #endif
 
@@ -595,13 +576,10 @@ obs_properties_t* virtual_greenscreen_factory::get_properties2(virtual_greenscre
 		obs_properties_add_group(pr, S_ADVANCED, D_TRANSLATE(S_ADVANCED), OBS_GROUP_NORMAL, grp);
 
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_PROVIDER, D_TRANSLATE(ST_I18N_PROVIDER), OBS_COMBO_TYPE_LIST,
-											 OBS_COMBO_FORMAT_INT);
+			auto p = obs_properties_add_list(grp, ST_KEY_PROVIDER, D_TRANSLATE(ST_I18N_PROVIDER), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_set_modified_callback(p, modified_provider);
-			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC),
-									  static_cast<int64_t>(virtual_greenscreen_provider::AUTOMATIC));
-			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_PROVIDER_NVIDIA_GREENSCREEN),
-									  static_cast<int64_t>(virtual_greenscreen_provider::NVIDIA_GREENSCREEN));
+			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), static_cast<int64_t>(virtual_greenscreen_provider::AUTOMATIC));
+			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_PROVIDER_NVIDIA_GREENSCREEN), static_cast<int64_t>(virtual_greenscreen_provider::NVIDIA_GREENSCREEN));
 		}
 	}
 
@@ -624,8 +602,7 @@ bool virtual_greenscreen_factory::on_manual_open(obs_properties_t* props, obs_pr
 }
 #endif
 
-bool streamfx::filter::virtual_greenscreen::virtual_greenscreen_factory::is_provider_available(
-	virtual_greenscreen_provider provider)
+bool streamfx::filter::virtual_greenscreen::virtual_greenscreen_factory::is_provider_available(virtual_greenscreen_provider provider)
 {
 	switch (provider) {
 #ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA

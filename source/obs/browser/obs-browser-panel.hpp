@@ -52,11 +52,9 @@ namespace streamfx::obs {
 		virtual bool initialized(void)           = 0;
 		virtual bool wait_for_browser_init(void) = 0;
 
-		virtual QCefWidget* create_widget(QWidget* parent, const std::string& url,
-										  QCefCookieManager* cookie_manager = nullptr) = 0;
+		virtual QCefWidget* create_widget(QWidget* parent, const std::string& url, QCefCookieManager* cookie_manager = nullptr) = 0;
 
-		virtual QCefCookieManager* create_cookie_manager(const std::string& storage_path,
-														 bool               persist_session_cookies = false) = 0;
+		virtual QCefCookieManager* create_cookie_manager(const std::string& storage_path, bool persist_session_cookies = false) = 0;
 
 		virtual BPtr<char> get_cookie_path(const std::string& storage_path) = 0;
 

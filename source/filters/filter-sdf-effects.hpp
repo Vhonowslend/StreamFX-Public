@@ -80,8 +80,7 @@ namespace streamfx::filter::sdf_effects {
 		virtual void video_render(gs_effect_t*) override;
 	};
 
-	class sdf_effects_factory : public obs::source_factory<filter::sdf_effects::sdf_effects_factory,
-														   filter::sdf_effects::sdf_effects_instance> {
+	class sdf_effects_factory : public obs::source_factory<filter::sdf_effects::sdf_effects_factory, filter::sdf_effects::sdf_effects_instance> {
 		public:
 		sdf_effects_factory();
 		virtual ~sdf_effects_factory();

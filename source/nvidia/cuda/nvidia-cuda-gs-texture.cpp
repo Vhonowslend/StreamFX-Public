@@ -29,8 +29,7 @@ streamfx::nvidia::cuda::gstexture::~gstexture()
 	_cuda->cuGraphicsUnregisterResource(_resource);
 }
 
-streamfx::nvidia::cuda::gstexture::gstexture(std::shared_ptr<streamfx::obs::gs::texture> texture)
-	: _cuda(::streamfx::nvidia::cuda::cuda::get()), _texture(texture), _resource(), _is_mapped(false), _pointer()
+streamfx::nvidia::cuda::gstexture::gstexture(std::shared_ptr<streamfx::obs::gs::texture> texture) : _cuda(::streamfx::nvidia::cuda::cuda::get()), _texture(texture), _resource(), _is_mapped(false), _pointer()
 {
 	D_LOG_DEBUG("Initializating... (Addr: 0x%" PRIuPTR ")", this);
 
@@ -69,8 +68,7 @@ streamfx::nvidia::cuda::gstexture::gstexture(std::shared_ptr<streamfx::obs::gs::
 #endif
 }
 
-streamfx::nvidia::cuda::array_t
-	streamfx::nvidia::cuda::gstexture::map(std::shared_ptr<streamfx::nvidia::cuda::stream> stream)
+streamfx::nvidia::cuda::array_t streamfx::nvidia::cuda::gstexture::map(std::shared_ptr<streamfx::nvidia::cuda::stream> stream)
 {
 	if (_is_mapped) {
 		return _pointer;

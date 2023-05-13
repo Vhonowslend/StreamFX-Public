@@ -32,8 +32,7 @@ namespace streamfx::util {
 		curl_debug_callback_t              _debug_callback;
 		std::map<std::string, std::string> _headers;
 
-		static int32_t debug_helper(CURL* handle, curl_infotype type, char* data, size_t size,
-									streamfx::util::curl* userptr);
+		static int32_t debug_helper(CURL* handle, curl_infotype type, char* data, size_t size, streamfx::util::curl* userptr);
 		static size_t  read_helper(void*, size_t, size_t, streamfx::util::curl*);
 		static size_t  write_helper(void*, size_t, size_t, streamfx::util::curl*);
 		static int32_t xferinfo_callback(streamfx::util::curl*, curl_off_t, curl_off_t, curl_off_t, curl_off_t);

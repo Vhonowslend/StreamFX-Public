@@ -149,26 +149,19 @@ bool swscale::initialize(int flags)
 	if (this->context) {
 		return false;
 	}
-	if (source_size.first == 0 || source_size.second == 0 || source_format == AV_PIX_FMT_NONE
-		|| source_colorspace == AVCOL_SPC_UNSPECIFIED) {
+	if (source_size.first == 0 || source_size.second == 0 || source_format == AV_PIX_FMT_NONE || source_colorspace == AVCOL_SPC_UNSPECIFIED) {
 		throw std::invalid_argument("not all source parameters were set");
 	}
-	if (target_size.first == 0 || target_size.second == 0 || target_format == AV_PIX_FMT_NONE
-		|| target_colorspace == AVCOL_SPC_UNSPECIFIED) {
+	if (target_size.first == 0 || target_size.second == 0 || target_format == AV_PIX_FMT_NONE || target_colorspace == AVCOL_SPC_UNSPECIFIED) {
 		throw std::invalid_argument("not all target parameters were set");
 	}
 
-	this->context =
-		sws_getContext(static_cast<int>(source_size.first), static_cast<int>(source_size.second), source_format,
-					   static_cast<int>(target_size.first), static_cast<int>(target_size.second), target_format, flags,
-					   nullptr, nullptr, nullptr);
+	this->context = sws_getContext(static_cast<int>(source_size.first), static_cast<int>(source_size.second), source_format, static_cast<int>(target_size.first), static_cast<int>(target_size.second), target_format, flags, nullptr, nullptr, nullptr);
 	if (!this->context) {
 		return false;
 	}
 
-	sws_setColorspaceDetails(this->context, sws_getCoefficients(source_colorspace), source_full_range ? 1 : 0,
-							 sws_getCoefficients(target_colorspace), target_full_range ? 1 : 0, 1L << 16 | 0L,
-							 1L << 16 | 0L, 1L << 16 | 0L);
+	sws_setColorspaceDetails(this->context, sws_getCoefficients(source_colorspace), source_full_range ? 1 : 0, sws_getCoefficients(target_colorspace), target_full_range ? 1 : 0, 1L << 16 | 0L, 1L << 16 | 0L, 1L << 16 | 0L);
 
 	return true;
 }
@@ -183,13 +176,11 @@ bool swscale::finalize()
 	return false;
 }
 
-int32_t swscale::convert(const uint8_t* const source_data[], const int source_stride[], int32_t source_row,
-						 int32_t source_rows, uint8_t* const target_data[], const int target_stride[])
+int32_t swscale::convert(const uint8_t* const source_data[], const int source_stride[], int32_t source_row, int32_t source_rows, uint8_t* const target_data[], const int target_stride[])
 {
 	if (!this->context) {
 		return 0;
 	}
-	int height =
-		sws_scale(this->context, source_data, source_stride, source_row, source_rows, target_data, target_stride);
+	int height = sws_scale(this->context, source_data, source_stride, source_row, source_rows, target_data, target_stride);
 	return height;
 }
