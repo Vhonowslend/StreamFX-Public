@@ -141,7 +141,8 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/build/ci/install" \
           -DPACKAGE_NAME="streamfx-${{ matrix.package_name }}" \
           -DPACKAGE_PREFIX="${{ github.workspace }}/build/package" \
-          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/build/obs/install;${{ github.workspace }}/build/qt;${{ github.workspace }}/build/obsdeps"
+          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/build/obs/install;${{ github.workspace }}/build/qt;${{ github.workspace }}/build/obsdeps" \
+          -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
     - name: "Build: Debug"
       continue-on-error: true
       shell: bash
@@ -285,7 +286,8 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/build/ci/install" \
           -DPACKAGE_NAME="streamfx-${{ matrix.package_name }}" \
           -DPACKAGE_PREFIX="${{ github.workspace }}/build/package" \
-          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/build/obs/install;${{ github.workspace }}/build/qt;${{ github.workspace }}/build/obsdeps"
+          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/build/obs/install;${{ github.workspace }}/build/qt;${{ github.workspace }}/build/obsdeps" \
+          -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
     - name: "Build: Debug"
       continue-on-error: true
       shell: bash
@@ -463,7 +465,8 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/build/ci/install" \
           -DPACKAGE_NAME="streamfx-${{ env.PACKAGE_NAME }}" \
           -DPACKAGE_PREFIX="${{ github.workspace }}/build/package" \
-          -Dlibobs_DIR="${{ github.workspace }}/build/obs/install"
+          -Dlibobs_DIR="${{ github.workspace }}/build/obs/install" \
+          -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
     - name: "Build: Debug"
       continue-on-error: true
       shell: bash
