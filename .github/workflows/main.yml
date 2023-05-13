@@ -369,6 +369,7 @@ jobs:
           git
         IFS=$'-' compiler=($(echo "${{ matrix.compiler }}")) # ToDo: Can this be done without invoking a sub-shell?
         if [[ "${compiler[0]}" == "GCC" ]]; then
+          sudo apt-get purge "gcc*" "g++*"
           sudo apt-get install \
             binutils gcc-${compiler[1]} g++-${compiler[1]}
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${compiler[1]} 800 --slave /usr/bin/g++ g++ /usr/bin/g++-${compiler[1]}
@@ -377,7 +378,7 @@ jobs:
           echo "CMAKE_C_FLAGS=-fuse-ld=ld" >> "$GITHUB_ENV"
           echo "CMAKE_CXX_FLAGS=-fuse-ld=ld" >> "$GITHUB_ENV"
         elif [[ "${compiler[0]}" == "Clang" ]]; then
-          sudo apt-get purge clang clangd clang++ lld lldb clang-format clang-tidy
+          sudo apt-get purge "*clang*" "*clangd*" "*clang++*" "lld*" "*clang-format*" "*clang-tidy*"
           curl -jLo /tmp/llvm.sh "https://apt.llvm.org/llvm.sh"
           chmod +x /tmp/llvm.sh
           sudo /tmp/llvm.sh ${compiler[1]} all
