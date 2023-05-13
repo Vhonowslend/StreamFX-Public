@@ -125,11 +125,11 @@ jobs:
           -DENABLE_SCRIPTING=OFF
         cmake \
           --build "${{ github.workspace }}/build/obs" \
-          --config Release \
+          --config RelWithDebInfo \
           --target obs-frontend-api
         cmake \
           --install "${{ github.workspace }}/build/obs" \
-          --config Release \
+          --config RelWithDebInfo \
           --component obs_libraries
     - name: "Configure"
       continue-on-error: true
@@ -269,11 +269,11 @@ jobs:
           -DENABLE_SCRIPTING=OFF
         cmake \
           --build "${{ github.workspace }}/build/obs" \
-          --config Release \
+          --config RelWithDebInfo \
           --target obs-frontend-api
         cmake \
           --install "${{ github.workspace }}/build/obs" \
-          --config Release \
+          --config RelWithDebInfo \
           --component obs_libraries
     - name: "Configure"
       continue-on-error: true
@@ -462,11 +462,11 @@ jobs:
           -DENABLE_SCRIPTING=OFF
         cmake \
           --build "${{ github.workspace }}/build/obs" \
-          --config Release \
+          --config RelWithDebInfo \
           --target obs-frontend-api
         cmake \
           --install "${{ github.workspace }}/build/obs" \
-          --config Release \
+          --config RelWithDebInfo \
           --component obs_libraries
     - name: "Configure"
       continue-on-error: true
