@@ -64,7 +64,7 @@ jobs:
             name: "MacOS"
             package_name: "macos"
             CMAKE_GENERATOR: "Xcode"
-            CMAKE_OSX_DEPLOYMENT_TARGET: "10.15"
+            CMAKE_OSX_DEPLOYMENT_TARGET: "11.0"
             CMAKE_OSX_ARCHITECTURES: "x86_64;arm64"
 
           # Ubuntu needs version-specific binaries
@@ -187,17 +187,6 @@ jobs:
         # libOBS Version
         echo "obs_version=$(cd "${{ github.workspace }}/third-party/obs-studio" && git describe --tags --long)"
 
-        # CMake Flags
-        if [[ "${{ matrix.CMAKE_GENERATOR }}" != "" ]]; then
-          echo "cmake_generator=-G \"${{ matrix.CMAKE_GENERATOR }}\"" >> $GITHUB_ENV
-        fi
-        if [[ "${{ matrix.CMAKE_GENERATOR_TOOLSET }}" != "" ]]; then
-          echo "cmake_generator_toolset=-T \"${{ matrix.CMAKE_GENERATOR_TOOLSET }}\"" >> $GITHUB_ENV
-        fi
-        if [[ "${{ matrix.CMAKE_GENERATOR_PLATFORM }}" != "" ]]; then
-          echo "cmake_generator_platform=-A \"${{ matrix.CMAKE_GENERATOR_PLATFORM }}\"" >> $GITHUB_ENV
-        fi
-
         # Compiler Setup
         if [[ "${{ matrix.runner }}" = ubuntu* ]]; then
           if [[ "${{ matrix.generator }}" = "GCC" ]]; then
@@ -288,21 +277,12 @@ jobs:
         cmake \
           -S "${{ github.workspace }}/third-party/obs-studio" \
           -B "${{ github.workspace }}/build/obs" \
-          ${{ env.cmake_generator }} \
-          ${{ env.cmake_generator_toolset }} \
-          ${{ env.cmake_generator_platform }} \
-          -DCMAKE_C_COMPILER="${{ env.CC }}" \
-          -DCMAKE_CXX_COMPILER="${{ env.CXX }}" \
-          -DCMAKE_LINKER="${{ env.LD }}" \
-          -DCMAKE_OSX_ARCHITECTURES="${{ matrix.CMAKE_OSX_ARCHITECTURES }}" \
-          -DCMAKE_OSX_DEPLOYMENT_TARGET="${{ matrix.CMAKE_OSX_DEPLOYMENT_TARGET }}" \
-          -DCMAKE_SYSTEM_VERSION="${{ matrix.CMAKE_SYSTEM_VERSION }}" \
-          -DCMAKE_BUILD_TYPE="${{ env.CMAKE_BUILD_TYPE }}" \
           -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/build/obs/install" \
+          -DCMAKE_BUILD_TYPE="${{ env.CMAKE_BUILD_TYPE }}" \
+          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/build/obsdeps;${{ github.workspace }}/build/qt" \
           -DENABLE_PLUGINS=OFF \
           -DENABLE_UI=OFF \
-          -DENABLE_SCRIPTING=OFF \
-          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/build/obsdeps;${{ github.workspace }}/build/qt"
+          -DENABLE_SCRIPTING=OFF
         cmake \
           --build "${{ github.workspace }}/build/obs" \
           --config Release \
