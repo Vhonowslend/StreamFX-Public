@@ -169,8 +169,8 @@ jobs:
           buildspecdata=(0000-00-00 "about:blank" "00000000000000000000000000000000")
         fi
         echo "obs_deps_version=${buildspecdata[0]}" >> $GITHUB_ENV
-        echo "obs_deps_url=${buildspecdata[1]}" >> $GITHUB_ENV
-        echo "obs_deps_hash=${buildspecdata[2]}" >> $GITHUB_ENV
+        echo "obs_deps_hash=${buildspecdata[1]}" >> $GITHUB_ENV
+        echo "obs_deps_url=${buildspecdata[2]}" >> $GITHUB_ENV
 
         # Qt Version
         if [[ "${{ matrix.runner }}" = windows* ]]; then
@@ -181,8 +181,8 @@ jobs:
           buildspecdata=(0000-00-00 "about:blank" "00000000000000000000000000000000")
         fi
         echo "qt_version=${buildspecdata[0]}" >> $GITHUB_ENV
-        echo "qt_url=${buildspecdata[1]}" >> $GITHUB_ENV
-        echo "qt_hash=${buildspecdata[2]}" >> $GITHUB_ENV
+        echo "qt_hash=${buildspecdata[1]}" >> $GITHUB_ENV
+        echo "qt_url=${buildspecdata[2]}" >> $GITHUB_ENV
 
         # libOBS Version
         echo "obs_version=$(cd "${{ github.workspace }}/third-party/obs-studio" && git describe --tags --long)"
