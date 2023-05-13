@@ -338,7 +338,7 @@ jobs:
           - runner: "ubuntu-22.04"
             compiler: "Clang"
             qt: 6
-            name: "Ubuntu 22.04 (Clang)"
+            name: "Ubuntu 22.04"
             package_name: "ubuntu22.04-qt6-clang"
             CMAKE_GENERATOR: "Ninja"
             CMAKE_C_COMPILER: "clang-16"
@@ -356,7 +356,7 @@ jobs:
           - runner: "ubuntu-20.04"
             compiler: "Clang"
             qt: 5
-            name: "Ubuntu 20.04 (Clang)"
+            name: "Ubuntu 20.04"
             package_name: "ubuntu20.04-qt5-clang"
             CMAKE_GENERATOR: "Ninja"
             CMAKE_C_COMPILER: "clang-16"
