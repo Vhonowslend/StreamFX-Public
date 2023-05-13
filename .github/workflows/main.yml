@@ -157,24 +157,34 @@ jobs:
       id: info
       shell: bash
       run: |
-        # Dependency Versioning
+        # Define buildspec file
+        buildspec="${{ github.workspace }}/third-party/obs-studio/buildspec.json"
+
+        # Prebuilt Dependencies Version
         if [[ "${{ matrix.runner }}" = windows* ]]; then
-          if [[ -f "${{ github.workspace }}/third-party/DEPS_VERSION_WIN" ]]; then
-            echo "obs_deps_version=$(cat "${{ github.workspace }}/third-party/DEPS_VERSION_WIN")" >> $GITHUB_ENV
-          else
-            [[ $(cat "${{ github.workspace }}/third-party/obs-studio/.github/workflows/main.yml") =~ DEPS_VERSION_WIN:\ \'([0-9a-zA-Z\-]+)\' ]]
-            echo "obs_deps_version=${BASH_REMATCH[1]}" >> $GITHUB_ENV
-          fi
+          $IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "prebuilt" "windows-x64"))
         elif [[ "${{ matrix.runner }}" = macos* ]]; then
-          if [[ -f "${{ github.workspace }}/third-party/DEPS_VERSION_MAC" ]]; then
-            echo "obs_deps_version=$(cat "${{ github.workspace }}/third-party/DEPS_VERSION_MAC")" >> $GITHUB_ENV
-          else
-            [[ $(cat "${{ github.workspace }}/third-party/obs-studio/.github/workflows/main.yml") =~ DEPS_VERSION_MAC:\ \'([0-9a-zA-Z\-]+)\' ]]
-            echo "obs_deps_version=${BASH_REMATCH[1]}" >> $GITHUB_ENV
-          fi
+          $IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "prebuilt" "macos-universal"))
         else
-          echo "obs_deps_version=BADVALUE" >> $GITHUB_ENV
+          buildspecdata=(0000-00-00 "about:blank" "00000000000000000000000000000000")
         fi
+        echo "obs_deps_version::${buildspecdata[0]}" >> $GITHUB_ENV
+        echo "obs_deps_url::${buildspecdata[1]}" >> $GITHUB_ENV
+        echo "obs_deps_hash::${buildspecdata[2]}" >> $GITHUB_ENV
+
+        # Qt Version
+        if [[ "${{ matrix.runner }}" = windows* ]]; then
+          $IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "qt${{ matrix.qt }}" "windows-x64"))
+        elif [[ "${{ matrix.runner }}" = macos* ]]; then
+          $IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "qt${{ matrix.qt }}" "macos-universal"))
+        else
+          buildspecdata=(0000-00-00 "about:blank" "00000000000000000000000000000000")
+        fi
+        echo "qt_version::${buildspecdata[0]}" >> $GITHUB_ENV
+        echo "qt_url::${buildspecdata[1]}" >> $GITHUB_ENV
+        echo "qt_hash::${buildspecdata[2]}" >> $GITHUB_ENV
+
+        # libOBS Version
         echo "obs_version::$(cd "${{ github.workspace }}/third-party/obs-studio" && git describe --tags --long)"
 
         # CMake Flags
@@ -207,18 +217,18 @@ jobs:
       uses: actions/cache@v3
       with:
         path: "${{ github.workspace }}/build/qt"
-        key: "${{ matrix.runner }}-obsdeps${{ env.obs_deps_version }}-qt${{ matrix.qt }}-${{ env.CACHE_VERSION }}"
+        key: "${{ matrix.runner }}-qt${{ matrix.qt }}_${{ env.qt_version }}_${{ env.qt_hash }}-${{ env.CACHE_VERSION }}"
     - name: "Dependency: Qt "
       id: qt
       if: ${{ startsWith( matrix.runner, 'ubuntu' ) || (steps.qt-cache.outputs.cache-hit != 'true') }}
       shell: bash
       run: |
         if [[ "${{ matrix.runner }}" = windows* ]]; then
-          curl --retry 5 --retry-delay 30 -jLo /tmp/qt.zip "https://github.com/obsproject/obs-deps/releases/download/${{ env.obs_deps_version }}/windows-deps-qt${{ matrix.qt }}-${{ env.obs_deps_version }}-x64.zip"
+          curl --retry 5 --retry-delay 30 -jLo /tmp/qt.zip "${{ env.qt_url }}"
           if [[ ! -f "${{ github.workspace }}/build/qt" ]]; then mkdir -p "${{ github.workspace }}/build/qt"; fi
           7z x -y -o"${{ github.workspace }}/build/qt" -- "/tmp/qt.zip"
         elif [[ "${{ matrix.runner }}" = macos* ]]; then
-          curl --retry 5 --retry-delay 30 -jLo /tmp/qt.tar.xz "https://github.com/obsproject/obs-deps/releases/download/${{ env.obs_deps_version }}/macos-deps-qt${{ matrix.qt }}-${{ env.obs_deps_version }}-universal.tar.xz"
+          curl --retry 5 --retry-delay 30 -jLo /tmp/qt.tar.xz "${{ env.qt_url }}"
           if [[ ! -f "${{ github.workspace }}/build/qt" ]]; then mkdir -p "${{ github.workspace }}/build/qt"; fi
           tar -xvf "/tmp/qt.tar.xz" -C "${{ github.workspace }}/build/qt"
         elif [[ "${{ matrix.runner }}" = ubuntu* ]]; then
@@ -237,18 +247,18 @@ jobs:
       uses: actions/cache@v3
       with:
         path: "${{ github.workspace }}/build/obsdeps"
-        key: "${{ matrix.runner }}-obsdeps${{ env.obs_deps_version }}-${{ env.CACHE_VERSION }}"
+        key: "${{ matrix.runner }}-obsdeps${{ env.obs_deps_version }}_${{ env.obs_deps_hash }}-${{ env.CACHE_VERSION }}"
     - name: "Dependency: OBS Dependencies (FFmpeg, CURL, ...)"
       id: obsdeps
       if: ${{ startsWith( matrix.runner, 'ubuntu' ) || (steps.obsdeps-cache.outputs.cache-hit != 'true') }}
       shell: bash
       run: |
         if [[ "${{ matrix.runner }}" = windows* ]]; then
-          curl --retry 5 --retry-delay 30 -jLo /tmp/obsdeps.zip "https://github.com/obsproject/obs-deps/releases/download/${{ env.obs_deps_version }}/windows-deps-${{ env.obs_deps_version }}-x64.zip"
+          curl --retry 5 --retry-delay 30 -jLo /tmp/obsdeps.zip "${{ env.obs_deps_url }}"
           if [[ ! -f "${{ github.workspace }}/build/obsdeps" ]]; then mkdir -p "${{ github.workspace }}/build/obsdeps"; fi
           7z x -y -o"${{ github.workspace }}/build/obsdeps" -- "/tmp/obsdeps.zip"
         elif [[ "${{ matrix.runner }}" = macos* ]]; then
-          curl --retry 5 --retry-delay 30 -jLo /tmp/obsdeps.tar.xz "https://github.com/obsproject/obs-deps/releases/download/${{ env.obs_deps_version }}/macos-deps-${{ env.obs_deps_version }}-universal.tar.xz"
+          curl --retry 5 --retry-delay 30 -jLo /tmp/obsdeps.tar.xz "${{ env.obs_deps_url }}"
           if [[ ! -f "${{ github.workspace }}/build/obsdeps" ]]; then mkdir -p "${{ github.workspace }}/build/obsdeps"; fi
           tar -xvf "/tmp/obsdeps.tar.xz" -C "${{ github.workspace }}/build/obsdeps"
         elif [[ "${{ matrix.runner }}" = ubuntu* ]]; then
@@ -302,16 +312,6 @@ jobs:
           --config Release \
           --component obs_libraries
 
-    - name: "Configure (Cache)"
-      if: ${{ ! startsWith( github.ref, 'refs/tags/' ) }}
-      id: streamfx-cache
-      uses: actions/cache@v3
-      with:
-        path: "${{ github.workspace }}/build/ci"
-        key: "${{ matrix.runner }}-${{ matrix.generator }}-${{ github.ref_name }}-obs${{ env.obs_version }}-obsdeps${{ env.obs_deps_version }}-qt${{ matrix.qt }}-${{ env.CACHE_VERSION }}"
-        restore-keys: |
-          "${{ matrix.runner }}-${{ matrix.generator }}-${{ github.ref_name }}-obs${{ env.obs_version }}-obsdeps${{ env.obs_deps_version }}-qt${{ matrix.qt }}-${{ env.CACHE_VERSION }}"
-          "${{ matrix.runner }}-${{ matrix.generator }}-main-obs${{ env.obs_version }}-obsdeps${{ env.obs_deps_version }}-qt${{ matrix.qt }}-${{ env.CACHE_VERSION }}"
     - name: "Configure"
       continue-on-error: true
       shell: bash
