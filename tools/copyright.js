@@ -361,7 +361,7 @@ async function updateFile(file) {
 
 			let fd = await FSPROMISES.open(file, "w");
 			let fp = [];
-			if ((startHeader >= 0) && (endHeader >= 0)) {
+			if ((startHeader >= 0) && (endHeader > startHeader)) {
 				let pos = 0;
 				if (startHeader > 0) {
 					fd.write(content, 0, startHeader, 0);
