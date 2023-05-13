@@ -322,18 +322,16 @@ jobs:
       fail-fast: false
       matrix:
         runner: [ "ubuntu-22.04", "ubuntu-20.04" ]
-        compiler: [ "GCC-12", "GCC-11", "GCC-10", "Clang-16", "Clang-15", "Clang-14" ]
+        compiler: [ "GCC-12", "GCC-11", "Clang-16" ]
         qt: [ 5, 6 ]
         CMAKE_GENERATOR: [ "Ninja Multi-Config" ]
         exclude:
           - runner: "ubuntu-22.04"
             qt: 5
-          - runner: "ubuntu-22.04"
-            compiler: "gcc-10"
           - runner: "ubuntu-20.04"
             qt: 6
           - runner: "ubuntu-20.04"
-            compiler: "gcc-12"
+            compiler: "GCC-12"
         include:
           - runner: "ubuntu-22.04"
             name: "Ubuntu 22.04"
@@ -359,26 +357,19 @@ jobs:
       shell: bash
       run: |
         sudo apt-get -qq update
-        sudo apt-get purge libjpeg9-dev:amd64 libjpeg8-dev:amd64 libjpeg-turbo8-dev:amd64
-        sudo apt-get install \
-          build-essential \
-          checkinstall \
-          pkg-config \
-          cmake \
-          ninja-build \
-          git
+        sudo apt-get install build-essential checkinstall pkg-config cmake ninja-build git
+
+        # Install the appropriate compiler
         IFS=$'-' compiler=($(echo "${{ matrix.compiler }}")) # ToDo: Can this be done without invoking a sub-shell?
         if [[ "${compiler[0]}" == "GCC" ]]; then
-          sudo apt-get purge "gcc" "g++"
-          sudo apt-get install \
-            binutils gcc-${compiler[1]} g++-${compiler[1]}
+          sudo apt-get install binutils gcc-${compiler[1]} g++-${compiler[1]}
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${compiler[1]} 800 --slave /usr/bin/g++ g++ /usr/bin/g++-${compiler[1]}
+
           echo "CMAKE_C_COMPILER=gcc-${compiler[1]}" >> "$GITHUB_ENV"
           echo "CMAKE_CXX_COMPILER=g++-${compiler[1]}" >> "$GITHUB_ENV"
           echo "CMAKE_C_FLAGS=-fuse-ld=ld" >> "$GITHUB_ENV"
           echo "CMAKE_CXX_FLAGS=-fuse-ld=ld" >> "$GITHUB_ENV"
         elif [[ "${compiler[0]}" == "Clang" ]]; then
-          sudo apt-get purge "clang" "clangd" "clang++" "lld" "clang-format" "clang-tidy"
           curl -jLo /tmp/llvm.sh "https://apt.llvm.org/llvm.sh"
           chmod +x /tmp/llvm.sh
           sudo /tmp/llvm.sh ${compiler[1]} all
@@ -389,6 +380,7 @@ jobs:
           sudo update-alternatives --install /usr/bin/lldb lldb /usr/bin/lldb-${compiler[1]} 800
           sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-${compiler[1]} 800
           sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-${compiler[1]} 800
+
           echo "CMAKE_C_COMPILER=clang-${compiler[1]}" >> "$GITHUB_ENV"
           echo "CMAKE_CXX_COMPILER=clang++-${compiler[1]}" >> "$GITHUB_ENV"
           echo "CMAKE_C_FLAGS=-fuse-ld=ld.lld" >> "$GITHUB_ENV"
