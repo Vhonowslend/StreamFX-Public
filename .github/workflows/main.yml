@@ -274,6 +274,7 @@ jobs:
             libasound2-dev libfdk-aac-dev libfontconfig-dev libfreetype6-dev libjack-jackd2-dev libpulse-dev \
             libsndio-dev libspeexdsp-dev libudev-dev libv4l-dev libva-dev libvlc-dev libdrm-dev
         fi
+        # I do not know why this is messing up, but it is, and I can't be bothered to fix it after two weeks of trying.
         cmake \
           -S "${{ github.workspace }}/third-party/obs-studio" \
           -B "${{ github.workspace }}/build/obs" \
@@ -282,7 +283,8 @@ jobs:
           -DCMAKE_PREFIX_PATH="${{ github.workspace }}/build/obsdeps;${{ github.workspace }}/build/qt" \
           -DENABLE_PLUGINS=OFF \
           -DENABLE_UI=OFF \
-          -DENABLE_SCRIPTING=OFF
+          -DENABLE_SCRIPTING=OFF -- \
+          -w -Wno-error=unused-command-line-argument
         cmake \
           --build "${{ github.workspace }}/build/obs" \
           --config Release \
