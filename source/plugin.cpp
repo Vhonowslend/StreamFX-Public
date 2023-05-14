@@ -25,9 +25,6 @@
 #ifdef ENABLE_FILTER_DISPLACEMENT
 #include "filters/filter-displacement.hpp"
 #endif
-#ifdef ENABLE_FILTER_UPSCALING
-#include "filters/filter-upscaling.hpp"
-#endif
 
 #ifdef ENABLE_FRONTEND
 #include "ui/ui.hpp"
@@ -137,9 +134,6 @@ MODULE_EXPORT bool obs_module_load(void)
 #ifdef ENABLE_FILTER_DISPLACEMENT
 			streamfx::filter::displacement::displacement_factory::initialize();
 #endif
-#ifdef ENABLE_FILTER_UPSCALING
-			streamfx::filter::upscaling::upscaling_factory::initialize();
-#endif
 		}
 
 		DLOG_INFO("Loaded Version %s", STREAMFX_VERSION_STRING);
@@ -168,9 +162,6 @@ MODULE_EXPORT void obs_module_unload(void)
 #endif
 #ifdef ENABLE_FILTER_DISPLACEMENT
 			streamfx::filter::displacement::displacement_factory::finalize();
-#endif
-#ifdef ENABLE_FILTER_UPSCALING
-			streamfx::filter::upscaling::upscaling_factory::finalize();
 #endif
 		}
 

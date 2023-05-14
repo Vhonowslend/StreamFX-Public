@@ -109,7 +109,7 @@ namespace streamfx::filter::upscaling {
 		public: // Singleton
 		static void                                                              initialize();
 		static void                                                              finalize();
-		static std::shared_ptr<::streamfx::filter::upscaling::upscaling_factory> get();
+		static std::shared_ptr<::streamfx::filter::upscaling::upscaling_factory> instance();
 	};
 
 } // namespace streamfx::filter::upscaling

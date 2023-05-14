@@ -146,7 +146,7 @@ void upscaling_instance::update(obs_data_t* data)
 	// Check if the user changed which Denoising provider we use.
 	upscaling_provider provider = static_cast<upscaling_provider>(obs_data_get_int(data, ST_KEY_PROVIDER));
 	if (provider == upscaling_provider::AUTOMATIC) {
-		provider = upscaling_factory::get()->find_ideal_provider();
+		provider = upscaling_factory::instance()->find_ideal_provider();
 	}
 
 	// Check if the provider was changed, and if so switch.
@@ -618,7 +618,7 @@ bool streamfx::filter::upscaling::upscaling_factory::is_provider_available(upsca
 upscaling_provider streamfx::filter::upscaling::upscaling_factory::find_ideal_provider()
 {
 	for (auto v : provider_priority) {
-		if (upscaling_factory::get()->is_provider_available(v)) {
+		if (upscaling_factory::instance()->is_provider_available(v)) {
 			return v;
 			break;
 		}
@@ -626,26 +626,27 @@ upscaling_provider streamfx::filter::upscaling::upscaling_factory::find_ideal_pr
 	return upscaling_provider::AUTOMATIC;
 }
 
-std::shared_ptr<upscaling_factory> _video_superresolution_factory_instance = nullptr;
-
-void upscaling_factory::initialize()
+std::shared_ptr<upscaling_factory> upscaling_factory::instance()
 {
-	try {
-		if (!_video_superresolution_factory_instance)
-			_video_superresolution_factory_instance = std::make_shared<upscaling_factory>();
-	} catch (const std::exception& ex) {
-		D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
-	} catch (...) {
-		D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+	static std::weak_ptr<upscaling_factory> winst;
+	static std::mutex                    mtx;
+
+	std::unique_lock<decltype(mtx)> lock(mtx);
+	auto                            instance = winst.lock();
+	if (!instance) {
+		instance = std::shared_ptr<upscaling_factory>(new upscaling_factory());
+		winst    = instance;
 	}
+	return instance;
 }
 
-void upscaling_factory::finalize()
-{
-	_video_superresolution_factory_instance.reset();
-}
+static std::shared_ptr<upscaling_factory> loader_instance;
 
-std::shared_ptr<upscaling_factory> upscaling_factory::get()
-{
-	return _video_superresolution_factory_instance;
-}
+static auto loader = streamfx::loader(
+	[]() { // Initalizer
+		loader_instance = upscaling_factory::instance();
+	},
+	[]() { // Finalizer
+		loader_instance.reset();
+	},
+	streamfx::loader_priority::NORMAL);
