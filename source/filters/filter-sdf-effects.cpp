@@ -685,26 +685,27 @@ bool sdf_effects_factory::on_manual_open(obs_properties_t* props, obs_property_t
 }
 #endif
 
-std::shared_ptr<sdf_effects_factory> _filter_sdf_effects_factory_instance = nullptr;
-
-void streamfx::filter::sdf_effects::sdf_effects_factory::initialize()
+std::shared_ptr<sdf_effects_factory> sdf_effects_factory::instance()
 {
-	try {
-		if (!_filter_sdf_effects_factory_instance)
-			_filter_sdf_effects_factory_instance = std::make_shared<sdf_effects_factory>();
-	} catch (const std::exception& ex) {
-		D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
-	} catch (...) {
-		D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+	static std::weak_ptr<sdf_effects_factory> winst;
+	static std::mutex                          mtx;
+
+	std::unique_lock<decltype(mtx)> lock(mtx);
+	auto                            instance = winst.lock();
+	if (!instance) {
+		instance = std::shared_ptr<sdf_effects_factory>(new sdf_effects_factory());
+		winst    = instance;
 	}
+	return instance;
 }
 
-void streamfx::filter::sdf_effects::sdf_effects_factory::finalize()
-{
-	_filter_sdf_effects_factory_instance.reset();
-}
+static std::shared_ptr<sdf_effects_factory> loader_instance;
 
-std::shared_ptr<sdf_effects_factory> streamfx::filter::sdf_effects::sdf_effects_factory::get()
-{
-	return _filter_sdf_effects_factory_instance;
-}
+static auto loader = streamfx::loader(
+	[]() { // Initalizer
+		loader_instance = sdf_effects_factory::instance();
+	},
+	[]() { // Finalizer
+		loader_instance.reset();
+	},
+	streamfx::loader_priority::NORMAL);
