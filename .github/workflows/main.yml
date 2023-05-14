@@ -115,6 +115,16 @@ jobs:
       if: ${{ steps.obs-cache.outputs.cache-hit != 'true' }}
       shell: bash
       run: |
+        # Apply patches to obs-studio
+        pushd "${{ github.workspace }}/third-party/obs-studio" > /dev/null
+        for f in ${{ github.workspace }}/patches/obs-studio/*.patch; do
+          echo "Applying patch '${f}''..."
+          [ -e "$f" ] || continue
+          git apply "$f"
+        done
+        popd > /dev/null
+
+        # Build obs-studio
         cmake \
           -S "${{ github.workspace }}/third-party/obs-studio" \
           -B "${{ github.workspace }}/build/obs" \
@@ -262,6 +272,16 @@ jobs:
       if: ${{ steps.obs-cache.outputs.cache-hit != 'true' }}
       shell: bash
       run: |
+        # Apply patches to obs-studio
+        pushd "${{ github.workspace }}/third-party/obs-studio" > /dev/null
+        for f in ${{ github.workspace }}/patches/obs-studio/*.patch; do
+          echo "Applying patch '${f}''..."
+          [ -e "$f" ] || continue
+          git apply "$f"
+        done
+        popd > /dev/null
+
+        # Build obs-studio
         cmake \
           -S "${{ github.workspace }}/third-party/obs-studio" \
           -B "${{ github.workspace }}/build/obs" \
@@ -427,6 +447,15 @@ jobs:
       if: ${{ steps.obs-cache.outputs.cache-hit != 'true' }}
       shell: bash
       run: |
+        # Apply patches to obs-studio
+        pushd "${{ github.workspace }}/third-party/obs-studio" > /dev/null
+        for f in ${{ github.workspace }}/patches/obs-studio/*.patch; do
+          echo "Applying patch '${f}''..."
+          [ -e "$f" ] || continue
+          git apply "$f"
+        done
+        popd > /dev/null
+
         # Extra requirements by libobs on Linux.
         sudo apt-get install \
           libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev \
@@ -436,6 +465,8 @@ jobs:
           libgles2-mesa-dev libwayland-dev \
           libasound2-dev libfdk-aac-dev libfontconfig-dev libfreetype6-dev libjack-jackd2-dev libpulse-dev \
           libsndio-dev libspeexdsp-dev libudev-dev libv4l-dev libva-dev libvlc-dev libdrm-dev
+
+        # Build obs-studio
         cmake \
           -S "${{ github.workspace }}/third-party/obs-studio" \
           -B "${{ github.workspace }}/build/obs" \
