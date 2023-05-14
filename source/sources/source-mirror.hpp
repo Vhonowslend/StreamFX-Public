@@ -90,6 +90,6 @@ namespace streamfx::source::mirror {
 
 		static void finalize();
 
-		static std::shared_ptr<mirror_factory> get();
+		static std::shared_ptr<mirror_factory> instance();
 	};
 } // namespace streamfx::source::mirror
