@@ -147,8 +147,6 @@ namespace streamfx::encoder::ffmpeg {
 		ffmpeg_manager();
 		~ffmpeg_manager();
 
-		void register_encoders();
-
 		void register_handler(std::string codec, std::shared_ptr<handler::handler> handler);
 
 		std::shared_ptr<handler::handler> get_handler(std::string codec);
@@ -156,10 +154,6 @@ namespace streamfx::encoder::ffmpeg {
 		bool has_handler(std::string_view codec);
 
 		public: // Singleton
-		static void initialize();
-
-		static void finalize();
-
 		static std::shared_ptr<ffmpeg_manager> instance();
 	};
 } // namespace streamfx::encoder::ffmpeg
