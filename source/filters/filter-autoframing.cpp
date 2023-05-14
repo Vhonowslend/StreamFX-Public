@@ -345,7 +345,7 @@ void autoframing_instance::update(obs_data_t* data)
 	{ // Check if the user changed which Denoising provider we use.
 		auto provider = static_cast<tracking_provider>(obs_data_get_int(data, ST_KEY_ADVANCED_PROVIDER));
 		if (provider == tracking_provider::AUTOMATIC) {
-			provider = autoframing_factory::get()->find_ideal_provider();
+			provider = autoframing_factory::instance()->find_ideal_provider();
 		}
 
 		// Check if the provider was changed, and if so switch.
@@ -1255,26 +1255,27 @@ tracking_provider streamfx::filter::autoframing::autoframing_factory::find_ideal
 	return tracking_provider::INVALID;
 }
 
-std::shared_ptr<autoframing_factory> _filter_autoframing_factory_instance = nullptr;
-
-void autoframing_factory::initialize()
+std::shared_ptr<autoframing_factory> autoframing_factory::instance()
 {
-	try {
-		if (!_filter_autoframing_factory_instance)
-			_filter_autoframing_factory_instance = std::make_shared<autoframing_factory>();
-	} catch (const std::exception& ex) {
-		D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
-	} catch (...) {
-		D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+	static std::weak_ptr<autoframing_factory> winst;
+	static std::mutex                       mtx;
+
+	std::unique_lock<decltype(mtx)> lock(mtx);
+	auto                            instance = winst.lock();
+	if (!instance) {
+		instance = std::shared_ptr<autoframing_factory>(new autoframing_factory());
+		winst    = instance;
 	}
+	return instance;
 }
 
-void autoframing_factory::finalize()
-{
-	_filter_autoframing_factory_instance.reset();
-}
+static std::shared_ptr<autoframing_factory> loader_instance;
 
-std::shared_ptr<autoframing_factory> autoframing_factory::get()
-{
-	return _filter_autoframing_factory_instance;
-}
+static auto loader = streamfx::loader(
+	[]() { // Initalizer
+		loader_instance = autoframing_factory::instance();
+	},
+	[]() { // Finalizer
+		loader_instance.reset();
+	},
+	streamfx::loader_priority::NORMAL);
