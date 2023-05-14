@@ -26,6 +26,8 @@ namespace streamfx {
 
 		public:
 		~configuration();
+
+		private:
 		configuration();
 
 		public:
@@ -39,8 +41,6 @@ namespace streamfx {
 		bool is_different_version();
 
 		public /* Singleton */:
-		static void                                     initialize();
-		static void                                     finalize();
 		static std::shared_ptr<streamfx::configuration> instance();
 	};
 } // namespace streamfx
