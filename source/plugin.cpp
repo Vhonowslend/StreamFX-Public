@@ -50,9 +50,6 @@
 #ifdef ENABLE_SOURCE_MIRROR
 #include "sources/source-mirror.hpp"
 #endif
-#ifdef ENABLE_SOURCE_SHADER
-#include "sources/source-shader.hpp"
-#endif
 
 #ifdef ENABLE_FRONTEND
 #include "ui/ui.hpp"
@@ -190,9 +187,6 @@ MODULE_EXPORT bool obs_module_load(void)
 #ifdef ENABLE_SOURCE_MIRROR
 			streamfx::source::mirror::mirror_factory::initialize();
 #endif
-#ifdef ENABLE_SOURCE_SHADER
-			streamfx::source::shader::shader_factory::initialize();
-#endif
 		}
 
 		DLOG_INFO("Loaded Version %s", STREAMFX_VERSION_STRING);
@@ -215,9 +209,6 @@ MODULE_EXPORT void obs_module_unload(void)
 		{
 #ifdef ENABLE_SOURCE_MIRROR
 			streamfx::source::mirror::mirror_factory::finalize();
-#endif
-#ifdef ENABLE_SOURCE_SHADER
-			streamfx::source::shader::shader_factory::finalize();
 #endif
 		}
 
