@@ -57,10 +57,6 @@
 #include "sources/source-shader.hpp"
 #endif
 
-#ifdef ENABLE_TRANSITION_SHADER
-#include "transitions/transition-shader.hpp"
-#endif
-
 #ifdef ENABLE_FRONTEND
 #include "ui/ui.hpp"
 #endif
@@ -205,13 +201,6 @@ MODULE_EXPORT bool obs_module_load(void)
 #endif
 		}
 
-		// Transitions
-		{
-#ifdef ENABLE_TRANSITION_SHADER
-			streamfx::transition::shader::shader_factory::initialize();
-#endif
-		}
-
 		DLOG_INFO("Loaded Version %s", STREAMFX_VERSION_STRING);
 		return true;
 	} catch (std::exception const& ex) {
@@ -227,13 +216,6 @@ MODULE_EXPORT void obs_module_unload(void)
 {
 	try {
 		DLOG_INFO("Unloading Version %s", STREAMFX_VERSION_STRING);
-
-		// Transitions
-		{
-#ifdef ENABLE_TRANSITION_SHADER
-			streamfx::transition::shader::shader_factory::finalize();
-#endif
-		}
 
 		// Sources
 		{
