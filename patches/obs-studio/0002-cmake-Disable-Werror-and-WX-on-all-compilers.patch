@@ -1,0 +1,85 @@
+From 8de7080fa8d98102eec252c852b797e556b03ea8 Mon Sep 17 00:00:00 2001
+From: Michael Fabian 'Xaymar' Dirks <info@xaymar.com>
+Date: Sun, 14 May 2023 02:32:05 +0200
+Subject: [PATCH 17/17] cmake: Disable -Werror and /WX on all compilers
+
+These are useless - there's a reason warnings are warnings and not errors.
+---
+ cmake/Modules/CompilerConfig.cmake    | 4 +---
+ cmake/external/ObsPluginHelpers.cmake | 4 +---
+ cmake/macos/compilerconfig.cmake      | 1 -
+ 3 files changed, 2 insertions(+), 7 deletions(-)
+
+diff --git a/cmake/Modules/CompilerConfig.cmake b/cmake/Modules/CompilerConfig.cmake
+index 849d19de7..0d3967021 100644
+--- a/cmake/Modules/CompilerConfig.cmake
++++ b/cmake/Modules/CompilerConfig.cmake
+@@ -63,7 +63,6 @@ if(OS_WINDOWS AND MSVC)
+     /Brepro
+     /MP
+     /W3
+-    /WX
+     /wd4127
+     /wd4201
+     /wd4456
+@@ -83,7 +82,7 @@ if(OS_WINDOWS AND MSVC)
+     /Zc:preprocessor)
+ 
+   add_link_options(
+-    "LINKER:/Brepro" "LINKER:/OPT:REF" "LINKER:/WX" "$<$<NOT:$<EQUAL:${CMAKE_SIZEOF_VOID_P},8>>:LINKER\:/SAFESEH\:NO>"
++    "LINKER:/Brepro" "LINKER:/OPT:REF" "$<$<NOT:$<EQUAL:${CMAKE_SIZEOF_VOID_P},8>>:LINKER\:/SAFESEH\:NO>"
+     "$<$<CONFIG:DEBUG>:LINKER\:/INCREMENTAL\:NO>" "$<$<CONFIG:RELWITHDEBINFO>:LINKER\:/INCREMENTAL\:NO;/OPT:ICF>")
+ else()
+   find_program(CCACHE_PROGRAM "ccache")
+@@ -108,7 +107,6 @@ else()
+     - https://github.com/obsproject/obs-studio/issues/8850 for 13.1.1
+   ]]
+   add_compile_options(
+-    -Werror
+     -Wextra
+     -Wvla
+     -Wswitch
+diff --git a/cmake/external/ObsPluginHelpers.cmake b/cmake/external/ObsPluginHelpers.cmake
+index 811c4aadb..88fa81c82 100644
+--- a/cmake/external/ObsPluginHelpers.cmake
++++ b/cmake/external/ObsPluginHelpers.cmake
+@@ -167,7 +167,7 @@ if(OS_POSIX)
+   target_compile_options(
+     ${CMAKE_PROJECT_NAME}
+     PRIVATE
+-      -Werror
++#      -Werror
+       -Wextra
+       -Wvla
+       -Wformat
+@@ -531,7 +531,6 @@ else()
+         ${CMAKE_PROJECT_NAME}
+         PRIVATE /MP
+                 /W3
+-                /WX
+                 /wd4201
+                 "$<$<CONFIG:RELWITHDEBINFO>:/Ob2>"
+                 "$<$<CONFIG:DEBUG>:/DDEBUG=1;/D_DEBUG=1>"
+@@ -556,7 +555,6 @@ else()
+         ${CMAKE_PROJECT_NAME}
+         PRIVATE
+         "LINKER:/OPT:REF"
+-        "LINKER:/WX"
+         "$<$<NOT:$<EQUAL:${CMAKE_SIZEOF_VOID_P},8>>:LINKER\:/SAFESEH\:NO>"
+         "$<$<CONFIG:DEBUG>:LINKER\:/INCREMENTAL\:NO>"
+         "$<$<CONFIG:RELWITHDEBINFO>:LINKER\:/INCREMENTAL\:NO;/OPT\:ICF>")
+diff --git a/cmake/macos/compilerconfig.cmake b/cmake/macos/compilerconfig.cmake
+index 29b035baf..15872b979 100644
+--- a/cmake/macos/compilerconfig.cmake
++++ b/cmake/macos/compilerconfig.cmake
+@@ -33,7 +33,6 @@ if(NOT XCODE)
+   list(
+     APPEND
+     _obs_c_options
+-    -Werror
+     -Wextra
+     -Wvla
+     -Wswitch
+-- 
+2.39.2.windows.1
+
