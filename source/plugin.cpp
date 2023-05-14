@@ -12,14 +12,6 @@
 #include "nvidia/cuda/nvidia-cuda-obs.hpp"
 #endif
 
-#ifdef ENABLE_ENCODER_AOM_AV1
-#include "encoders/encoder-aom-av1.hpp"
-#endif
-
-#ifdef ENABLE_FILTER_DISPLACEMENT
-#include "filters/filter-displacement.hpp"
-#endif
-
 #ifdef ENABLE_FRONTEND
 #include "ui/ui.hpp"
 #endif
@@ -110,20 +102,6 @@ MODULE_EXPORT bool obs_module_load(void)
 		}
 #endif
 
-		// Encoders
-		{
-#ifdef ENABLE_ENCODER_AOM_AV1
-			streamfx::encoder::aom::av1::aom_av1_factory::initialize();
-#endif
-		}
-
-		// Filters
-		{
-#ifdef ENABLE_FILTER_DISPLACEMENT
-			streamfx::filter::displacement::displacement_factory::initialize();
-#endif
-		}
-
 		DLOG_INFO("Loaded Version %s", STREAMFX_VERSION_STRING);
 		return true;
 	} catch (std::exception const& ex) {
@@ -139,20 +117,6 @@ MODULE_EXPORT void obs_module_unload(void)
 {
 	try {
 		DLOG_INFO("Unloading Version %s", STREAMFX_VERSION_STRING);
-
-		// Filters
-		{
-#ifdef ENABLE_FILTER_DISPLACEMENT
-			streamfx::filter::displacement::displacement_factory::finalize();
-#endif
-		}
-
-		// Encoders
-		{
-#ifdef ENABLE_ENCODER_AOM_AV1
-			streamfx::encoder::aom::av1::aom_av1_factory::finalize();
-#endif
-		}
 
 		// Finalize GLAD (OpenGL)
 		{
