@@ -107,7 +107,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: "${{ github.workspace }}/build/obs"
-        key: "obs${{ env.obs_version }}-obsdeps${{ env.obs_deps_hash }}-qt${{ env.qt_hash }}-${{ env.CACHE_VERSION }}"
+        key: "obs${{ env.obs_version }}-${{ matrix.runner }}_${{ matrix.compiler }}-obsdeps${{ env.obs_deps_hash }}-qt${{ env.qt_hash }}-${{ env.CACHE_VERSION }}"
     - name: "Dependency: OBS Libraries"
       id: obs
       if: ${{ steps.obs-cache.outputs.cache-hit != 'true' }}
@@ -249,7 +249,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: "${{ github.workspace }}/build/obs"
-        key: "obs${{ env.obs_version }}-obsdeps${{ env.obs_deps_hash }}-qt${{ env.qt_hash }}-${{ env.CACHE_VERSION }}"
+        key: "obs${{ env.obs_version }}-${{ matrix.runner }}_${{ matrix.compiler }}--obsdeps${{ env.obs_deps_hash }}-qt${{ env.qt_hash }}-${{ env.CACHE_VERSION }}"
     - name: "Dependency: OBS Libraries"
       id: obs
       if: ${{ steps.obs-cache.outputs.cache-hit != 'true' }}
@@ -397,7 +397,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: "${{ github.workspace }}/build/obs"
-        key: "obs${{ env.obs_version }}-${{ matrix.runner }}-${{ matrix.compiler }}-${{ env.CACHE_VERSION }}"
+        key: "obs${{ env.obs_version }}-${{ matrix.runner }}_${{ matrix.compiler }}--${{ matrix.runner }}-${{ matrix.compiler }}-${{ env.CACHE_VERSION }}"
     - name: "Dependency: OBS Libraries"
       id: obs
       if: ${{ steps.obs-cache.outputs.cache-hit != 'true' }}
