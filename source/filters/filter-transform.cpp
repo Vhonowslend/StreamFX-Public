@@ -810,26 +810,27 @@ bool transform_factory::on_manual_open(obs_properties_t* props, obs_property_t* 
 }
 #endif
 
-std::shared_ptr<transform_factory> _filter_transform_factory_instance = nullptr;
-
-void transform_factory::initialize()
+std::shared_ptr<transform_factory> transform_factory::instance()
 {
-	try {
-		if (!_filter_transform_factory_instance)
-			_filter_transform_factory_instance = std::make_shared<transform_factory>();
-	} catch (const std::exception& ex) {
-		D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
-	} catch (...) {
-		D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+	static std::weak_ptr<transform_factory> winst;
+	static std::mutex                    mtx;
+
+	std::unique_lock<decltype(mtx)> lock(mtx);
+	auto                            instance = winst.lock();
+	if (!instance) {
+		instance = std::shared_ptr<transform_factory>(new transform_factory());
+		winst    = instance;
 	}
+	return instance;
 }
 
-void transform_factory::finalize()
-{
-	_filter_transform_factory_instance.reset();
-}
+static std::shared_ptr<transform_factory> loader_instance;
 
-std::shared_ptr<transform_factory> transform_factory::get()
-{
-	return _filter_transform_factory_instance;
-}
+static auto loader = streamfx::loader(
+	[]() { // Initalizer
+		loader_instance = transform_factory::instance();
+	},
+	[]() { // Finalizer
+		loader_instance.reset();
+	},
+	streamfx::loader_priority::NORMAL);

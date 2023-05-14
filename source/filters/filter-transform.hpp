@@ -96,10 +96,6 @@ namespace streamfx::filter::transform {
 #endif
 
 		public: // Singleton
-		static void initialize();
-
-		static void finalize();
-
-		static std::shared_ptr<transform_factory> get();
+		static std::shared_ptr<transform_factory> instance();
 	};
 } // namespace streamfx::filter::transform
