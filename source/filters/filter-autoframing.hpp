@@ -171,6 +171,6 @@ namespace streamfx::filter::autoframing {
 		public: // Singleton
 		static void                                 initialize();
 		static void                                 finalize();
-		static std::shared_ptr<autoframing_factory> get();
+		static std::shared_ptr<autoframing_factory> instance();
 	};
 } // namespace streamfx::filter::autoframing
