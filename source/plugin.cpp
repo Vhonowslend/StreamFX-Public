@@ -81,7 +81,6 @@
 #include <stdexcept>
 #include "warning-enable.hpp"
 
-static std::shared_ptr<streamfx::util::threadpool::threadpool> _threadpool;
 static std::shared_ptr<streamfx::gfx::opengl>                  _streamfx_gfx_opengl;
 static std::shared_ptr<streamfx::obs::source_tracker>          _source_tracker;
 
@@ -141,9 +140,6 @@ MODULE_EXPORT bool obs_module_load(void)
 
 		// Initialize global configuration.
 		streamfx::configuration::initialize();
-
-		// Initialize global Thread Pool.
-		_threadpool = std::make_shared<streamfx::util::threadpool::threadpool>();
 
 		// Initialize Source Tracker
 		_source_tracker = streamfx::obs::source_tracker::get();
@@ -338,9 +334,6 @@ MODULE_EXPORT void obs_module_unload(void)
 		// Finalize Configuration
 		streamfx::configuration::finalize();
 
-		// Finalize Thread Pool
-		_threadpool.reset();
-
 		// Run all finalizers.
 		for (auto kv : streamfx::get_finalizers()) {
 			for (auto init : kv.second) {
@@ -364,7 +357,7 @@ MODULE_EXPORT void obs_module_unload(void)
 
 std::shared_ptr<streamfx::util::threadpool::threadpool> streamfx::threadpool()
 {
-	return _threadpool;
+	return streamfx::util::threadpool::threadpool::instance();
 }
 
 std::filesystem::path streamfx::data_file_path(std::string_view file)

@@ -132,5 +132,8 @@ namespace streamfx::util::threadpool {
 
 		private:
 		void work(std::shared_ptr<worker_info>);
+
+		public /* Singleton */:
+		static std::shared_ptr<streamfx::util::threadpool::threadpool> instance();
 	};
 } // namespace streamfx::util::threadpool

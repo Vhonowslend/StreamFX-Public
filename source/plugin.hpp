@@ -6,7 +6,6 @@
 #include "common.hpp"
 
 #include "warning-disable.hpp"
-#include <cstdint>
 #include <functional>
 #include "warning-enable.hpp"
 
