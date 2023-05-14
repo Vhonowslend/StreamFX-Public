@@ -160,6 +160,6 @@ namespace streamfx::encoder::ffmpeg {
 
 		static void finalize();
 
-		static std::shared_ptr<ffmpeg_manager> get();
+		static std::shared_ptr<ffmpeg_manager> instance();
 	};
 } // namespace streamfx::encoder::ffmpeg

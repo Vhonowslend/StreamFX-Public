@@ -84,7 +84,7 @@ ffmpeg_instance::ffmpeg_instance(obs_data_t* settings, obs_encoder_t* self, bool
 
 	  _factory(reinterpret_cast<ffmpeg_factory*>(obs_encoder_get_type_data(self))),
 
-	  _codec(_factory->get_avcodec()), _context(nullptr), _handler(ffmpeg_manager::get()->get_handler(_codec->name)),
+	  _codec(_factory->get_avcodec()), _context(nullptr), _handler(ffmpeg_manager::instance()->get_handler(_codec->name)),
 
 	  _scaler(), _packet(),
 
@@ -958,7 +958,7 @@ ffmpeg_factory::ffmpeg_factory(const AVCodec* codec) : _avcodec(codec)
 	}
 
 	// Find any available handlers for this codec.
-	if (_handler = ffmpeg_manager::get()->get_handler(_avcodec->name); _handler) {
+	if (_handler = ffmpeg_manager::instance()->get_handler(_avcodec->name); _handler) {
 		// Override any found info with the one specified by the handler.
 		_handler->adjust_info(this, _avcodec, _id, _name, _codec);
 
@@ -1213,22 +1213,28 @@ bool ffmpeg_manager::has_handler(std::string_view codec)
 	return (_handlers.find(codec.data()) != _handlers.end());
 }
 
-std::shared_ptr<ffmpeg_manager> _ffmepg_encoder_factory_instance = nullptr;
 
-void ffmpeg_manager::initialize()
+std::shared_ptr<ffmpeg_manager> ffmpeg_manager::instance()
 {
-	if (!_ffmepg_encoder_factory_instance) {
-		_ffmepg_encoder_factory_instance = std::make_shared<ffmpeg_manager>();
-		_ffmepg_encoder_factory_instance->register_encoders();
+	static std::weak_ptr<ffmpeg_manager> winst;
+	static std::mutex                             mtx;
+
+	std::unique_lock<decltype(mtx)> lock(mtx);
+	auto                            instance = winst.lock();
+	if (!instance) {
+		instance = std::shared_ptr<ffmpeg_manager>(new ffmpeg_manager());
+		winst    = instance;
 	}
+	return instance;
 }
 
-void ffmpeg_manager::finalize()
-{
-	_ffmepg_encoder_factory_instance.reset();
-}
+static std::shared_ptr<ffmpeg_manager> loader_instance;
 
-std::shared_ptr<ffmpeg_manager> ffmpeg_manager::get()
-{
-	return _ffmepg_encoder_factory_instance;
-}
+static auto loader = streamfx::loader(
+	[]() { // Initalizer
+		loader_instance = ffmpeg_manager::instance();
+	},
+	[]() { // Finalizer
+		loader_instance.reset();
+	},
+	streamfx::loader_priority::NORMAL);
