@@ -103,10 +103,6 @@ namespace streamfx::filter::color_grade {
 #endif
 
 		public: // Singleton
-		static void initialize();
-
-		static void finalize();
-
-		static std::shared_ptr<color_grade_factory> get();
+		static std::shared_ptr<color_grade_factory> instance();
 	};
 } // namespace streamfx::filter::color_grade
