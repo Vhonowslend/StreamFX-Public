@@ -33,6 +33,7 @@ Depending on where the file is that you ended up modifying, or if you modified m
 - `/source`, `/include` -> `code`
 - `/templates` -> `templates` (or merge with `cmake`)
 - `/third-party` -> `third-party`
+- `/patches` -> `patches`
 - `/tools` -> `tools`
 - `/ui` -> `ui` (if not part of a `code` change)
 - Most other files -> `project`
