@@ -57,6 +57,6 @@ namespace streamfx::filter::shader {
 
 		static void finalize();
 
-		static std::shared_ptr<shader_factory> get();
+		static std::shared_ptr<shader_factory> instance();
 	};
 } // namespace streamfx::filter::shader
