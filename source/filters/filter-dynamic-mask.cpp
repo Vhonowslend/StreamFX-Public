@@ -822,26 +822,27 @@ bool dynamic_mask_factory::on_manual_open(obs_properties_t* props, obs_property_
 }
 #endif
 
-std::shared_ptr<dynamic_mask_factory> _filter_dynamic_mask_factory_instance = nullptr;
-
-void streamfx::filter::dynamic_mask::dynamic_mask_factory::initialize()
+std::shared_ptr<dynamic_mask_factory> dynamic_mask_factory::instance()
 {
-	try {
-		if (!_filter_dynamic_mask_factory_instance)
-			_filter_dynamic_mask_factory_instance = std::make_shared<dynamic_mask_factory>();
-	} catch (const std::exception& ex) {
-		D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
-	} catch (...) {
-		D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+	static std::weak_ptr<dynamic_mask_factory> winst;
+	static std::mutex                       mtx;
+
+	std::unique_lock<decltype(mtx)> lock(mtx);
+	auto                            instance = winst.lock();
+	if (!instance) {
+		instance = std::shared_ptr<dynamic_mask_factory>(new dynamic_mask_factory());
+		winst    = instance;
 	}
+	return instance;
 }
 
-void streamfx::filter::dynamic_mask::dynamic_mask_factory::finalize()
-{
-	_filter_dynamic_mask_factory_instance.reset();
-}
+static std::shared_ptr<dynamic_mask_factory> loader_instance;
 
-std::shared_ptr<dynamic_mask_factory> streamfx::filter::dynamic_mask::dynamic_mask_factory::get()
-{
-	return _filter_dynamic_mask_factory_instance;
-}
+static auto loader = streamfx::loader(
+	[]() { // Initalizer
+		loader_instance = dynamic_mask_factory::instance();
+	},
+	[]() { // Finalizer
+		loader_instance.reset();
+	},
+	streamfx::loader_priority::NORMAL);
