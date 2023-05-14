@@ -34,9 +34,6 @@
 #ifdef ENABLE_FILTER_SDF_EFFECTS
 #include "filters/filter-sdf-effects.hpp"
 #endif
-#ifdef ENABLE_FILTER_TRANSFORM
-#include "filters/filter-transform.hpp"
-#endif
 #ifdef ENABLE_FILTER_UPSCALING
 #include "filters/filter-upscaling.hpp"
 #endif
@@ -165,9 +162,6 @@ MODULE_EXPORT bool obs_module_load(void)
 #ifdef ENABLE_FILTER_SDF_EFFECTS
 			streamfx::filter::sdf_effects::sdf_effects_factory::initialize();
 #endif
-#ifdef ENABLE_FILTER_TRANSFORM
-			streamfx::filter::transform::transform_factory::initialize();
-#endif
 #ifdef ENABLE_FILTER_UPSCALING
 			streamfx::filter::upscaling::upscaling_factory::initialize();
 #endif
@@ -225,9 +219,6 @@ MODULE_EXPORT void obs_module_unload(void)
 #endif
 #ifdef ENABLE_FILTER_SDF_EFFECTS
 			streamfx::filter::sdf_effects::sdf_effects_factory::finalize();
-#endif
-#ifdef ENABLE_FILTER_TRANSFORM
-			streamfx::filter::transform::transform_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_UPSCALING
 			streamfx::filter::upscaling::upscaling_factory::finalize();
