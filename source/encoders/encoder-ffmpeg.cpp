@@ -1165,15 +1165,7 @@ ffmpeg_manager::ffmpeg_manager() : _factories(), _handlers(), _debug_handler()
 #ifdef ENABLE_ENCODER_FFMPEG_DNXHR
 	register_handler("dnxhd", ::std::make_shared<handler::dnxhd_handler>());
 #endif
-}
-
-ffmpeg_manager::~ffmpeg_manager()
-{
-	_factories.clear();
-}
-
-void ffmpeg_manager::register_encoders()
-{
+		
 	// Encoders
 	void* iterator = nullptr;
 	for (const AVCodec* codec = av_codec_iterate(&iterator); codec != nullptr; codec = av_codec_iterate(&iterator)) {
@@ -1189,6 +1181,11 @@ void ffmpeg_manager::register_encoders()
 			}
 		}
 	}
+}
+
+ffmpeg_manager::~ffmpeg_manager()
+{
+	_factories.clear();
 }
 
 void ffmpeg_manager::register_handler(std::string codec, std::shared_ptr<handler::handler> handler)
