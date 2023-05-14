@@ -152,60 +152,56 @@ bool streamfx::version_info::is_older_than(const version_info other)
 
 	// Compare Major version:
 	// - Theirs is greater: Remote is newer.
-	// - Ours is greater: Remote is older.
-	// - Continue the check.
 	if (major < other.major)
 		return true;
+	// - Ours is greater: Remote is older.
 	if (major > other.major)
 		return false;
+	// - Continue the check.
 
 	// Compare Minor version:
 	// - Theirs is greater: Remote is newer.
-	// - Ours is greater: Remote is older.
-	// - Continue the check.
 	if (minor < other.minor)
 		return true;
+	// - Ours is greater: Remote is older.
 	if (minor > other.minor)
 		return false;
+	// - Continue the check.
 
 	// Compare Patch version:
 	// - Theirs is greater: Remote is newer.
-	// - Ours is greater: Remote is older.
-	// - Continue the check.
 	if (patch < other.patch)
 		return true;
+	// - Ours is greater: Remote is older.
 	if (patch > other.patch)
 		return false;
-
-	// Compare Tweak and Stage version:
-	// - Theirs is greater: Remote is newer.
-	// - Ours is greater: Special logic.
 	// - Continue the check.
+
+	// Compare Stage
+	// - Theirs is Stable, we are not: Remote is newer.
+	if ((stage != version_stage::STABLE) && (other.stage == version_stage::STABLE))
+		return true;
+	// - Continue the check.
+
+	// Compare Tweak
+	// - Theirs is greater: Remote is newer.
 	if (tweak < other.tweak)
 		return true;
-	if ((tweak > other.tweak) && (other.stage != version_stage::STABLE)) {
-		// If the remote isn't a stable release, it's always considered older.
+	// - Ours is greater: Remote is older.
+	if (tweak > other.tweak)
 		return false;
-
-		// 0.12.0 vs 0.12.0
-		// Major: equal, continue
-		// Minor: equal, continue
-		// Patch: equal, continue
-		// Tweak: equal, continue
-		// Ours is older?
-	}
-
-	// As a last effort, compare the stage.
-	// - Theirs is greater: Remote is older.
-	// - Ours is greater: Remote is newer.
 	// - Continue the check.
-	if (stage < other.stage)
-		return false;
+
+	// Compare Stage (again)
+	// - Ours is greater: Remote is newer.
 	if (stage > other.stage)
 		return true;
-
-	// If there are no further tests, assume this version is older.
-	return true;
+	// - Theirs is greater: Remote is older.
+	if (stage < other.stage)
+		return false;
+	
+	// If all tests failed so far, assume the compared version is identical or newer.
+	return false;
 }
 
 streamfx::version_info::operator std::string()
