@@ -928,7 +928,7 @@ void ffmpeg_instance::parse_ffmpeg_commandline(std::string_view text)
 	}
 }
 
-ffmpeg_factory::ffmpeg_factory(const AVCodec* codec) : _avcodec(codec)
+ffmpeg_factory::ffmpeg_factory(ffmpeg_manager* manager, const AVCodec* codec) : _avcodec(codec)
 {
 	// Generate default identifier.
 	{
@@ -958,7 +958,7 @@ ffmpeg_factory::ffmpeg_factory(const AVCodec* codec) : _avcodec(codec)
 	}
 
 	// Find any available handlers for this codec.
-	if (_handler = ffmpeg_manager::instance()->get_handler(_avcodec->name); _handler) {
+	if (_handler = manager->get_handler(_avcodec->name); _handler) {
 		// Override any found info with the one specified by the handler.
 		_handler->adjust_info(this, _avcodec, _id, _name, _codec);
 
@@ -1165,7 +1165,7 @@ ffmpeg_manager::ffmpeg_manager() : _factories(), _handlers(), _debug_handler()
 #ifdef ENABLE_ENCODER_FFMPEG_DNXHR
 	register_handler("dnxhd", ::std::make_shared<handler::dnxhd_handler>());
 #endif
-		
+
 	// Encoders
 	void* iterator = nullptr;
 	for (const AVCodec* codec = av_codec_iterate(&iterator); codec != nullptr; codec = av_codec_iterate(&iterator)) {
@@ -1175,7 +1175,7 @@ ffmpeg_manager::ffmpeg_manager() : _factories(), _handlers(), _debug_handler()
 
 		if ((codec->type == AVMediaType::AVMEDIA_TYPE_AUDIO) || (codec->type == AVMediaType::AVMEDIA_TYPE_VIDEO)) {
 			try {
-				_factories.emplace(codec, std::make_shared<ffmpeg_factory>(codec));
+				_factories.emplace(codec, std::make_shared<ffmpeg_factory>(this, codec));
 			} catch (const std::exception& ex) {
 				DLOG_ERROR("Failed to register encoder '%s': %s", codec->name, ex.what());
 			}
@@ -1210,11 +1210,10 @@ bool ffmpeg_manager::has_handler(std::string_view codec)
 	return (_handlers.find(codec.data()) != _handlers.end());
 }
 
-
 std::shared_ptr<ffmpeg_manager> ffmpeg_manager::instance()
 {
 	static std::weak_ptr<ffmpeg_manager> winst;
-	static std::mutex                             mtx;
+	static std::mutex                    mtx;
 
 	std::unique_lock<decltype(mtx)> lock(mtx);
 	auto                            instance = winst.lock();

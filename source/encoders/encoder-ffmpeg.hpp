@@ -29,7 +29,9 @@ extern "C" {
 }
 
 namespace streamfx::encoder::ffmpeg {
+	class ffmpeg_instance;
 	class ffmpeg_factory;
+	class ffmpeg_manager;
 
 	class ffmpeg_instance : public obs::encoder_instance {
 		ffmpeg_factory* _factory;
@@ -117,7 +119,7 @@ namespace streamfx::encoder::ffmpeg {
 		std::shared_ptr<handler::handler> _handler;
 
 		public:
-		ffmpeg_factory(const AVCodec* codec);
+		ffmpeg_factory(ffmpeg_manager* manager, const AVCodec* codec);
 		virtual ~ffmpeg_factory();
 
 		const char* get_name() override;
