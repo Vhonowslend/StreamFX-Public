@@ -18,7 +18,6 @@
 
 #ifdef ENABLE_UPDATER
 #include "updater.hpp"
-//static std::shared_ptr<streamfx::updater> _updater;
 #endif
 
 #include "warning-disable.hpp"
@@ -71,19 +70,6 @@ MODULE_EXPORT bool obs_module_load(void)
 	try {
 		DLOG_INFO("Loading Version %s", STREAMFX_VERSION_STRING);
 
-		// Run all initializers.
-		for (auto kv : streamfx::get_initializers()) {
-			for (auto init : kv.second) {
-				try {
-					init();
-				} catch (const std::exception& ex) {
-					DLOG_ERROR("Initializer threw exception: %s", ex.what());
-				} catch (...) {
-					DLOG_ERROR("Initializer threw unknown exception.");
-				}
-			}
-		}
-
 		// Initialize GLAD (OpenGL)
 		{
 			streamfx::obs::gs::context gctx{};
@@ -102,6 +88,19 @@ MODULE_EXPORT bool obs_module_load(void)
 		}
 #endif
 
+		// Run all initializers.
+		for (auto kv : streamfx::get_initializers()) {
+			for (auto init : kv.second) {
+				try {
+					init();
+				} catch (const std::exception& ex) {
+					DLOG_ERROR("Initializer threw exception: %s", ex.what());
+				} catch (...) {
+					DLOG_ERROR("Initializer threw unknown exception.");
+				}
+			}
+		}
+
 		DLOG_INFO("Loaded Version %s", STREAMFX_VERSION_STRING);
 		return true;
 	} catch (std::exception const& ex) {
@@ -118,17 +117,6 @@ MODULE_EXPORT void obs_module_unload(void)
 	try {
 		DLOG_INFO("Unloading Version %s", STREAMFX_VERSION_STRING);
 
-		// Finalize GLAD (OpenGL)
-		{
-			streamfx::obs::gs::context gctx{};
-			_streamfx_gfx_opengl.reset();
-		}
-
-		//	// Auto-Updater
-		//#ifdef ENABLE_UPDATER
-		//	_updater.reset();
-		//#endif
-
 		// Run all finalizers.
 		for (auto kv : streamfx::get_finalizers()) {
 			for (auto init : kv.second) {
@@ -141,6 +129,13 @@ MODULE_EXPORT void obs_module_unload(void)
 				}
 			}
 		}
+
+		// Finalize GLAD (OpenGL)
+		{
+			streamfx::obs::gs::context gctx{};
+			_streamfx_gfx_opengl.reset();
+		}
+
 
 		DLOG_INFO("Unloaded Version %s", STREAMFX_VERSION_STRING);
 	} catch (std::exception const& ex) {
