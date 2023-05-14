@@ -76,6 +76,8 @@
 
 #include "warning-disable.hpp"
 #include <fstream>
+#include <list>
+#include <map>
 #include <stdexcept>
 #include "warning-enable.hpp"
 
@@ -83,10 +85,59 @@ static std::shared_ptr<streamfx::util::threadpool::threadpool> _threadpool;
 static std::shared_ptr<streamfx::gfx::opengl>                  _streamfx_gfx_opengl;
 static std::shared_ptr<streamfx::obs::source_tracker>          _source_tracker;
 
+namespace streamfx {
+	typedef std::list<loader_function_t>               loader_list_t;
+	typedef std::map<loader_priority_t, loader_list_t> loader_map_t;
+
+	loader_map_t& get_initializers()
+	{
+		static loader_map_t initializers;
+		return initializers;
+	}
+
+	loader_map_t& get_finalizers()
+	{
+		static loader_map_t finalizers;
+		return finalizers;
+	}
+
+	loader::loader(loader_function_t initializer, loader_function_t finalizer, loader_priority_t priority)
+	{
+		auto init_kv = get_initializers().find(priority);
+		if (init_kv != get_initializers().end()) {
+			init_kv->second.push_back(initializer);
+		} else {
+			get_initializers().emplace(priority, loader_list_t{initializer});
+		}
+
+		// Invert the order for finalizers.
+		auto ipriority = priority ^ static_cast<loader_priority_t>(0xFFFFFFFFFFFFFFFF);
+		auto fina_kv   = get_finalizers().find(ipriority);
+		if (fina_kv != get_finalizers().end()) {
+			fina_kv->second.push_back(finalizer);
+		} else {
+			get_finalizers().emplace(ipriority, loader_list_t{finalizer});
+		}
+	}
+} // namespace streamfx
+
 MODULE_EXPORT bool obs_module_load(void)
 {
 	try {
 		DLOG_INFO("Loading Version %s", STREAMFX_VERSION_STRING);
+
+		// Run all initializers.
+		for (auto kv : streamfx::get_initializers()) {
+			for (auto init : kv.second) {
+				try {
+					init();
+				} catch (const std::exception& ex) {
+					DLOG_ERROR("Initializer threw exception: %s", ex.what());
+				} catch (...) {
+					DLOG_ERROR("Initializer threw unknown exception.");
+				}
+			}
+		}
 
 		// Initialize global configuration.
 		streamfx::configuration::initialize();
@@ -289,6 +340,19 @@ MODULE_EXPORT void obs_module_unload(void)
 
 		// Finalize Thread Pool
 		_threadpool.reset();
+
+		// Run all finalizers.
+		for (auto kv : streamfx::get_finalizers()) {
+			for (auto init : kv.second) {
+				try {
+					init();
+				} catch (const std::exception& ex) {
+					DLOG_ERROR("Finalizer threw exception: %s", ex.what());
+				} catch (...) {
+					DLOG_ERROR("Finalizer threw unknown exception.");
+				}
+			}
+		}
 
 		DLOG_INFO("Unloaded Version %s", STREAMFX_VERSION_STRING);
 	} catch (std::exception const& ex) {
