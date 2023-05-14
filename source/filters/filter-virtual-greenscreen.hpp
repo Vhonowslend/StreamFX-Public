@@ -109,7 +109,7 @@ namespace streamfx::filter::virtual_greenscreen {
 		public: // Singleton
 		static void                                                                                  initialize();
 		static void                                                                                  finalize();
-		static std::shared_ptr<::streamfx::filter::virtual_greenscreen::virtual_greenscreen_factory> get();
+		static std::shared_ptr<::streamfx::filter::virtual_greenscreen::virtual_greenscreen_factory> instance();
 	};
 
 } // namespace streamfx::filter::virtual_greenscreen
