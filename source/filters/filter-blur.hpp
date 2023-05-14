@@ -120,10 +120,6 @@ namespace streamfx::filter::blur {
 #endif
 
 		public: // Singleton
-		static void initialize();
-
-		static void finalize();
-
-		static std::shared_ptr<blur_factory> get();
+		static std::shared_ptr<blur_factory> instance();
 	};
 } // namespace streamfx::filter::blur

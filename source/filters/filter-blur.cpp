@@ -855,26 +855,27 @@ bool blur_factory::on_manual_open(obs_properties_t* props, obs_property_t* prope
 }
 #endif
 
-std::shared_ptr<blur_factory> _filter_blur_factory_instance = nullptr;
-
-void streamfx::filter::blur::blur_factory::initialize()
+std::shared_ptr<blur_factory> blur_factory::instance()
 {
-	try {
-		if (!_filter_blur_factory_instance)
-			_filter_blur_factory_instance = std::make_shared<blur_factory>();
-	} catch (const std::exception& ex) {
-		D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
-	} catch (...) {
-		D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+	static std::weak_ptr<blur_factory> winst;
+	static std::mutex                          mtx;
+
+	std::unique_lock<decltype(mtx)> lock(mtx);
+	auto                            instance = winst.lock();
+	if (!instance) {
+		instance = std::shared_ptr<blur_factory>(new blur_factory());
+		winst    = instance;
 	}
+	return instance;
 }
 
-void streamfx::filter::blur::blur_factory::finalize()
-{
-	_filter_blur_factory_instance.reset();
-}
+static std::shared_ptr<blur_factory> loader_instance;
 
-std::shared_ptr<blur_factory> streamfx::filter::blur::blur_factory::get()
-{
-	return _filter_blur_factory_instance;
-}
+static auto loader = streamfx::loader(
+	[]() { // Initalizer
+		loader_instance = blur_factory::instance();
+	},
+	[]() { // Finalizer
+		loader_instance.reset();
+	},
+	streamfx::loader_priority::NORMAL);
