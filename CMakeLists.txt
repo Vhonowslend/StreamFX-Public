@@ -318,7 +318,6 @@ set(${PREFIX}ENABLE_ENCODER_FFMPEG_AMF ${FEATURE_DEPRECATED} CACHE BOOL "Enable 
 set(${PREFIX}ENABLE_ENCODER_FFMPEG_NVENC ${FEATURE_UNSTABLE} CACHE BOOL "Enable NVENC Encoder in FFmpeg.")
 set(${PREFIX}ENABLE_ENCODER_FFMPEG_PRORES ${FEATURE_STABLE} CACHE BOOL "Enable ProRes Encoder in FFmpeg.")
 set(${PREFIX}ENABLE_ENCODER_FFMPEG_DNXHR ${FEATURE_STABLE} CACHE BOOL "Enable DNXHR Encoder in FFmpeg.")
-set(${PREFIX}ENABLE_ENCODER_AOM_AV1 ${FEATURE_DEPRECATED} CACHE BOOL "Enable AOM AV1 Encoder.")
 
 ## Filters
 set(${PREFIX}ENABLE_FILTER_AUTOFRAMING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Auto-Framing Filter")
@@ -1236,23 +1235,6 @@ if(T_CHECK)
 				ENABLE_ENCODER_FFMPEG_DNXHR
 		)
 	endif()
-endif()
-
-# Encoder/AOM-AV1
-is_feature_enabled(ENCODER_AOM_AV1 T_CHECK)
-if(T_CHECK)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/encoders/codecs/av1.hpp"
-		"source/encoders/codecs/av1.cpp"
-		"source/encoders/encoder-aom-av1.hpp"
-		"source/encoders/encoder-aom-av1.cpp"
-	)
-	list(APPEND PROJECT_INCLUDE_DIRS
-		${AOM_INCLUDE_DIR}
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_ENCODER_AOM_AV1
-	)
 endif()
 
 # Filter/Auto-Framing
