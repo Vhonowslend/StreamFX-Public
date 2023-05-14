@@ -52,10 +52,6 @@ namespace streamfx::transition::shader {
 #endif
 
 		public: // Singleton
-		static void initialize();
-
-		static void finalize();
-
-		static std::shared_ptr<shader_factory> get();
+		static std::shared_ptr<shader_factory> instance();
 	};
 } // namespace streamfx::transition::shader
