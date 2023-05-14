@@ -7,7 +7,6 @@
 #include "gfx/gfx-opengl.hpp"
 #include "obs/gs/gs-helper.hpp"
 #include "obs/gs/gs-vertexbuffer.hpp"
-#include "obs/obs-source-tracker.hpp"
 
 #ifdef ENABLE_NVIDIA_CUDA
 #include "nvidia/cuda/nvidia-cuda-obs.hpp"
@@ -81,8 +80,7 @@
 #include <stdexcept>
 #include "warning-enable.hpp"
 
-static std::shared_ptr<streamfx::gfx::opengl>                  _streamfx_gfx_opengl;
-static std::shared_ptr<streamfx::obs::source_tracker>          _source_tracker;
+static std::shared_ptr<streamfx::gfx::opengl> _streamfx_gfx_opengl;
 
 namespace streamfx {
 	typedef std::list<loader_function_t>               loader_list_t;
@@ -137,9 +135,6 @@ MODULE_EXPORT bool obs_module_load(void)
 				}
 			}
 		}
-
-		// Initialize Source Tracker
-		_source_tracker = streamfx::obs::source_tracker::get();
 
 		// Initialize GLAD (OpenGL)
 		{
@@ -319,9 +314,6 @@ MODULE_EXPORT void obs_module_unload(void)
 			streamfx::obs::gs::context gctx{};
 			_streamfx_gfx_opengl.reset();
 		}
-
-		// Finalize Source Tracker
-		_source_tracker.reset();
 
 		//	// Auto-Updater
 		//#ifdef ENABLE_UPDATER

@@ -327,7 +327,7 @@ obs_properties_t* mirror_factory::get_properties2(mirror_instance* data)
 		obs_property_set_modified_callback(p, modified_properties);
 
 		obs_property_list_add_string(p, "", "");
-		obs::source_tracker::get()->enumerate(
+		obs::source_tracker::instance()->enumerate(
 			[&p](std::string name, ::streamfx::obs::source) {
 				std::stringstream sstr;
 				sstr << name << " (" << D_TRANSLATE(S_SOURCETYPE_SOURCE) << ")";
@@ -335,7 +335,7 @@ obs_properties_t* mirror_factory::get_properties2(mirror_instance* data)
 				return false;
 			},
 			obs::source_tracker::filter_sources);
-		obs::source_tracker::get()->enumerate(
+		obs::source_tracker::instance()->enumerate(
 			[&p](std::string name, ::streamfx::obs::source) {
 				std::stringstream sstr;
 				sstr << name << " (" << D_TRANSLATE(S_SOURCETYPE_SCENE) << ")";

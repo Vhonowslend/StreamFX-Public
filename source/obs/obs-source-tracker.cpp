@@ -4,6 +4,7 @@
 
 #include "obs-source-tracker.hpp"
 #include "obs/obs-tools.hpp"
+#include "plugin.hpp"
 #include "util/util-logging.hpp"
 
 #include "warning-disable.hpp"
@@ -235,17 +236,27 @@ void streamfx::obs::source_tracker::source_rename_handler(void* ptr, calldata_t*
 	}
 }
 
-std::shared_ptr<streamfx::obs::source_tracker> streamfx::obs::source_tracker::get()
+std::shared_ptr<streamfx::obs::source_tracker> streamfx::obs::source_tracker::instance()
 {
-	static std::mutex                                   inst_mtx;
-	static std::weak_ptr<streamfx::obs::source_tracker> inst_weak;
+	static std::weak_ptr<streamfx::obs::source_tracker> winst;
+	static std::mutex                                   mtx;
 
-	std::unique_lock<std::mutex> lock(inst_mtx);
-	if (inst_weak.expired()) {
-		auto instance = std::shared_ptr<streamfx::obs::source_tracker>(new streamfx::obs::source_tracker());
-		inst_weak     = instance;
-		return instance;
-	} else {
-		return inst_weak.lock();
+	std::unique_lock<decltype(mtx)> lock(mtx);
+	auto                            instance = winst.lock();
+	if (!instance) {
+		instance = std::shared_ptr<streamfx::obs::source_tracker>(new streamfx::obs::source_tracker());
+		winst    = instance;
 	}
+	return instance;
 }
+
+static std::shared_ptr<streamfx::obs::source_tracker> loader_instance;
+
+static auto loader = streamfx::loader(
+	[]() { // Initalizer
+		loader_instance = streamfx::obs::source_tracker::instance();
+	},
+	[]() { // Finalizer
+		loader_instance.reset();
+	},
+	streamfx::loader_priority::HIGHEST); // Does not rely on other critical functionality.
