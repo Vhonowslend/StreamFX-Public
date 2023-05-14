@@ -1146,10 +1146,10 @@ if(T_CHECK)
 		"source/encoders/codecs/dnxhr.cpp"
 
 		# Encoders/Handlers
-		"source/encoders/handlers/handler.hpp"
-		"source/encoders/handlers/handler.cpp"
-		"source/encoders/handlers/debug_handler.hpp"
-		"source/encoders/handlers/debug_handler.cpp"
+		"source/encoders/ffmpeg/handler.hpp"
+		"source/encoders/ffmpeg/handler.cpp"
+		"source/encoders/ffmpeg/debug_handler.hpp"
+		"source/encoders/ffmpeg/debug_handler.cpp"
 	)
 	list(APPEND PROJECT_DEFINITIONS
 		ENABLE_ENCODER_FFMPEG
@@ -1159,12 +1159,12 @@ if(T_CHECK)
 	is_feature_enabled(ENCODER_FFMPEG_AMF T_CHECK)
 	if(T_CHECK)
 		list(APPEND PROJECT_PRIVATE_SOURCE
-			"source/encoders/handlers/amf_shared.hpp"
-			"source/encoders/handlers/amf_shared.cpp"
-			"source/encoders/handlers/amf_h264_handler.hpp"
-			"source/encoders/handlers/amf_h264_handler.cpp"
-			"source/encoders/handlers/amf_hevc_handler.hpp"
-			"source/encoders/handlers/amf_hevc_handler.cpp"
+			"source/encoders/ffmpeg/amf_shared.hpp"
+			"source/encoders/ffmpeg/amf_shared.cpp"
+			"source/encoders/ffmpeg/amf_h264_handler.hpp"
+			"source/encoders/ffmpeg/amf_h264_handler.cpp"
+			"source/encoders/ffmpeg/amf_hevc_handler.hpp"
+			"source/encoders/ffmpeg/amf_hevc_handler.cpp"
 		)
 		list(APPEND PROJECT_DEFINITIONS
 			ENABLE_ENCODER_FFMPEG_AMF
@@ -1175,12 +1175,12 @@ if(T_CHECK)
 	is_feature_enabled(ENCODER_FFMPEG_NVENC T_CHECK)
 	if(T_CHECK)
 		list(APPEND PROJECT_PRIVATE_SOURCE
-			"source/encoders/handlers/nvenc_shared.hpp"
-			"source/encoders/handlers/nvenc_shared.cpp"
-			"source/encoders/handlers/nvenc_h264_handler.hpp"
-			"source/encoders/handlers/nvenc_h264_handler.cpp"
-			"source/encoders/handlers/nvenc_hevc_handler.hpp"
-			"source/encoders/handlers/nvenc_hevc_handler.cpp"
+			"source/encoders/ffmpeg/nvenc_shared.hpp"
+			"source/encoders/ffmpeg/nvenc_shared.cpp"
+			"source/encoders/ffmpeg/nvenc_h264_handler.hpp"
+			"source/encoders/ffmpeg/nvenc_h264_handler.cpp"
+			"source/encoders/ffmpeg/nvenc_hevc_handler.hpp"
+			"source/encoders/ffmpeg/nvenc_hevc_handler.cpp"
 		)
 		list(APPEND PROJECT_DEFINITIONS
 			ENABLE_ENCODER_FFMPEG_NVENC
@@ -1191,8 +1191,8 @@ if(T_CHECK)
 	is_feature_enabled(ENCODER_FFMPEG_PRORES T_CHECK)
 	if(T_CHECK)
 		list(APPEND PROJECT_PRIVATE_SOURCE
-			"source/encoders/handlers/prores_aw_handler.hpp"
-			"source/encoders/handlers/prores_aw_handler.cpp"
+			"source/encoders/ffmpeg/prores_aw_handler.hpp"
+			"source/encoders/ffmpeg/prores_aw_handler.cpp"
 		)
 		list(APPEND PROJECT_DEFINITIONS
 			ENABLE_ENCODER_FFMPEG_PRORES
@@ -1203,11 +1203,11 @@ if(T_CHECK)
 	is_feature_enabled(ENCODER_FFMPEG_DNXHR T_CHECK)
 	if(T_CHECK)
 		list(APPEND PROJECT_PRIVATE_SOURCE
-				"source/encoders/handlers/dnxhd_handler.hpp"
-				"source/encoders/handlers/dnxhd_handler.cpp"
+			"source/encoders/ffmpeg/dnxhd_handler.hpp"
+			"source/encoders/ffmpeg/dnxhd_handler.cpp"
 		)
 		list(APPEND PROJECT_DEFINITIONS
-				ENABLE_ENCODER_FFMPEG_DNXHR
+			ENABLE_ENCODER_FFMPEG_DNXHR
 		)
 	endif()
 endif()
