@@ -92,20 +92,27 @@ bool streamfx::configuration::is_different_version()
 	return (version() & STREAMFX_MASK_COMPAT) != (STREAMFX_VERSION & STREAMFX_MASK_COMPAT);
 }
 
-static std::shared_ptr<streamfx::configuration> _instance = nullptr;
-
-void streamfx::configuration::initialize()
-{
-	if (!_instance)
-		_instance = std::make_shared<streamfx::configuration>();
-}
-
-void streamfx::configuration::finalize()
-{
-	_instance.reset();
-}
-
 std::shared_ptr<streamfx::configuration> streamfx::configuration::instance()
 {
-	return _instance;
+	static std::weak_ptr<streamfx::configuration> winst;
+	static std::mutex                             mtx;
+
+	std::unique_lock<decltype(mtx)> lock(mtx);
+	auto                            instance = winst.lock();
+	if (!instance) {
+		instance = std::shared_ptr<streamfx::configuration>(new streamfx::configuration());
+		winst    = instance;
+	}
+	return instance;
 }
+
+static std::shared_ptr<streamfx::configuration> loader_instance;
+
+static auto loader = streamfx::loader(
+	[]() { // Initalizer
+		loader_instance = streamfx::configuration::instance();
+	},
+	[]() { // Finalizer
+		loader_instance.reset();
+	},
+	streamfx::loader_priority::HIGHER); // Attempt to load after critical functionality.
