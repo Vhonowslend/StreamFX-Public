@@ -111,6 +111,9 @@ jobs:
     - name: "Dependency: OBS Libraries"
       id: obs
       if: ${{ steps.obs-cache.outputs.cache-hit != 'true' }}
+      env:
+        # obs-studio does not support ClangCL
+        CMAKE_GENERATOR_TOOLSET: ""
       shell: bash
       run: |
         # Apply patches to obs-studio
