@@ -10,7 +10,6 @@
 #include "strings.hpp"
 #include "codecs/hevc.hpp"
 #include "ffmpeg/tools.hpp"
-#include "handlers/debug_handler.hpp"
 #include "obs/gs/gs-helper.hpp"
 #include "plugin.hpp"
 
@@ -31,24 +30,6 @@ extern "C" {
 #include <libavutil/pixdesc.h>
 #include "warning-enable.hpp"
 }
-
-#ifdef ENABLE_ENCODER_FFMPEG_AMF
-#include "handlers/amf_h264_handler.hpp"
-#include "handlers/amf_hevc_handler.hpp"
-#endif
-
-#ifdef ENABLE_ENCODER_FFMPEG_NVENC
-#include "handlers/nvenc_h264_handler.hpp"
-#include "handlers/nvenc_hevc_handler.hpp"
-#endif
-
-#ifdef ENABLE_ENCODER_FFMPEG_PRORES
-#include "handlers/prores_aw_handler.hpp"
-#endif
-
-#ifdef ENABLE_ENCODER_FFMPEG_DNXHR
-#include "handlers/dnxhd_handler.hpp"
-#endif
 
 #ifdef WIN32
 #include "ffmpeg/hwapi/d3d11.hpp"
@@ -176,7 +157,7 @@ ffmpeg_instance::~ffmpeg_instance()
 void ffmpeg_instance::get_properties(obs_properties_t* props)
 {
 	if (_handler)
-		_handler->get_properties(props, _codec, _context, _handler->is_hardware_encoder(_factory));
+		_handler->properties(this->_factory, this, props);
 
 	obs_property_set_enabled(obs_properties_get(props, ST_KEY_KEYFRAMES_INTERVALTYPE), false);
 	obs_property_set_enabled(obs_properties_get(props, ST_KEY_KEYFRAMES_INTERVAL_SECONDS), false);
@@ -189,7 +170,7 @@ void ffmpeg_instance::get_properties(obs_properties_t* props)
 void ffmpeg_instance::migrate(obs_data_t* settings, uint64_t version)
 {
 	if (_handler)
-		_handler->migrate(settings, version, _codec, _context);
+		_handler->migrate(this->_factory, this, settings, version);
 }
 
 bool ffmpeg_instance::update(obs_data_t* settings)
@@ -199,7 +180,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 	bool support_reconfig_gpu       = false;
 	bool support_reconfig_keyframes = false;
 	if (_handler) {
-		support_reconfig = _handler->supports_reconfigure(_factory, support_reconfig_threads, support_reconfig_gpu, support_reconfig_keyframes);
+		support_reconfig = _handler->is_reconfigurable(_factory, support_reconfig_threads, support_reconfig_gpu, support_reconfig_keyframes);
 	}
 
 	if (!_context->internal) {
@@ -245,7 +226,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 
 	if (!_context->internal || (support_reconfig && support_reconfig_keyframes)) {
 		// Keyframes
-		if (_handler && _handler->has_keyframe_support(_factory)) {
+		if (_handler && _handler->has_keyframes(_factory)) {
 			// Key-Frame Options
 			obs_video_info ovi;
 			if (!obs_get_video_info(&ovi)) {
@@ -268,7 +249,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 	if (!_context->internal || support_reconfig) {
 		// Handler Options
 		if (_handler)
-			_handler->update(settings, _codec, _context);
+			_handler->update(this->_factory, this, settings);
 
 		{ // FFmpeg Custom Options
 			const char* opts     = obs_data_get_string(settings, ST_KEY_FFMPEG_CUSTOMSETTINGS);
@@ -279,7 +260,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 
 		// Handler Overrides
 		if (_handler)
-			_handler->override_update(this, settings);
+			_handler->override_update(this->_factory, this, settings);
 	}
 
 	// Handler Logging
@@ -310,7 +291,7 @@ bool ffmpeg_instance::update(obs_data_t* settings)
 		}
 
 		if (_handler) {
-			_handler->log_options(settings, _codec, _context);
+			_handler->log(this->_factory, this, settings);
 		}
 	}
 
@@ -438,7 +419,7 @@ void ffmpeg_instance::initialize_sw(obs_data_t* settings)
 			}
 
 			if (_handler) // Allow Handler to override the automatic color format for sanity reasons.
-				_handler->override_colorformat(pix_fmt_target, settings, _codec, _context);
+				_handler->override_colorformat(this->_factory, this, settings, pix_fmt_target);
 		}
 
 		// Setup from OBS information.
@@ -634,8 +615,9 @@ int ffmpeg_instance::receive_packet(bool* received_packet, struct encoder_packet
 	}
 
 	// Allow Handler Post-Processing
-	if (_handler)
-		_handler->process_avpacket(_packet, _codec, _context);
+	//FIXME! Is this still necessary?
+	//if (_handler)
+	//	_handler->process_avpacket(_packet, _codec, _context);
 
 	// Build packet for use in OBS.
 	packet->type     = OBS_ENCODER_VIDEO;
@@ -960,10 +942,10 @@ ffmpeg_factory::ffmpeg_factory(ffmpeg_manager* manager, const AVCodec* codec) : 
 	// Find any available handlers for this codec.
 	if (_handler = manager->get_handler(_avcodec->name); _handler) {
 		// Override any found info with the one specified by the handler.
-		_handler->adjust_info(this, _avcodec, _id, _name, _codec);
+		_handler->adjust_info(this, _id, _name, _codec);
 
 		// Add texture capability for hardware encoders.
-		if (_handler->is_hardware_encoder(this)) {
+		if (_handler->is_hardware(this)) {
 			_info.caps |= OBS_ENCODER_CAP_PASS_TEXTURE;
 		}
 	} else {
@@ -1007,9 +989,9 @@ const char* ffmpeg_factory::get_name()
 void ffmpeg_factory::get_defaults2(obs_data_t* settings)
 {
 	if (_handler) {
-		_handler->get_defaults(settings, _avcodec, nullptr, _handler->is_hardware_encoder(this));
+		_handler->defaults(this, settings);
 
-		if (_handler->has_keyframe_support(this)) {
+		if (_handler->has_keyframes(this)) {
 			obs_data_set_default_int(settings, ST_KEY_KEYFRAMES_INTERVALTYPE, 0);
 			obs_data_set_default_double(settings, ST_KEY_KEYFRAMES_INTERVAL_SECONDS, 2.0);
 			obs_data_set_default_int(settings, ST_KEY_KEYFRAMES_INTERVAL_FRAMES, 300);
@@ -1027,7 +1009,7 @@ void ffmpeg_factory::get_defaults2(obs_data_t* settings)
 void ffmpeg_factory::migrate(obs_data_t* data, uint64_t version)
 {
 	if (_handler)
-		_handler->migrate(data, version, _avcodec, nullptr);
+		_handler->migrate(this, nullptr, data, version);
 }
 
 static bool modified_keyframes(obs_properties_t* props, obs_property_t*, obs_data_t* settings) noexcept
@@ -1061,9 +1043,9 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 	}
 
 	if (_handler)
-		_handler->get_properties(props, _avcodec, nullptr, _handler->is_hardware_encoder(this));
+		_handler->properties(this, data, props);
 
-	if (_handler && _handler->has_keyframe_support(this)) {
+	if (_handler && _handler->has_keyframes(this)) {
 		// Key-Frame Options
 		obs_properties_t* grp = props;
 		if (!streamfx::util::are_property_groups_broken()) {
@@ -1099,11 +1081,11 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 			auto p = obs_properties_add_text(grp, ST_KEY_FFMPEG_CUSTOMSETTINGS, D_TRANSLATE(ST_I18N_FFMPEG_CUSTOMSETTINGS), obs_text_type::OBS_TEXT_DEFAULT);
 		}
 
-		if (_handler && _handler->is_hardware_encoder(this)) {
+		if (_handler && _handler->is_hardware(this)) {
 			auto p = obs_properties_add_int(grp, ST_KEY_FFMPEG_GPU, D_TRANSLATE(ST_I18N_FFMPEG_GPU), -1, std::numeric_limits<uint8_t>::max(), 1);
 		}
 
-		if (_handler && _handler->has_threading_support(this)) {
+		if (_handler && _handler->has_threading(this)) {
 			auto p = obs_properties_add_int_slider(grp, ST_KEY_FFMPEG_THREADS, D_TRANSLATE(ST_I18N_FFMPEG_THREADS), 0, static_cast<int64_t>(std::thread::hardware_concurrency()) * 2, 1);
 		}
 
@@ -1132,7 +1114,7 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 bool ffmpeg_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
 {
 	ffmpeg_factory* ptr = static_cast<ffmpeg_factory*>(data);
-	streamfx::open_url(ptr->_handler->get_help_url(ptr->_avcodec));
+	streamfx::open_url(ptr->_handler->help(ptr));
 	return false;
 }
 #endif
@@ -1147,25 +1129,8 @@ obs_encoder_info* streamfx::encoder::ffmpeg::ffmpeg_factory::get_info()
 	return &_info;
 }
 
-ffmpeg_manager::ffmpeg_manager() : _factories(), _handlers(), _debug_handler()
+ffmpeg_manager::ffmpeg_manager() : _factories()
 {
-	// Handlers
-	_debug_handler = ::std::make_shared<handler::debug_handler>();
-#ifdef ENABLE_ENCODER_FFMPEG_AMF
-	register_handler("h264_amf", ::std::make_shared<handler::amf_h264_handler>());
-	register_handler("hevc_amf", ::std::make_shared<handler::amf_hevc_handler>());
-#endif
-#ifdef ENABLE_ENCODER_FFMPEG_NVENC
-	register_handler("h264_nvenc", ::std::make_shared<handler::nvenc_h264_handler>());
-	register_handler("hevc_nvenc", ::std::make_shared<handler::nvenc_hevc_handler>());
-#endif
-#ifdef ENABLE_ENCODER_FFMPEG_PRORES
-	register_handler("prores_aw", ::std::make_shared<handler::prores_aw_handler>());
-#endif
-#ifdef ENABLE_ENCODER_FFMPEG_DNXHR
-	register_handler("dnxhd", ::std::make_shared<handler::dnxhd_handler>());
-#endif
-
 	// Encoders
 	void* iterator = nullptr;
 	for (const AVCodec* codec = av_codec_iterate(&iterator); codec != nullptr; codec = av_codec_iterate(&iterator)) {
@@ -1188,28 +1153,6 @@ ffmpeg_manager::~ffmpeg_manager()
 	_factories.clear();
 }
 
-void ffmpeg_manager::register_handler(std::string codec, std::shared_ptr<handler::handler> handler)
-{
-	_handlers.emplace(codec, handler);
-}
-
-std::shared_ptr<handler::handler> ffmpeg_manager::get_handler(std::string codec)
-{
-	auto fnd = _handlers.find(codec);
-	if (fnd != _handlers.end())
-		return fnd->second;
-#ifdef _DEBUG
-	return _debug_handler;
-#else
-	return nullptr;
-#endif
-}
-
-bool ffmpeg_manager::has_handler(std::string_view codec)
-{
-	return (_handlers.find(codec.data()) != _handlers.end());
-}
-
 std::shared_ptr<ffmpeg_manager> ffmpeg_manager::instance()
 {
 	static std::weak_ptr<ffmpeg_manager> winst;
@@ -1222,6 +1165,30 @@ std::shared_ptr<ffmpeg_manager> ffmpeg_manager::instance()
 		winst    = instance;
 	}
 	return instance;
+}
+
+streamfx::encoder::ffmpeg::handler* ffmpeg_manager::find_handler(std::string_view codec)
+{
+	auto handlers = streamfx::encoder::ffmpeg::handler::handlers();
+	if (auto kv = handlers.find(std::string{codec}); kv != handlers.end()) {
+		return kv->second;
+	}
+#ifdef _DEBUG
+	if (auto kv = handlers.find(""); kv != handlers.end()) {
+		return kv->second;
+	}
+#endif
+	return nullptr;
+}
+
+streamfx::encoder::ffmpeg::handler* ffmpeg_manager::get_handler(std::string_view codec)
+{
+	return find_handler(codec);
+}
+
+bool ffmpeg_manager::has_handler(std::string_view codec)
+{
+	return find_handler(codec) != nullptr;
 }
 
 static std::shared_ptr<ffmpeg_manager> loader_instance;
