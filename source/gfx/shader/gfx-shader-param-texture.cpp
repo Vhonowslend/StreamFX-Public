@@ -188,7 +188,7 @@ void streamfx::gfx::shader::texture_parameter::properties(obs_properties_t* prop
 		{
 			auto p = obs_properties_add_list(pr, _keys[2].c_str(), D_TRANSLATE(ST_I18N_SOURCE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 			obs_property_list_add_string(p, "", "");
-			obs::source_tracker::get()->enumerate(
+			obs::source_tracker::instance()->enumerate(
 				[&p](std::string name, ::streamfx::obs::source) {
 					std::stringstream sstr;
 					sstr << name << " (" << D_TRANSLATE(S_SOURCETYPE_SOURCE) << ")";
@@ -196,7 +196,7 @@ void streamfx::gfx::shader::texture_parameter::properties(obs_properties_t* prop
 					return false;
 				},
 				obs::source_tracker::filter_video_sources);
-			obs::source_tracker::get()->enumerate(
+			obs::source_tracker::instance()->enumerate(
 				[&p](std::string name, ::streamfx::obs::source) {
 					std::stringstream sstr;
 					sstr << name << " (" << D_TRANSLATE(S_SOURCETYPE_SCENE) << ")";

@@ -807,13 +807,13 @@ obs_properties_t* blur_factory::get_properties2(blur_instance* data)
 		/// Source
 		p = obs_properties_add_list(pr, ST_KEY_MASK_SOURCE, D_TRANSLATE(ST_I18N_MASK_SOURCE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 		obs_property_list_add_string(p, "", "");
-		obs::source_tracker::get()->enumerate(
+		obs::source_tracker::instance()->enumerate(
 			[&p](std::string name, ::streamfx::obs::source) {
 				obs_property_list_add_string(p, std::string(name + " (Source)").c_str(), name.c_str());
 				return false;
 			},
 			obs::source_tracker::filter_video_sources);
-		obs::source_tracker::get()->enumerate(
+		obs::source_tracker::instance()->enumerate(
 			[&p](std::string name, ::streamfx::obs::source) {
 				obs_property_list_add_string(p, std::string(name + " (Scene)").c_str(), name.c_str());
 				return false;

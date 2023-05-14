@@ -32,7 +32,7 @@ namespace streamfx::obs {
 		// @return true to skip, false to pass along.
 		typedef std::function<bool(std::string, ::streamfx::obs::source)> filter_cb_t;
 
-		protected:
+		private:
 		source_tracker();
 
 		public:
@@ -62,6 +62,6 @@ namespace streamfx::obs {
 		static void source_rename_handler(void* ptr, calldata_t* data) noexcept;
 
 		public: // Singleton
-		static std::shared_ptr<streamfx::obs::source_tracker> get();
+		static std::shared_ptr<streamfx::obs::source_tracker> instance();
 	};
 } // namespace streamfx::obs
