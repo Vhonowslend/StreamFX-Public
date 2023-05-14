@@ -826,26 +826,33 @@ bool color_grade_factory::on_manual_open(obs_properties_t* props, obs_property_t
 }
 #endif
 
-std::shared_ptr<color_grade_factory> _color_grade_factory_instance = nullptr;
-
-void streamfx::filter::color_grade::color_grade_factory::initialize()
+std::shared_ptr<color_grade_factory> streamfx::filter::color_grade::color_grade_factory::instance()
 {
-	try {
-		if (!_color_grade_factory_instance)
-			_color_grade_factory_instance = std::make_shared<color_grade_factory>();
-	} catch (const std::exception& ex) {
-		D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
-	} catch (...) {
-		D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+	static std::weak_ptr<color_grade_factory> winst;
+	static std::mutex                         mtx;
+
+	std::unique_lock<decltype(mtx)> lock(mtx);
+	auto                            instance = winst.lock();
+	if (!instance) {
+		try {
+			instance = std::shared_ptr<color_grade_factory>(new color_grade_factory());
+			winst    = instance;
+		} catch (const std::exception& ex) {
+			D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
+		} catch (...) {
+			D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+		}
 	}
+	return instance;
 }
 
-void streamfx::filter::color_grade::color_grade_factory::finalize()
-{
-	_color_grade_factory_instance.reset();
-}
+static std::shared_ptr<color_grade_factory> loader_instance;
 
-std::shared_ptr<color_grade_factory> streamfx::filter::color_grade::color_grade_factory::get()
-{
-	return _color_grade_factory_instance;
-}
+static auto loader = streamfx::loader(
+	[]() { // Initalizer
+		loader_instance = color_grade_factory::instance();
+	},
+	[]() { // Finalizer
+		loader_instance.reset();
+	},
+	streamfx::loader_priority::NORMAL); // Must be loaded after all other functionality.

@@ -22,9 +22,6 @@
 #ifdef ENABLE_FILTER_BLUR
 #include "filters/filter-blur.hpp"
 #endif
-#ifdef ENABLE_FILTER_COLOR_GRADE
-#include "filters/filter-color-grade.hpp"
-#endif
 #ifdef ENABLE_FILTER_DENOISING
 #include "filters/filter-denoising.hpp"
 #endif
@@ -162,9 +159,6 @@ MODULE_EXPORT bool obs_module_load(void)
 #ifdef ENABLE_FILTER_BLUR
 			streamfx::filter::blur::blur_factory::initialize();
 #endif
-#ifdef ENABLE_FILTER_COLOR_GRADE
-			streamfx::filter::color_grade::color_grade_factory::initialize();
-#endif
 #ifdef ENABLE_FILTER_DENOISING
 			streamfx::filter::denoising::denoising_factory::initialize();
 #endif
@@ -234,9 +228,6 @@ MODULE_EXPORT void obs_module_unload(void)
 #endif
 #ifdef ENABLE_FILTER_BLUR
 			streamfx::filter::blur::blur_factory::finalize();
-#endif
-#ifdef ENABLE_FILTER_COLOR_GRADE
-			streamfx::filter::color_grade::color_grade_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_DENOISING
 			streamfx::filter::denoising::denoising_factory::finalize();
