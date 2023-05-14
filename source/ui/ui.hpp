@@ -36,8 +36,10 @@ namespace streamfx::ui {
 		std::shared_ptr<streamfx::ui::updater> _updater;
 #endif
 
-		public:
+		private:
 		handler();
+
+		public:
 		~handler();
 
 		bool have_shown_about_streamfx(bool shown = false);
@@ -63,11 +65,7 @@ namespace streamfx::ui {
 		void on_action_about(bool);
 
 		public /* Singleton */:
-		static void initialize();
-
-		static void finalize();
-
-		static std::shared_ptr<ui::handler> get();
+		static std::shared_ptr<ui::handler> instance();
 	};
 
 	class translator : public QTranslator {
