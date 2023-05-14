@@ -28,9 +28,6 @@
 #ifdef ENABLE_FILTER_DISPLACEMENT
 #include "filters/filter-displacement.hpp"
 #endif
-#ifdef ENABLE_FILTER_DYNAMIC_MASK
-#include "filters/filter-dynamic-mask.hpp"
-#endif
 #ifdef ENABLE_FILTER_SDF_EFFECTS
 #include "filters/filter-sdf-effects.hpp"
 #endif
@@ -156,9 +153,6 @@ MODULE_EXPORT bool obs_module_load(void)
 #ifdef ENABLE_FILTER_DISPLACEMENT
 			streamfx::filter::displacement::displacement_factory::initialize();
 #endif
-#ifdef ENABLE_FILTER_DYNAMIC_MASK
-			streamfx::filter::dynamic_mask::dynamic_mask_factory::initialize();
-#endif
 #ifdef ENABLE_FILTER_SDF_EFFECTS
 			streamfx::filter::sdf_effects::sdf_effects_factory::initialize();
 #endif
@@ -213,9 +207,6 @@ MODULE_EXPORT void obs_module_unload(void)
 #endif
 #ifdef ENABLE_FILTER_DISPLACEMENT
 			streamfx::filter::displacement::displacement_factory::finalize();
-#endif
-#ifdef ENABLE_FILTER_DYNAMIC_MASK
-			streamfx::filter::dynamic_mask::dynamic_mask_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_SDF_EFFECTS
 			streamfx::filter::sdf_effects::sdf_effects_factory::finalize();

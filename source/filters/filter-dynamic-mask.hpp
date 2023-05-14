@@ -133,6 +133,6 @@ namespace streamfx::filter::dynamic_mask {
 
 		static void finalize();
 
-		static std::shared_ptr<dynamic_mask_factory> get();
+		static std::shared_ptr<dynamic_mask_factory> instance();
 	};
 } // namespace streamfx::filter::dynamic_mask
