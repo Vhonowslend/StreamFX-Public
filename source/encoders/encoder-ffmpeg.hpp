@@ -5,10 +5,10 @@
 
 #pragma once
 #include "common.hpp"
+#include "encoders/ffmpeg/handler.hpp"
 #include "ffmpeg/avframe-queue.hpp"
 #include "ffmpeg/hwapi/base.hpp"
 #include "ffmpeg/swscale.hpp"
-#include "handlers/handler.hpp"
 #include "obs/obs-encoder-factory.hpp"
 
 #include "warning-disable.hpp"
@@ -17,16 +17,15 @@
 #include <mutex>
 #include <queue>
 #include <stack>
+#include <string>
+#include <string_view>
 #include <thread>
 #include <vector>
-#include "warning-enable.hpp"
-
 extern "C" {
-#include "warning-disable.hpp"
 #include <libavcodec/avcodec.h>
 #include <libavutil/frame.h>
-#include "warning-enable.hpp"
 }
+#include "warning-enable.hpp"
 
 namespace streamfx::encoder::ffmpeg {
 	class ffmpeg_instance;
@@ -38,7 +37,7 @@ namespace streamfx::encoder::ffmpeg {
 		const AVCodec*  _codec;
 		AVCodecContext* _context;
 
-		std::shared_ptr<handler::handler> _handler;
+		streamfx::encoder::ffmpeg::handler* _handler;
 
 		::streamfx::ffmpeg::swscale _scaler;
 		std::shared_ptr<AVPacket>   _packet;
@@ -116,7 +115,7 @@ namespace streamfx::encoder::ffmpeg {
 
 		const AVCodec* _avcodec;
 
-		std::shared_ptr<handler::handler> _handler;
+		streamfx::encoder::ffmpeg::handler* _handler;
 
 		public:
 		ffmpeg_factory(ffmpeg_manager* manager, const AVCodec* codec);
@@ -142,16 +141,14 @@ namespace streamfx::encoder::ffmpeg {
 
 	class ffmpeg_manager {
 		std::map<const AVCodec*, std::shared_ptr<ffmpeg_factory>> _factories;
-		std::map<std::string, std::shared_ptr<handler::handler>>  _handlers;
-		std::shared_ptr<handler::handler>                         _debug_handler;
 
 		public:
 		ffmpeg_manager();
 		~ffmpeg_manager();
 
-		void register_handler(std::string codec, std::shared_ptr<handler::handler> handler);
+		streamfx::encoder::ffmpeg::handler* find_handler(std::string_view codec);
 
-		std::shared_ptr<handler::handler> get_handler(std::string codec);
+		streamfx::encoder::ffmpeg::handler* get_handler(std::string_view codec);
 
 		bool has_handler(std::string_view codec);
 
