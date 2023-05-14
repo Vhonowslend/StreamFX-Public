@@ -144,7 +144,7 @@ void denoising_instance::update(obs_data_t* data)
 	// Check if the user changed which Denoising provider we use.
 	denoising_provider provider = static_cast<denoising_provider>(obs_data_get_int(data, ST_KEY_PROVIDER));
 	if (provider == denoising_provider::AUTOMATIC) {
-		provider = denoising_factory::get()->find_ideal_provider();
+		provider = denoising_factory::instance()->find_ideal_provider();
 	}
 
 	// Check if the provider was changed, and if so switch.
@@ -621,26 +621,27 @@ denoising_provider streamfx::filter::denoising::denoising_factory::find_ideal_pr
 	return denoising_provider::AUTOMATIC;
 }
 
-std::shared_ptr<denoising_factory> _video_denoising_factory_instance = nullptr;
-
-void denoising_factory::initialize()
+std::shared_ptr<denoising_factory> denoising_factory::instance()
 {
-	try {
-		if (!_video_denoising_factory_instance)
-			_video_denoising_factory_instance = std::make_shared<denoising_factory>();
-	} catch (const std::exception& ex) {
-		D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
-	} catch (...) {
-		D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+	static std::weak_ptr<denoising_factory> winst;
+	static std::mutex                       mtx;
+
+	std::unique_lock<decltype(mtx)> lock(mtx);
+	auto                            instance = winst.lock();
+	if (!instance) {
+		instance = std::shared_ptr<denoising_factory>(new denoising_factory());
+		winst    = instance;
 	}
+	return instance;
 }
 
-void denoising_factory::finalize()
-{
-	_video_denoising_factory_instance.reset();
-}
+static std::shared_ptr<denoising_factory> loader_instance;
 
-std::shared_ptr<denoising_factory> denoising_factory::get()
-{
-	return _video_denoising_factory_instance;
-}
+static auto loader = streamfx::loader(
+	[]() { // Initalizer
+		loader_instance = denoising_factory::instance();
+	},
+	[]() { // Finalizer
+		loader_instance.reset();
+	},
+	streamfx::loader_priority::NORMAL);
