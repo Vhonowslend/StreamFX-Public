@@ -154,7 +154,10 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/build/ci/install" \
           -DPACKAGE_NAME="streamfx-${{ matrix.package_name }}" \
           -DPACKAGE_PREFIX="${{ github.workspace }}/build/package" \
-          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/build/obs/install;${{ github.workspace }}/build/qt;${{ github.workspace }}/build/obsdeps"
+          -Dlibobs_DIR="${{ github.workspace }}/build/obs/install" \
+          -DQt${{ matrix.qt }}_DIR="${{ github.workspace }}/build/qt" \
+          -DFFmpeg_DIR="${{ github.workspace }}/build/obsdeps" \
+          -DCURL_DIR="${{ github.workspace }}/build/obsdeps"
     - name: "Build: Debug"
       continue-on-error: true
       shell: bash
@@ -309,7 +312,10 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/build/ci/install" \
           -DPACKAGE_NAME="streamfx-${{ matrix.package_name }}" \
           -DPACKAGE_PREFIX="${{ github.workspace }}/build/package" \
-          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/build/obs/install;${{ github.workspace }}/build/qt;${{ github.workspace }}/build/obsdeps"
+          -Dlibobs_DIR="${{ github.workspace }}/build/obs/install" \
+          -DQt${{ matrix.qt }}_DIR="${{ github.workspace }}/build/qt" \
+          -DFFmpeg_DIR="${{ github.workspace }}/build/obsdeps" \
+          -DCURL_DIR="${{ github.workspace }}/build/obsdeps"
     - name: "Build: Debug"
       continue-on-error: true
       shell: bash
