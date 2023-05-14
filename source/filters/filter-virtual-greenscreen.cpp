@@ -155,7 +155,7 @@ void virtual_greenscreen_instance::update(obs_data_t* data)
 	// Check if the user changed which Denoising provider we use.
 	virtual_greenscreen_provider provider = static_cast<virtual_greenscreen_provider>(obs_data_get_int(data, ST_KEY_PROVIDER));
 	if (provider == virtual_greenscreen_provider::AUTOMATIC) {
-		provider = virtual_greenscreen_factory::get()->find_ideal_provider();
+		provider = virtual_greenscreen_factory::instance()->find_ideal_provider();
 	}
 
 	// Check if the provider was changed, and if so switch.
@@ -617,7 +617,7 @@ bool streamfx::filter::virtual_greenscreen::virtual_greenscreen_factory::is_prov
 virtual_greenscreen_provider streamfx::filter::virtual_greenscreen::virtual_greenscreen_factory::find_ideal_provider()
 {
 	for (auto v : provider_priority) {
-		if (virtual_greenscreen_factory::get()->is_provider_available(v)) {
+		if (virtual_greenscreen_factory::instance()->is_provider_available(v)) {
 			return v;
 			break;
 		}
@@ -625,26 +625,27 @@ virtual_greenscreen_provider streamfx::filter::virtual_greenscreen::virtual_gree
 	return virtual_greenscreen_provider::AUTOMATIC;
 }
 
-std::shared_ptr<virtual_greenscreen_factory> _video_superresolution_factory_instance = nullptr;
-
-void virtual_greenscreen_factory::initialize()
+std::shared_ptr<virtual_greenscreen_factory> virtual_greenscreen_factory::instance()
 {
-	try {
-		if (!_video_superresolution_factory_instance)
-			_video_superresolution_factory_instance = std::make_shared<virtual_greenscreen_factory>();
-	} catch (const std::exception& ex) {
-		D_LOG_ERROR("Failed to initialize due to error: %s", ex.what());
-	} catch (...) {
-		D_LOG_ERROR("Failed to initialize due to unknown error.", "");
+	static std::weak_ptr<virtual_greenscreen_factory> winst;
+	static std::mutex                    mtx;
+
+	std::unique_lock<decltype(mtx)> lock(mtx);
+	auto                            instance = winst.lock();
+	if (!instance) {
+		instance = std::shared_ptr<virtual_greenscreen_factory>(new virtual_greenscreen_factory());
+		winst    = instance;
 	}
+	return instance;
 }
 
-void virtual_greenscreen_factory::finalize()
-{
-	_video_superresolution_factory_instance.reset();
-}
+static std::shared_ptr<virtual_greenscreen_factory> loader_instance;
 
-std::shared_ptr<virtual_greenscreen_factory> virtual_greenscreen_factory::get()
-{
-	return _video_superresolution_factory_instance;
-}
+static auto loader = streamfx::loader(
+	[]() { // Initalizer
+		loader_instance = virtual_greenscreen_factory::instance();
+	},
+	[]() { // Finalizer
+		loader_instance.reset();
+	},
+	streamfx::loader_priority::NORMAL);

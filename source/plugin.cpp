@@ -28,9 +28,6 @@
 #ifdef ENABLE_FILTER_UPSCALING
 #include "filters/filter-upscaling.hpp"
 #endif
-#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN
-#include "filters/filter-virtual-greenscreen.hpp"
-#endif
 
 #ifdef ENABLE_FRONTEND
 #include "ui/ui.hpp"
@@ -143,9 +140,6 @@ MODULE_EXPORT bool obs_module_load(void)
 #ifdef ENABLE_FILTER_UPSCALING
 			streamfx::filter::upscaling::upscaling_factory::initialize();
 #endif
-#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN
-			streamfx::filter::virtual_greenscreen::virtual_greenscreen_factory::initialize();
-#endif
 		}
 
 		DLOG_INFO("Loaded Version %s", STREAMFX_VERSION_STRING);
@@ -177,9 +171,6 @@ MODULE_EXPORT void obs_module_unload(void)
 #endif
 #ifdef ENABLE_FILTER_UPSCALING
 			streamfx::filter::upscaling::upscaling_factory::finalize();
-#endif
-#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN
-			streamfx::filter::virtual_greenscreen::virtual_greenscreen_factory::finalize();
 #endif
 		}
 
