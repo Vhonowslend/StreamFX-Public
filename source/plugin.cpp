@@ -19,9 +19,6 @@
 #ifdef ENABLE_FILTER_AUTOFRAMING
 #include "filters/filter-autoframing.hpp"
 #endif
-#ifdef ENABLE_FILTER_DENOISING
-#include "filters/filter-denoising.hpp"
-#endif
 #ifdef ENABLE_FILTER_DISPLACEMENT
 #include "filters/filter-displacement.hpp"
 #endif
@@ -128,9 +125,6 @@ MODULE_EXPORT bool obs_module_load(void)
 #ifdef ENABLE_FILTER_AUTOFRAMING
 			streamfx::filter::autoframing::autoframing_factory::initialize();
 #endif
-#ifdef ENABLE_FILTER_DENOISING
-			streamfx::filter::denoising::denoising_factory::initialize();
-#endif
 #ifdef ENABLE_FILTER_DISPLACEMENT
 			streamfx::filter::displacement::displacement_factory::initialize();
 #endif
@@ -156,9 +150,6 @@ MODULE_EXPORT void obs_module_unload(void)
 		{
 #ifdef ENABLE_FILTER_AUTOFRAMING
 			streamfx::filter::autoframing::autoframing_factory::finalize();
-#endif
-#ifdef ENABLE_FILTER_DENOISING
-			streamfx::filter::denoising::denoising_factory::finalize();
 #endif
 #ifdef ENABLE_FILTER_DISPLACEMENT
 			streamfx::filter::displacement::displacement_factory::finalize();

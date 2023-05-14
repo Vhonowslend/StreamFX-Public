@@ -108,7 +108,7 @@ namespace streamfx::filter::denoising {
 		public: // Singleton
 		static void                                                              initialize();
 		static void                                                              finalize();
-		static std::shared_ptr<::streamfx::filter::denoising::denoising_factory> get();
+		static std::shared_ptr<::streamfx::filter::denoising::denoising_factory> instance();
 	};
 
 } // namespace streamfx::filter::denoising
