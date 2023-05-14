@@ -32,10 +32,6 @@
 #include "filters/filter-virtual-greenscreen.hpp"
 #endif
 
-#ifdef ENABLE_SOURCE_MIRROR
-#include "sources/source-mirror.hpp"
-#endif
-
 #ifdef ENABLE_FRONTEND
 #include "ui/ui.hpp"
 #endif
@@ -152,13 +148,6 @@ MODULE_EXPORT bool obs_module_load(void)
 #endif
 		}
 
-		// Sources
-		{
-#ifdef ENABLE_SOURCE_MIRROR
-			streamfx::source::mirror::mirror_factory::initialize();
-#endif
-		}
-
 		DLOG_INFO("Loaded Version %s", STREAMFX_VERSION_STRING);
 		return true;
 	} catch (std::exception const& ex) {
@@ -174,13 +163,6 @@ MODULE_EXPORT void obs_module_unload(void)
 {
 	try {
 		DLOG_INFO("Unloading Version %s", STREAMFX_VERSION_STRING);
-
-		// Sources
-		{
-#ifdef ENABLE_SOURCE_MIRROR
-			streamfx::source::mirror::mirror_factory::finalize();
-#endif
-		}
 
 		// Filters
 		{
