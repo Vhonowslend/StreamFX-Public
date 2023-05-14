@@ -1148,8 +1148,8 @@ if(T_CHECK)
 		# Encoders/Handlers
 		"source/encoders/ffmpeg/handler.hpp"
 		"source/encoders/ffmpeg/handler.cpp"
-		"source/encoders/ffmpeg/debug_handler.hpp"
-		"source/encoders/ffmpeg/debug_handler.cpp"
+		"source/encoders/ffmpeg/debug.hpp"
+		"source/encoders/ffmpeg/debug.cpp"
 	)
 	list(APPEND PROJECT_DEFINITIONS
 		ENABLE_ENCODER_FFMPEG
