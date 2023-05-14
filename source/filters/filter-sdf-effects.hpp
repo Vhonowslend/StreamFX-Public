@@ -100,7 +100,7 @@ namespace streamfx::filter::sdf_effects {
 
 		static void finalize();
 
-		static std::shared_ptr<sdf_effects_factory> get();
+		static std::shared_ptr<sdf_effects_factory> instance();
 	};
 
 } // namespace streamfx::filter::sdf_effects
