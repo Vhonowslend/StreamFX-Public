@@ -103,7 +103,7 @@ namespace streamfx::encoder::ffmpeg {
 
 		const AVCodec* get_avcodec();
 
-		const AVCodecContext* get_avcodeccontext();
+		AVCodecContext* get_avcodeccontext();
 
 		void parse_ffmpeg_commandline(std::string_view text);
 	};

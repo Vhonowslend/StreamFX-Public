@@ -781,7 +781,7 @@ const AVCodec* ffmpeg_instance::get_avcodec()
 	return _codec;
 }
 
-const AVCodecContext* ffmpeg_instance::get_avcodeccontext()
+AVCodecContext* ffmpeg_instance::get_avcodeccontext()
 {
 	return _context;
 }
