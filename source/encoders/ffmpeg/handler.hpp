@@ -32,7 +32,7 @@ namespace streamfx::encoder::ffmpeg {
 		virtual void override_update(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings);
 		virtual void log(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings);
 
-		virtual void override_colorformat(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings, AVPixelFormat target_format);
+		virtual void override_colorformat(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings, AVPixelFormat& target_format);
 
 		public:
 		typedef std::map<std::string, handler*> handler_map_t;

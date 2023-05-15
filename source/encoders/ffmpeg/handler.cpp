@@ -64,4 +64,4 @@ void streamfx::encoder::ffmpeg::handler::override_update(ffmpeg_factory* factory
 
 void streamfx::encoder::ffmpeg::handler::log(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings) {}
 
-void streamfx::encoder::ffmpeg::handler::override_colorformat(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings, AVPixelFormat target_format) {}
+void streamfx::encoder::ffmpeg::handler::override_colorformat(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings, AVPixelFormat& target_format) {}
