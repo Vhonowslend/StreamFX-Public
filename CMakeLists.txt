@@ -1171,12 +1171,8 @@ if(T_CHECK)
 	is_feature_enabled(ENCODER_FFMPEG_NVENC T_CHECK)
 	if(T_CHECK)
 		list(APPEND PROJECT_PRIVATE_SOURCE
-			"source/encoders/ffmpeg/nvenc_shared.hpp"
-			"source/encoders/ffmpeg/nvenc_shared.cpp"
-			"source/encoders/ffmpeg/nvenc_h264_handler.hpp"
-			"source/encoders/ffmpeg/nvenc_h264_handler.cpp"
-			"source/encoders/ffmpeg/nvenc_hevc_handler.hpp"
-			"source/encoders/ffmpeg/nvenc_hevc_handler.cpp"
+			"source/encoders/ffmpeg/nvenc.hpp"
+			"source/encoders/ffmpeg/nvenc.cpp"
 		)
 		list(APPEND PROJECT_DEFINITIONS
 			ENABLE_ENCODER_FFMPEG_NVENC
