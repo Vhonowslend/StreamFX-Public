@@ -18,20 +18,29 @@ streamfx::encoder::ffmpeg::handler::handler(std::string codec)
 
 bool streamfx::encoder::ffmpeg::handler::has_keyframes(ffmpeg_factory* factory)
 {
-#if LIBAVCODEC_VERSION_MAJOR > 58
+#if defined(AV_CODEC_PROP_INTRA_ONLY) // TODO: Determine if we need to check for an exact version.
 	if (auto* desc = avcodec_descriptor_get(factory->get_avcodec()->id); desc) {
 		return (desc->props & AV_CODEC_PROP_INTRA_ONLY) == 0;
-	} else {
-		return false;
 	}
-#else
+#endif
+
+#ifdef AV_CODEC_CAP_INTRA_ONLY
 	return (factory->get_avcodec()->capabilities & AV_CODEC_CAP_INTRA_ONLY) == 0;
+#else
+	return false;
 #endif
 }
 
 bool streamfx::encoder::ffmpeg::handler::has_threading(ffmpeg_factory* factory)
 {
-	return (factory->get_avcodec()->capabilities & (AV_CODEC_CAP_FRAME_THREADS | AV_CODEC_CAP_SLICE_THREADS | AV_CODEC_CAP_OTHER_THREADS));
+	return (factory->get_avcodec()->capabilities
+			& (AV_CODEC_CAP_FRAME_THREADS | AV_CODEC_CAP_SLICE_THREADS
+#if defined(AV_CODEC_CAP_OTHER_THREADS) // TODO: Determine if we need to check for an exact version.
+			   | AV_CODEC_CAP_OTHER_THREADS
+#else
+			   | AV_CODEC_CAP_AUTO_THREADS
+#endif
+			   ));
 }
 
 bool streamfx::encoder::ffmpeg::handler::is_hardware(ffmpeg_factory* factory)
@@ -52,7 +61,8 @@ bool streamfx::encoder::ffmpeg::handler::is_reconfigurable(ffmpeg_factory* facto
 
 void streamfx::encoder::ffmpeg::handler::adjust_info(ffmpeg_factory* factory, std::string& id, std::string& name, std::string& codec) {}
 
-std::string streamfx::encoder::ffmpeg::handler::help(ffmpeg_factory* factory) {
+std::string streamfx::encoder::ffmpeg::handler::help(ffmpeg_factory* factory)
+{
 	return "about:blank";
 }
 
