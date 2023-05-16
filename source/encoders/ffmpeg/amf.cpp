@@ -6,14 +6,20 @@
 // THIS FEATURE IS DEPRECATED. SUBMITTED PATCHES WILL BE REJECTED.
 //--------------------------------------------------------------------------------//
 
-#include "amf_shared.hpp"
+#include "amf.hpp"
+#include "common.hpp"
+#include "strings.hpp"
+#include "encoders/codecs/h264.hpp"
+#include "encoders/codecs/hevc.hpp"
+#include "encoders/encoder-ffmpeg.hpp"
 #include "ffmpeg/tools.hpp"
+#include "plugin.hpp"
 
-extern "C" {
 #include "warning-disable.hpp"
+extern "C" {
 #include <libavutil/opt.h>
-#include "warning-enable.hpp"
 }
+#include "warning-enable.hpp"
 
 // Translation
 #define ST_I18N "Encoder.FFmpeg.AMF"
@@ -60,7 +66,17 @@ extern "C" {
 #define ST_KEY_OTHER_VBAQ "Other.VBAQ"
 #define ST_KEY_OTHER_ACCESSUNITDELIMITER "Other.AccessUnitDelimiter"
 
-using namespace streamfx::encoder::ffmpeg::handler;
+// Settings
+#define ST_KEY_H264_PROFILE "H264.Profile"
+#define ST_KEY_H264_LEVEL "H264.Level"
+
+// Settings
+#define ST_KEY_HEVC_PROFILE "H265.Profile"
+#define ST_KEY_HEVC_TIER "H265.Tier"
+#define ST_KEY_HEVC_LEVEL "H265.Level"
+
+using namespace streamfx::encoder::ffmpeg;
+using namespace streamfx::encoder::codec;
 
 std::map<amf::preset, std::string> amf::presets{
 	{amf::preset::SPEED, ST_I18N_PRESET_("Speed")},
@@ -88,7 +104,30 @@ std::map<amf::ratecontrolmode, std::string> amf::ratecontrolmode_to_opt{
 	{amf::ratecontrolmode::VBR_LATENCY, "vbr_latency"},
 };
 
-bool streamfx::encoder::ffmpeg::handler::amf::is_available()
+static std::map<h264::profile, std::string> h264_profiles{
+	{h264::profile::CONSTRAINED_BASELINE, "constrained_baseline"},
+	{h264::profile::MAIN, "main"},
+	{h264::profile::HIGH, "high"},
+};
+
+static std::map<h264::level, std::string> h264_levels{
+	{h264::level::L1_0, "1.0"}, {h264::level::L1_0b, "1.0b"}, {h264::level::L1_1, "1.1"}, {h264::level::L1_2, "1.2"}, {h264::level::L1_3, "1.3"}, {h264::level::L2_0, "2.0"}, {h264::level::L2_1, "2.1"}, {h264::level::L2_2, "2.2"}, {h264::level::L3_0, "3.0"}, {h264::level::L3_1, "3.1"}, {h264::level::L3_2, "3.2"}, {h264::level::L4_0, "4.0"}, {h264::level::L4_1, "4.1"}, {h264::level::L4_2, "4.2"}, {h264::level::L5_0, "5.0"}, {h264::level::L5_1, "5.1"}, {h264::level::L5_2, "5.2"}, {h264::level::L6_0, "6.0"}, {h264::level::L6_1, "6.1"}, {h264::level::L6_2, "6.2"},
+};
+
+static std::map<hevc::profile, std::string> hevc_profiles{
+	{hevc::profile::MAIN, "main"},
+};
+
+static std::map<hevc::tier, std::string> hevc_tiers{
+	{hevc::tier::MAIN, "main"},
+	{hevc::tier::HIGH, "high"},
+};
+
+static std::map<hevc::level, std::string> hevc_levels{
+	{hevc::level::L1_0, "1.0"}, {hevc::level::L2_0, "2.0"}, {hevc::level::L2_1, "2.1"}, {hevc::level::L3_0, "3.0"}, {hevc::level::L3_1, "3.1"}, {hevc::level::L4_0, "4.0"}, {hevc::level::L4_1, "4.1"}, {hevc::level::L5_0, "5.0"}, {hevc::level::L5_1, "5.1"}, {hevc::level::L5_2, "5.2"}, {hevc::level::L6_0, "6.0"}, {hevc::level::L6_1, "6.1"}, {hevc::level::L6_2, "6.2"},
+};
+
+bool streamfx::encoder::ffmpeg::amf::is_available()
 {
 #if defined(D_PLATFORM_WINDOWS)
 #if defined(D_PLATFORM_64BIT)
@@ -111,7 +150,7 @@ bool streamfx::encoder::ffmpeg::handler::amf::is_available()
 	}
 }
 
-void amf::get_defaults(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context)
+void amf::defaults(ffmpeg_factory* factory, obs_data_t* settings)
 {
 	obs_data_set_default_int(settings, ST_KEY_PRESET, static_cast<int64_t>(amf::preset::BALANCED));
 
@@ -173,7 +212,7 @@ static bool modified_ratecontrol(obs_properties_t* props, obs_property_t*, obs_d
 	return true;
 }
 
-void amf::get_properties_pre(obs_properties_t* props, const AVCodec* codec)
+void amf::properties_before(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_properties_t* props)
 {
 	{
 		auto p = obs_properties_add_text(props, "[[deprecated]]", D_TRANSLATE(ST_I18N_DEPRECATED), OBS_TEXT_INFO);
@@ -187,8 +226,10 @@ void amf::get_properties_pre(obs_properties_t* props, const AVCodec* codec)
 	}
 }
 
-void amf::get_properties_post(obs_properties_t* props, const AVCodec* codec)
+void amf::properties_after(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_properties_t* props)
 {
+	auto codec = factory->get_avcodec();
+
 	{ // Rate Control
 		obs_properties_t* grp = obs_properties_create();
 		obs_properties_add_group(props, ST_I18N_RATECONTROL, D_TRANSLATE(ST_I18N_RATECONTROL), OBS_GROUP_NORMAL, grp);
@@ -257,8 +298,15 @@ void amf::get_properties_post(obs_properties_t* props, const AVCodec* codec)
 	}
 }
 
-void amf::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context)
+void amf::properties_runtime(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_properties_t* props) {}
+
+void amf::migrate(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings, uint64_t version) {}
+
+void amf::update(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings)
 {
+	auto codec   = factory->get_avcodec();
+	auto context = instance->get_avcodeccontext();
+
 	// Alway enable loop filter.
 	context->flags |= AV_CODEC_FLAG_LOOP_FILTER;
 
@@ -396,9 +444,14 @@ void amf::update(obs_data_t* settings, const AVCodec* codec, AVCodecContext* con
 	}
 }
 
-void amf::log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext* context)
+void amf::override_update(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings) {}
+
+void amf::log(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings)
 {
 	using namespace ::streamfx::ffmpeg;
+
+	auto codec   = factory->get_avcodec();
+	auto context = instance->get_avcodeccontext();
 
 	DLOG_INFO("[%s]   AMD AMF:", codec->name);
 	tools::print_av_option_string2(context, "usage", "    Usage", [](int64_t v, std::string_view o) { return std::string(o); });
@@ -438,8 +491,278 @@ void amf::log_options(obs_data_t* settings, const AVCodec* codec, AVCodecContext
 	tools::print_av_option_bool(context, "me_quarter_pel", "      Quarter-Pel Motion Estimation");
 }
 
-void streamfx::encoder::ffmpeg::handler::amf::get_runtime_properties(obs_properties_t* props, const AVCodec* codec, AVCodecContext* context) {}
+// H264 Handler
+//--------------
 
-void streamfx::encoder::ffmpeg::handler::amf::migrate(obs_data_t* settings, uint64_t version, const AVCodec* codec, AVCodecContext* context) {}
+amf_h264::amf_h264() : handler("h264_amf") {}
 
-void streamfx::encoder::ffmpeg::handler::amf::override_update(ffmpeg_instance* instance, obs_data_t* settings) {}
+amf_h264::~amf_h264() {}
+
+bool amf_h264::has_keyframes(ffmpeg_factory* instance)
+{
+	return true;
+}
+
+bool amf_h264::is_hardware(ffmpeg_factory* instance)
+{
+	return true;
+}
+
+bool amf_h264::has_threading(ffmpeg_factory* instance)
+{
+	return false;
+}
+
+void streamfx::encoder::ffmpeg::amf_h264::adjust_info(ffmpeg_factory* factory, std::string& id, std::string& name, std::string& codec)
+{
+	name = "AMD AMF H.264/AVC (via FFmpeg)";
+	if (!amf::is_available())
+		factory->get_info()->caps |= OBS_ENCODER_CAP_DEPRECATED;
+	factory->get_info()->caps |= OBS_ENCODER_CAP_DEPRECATED;
+}
+
+void amf_h264::defaults(ffmpeg_factory* factory, obs_data_t* settings)
+{
+	amf::defaults(factory, settings);
+
+	obs_data_set_default_int(settings, ST_KEY_H264_PROFILE, static_cast<int64_t>(h264::profile::HIGH));
+	obs_data_set_default_int(settings, ST_KEY_H264_LEVEL, static_cast<int64_t>(h264::level::UNKNOWN));
+}
+
+void amf_h264::properties(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_properties_t* props)
+{
+	if (!instance) {
+		this->get_encoder_properties(factory, instance, props);
+	} else {
+		this->get_runtime_properties(factory, instance, props);
+	}
+}
+
+void amf_h264::migrate(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings, uint64_t version)
+{
+	amf::migrate(factory, instance, settings, version);
+}
+
+void amf_h264::update(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings)
+{
+	auto codec   = factory->get_avcodec();
+	auto context = instance->get_avcodeccontext();
+
+	amf::update(factory, instance, settings);
+
+	{
+		auto found = h264_profiles.find(static_cast<h264::profile>(obs_data_get_int(settings, ST_KEY_H264_PROFILE)));
+		if (found != h264_profiles.end()) {
+			av_opt_set(context->priv_data, "profile", found->second.c_str(), 0);
+		}
+	}
+
+	{
+		auto found = h264_levels.find(static_cast<h264::level>(obs_data_get_int(settings, ST_KEY_H264_LEVEL)));
+		if (found != h264_levels.end()) {
+			av_opt_set(context->priv_data, "level", found->second.c_str(), 0);
+		} else {
+			av_opt_set(context->priv_data, "level", "auto", 0);
+		}
+	}
+}
+
+void amf_h264::override_update(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings)
+{
+	amf::override_update(factory, instance, settings);
+}
+
+void amf_h264::log(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings)
+{
+	auto codec   = factory->get_avcodec();
+	auto context = instance->get_avcodeccontext();
+
+	amf::log(factory, instance, settings);
+
+	DLOG_INFO("[%s]     H.264/AVC:", codec->name);
+	::streamfx::ffmpeg::tools::print_av_option_string2(context, context->priv_data, "profile", "      Profile", [](int64_t v, std::string_view o) { return std::string(o); });
+	::streamfx::ffmpeg::tools::print_av_option_string2(context, context->priv_data, "level", "      Level", [](int64_t v, std::string_view o) { return std::string(o); });
+}
+
+void amf_h264::get_encoder_properties(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_properties_t* props)
+{
+	amf::properties_before(factory, instance, props);
+
+	{
+		obs_properties_t* grp = obs_properties_create();
+		obs_properties_add_group(props, S_CODEC_H264, D_TRANSLATE(S_CODEC_H264), OBS_GROUP_NORMAL, grp);
+
+		{
+			auto p = obs_properties_add_list(grp, ST_KEY_H264_PROFILE, D_TRANSLATE(S_CODEC_H264_PROFILE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), static_cast<int64_t>(h264::profile::UNKNOWN));
+			for (auto const kv : h264_profiles) {
+				std::string trans = std::string(S_CODEC_H264_PROFILE) + "." + kv.second;
+				obs_property_list_add_int(p, D_TRANSLATE(trans.c_str()), static_cast<int64_t>(kv.first));
+			}
+		}
+		{
+			auto p = obs_properties_add_list(grp, ST_KEY_H264_LEVEL, D_TRANSLATE(S_CODEC_H264_LEVEL), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), static_cast<int64_t>(h264::level::UNKNOWN));
+			for (auto const kv : h264_levels) {
+				obs_property_list_add_int(p, kv.second.c_str(), static_cast<int64_t>(kv.first));
+			}
+		}
+	}
+
+	amf::properties_after(factory, instance, props);
+}
+
+void amf_h264::get_runtime_properties(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_properties_t* props)
+{
+	amf::properties_runtime(factory, instance, props);
+}
+
+void amf_h264::override_colorformat(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings, AVPixelFormat& target_format)
+{
+	target_format = AV_PIX_FMT_NV12;
+}
+
+static auto inst_h264 = amf_h264();
+
+// H265/HEVC Handler
+//-------------------
+
+amf_hevc::amf_hevc() : handler("hevc_amf") {}
+
+amf_hevc::~amf_hevc(){};
+
+bool amf_hevc::has_keyframes(ffmpeg_factory* instance)
+{
+	return true;
+}
+
+bool amf_hevc::is_hardware(ffmpeg_factory* instance)
+{
+	return true;
+}
+
+bool amf_hevc::has_threading(ffmpeg_factory* instance)
+{
+	return false;
+}
+
+void streamfx::encoder::ffmpeg::amf_hevc::adjust_info(ffmpeg_factory* factory, std::string& id, std::string& name, std::string& codec)
+{
+	name = "AMD AMF H.265/HEVC (via FFmpeg)";
+	if (!amf::is_available())
+		factory->get_info()->caps |= OBS_ENCODER_CAP_DEPRECATED;
+	factory->get_info()->caps |= OBS_ENCODER_CAP_DEPRECATED;
+}
+
+void amf_hevc::defaults(ffmpeg_factory* factory, obs_data_t* settings)
+{
+	amf::defaults(factory, settings);
+
+	obs_data_set_default_int(settings, ST_KEY_HEVC_PROFILE, static_cast<int64_t>(hevc::profile::MAIN));
+	obs_data_set_default_int(settings, ST_KEY_HEVC_TIER, static_cast<int64_t>(hevc::profile::MAIN));
+	obs_data_set_default_int(settings, ST_KEY_HEVC_LEVEL, static_cast<int64_t>(hevc::level::UNKNOWN));
+}
+
+void amf_hevc::properties(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_properties_t* props)
+{
+	if (!instance) {
+		this->get_encoder_properties(factory, instance, props);
+	} else {
+		this->get_runtime_properties(factory, instance, props);
+	}
+}
+
+void amf_hevc::migrate(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings, uint64_t version)
+{
+	amf::migrate(factory, instance, settings, version);
+}
+
+void amf_hevc::update(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings)
+{
+	auto codec   = factory->get_avcodec();
+	auto context = instance->get_avcodeccontext();
+
+	amf::update(factory, instance, settings);
+
+	{ // HEVC Options
+		auto found = hevc_profiles.find(static_cast<hevc::profile>(obs_data_get_int(settings, ST_KEY_HEVC_PROFILE)));
+		if (found != hevc_profiles.end()) {
+			av_opt_set(context->priv_data, "profile", found->second.c_str(), 0);
+		}
+	}
+	{
+		auto found = hevc_tiers.find(static_cast<hevc::tier>(obs_data_get_int(settings, ST_KEY_HEVC_TIER)));
+		if (found != hevc_tiers.end()) {
+			av_opt_set(context->priv_data, "tier", found->second.c_str(), 0);
+		}
+	}
+	{
+		auto found = hevc_levels.find(static_cast<hevc::level>(obs_data_get_int(settings, ST_KEY_HEVC_LEVEL)));
+		if (found != hevc_levels.end()) {
+			av_opt_set(context->priv_data, "level", found->second.c_str(), 0);
+		} else {
+			av_opt_set(context->priv_data, "level", "auto", 0);
+		}
+	}
+}
+
+void amf_hevc::override_update(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings)
+{
+	amf::override_update(factory, instance, settings);
+}
+
+void amf_hevc::log(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings)
+{
+	auto codec   = factory->get_avcodec();
+	auto context = instance->get_avcodeccontext();
+
+	amf::log(factory, instance, settings);
+
+	DLOG_INFO("[%s]     H.265/HEVC:", codec->name);
+	::streamfx::ffmpeg::tools::print_av_option_string2(context, "profile", "      Profile", [](int64_t v, std::string_view o) { return std::string(o); });
+	::streamfx::ffmpeg::tools::print_av_option_string2(context, "level", "      Level", [](int64_t v, std::string_view o) { return std::string(o); });
+	::streamfx::ffmpeg::tools::print_av_option_string2(context, "tier", "      Tier", [](int64_t v, std::string_view o) { return std::string(o); });
+}
+
+void amf_hevc::get_encoder_properties(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_properties_t* props)
+{
+	amf::properties_before(factory, instance, props);
+
+	{
+		obs_properties_t* grp = obs_properties_create();
+		obs_properties_add_group(props, S_CODEC_HEVC, D_TRANSLATE(S_CODEC_HEVC), OBS_GROUP_NORMAL, grp);
+
+		{
+			auto p = obs_properties_add_list(grp, ST_KEY_HEVC_PROFILE, D_TRANSLATE(S_CODEC_HEVC_PROFILE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), static_cast<int64_t>(hevc::profile::UNKNOWN));
+			for (auto const kv : hevc_profiles) {
+				std::string trans = std::string(S_CODEC_HEVC_PROFILE) + "." + kv.second;
+				obs_property_list_add_int(p, D_TRANSLATE(trans.c_str()), static_cast<int64_t>(kv.first));
+			}
+		}
+		{
+			auto p = obs_properties_add_list(grp, ST_KEY_HEVC_TIER, D_TRANSLATE(S_CODEC_HEVC_TIER), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_DEFAULT), static_cast<int64_t>(hevc::tier::UNKNOWN));
+			for (auto const kv : hevc_tiers) {
+				std::string trans = std::string(S_CODEC_HEVC_TIER) + "." + kv.second;
+				obs_property_list_add_int(p, D_TRANSLATE(trans.c_str()), static_cast<int64_t>(kv.first));
+			}
+		}
+		{
+			auto p = obs_properties_add_list(grp, ST_KEY_HEVC_LEVEL, D_TRANSLATE(S_CODEC_HEVC_LEVEL), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), static_cast<int64_t>(hevc::level::UNKNOWN));
+			for (auto const kv : hevc_levels) {
+				obs_property_list_add_int(p, kv.second.c_str(), static_cast<int64_t>(kv.first));
+			}
+		}
+	}
+
+	amf::properties_after(factory, instance, props);
+}
+
+void amf_hevc::get_runtime_properties(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_properties_t* props)
+{
+	amf::properties_runtime(factory, instance, props);
+}
+
+static auto inst_hevc = amf_hevc();
