@@ -1159,12 +1159,8 @@ if(T_CHECK)
 	is_feature_enabled(ENCODER_FFMPEG_AMF T_CHECK)
 	if(T_CHECK)
 		list(APPEND PROJECT_PRIVATE_SOURCE
-			"source/encoders/ffmpeg/amf_shared.hpp"
-			"source/encoders/ffmpeg/amf_shared.cpp"
-			"source/encoders/ffmpeg/amf_h264_handler.hpp"
-			"source/encoders/ffmpeg/amf_h264_handler.cpp"
-			"source/encoders/ffmpeg/amf_hevc_handler.hpp"
-			"source/encoders/ffmpeg/amf_hevc_handler.cpp"
+			"source/encoders/ffmpeg/amf.hpp"
+			"source/encoders/ffmpeg/amf.cpp"
 		)
 		list(APPEND PROJECT_DEFINITIONS
 			ENABLE_ENCODER_FFMPEG_AMF
