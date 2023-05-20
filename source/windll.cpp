@@ -4,9 +4,25 @@
 
 #include "warning-disable.hpp"
 #include <Windows.h>
+#include <mutex>
 #include "warning-enable.hpp"
 
-BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID)
+std::shared_ptr<void> local_mutex;
+std::shared_ptr<void> global_mutex;
+
+BOOL WINAPI DllMain(HINSTANCE, DWORD dwReason, LPVOID)
 {
+	if (dwReason == DLL_PROCESS_ATTACH) {
+		// Prevent installer from progressing while StreamFX is still active.
+		local_mutex  = std::shared_ptr<void>(CreateMutexW(NULL, TRUE, L"Local\\StreamFX-Setup"), [](HANDLE p) {
+            ReleaseMutex(p);
+            CloseHandle(p);
+        });
+		global_mutex = std::shared_ptr<void>(CreateMutexW(NULL, TRUE, L"Global\\StreamFX-Setup"), [](HANDLE p) {
+			ReleaseMutex(p);
+			CloseHandle(p);
+		});
+	}
+
 	return TRUE;
 }
