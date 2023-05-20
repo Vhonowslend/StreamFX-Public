@@ -238,7 +238,7 @@ var
 begin
 	// Attempt to remove old version if it exists.
 	if (IsUpgrade()) then begin
-		if (UninstallOldVersion() != 0) then begin
+		if (UninstallOldVersion() <> 0) then begin
 			Result := "Removal of older @PROJECT_NAME@ version was cancelled. Unable to continue with normal installation process, Setup will now abort."
 			exit;
 		end
