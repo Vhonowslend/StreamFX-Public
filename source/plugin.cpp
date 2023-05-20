@@ -136,7 +136,6 @@ MODULE_EXPORT void obs_module_unload(void)
 			_streamfx_gfx_opengl.reset();
 		}
 
-
 		DLOG_INFO("Unloaded Version %s", STREAMFX_VERSION_STRING);
 	} catch (std::exception const& ex) {
 		DLOG_ERROR("Unexpected exception in function '%s': %s", __FUNCTION_NAME__, ex.what());
