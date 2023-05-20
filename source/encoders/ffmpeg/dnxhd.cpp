@@ -48,16 +48,17 @@ void dnxhd::defaults(ffmpeg_factory* factory, obs_data_t* settings)
 
 void dnxhd::properties(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_properties_t* props)
 {
-	AVCodecContext* ctx = instance->get_avcodeccontext();
-
-	//Create dummy context if null was passed to the function
-	if (!ctx) {
-		ctx = avcodec_alloc_context3(factory->get_avcodec());
+	// Try and acquire a valid context.
+	std::shared_ptr<AVCodecContext> ctx;
+	if (instance) {
+		ctx = std::shared_ptr<AVCodecContext>(instance->get_avcodeccontext(), [](AVCodecContext*) {});
+	} else { // If we don't have a context, create a temporary one that is automatically freed.
+		ctx = std::shared_ptr<AVCodecContext>(avcodec_alloc_context3(factory->get_avcodec()), [](AVCodecContext* v) { avcodec_free_context(&v); });
 		if (!ctx->priv_data) {
-			avcodec_free_context(&ctx);
 			return;
 		}
 	}
+
 	auto p = obs_properties_add_list(props, S_CODEC_DNXHR_PROFILE, D_TRANSLATE(S_CODEC_DNXHR_PROFILE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 
 	streamfx::ffmpeg::tools::avoption_list_add_entries(ctx->priv_data, "profile", [&p](const AVOption* opt) {
@@ -72,11 +73,6 @@ void dnxhd::properties(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_p
 		//Therefore, new entries will always be inserted at the top, effectively reversing the list
 		obs_property_list_insert_string(p, 0, dnx_profile_to_display_name(opt->name), opt->name);
 	});
-
-	//Free context if we created it here
-	if (ctx && ctx != instance->get_avcodeccontext()) {
-		avcodec_free_context(&ctx);
-	}
 }
 
 void dnxhd::update(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings)
