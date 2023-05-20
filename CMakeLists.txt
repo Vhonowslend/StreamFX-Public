@@ -293,6 +293,7 @@ set(${PREFIX}ENABLE_ENCODER_FFMPEG_AMF ${FEATURE_DEPRECATED} CACHE BOOL "Enable 
 set(${PREFIX}ENABLE_ENCODER_FFMPEG_NVENC ${FEATURE_STABLE} CACHE BOOL "Enable NVENC Encoder in FFmpeg.")
 set(${PREFIX}ENABLE_ENCODER_FFMPEG_PRORES ${FEATURE_STABLE} CACHE BOOL "Enable ProRes Encoder in FFmpeg.")
 set(${PREFIX}ENABLE_ENCODER_FFMPEG_DNXHR ${FEATURE_STABLE} CACHE BOOL "Enable DNXHR Encoder in FFmpeg.")
+set(${PREFIX}ENABLE_ENCODER_FFMPEG_CFHD ${FEATURE_STABLE} CACHE BOOL "Enable CineForm Encoder in FFmpeg.")
 
 ## Filters
 set(${PREFIX}ENABLE_FILTER_AUTOFRAMING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Auto-Framing Filter")
@@ -476,6 +477,9 @@ function(feature_encoder_ffmpeg RESOLVE)
 
 			# DNxHR
 			is_feature_enabled(ENCODER_FFMPEG_DNXHR T_CHECK)
+
+			# CineForm
+			is_feature_enabled(ENCODER_FFMPEG_CFHD T_CHECK)
 		endif()
 	elseif(T_CHECK)
 		set(REQUIRE_FFMPEG ON PARENT_SCOPE)
@@ -1200,6 +1204,18 @@ if(T_CHECK)
 		)
 		list(APPEND PROJECT_DEFINITIONS
 			ENABLE_ENCODER_FFMPEG_DNXHR
+		)
+	endif()
+
+	# CineForm HD
+	is_feature_enabled(ENCODER_FFMPEG_CFHD T_CHECK)
+	if(T_CHECK)
+		list(APPEND PROJECT_PRIVATE_SOURCE
+			"source/encoders/ffmpeg/cfhd.hpp"
+			"source/encoders/ffmpeg/cfhd.cpp"
+		)
+		list(APPEND PROJECT_DEFINITIONS
+			ENABLE_ENCODER_FFMPEG_CFHD
 		)
 	endif()
 endif()
