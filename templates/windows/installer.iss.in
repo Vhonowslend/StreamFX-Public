@@ -118,7 +118,7 @@ function user32_SendTextMessageTimeoutA(
 	uTimeout: UINT;
 	out lpdwResult: DWORD): LRESULT;
 	external 'SendMessageTimeoutA@user32.dll stdcall';
-	
+
 procedure RefreshEnvironment();
 var
 	S: AnsiString;
@@ -238,7 +238,10 @@ var
 begin
 	// Attempt to remove old version if it exists.
 	if (IsUpgrade()) then begin
-		UninstallOldVersion();
+		if (UninstallOldVersion() != 0) then begin
+			Result := "Removal of older @PROJECT_NAME@ version was cancelled. Unable to continue with normal installation process, Setup will now abort."
+			exit;
+		end
 	end;
 
 	// Also ensure that we have the necessary prerequisites installed to run the program.
@@ -268,7 +271,7 @@ begin
 	if (IsSystemMode()) then begin
 		// Default to ProgramData/obs-studio/@PROJECT_NAME@
 		Result := ExpandConstant('{commonappdata}\obs-studio\plugins\@PROJECT_NAME@');
-	end else if (IsUserMode()) then begin 
+	end else if (IsUserMode()) then begin
 		Result := ExpandConstant('{userpf}\obs-studio\plugins\@PROJECT_NAME@');
 	end else begin
 		// If a path was given as an argument, use it.
@@ -340,7 +343,7 @@ begin
 	Result := '';
 	if (RegQueryStringValue(HKCU64, AppRegistryKey(), 'UninstallString', sPath)) then begin
 		Result := sPath;
-	end;	
+	end;
 end;
 
 function IsUserInstallPresent(): Boolean;
@@ -404,7 +407,7 @@ begin
 	sUninstallerPath := GetUninstallerPath();
 	if (sUninstallerPath <> '') then begin
 		sUninstallerPath := RemoveQuotes(sUninstallerPath);
-		if Exec(sUninstallerPath, '/VERYSILENT /NORESTART /SUPPRESSMSGBOXES', '', SW_HIDE, ewWaitUntilTerminated, iResultCode) then begin
+		if Exec(sUninstallerPath, '', '', SW_HIDE, ewWaitUntilTerminated, iResultCode) then begin
 			Result := iResultCode
 		end else begin
 			Result := 1
@@ -440,7 +443,7 @@ begin
 		bIsSystemMode := False;
 		bIsUserMode := True;
 		bIsPortableMode := False;
-		
+
 		WizardSelectComponents('startmenu');
 	end;
 end;
@@ -453,7 +456,7 @@ begin
 	bIsSystemMode := False;
 	bIsUserMode := False;
 	bIsPortableMode := True;
-	
+
 	WizardSelectComponents('!startmenu');
 end;
 
@@ -521,7 +524,7 @@ begin
 		oSystemText.WordWrap := True
 		oSystemText.Caption := 'Install for all users of this System, which will require Administrator rights for future updates. May cause problems with Portable and Current User installations.';
 		oSystemText.OnClick := @OnModePageSystemChoiceClick;
-		
+
 		// Not available without Administrator rights.
 		if (not IsAdmin()) then begin
 			oSystemWarningText := TLabel.Create(oSystemPanel);
@@ -598,7 +601,7 @@ begin
 		oUserText.WordWrap := True
 		oUserText.Caption := 'Install for the current user only, which will allow you to use @PROJECT_NAME@. Updating will not require Administrator rights.';
 		oUserText.OnClick := @OnModePageUserChoiceClick;
-		
+
 		// Not available with Administrator rights.
 		if (IsAdmin()) then begin
 			oUserWarningText := TLabel.Create(oUserPanel);
@@ -680,7 +683,7 @@ begin
 		oPortableText.WordWrap := True
 		oPortableText.Caption := 'Install for a portable OBS Studio environment.';
 		oPortableText.OnClick := @OnModePagePortableChoiceClick;
-		
+
 		// Warn about Administrator rights
 		if (IsAdmin()) then begin
 			oPortableWarningText := TLabel.Create(oPortablePanel);
