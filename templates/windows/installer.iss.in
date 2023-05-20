@@ -250,11 +250,11 @@ begin
 
 	// If this is a User install, register the necessary environment changes.
 	if (IsUserMode()) then begin
-		sPluginsPath := ExpandConstant('{userpf}\obs-studio\plugins\%module%\bin\');
+		sPluginsPath := ExpandConstant('{usercf}\obs-studio\plugins\%module%\bin\');
 		StringChangeEx(sPluginsPath, '\', '/', True);
 		RegWriteExpandStringValue(HKEY_CURRENT_USER, 'Environment', 'OBS_PLUGINS_PATH', sPluginsPath);
 
-		sPluginsDataPath := ExpandConstant('{userpf}\obs-studio\plugins\%module%\data\');
+		sPluginsDataPath := ExpandConstant('{usercf}\obs-studio\plugins\%module%\data\');
 		StringChangeEx(sPluginsDataPath, '\', '/', True);
 		RegWriteExpandStringValue(HKEY_CURRENT_USER, 'Environment', 'OBS_PLUGINS_DATA_PATH', sPluginsDataPath);
 
@@ -272,7 +272,7 @@ begin
 		// Default to ProgramData/obs-studio/@PROJECT_NAME@
 		Result := ExpandConstant('{commonappdata}\obs-studio\plugins\@PROJECT_NAME@');
 	end else if (IsUserMode()) then begin
-		Result := ExpandConstant('{userpf}\obs-studio\plugins\@PROJECT_NAME@');
+		Result := ExpandConstant('{usercf}\obs-studio\plugins\@PROJECT_NAME@');
 	end else begin
 		// If a path was given as an argument, use it.
 		if (Value <> '') then begin
