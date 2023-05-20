@@ -404,46 +404,44 @@ bool ffmpeg_instance::encode_video(uint32_t handle, int64_t pts, uint64_t lock_k
 
 void ffmpeg_instance::initialize_sw(obs_data_t* settings)
 {
-	if (_codec->type == AVMEDIA_TYPE_VIDEO) {
-		// Initialize Video Encoding
-		auto voi = video_output_get_info(obs_encoder_video(_self));
+	// Initialize Video Encoding
+	auto voi = video_output_get_info(obs_encoder_video(_self));
 
-		// Figure out a suitable pixel format to convert to if necessary.
-		AVPixelFormat pix_fmt_source = ::streamfx::ffmpeg::tools::obs_videoformat_to_avpixelformat(voi->format);
-		AVPixelFormat pix_fmt_target = AV_PIX_FMT_NONE;
-		{
-			if (_codec->pix_fmts) {
-				pix_fmt_target = ::streamfx::ffmpeg::tools::get_least_lossy_format(_codec->pix_fmts, pix_fmt_source);
-			} else { // If there are no supported formats, just pass in the current one.
-				pix_fmt_target = pix_fmt_source;
-			}
-
-			if (_handler) // Allow Handler to override the automatic color format for sanity reasons.
-				_handler->override_colorformat(this->_factory, this, settings, pix_fmt_target);
+	// Figure out a suitable pixel format to convert to if necessary.
+	AVPixelFormat pix_fmt_source = ::streamfx::ffmpeg::tools::obs_videoformat_to_avpixelformat(voi->format);
+	AVPixelFormat pix_fmt_target = AV_PIX_FMT_NONE;
+	{
+		if (_codec->pix_fmts) {
+			pix_fmt_target = ::streamfx::ffmpeg::tools::get_least_lossy_format(_codec->pix_fmts, pix_fmt_source);
+		} else { // If there are no supported formats, just pass in the current one.
+			pix_fmt_target = pix_fmt_source;
 		}
 
-		// Setup from OBS information.
-		::streamfx::ffmpeg::tools::context_setup_from_obs(voi, _context);
+		if (_handler) // Allow Handler to override the automatic color format for sanity reasons.
+			_handler->override_colorformat(this->_factory, this, settings, pix_fmt_target);
+	}
 
-		// Override with other information.
-		_context->width   = static_cast<int>(obs_encoder_get_width(_self));
-		_context->height  = static_cast<int>(obs_encoder_get_height(_self));
-		_context->pix_fmt = pix_fmt_target;
+	// Setup from OBS information.
+	::streamfx::ffmpeg::tools::context_setup_from_obs(voi, _context);
 
-		_scaler.set_source_size(static_cast<uint32_t>(_context->width), static_cast<uint32_t>(_context->height));
-		_scaler.set_source_color(_context->color_range == AVCOL_RANGE_JPEG, _context->colorspace);
-		_scaler.set_source_format(pix_fmt_source);
+	// Override with other information.
+	_context->width   = static_cast<int>(obs_encoder_get_width(_self));
+	_context->height  = static_cast<int>(obs_encoder_get_height(_self));
+	_context->pix_fmt = pix_fmt_target;
 
-		_scaler.set_target_size(static_cast<uint32_t>(_context->width), static_cast<uint32_t>(_context->height));
-		_scaler.set_target_color(_context->color_range == AVCOL_RANGE_JPEG, _context->colorspace);
-		_scaler.set_target_format(pix_fmt_target);
+	_scaler.set_source_size(static_cast<uint32_t>(_context->width), static_cast<uint32_t>(_context->height));
+	_scaler.set_source_color(_context->color_range == AVCOL_RANGE_JPEG, _context->colorspace);
+	_scaler.set_source_format(pix_fmt_source);
 
-		// Create Scaler
-		if (!_scaler.initialize(SWS_SINC | SWS_FULL_CHR_H_INT | SWS_FULL_CHR_H_INP | SWS_ACCURATE_RND | SWS_BITEXACT)) {
-			std::stringstream sstr;
-			sstr << "Initializing scaler failed for conversion from '" << ::streamfx::ffmpeg::tools::get_pixel_format_name(_scaler.get_source_format()) << "' to '" << ::streamfx::ffmpeg::tools::get_pixel_format_name(_scaler.get_target_format()) << "' with color space '" << ::streamfx::ffmpeg::tools::get_color_space_name(_scaler.get_source_colorspace()) << "' and " << (_scaler.is_source_full_range() ? "full" : "partial") << " range.";
-			throw std::runtime_error(sstr.str());
-		}
+	_scaler.set_target_size(static_cast<uint32_t>(_context->width), static_cast<uint32_t>(_context->height));
+	_scaler.set_target_color(_context->color_range == AVCOL_RANGE_JPEG, _context->colorspace);
+	_scaler.set_target_format(pix_fmt_target);
+
+	// Create Scaler
+	if (!_scaler.initialize(SWS_SINC | SWS_FULL_CHR_H_INT | SWS_FULL_CHR_H_INP | SWS_ACCURATE_RND | SWS_BITEXACT)) {
+		std::stringstream sstr;
+		sstr << "Initializing scaler failed for conversion from '" << ::streamfx::ffmpeg::tools::get_pixel_format_name(_scaler.get_source_format()) << "' to '" << ::streamfx::ffmpeg::tools::get_pixel_format_name(_scaler.get_target_format()) << "' with color space '" << ::streamfx::ffmpeg::tools::get_color_space_name(_scaler.get_source_colorspace()) << "' and " << (_scaler.is_source_full_range() ? "full" : "partial") << " range.";
+		throw std::runtime_error(sstr.str());
 	}
 }
 
@@ -1138,7 +1136,7 @@ ffmpeg_manager::ffmpeg_manager() : _factories()
 		if (!av_codec_is_encoder(codec))
 			continue;
 
-		if ((codec->type == AVMediaType::AVMEDIA_TYPE_AUDIO) || (codec->type == AVMediaType::AVMEDIA_TYPE_VIDEO)) {
+		if (codec->type == AVMediaType::AVMEDIA_TYPE_VIDEO) {
 			try {
 				_factories.emplace(codec, std::make_shared<ffmpeg_factory>(this, codec));
 			} catch (const std::exception& ex) {
