@@ -8,7 +8,7 @@
 // OBS Studio does not correctly translate all HLSL functionality to GLSL.
 
 // log10(x) is HLSL-exclusive and not translated by OBS Shader Parser.
-#define m_log10(x) (log(x) / log(10))
+#define m_log10(x) (log(x) / log(10.))
 
 //------------------------------------------------------------------------------
 // Uniforms
