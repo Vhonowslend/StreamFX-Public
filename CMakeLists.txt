@@ -1694,6 +1694,8 @@ if(D_PLATFORM_WINDOWS AND ((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR (CMAKE_CXX
 
 	# - Treat Warnings as Errors
 	target_compile_options(${PROJECT_NAME} PRIVATE "/Wall")
+	# - Explicitly disable treating all Warnings as Errors
+	target_compile_options(${PROJECT_NAME} PRIVATE "/WX-")
 
 	# - Disable useless warnings
 	set(DISABLED_WARNINGS
