@@ -1851,15 +1851,6 @@ function(streamfx_add_library TARGET_NAME TARGET_TYPE)
 		# - Don't export by default, require attributes.
 		# add_compile_options("-fvisibility=hidden")
 	endif()
-	
-	# Enable Qt if needed
-	set_target_properties(${TARGET_NAME} PROPERTIES
-		AUTOUIC ON
-		AUTOUIC_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_SOURCE_DIR}/ui"
-		AUTOMOC ON
-		AUTORCC ON
-		AUTOGEN_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated"
-	)
 endfunction()
 
 function(streamfx_add_component COMPONENT_NAME)
@@ -1943,6 +1934,16 @@ function(streamfx_add_component COMPONENT_NAME)
 			HEADER_FILE_ONLY ON
 	)
 	
+	
+	# Enable Qt if needed
+	set_target_properties(${TARGET_NAME} PROPERTIES
+		AUTOUIC ON
+		AUTOUIC_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_SOURCE_DIR}/ui"
+		AUTOMOC ON
+		AUTORCC ON
+		AUTOGEN_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated"
+	)
+
 	set_source_files_properties(
 		${TEMPLATES}
 		${SOURCE_PRIVATE}
@@ -2071,15 +2072,20 @@ endif()
 streamfx_add_library(StreamFX_Core STATIC EXCLUDE_FROM_ALL)
 add_library(StreamFX::Core ALIAS StreamFX_Core)
 
-target_link_libraries(StreamFX_Core 
-	PUBLIC
-		OBS::libobs
+# Register the library
+target_sources(StreamFX_Core PRIVATE ${PROJECT_FILES})
+target_link_libraries(StreamFX_Core
+	PRIVATE ${PROJECT_LIBRARIES}
+	PUBLIC OBS::libobs
 )
-
-target_include_directories(StreamFX_Core
+target_include_directories(StreamFX_Core 
+	PRIVATE ${PROJECT_INCLUDE_DIRS}
 	PUBLIC
 		"${PROJECT_SOURCE_DIR}/source"
 		"${PROJECT_BINARY_DIR}/generated"
+)
+target_compile_definitions(StreamFX_Core 
+	PRIVATE ${PROJECT_DEFINITIONS}
 )
 
 # Combine all variables that matter.
@@ -2109,8 +2115,17 @@ set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} ${PROJECT_UI} $
 	HEADER_FILE_ONLY ON
 )
 
-# Prevent non-UI files from being Qt'd
+	# Enable Qt if needed
 if(Qt5_Found OR Qt6_FOUND)
+	set_target_properties(StreamFX_Core PROPERTIES
+		AUTOUIC ON
+		AUTOUIC_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_SOURCE_DIR}/ui"
+		AUTOMOC ON
+		AUTORCC ON
+		AUTOGEN_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated"
+	)
+
+	# Prevent non-UI files from being Qt'd
 	set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} ${PROJECT_MEDIA} ${PROJECT_PRIVATE_GENERATED} ${PROJECT_PRIVATE_SOURCE} PROPERTIES
 		SKIP_AUTOGEN ON
 		SKIP_AUTOMOC ON
@@ -2119,11 +2134,6 @@ if(Qt5_Found OR Qt6_FOUND)
 	)
 endif()
 
-# Register the library
-target_sources(StreamFX_Core PRIVATE ${PROJECT_FILES})
-target_link_libraries(StreamFX_Core PRIVATE ${PROJECT_LIBRARIES})
-target_include_directories(StreamFX_Core PRIVATE ${PROJECT_INCLUDE_DIRS})
-target_compile_definitions(StreamFX_Core PRIVATE ${PROJECT_DEFINITIONS})
 
 ################################################################################
 # Components
