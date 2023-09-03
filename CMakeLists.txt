@@ -1874,29 +1874,40 @@ function(streamfx_add_component COMPONENT_NAME)
 
 	# Convert the sanitized version to upper case.
 	string(TOUPPER "${COMPONENT_SANITIZED_NAME}" COMPONENT_OPTION_NAME)
-	set(COMPONENT_OPTION "${PREFIX}COMPONENT_${COMPONENT_OPTION_NAME}" PARENT_SCOPE)
+	set(COMPONENT_OPTION "${PREFIX}COMPONENT_${COMPONENT_OPTION_NAME}")
+	set(COMPONENT_OPTION "${COMPONENT_OPTION}" PARENT_SCOPE)
 
 	# Define the necessary targets.
-	set(COMPONENT_TARGET "${PROJECT_NAME}_${COMPONENT_SANITIZED_NAME}")
-	set(COMPONENT_TARGET "${PROJECT_NAME}_${COMPONENT_SANITIZED_NAME}" PARENT_SCOPE)
-	set(COMPONENT_ALIAS "${PROJECT_NAME}::${COMPONENT_SANITIZED_NAME}")
-	set(COMPONENT_ALIAS "${PROJECT_NAME}::${COMPONENT_SANITIZED_NAME}" PARENT_SCOPE)
+	set(COMPONENT_TARGET "StreamFX_${COMPONENT_SANITIZED_NAME}")
+	set(COMPONENT_TARGET "${COMPONENT_TARGET}" PARENT_SCOPE)
+	set(COMPONENT_ALIAS "StreamFX::${COMPONENT_SANITIZED_NAME}")
+	set(COMPONENT_ALIAS "${COMPONENT_ALIAS}" PARENT_SCOPE)
 
-	streamfx_add_library(${COMPONENT_TARGET} STATIC)
-	target_link_libraries(${COMPONENT_TARGET} PUBLIC ${PROJECT_NAME}::Core)
+	streamfx_add_library(${COMPONENT_TARGET} STATIC EXCLUDE_FROM_ALL)
 	add_library(${COMPONENT_ALIAS} ALIAS ${COMPONENT_TARGET})
 	set_target_properties(${COMPONENT_TARGET} PROPERTIES
-		PROJECT_LABNEL "${COMPONENT_ALIAS}"
+#		PROJECT_LABEL "${COMPONENT_ALIAS}"
 		COMPONENT_LABEL "${COMPONENT_NAME}"
 		COMPONENT_NAME "${COMPONENT_ALIAS}"
-		COMPONENT_OPTION "${COMPONENT_OPTION_NAME}"
+		COMPONENT_OPTION "${COMPONENT_OPTION}"
 	)
 
+	# Always depend on StreamFX::Core
+	target_link_libraries(${COMPONENT_TARGET} PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,${PROJECT_NAME}_Core>)
+
 	# Register the component globally.
-	list(APPEND ${PREFIX}COMPONENTS "${COMPONENT_TARGET}")
+	get_target_property(_DEPENDS StreamFX COMPONENT_DEPENDS)
+	if(_DEPENDS)
+		list(APPEND _DEPENDS "${COMPONENT_TARGET}")
+	else()
+		set(_DEPENDS "${COMPONENT_TARGET}")
+	endif()
+	set_target_properties(StreamFX PROPERTIES 
+		COMPONENT_DEPENDS "${_DEPENDS}"
+	)
 
 	# Allow disabling this component.
-	set(${PREFIX}COMPONENT_${COMPONENT_OPTION_NAME} CACHE BOOL "Enable the ${COMPONENT_NAME} component?")
+	set(${COMPONENT_OPTION} ON CACHE BOOL "Enable the ${COMPONENT_NAME} component?")
 
 	# Add files in common places.
 	file(GLOB_RECURSE TEMPLATES FOLLOW_SYMLINKS CONFIGURE_DEPENDS "templates/*")
@@ -2114,53 +2125,57 @@ target_compile_definitions(${PROJECT_NAME}_Core PRIVATE ${PROJECT_DEFINITIONS})
 
 file(GLOB COMPONENTS RELATIVE ${PROJECT_SOURCE_DIR} CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/components/*)
 foreach(COMPONENT ${COMPONENTS})
-	add_subdirectory(${COMPONENT} "${PROJECT_BINARY_DIR}/${COMPONENT}" EXCLUDE_FROM_ALL)
+	add_subdirectory(${COMPONENT} EXCLUDE_FROM_ALL)
 endforeach()
 
 ################################################################################
 # Resolve Components
 ################################################################################
-target_link_libraries(${PROJECT_NAME} PUBLIC $<LINK_LIBRARY:WHOLE_ARCHIVE,${PROJECT_NAME}_Core>)
+target_link_libraries(${PROJECT_NAME} PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,${PROJECT_NAME}_Core>)
 
-foreach(COMPONENT ${${PREFIX}COMPONENTS})
-	# If the component doesn't exist, skip it.
-	if(NOT TARGET ${COMPONENT})
-		message(WARNING "Encountered invalid component '${COMPONENT}' in list of all components.")
-		continue()
-	endif()
-
-	get_target_property(_NAME PROPERTY COMPONENT_LABEL)
-
-	# If the component is disabled, skip it.
-	get_target_property(_OPTION PROPERTY COMPONENT_OPTION)
-	if(NOT ${_OPTION})
-		message(STATUS "[${_NAME}] Disabled by developer.")
-		continue()
-	elseif(${_OPTION}_DISABLED)
-		message(STATUS "[${_NAME}] Disabled by build script.")
-		continue()
-	endif()
-	
-	# Test if all dependencies are valid.
-	set(_HASDEPENDENCY ON)
-	get_target_property(_DEPENDS PROPERTY COMPONENT_DEPENDS)
-	foreach(_DEPEND ${_DEPENDS})
-		get_target_property(_DNAME PROPERTY COMPONENT_LABEL)
-		get_target_property(_DOPTION PROPERTY COMPONENT_OPTION)
-		if((NOT ${_DOPTION}) OR (${_DOPTION}_DISABLED))
-			message(STATUS "[${_NAME}] Missing or disabled dependency on '${_DNAME}'.")
-			set(_HASDEPENDENCY OFF)
+get_target_property(_DEPENDS StreamFX COMPONENT_DEPENDS)
+if(_DEPENDS)
+	foreach(COMPONENT ${_DEPENDS})
+		# If the component doesn't exist, skip it.
+		if(NOT TARGET ${COMPONENT})
+			message(WARNING "Encountered invalid component '${COMPONENT}' in list of all components.")
 			continue()
 		endif()
-	endforeach()
-	if(NOT _HASDEPENDENCY)
-		message(STATUS "[${_NAME}] Unable to fulfill some dependencies, disabling...")
-		continue()
-	endif()
 
-	# Finally if everything is correct, do things.
-	target_link_libraries(${PROJECT_NAME} PUBLIC $<LINK_LIBRARY:WHOLE_ARCHIVE,${COMPONENT}>)
-endforeach()
+		get_target_property(_NAME ${COMPONENT} COMPONENT_LABEL)
+
+		# If the component is disabled, skip it.
+		get_target_property(_OPTION ${COMPONENT} COMPONENT_OPTION)
+		if(NOT ${_OPTION})
+			message(STATUS "[${_NAME}] Disabled by developer.")
+			continue()
+		elseif(${_OPTION}_DISABLED)
+			message(STATUS "[${_NAME}] Disabled by build script.")
+			continue()
+		endif()
+		
+		# Test if all dependencies are valid.
+		set(_HASDEPENDENCY ON)
+		get_target_property(_DEPENDS ${COMPONENT} COMPONENT_DEPENDS)
+		foreach(_DEPEND ${_DEPENDS})
+			get_target_property(_DNAME ${COMPONENT} COMPONENT_LABEL)
+			get_target_property(_DOPTION ${COMPONENT} COMPONENT_OPTION)
+			if((NOT ${_DOPTION}) OR (${_DOPTION}_DISABLED))
+				message(STATUS "[${_NAME}] Missing or disabled dependency on '${_DNAME}'.")
+				set(_HASDEPENDENCY OFF)
+				continue()
+			endif()
+		endforeach()
+		if(NOT _HASDEPENDENCY)
+			message(STATUS "[${_NAME}] Disabled due to missing dependencies.")
+			continue()
+		endif()
+
+		# Finally if everything is correct, do things.
+		message(STATUS "[${_NAME}] Enabled.")
+		target_link_libraries(${PROJECT_NAME} PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,${COMPONENT}>)
+	endforeach()
+endif()
 
 # ################################################################################
 # # Installation
