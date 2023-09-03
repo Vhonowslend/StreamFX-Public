@@ -2069,7 +2069,6 @@ streamfx_add_library(StreamFX_Core STATIC EXCLUDE_FROM_ALL)
 add_library(StreamFX::Core ALIAS StreamFX_Core)
 
 # Register the library
-target_sources(StreamFX_Core PRIVATE ${PROJECT_FILES})
 target_link_libraries(StreamFX_Core
 	PRIVATE ${PROJECT_LIBRARIES}
 	PUBLIC OBS::libobs
@@ -2111,7 +2110,7 @@ set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} ${PROJECT_UI} $
 	HEADER_FILE_ONLY ON
 )
 
-	# Enable Qt if needed
+# Enable Qt if needed
 if(Qt5_Found OR Qt6_FOUND)
 	set_target_properties(StreamFX_Core PROPERTIES
 		AUTOUIC ON
@@ -2130,6 +2129,7 @@ if(Qt5_Found OR Qt6_FOUND)
 	)
 endif()
 
+target_sources(StreamFX_Core PRIVATE ${PROJECT_FILES})
 
 ################################################################################
 # Components
