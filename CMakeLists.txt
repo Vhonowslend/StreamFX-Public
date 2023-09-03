@@ -323,9 +323,6 @@ set(${PREFIX}ENABLE_FRONTEND ON CACHE BOOL "Enable Frontend code.")
 set(${PREFIX}ENABLE_UPDATER ON CACHE BOOL "Enable automatic update checks.")
 
 ## Code Related
-if(COMMAND clang_format)
-	set(${PREFIX}ENABLE_CLANG OFF CACHE BOOL "Enable Clang integration for supported compilers.")
-endif()
 set(${PREFIX}ENABLE_PROFILING OFF CACHE BOOL "Enable CPU and GPU performance tracking, which has a non-zero overhead at all times. Do not enable this for release builds.")
 
 ## Compile/Link Related
@@ -1863,23 +1860,6 @@ function(streamfx_add_library TARGET_NAME TARGET_TYPE)
 		AUTORCC ON
 		AUTOGEN_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated"
 	)
-	
-	# Extras: Clang
-	#is_feature_enabled(CLANG T_CHECK)
-	#if(T_CHECK)
-	#	generate_compile_commands_json(
-	#		TARGETS ${TARGET_NAME}
-	#	)
-	#	clang_tidy(
-	#		TARGETS ${TARGET_NAME}
-	#		VERSION 14.0.0
-	#	)
-	#	clang_format(
-	#		TARGETS ${TARGET_NAME}
-	#		DEPENDENCY
-	#		VERSION 14.0.0
-	#	)
-	#endif()
 endfunction()
 
 set(${PREFIX}COMPONENTS "")
@@ -1906,7 +1886,8 @@ function(streamfx_add_component COMPONENT_NAME)
 	target_link_libraries(${COMPONENT_TARGET} PUBLIC ${PROJECT_NAME}::Core)
 	add_library(${COMPONENT_ALIAS} ALIAS ${COMPONENT_TARGET})
 	set_target_properties(${COMPONENT_TARGET} PROPERTIES
-		COMPONENT_LABEL "${COMPONENT_LABEL}"
+		PROJECT_LABNEL "${COMPONENT_ALIAS}"
+		COMPONENT_LABEL "${COMPONENT_NAME}"
 		COMPONENT_NAME "${COMPONENT_ALIAS}"
 		COMPONENT_OPTION "${COMPONENT_OPTION_NAME}"
 	)
@@ -2133,7 +2114,7 @@ target_compile_definitions(${PROJECT_NAME}_Core PRIVATE ${PROJECT_DEFINITIONS})
 
 file(GLOB COMPONENTS RELATIVE ${PROJECT_SOURCE_DIR} CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/components/*)
 foreach(COMPONENT ${COMPONENTS})
-	add_subdirectory(${COMPONENT} EXCLUDE_FROM_ALL)
+	add_subdirectory(${COMPONENT} "${PROJECT_BINARY_DIR}/${COMPONENT}" EXCLUDE_FROM_ALL)
 endforeach()
 
 ################################################################################
@@ -2141,7 +2122,45 @@ endforeach()
 ################################################################################
 target_link_libraries(${PROJECT_NAME} PUBLIC $<LINK_LIBRARY:WHOLE_ARCHIVE,${PROJECT_NAME}_Core>)
 
+foreach(COMPONENT ${${PREFIX}COMPONENTS})
+	# If the component doesn't exist, skip it.
+	if(NOT TARGET ${COMPONENT})
+		message(WARNING "Encountered invalid component '${COMPONENT}' in list of all components.")
+		continue()
+	endif()
 
+	get_target_property(_NAME PROPERTY COMPONENT_LABEL)
+
+	# If the component is disabled, skip it.
+	get_target_property(_OPTION PROPERTY COMPONENT_OPTION)
+	if(NOT ${_OPTION})
+		message(STATUS "[${_NAME}] Disabled by developer.")
+		continue()
+	elseif(${_OPTION}_DISABLED)
+		message(STATUS "[${_NAME}] Disabled by build script.")
+		continue()
+	endif()
+	
+	# Test if all dependencies are valid.
+	set(_HASDEPENDENCY ON)
+	get_target_property(_DEPENDS PROPERTY COMPONENT_DEPENDS)
+	foreach(_DEPEND ${_DEPENDS})
+		get_target_property(_DNAME PROPERTY COMPONENT_LABEL)
+		get_target_property(_DOPTION PROPERTY COMPONENT_OPTION)
+		if((NOT ${_DOPTION}) OR (${_DOPTION}_DISABLED))
+			message(STATUS "[${_NAME}] Missing or disabled dependency on '${_DNAME}'.")
+			set(_HASDEPENDENCY OFF)
+			continue()
+		endif()
+	endforeach()
+	if(NOT _HASDEPENDENCY)
+		message(STATUS "[${_NAME}] Unable to fulfill some dependencies, disabling...")
+		continue()
+	endif()
+
+	# Finally if everything is correct, do things.
+	target_link_libraries(${PROJECT_NAME} PUBLIC $<LINK_LIBRARY:WHOLE_ARCHIVE,${COMPONENT}>)
+endforeach()
 
 # ################################################################################
 # # Installation
