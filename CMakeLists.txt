@@ -349,7 +349,7 @@ if(STANDALONE)
 	endif()
 
 	set(PACKAGE_PREFIX "${CMAKE_BINARY_DIR}" CACHE PATH "Where to place the packages?")
-	set(PACKAGE_NAME "${PROJECT_NAME}" CACHE STRING "What should the package be called?")
+	set(PACKAGE_NAME "StreamFX" CACHE STRING "What should the package be called?")
 	set(PACKAGE_SUFFIX "" CACHE STRING "Any suffix for the package name? (Defaults to the current version string)")
 endif()
 
@@ -380,7 +380,7 @@ project(
 	DESCRIPTION "Additional sources, filters, transitions and encoders for OBS Studio."
 	HOMEPAGE_URL "https://streamfx.xaymar.com/"
 )
-set(PROJECT_IDENTIFER "com.xaymar.${PROJECT_NAME}.obs")
+set(PROJECT_IDENTIFER "com.xaymar.StreamFX.obs")
 set(PROJECT_TITLE "StreamFX (for OBS Studio)")
 set(PROJECT_AUTHORS "Michael Fabian 'Xaymar' Dirks <info@xaymar.com>")
 set(PROJECT_COPYRIGHT "2017 - 2022, Michael Fabian Dirks. All Rights Reserved")
@@ -1862,7 +1862,6 @@ function(streamfx_add_library TARGET_NAME TARGET_TYPE)
 	)
 endfunction()
 
-set(${PREFIX}COMPONENTS "")
 function(streamfx_add_component COMPONENT_NAME)
 	# Sanitize the component name by trimming whitespace.
 	string(REGEX REPLACE "^[ \t]+" "" COMPONENT_NAME "${COMPONENT_NAME}")
@@ -1886,14 +1885,13 @@ function(streamfx_add_component COMPONENT_NAME)
 	streamfx_add_library(${COMPONENT_TARGET} STATIC EXCLUDE_FROM_ALL)
 	add_library(${COMPONENT_ALIAS} ALIAS ${COMPONENT_TARGET})
 	set_target_properties(${COMPONENT_TARGET} PROPERTIES
-#		PROJECT_LABEL "${COMPONENT_ALIAS}"
 		COMPONENT_LABEL "${COMPONENT_NAME}"
 		COMPONENT_NAME "${COMPONENT_ALIAS}"
 		COMPONENT_OPTION "${COMPONENT_OPTION}"
 	)
 
 	# Always depend on StreamFX::Core
-	target_link_libraries(${COMPONENT_TARGET} PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,${PROJECT_NAME}_Core>)
+	target_link_libraries(${COMPONENT_TARGET} PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,StreamFX_Core>)
 
 	# Register the component globally.
 	get_target_property(_DEPENDS StreamFX COMPONENT_DEPENDS)
@@ -1969,9 +1967,9 @@ endfunction()
 ################################################################################
 # Register Library
 ################################################################################
-streamfx_add_library(${PROJECT_NAME} MODULE) # We are a module for libOBS.
+streamfx_add_library(StreamFX MODULE) # We are a module for libOBS.
 
-target_include_directories(${PROJECT_NAME} PRIVATE
+target_include_directories(StreamFX PRIVATE
 	"source"
 	"include"
 	"${PROJECT_BINARY_DIR}/generated"
@@ -1988,7 +1986,7 @@ if(D_PLATFORM_WINDOWS) # Windows Support
 		"templates/windows/version.rc.in"
 		"generated/version.rc"
 	)
-	target_sources(${PROJECT_NAME} 
+	target_sources(StreamFX 
 		PRIVATE
 			"templates/windows/version.rc.in"
 			"${PROJECT_BINARY_DIR}/generated/version.rc"
@@ -1996,7 +1994,7 @@ if(D_PLATFORM_WINDOWS) # Windows Support
 endif()
 
 # Set file version
-set_target_properties(${PROJECT_NAME} PROPERTIES
+set_target_properties(StreamFX PROPERTIES
 	MACHO_COMPATIBILITY_VERSION ${_VERSION_MAJOR}.${_VERSION_MINOR}
 	MACHO_CURRENT_VERSION ${PROJECT_VERSION}
 	SOVERSION ${_VERSION_MAJOR}.${_VERSION_MINOR}
@@ -2006,18 +2004,18 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 # Windows exclusive changes
 if(D_PLATFORM_WINDOWS)
 	foreach(DELAYLOAD ${PROJECT_LIBRARIES_DELAYED})
-		get_target_property(_lf ${PROJECT_NAME} LINK_FLAGS)
+		get_target_property(_lf StreamFX LINK_FLAGS)
 		if(NOT _lf)
 			set(_lf "")
 		endif()
-		set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${_lf} /DELAYLOAD:${DELAYLOAD}")
+		set_target_properties(StreamFX PROPERTIES LINK_FLAGS "${_lf} /DELAYLOAD:${DELAYLOAD}")
 		add_link_options("/DELAYLOAD:${DELAYLOAD}")
 	endforeach()
 endif()
 
 # MacOS exclusive Changes
 if(D_PLATFORM_MAC)
-	set_target_properties(${PROJECT_NAME} PROPERTIES
+	set_target_properties(StreamFX PROPERTIES
 		# No automatic code signing in XCode
 		XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ""
 		XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO"
@@ -2025,7 +2023,7 @@ if(D_PLATFORM_MAC)
 		INSTALL_RPATH "@executable_path/../Frameworks/;@loader_path/../Frameworks/;@loader_path/../Resources/"
 	)
 	if(STANDALONE)
-		set_target_properties(${PROJECT_NAME} PROPERTIES
+		set_target_properties(StreamFX PROPERTIES
 			# @rpath in built binaries
 			BUILD_WITH_INSTALL_RPATH ON
 		)
@@ -2049,7 +2047,7 @@ if(D_PLATFORM_MAC)
 		)
 
 		# Bundle Information
-		set(MACOSX_BUNDLE_BUNDLE_NAME "${PROJECT_NAME}")
+		set(MACOSX_BUNDLE_BUNDLE_NAME "StreamFX")
 		set(MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}")
 		set(MACOSX_BUNDLE_COPYRIGHT "${PROJECT_COPYRIGHT}")
 		set(MACOSX_BUNDLE_GUI_IDENTIFIER "${PROJECT_IDENTIFER}")
@@ -2057,10 +2055,10 @@ if(D_PLATFORM_MAC)
 		set(MACOSX_BUNDLE_VERSION_STRING "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 		set(MACOSX_BUNDLE_LONG_VERSION_STRING "${_VERSION}")
 		set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}")
-		set_target_properties(${PROJECT_NAME} PROPERTIES
+		set_target_properties(StreamFX PROPERTIES
 			BUNDLE ON
 			BUNDLE_EXTENSION "plugin"
-			OUTPUT_NAME ${PROJECT_NAME}
+			OUTPUT_NAME StreamFX
 			MACOSX_BUNDLE_INFO_PLIST "${PROJECT_SOURCE_DIR}/templates/macos/Info.plist.in"
 			XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${MACOSX_BUNDLE_GUI_IDENTIFIER}"
 		)
@@ -2070,8 +2068,19 @@ endif()
 ################################################################################
 # Add Core
 ################################################################################
-streamfx_add_library(${PROJECT_NAME}_Core STATIC EXCLUDE_FROM_ALL)
-add_library(${PROJECT_NAME}::Core ALIAS ${PROJECT_NAME}_Core)
+streamfx_add_library(StreamFX_Core STATIC EXCLUDE_FROM_ALL)
+add_library(StreamFX::Core ALIAS StreamFX_Core)
+
+target_link_libraries(StreamFX_Core 
+	PUBLIC
+		OBS::libobs
+)
+
+target_include_directories(StreamFX_Core
+	PUBLIC
+		"${PROJECT_SOURCE_DIR}/source"
+		"${PROJECT_BINARY_DIR}/generated"
+)
 
 # Combine all variables that matter.
 set(PROJECT_FILES
@@ -2111,10 +2120,10 @@ if(Qt5_Found OR Qt6_FOUND)
 endif()
 
 # Register the library
-target_sources(${PROJECT_NAME}_Core PRIVATE ${PROJECT_FILES})
-target_link_libraries(${PROJECT_NAME}_Core PRIVATE ${PROJECT_LIBRARIES})
-target_include_directories(${PROJECT_NAME}_Core PRIVATE ${PROJECT_INCLUDE_DIRS})
-target_compile_definitions(${PROJECT_NAME}_Core PRIVATE ${PROJECT_DEFINITIONS})
+target_sources(StreamFX_Core PRIVATE ${PROJECT_FILES})
+target_link_libraries(StreamFX_Core PRIVATE ${PROJECT_LIBRARIES})
+target_include_directories(StreamFX_Core PRIVATE ${PROJECT_INCLUDE_DIRS})
+target_compile_definitions(StreamFX_Core PRIVATE ${PROJECT_DEFINITIONS})
 
 ################################################################################
 # Components
@@ -2131,7 +2140,7 @@ endforeach()
 ################################################################################
 # Resolve Components
 ################################################################################
-target_link_libraries(${PROJECT_NAME} PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,${PROJECT_NAME}_Core>)
+target_link_libraries(StreamFX PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,StreamFX_Core>)
 
 get_target_property(_DEPENDS StreamFX COMPONENT_DEPENDS)
 if(_DEPENDS)
@@ -2173,7 +2182,7 @@ if(_DEPENDS)
 
 		# Finally if everything is correct, do things.
 		message(STATUS "[${_NAME}] Enabled.")
-		target_link_libraries(${PROJECT_NAME} PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,${COMPONENT}>)
+		target_link_libraries(StreamFX PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,${COMPONENT}>)
 	endforeach()
 endif()
 
@@ -2192,14 +2201,14 @@ if(STANDALONE)
 
 # 		if(D_PLATFORM_WINDOWS)
 # 			install(
-# 				TARGETS ${PROJECT_NAME}
+# 				TARGETS StreamFX
 # 				RUNTIME DESTINATION "bin/windows-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
 # 				LIBRARY DESTINATION "bin/windows-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
 # 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
 # 			)
 # 			if(MSVC)
 # 				install(
-# 					FILES $<TARGET_PDB_FILE:${PROJECT_NAME}>
+# 					FILES $<TARGET_PDB_FILE:StreamFX>
 # 					DESTINATION "bin/windows-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/"
 # 					COMPONENT StreamFX
 # 					OPTIONAL
@@ -2207,14 +2216,14 @@ if(STANDALONE)
 # 			endif()
 # 		elseif(D_PLATFORM_LINUX)
 # 			install(
-# 				TARGETS ${PROJECT_NAME}
+# 				TARGETS StreamFX
 # 				RUNTIME DESTINATION "bin/linux-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
 # 				LIBRARY DESTINATION "bin/linux-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
 # 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
 # 			)
 # 		elseif(D_PLATFORM_MAC)
 # 			install(
-# 				TARGETS ${PROJECT_NAME}
+# 				TARGETS StreamFX
 # 				RUNTIME DESTINATION "bin/mac-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
 # 				LIBRARY DESTINATION "bin/mac-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
 # 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
@@ -2233,17 +2242,17 @@ if(STANDALONE)
 # 		)
 # 	elseif(D_PLATFORM_WINDOWS)
 # 		install(
-# 			TARGETS ${PROJECT_NAME}
+# 			TARGETS StreamFX
 # 			RUNTIME DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
 # 			LIBRARY DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
 # 		)
 # 		install(
 # 			DIRECTORY "data/"
-# 			DESTINATION "data/obs-plugins/${PROJECT_NAME}/"
+# 			DESTINATION "data/obs-plugins/StreamFX/"
 # 		)
 # 		if(MSVC)
 # 			install(
-# 				FILES $<TARGET_PDB_FILE:${PROJECT_NAME}>
+# 				FILES $<TARGET_PDB_FILE:StreamFX>
 # 				DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/"
 # 				OPTIONAL
 # 			)
@@ -2251,28 +2260,28 @@ if(STANDALONE)
 # 	elseif(D_PLATFORM_LINUX)
 # 		if(STRUCTURE_PACKAGEMANAGER)
 # 			install(
-# 				TARGETS ${PROJECT_NAME}
+# 				TARGETS StreamFX
 # 				RUNTIME DESTINATION "lib/obs-plugins/" COMPONENT StreamFX
 # 				LIBRARY DESTINATION "lib/obs-plugins/" COMPONENT StreamFX
 # 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
 # 			)
 # 			install(
 # 				DIRECTORY "data/"
-# 				DESTINATION "share/obs/obs-plugins/${PROJECT_NAME}"
+# 				DESTINATION "share/obs/obs-plugins/StreamFX"
 # 				COMPONENT StreamFX
 # 				FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
 # 				DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
 # 			)
 # 		else()
 # 			install(
-# 				TARGETS ${PROJECT_NAME}
-# 				RUNTIME DESTINATION "plugins/${PROJECT_NAME}/bin/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
-# 				LIBRARY DESTINATION "plugins/${PROJECT_NAME}/bin/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
+# 				TARGETS StreamFX
+# 				RUNTIME DESTINATION "plugins/StreamFX/bin/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
+# 				LIBRARY DESTINATION "plugins/StreamFX/bin/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
 # 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
 # 			)
 # 			install(
 # 				DIRECTORY "data/"
-# 				DESTINATION "plugins/${PROJECT_NAME}/data/"
+# 				DESTINATION "plugins/StreamFX/data/"
 # 				COMPONENT StreamFX
 # 				FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
 # 				DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
@@ -2281,7 +2290,7 @@ if(STANDALONE)
 # 	elseif(D_PLATFORM_MAC)
 # 		if(STRUCTURE_BUNDLE)
 # 			install(
-# 				TARGETS ${PROJECT_NAME}
+# 				TARGETS StreamFX
 # 				RUNTIME DESTINATION "." COMPONENT StreamFX
 # 				LIBRARY DESTINATION "." COMPONENT StreamFX
 # 				BUNDLE DESTINATION "." COMPONENT StreamFX
@@ -2289,14 +2298,14 @@ if(STANDALONE)
 # 			)
 # 		else()
 # 			install(
-# 				TARGETS ${PROJECT_NAME}
-# 				RUNTIME DESTINATION "${PROJECT_NAME}/bin/" COMPONENT StreamFX
-# 				LIBRARY DESTINATION "${PROJECT_NAME}/bin/" COMPONENT StreamFX
+# 				TARGETS StreamFX
+# 				RUNTIME DESTINATION "StreamFX/bin/" COMPONENT StreamFX
+# 				LIBRARY DESTINATION "StreamFX/bin/" COMPONENT StreamFX
 # 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
 # 			)
 # 			install(
 # 				DIRECTORY "data/"
-# 				DESTINATION "${PROJECT_NAME}/data/"
+# 				DESTINATION "StreamFX/data/"
 # 				COMPONENT StreamFX
 # 				FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
 # 				DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
@@ -2305,10 +2314,10 @@ if(STANDALONE)
 # 	endif()
 else()
 	if(COMMAND setup_plugin_target)
-		setup_plugin_target(${PROJECT_NAME})
+		setup_plugin_target(StreamFX)
 		# Seems like we lost the ability to customize which directoy resources are in, and instead are forced to use '/data'.
 	elseif(COMMAND install_obs_plugin_with_data)
-		install_obs_plugin_with_data(${PROJECT_NAME} data)
+		install_obs_plugin_with_data(StreamFX data)
 	endif()
 endif()
 
@@ -2370,7 +2379,7 @@ endif()
 # 		# Apple MacOS
 # 		if(D_PLATFORM_MAC)
 # 			# .pkg Installer
-# 			set(PACKAGES_PATH_NAME "${PROJECT_NAME}")
+# 			set(PACKAGES_PATH_NAME "StreamFX")
 # 			if(STRUCTURE_BUNDLE)
 # 				set(PACKAGES_PATH_NAME "${PACKAGES_PATH_NAME}.plugin")
 # 			endif()
