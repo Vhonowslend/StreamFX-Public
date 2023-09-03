@@ -2190,14 +2190,6 @@ if(STANDALONE)
 # 					OPTIONAL
 # 				)
 # 			endif()
-
-# 			# Dependency: AOM
-# 			if(HAVE_AOM AND AOM_BINARY AND D_PLATFORM_WINDOWS)
-# 				install(
-# 					FILES ${AOM_BINARY}
-# 					DESTINATION "data/" COMPONENT StreamFX
-# 				)
-# 			endif()
 # 		elseif(D_PLATFORM_LINUX)
 # 			install(
 # 				TARGETS ${PROJECT_NAME}
@@ -2239,14 +2231,6 @@ if(STANDALONE)
 # 				FILES $<TARGET_PDB_FILE:${PROJECT_NAME}>
 # 				DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/"
 # 				OPTIONAL
-# 			)
-# 		endif()
-
-# 		# Dependency: AOM
-# 		if(HAVE_AOM AND AOM_BINARY)
-# 			install(
-# 				FILES "${AOM_BINARY}"
-# 				DESTINATION "data/obs-plugins/${PROJECT_NAME}/" COMPONENT StreamFX
 # 			)
 # 		endif()
 # 	elseif(D_PLATFORM_LINUX)
@@ -2308,24 +2292,8 @@ else()
 	if(COMMAND setup_plugin_target)
 		setup_plugin_target(${PROJECT_NAME})
 		# Seems like we lost the ability to customize which directoy resources are in, and instead are forced to use '/data'.
-
-		if(HAVE_AOM AND AOM_BINARY) # Dependency: AOM
-			add_target_resource(${PROJECT_NAME} "${AOM_BINARY}" "obs-plugins/${PROJECT_NAME}")
-		endif()
 	elseif(COMMAND install_obs_plugin_with_data)
 		install_obs_plugin_with_data(${PROJECT_NAME} data)
-
-		if(HAVE_AOM AND AOM_BINARY) # Dependency: AOM
-			install(
-				FILES "${AOM_BINARY}"
-				DESTINATION "${OBS_DATA_DESTINATION}/obs-plugins/${PROJECT_NAME}"
-			)
-			add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-				COMMAND "${CMAKE_COMMAND}" -E copy
-					"${AOM_BINARY}"
-					"${OBS_DATA_DESTINATION}/obs-plugins/${PROJECT_NAME}"
-				VERBATIM)
-		endif()
 	endif()
 endif()
 
