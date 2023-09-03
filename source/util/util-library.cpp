@@ -102,6 +102,10 @@ std::shared_ptr<::streamfx::util::library> streamfx::util::library::load(std::st
 
 std::shared_ptr<::streamfx::util::library> streamfx::util::library::load(obs_module_t* instance)
 {
+	if (!instance) {
+		throw std::runtime_error("Can't load nullptr as a library.");
+	}
+
 	// Get an absolute path to the module.
 	auto path = std::filesystem::absolute(std::filesystem::u8path(obs_get_module_binary_path(instance)));
 
