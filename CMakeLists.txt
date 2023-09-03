@@ -425,8 +425,10 @@ if(D_PLATFORM_MAC)
 	)
 endif()
 
+set_property(GLOBAL PROPERTY AUTOGEN_SOURCE_GROUP "User-Interface Files/Generated")
+
 ################################################################################
-# Components
+# Components (Old System)
 ################################################################################
 
 # Component resolving:
@@ -1608,326 +1610,387 @@ if((CMAKE_C_COMPILER_ID STREQUAL "GNU")
 endif()
 
 ################################################################################
+# Helpers
+################################################################################
+define_property(TARGET PROPERTY COMPONENT_LABEL)
+define_property(TARGET PROPERTY COMPONENT_NAME)
+define_property(TARGET PROPERTY COMPONENT_OPTION)
+define_property(TARGET PROPERTY COMPONENT_DEPENDS)
+
+function(streamfx_add_library TARGET_NAME TARGET_TYPE)
+	add_library(${TARGET_NAME} ${TARGET_TYPE})
+
+	set_target_properties(${TARGET_NAME} PROPERTIES
+		# Always generate position independent code.
+		POSITION_INDEPENDENT_CODE ON
+
+		# Set C++ Standard and Extensions
+		C_STANDARD 17
+		C_STANDARD_REQUIRED ON
+		CXX_STANDARD 17
+		CXX_STANDARD_REQUIRED ON
+		CXX_EXTENSIONS OFF
+
+		# Remove prefix from generated files.
+		PREFIX ""
+		IMPORT_PREFIX ""
+	)
+	if(D_PLATFORM_MAC)
+		set_target_properties(${TARGET_NAME} PROPERTIES
+			# @rpath in installed binaries
+			INSTALL_RPATH "@executable_path/../Frameworks/;@loader_path/../Frameworks/;@loader_path/../Resources/"
+		)
+		if(STANDALONE)
+			set_target_properties(${TARGET_NAME} PROPERTIES
+				# @rpath in built binaries
+				BUILD_WITH_INSTALL_RPATH ON
+			)
+		endif()
+	endif()
+
+	target_compile_definitions(${TARGET_NAME} PRIVATE
+		__STDC_WANT_LIB_EXT1__=1
+	)
+
+	# C/C++ Compiler Adjustments
+	if(D_PLATFORM_WINDOWS AND ((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")))
+		# MSVC/ClangCL
+
+		# - Dynamically link Microsoft C/C++ Redistributable.
+		target_compile_options(${TARGET_NAME} PRIVATE
+			$<$<CONFIG:>:/MD>
+			$<$<CONFIG:Debug>:/MDd>
+			$<$<CONFIG:Release>:/MD>
+			$<$<CONFIG:RelWithDebInfo>:/MD>
+			$<$<CONFIG:MinSizeRel>:/MD>
+		)
+
+		# - Treat Warnings as Errors
+		target_compile_options(${TARGET_NAME} PRIVATE "/Wall")
+
+		# - Explicitly disable treating all Warnings as Errors
+		target_compile_options(${TARGET_NAME} PRIVATE "/WX-")
+
+		# - Disable useless warnings
+		set(DISABLED_WARNINGS
+			# Don't warn about unused variables, parameters, labels, functions, or typedefs.
+			"4100"
+			"4101"
+			"4102"
+			"4505"
+			"4514"
+			"5245"
+			# Don't warn about unreferenced variables or parameters which are assigned/initialized.
+			"4189"
+			# Don't warn about not-explicitly-handled enumeration identifiers
+			"4061"
+			# Ignore automatic padding warnings.
+			"4820"
+			# Ignore assignment/move/copy being implicit '= delete;'.
+			"4623"
+			"4625"
+			"4626"
+			"5026"
+			"5027"
+			# Relative include paths are fine.
+			"4464"
+			# Buggy warning: printf expects string literal
+			"4774"
+			# Buggy warning: subobject initialization should be wrapped in braces
+			"5246"
+			# Ignore undefined, unused or unreferenced pre-processor macros
+			"4688"
+			# Ignore non-inlined functions
+			"4710"
+			# Ignore Spectre mitigation insertions
+			"5045"
+			# Ignore inserted padding.
+			"4324"
+		)
+		foreach(WARN ${DISABLED_WARNINGS})
+			target_compile_options(${TARGET_NAME} PRIVATE "/wd${WARN}")
+		endforeach()
+
+		# - Require enabled instruction sets.
+		if(D_PLATFORM_ARCH_X86)
+			if(${PREFIX}TARGET_X86_64_V4)
+				target_compile_options(${TARGET_NAME} PRIVATE "/arch:AVX512")
+			elseif(${PREFIX}TARGET_X86_64_V3)
+				target_compile_options(${TARGET_NAME} PRIVATE "/arch:AVX2")
+			elseif(${PREFIX}TARGET_X86_64_V2_EX)
+				target_compile_options(${TARGET_NAME} PRIVATE "/arch:AVX")
+			elseif(${PREFIX}TARGET_X86_64_V2)
+				target_compile_options(${TARGET_NAME} PRIVATE "/d2archSSE42")
+			elseif(${PREFIX}TARGET_X86_64)
+				#target_compile_options(${TARGET_NAME} PRIVATE "/arch:SSE2")
+			endif()
+		endif()
+
+		# - Use fast unordered math if possible.
+		if(${PREFIX}ENABLE_FASTMATH)
+			target_compile_options(${TARGET_NAME} PRIVATE "/fp:fast")
+		else()
+			target_compile_options(${TARGET_NAME} PRIVATE "/fp:precise")
+			if(MSVC_VERSION GREATER 1930)
+				# Keep original behavior in VS2022 and up.
+				target_compile_options(${TARGET_NAME} PRIVATE "/fp:contract")
+			endif()
+		endif()
+
+		# - Disable incremental builds
+		target_compile_options(${TARGET_NAME} PRIVATE "/INCREMENTAL:NO")
+
+		# - Enable C++ exceptions with SEH exceptions.
+		target_compile_options(${TARGET_NAME} PRIVATE "/EHa")
+
+		# - Enable multi-processor compiling.
+		target_compile_options(${TARGET_NAME} PRIVATE "/MP")
+
+		# - Enable updated __cplusplus macro
+		target_compile_options(${TARGET_NAME} PRIVATE "/Zc:__cplusplus")
+	elseif(D_PLATFORM_LINUX AND ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")))
+		# GCC/Clang
+
+		# - Enable all warnings.
+		target_compile_options(${TARGET_NAME} PRIVATE "-Wall")
+		target_compile_options(${TARGET_NAME} PRIVATE "-Wextra")
+
+		# - Disable useless warnings
+		set(DISABLED_WARNINGS
+			# Don't warn about unused variables, parameters, labels, functions, or typedefs.
+			"unused-function"
+			"unused-label"
+			"unused-local-typedefs"
+			"unused-parameter"
+			"unused-result"
+			"unused-const-variable"
+			"unused-variable"
+			"unused-value"
+			# Don't warn about unreferenced variables or parameters which are assigned/initialized.
+			"unused-but-set-parameter"
+			"unused-but-set-variable"
+			# Don't warn about not-explicitly-handled enumeration identifiers
+			"switch"
+			# Ignore automatic padding warnings.
+			"padded"
+			# Ignore implicit '= delete;'.
+			# Ignore extra arguments for printf
+			"format-extra-args"
+			# Ignore undefined, unused or unreferenced pre-processor macros
+			"unused-macros"
+		)
+		foreach(WARN ${DISABLED_WARNINGS})
+			target_compile_options(${TARGET_NAME} PRIVATE "-Wno-${WARN}")
+		endforeach()
+
+		# - Require enabled instruction sets.
+		if(${PREFIX}TARGET_NATIVE)
+			target_compile_options(${TARGET_NAME} PRIVATE
+				"-march=native"
+			)
+		elseif(D_PLATFORM_ARCH_X86)
+			if(${PREFIX}TARGET_X86_64_V4)
+				target_compile_options(${TARGET_NAME} PRIVATE
+					"-march=x86-64-v4"
+				)
+			elseif(${PREFIX}TARGET_X86_64_V3)
+				target_compile_options(${TARGET_NAME} PRIVATE
+					"-march=x86-64-v3"
+				)
+			elseif(${PREFIX}TARGET_X86_64_V2_EX)
+				target_compile_options(${TARGET_NAME} PRIVATE
+					"-march=x86-64-v2"
+					"-mavx"
+					"-mbmi2"
+					"-mbmi"
+					"-mfma"
+					"-mf16c"
+					"-mmovbe"
+					"-mpclmul"
+					"-mpopcnt"
+				)
+			elseif(${PREFIX}TARGET_X86_64_V2)
+				target_compile_options(${TARGET_NAME} PRIVATE
+					"-march=x86-64-v2"
+				)
+			elseif(${PREFIX}TARGET_X86_64)
+				target_compile_options(${TARGET_NAME} PRIVATE
+					"-march=x86-64"
+				)
+			endif()
+			if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+				target_compile_options(${TARGET_NAME} PRIVATE
+					"-mtune=generic"
+				)
+			else()
+				target_compile_options(${TARGET_NAME} PRIVATE
+					"-mtune=x86-64"
+				)
+			endif()
+		endif()
+
+		# - Use fast unordered math if possible.
+		if(${PREFIX}ENABLE_FASTMATH)
+			if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+				target_compile_options(${TARGET_NAME} PRIVATE
+					"-ffast-math"
+				)
+			else()
+				target_compile_options(${TARGET_NAME} PRIVATE
+					"-ffp-model=fast"
+				)
+			endif()
+		else()
+			target_compile_options(${TARGET_NAME} PRIVATE
+				"-ffp-model=precise"
+			)
+		endif()
+
+		# - Don't export by default, require attributes.
+		# add_compile_options("-fvisibility=hidden")
+	elseif(D_PLATFORM_MAC AND (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
+		# AppleClang
+
+		# - Enable most useful warnings.
+		target_compile_options(${TARGET_NAME} PRIVATE "-Wall")
+		target_compile_options(${TARGET_NAME} PRIVATE "-Wextra")
+
+		# - Require enabled instruction sets.
+		if(${PREFIX}TARGET_NATIVE)
+			target_compile_options(${TARGET_NAME} PRIVATE
+				"-march=native"
+			)
+			message(WARNING "Targeting native architecture. Binaries will not be distributable to other systems!")
+		endif()
+
+		# - Use fast unordered math if possible.
+		# FIXME: Appears to not be supported.
+
+		# - Don't export by default, require attributes.
+		# add_compile_options("-fvisibility=hidden")
+	endif()
+	
+	# Enable Qt if needed
+	set_target_properties(${TARGET_NAME} PROPERTIES
+		AUTOUIC ON
+		AUTOUIC_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_SOURCE_DIR}/ui"
+		AUTOMOC ON
+		AUTORCC ON
+		AUTOGEN_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated"
+	)
+	
+	# Extras: Clang
+	#is_feature_enabled(CLANG T_CHECK)
+	#if(T_CHECK)
+	#	generate_compile_commands_json(
+	#		TARGETS ${TARGET_NAME}
+	#	)
+	#	clang_tidy(
+	#		TARGETS ${TARGET_NAME}
+	#		VERSION 14.0.0
+	#	)
+	#	clang_format(
+	#		TARGETS ${TARGET_NAME}
+	#		DEPENDENCY
+	#		VERSION 14.0.0
+	#	)
+	#endif()
+endfunction()
+
+set(${PREFIX}COMPONENTS "")
+function(streamfx_add_component COMPONENT_NAME)
+	# Sanitize the component name by trimming whitespace.
+	string(REGEX REPLACE "^[ \t]+" "" COMPONENT_NAME "${COMPONENT_NAME}")
+	string(REGEX REPLACE "[ \t]+$" "" COMPONENT_NAME "${COMPONENT_NAME}")
+
+	# Generate a sanitized version of the component name for use in targets and options.
+	string(REGEX REPLACE "[^a-zA-Z0-9_-]+" "_" COMPONENT_SANITIZED_NAME "${COMPONENT_NAME}")
+	string(REGEX REPLACE "_[_]+" "_" COMPONENT_SANITIZED_NAME "${COMPONENT_SANITIZED_NAME}")
+
+	# Convert the sanitized version to upper case.
+	string(TOUPPER "${COMPONENT_SANITIZED_NAME}" COMPONENT_OPTION_NAME)
+	set(COMPONENT_OPTION "${PREFIX}COMPONENT_${COMPONENT_OPTION_NAME}" PARENT_SCOPE)
+
+	# Define the necessary targets.
+	set(COMPONENT_TARGET "${PROJECT_NAME}_${COMPONENT_SANITIZED_NAME}")
+	set(COMPONENT_TARGET "${PROJECT_NAME}_${COMPONENT_SANITIZED_NAME}" PARENT_SCOPE)
+	set(COMPONENT_ALIAS "${PROJECT_NAME}::${COMPONENT_SANITIZED_NAME}")
+	set(COMPONENT_ALIAS "${PROJECT_NAME}::${COMPONENT_SANITIZED_NAME}" PARENT_SCOPE)
+
+	streamfx_add_library(${COMPONENT_TARGET} STATIC)
+	add_library(${COMPONENT_ALIAS} ALIAS ${COMPONENT_TARGET})
+	set_target_properties(${COMPONENT_TARGET} PROPERTIES
+		COMPONENT_LABEL "${COMPONENT_LABEL}"
+		COMPONENT_NAME "${COMPONENT_ALIAS}"
+		COMPONENT_OPTION "${COMPONENT_OPTION_NAME}"
+	)
+
+	# Register the component globally.
+	list(APPEND ${PREFIX}COMPONENTS "${COMPONENT_TARGET}")
+
+	# Allow disabling this component.
+	set(${PREFIX}COMPONENT_${COMPONENT_OPTION_NAME} CACHE BOOL "Enable the ${COMPONENT_NAME} component?")
+
+	# Add files in common places.
+	file(GLOB_RECURSE TEMPLATES FOLLOW_SYMLINKS CONFIGURE_DEPENDS "templates/*")
+	source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/templates" PREFIX "Templates" FILES ${TEMPLATES})
+
+	file(GLOB_RECURSE SOURCE_PRIVATE FOLLOW_SYMLINKS CONFIGURE_DEPENDS "ui/*")
+	source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/ui" PREFIX "User-Interface Files" FILES ${UI_PRIVATE})
+
+	file(GLOB_RECURSE SOURCE_PRIVATE FOLLOW_SYMLINKS CONFIGURE_DEPENDS "source/*")
+	source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/source" PREFIX "Private Files" FILES ${SOURCE_PRIVATE})
+	file(GLOB_RECURSE GENERATED_PRIVATE FOLLOW_SYMLINKS CONFIGURE_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/source/*")
+	source_group(TREE "${CMAKE_CURRENT_BINARY_DIR}/source" PREFIX "Private Files/Generated" FILES ${GENERATED_PRIVATE})
+
+	file(GLOB_RECURSE SOURCE_PUBLIC FOLLOW_SYMLINKS CONFIGURE_DEPENDS "include/*")
+	source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/include" PREFIX "Public Files" FILES ${SOURCE_PUBLIC})
+	file(GLOB_RECURSE GENERATED_PUBLIC FOLLOW_SYMLINKS CONFIGURE_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/include/*")
+	source_group(TREE "${CMAKE_CURRENT_BINARY_DIR}/include" PREFIX "Public Files/Generated" FILES ${GENERATED_PUBLIC})
+	
+	target_sources(${COMPONENT_TARGET}
+		PRIVATE
+			${TEMPLATES}
+			${UI_PRIVATE}
+			${SOURCE_PRIVATE}
+			${GENERATED_PRIVATE}
+		PUBLIC
+			${SOURCE_PUBLIC}
+			${GENERATED_PUBLIC}
+	)
+
+	# Ignore data only files.
+	set_source_files_properties(
+		${TEMPLATES}
+		${UI_PRIVATE}
+		PROPERTIES
+			HEADER_FILE_ONLY ON
+	)
+	
+	set_source_files_properties(
+		${TEMPLATES}
+		${SOURCE_PRIVATE}
+		${GENERATED_PRIVATE}
+		${SOURCE_PUBLIC}
+		${GENERATED_PUBLIC}
+		PROPERTIES
+			SKIP_AUTOGEN ON
+			SKIP_AUTOMOC ON
+			SKIP_AUTORCC ON
+			SKIP_AUTOUIC ON
+	)	
+endfunction()
+
+# Use this to add a dependency on another component, 
+function(streamfx_add_component_dependency COMPONENT_NAME)
+	
+
+endfunction()
+
+################################################################################
 # Register Library
 ################################################################################
-
-# Combine all variables that matter.
-set(PROJECT_FILES
-	# Always exist
-	${PROJECT_DATA}
-	${PROJECT_PRIVATE_GENERATED}
-	${PROJECT_PRIVATE_SOURCE}
-	${PROJECT_TEMPLATES}
-	# UI-only (empty if not enabled)
-	${PROJECT_UI}
-	${PROJECT_UI_SOURCE}
-	# Media
-	${PROJECT_MEDIA}
-)
-
-# Set source groups for IDE generators.
-source_group(TREE "${PROJECT_SOURCE_DIR}/data" PREFIX "Data" FILES ${PROJECT_DATA})
-source_group(TREE "${PROJECT_SOURCE_DIR}/source" PREFIX "Source" FILES ${PROJECT_PRIVATE_SOURCE} ${PROJECT_UI_SOURCE})
-source_group(TREE "${PROJECT_BINARY_DIR}/generated" PREFIX "Source" FILES ${PROJECT_PRIVATE_GENERATED})
-source_group(TREE "${PROJECT_SOURCE_DIR}/templates" PREFIX "Templates" FILES ${PROJECT_TEMPLATES})
-source_group(TREE "${PROJECT_SOURCE_DIR}/ui" PREFIX "User Interface" FILES ${PROJECT_UI})
-source_group(TREE "${PROJECT_SOURCE_DIR}/media" PREFIX "Media" FILES ${PROJECT_MEDIA})
-
-# Prevent unwanted files from being built as source.
-set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} ${PROJECT_UI} ${PROJECT_MEDIA} PROPERTIES
-	HEADER_FILE_ONLY ON
-)
-
-# Prevent non-UI files from being Qt'd
-if(Qt5_Found OR Qt6_FOUND)
-	set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} ${PROJECT_MEDIA} ${PROJECT_PRIVATE_GENERATED} ${PROJECT_PRIVATE_SOURCE} PROPERTIES
-		SKIP_AUTOGEN ON
-		SKIP_AUTOMOC ON
-		SKIP_AUTORCC ON
-		SKIP_AUTOUIC ON
-	)
-endif()
-
-# Register the library
-add_library(${PROJECT_NAME} MODULE ${PROJECT_FILES}) # We are a module for libOBS.
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_LIBRARIES})
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_INCLUDE_DIRS})
-target_compile_definitions(${PROJECT_NAME} PRIVATE ${PROJECT_DEFINITIONS})
-
-# Always generate position independent code.
-set_target_properties(${PROJECT_NAME} PROPERTIES
-	POSITION_INDEPENDENT_CODE ON
-)
-
-# Set C++ Standard and Extensions
-set_target_properties(${PROJECT_NAME} PROPERTIES
-	C_STANDARD 17
-	C_STANDARD_REQUIRED ON
-	CXX_STANDARD 17
-	CXX_STANDARD_REQUIRED ON
-	CXX_EXTENSIONS OFF
-)
-target_compile_definitions(${PROJECT_NAME} PRIVATE
-	__STDC_WANT_LIB_EXT1__=1
-)
-
-# Link-Time/Interprocedural Optimization
-if(${PREFIX}ENABLE_LTO)
-	set_target_properties(${PROJECT_NAME} PROPERTIES
-		INTERPROCEDURAL_OPTIMIZATION ON
-	)
-endif()
-
-# C/C++ Compiler Adjustments
-if(D_PLATFORM_WINDOWS AND ((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")))
-	# MSVC/ClangCL
-	message(STATUS "Applying custom flags for MSVC style build.")
-
-	# - Dynamically link Microsoft C/C++ Redistributable.
-	target_compile_options(${PROJECT_NAME} PRIVATE
-		$<$<CONFIG:>:/MD>
-		$<$<CONFIG:Debug>:/MDd>
-		$<$<CONFIG:Release>:/MD>
-		$<$<CONFIG:RelWithDebInfo>:/MD>
-		$<$<CONFIG:MinSizeRel>:/MD>
-	)
-
-	# - Treat Warnings as Errors
-	target_compile_options(${PROJECT_NAME} PRIVATE "/Wall")
-	# - Explicitly disable treating all Warnings as Errors
-	target_compile_options(${PROJECT_NAME} PRIVATE "/WX-")
-
-	# - Disable useless warnings
-	set(DISABLED_WARNINGS
-		# Don't warn about unused variables, parameters, labels, functions, or typedefs.
-		"4100"
-		"4101"
-		"4102"
-		"4505"
-		"4514"
-		"5245"
-		# Don't warn about unreferenced variables or parameters which are assigned/initialized.
-		"4189"
-		# Don't warn about not-explicitly-handled enumeration identifiers
-		"4061"
-		# Ignore automatic padding warnings.
-		"4820"
-		# Ignore assignment/move/copy being implicit '= delete;'.
-		"4623"
-		"4625"
-		"4626"
-		"5026"
-		"5027"
-		# Relative include paths are fine.
-		"4464"
-		# Buggy warning: printf expects string literal
-		"4774"
-		# Buggy warning: subobject initialization should be wrapped in braces
-		"5246"
-		# Ignore undefined, unused or unreferenced pre-processor macros
-		"4688"
-		# Ignore non-inlined functions
-		"4710"
-		# Ignore Spectre mitigation insertions
-		"5045"
-		# Ignore inserted padding.
-		"4324"
-	)
-	foreach(WARN ${DISABLED_WARNINGS})
-		target_compile_options(${PROJECT_NAME} PRIVATE "/wd${WARN}")
-	endforeach()
-
-	# - Require enabled instruction sets.
-	if(D_PLATFORM_ARCH_X86)
-		if(${PREFIX}TARGET_X86_64_V4)
-			target_compile_options(${PROJECT_NAME} PRIVATE "/arch:AVX512")
-			message(STATUS "Targeting x86-64-v4.")
-		elseif(${PREFIX}TARGET_X86_64_V3)
-			target_compile_options(${PROJECT_NAME} PRIVATE "/arch:AVX2")
-			message(STATUS "Targeting x86-64-v3.")
-		elseif(${PREFIX}TARGET_X86_64_V2_EX)
-			target_compile_options(${PROJECT_NAME} PRIVATE "/arch:AVX")
-			message(STATUS "Targeting extended x86-64-v2.")
-		elseif(${PREFIX}TARGET_X86_64_V2)
-			target_compile_options(${PROJECT_NAME} PRIVATE "/d2archSSE42")
-			message(STATUS "Targeting x86-64-v2.")
-		elseif(${PREFIX}TARGET_X86_64)
-			#target_compile_options(${PROJECT_NAME} PRIVATE "/arch:SSE2")
-			message(STATUS "Targeting x86-64.")
-		endif()
-	endif()
-
-	# - Use fast unordered math if possible.
-	if(${PREFIX}ENABLE_FASTMATH)
-		target_compile_options(${PROJECT_NAME} PRIVATE "/fp:fast")
-	else()
-		target_compile_options(${PROJECT_NAME} PRIVATE "/fp:precise")
-		if(MSVC_VERSION GREATER 1930)
-			# Keep original behavior in VS2022 and up.
-			target_compile_options(${PROJECT_NAME} PRIVATE "/fp:contract")
-		endif()
-	endif()
-
-	# - Disable incremental builds
-	target_compile_options(${PROJECT_NAME} PRIVATE "/INCREMENTAL:NO")
-
-	# - Enable C++ exceptions with SEH exceptions.
-	target_compile_options(${PROJECT_NAME} PRIVATE "/EHa")
-
-	# - Enable multi-processor compiling.
-	target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
-
-	# - Enable updated __cplusplus macro
-	target_compile_options(${PROJECT_NAME} PRIVATE "/Zc:__cplusplus")
-
-	# - Generic Optimizations for Release/RelWithDebInfo/MinSizeRel
-	set(FLAGS
-		"/OPT:REF"
-		"/OPT:ICF=3"
-		"/GL"
-		"/Gy"
-		"/GF"
-		"/Ox"
-		"/Ob3"
-	)
-	foreach(FLAG ${FLAGS})
-		target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:${FLAG}>")
-	endforeach()
-elseif(D_PLATFORM_LINUX AND ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")))
-	# GCC/Clang
-	message(STATUS "Applying custom flags for GCC/Clang style build.")
-
-	# - Enable all warnings.
-	target_compile_options(${PROJECT_NAME} PRIVATE "-Wall")
-	target_compile_options(${PROJECT_NAME} PRIVATE "-Wextra")
-
-	# - Disable useless warnings
-	set(DISABLED_WARNINGS
-		# Don't warn about unused variables, parameters, labels, functions, or typedefs.
-		"unused-function"
-		"unused-label"
-		"unused-local-typedefs"
-		"unused-parameter"
-		"unused-result"
-		"unused-const-variable"
-		"unused-variable"
-		"unused-value"
-		# Don't warn about unreferenced variables or parameters which are assigned/initialized.
-		"unused-but-set-parameter"
-		"unused-but-set-variable"
-		# Don't warn about not-explicitly-handled enumeration identifiers
-		"switch"
-		# Ignore automatic padding warnings.
-		"padded"
-		# Ignore implicit '= delete;'.
-		# Ignore extra arguments for printf
-		"format-extra-args"
-		# Ignore undefined, unused or unreferenced pre-processor macros
-		"unused-macros"
-	)
-	foreach(WARN ${DISABLED_WARNINGS})
-		target_compile_options(${PROJECT_NAME} PRIVATE "-Wno-${WARN}")
-	endforeach()
-
-	# - Require enabled instruction sets.
-	if(${PREFIX}TARGET_NATIVE)
-		target_compile_options(${PROJECT_NAME} PRIVATE
-			"-march=native"
-		)
-		message(WARNING "Targeting native architecture. Binaries will not be distributable to other systems!")
-	elseif(D_PLATFORM_ARCH_X86)
-		if(${PREFIX}TARGET_X86_64_V4)
-			target_compile_options(${PROJECT_NAME} PRIVATE
-				"-march=x86-64-v4"
-			)
-			message(STATUS "Targeting x86-64-v4.")
-		elseif(${PREFIX}TARGET_X86_64_V3)
-			target_compile_options(${PROJECT_NAME} PRIVATE
-				"-march=x86-64-v3"
-			)
-			message(STATUS "Targeting x86-64-v3.")
-		elseif(${PREFIX}TARGET_X86_64_V2_EX)
-			target_compile_options(${PROJECT_NAME} PRIVATE
-				"-march=x86-64-v2"
-				"-mavx"
-				"-mbmi2"
-				"-mbmi"
-				"-mfma"
-				"-mf16c"
-				"-mmovbe"
-				"-mpclmul"
-				"-mpopcnt"
-			)
-			message(STATUS "Targeting extended x86-64-v2.")
-		elseif(${PREFIX}TARGET_X86_64_V2)
-			target_compile_options(${PROJECT_NAME} PRIVATE
-				"-march=x86-64-v2"
-			)
-			message(STATUS "Targeting x86-64-v2.")
-		elseif(${PREFIX}TARGET_X86_64)
-			target_compile_options(${PROJECT_NAME} PRIVATE
-				"-march=x86-64"
-			)
-			message(STATUS "Targeting x86-64.")
-		endif()
-		if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-			target_compile_options(${PROJECT_NAME} PRIVATE
-				"-mtune=generic"
-			)
-		else()
-			target_compile_options(${PROJECT_NAME} PRIVATE
-				"-mtune=x86-64"
-			)
-		endif()
-	endif()
-
-	# - Use fast unordered math if possible.
-	if(${PREFIX}ENABLE_FASTMATH)
-		if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-			target_compile_options(${PROJECT_NAME} PRIVATE
-				"-ffast-math"
-			)
-		else()
-			target_compile_options(${PROJECT_NAME} PRIVATE
-				"-ffp-model=fast"
-			)
-		endif()
-	else()
-		target_compile_options(${PROJECT_NAME} PRIVATE
-			"-ffp-model=precise"
-		)
-	endif()
-
-	# - Don't export by default, require attributes.
-	# add_compile_options("-fvisibility=hidden")
-elseif(D_PLATFORM_MAC AND (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
-	# AppleClang
-	message(STATUS "Applying custom flags for AppleClang style build.")
-
-	# - Enable most useful warnings.
-	target_compile_options(${PROJECT_NAME} PRIVATE "-Wall")
-	target_compile_options(${PROJECT_NAME} PRIVATE "-Wextra")
-
-	# - Require enabled instruction sets.
-	if(${PREFIX}TARGET_NATIVE)
-		target_compile_options(${PROJECT_NAME} PRIVATE
-			"-march=native"
-		)
-		message(WARNING "Targeting native architecture. Binaries will not be distributable to other systems!")
-	endif()
-
-	# - Use fast unordered math if possible.
-	# FIXME: Appears to not be supported.
-
-	# - Don't export by default, require attributes.
-	# add_compile_options("-fvisibility=hidden")
-endif()
-
-# Remove prefix on other platforms.
-set_target_properties(${PROJECT_NAME} PROPERTIES
-	PREFIX ""
-	IMPORT_PREFIX ""
-)
+streamfx_add_library(${PROJECT_NAME} MODULE) # We are a module for libOBS.
 
 # Set file version
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -1936,17 +1999,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 	SOVERSION ${_VERSION_MAJOR}.${_VERSION_MINOR}
 	VERSION ${PROJECT_VERSION}
 )
-
-# Enable Qt if needed
-if(Qt5_FOUND OR Qt6_FOUND)
-	set_target_properties(${PROJECT_NAME} PROPERTIES
-		AUTOUIC ON
-		AUTOUIC_SEARCH_PATHS "${PROJECT_SOURCE_DIR};${PROJECT_SOURCE_DIR}/ui"
-		AUTOMOC ON
-		AUTORCC ON
-		AUTOGEN_BUILD_DIR "${PROJECT_BINARY_DIR}/generated"
-	)
-endif()
 
 # Windows exclusive changes
 if(D_PLATFORM_WINDOWS)
@@ -2013,259 +2065,300 @@ if(D_PLATFORM_MAC)
 endif()
 
 ################################################################################
-# Extra Tools
+# Add Core
 ################################################################################
+streamfx_add_library(${PROJECT_NAME}_Core STATIC EXCLUDE_FROM_ALL)
+add_library(${PROJECT_NAME}::Core ALIAS ${PROJECT_NAME}_Core)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}::Core)
 
-# Clang
-is_feature_enabled(CLANG T_CHECK)
-if(T_CHECK)
-	generate_compile_commands_json(
-		TARGETS ${PROJECT_NAME}
-	)
-	clang_tidy(
-		TARGETS ${PROJECT_NAME}
-		VERSION 14.0.0
-	)
-	clang_format(
-		TARGETS ${PROJECT_NAME}
-		DEPENDENCY
-		VERSION 14.0.0
+# Combine all variables that matter.
+set(PROJECT_FILES
+	# Always exist
+	${PROJECT_DATA}
+	${PROJECT_PRIVATE_GENERATED}
+	${PROJECT_PRIVATE_SOURCE}
+	${PROJECT_TEMPLATES}
+	# UI-only (empty if not enabled)
+	${PROJECT_UI}
+	${PROJECT_UI_SOURCE}
+	# Media
+	${PROJECT_MEDIA}
+)
+
+# Set source groups for IDE generators.
+source_group(TREE "${PROJECT_SOURCE_DIR}/data" PREFIX "Data" FILES ${PROJECT_DATA})
+source_group(TREE "${PROJECT_SOURCE_DIR}/source" PREFIX "Source" FILES ${PROJECT_PRIVATE_SOURCE} ${PROJECT_UI_SOURCE})
+source_group(TREE "${PROJECT_BINARY_DIR}/generated" PREFIX "Source" FILES ${PROJECT_PRIVATE_GENERATED})
+source_group(TREE "${PROJECT_SOURCE_DIR}/templates" PREFIX "Templates" FILES ${PROJECT_TEMPLATES})
+source_group(TREE "${PROJECT_SOURCE_DIR}/ui" PREFIX "User Interface" FILES ${PROJECT_UI})
+source_group(TREE "${PROJECT_SOURCE_DIR}/media" PREFIX "Media" FILES ${PROJECT_MEDIA})
+
+# Prevent unwanted files from being built as source.
+set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} ${PROJECT_UI} ${PROJECT_MEDIA} PROPERTIES
+	HEADER_FILE_ONLY ON
+)
+
+# Prevent non-UI files from being Qt'd
+if(Qt5_Found OR Qt6_FOUND)
+	set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} ${PROJECT_MEDIA} ${PROJECT_PRIVATE_GENERATED} ${PROJECT_PRIVATE_SOURCE} PROPERTIES
+		SKIP_AUTOGEN ON
+		SKIP_AUTOMOC ON
+		SKIP_AUTORCC ON
+		SKIP_AUTOUIC ON
 	)
 endif()
 
-################################################################################
-# Installation
-################################################################################
-
-if(STANDALONE)
-	if(STRUCTURE_UNIFIED)
-		install(
-			DIRECTORY "data/"
-			DESTINATION "data/"
-			FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-			DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-		)
-
-		if(D_PLATFORM_WINDOWS)
-			install(
-				TARGETS ${PROJECT_NAME}
-				RUNTIME DESTINATION "bin/windows-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
-				LIBRARY DESTINATION "bin/windows-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
-				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-			)
-			if(MSVC)
-				install(
-					FILES $<TARGET_PDB_FILE:${PROJECT_NAME}>
-					DESTINATION "bin/windows-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/"
-					COMPONENT StreamFX
-					OPTIONAL
-				)
-			endif()
-
-			# Dependency: AOM
-			if(HAVE_AOM AND AOM_BINARY AND D_PLATFORM_WINDOWS)
-				install(
-					FILES ${AOM_BINARY}
-					DESTINATION "data/" COMPONENT StreamFX
-				)
-			endif()
-		elseif(D_PLATFORM_LINUX)
-			install(
-				TARGETS ${PROJECT_NAME}
-				RUNTIME DESTINATION "bin/linux-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
-				LIBRARY DESTINATION "bin/linux-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
-				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-			)
-		elseif(D_PLATFORM_MAC)
-			install(
-				TARGETS ${PROJECT_NAME}
-				RUNTIME DESTINATION "bin/mac-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
-				LIBRARY DESTINATION "bin/mac-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
-				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-			)
-		endif()
-
-		install(
-			FILES LICENSE
-			DESTINATION "LICENSE"
-			COMPONENT StreamFX
-		)
-		install(
-			FILES icon.png
-			DESTINATION "icon.png"
-			COMPONENT StreamFX
-		)
-	elseif(D_PLATFORM_WINDOWS)
-		install(
-			TARGETS ${PROJECT_NAME}
-			RUNTIME DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
-			LIBRARY DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
-		)
-		install(
-			DIRECTORY "data/"
-			DESTINATION "data/obs-plugins/${PROJECT_NAME}/"
-		)
-		if(MSVC)
-			install(
-				FILES $<TARGET_PDB_FILE:${PROJECT_NAME}>
-				DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/"
-				OPTIONAL
-			)
-		endif()
-
-		# Dependency: AOM
-		if(HAVE_AOM AND AOM_BINARY)
-			install(
-				FILES "${AOM_BINARY}"
-				DESTINATION "data/obs-plugins/${PROJECT_NAME}/" COMPONENT StreamFX
-			)
-		endif()
-	elseif(D_PLATFORM_LINUX)
-		if(STRUCTURE_PACKAGEMANAGER)
-			install(
-				TARGETS ${PROJECT_NAME}
-				RUNTIME DESTINATION "lib/obs-plugins/" COMPONENT StreamFX
-				LIBRARY DESTINATION "lib/obs-plugins/" COMPONENT StreamFX
-				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-			)
-			install(
-				DIRECTORY "data/"
-				DESTINATION "share/obs/obs-plugins/${PROJECT_NAME}"
-				COMPONENT StreamFX
-				FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-				DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-			)
-		else()
-			install(
-				TARGETS ${PROJECT_NAME}
-				RUNTIME DESTINATION "plugins/${PROJECT_NAME}/bin/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
-				LIBRARY DESTINATION "plugins/${PROJECT_NAME}/bin/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
-				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-			)
-			install(
-				DIRECTORY "data/"
-				DESTINATION "plugins/${PROJECT_NAME}/data/"
-				COMPONENT StreamFX
-				FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-				DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-			)
-		endif()
-	elseif(D_PLATFORM_MAC)
-		if(STRUCTURE_BUNDLE)
-			install(
-				TARGETS ${PROJECT_NAME}
-				RUNTIME DESTINATION "." COMPONENT StreamFX
-				LIBRARY DESTINATION "." COMPONENT StreamFX
-				BUNDLE DESTINATION "." COMPONENT StreamFX
-				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-			)
-		else()
-			install(
-				TARGETS ${PROJECT_NAME}
-				RUNTIME DESTINATION "${PROJECT_NAME}/bin/" COMPONENT StreamFX
-				LIBRARY DESTINATION "${PROJECT_NAME}/bin/" COMPONENT StreamFX
-				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-			)
-			install(
-				DIRECTORY "data/"
-				DESTINATION "${PROJECT_NAME}/data/"
-				COMPONENT StreamFX
-				FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-				DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-			)
-		endif()
-	endif()
-else()
-	if(COMMAND setup_plugin_target)
-		setup_plugin_target(${PROJECT_NAME})
-		# Seems like we lost the ability to customize which directoy resources are in, and instead are forced to use '/data'.
-
-		if(HAVE_AOM AND AOM_BINARY) # Dependency: AOM
-			add_target_resource(${PROJECT_NAME} "${AOM_BINARY}" "obs-plugins/${PROJECT_NAME}")
-		endif()
-	elseif(COMMAND install_obs_plugin_with_data)
-		install_obs_plugin_with_data(${PROJECT_NAME} data)
-
-		if(HAVE_AOM AND AOM_BINARY) # Dependency: AOM
-			install(
-				FILES "${AOM_BINARY}"
-				DESTINATION "${OBS_DATA_DESTINATION}/obs-plugins/${PROJECT_NAME}"
-			)
-			add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-				COMMAND "${CMAKE_COMMAND}" -E copy
-					"${AOM_BINARY}"
-					"${OBS_DATA_DESTINATION}/obs-plugins/${PROJECT_NAME}"
-				VERBATIM)
-		endif()
-	endif()
-endif()
+# Register the library
+target_sources(${PROJECT_NAME}_Core PRIVATE ${PROJECT_FILES})
+target_link_libraries(${PROJECT_NAME}_Core PRIVATE ${PROJECT_LIBRARIES})
+target_include_directories(${PROJECT_NAME}_Core PRIVATE ${PROJECT_INCLUDE_DIRS})
+target_compile_definitions(${PROJECT_NAME}_Core PRIVATE ${PROJECT_DEFINITIONS})
 
 ################################################################################
-# Packaging
+# Components
 ################################################################################
+# As the above monolithic approach started to show its weaknesses, it was time
+# for an improved system which suffers under less issues. This new component
+# system should address the main necessary parts,
 
-if(STANDALONE)
-	# Packaging
-	if(NOT PACKAGE_SUFFIX)
-		set(_PACKAGE_SUFFIX_OVERRIDE "${_VERSION_THIN}")
-	else()
-		set(_PACKAGE_SUFFIX_OVERRIDE "${PACKAGE_SUFFIX}")
-	endif()
-	set(_PACKAGE_FULL_NAME "${PACKAGE_PREFIX}/${PACKAGE_NAME}-${_PACKAGE_SUFFIX_OVERRIDE}")
+file(GLOB COMPONENTS RELATIVE ${PROJECT_SOURCE_DIR} CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/components/*)
+foreach(COMPONENT ${COMPONENTS})
+	add_subdirectory(${COMPONENT} EXCLUDE_FROM_ALL)
+endforeach()
 
-	if(STRUCTURE_UNIFIED)
-		add_custom_target(
-			PACKAGE_ZIP
-			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.obs" --format=zip --
-				"."
-			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
-		)
-	else()
-		add_custom_target(
-			PACKAGE_7Z
-			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.7z" --format=7zip --
-				"."
-			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
-		)
-		add_custom_target(
-			PACKAGE_ZIP
-			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.zip" --format=zip --
-				"."
-			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
-		)
+# ################################################################################
+# # Installation
+# ################################################################################
 
-		# Windows
-		if(D_PLATFORM_WINDOWS)
-			## Installer (InnoSetup)
-			get_filename_component(ISS_FILES_DIR "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
-			file(TO_NATIVE_PATH "${ISS_FILES_DIR}" ISS_FILES_DIR)
+# if(STANDALONE)
+# 	if(STRUCTURE_UNIFIED)
+# 		install(
+# 			DIRECTORY "data/"
+# 			DESTINATION "data/"
+# 			FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+# 			DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+# 		)
 
-			get_filename_component(ISS_PACKAGE_DIR "${PACKAGE_PREFIX}" ABSOLUTE)
-			file(TO_NATIVE_PATH "${ISS_PACKAGE_DIR}" ISS_PACKAGE_DIR)
+# 		if(D_PLATFORM_WINDOWS)
+# 			install(
+# 				TARGETS ${PROJECT_NAME}
+# 				RUNTIME DESTINATION "bin/windows-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
+# 				LIBRARY DESTINATION "bin/windows-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
+# 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+# 			)
+# 			if(MSVC)
+# 				install(
+# 					FILES $<TARGET_PDB_FILE:${PROJECT_NAME}>
+# 					DESTINATION "bin/windows-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/"
+# 					COMPONENT StreamFX
+# 					OPTIONAL
+# 				)
+# 			endif()
 
-			get_filename_component(ISS_SOURCE_DIR "${PROJECT_SOURCE_DIR}" ABSOLUTE)
-			file(TO_NATIVE_PATH "${ISS_SOURCE_DIR}" ISS_SOURCE_DIR)
+# 			# Dependency: AOM
+# 			if(HAVE_AOM AND AOM_BINARY AND D_PLATFORM_WINDOWS)
+# 				install(
+# 					FILES ${AOM_BINARY}
+# 					DESTINATION "data/" COMPONENT StreamFX
+# 				)
+# 			endif()
+# 		elseif(D_PLATFORM_LINUX)
+# 			install(
+# 				TARGETS ${PROJECT_NAME}
+# 				RUNTIME DESTINATION "bin/linux-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
+# 				LIBRARY DESTINATION "bin/linux-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
+# 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+# 			)
+# 		elseif(D_PLATFORM_MAC)
+# 			install(
+# 				TARGETS ${PROJECT_NAME}
+# 				RUNTIME DESTINATION "bin/mac-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
+# 				LIBRARY DESTINATION "bin/mac-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
+# 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+# 			)
+# 		endif()
 
-			get_filename_component(ISS_MSVCHELPER_PATH "${msvc-redist-helper_BUILD_DIR}" ABSOLUTE)
-			file(TO_NATIVE_PATH "${ISS_MSVCHELPER_PATH}" ISS_MSVCHELPER_PATH)
+# 		install(
+# 			FILES LICENSE
+# 			DESTINATION "LICENSE"
+# 			COMPONENT StreamFX
+# 		)
+# 		install(
+# 			FILES icon.png
+# 			DESTINATION "icon.png"
+# 			COMPONENT StreamFX
+# 		)
+# 	elseif(D_PLATFORM_WINDOWS)
+# 		install(
+# 			TARGETS ${PROJECT_NAME}
+# 			RUNTIME DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
+# 			LIBRARY DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
+# 		)
+# 		install(
+# 			DIRECTORY "data/"
+# 			DESTINATION "data/obs-plugins/${PROJECT_NAME}/"
+# 		)
+# 		if(MSVC)
+# 			install(
+# 				FILES $<TARGET_PDB_FILE:${PROJECT_NAME}>
+# 				DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/"
+# 				OPTIONAL
+# 			)
+# 		endif()
 
-			configure_file(
-				"templates/windows/installer.iss.in"
-				"installer.iss"
-			)
-		endif()
+# 		# Dependency: AOM
+# 		if(HAVE_AOM AND AOM_BINARY)
+# 			install(
+# 				FILES "${AOM_BINARY}"
+# 				DESTINATION "data/obs-plugins/${PROJECT_NAME}/" COMPONENT StreamFX
+# 			)
+# 		endif()
+# 	elseif(D_PLATFORM_LINUX)
+# 		if(STRUCTURE_PACKAGEMANAGER)
+# 			install(
+# 				TARGETS ${PROJECT_NAME}
+# 				RUNTIME DESTINATION "lib/obs-plugins/" COMPONENT StreamFX
+# 				LIBRARY DESTINATION "lib/obs-plugins/" COMPONENT StreamFX
+# 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+# 			)
+# 			install(
+# 				DIRECTORY "data/"
+# 				DESTINATION "share/obs/obs-plugins/${PROJECT_NAME}"
+# 				COMPONENT StreamFX
+# 				FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+# 				DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+# 			)
+# 		else()
+# 			install(
+# 				TARGETS ${PROJECT_NAME}
+# 				RUNTIME DESTINATION "plugins/${PROJECT_NAME}/bin/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
+# 				LIBRARY DESTINATION "plugins/${PROJECT_NAME}/bin/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
+# 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+# 			)
+# 			install(
+# 				DIRECTORY "data/"
+# 				DESTINATION "plugins/${PROJECT_NAME}/data/"
+# 				COMPONENT StreamFX
+# 				FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+# 				DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+# 			)
+# 		endif()
+# 	elseif(D_PLATFORM_MAC)
+# 		if(STRUCTURE_BUNDLE)
+# 			install(
+# 				TARGETS ${PROJECT_NAME}
+# 				RUNTIME DESTINATION "." COMPONENT StreamFX
+# 				LIBRARY DESTINATION "." COMPONENT StreamFX
+# 				BUNDLE DESTINATION "." COMPONENT StreamFX
+# 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+# 			)
+# 		else()
+# 			install(
+# 				TARGETS ${PROJECT_NAME}
+# 				RUNTIME DESTINATION "${PROJECT_NAME}/bin/" COMPONENT StreamFX
+# 				LIBRARY DESTINATION "${PROJECT_NAME}/bin/" COMPONENT StreamFX
+# 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+# 			)
+# 			install(
+# 				DIRECTORY "data/"
+# 				DESTINATION "${PROJECT_NAME}/data/"
+# 				COMPONENT StreamFX
+# 				FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+# 				DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+# 			)
+# 		endif()
+# 	endif()
+# else()
+# 	if(COMMAND setup_plugin_target)
+# 		setup_plugin_target(${PROJECT_NAME})
+# 		# Seems like we lost the ability to customize which directoy resources are in, and instead are forced to use '/data'.
 
-		# Apple MacOS
-		if(D_PLATFORM_MAC)
-			# .pkg Installer
-			set(PACKAGES_PATH_NAME "${PROJECT_NAME}")
-			if(STRUCTURE_BUNDLE)
-				set(PACKAGES_PATH_NAME "${PACKAGES_PATH_NAME}.plugin")
-			endif()
-			configure_file(
-				"templates/macos/installer.pkgproj.in"
-				"installer.pkgproj"
-			)
-		endif()
-	endif()
-endif()
+# 		if(HAVE_AOM AND AOM_BINARY) # Dependency: AOM
+# 			add_target_resource(${PROJECT_NAME} "${AOM_BINARY}" "obs-plugins/${PROJECT_NAME}")
+# 		endif()
+# 	elseif(COMMAND install_obs_plugin_with_data)
+# 		install_obs_plugin_with_data(${PROJECT_NAME} data)
+
+# 		if(HAVE_AOM AND AOM_BINARY) # Dependency: AOM
+# 			install(
+# 				FILES "${AOM_BINARY}"
+# 				DESTINATION "${OBS_DATA_DESTINATION}/obs-plugins/${PROJECT_NAME}"
+# 			)
+# 			add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+# 				COMMAND "${CMAKE_COMMAND}" -E copy
+# 					"${AOM_BINARY}"
+# 					"${OBS_DATA_DESTINATION}/obs-plugins/${PROJECT_NAME}"
+# 				VERBATIM)
+# 		endif()
+# 	endif()
+# endif()
+
+# ################################################################################
+# # Packaging
+# ################################################################################
+
+# if(STANDALONE)
+# 	# Packaging
+# 	if(NOT PACKAGE_SUFFIX)
+# 		set(_PACKAGE_SUFFIX_OVERRIDE "${_VERSION_THIN}")
+# 	else()
+# 		set(_PACKAGE_SUFFIX_OVERRIDE "${PACKAGE_SUFFIX}")
+# 	endif()
+# 	set(_PACKAGE_FULL_NAME "${PACKAGE_PREFIX}/${PACKAGE_NAME}-${_PACKAGE_SUFFIX_OVERRIDE}")
+
+# 	if(STRUCTURE_UNIFIED)
+# 		add_custom_target(
+# 			PACKAGE_ZIP
+# 			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.obs" --format=zip --
+# 				"."
+# 			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
+# 		)
+# 	else()
+# 		add_custom_target(
+# 			PACKAGE_7Z
+# 			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.7z" --format=7zip --
+# 				"."
+# 			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
+# 		)
+# 		add_custom_target(
+# 			PACKAGE_ZIP
+# 			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.zip" --format=zip --
+# 				"."
+# 			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
+# 		)
+
+# 		# Windows
+# 		if(D_PLATFORM_WINDOWS)
+# 			## Installer (InnoSetup)
+# 			get_filename_component(ISS_FILES_DIR "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
+# 			file(TO_NATIVE_PATH "${ISS_FILES_DIR}" ISS_FILES_DIR)
+
+# 			get_filename_component(ISS_PACKAGE_DIR "${PACKAGE_PREFIX}" ABSOLUTE)
+# 			file(TO_NATIVE_PATH "${ISS_PACKAGE_DIR}" ISS_PACKAGE_DIR)
+
+# 			get_filename_component(ISS_SOURCE_DIR "${PROJECT_SOURCE_DIR}" ABSOLUTE)
+# 			file(TO_NATIVE_PATH "${ISS_SOURCE_DIR}" ISS_SOURCE_DIR)
+
+# 			get_filename_component(ISS_MSVCHELPER_PATH "${msvc-redist-helper_BUILD_DIR}" ABSOLUTE)
+# 			file(TO_NATIVE_PATH "${ISS_MSVCHELPER_PATH}" ISS_MSVCHELPER_PATH)
+
+# 			configure_file(
+# 				"templates/windows/installer.iss.in"
+# 				"installer.iss"
+# 			)
+# 		endif()
+
+# 		# Apple MacOS
+# 		if(D_PLATFORM_MAC)
+# 			# .pkg Installer
+# 			set(PACKAGES_PATH_NAME "${PROJECT_NAME}")
+# 			if(STRUCTURE_BUNDLE)
+# 				set(PACKAGES_PATH_NAME "${PACKAGES_PATH_NAME}.plugin")
+# 			endif()
+# 			configure_file(
+# 				"templates/macos/installer.pkgproj.in"
+# 				"installer.pkgproj"
+# 			)
+# 		endif()
+# 	endif()
+# endif()
