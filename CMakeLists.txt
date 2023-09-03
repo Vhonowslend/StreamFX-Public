@@ -2186,132 +2186,132 @@ if(_DEPENDS)
 	endforeach()
 endif()
 
-# ################################################################################
-# # Installation
-# ################################################################################
+################################################################################
+# Installation
+################################################################################
 
 if(STANDALONE)
-# 	if(STRUCTURE_UNIFIED)
-# 		install(
-# 			DIRECTORY "data/"
-# 			DESTINATION "data/"
-# 			FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-# 			DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-# 		)
+	if(STRUCTURE_UNIFIED)
+		install(
+			DIRECTORY "data/"
+			DESTINATION "data/"
+			FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+		)
 
-# 		if(D_PLATFORM_WINDOWS)
-# 			install(
-# 				TARGETS StreamFX
-# 				RUNTIME DESTINATION "bin/windows-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
-# 				LIBRARY DESTINATION "bin/windows-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
-# 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-# 			)
-# 			if(MSVC)
-# 				install(
-# 					FILES $<TARGET_PDB_FILE:StreamFX>
-# 					DESTINATION "bin/windows-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/"
-# 					COMPONENT StreamFX
-# 					OPTIONAL
-# 				)
-# 			endif()
-# 		elseif(D_PLATFORM_LINUX)
-# 			install(
-# 				TARGETS StreamFX
-# 				RUNTIME DESTINATION "bin/linux-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
-# 				LIBRARY DESTINATION "bin/linux-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
-# 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-# 			)
-# 		elseif(D_PLATFORM_MAC)
-# 			install(
-# 				TARGETS StreamFX
-# 				RUNTIME DESTINATION "bin/mac-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
-# 				LIBRARY DESTINATION "bin/mac-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
-# 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-# 			)
-# 		endif()
+		if(D_PLATFORM_WINDOWS)
+			install(
+				TARGETS StreamFX
+				RUNTIME DESTINATION "bin/windows-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
+				LIBRARY DESTINATION "bin/windows-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
+				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			)
+			if(MSVC)
+				install(
+					FILES $<TARGET_PDB_FILE:StreamFX>
+					DESTINATION "bin/windows-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/"
+					COMPONENT StreamFX
+					OPTIONAL
+				)
+			endif()
+		elseif(D_PLATFORM_LINUX)
+			install(
+				TARGETS StreamFX
+				RUNTIME DESTINATION "bin/linux-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
+				LIBRARY DESTINATION "bin/linux-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
+				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			)
+		elseif(D_PLATFORM_MAC)
+			install(
+				TARGETS StreamFX
+				RUNTIME DESTINATION "bin/mac-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
+				LIBRARY DESTINATION "bin/mac-${D_PLATFORM_INSTR}-${D_PLATFORM_BITS}/" COMPONENT StreamFX
+				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			)
+		endif()
 
-# 		install(
-# 			FILES LICENSE
-# 			DESTINATION "LICENSE"
-# 			COMPONENT StreamFX
-# 		)
-# 		install(
-# 			FILES icon.png
-# 			DESTINATION "icon.png"
-# 			COMPONENT StreamFX
-# 		)
-# 	elseif(D_PLATFORM_WINDOWS)
-# 		install(
-# 			TARGETS StreamFX
-# 			RUNTIME DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
-# 			LIBRARY DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
-# 		)
-# 		install(
-# 			DIRECTORY "data/"
-# 			DESTINATION "data/obs-plugins/StreamFX/"
-# 		)
-# 		if(MSVC)
-# 			install(
-# 				FILES $<TARGET_PDB_FILE:StreamFX>
-# 				DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/"
-# 				OPTIONAL
-# 			)
-# 		endif()
-# 	elseif(D_PLATFORM_LINUX)
-# 		if(STRUCTURE_PACKAGEMANAGER)
-# 			install(
-# 				TARGETS StreamFX
-# 				RUNTIME DESTINATION "lib/obs-plugins/" COMPONENT StreamFX
-# 				LIBRARY DESTINATION "lib/obs-plugins/" COMPONENT StreamFX
-# 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-# 			)
-# 			install(
-# 				DIRECTORY "data/"
-# 				DESTINATION "share/obs/obs-plugins/StreamFX"
-# 				COMPONENT StreamFX
-# 				FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-# 				DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-# 			)
-# 		else()
-# 			install(
-# 				TARGETS StreamFX
-# 				RUNTIME DESTINATION "plugins/StreamFX/bin/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
-# 				LIBRARY DESTINATION "plugins/StreamFX/bin/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
-# 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-# 			)
-# 			install(
-# 				DIRECTORY "data/"
-# 				DESTINATION "plugins/StreamFX/data/"
-# 				COMPONENT StreamFX
-# 				FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-# 				DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-# 			)
-# 		endif()
-# 	elseif(D_PLATFORM_MAC)
-# 		if(STRUCTURE_BUNDLE)
-# 			install(
-# 				TARGETS StreamFX
-# 				RUNTIME DESTINATION "." COMPONENT StreamFX
-# 				LIBRARY DESTINATION "." COMPONENT StreamFX
-# 				BUNDLE DESTINATION "." COMPONENT StreamFX
-# 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-# 			)
-# 		else()
-# 			install(
-# 				TARGETS StreamFX
-# 				RUNTIME DESTINATION "StreamFX/bin/" COMPONENT StreamFX
-# 				LIBRARY DESTINATION "StreamFX/bin/" COMPONENT StreamFX
-# 				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-# 			)
-# 			install(
-# 				DIRECTORY "data/"
-# 				DESTINATION "StreamFX/data/"
-# 				COMPONENT StreamFX
-# 				FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-# 				DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-# 			)
-# 		endif()
-# 	endif()
+		install(
+			FILES LICENSE
+			DESTINATION "LICENSE"
+			COMPONENT StreamFX
+		)
+		install(
+			FILES icon.png
+			DESTINATION "icon.png"
+			COMPONENT StreamFX
+		)
+	elseif(D_PLATFORM_WINDOWS)
+		install(
+			TARGETS StreamFX
+			RUNTIME DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
+			LIBRARY DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
+		)
+		install(
+			DIRECTORY "data/"
+			DESTINATION "data/obs-plugins/StreamFX/"
+		)
+		if(MSVC)
+			install(
+				FILES $<TARGET_PDB_FILE:StreamFX>
+				DESTINATION "obs-plugins/${D_PLATFORM_BITS}bit/"
+				OPTIONAL
+			)
+		endif()
+	elseif(D_PLATFORM_LINUX)
+		if(STRUCTURE_PACKAGEMANAGER)
+			install(
+				TARGETS StreamFX
+				RUNTIME DESTINATION "lib/obs-plugins/" COMPONENT StreamFX
+				LIBRARY DESTINATION "lib/obs-plugins/" COMPONENT StreamFX
+				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			)
+			install(
+				DIRECTORY "data/"
+				DESTINATION "share/obs/obs-plugins/StreamFX"
+				COMPONENT StreamFX
+				FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+				DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			)
+		else()
+			install(
+				TARGETS StreamFX
+				RUNTIME DESTINATION "plugins/StreamFX/bin/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
+				LIBRARY DESTINATION "plugins/StreamFX/bin/${D_PLATFORM_BITS}bit/" COMPONENT StreamFX
+				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			)
+			install(
+				DIRECTORY "data/"
+				DESTINATION "plugins/StreamFX/data/"
+				COMPONENT StreamFX
+				FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+				DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			)
+		endif()
+	elseif(D_PLATFORM_MAC)
+		if(STRUCTURE_BUNDLE)
+			install(
+				TARGETS StreamFX
+				RUNTIME DESTINATION "." COMPONENT StreamFX
+				LIBRARY DESTINATION "." COMPONENT StreamFX
+				BUNDLE DESTINATION "." COMPONENT StreamFX
+				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			)
+		else()
+			install(
+				TARGETS StreamFX
+				RUNTIME DESTINATION "StreamFX/bin/" COMPONENT StreamFX
+				LIBRARY DESTINATION "StreamFX/bin/" COMPONENT StreamFX
+				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			)
+			install(
+				DIRECTORY "data/"
+				DESTINATION "StreamFX/data/"
+				COMPONENT StreamFX
+				FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+				DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+			)
+		endif()
+	endif()
 else()
 	if(COMMAND setup_plugin_target)
 		setup_plugin_target(StreamFX)
@@ -2321,72 +2321,72 @@ else()
 	endif()
 endif()
 
-# ################################################################################
-# # Packaging
-# ################################################################################
+################################################################################
+# Packaging
+################################################################################
 
-# if(STANDALONE)
-# 	# Packaging
-# 	if(NOT PACKAGE_SUFFIX)
-# 		set(_PACKAGE_SUFFIX_OVERRIDE "${_VERSION_THIN}")
-# 	else()
-# 		set(_PACKAGE_SUFFIX_OVERRIDE "${PACKAGE_SUFFIX}")
-# 	endif()
-# 	set(_PACKAGE_FULL_NAME "${PACKAGE_PREFIX}/${PACKAGE_NAME}-${_PACKAGE_SUFFIX_OVERRIDE}")
+if(STANDALONE)
+	# Packaging
+	if(NOT PACKAGE_SUFFIX)
+		set(_PACKAGE_SUFFIX_OVERRIDE "${_VERSION_THIN}")
+	else()
+		set(_PACKAGE_SUFFIX_OVERRIDE "${PACKAGE_SUFFIX}")
+	endif()
+	set(_PACKAGE_FULL_NAME "${PACKAGE_PREFIX}/${PACKAGE_NAME}-${_PACKAGE_SUFFIX_OVERRIDE}")
 
-# 	if(STRUCTURE_UNIFIED)
-# 		add_custom_target(
-# 			PACKAGE_ZIP
-# 			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.obs" --format=zip --
-# 				"."
-# 			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
-# 		)
-# 	else()
-# 		add_custom_target(
-# 			PACKAGE_7Z
-# 			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.7z" --format=7zip --
-# 				"."
-# 			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
-# 		)
-# 		add_custom_target(
-# 			PACKAGE_ZIP
-# 			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.zip" --format=zip --
-# 				"."
-# 			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
-# 		)
+	if(STRUCTURE_UNIFIED)
+		add_custom_target(
+			PACKAGE_ZIP
+			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.obs" --format=zip --
+				"."
+			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
+		)
+	else()
+		add_custom_target(
+			PACKAGE_7Z
+			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.7z" --format=7zip --
+				"."
+			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
+		)
+		add_custom_target(
+			PACKAGE_ZIP
+			${CMAKE_COMMAND} -E tar cfv "${_PACKAGE_FULL_NAME}.zip" --format=zip --
+				"."
+			WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}"
+		)
 
-# 		# Windows
-# 		if(D_PLATFORM_WINDOWS)
-# 			## Installer (InnoSetup)
-# 			get_filename_component(ISS_FILES_DIR "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
-# 			file(TO_NATIVE_PATH "${ISS_FILES_DIR}" ISS_FILES_DIR)
+		# Windows
+		if(D_PLATFORM_WINDOWS)
+			## Installer (InnoSetup)
+			get_filename_component(ISS_FILES_DIR "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
+			file(TO_NATIVE_PATH "${ISS_FILES_DIR}" ISS_FILES_DIR)
 
-# 			get_filename_component(ISS_PACKAGE_DIR "${PACKAGE_PREFIX}" ABSOLUTE)
-# 			file(TO_NATIVE_PATH "${ISS_PACKAGE_DIR}" ISS_PACKAGE_DIR)
+			get_filename_component(ISS_PACKAGE_DIR "${PACKAGE_PREFIX}" ABSOLUTE)
+			file(TO_NATIVE_PATH "${ISS_PACKAGE_DIR}" ISS_PACKAGE_DIR)
 
-# 			get_filename_component(ISS_SOURCE_DIR "${PROJECT_SOURCE_DIR}" ABSOLUTE)
-# 			file(TO_NATIVE_PATH "${ISS_SOURCE_DIR}" ISS_SOURCE_DIR)
+			get_filename_component(ISS_SOURCE_DIR "${PROJECT_SOURCE_DIR}" ABSOLUTE)
+			file(TO_NATIVE_PATH "${ISS_SOURCE_DIR}" ISS_SOURCE_DIR)
 
-# 			get_filename_component(ISS_MSVCHELPER_PATH "${msvc-redist-helper_BUILD_DIR}" ABSOLUTE)
-# 			file(TO_NATIVE_PATH "${ISS_MSVCHELPER_PATH}" ISS_MSVCHELPER_PATH)
+			get_filename_component(ISS_MSVCHELPER_PATH "${msvc-redist-helper_BUILD_DIR}" ABSOLUTE)
+			file(TO_NATIVE_PATH "${ISS_MSVCHELPER_PATH}" ISS_MSVCHELPER_PATH)
 
-# 			configure_file(
-# 				"templates/windows/installer.iss.in"
-# 				"installer.iss"
-# 			)
-# 		endif()
+			configure_file(
+				"templates/windows/installer.iss.in"
+				"installer.iss"
+			)
+		endif()
 
-# 		# Apple MacOS
-# 		if(D_PLATFORM_MAC)
-# 			# .pkg Installer
-# 			set(PACKAGES_PATH_NAME "StreamFX")
-# 			if(STRUCTURE_BUNDLE)
-# 				set(PACKAGES_PATH_NAME "${PACKAGES_PATH_NAME}.plugin")
-# 			endif()
-# 			configure_file(
-# 				"templates/macos/installer.pkgproj.in"
-# 				"installer.pkgproj"
-# 			)
-# 		endif()
-# 	endif()
-# endif()
+		# Apple MacOS
+		if(D_PLATFORM_MAC)
+			# .pkg Installer
+			set(PACKAGES_PATH_NAME "StreamFX")
+			if(STRUCTURE_BUNDLE)
+				set(PACKAGES_PATH_NAME "${PACKAGES_PATH_NAME}.plugin")
+			endif()
+			configure_file(
+				"templates/macos/installer.pkgproj.in"
+				"installer.pkgproj"
+			)
+		endif()
+	endif()
+endif()
