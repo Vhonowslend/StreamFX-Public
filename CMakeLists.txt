@@ -831,7 +831,6 @@ feature_updater(ON)
 ################################################################################
 set(PROJECT_DATA )
 set(PROJECT_LIBRARIES )
-set(PROJECT_LIBRARIES_DELAYED )
 set(PROJECT_INCLUDE_DIRS )
 set(PROJECT_TEMPLATES )
 set(PROJECT_PRIVATE_GENERATED )
@@ -1522,12 +1521,6 @@ endif()
 
 # Windows
 if(D_PLATFORM_WINDOWS)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/windll.cpp"
-	)
-	list(APPEND PROJECT_LIBRARIES
-		Delayimp.lib
-	)
 	# Disable/Enable a ton of things.
 	list(APPEND PROJECT_DEFINITIONS
 		# Microsoft Visual C++
@@ -1976,7 +1969,23 @@ target_include_directories(StreamFX PRIVATE
 	"${PROJECT_BINARY_DIR}/generated"
 )
 
-if(D_PLATFORM_WINDOWS) # Windows Support
+# Ensure there is at least one file.
+if(D_PLATFORM_WINDOWS)
+	target_sources(StreamFX
+		PRIVATE
+			"source/windll.cpp"
+	)
+else()
+	target_sources(StreamFX
+		PRIVATE
+			"/dev/null"
+	)
+endif()
+
+if(D_PLATFORM_WINDOWS)
+	# Windows-exclusive
+
+	# Version Resource
 	set(PROJECT_PRODUCT_NAME "${PROJECT_FULL_NAME}")
 	set(PROJECT_COMPANY_NAME "${PROJECT_AUTHORS}")
 	set(PROJECT_COPYRIGHT "${PROJECT_AUTHORS} © ${PROJECT_COPYRIGHT_YEARS}")
@@ -1992,30 +2001,9 @@ if(D_PLATFORM_WINDOWS) # Windows Support
 			"templates/windows/version.rc.in"
 			"${PROJECT_BINARY_DIR}/generated/version.rc"
 	)
-endif()
+elseif(D_PLATFORM_MAC)
+	# MacOS exclusive Changes
 
-# Set file version
-set_target_properties(StreamFX PROPERTIES
-	MACHO_COMPATIBILITY_VERSION ${_VERSION_MAJOR}.${_VERSION_MINOR}
-	MACHO_CURRENT_VERSION ${PROJECT_VERSION}
-	SOVERSION ${_VERSION_MAJOR}.${_VERSION_MINOR}
-	VERSION ${PROJECT_VERSION}
-)
-
-# Windows exclusive changes
-if(D_PLATFORM_WINDOWS)
-	foreach(DELAYLOAD ${PROJECT_LIBRARIES_DELAYED})
-		get_target_property(_lf StreamFX LINK_FLAGS)
-		if(NOT _lf)
-			set(_lf "")
-		endif()
-		set_target_properties(StreamFX PROPERTIES LINK_FLAGS "${_lf} /DELAYLOAD:${DELAYLOAD}")
-		add_link_options("/DELAYLOAD:${DELAYLOAD}")
-	endforeach()
-endif()
-
-# MacOS exclusive Changes
-if(D_PLATFORM_MAC)
 	set_target_properties(StreamFX PROPERTIES
 		# No automatic code signing in XCode
 		XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ""
@@ -2065,6 +2053,14 @@ if(D_PLATFORM_MAC)
 		)
 	endif()
 endif()
+
+# Set file version
+set_target_properties(StreamFX PROPERTIES
+	MACHO_COMPATIBILITY_VERSION ${_VERSION_MAJOR}.${_VERSION_MINOR}
+	MACHO_CURRENT_VERSION ${PROJECT_VERSION}
+	SOVERSION ${_VERSION_MAJOR}.${_VERSION_MINOR}
+	VERSION ${PROJECT_VERSION}
+)
 
 ################################################################################
 # Add Core
