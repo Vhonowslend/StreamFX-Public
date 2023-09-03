@@ -874,21 +874,6 @@ configure_file(
 )
 LIST(APPEND PROJECT_TEMPLATES "templates/module.cpp.in")
 LIST(APPEND PROJECT_PRIVATE_GENERATED "${PROJECT_BINARY_DIR}/generated/module.cpp")
-
-if(D_PLATFORM_WINDOWS) # Windows Support
-	set(PROJECT_PRODUCT_NAME "${PROJECT_FULL_NAME}")
-	set(PROJECT_COMPANY_NAME "${PROJECT_AUTHORS}")
-	set(PROJECT_COPYRIGHT "${PROJECT_AUTHORS} © ${PROJECT_COPYRIGHT_YEARS}")
-	set(PROJECT_LEGAL_TRADEMARKS_1 "")
-	set(PROJECT_LEGAL_TRADEMARKS_2 "")
-
-	configure_file(
-		"templates/windows/version.rc.in"
-		"generated/version.rc"
-	)
-	LIST(APPEND PROJECT_PRIVATE_GENERATED "${PROJECT_BINARY_DIR}/generated/version.rc")
-endif()
-
 # Minimum Dependencies
 list(APPEND PROJECT_LIBRARIES OBS::libobs)
 
@@ -1918,6 +1903,7 @@ function(streamfx_add_component COMPONENT_NAME)
 	set(COMPONENT_ALIAS "${PROJECT_NAME}::${COMPONENT_SANITIZED_NAME}" PARENT_SCOPE)
 
 	streamfx_add_library(${COMPONENT_TARGET} STATIC)
+	target_link_libraries(${COMPONENT_TARGET} PUBLIC ${PROJECT_NAME}::Core)
 	add_library(${COMPONENT_ALIAS} ALIAS ${COMPONENT_TARGET})
 	set_target_properties(${COMPONENT_TARGET} PROPERTIES
 		COMPONENT_LABEL "${COMPONENT_LABEL}"
@@ -1982,15 +1968,40 @@ function(streamfx_add_component COMPONENT_NAME)
 endfunction()
 
 # Use this to add a dependency on another component, 
-function(streamfx_add_component_dependency COMPONENT_NAME)
-	
-
+function(streamfx_add_component_dependency _NAME)
+	get_target_property(DEPENDS ${COMPONENT_TARGET} COMPONENT_DEPENDS)
+	list(APPEND DEPENDS "${_NAME}")
+	set_target_properties(${COMPONENT_TARGET} PROPERTIES COMPONENT_DEPENDS "${DEPENDS}")
 endfunction()
 
 ################################################################################
 # Register Library
 ################################################################################
 streamfx_add_library(${PROJECT_NAME} MODULE) # We are a module for libOBS.
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+	"source"
+	"include"
+	"${PROJECT_BINARY_DIR}/generated"
+)
+
+if(D_PLATFORM_WINDOWS) # Windows Support
+	set(PROJECT_PRODUCT_NAME "${PROJECT_FULL_NAME}")
+	set(PROJECT_COMPANY_NAME "${PROJECT_AUTHORS}")
+	set(PROJECT_COPYRIGHT "${PROJECT_AUTHORS} © ${PROJECT_COPYRIGHT_YEARS}")
+	set(PROJECT_LEGAL_TRADEMARKS_1 "")
+	set(PROJECT_LEGAL_TRADEMARKS_2 "")
+
+	configure_file(
+		"templates/windows/version.rc.in"
+		"generated/version.rc"
+	)
+	target_sources(${PROJECT_NAME} 
+		PRIVATE
+			"templates/windows/version.rc.in"
+			"${PROJECT_BINARY_DIR}/generated/version.rc"
+	)
+endif()
 
 # Set file version
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -2069,7 +2080,6 @@ endif()
 ################################################################################
 streamfx_add_library(${PROJECT_NAME}_Core STATIC EXCLUDE_FROM_ALL)
 add_library(${PROJECT_NAME}::Core ALIAS ${PROJECT_NAME}_Core)
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}::Core)
 
 # Combine all variables that matter.
 set(PROJECT_FILES
@@ -2126,11 +2136,18 @@ foreach(COMPONENT ${COMPONENTS})
 	add_subdirectory(${COMPONENT} EXCLUDE_FROM_ALL)
 endforeach()
 
+################################################################################
+# Resolve Components
+################################################################################
+target_link_libraries(${PROJECT_NAME} PUBLIC $<LINK_LIBRARY:WHOLE_ARCHIVE,${PROJECT_NAME}_Core>)
+
+
+
 # ################################################################################
 # # Installation
 # ################################################################################
 
-# if(STANDALONE)
+if(STANDALONE)
 # 	if(STRUCTURE_UNIFIED)
 # 		install(
 # 			DIRECTORY "data/"
@@ -2268,30 +2285,30 @@ endforeach()
 # 			)
 # 		endif()
 # 	endif()
-# else()
-# 	if(COMMAND setup_plugin_target)
-# 		setup_plugin_target(${PROJECT_NAME})
-# 		# Seems like we lost the ability to customize which directoy resources are in, and instead are forced to use '/data'.
+else()
+	if(COMMAND setup_plugin_target)
+		setup_plugin_target(${PROJECT_NAME})
+		# Seems like we lost the ability to customize which directoy resources are in, and instead are forced to use '/data'.
 
-# 		if(HAVE_AOM AND AOM_BINARY) # Dependency: AOM
-# 			add_target_resource(${PROJECT_NAME} "${AOM_BINARY}" "obs-plugins/${PROJECT_NAME}")
-# 		endif()
-# 	elseif(COMMAND install_obs_plugin_with_data)
-# 		install_obs_plugin_with_data(${PROJECT_NAME} data)
+		if(HAVE_AOM AND AOM_BINARY) # Dependency: AOM
+			add_target_resource(${PROJECT_NAME} "${AOM_BINARY}" "obs-plugins/${PROJECT_NAME}")
+		endif()
+	elseif(COMMAND install_obs_plugin_with_data)
+		install_obs_plugin_with_data(${PROJECT_NAME} data)
 
-# 		if(HAVE_AOM AND AOM_BINARY) # Dependency: AOM
-# 			install(
-# 				FILES "${AOM_BINARY}"
-# 				DESTINATION "${OBS_DATA_DESTINATION}/obs-plugins/${PROJECT_NAME}"
-# 			)
-# 			add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-# 				COMMAND "${CMAKE_COMMAND}" -E copy
-# 					"${AOM_BINARY}"
-# 					"${OBS_DATA_DESTINATION}/obs-plugins/${PROJECT_NAME}"
-# 				VERBATIM)
-# 		endif()
-# 	endif()
-# endif()
+		if(HAVE_AOM AND AOM_BINARY) # Dependency: AOM
+			install(
+				FILES "${AOM_BINARY}"
+				DESTINATION "${OBS_DATA_DESTINATION}/obs-plugins/${PROJECT_NAME}"
+			)
+			add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+				COMMAND "${CMAKE_COMMAND}" -E copy
+					"${AOM_BINARY}"
+					"${OBS_DATA_DESTINATION}/obs-plugins/${PROJECT_NAME}"
+				VERBATIM)
+		endif()
+	endif()
+endif()
 
 # ################################################################################
 # # Packaging

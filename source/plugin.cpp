@@ -112,6 +112,8 @@ MODULE_EXPORT bool obs_module_load(void)
 	}
 }
 
+MODULE_EXPORT void obs_module_post_load(void) {}
+
 MODULE_EXPORT void obs_module_unload(void)
 {
 	try {
