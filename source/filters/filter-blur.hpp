@@ -55,12 +55,12 @@ namespace streamfx::filter::blur {
 			bool      enabled;
 			mask_type type;
 			struct {
-				float_t left;
-				float_t top;
-				float_t right;
-				float_t bottom;
-				float_t feather;
-				float_t feather_shift;
+				float left;
+				float top;
+				float right;
+				float bottom;
+				float feather;
+				float feather_shift;
 				bool    invert;
 			} region;
 			struct {
@@ -76,12 +76,12 @@ namespace streamfx::filter::blur {
 				std::shared_ptr<streamfx::obs::gs::texture>    texture;
 			} source;
 			struct {
-				float_t r;
-				float_t g;
-				float_t b;
-				float_t a;
+				float r;
+				float g;
+				float b;
+				float a;
 			} color;
-			float_t multiplier;
+			float multiplier;
 		} _mask;
 
 		public:
@@ -93,7 +93,7 @@ namespace streamfx::filter::blur {
 		virtual void migrate(obs_data_t* settings, uint64_t version) override;
 		virtual void update(obs_data_t* settings) override;
 
-		virtual void video_tick(float_t time) override;
+		virtual void video_tick(float time) override;
 		virtual void video_render(gs_effect_t* effect) override;
 
 		private:

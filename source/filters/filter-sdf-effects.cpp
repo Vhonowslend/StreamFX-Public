@@ -160,15 +160,15 @@ void sdf_effects_instance::update(obs_data_t* data)
 				cs       c;
 			};
 			color                 = uint32_t(obs_data_get_int(data, ST_KEY_SHADOW_OUTER_COLOR));
-			_outer_shadow_color.x = float_t(c.r / 255.0);
-			_outer_shadow_color.y = float_t(c.g / 255.0);
-			_outer_shadow_color.z = float_t(c.b / 255.0);
-			_outer_shadow_color.w = float_t(obs_data_get_double(data, ST_KEY_SHADOW_OUTER_ALPHA) / 100.0);
+			_outer_shadow_color.x = float(c.r / 255.0);
+			_outer_shadow_color.y = float(c.g / 255.0);
+			_outer_shadow_color.z = float(c.b / 255.0);
+			_outer_shadow_color.w = float(obs_data_get_double(data, ST_KEY_SHADOW_OUTER_ALPHA) / 100.0);
 		}
-		_outer_shadow_range_min = float_t(obs_data_get_double(data, ST_KEY_SHADOW_OUTER_RANGE_MINIMUM));
-		_outer_shadow_range_max = float_t(obs_data_get_double(data, ST_KEY_SHADOW_OUTER_RANGE_MAXIMUM));
-		_outer_shadow_offset_x  = float_t(obs_data_get_double(data, ST_KEY_SHADOW_OUTER_OFFSET_X));
-		_outer_shadow_offset_y  = float_t(obs_data_get_double(data, ST_KEY_SHADOW_OUTER_OFFSET_Y));
+		_outer_shadow_range_min = float(obs_data_get_double(data, ST_KEY_SHADOW_OUTER_RANGE_MINIMUM));
+		_outer_shadow_range_max = float(obs_data_get_double(data, ST_KEY_SHADOW_OUTER_RANGE_MAXIMUM));
+		_outer_shadow_offset_x  = float(obs_data_get_double(data, ST_KEY_SHADOW_OUTER_OFFSET_X));
+		_outer_shadow_offset_y  = float(obs_data_get_double(data, ST_KEY_SHADOW_OUTER_OFFSET_Y));
 	}
 
 	{
@@ -183,15 +183,15 @@ void sdf_effects_instance::update(obs_data_t* data)
 				cs       c;
 			};
 			color                 = uint32_t(obs_data_get_int(data, ST_KEY_SHADOW_INNER_COLOR));
-			_inner_shadow_color.x = float_t(c.r / 255.0);
-			_inner_shadow_color.y = float_t(c.g / 255.0);
-			_inner_shadow_color.z = float_t(c.b / 255.0);
-			_inner_shadow_color.w = float_t(obs_data_get_double(data, ST_KEY_SHADOW_INNER_ALPHA) / 100.0);
+			_inner_shadow_color.x = float(c.r / 255.0);
+			_inner_shadow_color.y = float(c.g / 255.0);
+			_inner_shadow_color.z = float(c.b / 255.0);
+			_inner_shadow_color.w = float(obs_data_get_double(data, ST_KEY_SHADOW_INNER_ALPHA) / 100.0);
 		}
-		_inner_shadow_range_min = float_t(obs_data_get_double(data, ST_KEY_SHADOW_INNER_RANGE_MINIMUM));
-		_inner_shadow_range_max = float_t(obs_data_get_double(data, ST_KEY_SHADOW_INNER_RANGE_MAXIMUM));
-		_inner_shadow_offset_x  = float_t(obs_data_get_double(data, ST_KEY_SHADOW_INNER_OFFSET_X));
-		_inner_shadow_offset_y  = float_t(obs_data_get_double(data, ST_KEY_SHADOW_INNER_OFFSET_Y));
+		_inner_shadow_range_min = float(obs_data_get_double(data, ST_KEY_SHADOW_INNER_RANGE_MINIMUM));
+		_inner_shadow_range_max = float(obs_data_get_double(data, ST_KEY_SHADOW_INNER_RANGE_MAXIMUM));
+		_inner_shadow_offset_x  = float(obs_data_get_double(data, ST_KEY_SHADOW_INNER_OFFSET_X));
+		_inner_shadow_offset_y  = float(obs_data_get_double(data, ST_KEY_SHADOW_INNER_OFFSET_Y));
 	}
 
 	{
@@ -206,16 +206,16 @@ void sdf_effects_instance::update(obs_data_t* data)
 				cs       c;
 			};
 			color               = uint32_t(obs_data_get_int(data, ST_KEY_GLOW_OUTER_COLOR));
-			_outer_glow_color.x = float_t(c.r / 255.0);
-			_outer_glow_color.y = float_t(c.g / 255.0);
-			_outer_glow_color.z = float_t(c.b / 255.0);
-			_outer_glow_color.w = float_t(obs_data_get_double(data, ST_KEY_GLOW_OUTER_ALPHA) / 100.0);
+			_outer_glow_color.x = float(c.r / 255.0);
+			_outer_glow_color.y = float(c.g / 255.0);
+			_outer_glow_color.z = float(c.b / 255.0);
+			_outer_glow_color.w = float(obs_data_get_double(data, ST_KEY_GLOW_OUTER_ALPHA) / 100.0);
 		}
-		_outer_glow_width         = float_t(obs_data_get_double(data, ST_KEY_GLOW_OUTER_WIDTH));
-		_outer_glow_sharpness     = float_t(obs_data_get_double(data, ST_KEY_GLOW_OUTER_SHARPNESS) / 100.0);
-		_outer_glow_sharpness_inv = float_t(1.0f / (1.0f - _outer_glow_sharpness));
-		if (_outer_glow_sharpness >= (1.0f - std::numeric_limits<float_t>::epsilon())) {
-			_outer_glow_sharpness = 1.0f - std::numeric_limits<float_t>::epsilon();
+		_outer_glow_width         = float(obs_data_get_double(data, ST_KEY_GLOW_OUTER_WIDTH));
+		_outer_glow_sharpness     = float(obs_data_get_double(data, ST_KEY_GLOW_OUTER_SHARPNESS) / 100.0);
+		_outer_glow_sharpness_inv = float(1.0f / (1.0f - _outer_glow_sharpness));
+		if (_outer_glow_sharpness >= (1.0f - std::numeric_limits<float>::epsilon())) {
+			_outer_glow_sharpness = 1.0f - std::numeric_limits<float>::epsilon();
 		}
 	}
 
@@ -231,16 +231,16 @@ void sdf_effects_instance::update(obs_data_t* data)
 				cs       c;
 			};
 			color               = uint32_t(obs_data_get_int(data, ST_KEY_GLOW_INNER_COLOR));
-			_inner_glow_color.x = float_t(c.r / 255.0);
-			_inner_glow_color.y = float_t(c.g / 255.0);
-			_inner_glow_color.z = float_t(c.b / 255.0);
-			_inner_glow_color.w = float_t(obs_data_get_double(data, ST_KEY_GLOW_INNER_ALPHA) / 100.0);
+			_inner_glow_color.x = float(c.r / 255.0);
+			_inner_glow_color.y = float(c.g / 255.0);
+			_inner_glow_color.z = float(c.b / 255.0);
+			_inner_glow_color.w = float(obs_data_get_double(data, ST_KEY_GLOW_INNER_ALPHA) / 100.0);
 		}
-		_inner_glow_width         = float_t(obs_data_get_double(data, ST_KEY_GLOW_INNER_WIDTH));
-		_inner_glow_sharpness     = float_t(obs_data_get_double(data, ST_KEY_GLOW_INNER_SHARPNESS) / 100.0);
-		_inner_glow_sharpness_inv = float_t(1.0f / (1.0f - _inner_glow_sharpness));
-		if (_inner_glow_sharpness >= (1.0f - std::numeric_limits<float_t>::epsilon())) {
-			_inner_glow_sharpness = 1.0f - std::numeric_limits<float_t>::epsilon();
+		_inner_glow_width         = float(obs_data_get_double(data, ST_KEY_GLOW_INNER_WIDTH));
+		_inner_glow_sharpness     = float(obs_data_get_double(data, ST_KEY_GLOW_INNER_SHARPNESS) / 100.0);
+		_inner_glow_sharpness_inv = float(1.0f / (1.0f - _inner_glow_sharpness));
+		if (_inner_glow_sharpness >= (1.0f - std::numeric_limits<float>::epsilon())) {
+			_inner_glow_sharpness = 1.0f - std::numeric_limits<float>::epsilon();
 		}
 	}
 
@@ -256,25 +256,25 @@ void sdf_effects_instance::update(obs_data_t* data)
 				cs       c;
 			};
 			color            = uint32_t(obs_data_get_int(data, ST_KEY_OUTLINE_COLOR));
-			_outline_color.x = float_t(c.r / 255.0);
-			_outline_color.y = float_t(c.g / 255.0);
-			_outline_color.z = float_t(c.b / 255.0);
-			_outline_color.w = float_t(obs_data_get_double(data, ST_KEY_OUTLINE_ALPHA) / 100.0);
+			_outline_color.x = float(c.r / 255.0);
+			_outline_color.y = float(c.g / 255.0);
+			_outline_color.z = float(c.b / 255.0);
+			_outline_color.w = float(obs_data_get_double(data, ST_KEY_OUTLINE_ALPHA) / 100.0);
 		}
-		_outline_width         = float_t(obs_data_get_double(data, ST_KEY_OUTLINE_WIDTH));
-		_outline_offset        = float_t(obs_data_get_double(data, ST_KEY_OUTLINE_OFFSET));
-		_outline_sharpness     = float_t(obs_data_get_double(data, ST_KEY_OUTLINE_SHARPNESS) / 100.0);
-		_outline_sharpness_inv = float_t(1.0f / (1.0f - _outline_sharpness));
-		if (_outline_sharpness >= (1.0f - std::numeric_limits<float_t>::epsilon())) {
-			_outline_sharpness = 1.0f - std::numeric_limits<float_t>::epsilon();
+		_outline_width         = float(obs_data_get_double(data, ST_KEY_OUTLINE_WIDTH));
+		_outline_offset        = float(obs_data_get_double(data, ST_KEY_OUTLINE_OFFSET));
+		_outline_sharpness     = float(obs_data_get_double(data, ST_KEY_OUTLINE_SHARPNESS) / 100.0);
+		_outline_sharpness_inv = float(1.0f / (1.0f - _outline_sharpness));
+		if (_outline_sharpness >= (1.0f - std::numeric_limits<float>::epsilon())) {
+			_outline_sharpness = 1.0f - std::numeric_limits<float>::epsilon();
 		}
 	}
 
 	_sdf_scale     = double_t(obs_data_get_double(data, ST_KEY_SDF_SCALE) / 100.0);
-	_sdf_threshold = float_t(obs_data_get_double(data, ST_KEY_SDF_THRESHOLD) / 100.0);
+	_sdf_threshold = float(obs_data_get_double(data, ST_KEY_SDF_THRESHOLD) / 100.0);
 }
 
-void sdf_effects_instance::video_tick(float_t)
+void sdf_effects_instance::video_tick(float)
 {
 	if (obs_source_t* target = obs_filter_get_target(_self); target != nullptr) {
 		_source_rendered = false;
@@ -372,7 +372,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 					gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &color_transparent, 0, 0);
 
 					_sdf_producer_effect.get_parameter("_image").set_texture(_source_texture);
-					_sdf_producer_effect.get_parameter("_size").set_float2(float_t(sdfW), float_t(sdfH));
+					_sdf_producer_effect.get_parameter("_size").set_float2(float(sdfW), float(sdfH));
 					_sdf_producer_effect.get_parameter("_sdf").set_texture(_sdf_texture);
 					_sdf_producer_effect.get_parameter("_threshold").set_float(_sdf_threshold);
 
@@ -447,7 +447,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 				_sdf_consumer_effect.get_parameter("pShadowColor").set_float4(_outer_shadow_color);
 				_sdf_consumer_effect.get_parameter("pShadowMin").set_float(_outer_shadow_range_min);
 				_sdf_consumer_effect.get_parameter("pShadowMax").set_float(_outer_shadow_range_max);
-				_sdf_consumer_effect.get_parameter("pShadowOffset").set_float2(_outer_shadow_offset_x / float_t(baseW), _outer_shadow_offset_y / float_t(baseH));
+				_sdf_consumer_effect.get_parameter("pShadowOffset").set_float2(_outer_shadow_offset_x / float(baseW), _outer_shadow_offset_y / float(baseH));
 				while (gs_effect_loop(_sdf_consumer_effect.get_object(), "ShadowOuter")) {
 					_gfx_util->draw_fullscreen_triangle();
 				}
@@ -459,7 +459,7 @@ void sdf_effects_instance::video_render(gs_effect_t* effect)
 				_sdf_consumer_effect.get_parameter("pShadowColor").set_float4(_inner_shadow_color);
 				_sdf_consumer_effect.get_parameter("pShadowMin").set_float(_inner_shadow_range_min);
 				_sdf_consumer_effect.get_parameter("pShadowMax").set_float(_inner_shadow_range_max);
-				_sdf_consumer_effect.get_parameter("pShadowOffset").set_float2(_inner_shadow_offset_x / float_t(baseW), _inner_shadow_offset_y / float_t(baseH));
+				_sdf_consumer_effect.get_parameter("pShadowOffset").set_float2(_inner_shadow_offset_x / float(baseW), _inner_shadow_offset_y / float(baseH));
 				while (gs_effect_loop(_sdf_consumer_effect.get_object(), "ShadowInner")) {
 					_gfx_util->draw_fullscreen_triangle();
 				}

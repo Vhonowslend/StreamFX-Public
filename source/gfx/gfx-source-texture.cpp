@@ -74,7 +74,7 @@ std::shared_ptr<streamfx::obs::gs::texture> streamfx::gfx::source_texture::rende
 		auto op = _rt->render(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 		vec4 black;
 		vec4_zero(&black);
-		gs_ortho(0, static_cast<float>(width), 0, static_cast<float_t>(height), 0, 1);
+		gs_ortho(0, static_cast<float>(width), 0, static_cast<float>(height), 0, 1);
 		gs_clear(GS_CLEAR_COLOR, &black, 0, 0);
 		obs_source_video_render(_child.get());
 	}

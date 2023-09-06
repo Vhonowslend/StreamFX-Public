@@ -22,66 +22,6 @@ obs_property_t* streamfx::util::obs_properties_add_tristate(obs_properties_t* pr
 	return p;
 }
 
-void* streamfx::util::vec2a::operator new(std::size_t count)
-{
-	return streamfx::util::malloc_aligned(16, count);
-}
-
-void* streamfx::util::vec2a::operator new[](std::size_t count)
-{
-	return streamfx::util::malloc_aligned(16, count);
-}
-
-void streamfx::util::vec2a::operator delete(void* p)
-{
-	streamfx::util::free_aligned(p);
-}
-
-void streamfx::util::vec2a::operator delete[](void* p)
-{
-	streamfx::util::free_aligned(p);
-}
-
-void* streamfx::util::vec3a::operator new(std::size_t count)
-{
-	return streamfx::util::malloc_aligned(16, count);
-}
-
-void* streamfx::util::vec3a::operator new[](std::size_t count)
-{
-	return streamfx::util::malloc_aligned(16, count);
-}
-
-void streamfx::util::vec3a::operator delete(void* p)
-{
-	streamfx::util::free_aligned(p);
-}
-
-void streamfx::util::vec3a::operator delete[](void* p)
-{
-	streamfx::util::free_aligned(p);
-}
-
-void* streamfx::util::vec4a::operator new(std::size_t count)
-{
-	return streamfx::util::malloc_aligned(16, count);
-}
-
-void* streamfx::util::vec4a::operator new[](std::size_t count)
-{
-	return streamfx::util::malloc_aligned(16, count);
-}
-
-void streamfx::util::vec4a::operator delete(void* p)
-{
-	streamfx::util::free_aligned(p);
-}
-
-void streamfx::util::vec4a::operator delete[](void* p)
-{
-	streamfx::util::free_aligned(p);
-}
-
 std::pair<int64_t, int64_t> streamfx::util::size_from_string(std::string_view text, bool allowSquare)
 {
 	int64_t width, height;
@@ -122,7 +62,7 @@ std::pair<int64_t, int64_t> streamfx::util::size_from_string(std::string_view te
 	return {width, height};
 }
 
-void* streamfx::util::malloc_aligned(std::size_t align, std::size_t size)
+void* streamfx::util::memory::malloc_aligned(std::size_t align, std::size_t size)
 {
 #ifdef USE_MSC_ALLOC
 	return _aligned_malloc(size, align);
@@ -146,7 +86,7 @@ void* streamfx::util::malloc_aligned(std::size_t align, std::size_t size)
 #endif
 }
 
-void streamfx::util::free_aligned(void* mem)
+void streamfx::util::memory::free_aligned(void* mem)
 {
 #ifdef USE_MSC_ALLOC
 	_aligned_free(mem);

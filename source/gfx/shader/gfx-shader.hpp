@@ -51,7 +51,7 @@ namespace streamfx::gfx {
 			std::string                     _shader_tech;
 			std::filesystem::file_time_type _shader_file_mt;
 			uintmax_t                       _shader_file_sz;
-			float_t                         _shader_file_tick;
+			float                         _shader_file_tick;
 			shader_param_map_t              _shader_params;
 
 			// Options
@@ -62,12 +62,12 @@ namespace streamfx::gfx {
 
 			// Cache
 			bool            _have_current_params;
-			float_t         _time;
-			float_t         _time_loop;
+			float         _time;
+			float         _time_loop;
 			int32_t         _loops;
 			std::mt19937_64 _random;
 			int32_t         _random_seed;
-			float_t         _random_values[16]; // 0..4 Per-Instance-Random, 4..8 Per-Activation-Random 9..15 Per-Frame-Random
+			float         _random_values[16]; // 0..4 Per-Instance-Random, 4..8 Per-Activation-Random 9..15 Per-Frame-Random
 
 			// Rendering
 			bool                                             _rt_up_to_date;
@@ -103,7 +103,7 @@ namespace streamfx::gfx {
 
 			uint32_t base_height();
 
-			bool tick(float_t time);
+			bool tick(float time);
 
 			void prepare_render();
 
@@ -120,7 +120,7 @@ namespace streamfx::gfx {
 
 			void set_input_b(std::shared_ptr<streamfx::obs::gs::texture> tex, bool srgb = false);
 
-			void set_transition_time(float_t t);
+			void set_transition_time(float t);
 
 			void set_transition_size(uint32_t w, uint32_t h);
 

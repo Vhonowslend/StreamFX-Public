@@ -26,7 +26,7 @@ namespace streamfx::gfx {
 			union {
 				int32_t  i32;
 				uint32_t ui32;
-				float_t  f32;
+				float  f32;
 			};
 		};
 

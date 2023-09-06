@@ -126,7 +126,7 @@ namespace streamfx::filter::autoframing {
 		uint32_t get_width() override;
 		uint32_t get_height() override;
 
-		virtual void video_tick(float_t seconds) override;
+		virtual void video_tick(float seconds) override;
 		virtual void video_render(gs_effect_t* effect) override;
 
 		private:

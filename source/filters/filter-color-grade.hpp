@@ -43,7 +43,7 @@ namespace streamfx::filter::color_grade {
 		vec4                            _offset;
 		detection_mode                  _tint_detection;
 		luma_mode                       _tint_luma;
-		float_t                         _tint_exponent;
+		float                         _tint_exponent;
 		vec3                            _tint_low;
 		vec3                            _tint_mid;
 		vec3                            _tint_hig;
@@ -83,7 +83,7 @@ namespace streamfx::filter::color_grade {
 
 		void rebuild_lut();
 
-		virtual void video_tick(float_t time) override;
+		virtual void video_tick(float time) override;
 		virtual void video_render(gs_effect_t* effect) override;
 	};
 

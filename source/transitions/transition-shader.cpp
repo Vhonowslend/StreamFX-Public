@@ -66,7 +66,7 @@ void shader_instance::update(obs_data_t* data)
 	_fx->update(data);
 }
 
-void shader_instance::video_tick(float_t sec_since_last)
+void shader_instance::video_tick(float sec_since_last)
 {
 	if (_fx->tick(sec_since_last)) {
 		obs_data_t* data = obs_source_get_settings(_self);
@@ -93,7 +93,7 @@ void shader_instance::video_render(gs_effect_t* effect)
 	obs_transition_video_render(_self, [](void* data, gs_texture_t* a, gs_texture_t* b, float t, uint32_t cx, uint32_t cy) { reinterpret_cast<shader_instance*>(data)->transition_render(a, b, t, cx, cy); });
 }
 
-void shader_instance::transition_render(gs_texture_t* a, gs_texture_t* b, float_t t, uint32_t cx, uint32_t cy)
+void shader_instance::transition_render(gs_texture_t* a, gs_texture_t* b, float t, uint32_t cx, uint32_t cy)
 {
 	_fx->set_input_a(std::make_shared<::streamfx::obs::gs::texture>(a, false));
 	_fx->set_input_b(std::make_shared<::streamfx::obs::gs::texture>(b, false));
@@ -106,7 +106,7 @@ void shader_instance::transition_render(gs_texture_t* a, gs_texture_t* b, float_
 bool shader_instance::audio_render(uint64_t* ts_out, obs_source_audio_mix* audio_output, uint32_t mixers, std::size_t channels, std::size_t sample_rate)
 {
 	return obs_transition_audio_render(
-		_self, ts_out, audio_output, mixers, channels, sample_rate, [](void*, float_t t) { return 1.0f - t; }, [](void*, float_t t) { return t; });
+		_self, ts_out, audio_output, mixers, channels, sample_rate, [](void*, float t) { return 1.0f - t; }, [](void*, float t) { return t; });
 }
 
 void shader_instance::transition_start()

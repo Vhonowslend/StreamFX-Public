@@ -64,7 +64,7 @@ namespace streamfx::filter::denoising {
 		uint32_t get_width() override;
 		uint32_t get_height() override;
 
-		void video_tick(float_t time) override;
+		void video_tick(float time) override;
 		void video_render(gs_effect_t* effect) override;
 
 		private:

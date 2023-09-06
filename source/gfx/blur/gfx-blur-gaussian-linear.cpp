@@ -40,7 +40,7 @@ streamfx::gfx::blur::gaussian_linear_data::gaussian_linear_data() : _gfx_util(::
 	// Precalculate Kernels
 	for (std::size_t kernel_size = 1; kernel_size <= ST_MAX_BLUR_SIZE; kernel_size++) {
 		std::vector<double_t> kernel_math(ST_MAX_KERNEL_SIZE);
-		std::vector<float_t>  kernel_data(ST_MAX_KERNEL_SIZE);
+		std::vector<float>  kernel_data(ST_MAX_KERNEL_SIZE);
 		double_t              actual_width = 1.;
 
 		// Find actual kernel width.
@@ -61,7 +61,7 @@ streamfx::gfx::blur::gaussian_linear_data::gaussian_linear_data() : _gfx_util(::
 		// Normalize to fill the entire 0..1 range over the width.
 		double_t inverse_sum = 1.0 / sum;
 		for (std::size_t p = 0; p <= kernel_size; p++) {
-			kernel_data.at(p) = float_t(kernel_math[p] * inverse_sum);
+			kernel_data.at(p) = float(kernel_math[p] * inverse_sum);
 		}
 
 		_kernels.push_back(std::move(kernel_data));
@@ -78,7 +78,7 @@ streamfx::obs::gs::effect streamfx::gfx::blur::gaussian_linear_data::get_effect(
 	return _effect;
 }
 
-std::vector<float_t> const& streamfx::gfx::blur::gaussian_linear_data::get_kernel(std::size_t width)
+std::vector<float> const& streamfx::gfx::blur::gaussian_linear_data::get_kernel(std::size_t width)
 {
 	if (width < 1)
 		width = 1;
@@ -292,8 +292,8 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_line
 		return _input_texture;
 	}
 
-	float_t width  = float_t(_input_texture->get_width());
-	float_t height = float_t(_input_texture->get_height());
+	float width  = float(_input_texture->get_width());
+	float height = float(_input_texture->get_height());
 
 	// Setup
 	gs_set_cull_mode(GS_NEITHER);
@@ -310,13 +310,13 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_line
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
 	effect.get_parameter("pImage").set_texture(_input_texture);
-	effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
-	effect.get_parameter("pSize").set_float(float_t(_size));
+	effect.get_parameter("pStepScale").set_float2(float(_step_scale.first), float(_step_scale.second));
+	effect.get_parameter("pSize").set_float(float(_size));
 	effect.get_parameter("pKernel").set_value(kernel.data(), ST_MAX_KERNEL_SIZE);
 
 	// First Pass
 	if (_step_scale.first > std::numeric_limits<double_t>::epsilon()) {
-		effect.get_parameter("pImageTexel").set_float2(float_t(1.f / width), 0.f);
+		effect.get_parameter("pImageTexel").set_float2(float(1.f / width), 0.f);
 
 		{
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
@@ -336,7 +336,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_line
 
 	// Second Pass
 	if (_step_scale.second > std::numeric_limits<double_t>::epsilon()) {
-		effect.get_parameter("pImageTexel").set_float2(0.f, float_t(1.f / height));
+		effect.get_parameter("pImageTexel").set_float2(0.f, float(1.f / height));
 
 		{
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
@@ -397,8 +397,8 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_line
 		return _input_texture;
 	}
 
-	float_t width  = float_t(_input_texture->get_width());
-	float_t height = float_t(_input_texture->get_height());
+	float width  = float(_input_texture->get_width());
+	float height = float(_input_texture->get_height());
 
 	// Setup
 	gs_set_cull_mode(GS_NEITHER);
@@ -415,9 +415,9 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_line
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
 	effect.get_parameter("pImage").set_texture(_input_texture);
-	effect.get_parameter("pImageTexel").set_float2(float_t(1.f / width * cos(_angle)), float_t(1.f / height * sin(_angle)));
-	effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
-	effect.get_parameter("pSize").set_float(float_t(_size));
+	effect.get_parameter("pImageTexel").set_float2(float(1.f / width * cos(_angle)), float(1.f / height * sin(_angle)));
+	effect.get_parameter("pStepScale").set_float2(float(_step_scale.first), float(_step_scale.second));
+	effect.get_parameter("pSize").set_float(float(_size));
 	effect.get_parameter("pKernel").set_value(kernel.data(), ST_MAX_KERNEL_SIZE);
 
 	// First Pass

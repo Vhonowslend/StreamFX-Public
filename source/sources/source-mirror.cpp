@@ -140,7 +140,7 @@ void mirror_instance::save(obs_data_t* data)
 	}
 }
 
-void mirror_instance::video_tick(float_t time) {}
+void mirror_instance::video_tick(float time) {}
 
 void mirror_instance::video_render(gs_effect_t* effect)
 {

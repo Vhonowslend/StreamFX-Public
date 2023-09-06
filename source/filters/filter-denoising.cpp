@@ -191,7 +191,7 @@ uint32_t streamfx::filter::denoising::denoising_instance::get_height()
 	return std::max<uint32_t>(_size.second, 1);
 }
 
-void denoising_instance::video_tick(float_t time)
+void denoising_instance::video_tick(float time)
 {
 	auto parent = obs_filter_get_parent(_self);
 	auto target = obs_filter_get_target(_self);
