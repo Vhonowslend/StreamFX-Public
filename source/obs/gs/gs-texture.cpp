@@ -63,7 +63,7 @@ streamfx::obs::gs::texture::texture(uint32_t width, uint32_t height, uint32_t de
 		throw std::logic_error("mip_levels must be at least 1");
 
 	if (mip_levels > 1 || ((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps)) {
-		bool isPOT = (streamfx::util::math::is_equal(pow(2, static_cast<int64_t>(floor(log(width) / log(2)))), width) && streamfx::util::math::is_equal(pow(2, static_cast<int64_t>(floor(log(height) / log(2)))), height) && streamfx::util::math::is_equal(pow(2, static_cast<int64_t>(floor(log(depth) / log(2)))), depth));
+		bool isPOT = (streamfx::util::math::is_close_epsilon(pow(2, static_cast<int64_t>(floor(log(width) / log(2)))), width) && streamfx::util::math::is_close_epsilon(pow(2, static_cast<int64_t>(floor(log(height) / log(2)))), height) && streamfx::util::math::is_close_epsilon(pow(2, static_cast<int64_t>(floor(log(depth) / log(2)))), depth));
 		if (!isPOT)
 			throw std::logic_error("mip mapping requires power of two dimensions");
 	}
@@ -87,7 +87,7 @@ streamfx::obs::gs::texture::texture(uint32_t size, gs_color_format format, uint3
 		throw std::logic_error("mip_levels must be at least 1");
 
 	if (mip_levels > 1 || ((texture_flags & flags::BuildMipMaps) == flags::BuildMipMaps)) {
-		bool isPOT = streamfx::util::math::is_equal(pow(2, static_cast<int64_t>(floor(log(size) / log(2)))), size);
+		bool isPOT = streamfx::util::math::is_close_epsilon(pow(2, static_cast<int64_t>(floor(log(size) / log(2)))), size);
 		if (!isPOT)
 			throw std::logic_error("mip mapping requires power of two dimensions");
 	}

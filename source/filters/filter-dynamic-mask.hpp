@@ -72,8 +72,8 @@ namespace streamfx::filter::dynamic_mask {
 		int64_t _debug_texture;
 
 		struct channel_data {
-			float_t value  = 0.0;
-			float_t scale  = 1.0;
+			float value  = 0.0;
+			float scale  = 1.0;
 			vec4    values = {0, 0, 0, 0};
 		};
 		std::map<channel, channel_data> _channels;
@@ -94,7 +94,7 @@ namespace streamfx::filter::dynamic_mask {
 		virtual void save(obs_data_t* settings) override;
 
 		virtual gs_color_space video_get_color_space(size_t count, const gs_color_space* preferred_spaces) override;
-		virtual void           video_tick(float_t time) override;
+		virtual void           video_tick(float time) override;
 		virtual void           video_render(gs_effect_t* effect) override;
 
 		void enum_active_sources(obs_source_enum_proc_t enum_callback, void* param) override;

@@ -129,30 +129,30 @@ namespace streamfx::obs::gs {
 
 		void set_bool_array(bool v[], std::size_t sz);
 
-		void set_float(float_t x);
-		void get_float(float_t& x);
-		void get_default_float(float_t& x);
+		void set_float(float x);
+		void get_float(float& x);
+		void get_default_float(float& x);
 
 		void set_float2(vec2 const& v);
 		void get_float2(vec2& v);
 		void get_default_float2(vec2& v);
-		void set_float2(float_t x, float_t y);
-		void get_float2(float_t& x, float_t& y);
-		void get_default_float2(float_t& x, float_t& y);
+		void set_float2(float x, float y);
+		void get_float2(float& x, float& y);
+		void get_default_float2(float& x, float& y);
 
 		void set_float3(vec3 const& v);
 		void get_float3(vec3& v);
 		void get_default_float3(vec3& v);
-		void set_float3(float_t x, float_t y, float_t z);
-		void get_float3(float_t& x, float_t& y, float_t& z);
-		void get_default_float3(float_t& x, float_t& y, float_t& z);
+		void set_float3(float x, float y, float z);
+		void get_float3(float& x, float& y, float& z);
+		void get_default_float3(float& x, float& y, float& z);
 
 		void set_float4(vec4 const& v);
 		void get_float4(vec4& v);
 		void get_default_float4(vec4& v);
-		void set_float4(float_t x, float_t y, float_t z, float_t w);
-		void get_float4(float_t& x, float_t& y, float_t& z, float_t& w);
-		void get_default_float4(float_t& x, float_t& y, float_t& z, float_t& w);
+		void set_float4(float x, float y, float z, float w);
+		void get_float4(float& x, float& y, float& z, float& w);
+		void get_default_float4(float& x, float& y, float& z, float& w);
 
 		void set_int(int32_t x);
 		void get_int(int32_t& x);
@@ -185,7 +185,7 @@ namespace streamfx::obs::gs {
 		void get_default_string(std::string& v);
 
 		public /* Helpers */:
-		inline float_t get_bool()
+		inline float get_bool()
 		{
 			bool v;
 			get_bool(v);
@@ -198,15 +198,15 @@ namespace streamfx::obs::gs {
 			return v;
 		};
 
-		inline float_t get_float()
+		inline float get_float()
 		{
-			float_t v;
+			float v;
 			get_float(v);
 			return v;
 		};
-		inline float_t get_default_float()
+		inline float get_default_float()
 		{
-			float_t v;
+			float v;
 			get_default_float(v);
 			return v;
 		};

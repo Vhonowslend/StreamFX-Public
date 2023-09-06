@@ -108,7 +108,7 @@ std::shared_ptr<streamfx::gfx::util> streamfx::gfx::blur::gaussian_data::get_gfx
 	return _gfx_util;
 }
 
-std::vector<float_t> const& streamfx::gfx::blur::gaussian_data::get_kernel(std::size_t width)
+std::vector<float> const& streamfx::gfx::blur::gaussian_data::get_kernel(std::size_t width)
 {
 	width = std::clamp<size_t>(width, 1, ST_MAX_BLUR_SIZE);
 	return _kernels.at(width);
@@ -321,8 +321,8 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian::ren
 	}
 
 	auto    kernel = _data->get_kernel(size_t(_size));
-	float_t width  = float_t(_input_texture->get_width());
-	float_t height = float_t(_input_texture->get_height());
+	float width  = float(_input_texture->get_width());
+	float height = float(_input_texture->get_height());
 
 	// Setup
 	gs_set_cull_mode(GS_NEITHER);
@@ -338,14 +338,14 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian::ren
 	gs_stencil_function(GS_STENCIL_BOTH, GS_ALWAYS);
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
-	effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
-	effect.get_parameter("pSize").set_float(float_t(_size * ST_OVERSAMPLE_MULTIPLIER));
+	effect.get_parameter("pStepScale").set_float2(float(_step_scale.first), float(_step_scale.second));
+	effect.get_parameter("pSize").set_float(float(_size * ST_OVERSAMPLE_MULTIPLIER));
 	effect.get_parameter("pKernel").set_value(kernel.data(), ST_KERNEL_SIZE);
 
 	// First Pass
 	if (_step_scale.first > std::numeric_limits<double_t>::epsilon()) {
 		effect.get_parameter("pImage").set_texture(_input_texture);
-		effect.get_parameter("pImageTexel").set_float2(float_t(1.f / width), 0.f);
+		effect.get_parameter("pImageTexel").set_float2(float(1.f / width), 0.f);
 
 		{
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
@@ -365,7 +365,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian::ren
 	// Second Pass
 	if (_step_scale.second > std::numeric_limits<double_t>::epsilon()) {
 		effect.get_parameter("pImage").set_texture(_rendertarget->get_texture());
-		effect.get_parameter("pImageTexel").set_float2(0.f, float_t(1.f / height));
+		effect.get_parameter("pImageTexel").set_float2(0.f, float(1.f / height));
 
 		{
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
@@ -426,8 +426,8 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_dire
 	}
 
 	auto    kernel = _data->get_kernel(size_t(_size));
-	float_t width  = float_t(_input_texture->get_width());
-	float_t height = float_t(_input_texture->get_height());
+	float width  = float(_input_texture->get_width());
+	float height = float(_input_texture->get_height());
 
 	// Setup
 	gs_set_cull_mode(GS_NEITHER);
@@ -444,9 +444,9 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_dire
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
 	effect.get_parameter("pImage").set_texture(_input_texture);
-	effect.get_parameter("pImageTexel").set_float2(float_t(1.f / width * cos(m_angle)), float_t(1.f / height * sin(m_angle)));
-	effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
-	effect.get_parameter("pSize").set_float(float_t(_size * ST_OVERSAMPLE_MULTIPLIER));
+	effect.get_parameter("pImageTexel").set_float2(float(1.f / width * cos(m_angle)), float(1.f / height * sin(m_angle)));
+	effect.get_parameter("pStepScale").set_float2(float(_step_scale.first), float(_step_scale.second));
+	effect.get_parameter("pSize").set_float(float(_size * ST_OVERSAMPLE_MULTIPLIER));
 	effect.get_parameter("pKernel").set_value(kernel.data(), ST_KERNEL_SIZE);
 
 	{
@@ -482,8 +482,8 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_rota
 	}
 
 	auto    kernel = _data->get_kernel(size_t(_size));
-	float_t width  = float_t(_input_texture->get_width());
-	float_t height = float_t(_input_texture->get_height());
+	float width  = float(_input_texture->get_width());
+	float height = float(_input_texture->get_height());
 
 	// Setup
 	gs_set_cull_mode(GS_NEITHER);
@@ -500,11 +500,11 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_rota
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
 	effect.get_parameter("pImage").set_texture(_input_texture);
-	effect.get_parameter("pImageTexel").set_float2(float_t(1.f / width), float_t(1.f / height));
-	effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
-	effect.get_parameter("pSize").set_float(float_t(_size * ST_OVERSAMPLE_MULTIPLIER));
-	effect.get_parameter("pAngle").set_float(float_t(m_angle / _size));
-	effect.get_parameter("pCenter").set_float2(float_t(m_center.first), float_t(m_center.second));
+	effect.get_parameter("pImageTexel").set_float2(float(1.f / width), float(1.f / height));
+	effect.get_parameter("pStepScale").set_float2(float(_step_scale.first), float(_step_scale.second));
+	effect.get_parameter("pSize").set_float(float(_size * ST_OVERSAMPLE_MULTIPLIER));
+	effect.get_parameter("pAngle").set_float(float(m_angle / _size));
+	effect.get_parameter("pCenter").set_float2(float(m_center.first), float(m_center.second));
 	effect.get_parameter("pKernel").set_value(kernel.data(), ST_KERNEL_SIZE);
 
 	// First Pass
@@ -563,8 +563,8 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_zoom
 		return _input_texture;
 	}
 
-	float_t width  = float_t(_input_texture->get_width());
-	float_t height = float_t(_input_texture->get_height());
+	float width  = float(_input_texture->get_width());
+	float height = float(_input_texture->get_height());
 
 	// Setup
 	gs_set_cull_mode(GS_NEITHER);
@@ -581,10 +581,10 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::gaussian_zoom
 	gs_stencil_op(GS_STENCIL_BOTH, GS_ZERO, GS_ZERO, GS_ZERO);
 
 	effect.get_parameter("pImage").set_texture(_input_texture);
-	effect.get_parameter("pImageTexel").set_float2(float_t(1.f / width), float_t(1.f / height));
-	effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
-	effect.get_parameter("pSize").set_float(float_t(_size));
-	effect.get_parameter("pCenter").set_float2(float_t(m_center.first), float_t(m_center.second));
+	effect.get_parameter("pImageTexel").set_float2(float(1.f / width), float(1.f / height));
+	effect.get_parameter("pStepScale").set_float2(float(_step_scale.first), float(_step_scale.second));
+	effect.get_parameter("pSize").set_float(float(_size));
+	effect.get_parameter("pCenter").set_float2(float(m_center.first), float(m_center.second));
 	effect.get_parameter("pKernel").set_value(kernel.data(), ST_KERNEL_SIZE);
 
 	// First Pass

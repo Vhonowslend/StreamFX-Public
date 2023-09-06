@@ -28,7 +28,7 @@ namespace streamfx::filter::sdf_effects {
 		std::shared_ptr<streamfx::obs::gs::rendertarget> _sdf_read;
 		std::shared_ptr<streamfx::obs::gs::texture>      _sdf_texture;
 		double_t                                         _sdf_scale;
-		float_t                                          _sdf_threshold;
+		float                                          _sdf_threshold;
 
 		// Effects
 		bool                                             _output_rendered;
@@ -37,36 +37,36 @@ namespace streamfx::filter::sdf_effects {
 		/// Inner Shadow
 		bool    _inner_shadow;
 		vec4    _inner_shadow_color;
-		float_t _inner_shadow_range_min;
-		float_t _inner_shadow_range_max;
-		float_t _inner_shadow_offset_x;
-		float_t _inner_shadow_offset_y;
+		float _inner_shadow_range_min;
+		float _inner_shadow_range_max;
+		float _inner_shadow_offset_x;
+		float _inner_shadow_offset_y;
 		/// Outer Shadow
 		bool    _outer_shadow;
 		vec4    _outer_shadow_color;
-		float_t _outer_shadow_range_min;
-		float_t _outer_shadow_range_max;
-		float_t _outer_shadow_offset_x;
-		float_t _outer_shadow_offset_y;
+		float _outer_shadow_range_min;
+		float _outer_shadow_range_max;
+		float _outer_shadow_offset_x;
+		float _outer_shadow_offset_y;
 		/// Inner Glow
 		bool    _inner_glow;
 		vec4    _inner_glow_color;
-		float_t _inner_glow_width;
-		float_t _inner_glow_sharpness;
-		float_t _inner_glow_sharpness_inv;
+		float _inner_glow_width;
+		float _inner_glow_sharpness;
+		float _inner_glow_sharpness_inv;
 		/// Outer Glow
 		bool    _outer_glow;
 		vec4    _outer_glow_color;
-		float_t _outer_glow_width;
-		float_t _outer_glow_sharpness;
-		float_t _outer_glow_sharpness_inv;
+		float _outer_glow_width;
+		float _outer_glow_sharpness;
+		float _outer_glow_sharpness_inv;
 		/// Outline
 		bool    _outline;
 		vec4    _outline_color;
-		float_t _outline_width;
-		float_t _outline_offset;
-		float_t _outline_sharpness;
-		float_t _outline_sharpness_inv;
+		float _outline_width;
+		float _outline_offset;
+		float _outline_sharpness;
+		float _outline_sharpness_inv;
 
 		public:
 		sdf_effects_instance(obs_data_t* settings, obs_source_t* self);
@@ -76,7 +76,7 @@ namespace streamfx::filter::sdf_effects {
 		virtual void migrate(obs_data_t* data, uint64_t version) override;
 		virtual void update(obs_data_t* settings) override;
 
-		virtual void video_tick(float_t) override;
+		virtual void video_tick(float) override;
 		virtual void video_render(gs_effect_t*) override;
 	};
 

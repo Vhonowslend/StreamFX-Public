@@ -49,7 +49,7 @@ streamfx::gfx::shader::shader::shader(obs_source_t* self, shader_mode mode)
 	// Initialize random values.
 	_random.seed(static_cast<unsigned long long>(_random_seed));
 	for (size_t idx = 0; idx < 16; idx++) {
-		_random_values[idx] = static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
+		_random_values[idx] = static_cast<float>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
 	}
 }
 
@@ -343,7 +343,7 @@ void streamfx::gfx::shader::shader::update(obs_data_t* data)
 		_random_seed = seed;
 		_random.seed(static_cast<unsigned long long>(_random_seed));
 		for (size_t idx = 0; idx < 16; idx++) {
-			_random_values[idx] = static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
+			_random_values[idx] = static_cast<float>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
 		}
 	}
 
@@ -399,9 +399,9 @@ uint32_t streamfx::gfx::shader::shader::base_height()
 	return _base_height;
 }
 
-bool streamfx::gfx::shader::shader::tick(float_t time)
+bool streamfx::gfx::shader::shader::tick(float time)
 {
-	_shader_file_tick = static_cast<float_t>(static_cast<double_t>(_shader_file_tick) + static_cast<double_t>(time));
+	_shader_file_tick = static_cast<float>(static_cast<double_t>(_shader_file_tick) + static_cast<double_t>(time));
 	if (_shader_file_tick >= 1.0f / 3.0f) {
 		_shader_file_tick -= 1.0f / 3.0f;
 		bool v1, v2;
@@ -422,7 +422,7 @@ bool streamfx::gfx::shader::shader::tick(float_t time)
 
 	// Recreate Per-Activation-Random values.
 	for (size_t idx = 0; idx < 8; idx++) {
-		_random_values[8 + idx] = static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
+		_random_values[8 + idx] = static_cast<float>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
 	}
 
 	// Flag Render Target as outdated.
@@ -444,14 +444,14 @@ void streamfx::gfx::shader::shader::prepare_render()
 	// float4 Time: (Time in Seconds), (Time in Current Second), (Time in Seconds only), (Random Value)
 	if (streamfx::obs::gs::effect_parameter el = _shader.get_parameter("Time"); el != nullptr) {
 		if (el.get_type() == streamfx::obs::gs::effect_parameter::type::Float4) {
-			el.set_float4(_time, _time_loop, static_cast<float_t>(_loops), static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max())));
+			el.set_float4(_time, _time_loop, static_cast<float>(_loops), static_cast<float>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max())));
 		}
 	}
 
 	// float4 ViewSize: (Width), (Height), (1.0 / Width), (1.0 / Height)
 	if (auto el = _shader.get_parameter("ViewSize"); el != nullptr) {
 		if (el.get_type() == streamfx::obs::gs::effect_parameter::type::Float4) {
-			el.set_float4(static_cast<float_t>(width()), static_cast<float_t>(height()), 1.0f / static_cast<float_t>(width()), 1.0f / static_cast<float_t>(height()));
+			el.set_float4(static_cast<float>(width()), static_cast<float>(height()), 1.0f / static_cast<float>(width()), 1.0f / static_cast<float>(height()));
 		}
 	}
 
@@ -574,7 +574,7 @@ void streamfx::gfx::shader::shader::set_input_b(std::shared_ptr<streamfx::obs::g
 	}
 }
 
-void streamfx::gfx::shader::shader::set_transition_time(float_t t)
+void streamfx::gfx::shader::shader::set_transition_time(float t)
 {
 	if (!_shader)
 		return;
@@ -616,7 +616,7 @@ void streamfx::gfx::shader::shader::set_active(bool active)
 
 	// Recreate Per-Activation-Random values.
 	for (size_t idx = 0; idx < 4; idx++) {
-		_random_values[4 + idx] = static_cast<float_t>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
+		_random_values[4 + idx] = static_cast<float>(static_cast<double_t>(_random()) / static_cast<double_t>(_random.max()));
 	}
 }
 

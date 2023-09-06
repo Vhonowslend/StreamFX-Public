@@ -37,7 +37,7 @@ inline bool get_annotation_string(streamfx::obs::gs::effect_parameter param, std
 	return false;
 }
 
-inline bool get_annotation_float(streamfx::obs::gs::effect_parameter param, std::string_view anno_name, float_t& out)
+inline bool get_annotation_float(streamfx::obs::gs::effect_parameter param, std::string_view anno_name, float& out)
 {
 	if (!param) {
 		return false;
@@ -203,8 +203,8 @@ streamfx::gfx::shader::float_parameter::float_parameter(streamfx::gfx::shader::s
 
 	// Reset minimum, maximum, step and scale.
 	for (std::size_t idx = 0; idx < get_size(); idx++) {
-		_min[idx].f32   = std::numeric_limits<float_t>::lowest();
-		_max[idx].f32   = std::numeric_limits<float_t>::max();
+		_min[idx].f32   = std::numeric_limits<float>::lowest();
+		_max[idx].f32   = std::numeric_limits<float>::max();
 		_step[idx].f32  = 0.01f;
 		_scale[idx].f32 = 1.00f;
 	}
@@ -236,7 +236,7 @@ streamfx::gfx::shader::float_parameter::~float_parameter() {}
 
 void streamfx::gfx::shader::float_parameter::defaults(obs_data_t* settings)
 {
-	std::vector<float_t> defaults;
+	std::vector<float> defaults;
 	defaults.resize(get_size());
 	get_parameter().get_default_value(defaults.data(), get_size());
 
@@ -245,7 +245,7 @@ void streamfx::gfx::shader::float_parameter::defaults(obs_data_t* settings)
 	}
 }
 
-static inline obs_property_t* build_float_property(streamfx::gfx::shader::basic_field_type ft, obs_properties_t* props, const char* key, const char* name, float_t min, float_t max, float_t step, std::list<streamfx::gfx::shader::basic_enum_data> edata)
+static inline obs_property_t* build_float_property(streamfx::gfx::shader::basic_field_type ft, obs_properties_t* props, const char* key, const char* name, float min, float max, float step, std::list<streamfx::gfx::shader::basic_enum_data> edata)
 {
 	switch (ft) {
 	case streamfx::gfx::shader::basic_field_type::Enum: {
@@ -287,7 +287,7 @@ void streamfx::gfx::shader::float_parameter::properties(obs_properties_t* props,
 void streamfx::gfx::shader::float_parameter::update(obs_data_t* settings)
 {
 	for (std::size_t idx = 0; idx < get_size(); idx++) {
-		_data[idx].f32 = static_cast<float_t>(obs_data_get_double(settings, key_at(idx).data())) * _scale[idx].f32;
+		_data[idx].f32 = static_cast<float>(obs_data_get_double(settings, key_at(idx).data())) * _scale[idx].f32;
 	}
 }
 

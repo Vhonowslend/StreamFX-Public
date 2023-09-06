@@ -277,8 +277,8 @@ void streamfx::gfx::mipmapper::rebuild(std::shared_ptr<streamfx::obs::gs::textur
 
 			uint32_t cwidth  = std::max<uint32_t>(width >> mip, 1);
 			uint32_t cheight = std::max<uint32_t>(height >> mip, 1);
-			float_t  iwidth  = 1.f / static_cast<float_t>(cwidth);
-			float_t  iheight = 1.f / static_cast<float_t>(cheight);
+			float  iwidth  = 1.f / static_cast<float>(cwidth);
+			float  iheight = 1.f / static_cast<float>(cheight);
 
 			try {
 				auto op = _rt->render(cwidth, cheight);

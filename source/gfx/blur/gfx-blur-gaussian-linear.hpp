@@ -20,7 +20,7 @@ namespace streamfx::gfx {
 		class gaussian_linear_data {
 			streamfx::obs::gs::effect            _effect;
 			std::shared_ptr<streamfx::gfx::util> _gfx_util;
-			std::vector<std::vector<float_t>>    _kernels;
+			std::vector<std::vector<float>>    _kernels;
 
 			public:
 			gaussian_linear_data();
@@ -30,7 +30,7 @@ namespace streamfx::gfx {
 
 			streamfx::obs::gs::effect get_effect();
 
-			std::vector<float_t> const& get_kernel(std::size_t width);
+			std::vector<float> const& get_kernel(std::size_t width);
 		};
 
 		class gaussian_linear_factory : public ::streamfx::gfx::blur::ifactory {

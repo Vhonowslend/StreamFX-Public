@@ -202,7 +202,7 @@ uint32_t streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::ge
 	return std::max<uint32_t>(_size.second, 1);
 }
 
-void virtual_greenscreen_instance::video_tick(float_t time)
+void virtual_greenscreen_instance::video_tick(float time)
 {
 	auto target = obs_filter_get_target(_self);
 	auto width  = obs_source_get_base_width(target);

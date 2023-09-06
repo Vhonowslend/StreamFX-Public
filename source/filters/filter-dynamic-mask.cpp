@@ -158,11 +158,11 @@ void dynamic_mask_instance::update(obs_data_t* settings)
 		}
 
 		std::string chv_key                               = std::string(ST_KEY_CHANNEL_VALUE) + "." + kv1.second;
-		found->second.value                               = static_cast<float_t>(obs_data_get_double(settings, chv_key.c_str()));
+		found->second.value                               = static_cast<float>(obs_data_get_double(settings, chv_key.c_str()));
 		_precalc.base.ptr[static_cast<size_t>(kv1.first)] = found->second.value;
 
 		std::string chm_key                                = std::string(ST_KEY_CHANNEL_MULTIPLIER) + "." + kv1.second;
-		found->second.scale                                = static_cast<float_t>(obs_data_get_double(settings, chm_key.c_str()));
+		found->second.scale                                = static_cast<float>(obs_data_get_double(settings, chm_key.c_str()));
 		_precalc.scale.ptr[static_cast<size_t>(kv1.first)] = found->second.scale;
 
 		vec4* ch = &_precalc.matrix.x;
@@ -185,7 +185,7 @@ void dynamic_mask_instance::update(obs_data_t* settings)
 
 		for (auto kv2 : channel_translations) {
 			std::string ab_key                                       = std::string(ST_KEY_CHANNEL_INPUT) + "." + kv1.second + "." + kv2.second;
-			found->second.values.ptr[static_cast<size_t>(kv2.first)] = static_cast<float_t>(obs_data_get_double(settings, ab_key.c_str()));
+			found->second.values.ptr[static_cast<size_t>(kv2.first)] = static_cast<float>(obs_data_get_double(settings, ab_key.c_str()));
 			ch->ptr[static_cast<size_t>(kv2.first)]                  = found->second.values.ptr[static_cast<size_t>(kv2.first)];
 		}
 	}

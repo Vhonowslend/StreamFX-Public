@@ -5,6 +5,7 @@
 
 #pragma once
 #include "warning-disable.hpp"
+#include <bitset>
 #include <cinttypes>
 #include <cstddef>
 #include <string>
@@ -56,39 +57,13 @@ namespace streamfx::util {
 		return tristate == -1;
 	}
 
-	struct vec2a : public vec2 {
-		// 16-byte Aligned version of vec2
-		static void* operator new(std::size_t count);
-		static void* operator new[](std::size_t count);
-		static void  operator delete(void* p);
-		static void  operator delete[](void* p);
-	};
-
-#ifdef _MSC_VER
-	__declspec(align(16))
-#endif
-		struct vec3a : public vec3 {
-		// 16-byte Aligned version of vec3
-		static void* operator new(std::size_t count);
-		static void* operator new[](std::size_t count);
-		static void  operator delete(void* p);
-		static void  operator delete[](void* p);
-	};
-
-#ifdef _MSC_VER
-	__declspec(align(16))
-#endif
-		struct vec4a : public vec4 {
-		// 16-byte Aligned version of vec4
-		static void* operator new(std::size_t count);
-		static void* operator new[](std::size_t count);
-		static void  operator delete(void* p);
-		static void  operator delete[](void* p);
-	};
-
 	std::pair<int64_t, int64_t> size_from_string(std::string_view text, bool allowSquare = true);
 
 	namespace math {
+		/** Integer exponentiation by squaring.
+		 * Complexity: O(log(exp)
+		 * Has fall-backs to the normal methods for non-integer types.
+		 */
 		template<typename T>
 		inline T pow(T base, T exp)
 		{
@@ -102,19 +77,55 @@ namespace streamfx::util {
 			return res;
 		}
 
-		// Proven by tests to be the fastest implementation on Intel and AMD CPUs.
-		// Ranking: log10, loop < bitscan < pow
-		// loop and log10 trade blows, usually almost identical.
-		// loop is used for integers, log10 for anything else.
+		template<>
+		inline float pow(float base, float exp)
+		{
+			return ::powf(base, exp);
+		}
+
+		template<>
+		inline double pow(double base, double exp)
+		{
+			return ::pow(base, exp);
+		}
+
+		template<>
+		inline long double pow(long double base, long double exp)
+		{
+			return ::powl(base, exp);
+		}
+
+		/** Fast PoT testing
+		 *
+		 * This was tested and verified to be the fastest implementation on
+		 * Intel and AMD x86 CPUs, in both 32bit and 64bit modes. It is
+		 * possible to make it even faster with a bit of SIMD magic (see
+		 * json-simd), but it would no longer be generic - and not worth it.
+		 *
+		 * Ranking: popcnt < log10, loop < bitscan < pow
+		 * - log10 version is useful for floating point.
+		 * - popcnt and loop are fixed point and integers.
+		 * - Pretty clear solution here.
+		 * 
+		 */
 		template<typename T>
 		inline bool is_power_of_two(T v)
 		{
-			return T(1ull << uint64_t(floor(log10(T(v)) / log10(2.0)))) == v;
-		}
+			static_assert(std::is_integral<T>::value, "Input must be an integral type.");
 
-		template<typename T>
-		inline bool is_power_of_two_loop(T v)
-		{
+#if 1 // Optimizes to popcount if available.
+			return std::bitset<sizeof(T) * 8>(v).count() == 0;
+
+#elif 0 // Loop Variant 1, uses bit shifts.
+			bool bit = false;
+			for (std::size_t index = 0; index < (sizeof(T) * 8) || (v == 0); index++) {
+				if (bit && (v & 1))
+					return false;
+				bit = (v & 1);
+				v >>= 1;
+			}
+			return true;
+#elif 0 // Loop Variant 2, optimized by compiler to the above.
 			bool have_bit = false;
 			for (std::size_t index = 0; index < (sizeof(T) * 8); index++) {
 				bool cur = (v & (static_cast<T>(1ull) << index)) != 0;
@@ -125,48 +136,61 @@ namespace streamfx::util {
 				}
 			}
 			return true;
+#endif
 		}
 
-#pragma push_macro("P_IS_POWER_OF_TWO_AS_LOOP")
-#define P_IS_POWER_OF_TWO_AS_LOOP(x)    \
-	template<>                          \
-	inline bool is_power_of_two(x v)    \
-	{                                   \
-		return is_power_of_two_loop(v); \
-	}
-		P_IS_POWER_OF_TWO_AS_LOOP(int8_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(uint8_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(int16_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(uint16_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(int32_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(uint32_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(int64_t)
-		P_IS_POWER_OF_TWO_AS_LOOP(uint64_t)
-#undef P_IS_POWER_OF_TWO_AS_LOOP
-#pragma pop_macro("P_IS_POWER_OF_TWO_AS_LOOP")
+		template<typename T>
+		inline bool is_power_of_two(float v)
+		{
+			return T(1ull << uint64_t(floor(log10(v) / log10(2.0f)))) == v;
+		}
 
+		template<typename T>
+		inline bool is_power_of_two(double v)
+		{
+			return T(1ull << uint64_t(floor(log10(v) / log10(2.0)))) == v;
+		}
+
+		template<typename T>
+		inline bool is_power_of_two(long double v)
+		{
+			return T(1ull << uint64_t(floor(log10(v) / log10(2.0l)))) == v;
+		}
+
+		template<typename T>
+		inline bool is_power_of_two_loop(T v)
+		{
+			return is_power_of_two<T>(v);
+		}
+
+		/** Retrieves the lower bound on the exponent for a texture that would fit the given size.
+		 *
+		 */
 		template<typename T>
 		inline uint64_t get_power_of_two_exponent_floor(T v)
 		{
-			return uint64_t(floor(log10(T(v)) / log10(2.0)));
+			return uint64_t(floor(log10(T(v)) / log10(2.0l)));
 		}
 
+		/** Retrieves the upper bound on the exponent for a texture that would fit the given size.
+		 *
+		 */
 		template<typename T>
 		inline uint64_t get_power_of_two_exponent_ceil(T v)
 		{
-			return uint64_t(ceil(log10(T(v)) / log10(2.0)));
+			return uint64_t(ceil(log10(T(v)) / log10(2.0l)));
 		}
 
 		template<typename T, typename C>
-		inline bool is_equal(T target, C value)
+		inline bool is_close_epsilon(T target, C value)
 		{
 			return (target > (value - std::numeric_limits<T>::epsilon())) && (target < (value + std::numeric_limits<T>::epsilon()));
 		}
 
 		template<typename T>
-		inline bool is_close(T target, T value, T delta)
+		inline bool is_close(T target, T value, T epsilon)
 		{
-			return (target > (value - delta)) && (target < (value + delta));
+			return (target > (value - epsilon)) && (target < (value + epsilon));
 		}
 
 		template<typename T>
@@ -189,7 +213,7 @@ namespace streamfx::util {
 			//static const double_t two_pi        = pi * 2.;
 			static const double_t two_pi_sqroot = 2.506628274631000502415765284811; //sqrt(two_pi);
 
-			if (is_equal<double_t>(0, o)) {
+			if (is_close_epsilon<double_t>(0, o)) {
 				return T(std::numeric_limits<double_t>::infinity());
 			}
 
@@ -197,7 +221,7 @@ namespace streamfx::util {
 			double_t left_e      = 1. / (o * two_pi_sqroot);
 			double_t mid_right_e = ((x /* - u*/) / o);
 			double_t right_e     = -0.5 * mid_right_e * mid_right_e;
-			double_t final       = left_e * exp(right_e);
+			double   final       = left_e * exp(right_e);
 
 			return T(final);
 		}
@@ -237,10 +261,12 @@ namespace streamfx::util {
 		};
 	} // namespace math
 
-	inline std::size_t aligned_offset(std::size_t align, std::size_t pos)
-	{
-		return ((pos / align) + 1) * align;
-	}
-	void* malloc_aligned(std::size_t align, std::size_t size);
-	void  free_aligned(void* mem);
+	namespace memory {
+		inline std::size_t aligned_offset(std::size_t align, std::size_t pos)
+		{
+			return ((pos / align) + 1) * align;
+		}
+		void* malloc_aligned(std::size_t align, std::size_t size);
+		void  free_aligned(void* mem);
+	} // namespace memory
 } // namespace streamfx::util

@@ -193,7 +193,7 @@ uint32_t streamfx::filter::upscaling::upscaling_instance::get_height()
 	return std::max<uint32_t>(_out_size.second, 1);
 }
 
-void upscaling_instance::video_tick(float_t time)
+void upscaling_instance::video_tick(float time)
 {
 	auto target = obs_filter_get_target(_self);
 	auto width  = obs_source_get_base_width(target);

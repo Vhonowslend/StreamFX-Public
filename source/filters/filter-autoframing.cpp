@@ -401,7 +401,7 @@ uint32_t autoframing_instance::get_height()
 	return std::max<uint32_t>(_out_size.second, 1);
 }
 
-void autoframing_instance::video_tick(float_t seconds)
+void autoframing_instance::video_tick(float seconds)
 {
 	auto target = obs_filter_get_target(_self);
 	auto width  = obs_source_get_base_width(target);

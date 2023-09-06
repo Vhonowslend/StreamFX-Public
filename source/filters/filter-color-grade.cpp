@@ -156,12 +156,12 @@ void color_grade_instance::allocate_rendertarget(gs_color_format format)
 	_cache_rt = std::make_unique<streamfx::obs::gs::rendertarget>(format, GS_ZS_NONE);
 }
 
-float_t fix_gamma_value(double_t v)
+float fix_gamma_value(double_t v)
 {
 	if (v < 0.0) {
-		return static_cast<float_t>(-v + 1.0);
+		return static_cast<float>(-v + 1.0);
 	} else {
-		return static_cast<float_t>(1.0 / (v + 1.0));
+		return static_cast<float>(1.0 / (v + 1.0));
 	}
 }
 
@@ -174,38 +174,38 @@ void color_grade_instance::migrate(obs_data_t* data, uint64_t version) {}
 
 void color_grade_instance::update(obs_data_t* data)
 {
-	_lift.x         = static_cast<float_t>(obs_data_get_double(data, ST_KEY_LIFT_(ST_RED)) / 100.0);
-	_lift.y         = static_cast<float_t>(obs_data_get_double(data, ST_KEY_LIFT_(ST_GREEN)) / 100.0);
-	_lift.z         = static_cast<float_t>(obs_data_get_double(data, ST_KEY_LIFT_(ST_BLUE)) / 100.0);
-	_lift.w         = static_cast<float_t>(obs_data_get_double(data, ST_KEY_LIFT_(ST_ALL)) / 100.0);
+	_lift.x         = static_cast<float>(obs_data_get_double(data, ST_KEY_LIFT_(ST_RED)) / 100.0);
+	_lift.y         = static_cast<float>(obs_data_get_double(data, ST_KEY_LIFT_(ST_GREEN)) / 100.0);
+	_lift.z         = static_cast<float>(obs_data_get_double(data, ST_KEY_LIFT_(ST_BLUE)) / 100.0);
+	_lift.w         = static_cast<float>(obs_data_get_double(data, ST_KEY_LIFT_(ST_ALL)) / 100.0);
 	_gamma.x        = fix_gamma_value(obs_data_get_double(data, ST_KEY_GAMMA_(ST_RED)) / 100.0);
 	_gamma.y        = fix_gamma_value(obs_data_get_double(data, ST_KEY_GAMMA_(ST_GREEN)) / 100.0);
 	_gamma.z        = fix_gamma_value(obs_data_get_double(data, ST_KEY_GAMMA_(ST_BLUE)) / 100.0);
 	_gamma.w        = fix_gamma_value(obs_data_get_double(data, ST_KEY_GAMMA_(ST_ALL)) / 100.0);
-	_gain.x         = static_cast<float_t>(obs_data_get_double(data, ST_KEY_GAIN_(ST_RED)) / 100.0);
-	_gain.y         = static_cast<float_t>(obs_data_get_double(data, ST_KEY_GAIN_(ST_GREEN)) / 100.0);
-	_gain.z         = static_cast<float_t>(obs_data_get_double(data, ST_KEY_GAIN_(ST_BLUE)) / 100.0);
-	_gain.w         = static_cast<float_t>(obs_data_get_double(data, ST_KEY_GAIN_(ST_ALL)) / 100.0);
-	_offset.x       = static_cast<float_t>(obs_data_get_double(data, ST_KEY_OFFSET_(ST_RED)) / 100.0);
-	_offset.y       = static_cast<float_t>(obs_data_get_double(data, ST_KEY_OFFSET_(ST_GREEN)) / 100.0);
-	_offset.z       = static_cast<float_t>(obs_data_get_double(data, ST_KEY_OFFSET_(ST_BLUE)) / 100.0);
-	_offset.w       = static_cast<float_t>(obs_data_get_double(data, ST_KEY_OFFSET_(ST_ALL)) / 100.0);
+	_gain.x         = static_cast<float>(obs_data_get_double(data, ST_KEY_GAIN_(ST_RED)) / 100.0);
+	_gain.y         = static_cast<float>(obs_data_get_double(data, ST_KEY_GAIN_(ST_GREEN)) / 100.0);
+	_gain.z         = static_cast<float>(obs_data_get_double(data, ST_KEY_GAIN_(ST_BLUE)) / 100.0);
+	_gain.w         = static_cast<float>(obs_data_get_double(data, ST_KEY_GAIN_(ST_ALL)) / 100.0);
+	_offset.x       = static_cast<float>(obs_data_get_double(data, ST_KEY_OFFSET_(ST_RED)) / 100.0);
+	_offset.y       = static_cast<float>(obs_data_get_double(data, ST_KEY_OFFSET_(ST_GREEN)) / 100.0);
+	_offset.z       = static_cast<float>(obs_data_get_double(data, ST_KEY_OFFSET_(ST_BLUE)) / 100.0);
+	_offset.w       = static_cast<float>(obs_data_get_double(data, ST_KEY_OFFSET_(ST_ALL)) / 100.0);
 	_tint_detection = static_cast<detection_mode>(obs_data_get_int(data, ST_KEY_TINT_DETECTION));
 	_tint_luma      = static_cast<luma_mode>(obs_data_get_int(data, ST_KEY_TINT_MODE));
-	_tint_exponent  = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_EXPONENT));
-	_tint_low.x     = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_LOW, ST_RED)) / 100.0);
-	_tint_low.y     = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_LOW, ST_GREEN)) / 100.0);
-	_tint_low.z     = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_LOW, ST_BLUE)) / 100.0);
-	_tint_mid.x     = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_MID, ST_RED)) / 100.0);
-	_tint_mid.y     = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_MID, ST_GREEN)) / 100.0);
-	_tint_mid.z     = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_MID, ST_BLUE)) / 100.0);
-	_tint_hig.x     = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_HIGH, ST_RED)) / 100.0);
-	_tint_hig.y     = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_HIGH, ST_GREEN)) / 100.0);
-	_tint_hig.z     = static_cast<float_t>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_HIGH, ST_BLUE)) / 100.0);
-	_correction.x   = static_cast<float_t>(obs_data_get_double(data, ST_KEY_CORRECTION_(ST_HUE)) / 360.0);
-	_correction.y   = static_cast<float_t>(obs_data_get_double(data, ST_KEY_CORRECTION_(ST_SATURATION)) / 100.0);
-	_correction.z   = static_cast<float_t>(obs_data_get_double(data, ST_KEY_CORRECTION_(ST_LIGHTNESS)) / 100.0);
-	_correction.w   = static_cast<float_t>(obs_data_get_double(data, ST_KEY_CORRECTION_(ST_CONTRAST)) / 100.0);
+	_tint_exponent  = static_cast<float>(obs_data_get_double(data, ST_KEY_TINT_EXPONENT));
+	_tint_low.x     = static_cast<float>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_LOW, ST_RED)) / 100.0);
+	_tint_low.y     = static_cast<float>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_LOW, ST_GREEN)) / 100.0);
+	_tint_low.z     = static_cast<float>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_LOW, ST_BLUE)) / 100.0);
+	_tint_mid.x     = static_cast<float>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_MID, ST_RED)) / 100.0);
+	_tint_mid.y     = static_cast<float>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_MID, ST_GREEN)) / 100.0);
+	_tint_mid.z     = static_cast<float>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_MID, ST_BLUE)) / 100.0);
+	_tint_hig.x     = static_cast<float>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_HIGH, ST_RED)) / 100.0);
+	_tint_hig.y     = static_cast<float>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_HIGH, ST_GREEN)) / 100.0);
+	_tint_hig.z     = static_cast<float>(obs_data_get_double(data, ST_KEY_TINT_(ST_TONE_HIGH, ST_BLUE)) / 100.0);
+	_correction.x   = static_cast<float>(obs_data_get_double(data, ST_KEY_CORRECTION_(ST_HUE)) / 360.0);
+	_correction.y   = static_cast<float>(obs_data_get_double(data, ST_KEY_CORRECTION_(ST_SATURATION)) / 100.0);
+	_correction.z   = static_cast<float>(obs_data_get_double(data, ST_KEY_CORRECTION_(ST_LIGHTNESS)) / 100.0);
+	_correction.w   = static_cast<float>(obs_data_get_double(data, ST_KEY_CORRECTION_(ST_CONTRAST)) / 100.0);
 
 	{
 		int64_t v = obs_data_get_int(data, ST_KEY_RENDERMODE);
@@ -370,7 +370,7 @@ void color_grade_instance::video_render(gs_effect_t* shader)
 
 		{
 			auto op = _ccache_rt->render(width, height);
-			gs_ortho(0, static_cast<float_t>(width), 0, static_cast<float_t>(height), 0, 1);
+			gs_ortho(0, static_cast<float>(width), 0, static_cast<float>(height), 0, 1);
 
 			// Blank out the input cache.
 			gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH, &blank, 0., 0);

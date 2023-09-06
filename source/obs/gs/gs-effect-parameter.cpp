@@ -216,33 +216,33 @@ void streamfx::obs::gs::effect_parameter::set_bool_array(bool v[], std::size_t s
 	gs_effect_set_val(get(), v, sz);
 }
 
-void streamfx::obs::gs::effect_parameter::set_float(float_t x)
+void streamfx::obs::gs::effect_parameter::set_float(float x)
 {
 	if (get_type() != type::Float)
 		throw std::bad_cast();
 	gs_effect_set_float(get(), x);
 }
 
-void streamfx::obs::gs::effect_parameter::get_float(float_t& x)
+void streamfx::obs::gs::effect_parameter::get_float(float& x)
 {
 	if (get_type() != type::Float)
 		throw std::bad_cast();
 	void* ptr = gs_effect_get_val(get());
 	if (ptr) {
-		x = *reinterpret_cast<float_t*>(ptr);
+		x = *reinterpret_cast<float*>(ptr);
 		bfree(ptr);
 	} else {
 		x = 0;
 	}
 }
 
-void streamfx::obs::gs::effect_parameter::get_default_float(float_t& x)
+void streamfx::obs::gs::effect_parameter::get_default_float(float& x)
 {
 	if (get_type() != type::Float)
 		throw std::bad_cast();
 	void* ptr = gs_effect_get_default_val(get());
 	if (ptr) {
-		x = *reinterpret_cast<float_t*>(ptr);
+		x = *reinterpret_cast<float*>(ptr);
 		bfree(ptr);
 	} else {
 		x = 0;
@@ -266,7 +266,7 @@ void streamfx::obs::gs::effect_parameter::get_default_float2(vec2& v)
 	get_default_float2(v.x, v.y);
 }
 
-void streamfx::obs::gs::effect_parameter::set_float2(float_t x, float_t y)
+void streamfx::obs::gs::effect_parameter::set_float2(float x, float y)
 {
 	vec2 data;
 	data.x = x;
@@ -274,28 +274,28 @@ void streamfx::obs::gs::effect_parameter::set_float2(float_t x, float_t y)
 	set_float2(data);
 }
 
-void streamfx::obs::gs::effect_parameter::get_float2(float_t& x, float_t& y)
+void streamfx::obs::gs::effect_parameter::get_float2(float& x, float& y)
 {
 	if (get_type() != type::Float2)
 		throw std::bad_cast();
 	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_val(get()));
 	if (ptr) {
-		x = *reinterpret_cast<float_t*>(ptr);
-		y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t));
+		x = *reinterpret_cast<float*>(ptr);
+		y = *reinterpret_cast<float*>(ptr + sizeof(float));
 		bfree(ptr);
 	} else {
 		x = y = 0;
 	}
 }
 
-void streamfx::obs::gs::effect_parameter::get_default_float2(float_t& x, float_t& y)
+void streamfx::obs::gs::effect_parameter::get_default_float2(float& x, float& y)
 {
 	if (get_type() != type::Float2)
 		throw std::bad_cast();
 	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_default_val(get()));
 	if (ptr) {
-		x = *reinterpret_cast<float_t*>(ptr);
-		y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t));
+		x = *reinterpret_cast<float*>(ptr);
+		y = *reinterpret_cast<float*>(ptr + sizeof(float));
 		bfree(ptr);
 	} else {
 		x = y = 0;
@@ -319,7 +319,7 @@ void streamfx::obs::gs::effect_parameter::get_default_float3(vec3& v)
 	get_default_float3(v.x, v.y, v.z);
 }
 
-void streamfx::obs::gs::effect_parameter::set_float3(float_t x, float_t y, float_t z)
+void streamfx::obs::gs::effect_parameter::set_float3(float x, float y, float z)
 {
 	if (get_type() != type::Float3)
 		throw std::bad_cast();
@@ -327,30 +327,30 @@ void streamfx::obs::gs::effect_parameter::set_float3(float_t x, float_t y, float
 	gs_effect_set_vec3(get(), &v);
 }
 
-void streamfx::obs::gs::effect_parameter::get_float3(float_t& x, float_t& y, float_t& z)
+void streamfx::obs::gs::effect_parameter::get_float3(float& x, float& y, float& z)
 {
 	if (get_type() != type::Float3)
 		throw std::bad_cast();
 	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_val(get()));
 	if (ptr) {
-		x = *reinterpret_cast<float_t*>(ptr);
-		y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t));
-		z = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 2);
+		x = *reinterpret_cast<float*>(ptr);
+		y = *reinterpret_cast<float*>(ptr + sizeof(float));
+		z = *reinterpret_cast<float*>(ptr + sizeof(float) * 2);
 		bfree(ptr);
 	} else {
 		x = y = z = 0;
 	}
 }
 
-void streamfx::obs::gs::effect_parameter::get_default_float3(float_t& x, float_t& y, float_t& z)
+void streamfx::obs::gs::effect_parameter::get_default_float3(float& x, float& y, float& z)
 {
 	if (get_type() != type::Float3)
 		throw std::bad_cast();
 	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_default_val(get()));
 	if (ptr) {
-		x = *reinterpret_cast<float_t*>(ptr);
-		y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t));
-		z = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 2);
+		x = *reinterpret_cast<float*>(ptr);
+		y = *reinterpret_cast<float*>(ptr + sizeof(float));
+		z = *reinterpret_cast<float*>(ptr + sizeof(float) * 2);
 		bfree(ptr);
 	} else {
 		x = y = z = 0;
@@ -374,7 +374,7 @@ void streamfx::obs::gs::effect_parameter::get_default_float4(vec4& v)
 	get_default_float4(v.x, v.y, v.z, v.w);
 }
 
-void streamfx::obs::gs::effect_parameter::set_float4(float_t x, float_t y, float_t z, float_t w)
+void streamfx::obs::gs::effect_parameter::set_float4(float x, float y, float z, float w)
 {
 	if (get_type() != type::Float4)
 		throw std::bad_cast();
@@ -382,32 +382,32 @@ void streamfx::obs::gs::effect_parameter::set_float4(float_t x, float_t y, float
 	gs_effect_set_vec4(get(), &v);
 }
 
-void streamfx::obs::gs::effect_parameter::get_float4(float_t& x, float_t& y, float_t& z, float_t& w)
+void streamfx::obs::gs::effect_parameter::get_float4(float& x, float& y, float& z, float& w)
 {
 	if (get_type() != type::Float4)
 		throw std::bad_cast();
 	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_val(get()));
 	if (ptr) {
-		x = *reinterpret_cast<float_t*>(ptr);
-		y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t));
-		z = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 2);
-		w = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 3);
+		x = *reinterpret_cast<float*>(ptr);
+		y = *reinterpret_cast<float*>(ptr + sizeof(float));
+		z = *reinterpret_cast<float*>(ptr + sizeof(float) * 2);
+		w = *reinterpret_cast<float*>(ptr + sizeof(float) * 3);
 		bfree(ptr);
 	} else {
 		x = y = z = w = 0;
 	}
 }
 
-void streamfx::obs::gs::effect_parameter::get_default_float4(float_t& x, float_t& y, float_t& z, float_t& w)
+void streamfx::obs::gs::effect_parameter::get_default_float4(float& x, float& y, float& z, float& w)
 {
 	if (get_type() != type::Float4)
 		throw std::bad_cast();
 	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_default_val(get()));
 	if (ptr) {
-		x = *reinterpret_cast<float_t*>(ptr);
-		y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t));
-		z = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 2);
-		w = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 3);
+		x = *reinterpret_cast<float*>(ptr);
+		y = *reinterpret_cast<float*>(ptr + sizeof(float));
+		z = *reinterpret_cast<float*>(ptr + sizeof(float) * 2);
+		w = *reinterpret_cast<float*>(ptr + sizeof(float) * 3);
 		bfree(ptr);
 	} else {
 		x = y = z = w = 0;
@@ -574,22 +574,22 @@ void streamfx::obs::gs::effect_parameter::get_matrix(matrix4& v)
 		throw std::bad_cast();
 	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_val(get()));
 	if (ptr) {
-		v.x.x = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 0);
-		v.x.y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 1);
-		v.x.z = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 2);
-		v.x.w = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 3);
-		v.y.x = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 4);
-		v.y.y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 5);
-		v.y.z = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 6);
-		v.y.w = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 7);
-		v.z.x = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 8);
-		v.z.y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 9);
-		v.z.z = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 10);
-		v.z.w = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 11);
-		v.t.x = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 12);
-		v.t.y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 13);
-		v.t.z = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 14);
-		v.t.w = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 15);
+		v.x.x = *reinterpret_cast<float*>(ptr + sizeof(float) * 0);
+		v.x.y = *reinterpret_cast<float*>(ptr + sizeof(float) * 1);
+		v.x.z = *reinterpret_cast<float*>(ptr + sizeof(float) * 2);
+		v.x.w = *reinterpret_cast<float*>(ptr + sizeof(float) * 3);
+		v.y.x = *reinterpret_cast<float*>(ptr + sizeof(float) * 4);
+		v.y.y = *reinterpret_cast<float*>(ptr + sizeof(float) * 5);
+		v.y.z = *reinterpret_cast<float*>(ptr + sizeof(float) * 6);
+		v.y.w = *reinterpret_cast<float*>(ptr + sizeof(float) * 7);
+		v.z.x = *reinterpret_cast<float*>(ptr + sizeof(float) * 8);
+		v.z.y = *reinterpret_cast<float*>(ptr + sizeof(float) * 9);
+		v.z.z = *reinterpret_cast<float*>(ptr + sizeof(float) * 10);
+		v.z.w = *reinterpret_cast<float*>(ptr + sizeof(float) * 11);
+		v.t.x = *reinterpret_cast<float*>(ptr + sizeof(float) * 12);
+		v.t.y = *reinterpret_cast<float*>(ptr + sizeof(float) * 13);
+		v.t.z = *reinterpret_cast<float*>(ptr + sizeof(float) * 14);
+		v.t.w = *reinterpret_cast<float*>(ptr + sizeof(float) * 15);
 		bfree(ptr);
 	} else {
 		v.x = vec4{};
@@ -605,22 +605,22 @@ void streamfx::obs::gs::effect_parameter::get_default_matrix(matrix4& v)
 		throw std::bad_cast();
 	uint8_t* ptr = static_cast<uint8_t*>(gs_effect_get_default_val(get()));
 	if (ptr) {
-		v.x.x = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 0);
-		v.x.y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 1);
-		v.x.z = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 2);
-		v.x.w = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 3);
-		v.y.x = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 4);
-		v.y.y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 5);
-		v.y.z = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 6);
-		v.y.w = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 7);
-		v.z.x = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 8);
-		v.z.y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 9);
-		v.z.z = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 10);
-		v.z.w = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 11);
-		v.t.x = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 12);
-		v.t.y = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 13);
-		v.t.z = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 14);
-		v.t.w = *reinterpret_cast<float_t*>(ptr + sizeof(float_t) * 15);
+		v.x.x = *reinterpret_cast<float*>(ptr + sizeof(float) * 0);
+		v.x.y = *reinterpret_cast<float*>(ptr + sizeof(float) * 1);
+		v.x.z = *reinterpret_cast<float*>(ptr + sizeof(float) * 2);
+		v.x.w = *reinterpret_cast<float*>(ptr + sizeof(float) * 3);
+		v.y.x = *reinterpret_cast<float*>(ptr + sizeof(float) * 4);
+		v.y.y = *reinterpret_cast<float*>(ptr + sizeof(float) * 5);
+		v.y.z = *reinterpret_cast<float*>(ptr + sizeof(float) * 6);
+		v.y.w = *reinterpret_cast<float*>(ptr + sizeof(float) * 7);
+		v.z.x = *reinterpret_cast<float*>(ptr + sizeof(float) * 8);
+		v.z.y = *reinterpret_cast<float*>(ptr + sizeof(float) * 9);
+		v.z.z = *reinterpret_cast<float*>(ptr + sizeof(float) * 10);
+		v.z.w = *reinterpret_cast<float*>(ptr + sizeof(float) * 11);
+		v.t.x = *reinterpret_cast<float*>(ptr + sizeof(float) * 12);
+		v.t.y = *reinterpret_cast<float*>(ptr + sizeof(float) * 13);
+		v.t.z = *reinterpret_cast<float*>(ptr + sizeof(float) * 14);
+		v.t.w = *reinterpret_cast<float*>(ptr + sizeof(float) * 15);
 		bfree(ptr);
 	} else {
 		v.x = vec4{};

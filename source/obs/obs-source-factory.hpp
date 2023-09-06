@@ -850,7 +850,7 @@ namespace streamfx::obs {
 			return GS_CS_SRGB;
 		}
 
-		virtual void video_tick(float_t seconds) {}
+		virtual void video_tick(float seconds) {}
 
 		virtual void video_render(gs_effect_t* effect) {}
 

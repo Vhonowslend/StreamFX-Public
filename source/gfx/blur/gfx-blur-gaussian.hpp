@@ -30,7 +30,7 @@ namespace streamfx::gfx {
 
 			std::shared_ptr<streamfx::gfx::util> get_gfx_util();
 
-			std::vector<float_t> const& get_kernel(std::size_t width);
+			std::vector<float> const& get_kernel(std::size_t width);
 		};
 
 		class gaussian_factory : public ::streamfx::gfx::blur::ifactory {

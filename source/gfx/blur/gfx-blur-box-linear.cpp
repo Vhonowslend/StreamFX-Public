@@ -236,8 +236,8 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_linear::r
 	auto gdmp = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Box Linear Blur");
 #endif
 
-	float_t width  = float_t(_input_texture->get_width());
-	float_t height = float_t(_input_texture->get_height());
+	float width  = float(_input_texture->get_width());
+	float height = float(_input_texture->get_height());
 
 	gs_set_cull_mode(GS_NEITHER);
 	gs_enable_color(true, true, true, true);
@@ -257,10 +257,10 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_linear::r
 	if (effect) {
 		// Pass 1
 		effect.get_parameter("pImage").set_texture(_input_texture);
-		effect.get_parameter("pImageTexel").set_float2(float_t(1.f / width), 0.f);
-		effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
-		effect.get_parameter("pSize").set_float(float_t(_size));
-		effect.get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(_size) * 2.0f + 1.0f)));
+		effect.get_parameter("pImageTexel").set_float2(float(1.f / width), 0.f);
+		effect.get_parameter("pStepScale").set_float2(float(_step_scale.first), float(_step_scale.second));
+		effect.get_parameter("pSize").set_float(float(_size));
+		effect.get_parameter("pSizeInverseMul").set_float(float(1.0f / (float(_size) * 2.0f + 1.0f)));
 
 		{
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
@@ -276,7 +276,7 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_linear::r
 
 		// Pass 2
 		effect.get_parameter("pImage").set_texture(_rendertarget2->get_texture());
-		effect.get_parameter("pImageTexel").set_float2(0., float_t(1.f / height));
+		effect.get_parameter("pImageTexel").set_float2(0., float(1.f / height));
 
 		{
 #if defined(ENABLE_PROFILING) && !defined(D_PLATFORM_MAC) && _DEBUG
@@ -326,8 +326,8 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_linear_di
 	auto gdmp = streamfx::obs::gs::debug_marker(streamfx::obs::gs::debug_color_azure_radiance, "Box Linear Directional Blur");
 #endif
 
-	float_t width  = float_t(_input_texture->get_width());
-	float_t height = float_t(_input_texture->get_height());
+	float width  = float(_input_texture->get_width());
+	float height = float(_input_texture->get_height());
 
 	gs_blend_state_push();
 	gs_reset_blend_state();
@@ -346,10 +346,10 @@ std::shared_ptr<::streamfx::obs::gs::texture> streamfx::gfx::blur::box_linear_di
 	streamfx::obs::gs::effect effect = _data->get_effect();
 	if (effect) {
 		effect.get_parameter("pImage").set_texture(_input_texture);
-		effect.get_parameter("pImageTexel").set_float2(float_t(1. / width * cos(_angle)), float_t(1.f / height * sin(_angle)));
-		effect.get_parameter("pStepScale").set_float2(float_t(_step_scale.first), float_t(_step_scale.second));
-		effect.get_parameter("pSize").set_float(float_t(_size));
-		effect.get_parameter("pSizeInverseMul").set_float(float_t(1.0f / (float_t(_size) * 2.0f + 1.0f)));
+		effect.get_parameter("pImageTexel").set_float2(float(1. / width * cos(_angle)), float(1.f / height * sin(_angle)));
+		effect.get_parameter("pStepScale").set_float2(float(_step_scale.first), float(_step_scale.second));
+		effect.get_parameter("pSize").set_float(float(_size));
+		effect.get_parameter("pSizeInverseMul").set_float(float(1.0f / (float(_size) * 2.0f + 1.0f)));
 
 		{
 			auto op = _rendertarget->render(uint32_t(width), uint32_t(height));

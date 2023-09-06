@@ -66,7 +66,7 @@ void shader_instance::update(obs_data_t* data)
 	_fx->update(data);
 }
 
-void shader_instance::video_tick(float_t sec_since_last)
+void shader_instance::video_tick(float sec_since_last)
 {
 	if (_fx->tick(sec_since_last)) {
 		obs_data_t* data = obs_source_get_settings(_self);

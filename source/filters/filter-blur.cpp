@@ -290,12 +290,12 @@ void blur_instance::update(obs_data_t* settings)
 			_mask.type = static_cast<mask_type>(obs_data_get_int(settings, ST_KEY_MASK_TYPE));
 			switch (_mask.type) {
 			case mask_type::Region:
-				_mask.region.left          = float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_LEFT) / 100.0);
-				_mask.region.top           = float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_TOP) / 100.0);
-				_mask.region.right         = 1.0f - float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_RIGHT) / 100.0);
-				_mask.region.bottom        = 1.0f - float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_BOTTOM) / 100.0);
-				_mask.region.feather       = float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_FEATHER) / 100.0);
-				_mask.region.feather_shift = float_t(obs_data_get_double(settings, ST_KEY_MASK_REGION_FEATHER_SHIFT) / 100.0);
+				_mask.region.left          = float(obs_data_get_double(settings, ST_KEY_MASK_REGION_LEFT) / 100.0);
+				_mask.region.top           = float(obs_data_get_double(settings, ST_KEY_MASK_REGION_TOP) / 100.0);
+				_mask.region.right         = 1.0f - float(obs_data_get_double(settings, ST_KEY_MASK_REGION_RIGHT) / 100.0);
+				_mask.region.bottom        = 1.0f - float(obs_data_get_double(settings, ST_KEY_MASK_REGION_BOTTOM) / 100.0);
+				_mask.region.feather       = float(obs_data_get_double(settings, ST_KEY_MASK_REGION_FEATHER) / 100.0);
+				_mask.region.feather_shift = float(obs_data_get_double(settings, ST_KEY_MASK_REGION_FEATHER_SHIFT) / 100.0);
 				_mask.region.invert        = obs_data_get_bool(settings, ST_KEY_MASK_REGION_INVERT);
 				break;
 			case mask_type::Image:
@@ -310,8 +310,8 @@ void blur_instance::update(obs_data_t* settings)
 				_mask.color.r    = static_cast<float>((color >> 0) & 0xFF) / 255.0f;
 				_mask.color.g    = static_cast<float>((color >> 8) & 0xFF) / 255.0f;
 				_mask.color.b    = static_cast<float>((color >> 16) & 0xFF) / 255.0f;
-				_mask.color.a    = static_cast<float_t>(obs_data_get_double(settings, ST_KEY_MASK_ALPHA));
-				_mask.multiplier = float_t(obs_data_get_double(settings, ST_KEY_MASK_MULTIPLIER));
+				_mask.color.a    = static_cast<float>(obs_data_get_double(settings, ST_KEY_MASK_ALPHA));
+				_mask.multiplier = float(obs_data_get_double(settings, ST_KEY_MASK_MULTIPLIER));
 			}
 		}
 	}
@@ -464,7 +464,7 @@ void blur_instance::video_render(gs_effect_t* effect)
 			std::string technique = "";
 			switch (this->_mask.type) {
 			case mask_type::Region:
-				if (this->_mask.region.feather > std::numeric_limits<float_t>::epsilon()) {
+				if (this->_mask.region.feather > std::numeric_limits<float>::epsilon()) {
 					if (this->_mask.region.invert) {
 						technique = "RegionFeatherInverted";
 					} else {
