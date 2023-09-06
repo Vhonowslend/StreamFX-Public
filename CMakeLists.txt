@@ -287,14 +287,6 @@ endif()
 set(${PREFIX}VERSION "" CACHE STRING "Specify an override for the automatically detected version. Accepts a mixture of SemVer 2.0 and CMake Version.")
 
 # Features
-## Encoders
-set(${PREFIX}ENABLE_ENCODER_FFMPEG ${FEATURE_STABLE} CACHE BOOL "Enable FFmpeg Encoder integration.")
-set(${PREFIX}ENABLE_ENCODER_FFMPEG_AMF ${FEATURE_DEPRECATED} CACHE BOOL "Enable AMF Encoder in FFmpeg.")
-set(${PREFIX}ENABLE_ENCODER_FFMPEG_NVENC ${FEATURE_STABLE} CACHE BOOL "Enable NVENC Encoder in FFmpeg.")
-set(${PREFIX}ENABLE_ENCODER_FFMPEG_PRORES ${FEATURE_STABLE} CACHE BOOL "Enable ProRes Encoder in FFmpeg.")
-set(${PREFIX}ENABLE_ENCODER_FFMPEG_DNXHR ${FEATURE_STABLE} CACHE BOOL "Enable DNXHR Encoder in FFmpeg.")
-set(${PREFIX}ENABLE_ENCODER_FFMPEG_CFHD ${FEATURE_STABLE} CACHE BOOL "Enable CineForm Encoder in FFmpeg.")
-
 ## Filters
 set(${PREFIX}ENABLE_FILTER_AUTOFRAMING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Auto-Framing Filter")
 set(${PREFIX}ENABLE_FILTER_AUTOFRAMING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) Auto-Framing Filter")
@@ -448,54 +440,6 @@ endmacro()
 macro(set_feature_disabled FEATURE DISABLED)
 	set(${PREFIX}DISABLE_${FEATURE} ${DISABLED} CACHE INTERNAL "" FORCE)
 endmacro()
-
-# Features
-function(feature_encoder_ffmpeg RESOLVE)
-	is_feature_enabled(ENCODER_FFMPEG T_CHECK)
-	if(RESOLVE AND T_CHECK)
-		if(NOT HAVE_FFMPEG)
-			message(WARNING "FFmpeg Encoder requires FFmpeg. Disabling...")
-			set_feature_disabled(ENCODER_FFMPEG ON)
-		else()
-			# AMF
-			is_feature_enabled(ENCODER_FFMPEG_AMF T_CHECK)
-			if(T_CHECK AND D_PLATFORM_MAC)
-				message(WARNING "FFmpeg Encoder 'AMF' requires Windows or Linux. Disabling...")
-				set_feature_disabled(ENCODER_FFMPEG_AMF ON)
-			endif()
-
-			# NVENC
-			is_feature_enabled(ENCODER_FFMPEG_NVENC T_CHECK)
-			if(T_CHECK AND D_PLATFORM_MAC)
-				message(WARNING "FFmpeg Encoder 'NVENC' requires Windows or Linux. Disabling...")
-				set_feature_disabled(ENCODER_FFMPEG_NVENC ON)
-			endif()
-
-			# ProRes
-			is_feature_enabled(ENCODER_FFMPEG_PRORES T_CHECK)
-
-			# DNxHR
-			is_feature_enabled(ENCODER_FFMPEG_DNXHR T_CHECK)
-
-			# CineForm
-			is_feature_enabled(ENCODER_FFMPEG_CFHD T_CHECK)
-		endif()
-	elseif(T_CHECK)
-		set(REQUIRE_FFMPEG ON PARENT_SCOPE)
-	endif()
-endfunction()
-
-function(feature_encoder_aom_av1 RESOLVE)
-	is_feature_enabled(ENCODER_AOM_AV1 T_CHECK)
-	if(RESOLVE AND T_CHECK)
-		if(NOT HAVE_AOM)
-			message(WARNING "AOM AV1 encoder missing AOM library. Disabling...")
-			set_feature_disabled(ENCODER_AOM_AV1 ON)
-		endif()
-	elseif(T_CHECK)
-		set(REQUIRE_AOM ON PARENT_SCOPE)
-	endif()
-endfunction()
 
 function(feature_filter_autoframing RESOLVE)
 	is_feature_enabled(FILTER_AUTOFRAMING T_CHECK)
@@ -651,8 +595,6 @@ function(feature_updater RESOLVE)
 endfunction()
 
 # Set Requirements
-feature_encoder_ffmpeg(OFF)
-feature_encoder_aom_av1(OFF)
 feature_filter_autoframing(OFF)
 feature_filter_blur(OFF)
 feature_filter_color_grade(OFF)
@@ -711,24 +653,6 @@ endif()
 set(CURL_FOUND OFF)
 if(REQUIRE_CURL)
 	find_package("CURL")
-endif()
-
-#- FFmpeg
-set(HAVE_FFMPEG OFF)
-if(REQUIRE_FFMPEG)
-	find_package("FFmpeg"
-		COMPONENTS "avutil" "avcodec" "swscale"
-	)
-	set(HAVE_FFMPEG ${FFmpeg_FOUND})
-endif()
-
-#- AOM
-set(HAVE_AOM OFF)
-if(REQUIRE_AOM)
-	if(NOT D_PLATFORM_MAC)
-		find_package("AOM")
-		set(HAVE_AOM ${AOM_FOUND})
-	endif()
 endif()
 
 #- JSON
@@ -808,8 +732,6 @@ if(REQUIRE_QT)
 endif()
 
 # Verify Requirements
-feature_encoder_ffmpeg(ON)
-feature_encoder_aom_av1(ON)
 feature_filter_autoframing(ON)
 feature_filter_blur(ON)
 feature_filter_color_grade(ON)
@@ -880,15 +802,6 @@ if(CURL_FOUND)
 		"source/util/util-curl.cpp"
 	)
 	list(APPEND PROJECT_LIBRARIES CURL::libcurl)
-endif()
-
-if(HAVE_FFMPEG)
-	list(APPEND PROJECT_LIBRARIES
-		${FFMPEG_LIBRARIES}
-	)
-	list(APPEND PROJECT_INCLUDE_DIRS
-		${FFMPEG_INCLUDE_DIRS}
-	)
 endif()
 
 if(HAVE_JSON)
@@ -1101,107 +1014,6 @@ list(APPEND PROJECT_INCLUDE_DIRS
 	"${PROJECT_BINARY_DIR}/generated"
 	"${PROJECT_SOURCE_DIR}/source"
 )
-
-# Encoder/FFmpeg
-is_feature_enabled(ENCODER_FFMPEG T_CHECK)
-if(T_CHECK)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		# FFmpeg
-		"source/ffmpeg/avframe-queue.cpp"
-		"source/ffmpeg/avframe-queue.hpp"
-		"source/ffmpeg/swscale.hpp"
-		"source/ffmpeg/swscale.cpp"
-		"source/ffmpeg/tools.hpp"
-		"source/ffmpeg/tools.cpp"
-		"source/ffmpeg/hwapi/base.hpp"
-		"source/ffmpeg/hwapi/base.cpp"
-		"source/ffmpeg/hwapi/d3d11.hpp"
-		"source/ffmpeg/hwapi/d3d11.cpp"
-
-		# Encoders
-		"source/encoders/encoder-ffmpeg.hpp"
-		"source/encoders/encoder-ffmpeg.cpp"
-
-		# Encoders/Codecs
-		"source/encoders/codecs/hevc.hpp"
-		"source/encoders/codecs/hevc.cpp"
-		"source/encoders/codecs/h264.hpp"
-		"source/encoders/codecs/h264.cpp"
-		"source/encoders/codecs/prores.hpp"
-		"source/encoders/codecs/prores.cpp"
-		"source/encoders/codecs/dnxhr.hpp"
-		"source/encoders/codecs/dnxhr.cpp"
-
-		# Encoders/Handlers
-		"source/encoders/ffmpeg/handler.hpp"
-		"source/encoders/ffmpeg/handler.cpp"
-		"source/encoders/ffmpeg/debug.hpp"
-		"source/encoders/ffmpeg/debug.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_ENCODER_FFMPEG
-	)
-
-	# AMF
-	is_feature_enabled(ENCODER_FFMPEG_AMF T_CHECK)
-	if(T_CHECK)
-		list(APPEND PROJECT_PRIVATE_SOURCE
-			"source/encoders/ffmpeg/amf.hpp"
-			"source/encoders/ffmpeg/amf.cpp"
-		)
-		list(APPEND PROJECT_DEFINITIONS
-			ENABLE_ENCODER_FFMPEG_AMF
-		)
-	endif()
-
-	# NVENC
-	is_feature_enabled(ENCODER_FFMPEG_NVENC T_CHECK)
-	if(T_CHECK)
-		list(APPEND PROJECT_PRIVATE_SOURCE
-			"source/encoders/ffmpeg/nvenc.hpp"
-			"source/encoders/ffmpeg/nvenc.cpp"
-		)
-		list(APPEND PROJECT_DEFINITIONS
-			ENABLE_ENCODER_FFMPEG_NVENC
-		)
-	endif()
-
-	# ProRES
-	is_feature_enabled(ENCODER_FFMPEG_PRORES T_CHECK)
-	if(T_CHECK)
-		list(APPEND PROJECT_PRIVATE_SOURCE
-			"source/encoders/ffmpeg/prores_aw.hpp"
-			"source/encoders/ffmpeg/prores_aw.cpp"
-		)
-		list(APPEND PROJECT_DEFINITIONS
-			ENABLE_ENCODER_FFMPEG_PRORES
-		)
-	endif()
-
-	# DNxHR
-	is_feature_enabled(ENCODER_FFMPEG_DNXHR T_CHECK)
-	if(T_CHECK)
-		list(APPEND PROJECT_PRIVATE_SOURCE
-			"source/encoders/ffmpeg/dnxhd.hpp"
-			"source/encoders/ffmpeg/dnxhd.cpp"
-		)
-		list(APPEND PROJECT_DEFINITIONS
-			ENABLE_ENCODER_FFMPEG_DNXHR
-		)
-	endif()
-
-	# CineForm HD
-	is_feature_enabled(ENCODER_FFMPEG_CFHD T_CHECK)
-	if(T_CHECK)
-		list(APPEND PROJECT_PRIVATE_SOURCE
-			"source/encoders/ffmpeg/cfhd.hpp"
-			"source/encoders/ffmpeg/cfhd.cpp"
-		)
-		list(APPEND PROJECT_DEFINITIONS
-			ENABLE_ENCODER_FFMPEG_CFHD
-		)
-	endif()
-endif()
 
 # Filter/Auto-Framing
 is_feature_enabled(FILTER_AUTOFRAMING T_CHECK)
@@ -1905,6 +1717,7 @@ function(streamfx_add_component COMPONENT_NAME)
 
 	# Allow disabling this component.
 	set(${COMPONENT_OPTION} ON CACHE BOOL "Enable the ${COMPONENT_NAME} component?")
+	set(${COMPONENT_OPTION}_DISABLED OFF CACHE INTERNAL "Disable the ${_NAME} component?" FORCE)
 
 	# Add common include directories
 	target_include_directories(${COMPONENT_TARGET}
@@ -1993,6 +1806,22 @@ function(streamfx_add_component_dependency _NAME)
 	get_target_property(DEPENDS ${COMPONENT_TARGET} COMPONENT_DEPENDS)
 	list(APPEND DEPENDS "${_NAME}")
 	set_target_properties(${COMPONENT_TARGET} PROPERTIES COMPONENT_DEPENDS "${DEPENDS}")
+endfunction()
+
+function(streamfx_disable_component _NAME _REASON)
+	# If the component doesn't exist, skip it.
+	if(NOT TARGET ${_NAME})
+		message(WARNING "Not disabling invalid component '${COMPONENT}'.")
+		return()
+	endif()
+	
+	get_target_property(_NAME ${COMPONENT} COMPONENT_LABEL)
+	get_target_property(_OPTION ${COMPONENT} COMPONENT_OPTION)
+
+	CacheSet(${_OPTION}_DISABLED ON)
+	if(_REASON)
+		message(STATUS "[${_NAME}] Disabled due to: ${_REASON}")
+	endif()
 endfunction()
 
 ################################################################################

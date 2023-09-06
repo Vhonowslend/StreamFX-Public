@@ -88,7 +88,7 @@ extern "C" {
 
 #define ST_KEY_H265_PROFILE "H265.Profile"
 #define ST_KEY_H265_TIER "H265.Tier"
-#define ST_KEY_H264_LEVEL "H265.Level"
+#define ST_KEY_H265_LEVEL "H265.Level"
 
 using namespace streamfx::encoder::ffmpeg;
 using namespace streamfx::encoder::codec;
@@ -1045,7 +1045,7 @@ void nvenc_hevc::defaults(ffmpeg_factory* factory, obs_data_t* settings)
 
 	obs_data_set_default_string(settings, ST_KEY_H265_PROFILE, "");
 	obs_data_set_default_string(settings, ST_KEY_H265_TIER, "");
-	obs_data_set_default_string(settings, ST_KEY_H264_LEVEL, "auto");
+	obs_data_set_default_string(settings, ST_KEY_H265_LEVEL, "auto");
 }
 
 void nvenc_hevc::properties(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_properties_t* props)
@@ -1060,6 +1060,17 @@ void nvenc_hevc::properties(ffmpeg_factory* factory, ffmpeg_instance* instance, 
 void nvenc_hevc::migrate(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings, uint64_t version)
 {
 	nvenc::migrate(factory, instance, settings, version);
+
+	// Migrate:
+	// - all versions below 0.12.
+	// - all versions that are larger than 0.12, but smaller than 0.12.0.315.
+	// - no other version.
+	if ((version < STREAMFX_MAKE_VERSION(0, 12, 0, 0))
+		|| ((version > STREAMFX_MAKE_VERSION(0, 12, 0, 0)) && (version < STREAMFX_MAKE_VERSION(0, 12, 0, 315)))) {
+		// Accidentally had this stored int he wrong place. Oops.
+		obs_data_set_string(settings, ST_KEY_H265_LEVEL, obs_data_get_string(settings, ST_KEY_H264_LEVEL));
+		obs_data_unset_user_value(settings, ST_KEY_H264_LEVEL);
+	}
 
 	if (version < STREAMFX_MAKE_VERSION(0, 11, 1, 0)) {
 		// Profile
@@ -1092,7 +1103,7 @@ void nvenc_hevc::migrate(ffmpeg_factory* factory, ffmpeg_instance* instance, obs
 		}
 
 		// Level
-		obs_data_set_string(settings, ST_KEY_H264_LEVEL, "auto");
+		obs_data_set_string(settings, ST_KEY_H265_LEVEL, "auto");
 	}
 }
 
@@ -1110,7 +1121,7 @@ void nvenc_hevc::update(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_
 		if (const char* v = obs_data_get_string(settings, ST_KEY_H265_TIER); v && (v[0] != '\0')) {
 			av_opt_set(context->priv_data, "tier", v, AV_OPT_SEARCH_CHILDREN);
 		}
-		if (const char* v = obs_data_get_string(settings, ST_KEY_H264_LEVEL); v && (v[0] != '\0')) {
+		if (const char* v = obs_data_get_string(settings, ST_KEY_H265_LEVEL); v && (v[0] != '\0')) {
 			av_opt_set(context->priv_data, "level", v, AV_OPT_SEARCH_CHILDREN);
 		}
 	}
@@ -1172,7 +1183,7 @@ void nvenc_hevc::properties_encoder(ffmpeg_factory* factory, ffmpeg_instance* in
 			});
 		}
 		{
-			auto p = obs_properties_add_list(grp, ST_KEY_H264_LEVEL, D_TRANSLATE(S_CODEC_HEVC_LEVEL), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+			auto p = obs_properties_add_list(grp, ST_KEY_H265_LEVEL, D_TRANSLATE(S_CODEC_HEVC_LEVEL), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 
 			streamfx::ffmpeg::tools::avoption_list_add_entries(context->priv_data, "level", [&p](const AVOption* opt) {
 				if (opt->default_val.i64 == 0) {

@@ -19,6 +19,7 @@ namespace streamfx::encoder::ffmpeg {
 
 	struct handler {
 		handler(std::string codec);
+		virtual ~handler(){};
 
 		virtual bool has_keyframes(ffmpeg_factory* factory);
 		virtual bool has_threading(ffmpeg_factory* factory);
