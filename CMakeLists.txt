@@ -1626,6 +1626,21 @@ function(streamfx_add_library TARGET_NAME TARGET_TYPE)
 	target_compile_definitions(${TARGET_NAME} PRIVATE
 		__STDC_WANT_LIB_EXT1__=1
 	)
+	if(D_PLATFORM_WINDOWS)
+		target_compile_definitions(${TARGET_NAME}
+			PUBLIC
+				# Microsoft Visual C++
+				_CRT_SECURE_NO_WARNINGS
+				_ENABLE_EXTENDED_ALIGNED_STORAGE
+
+			PUBLIC
+				# windows.h
+				# - Disable MIN/MAX macro as this breaks a lot of code.
+				NOMINMAX
+				# - Disable IN/OUT macro as this breaks a lot of code.
+				NOINOUT
+		)
+	endif()
 
 	# C/C++ Compiler Adjustments
 	if(D_PLATFORM_WINDOWS AND ((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")))
@@ -1891,27 +1906,41 @@ function(streamfx_add_component COMPONENT_NAME)
 	# Allow disabling this component.
 	set(${COMPONENT_OPTION} ON CACHE BOOL "Enable the ${COMPONENT_NAME} component?")
 
+	# Add common include directories
+	target_include_directories(${COMPONENT_TARGET}
+		PRIVATE
+			"${CMAKE_CURRENT_SOURCE_DIR}/source"
+		PUBLIC
+			"${CMAKE_CURRENT_SOURCE_DIR}/include"
+	)
+
 	# Add files in common places.
 	file(GLOB_RECURSE TEMPLATES FOLLOW_SYMLINKS CONFIGURE_DEPENDS "templates/*")
 	source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/templates" PREFIX "Templates" FILES ${TEMPLATES})
 
+	file(GLOB_RECURSE DATA FOLLOW_SYMLINKS CONFIGURE_DEPENDS "data/*")
+	source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/data" PREFIX "Data" FILES ${DATA})
+
 	file(GLOB_RECURSE SOURCE_PRIVATE FOLLOW_SYMLINKS CONFIGURE_DEPENDS "ui/*")
-	source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/ui" PREFIX "User-Interface Files" FILES ${UI_PRIVATE})
+	source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/ui" PREFIX "User-Interface Files" FILES ${USERINTERFACE})
 
 	file(GLOB_RECURSE SOURCE_PRIVATE FOLLOW_SYMLINKS CONFIGURE_DEPENDS "source/*")
 	source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/source" PREFIX "Private Files" FILES ${SOURCE_PRIVATE})
+	file(GLOB_RECURSE UI_PRIVATE FOLLOW_SYMLINKS CONFIGURE_DEPENDS "source/ui/*")
 	file(GLOB_RECURSE GENERATED_PRIVATE FOLLOW_SYMLINKS CONFIGURE_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/source/*")
 	source_group(TREE "${CMAKE_CURRENT_BINARY_DIR}/source" PREFIX "Private Files/Generated" FILES ${GENERATED_PRIVATE})
 
 	file(GLOB_RECURSE SOURCE_PUBLIC FOLLOW_SYMLINKS CONFIGURE_DEPENDS "include/*")
 	source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/include" PREFIX "Public Files" FILES ${SOURCE_PUBLIC})
+	file(GLOB_RECURSE UI_PUBLIC FOLLOW_SYMLINKS CONFIGURE_DEPENDS "include/ui/*")
 	file(GLOB_RECURSE GENERATED_PUBLIC FOLLOW_SYMLINKS CONFIGURE_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/include/*")
 	source_group(TREE "${CMAKE_CURRENT_BINARY_DIR}/include" PREFIX "Public Files/Generated" FILES ${GENERATED_PUBLIC})
 	
 	target_sources(${COMPONENT_TARGET}
 		PRIVATE
+			${DATA}
 			${TEMPLATES}
-			${UI_PRIVATE}
+			${USERINTERFACE}
 			${SOURCE_PRIVATE}
 			${GENERATED_PRIVATE}
 		PUBLIC
@@ -1921,12 +1950,12 @@ function(streamfx_add_component COMPONENT_NAME)
 
 	# Ignore data only files.
 	set_source_files_properties(
+		${DATA}
 		${TEMPLATES}
-		${UI_PRIVATE}
+		${USERINTERFACE}
 		PROPERTIES
 			HEADER_FILE_ONLY ON
 	)
-	
 	
 	# Enable Qt if needed
 	set_target_properties(${TARGET_NAME} PROPERTIES
@@ -1936,7 +1965,6 @@ function(streamfx_add_component COMPONENT_NAME)
 		AUTORCC ON
 		AUTOGEN_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated"
 	)
-
 	set_source_files_properties(
 		${TEMPLATES}
 		${SOURCE_PRIVATE}
@@ -1948,7 +1976,16 @@ function(streamfx_add_component COMPONENT_NAME)
 			SKIP_AUTOMOC ON
 			SKIP_AUTORCC ON
 			SKIP_AUTOUIC ON
-	)	
+	)
+	set_source_files_properties(
+		${UI_PRIVATE}
+		${UI_PUBLIC}
+		PROPERTIES
+			SKIP_AUTOGEN OFF
+			SKIP_AUTOMOC OFF
+			SKIP_AUTORCC OFF
+			SKIP_AUTOUIC OFF
+	)
 endfunction()
 
 # Use this to add a dependency on another component, 
