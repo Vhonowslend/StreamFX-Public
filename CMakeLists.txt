@@ -296,7 +296,6 @@ set(${PREFIX}ENABLE_FILTER_DENOISING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable 
 set(${PREFIX}ENABLE_FILTER_DENOISING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) for Denoising Filter")
 set(${PREFIX}ENABLE_FILTER_DYNAMIC_MASK ${FEATURE_STABLE} CACHE BOOL "Enable Dynamic Mask Filter")
 set(${PREFIX}ENABLE_FILTER_SDF_EFFECTS ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable SDF Effects Filter")
-set(${PREFIX}ENABLE_FILTER_SHADER ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Shader Filter")
 set(${PREFIX}ENABLE_FILTER_TRANSFORM ${FEATURE_STABLE} CACHE BOOL "Enable Transform Filter")
 set(${PREFIX}ENABLE_FILTER_UPSCALING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Upscaling Filter")
 set(${PREFIX}ENABLE_FILTER_UPSCALING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) for Upscaling Filter")
@@ -305,10 +304,6 @@ set(${PREFIX}ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA ${FEATURE_EXPERIMENTAL} CA
 
 ## Sources
 set(${PREFIX}ENABLE_SOURCE_MIRROR ${FEATURE_DEPRECATED} CACHE BOOL "Enable Mirror Source")
-set(${PREFIX}ENABLE_SOURCE_SHADER ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Shader Source")
-
-## Transitions
-set(${PREFIX}ENABLE_TRANSITION_SHADER ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Shader Transition")
 
 ## FrontEnd & UI
 set(${PREFIX}ENABLE_FRONTEND ON CACHE BOOL "Enable Frontend code.")
@@ -498,10 +493,6 @@ function(feature_filter_sdf_effects RESOLVE)
 	is_feature_enabled(FILTER_SDF_EFFECTS T_CHECK)
 endfunction()
 
-function(feature_filter_shader RESOLVE)
-	is_feature_enabled(FILTER_SHADER T_CHECK)
-endfunction()
-
 function(feature_filter_transform RESOLVE)
 	is_feature_enabled(FILTER_TRANSFORM T_CHECK)
 endfunction()
@@ -550,14 +541,6 @@ function(feature_source_mirror RESOLVE)
 	is_feature_enabled(SOURCE_MIRROR T_CHECK)
 endfunction()
 
-function(feature_source_shader RESOLVE)
-	is_feature_enabled(SOURCE_SHADER T_CHECK)
-endfunction()
-
-function(feature_transition_shader RESOLVE)
-	is_feature_enabled(TRANSITION_SHADER T_CHECK)
-endfunction()
-
 function(feature_frontend RESOLVE)
 	is_feature_enabled(FRONTEND T_CHECK)
 	if(RESOLVE AND T_CHECK)
@@ -601,13 +584,10 @@ feature_filter_color_grade(OFF)
 feature_filter_denoising(OFF)
 feature_filter_dynamic_mask(OFF)
 feature_filter_sdf_effects(OFF)
-feature_filter_shader(OFF)
 feature_filter_transform(OFF)
 feature_filter_upscaling(OFF)
 feature_filter_virtual_greenscreen(OFF)
 feature_source_mirror(OFF)
-feature_source_shader(OFF)
-feature_transition_shader(OFF)
 feature_frontend(OFF)
 feature_updater(OFF)
 
@@ -738,13 +718,10 @@ feature_filter_color_grade(ON)
 feature_filter_denoising(ON)
 feature_filter_dynamic_mask(ON)
 feature_filter_sdf_effects(ON)
-feature_filter_shader(ON)
 feature_filter_transform(ON)
 feature_filter_upscaling(ON)
 feature_filter_virtual_greenscreen(ON)
 feature_source_mirror(ON)
-feature_source_shader(ON)
-feature_transition_shader(ON)
 feature_frontend(ON)
 feature_updater(ON)
 
@@ -1113,19 +1090,6 @@ if(T_CHECK)
 	)
 endif()
 
-# Filter/Shader
-is_feature_enabled(FILTER_SHADER T_CHECK)
-if(T_CHECK)
-	set(REQUIRE_PART_SHADER ON)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/filters/filter-shader.hpp"
-		"source/filters/filter-shader.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_FILTER_SHADER
-	)
-endif()
-
 # Filter/Transform
 is_feature_enabled(FILTER_TRANSFORM T_CHECK)
 if(T_CHECK)
@@ -1204,32 +1168,6 @@ if(T_CHECK)
 	)
 endif()
 
-# Source/Shader
-is_feature_enabled(SOURCE_SHADER T_CHECK)
-if(T_CHECK)
-	set(REQUIRE_PART_SHADER ON)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/sources/source-shader.hpp"
-		"source/sources/source-shader.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_SOURCE_SHADER
-	)
-endif()
-
-# Transition/Shader
-is_feature_enabled(TRANSITION_SHADER T_CHECK)
-if(T_CHECK)
-	set(REQUIRE_PART_SHADER ON)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/transitions/transition-shader.hpp"
-		"source/transitions/transition-shader.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_TRANSITION_SHADER
-	)
-endif()
-
 # Profiling
 is_feature_enabled(PROFILING T_CHECK)
 if(T_CHECK)
@@ -1295,24 +1233,6 @@ endif()
 ################################################################################
 # Parts
 ################################################################################
-
-# Shaders
-if(REQUIRE_PART_SHADER)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/gfx/shader/gfx-shader.hpp"
-		"source/gfx/shader/gfx-shader.cpp"
-		"source/gfx/shader/gfx-shader-param.hpp"
-		"source/gfx/shader/gfx-shader-param.cpp"
-		"source/gfx/shader/gfx-shader-param-audio.hpp"
-		"source/gfx/shader/gfx-shader-param-audio.cpp"
-		"source/gfx/shader/gfx-shader-param-basic.hpp"
-		"source/gfx/shader/gfx-shader-param-basic.cpp"
-		"source/gfx/shader/gfx-shader-param-matrix.hpp"
-		"source/gfx/shader/gfx-shader-param-matrix.cpp"
-		"source/gfx/shader/gfx-shader-param-texture.hpp"
-		"source/gfx/shader/gfx-shader-param-texture.cpp"
-	)
-endif()
 
 # LUT
 if(REQUIRE_LUT)
