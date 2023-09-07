@@ -9,12 +9,6 @@ labels: ["bug"]
 body:
 - type: textarea
   attributes:
-    label: "OBS Studio Logs"
-    description: "Paste the content or attach the log files from OBS Studio here. In the event of a crash, paste or attach both the crash log and the normal log file."
-  validations:
-    required: true
-- type: textarea
-  attributes:
     label: "Current and Expected Behavior"
     description: "What actually happened when you used StreamFX? What did you expect to happen?"
   validations:
@@ -25,6 +19,12 @@ body:
     description: "What steps are required to consistently reproduce the bug/crash/freeze?"
   validations:
     required: true
+- type: textarea
+  attributes:
+    label: "Log files & Crash Dumps"
+    description: "Paste the content or attach the log files from OBS Studio here. In the event of a crash, paste or attach both the crash log and the normal log file."
+  validations:
+    required: false
 - type: textarea
   attributes:
     label: "Any additional Information we need to know?"
