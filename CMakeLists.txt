@@ -1354,22 +1354,61 @@ target_sources(StreamFX_Core PRIVATE ${PROJECT_FILES})
 # for an improved system which suffers under less issues. This new component
 # system should address the main necessary parts,
 
+#- Registration
 file(GLOB COMPONENTS RELATIVE ${PROJECT_SOURCE_DIR} CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/components/*)
 foreach(COMPONENT ${COMPONENTS})
-	add_subdirectory(${COMPONENT} EXCLUDE_FROM_ALL)
+	# Ignore directories with no CMakeLists.txt
+	if(EXISTS "${PROJECT_SOURCE_DIR}/${COMPONENT}/CMakeLists.txt")
+		add_subdirectory(${COMPONENT} EXCLUDE_FROM_ALL)
+	endif()
 endforeach()
 
-################################################################################
-# Resolve Components
-################################################################################
-target_link_libraries(StreamFX PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,StreamFX_Core>)
-
 get_target_property(_DEPENDS StreamFX COMPONENT_DEPENDS)
+
+#- Resolving
 if(_DEPENDS)
 	foreach(COMPONENT ${_DEPENDS})
 		# If the component doesn't exist, skip it.
 		if(NOT TARGET ${COMPONENT})
 			message(WARNING "Encountered invalid component '${COMPONENT}' in list of all components.")
+			continue()
+		endif()
+
+		get_target_property(_NAME ${COMPONENT} COMPONENT_LABEL)
+
+		# If the component is disabled, skip it.
+		get_target_property(_OPTION ${COMPONENT} COMPONENT_OPTION)
+		if(NOT ${_OPTION})
+			continue()
+		elseif(${_OPTION}_DISABLED)
+			continue()
+		endif()
+		
+		# Test if all dependencies are valid.
+		set(_HASDEPENDENCY ON)
+		get_target_property(_CDEPENDS ${COMPONENT} COMPONENT_DEPENDS)
+		foreach(_DEPEND ${_CDEPENDS})
+			get_target_property(_DNAME ${COMPONENT} COMPONENT_LABEL)
+			get_target_property(_DOPTION ${COMPONENT} COMPONENT_OPTION)
+			if((NOT ${_DOPTION}) OR (${_DOPTION}_DISABLED))
+				message(STATUS "[${_NAME}] Missing or disabled dependency on '${_DNAME}'.")
+				set(_HASDEPENDENCY OFF)
+				continue()
+			endif()
+		endforeach()
+		if(NOT _HASDEPENDENCY)
+			message(STATUS "[${_NAME}] Missing dependencies, disabling...")
+			set(${_OPTION}_DISABLED TRUE)
+			continue()
+		endif()
+	endforeach()
+endif()
+
+#- Linking
+target_link_libraries(StreamFX PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,StreamFX_Core>)
+if(_DEPENDS)
+	foreach(COMPONENT ${_DEPENDS})
+		if(NOT TARGET ${COMPONENT})
 			continue()
 		endif()
 
@@ -1384,29 +1423,13 @@ if(_DEPENDS)
 			message(STATUS "[${_NAME}] Disabled by build script.")
 			continue()
 		endif()
-		
-		# Test if all dependencies are valid.
-		set(_HASDEPENDENCY ON)
-		get_target_property(_DEPENDS ${COMPONENT} COMPONENT_DEPENDS)
-		foreach(_DEPEND ${_DEPENDS})
-			get_target_property(_DNAME ${COMPONENT} COMPONENT_LABEL)
-			get_target_property(_DOPTION ${COMPONENT} COMPONENT_OPTION)
-			if((NOT ${_DOPTION}) OR (${_DOPTION}_DISABLED))
-				message(STATUS "[${_NAME}] Missing or disabled dependency on '${_DNAME}'.")
-				set(_HASDEPENDENCY OFF)
-				continue()
-			endif()
-		endforeach()
-		if(NOT _HASDEPENDENCY)
-			message(STATUS "[${_NAME}] Disabled due to missing dependencies.")
-			continue()
-		endif()
 
 		# Finally if everything is correct, do things.
 		message(STATUS "[${_NAME}] Enabled.")
 		target_link_libraries(StreamFX PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,${COMPONENT}>)
 	endforeach()
 endif()
+
 
 ################################################################################
 # Installation
