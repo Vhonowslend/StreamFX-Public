@@ -290,8 +290,6 @@ set(${PREFIX}VERSION "" CACHE STRING "Specify an override for the automatically 
 ## Filters
 set(${PREFIX}ENABLE_FILTER_UPSCALING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Upscaling Filter")
 set(${PREFIX}ENABLE_FILTER_UPSCALING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) for Upscaling Filter")
-set(${PREFIX}ENABLE_FILTER_VIRTUAL_GREENSCREEN ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Virtual Greenscreen Filter")
-set(${PREFIX}ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) for Virtual Greenscreen Filter")
 
 ## FrontEnd & UI
 set(${PREFIX}ENABLE_FRONTEND ON CACHE BOOL "Enable Frontend code.")
@@ -444,26 +442,6 @@ function(feature_filter_upscaling RESOLVE)
 	endif()
 endfunction()
 
-function(feature_filter_virtual_greenscreen RESOLVE)
-	is_feature_enabled(FILTER_VIRTUAL_GREENSCREEN T_CHECK)
-	if(RESOLVE AND T_CHECK)
-		# Verify that the requirements for the providers are available
-		if(NOT HAVE_NVIDIA_VFX_SDK)
-			message(WARNING "'NVIDIA Video Effects SDK' is missing. Disabling NVIDIA provider(s)...")
-			set_feature_disabled(FILTER_VIRTUAL_GREENSCREEN_NVIDIA ON)
-		endif()
-
-		# Verify that we have at least one provider for Video Super-Resolution.
-		is_feature_enabled(FILTER_VIRTUAL_GREENSCREEN_NVIDIA T_CHECK_NVIDIA)
-		if(NOT T_CHECK_NVIDIA)
-			message(WARNING "Virtual Greenscreen has no available providers. Disabling...")
-			set_feature_disabled(FILTER_VIRTUAL_GREENSCREEN ON)
-		endif()
-	elseif(T_CHECK)
-		set(REQUIRE_NVIDIA_VFX_SDK ON PARENT_SCOPE)
-	endif()
-endfunction()
-
 function(feature_frontend RESOLVE)
 	is_feature_enabled(FRONTEND T_CHECK)
 	if(RESOLVE AND T_CHECK)
@@ -502,7 +480,6 @@ endfunction()
 
 # Set Requirements
 feature_filter_upscaling(OFF)
-feature_filter_virtual_greenscreen(OFF)
 feature_frontend(OFF)
 feature_updater(OFF)
 
@@ -628,7 +605,6 @@ endif()
 
 # Verify Requirements
 feature_filter_upscaling(ON)
-feature_filter_virtual_greenscreen(ON)
 feature_frontend(ON)
 feature_updater(ON)
 
@@ -913,24 +889,6 @@ if(T_CHECK)
 	if(T_CHECK)
 		list(APPEND PROJECT_DEFINITIONS
 			ENABLE_FILTER_UPSCALING_NVIDIA
-		)
-	endif()
-endif()
-
-# Filter/Virtual Greenscreen
-is_feature_enabled(FILTER_VIRTUAL_GREENSCREEN T_CHECK)
-if(T_CHECK)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/filters/filter-virtual-greenscreen.hpp"
-		"source/filters/filter-virtual-greenscreen.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_FILTER_VIRTUAL_GREENSCREEN
-	)
-	is_feature_enabled(FILTER_VIRTUAL_GREENSCREEN_NVIDIA T_CHECK)
-	if(T_CHECK)
-		list(APPEND PROJECT_DEFINITIONS
-			ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
 		)
 	endif()
 endif()
