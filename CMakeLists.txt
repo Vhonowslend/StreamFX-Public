@@ -292,7 +292,6 @@ set(${PREFIX}ENABLE_FILTER_AUTOFRAMING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enabl
 set(${PREFIX}ENABLE_FILTER_AUTOFRAMING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) Auto-Framing Filter")
 set(${PREFIX}ENABLE_FILTER_DENOISING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Denoising filter")
 set(${PREFIX}ENABLE_FILTER_DENOISING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) for Denoising Filter")
-set(${PREFIX}ENABLE_FILTER_SDF_EFFECTS ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable SDF Effects Filter")
 set(${PREFIX}ENABLE_FILTER_UPSCALING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Upscaling Filter")
 set(${PREFIX}ENABLE_FILTER_UPSCALING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) for Upscaling Filter")
 set(${PREFIX}ENABLE_FILTER_VIRTUAL_GREENSCREEN ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Virtual Greenscreen Filter")
@@ -470,10 +469,6 @@ function(feature_filter_denoising RESOLVE)
 	endif()
 endfunction()
 
-function(feature_filter_sdf_effects RESOLVE)
-	is_feature_enabled(FILTER_SDF_EFFECTS T_CHECK)
-endfunction()
-
 function(feature_filter_upscaling RESOLVE)
 	is_feature_enabled(FILTER_UPSCALING T_CHECK)
 	if(RESOLVE AND T_CHECK)
@@ -553,7 +548,6 @@ endfunction()
 # Set Requirements
 feature_filter_autoframing(OFF)
 feature_filter_denoising(OFF)
-feature_filter_sdf_effects(OFF)
 feature_filter_upscaling(OFF)
 feature_filter_virtual_greenscreen(OFF)
 feature_frontend(OFF)
@@ -682,7 +676,6 @@ endif()
 # Verify Requirements
 feature_filter_autoframing(ON)
 feature_filter_denoising(ON)
-feature_filter_sdf_effects(ON)
 feature_filter_upscaling(ON)
 feature_filter_virtual_greenscreen(ON)
 feature_frontend(ON)
@@ -971,22 +964,6 @@ if(T_CHECK)
 			ENABLE_FILTER_AUTOFRAMING_NVIDIA
 		)
 	endif()
-endif()
-
-# Filter/SDF Effects
-is_feature_enabled(FILTER_SDF_EFFECTS T_CHECK)
-if(T_CHECK)
-	list(APPEND PROJECT_DATA
-		"data/effects/sdf/sdf-producer.effect"
-		"data/effects/sdf/sdf-consumer.effect"
-	)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/filters/filter-sdf-effects.hpp"
-		"source/filters/filter-sdf-effects.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_FILTER_SDF_EFFECTS
-	)
 endif()
 
 # Filter/Denoising
