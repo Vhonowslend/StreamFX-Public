@@ -295,7 +295,6 @@ set(${PREFIX}ENABLE_FILTER_COLOR_GRADE ${FEATURE_STABLE} CACHE BOOL "Enable Colo
 set(${PREFIX}ENABLE_FILTER_DENOISING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Denoising filter")
 set(${PREFIX}ENABLE_FILTER_DENOISING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) for Denoising Filter")
 set(${PREFIX}ENABLE_FILTER_SDF_EFFECTS ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable SDF Effects Filter")
-set(${PREFIX}ENABLE_FILTER_TRANSFORM ${FEATURE_STABLE} CACHE BOOL "Enable Transform Filter")
 set(${PREFIX}ENABLE_FILTER_UPSCALING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Upscaling Filter")
 set(${PREFIX}ENABLE_FILTER_UPSCALING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) for Upscaling Filter")
 set(${PREFIX}ENABLE_FILTER_VIRTUAL_GREENSCREEN ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Virtual Greenscreen Filter")
@@ -488,10 +487,6 @@ function(feature_filter_sdf_effects RESOLVE)
 	is_feature_enabled(FILTER_SDF_EFFECTS T_CHECK)
 endfunction()
 
-function(feature_filter_transform RESOLVE)
-	is_feature_enabled(FILTER_TRANSFORM T_CHECK)
-endfunction()
-
 function(feature_filter_upscaling RESOLVE)
 	is_feature_enabled(FILTER_UPSCALING T_CHECK)
 	if(RESOLVE AND T_CHECK)
@@ -578,7 +573,6 @@ feature_filter_blur(OFF)
 feature_filter_color_grade(OFF)
 feature_filter_denoising(OFF)
 feature_filter_sdf_effects(OFF)
-feature_filter_transform(OFF)
 feature_filter_upscaling(OFF)
 feature_filter_virtual_greenscreen(OFF)
 feature_source_mirror(OFF)
@@ -711,7 +705,6 @@ feature_filter_blur(ON)
 feature_filter_color_grade(ON)
 feature_filter_denoising(ON)
 feature_filter_sdf_effects(ON)
-feature_filter_transform(ON)
 feature_filter_upscaling(ON)
 feature_filter_virtual_greenscreen(ON)
 feature_source_mirror(ON)
@@ -1065,18 +1058,6 @@ if(T_CHECK)
 	)
 	list(APPEND PROJECT_DEFINITIONS
 		ENABLE_FILTER_SDF_EFFECTS
-	)
-endif()
-
-# Filter/Transform
-is_feature_enabled(FILTER_TRANSFORM T_CHECK)
-if(T_CHECK)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/filters/filter-transform.hpp"
-		"source/filters/filter-transform.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_FILTER_TRANSFORM
 	)
 endif()
 
