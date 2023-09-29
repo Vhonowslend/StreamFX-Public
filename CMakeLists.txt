@@ -286,15 +286,7 @@ endif()
 # Version override
 set(${PREFIX}VERSION "" CACHE STRING "Specify an override for the automatically detected version. Accepts a mixture of SemVer 2.0 and CMake Version.")
 
-# Features
-## FrontEnd & UI
-set(${PREFIX}ENABLE_FRONTEND ON CACHE BOOL "Enable Frontend code.")
-set(${PREFIX}ENABLE_UPDATER ON CACHE BOOL "Enable automatic update checks.")
-
-## Code Related
-set(${PREFIX}ENABLE_PROFILING OFF CACHE BOOL "Enable CPU and GPU performance tracking, which has a non-zero overhead at all times. Do not enable this for release builds.")
-
-## Compile/Link Related
+# Compile/Link Related
 set(${PREFIX}ENABLE_LTO ${D_HAS_IPO} CACHE BOOL "Enable Link Time Optimization for faster and smaller binaries.")
 set(${PREFIX}ENABLE_FASTMATH ON CACHE BOOL "Enable fast math optimizations, which sacrifice precision and stability.")
 if(D_PLATFORM_ARCH_X86)
@@ -394,71 +386,9 @@ endif()
 set_property(GLOBAL PROPERTY AUTOGEN_SOURCE_GROUP "User-Interface Files/Generated")
 
 ################################################################################
-# Components (Old System)
+# Dependencies
 ################################################################################
 
-# Component resolving:
-# 1. Check which features are enabled. For each feature, set what they require to ON.
-# 2. Try and find required items.
-# 3. Again check which features are enabled, if their requirements are missing, warn about it and disable them.
-# TODO: Consider making this an error instead.
-
-macro(is_feature_enabled FEATURE OUTPUT)
-	set(T_ENABLED ${${PREFIX}ENABLE_${FEATURE}})
-	set(T_DISABLED ${${PREFIX}DISABLE_${FEATURE}})
-	if(T_ENABLED AND NOT T_DISABLED)
-		set(${OUTPUT} ON)
-	else()
-		# set(${PREFIX}DISABLE_${FEATURE} ON CACHE INTERNAL "" FORCE)
-		set(${OUTPUT} OFF)
-	endif()
-endmacro()
-
-macro(set_feature_disabled FEATURE DISABLED)
-	set(${PREFIX}DISABLE_${FEATURE} ${DISABLED} CACHE INTERNAL "" FORCE)
-endmacro()
-
-function(feature_frontend RESOLVE)
-	is_feature_enabled(FRONTEND T_CHECK)
-	if(RESOLVE AND T_CHECK)
-		if(NOT (Qt6_FOUND OR Qt5_FOUND))
-			message(WARNING "Front-End requires Qt. Disabling...")
-			set_feature_disabled(FRONTEND ON)
-		elseif(NOT obs-frontend-api_FOUND)
-			message(WARNING "Front-End requires OBS FrontEnd API. Disabling...")
-			set_feature_disabled(FRONTEND ON)
-		elseif(NOT HAVE_JSON)
-			message(WARNING "Front-End requires nlohmann::json. Disabling...")
-			set_feature_disabled(FRONTEND ON)
-		endif()
-	elseif(T_CHECK)
-		set(REQUIRE_QT ON PARENT_SCOPE)
-		set(REQUIRE_OBS_FRONTEND_API ON PARENT_SCOPE)
-		set(REQUIRE_JSON ON PARENT_SCOPE)
-	endif()
-endfunction()
-
-function(feature_updater RESOLVE)
-	is_feature_enabled(UPDATER T_CHECK)
-	if(RESOLVE AND T_CHECK)
-		if(NOT CURL_FOUND)
-			message(WARNING "Updater requires CURL. Disabling...")
-			set_feature_disabled(UPDATER ON)
-		elseif(NOT HAVE_JSON)
-			message(WARNING "Updater requires nlohmann::json. Disabling...")
-			set_feature_disabled(UPDATER ON)
-		endif()
-	elseif(T_CHECK)
-		set(REQUIRE_CURL ON PARENT_SCOPE)
-		set(REQUIRE_JSON ON PARENT_SCOPE)
-	endif()
-endfunction()
-
-# Set Requirements
-feature_frontend(OFF)
-feature_updater(OFF)
-
-# Fulfill Requirements
 #- OBS: Library
 if(STANDALONE)
 	find_package("libobs" REQUIRED CONFIG)
@@ -483,35 +413,25 @@ if(D_PLATFORM_MAC)
 endif()
 
 #- OBS: Front-End API
-set(obs-frontend-api_FOUND OFF)
-if(REQUIRE_OBS_FRONTEND_API)
-	if(STANDALONE)
-		find_package("obs-frontend-api" CONFIG)
-		set(obs-frontend-api_FOUND "${obs-frontend-api_FOUND}")
-	elseif(TARGET obs-frontend-api)
-		set(obs-frontend-api_FOUND ON)
-	endif()
-	if(NOT TARGET OBS::obs-frontend-api)
-		add_library(OBS::obs-frontend-api ALIAS obs-frontend-api)
-	endif()
+if(STANDALONE)
+	find_package("obs-frontend-api" CONFIG)
+	set(obs-frontend-api_FOUND "${obs-frontend-api_FOUND}")
+elseif(TARGET obs-frontend-api)
+	set(obs-frontend-api_FOUND ON)
+endif()
+if(NOT TARGET OBS::obs-frontend-api)
+	add_library(OBS::obs-frontend-api ALIAS obs-frontend-api)
 endif()
 
 #- CURL
-set(CURL_FOUND OFF)
-if(REQUIRE_CURL)
-	find_package("CURL")
-endif()
+find_package("CURL")
 
 #- JSON
-set(HAVE_JSON OFF)
-if(REQUIRE_JSON)
-	if(NOT EXISTS "${PROJECT_SOURCE_DIR}/third-party/nlohmann-json/single_include")
-		message(FATAL_ERROR "Please make sure to update git submodules to their latest supported version.")
-		return()
-	else()
-		set(JSON_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/third-party/nlohmann-json/single_include")
-		set(HAVE_JSON ON)
-	endif()
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/third-party/nlohmann-json/single_include")
+	message(FATAL_ERROR "Please make sure to update git submodules to their latest supported version.")
+	return()
+else()
+	set(JSON_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/third-party/nlohmann-json/single_include")
 endif()
 
 #- NVIDIA Augmented Reality SDK
@@ -556,31 +476,11 @@ if(REQUIRE_NVIDIA_CUDA AND D_PLATFORM_WINDOWS)
 	set(HAVE_NVIDIA_CUDA ON)
 endif()
 
-#- Qt
-if(REQUIRE_QT)
-	# Try Qt6 first...
-	find_package("Qt6"
-		COMPONENTS Core Gui Widgets
-		CONFIG
-	)
-
-	# If Qt6 isn't present, try Qt5
-	if(NOT Qt6_FOUND)
-		find_package("Qt5"
-			COMPONENTS Core Gui Widgets
-			CONFIG
-		)
-	endif()
-	if(Qt6_FOUND)
-		message(STATUS "Using Qt6.")
-	elseif(Qt5_FOUND)
-		message(STATUS "Using Qt5.")
-	endif()
-endif()
-
-# Verify Requirements
-feature_frontend(ON)
-feature_updater(ON)
+#- Qt 6
+find_package("Qt6"
+	COMPONENTS Core Gui Widgets
+	CONFIG
+)
 
 ################################################################################
 # Code
@@ -629,18 +529,14 @@ LIST(APPEND PROJECT_PRIVATE_GENERATED "${PROJECT_BINARY_DIR}/generated/module.cp
 # Minimum Dependencies
 list(APPEND PROJECT_LIBRARIES OBS::libobs)
 
-# Components
-if(CURL_FOUND)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/util/util-curl.hpp"
-		"source/util/util-curl.cpp"
-	)
-	list(APPEND PROJECT_LIBRARIES CURL::libcurl)
-endif()
+# Dependencies
+list(APPEND PROJECT_PRIVATE_SOURCE
+	"source/util/util-curl.hpp"
+	"source/util/util-curl.cpp"
+)
+list(APPEND PROJECT_LIBRARIES CURL::libcurl)
 
-if(HAVE_JSON)
-	list(APPEND PROJECT_INCLUDE_DIRS ${JSON_INCLUDE_DIR})
-endif()
+list(APPEND PROJECT_INCLUDE_DIRS ${JSON_INCLUDE_DIR})
 
 if(TRUE) # OpenGL
 	if(NOT TARGET khronos_glad)
@@ -737,20 +633,12 @@ if(HAVE_NVIDIA_CUDA)
 	)
 endif()
 
-if(REQUIRE_OBS_FRONTEND_API AND obs-frontend-api_FOUND)
-	list(APPEND PROJECT_LIBRARIES OBS::obs-frontend-api)
-	list(APPEND PROJECT_UI_SOURCE
-		"source/obs/browser/obs-browser-panel.hpp"
-	)
-endif()
+list(APPEND PROJECT_LIBRARIES OBS::obs-frontend-api)
+list(APPEND PROJECT_UI_SOURCE
+	"source/obs/browser/obs-browser-panel.hpp"
+)
 
-if(REQUIRE_QT)
-	if(Qt5_FOUND)
-		list(APPEND PROJECT_LIBRARIES Qt5::Core Qt5::Gui Qt5::Widgets)
-	elseif(Qt6_FOUND)
-		list(APPEND PROJECT_LIBRARIES Qt6::Core Qt6::Gui Qt6::Widgets)
-	endif()
-endif()
+list(APPEND PROJECT_LIBRARIES Qt6::Core Qt6::Gui Qt6::Widgets)
 
 ################################################################################
 # Features
@@ -850,66 +738,51 @@ list(APPEND PROJECT_INCLUDE_DIRS
 )
 
 # Profiling
-is_feature_enabled(PROFILING T_CHECK)
-if(T_CHECK)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/util/util-profiler.cpp"
-		"source/util/util-profiler.hpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_PROFILING
-	)
-endif()
+list(APPEND PROJECT_PRIVATE_SOURCE
+	"source/util/util-profiler.cpp"
+	"source/util/util-profiler.hpp"
+)
 
 # Updater
-is_feature_enabled(UPDATER T_CHECK)
-if(T_CHECK)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/updater.hpp"
-		"source/updater.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_UPDATER
-	)
-endif()
+list(APPEND PROJECT_PRIVATE_SOURCE
+	"source/updater.hpp"
+	"source/updater.cpp"
+)
+list(APPEND PROJECT_DEFINITIONS
+	ENABLE_UPDATER
+)
 
 # Frontend
-is_feature_enabled(FRONTEND T_CHECK)
-if(T_CHECK)
-	list(APPEND PROJECT_UI
-		"ui/streamfx.qrc"
-		"ui/about.ui"
-		"ui/about-entry.ui"
-	)
-	list(APPEND PROJECT_UI_SOURCE
-		"source/ui/ui-common.hpp"
-		"source/ui/ui.hpp"
-		"source/ui/ui.cpp"
-		"source/ui/ui-about.hpp"
-		"source/ui/ui-about.cpp"
-		"source/ui/ui-about-entry.hpp"
-		"source/ui/ui-about-entry.cpp"
-		"source/ui/ui-obs-browser-widget.hpp"
-		"source/ui/ui-obs-browser-widget.cpp"
-	)
-	list(APPEND PROJECT_INCLUDE_DIRS
-		"source/ui"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_FRONTEND
-	)
+list(APPEND PROJECT_UI
+	"ui/streamfx.qrc"
+	"ui/about.ui"
+	"ui/about-entry.ui"
+)
+list(APPEND PROJECT_UI_SOURCE
+	"source/ui/ui-common.hpp"
+	"source/ui/ui.hpp"
+	"source/ui/ui.cpp"
+	"source/ui/ui-about.hpp"
+	"source/ui/ui-about.cpp"
+	"source/ui/ui-about-entry.hpp"
+	"source/ui/ui-about-entry.cpp"
+	"source/ui/ui-obs-browser-widget.hpp"
+	"source/ui/ui-obs-browser-widget.cpp"
+)
+list(APPEND PROJECT_INCLUDE_DIRS
+	"source/ui"
+)
+list(APPEND PROJECT_DEFINITIONS
+	ENABLE_FRONTEND
+)
 
-	is_feature_enabled(UPDATER T_CHECK)
-	if(T_CHECK)
-		list(APPEND PROJECT_UI_SOURCE
-			"source/ui/ui-updater.hpp"
-			"source/ui/ui-updater.cpp"
-		)
-		list(APPEND PROJECT_UI
-			"ui/updater.ui"
-		)
-	endif()
-endif()
+list(APPEND PROJECT_UI_SOURCE
+	"source/ui/ui-updater.hpp"
+	"source/ui/ui-updater.cpp"
+)
+list(APPEND PROJECT_UI
+	"ui/updater.ui"
+)
 
 ################################################################################
 # Parts
@@ -1561,23 +1434,21 @@ set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} ${PROJECT_UI} $
 )
 
 # Enable Qt if needed
-if(Qt5_Found OR Qt6_FOUND)
-	set_target_properties(StreamFX_Core PROPERTIES
-		AUTOUIC ON
-		AUTOUIC_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_SOURCE_DIR}/ui"
-		AUTOMOC ON
-		AUTORCC ON
-		AUTOGEN_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated"
-	)
+set_target_properties(StreamFX_Core PROPERTIES
+	AUTOUIC ON
+	AUTOUIC_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_SOURCE_DIR}/ui"
+	AUTOMOC ON
+	AUTORCC ON
+	AUTOGEN_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated"
+)
 
-	# Prevent non-UI files from being Qt'd
-	set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} ${PROJECT_MEDIA} ${PROJECT_PRIVATE_GENERATED} ${PROJECT_PRIVATE_SOURCE} PROPERTIES
-		SKIP_AUTOGEN ON
-		SKIP_AUTOMOC ON
-		SKIP_AUTORCC ON
-		SKIP_AUTOUIC ON
-	)
-endif()
+# Prevent non-UI files from being Qt'd
+set_source_files_properties(${PROJECT_DATA} ${PROJECT_TEMPLATES} ${PROJECT_MEDIA} ${PROJECT_PRIVATE_GENERATED} ${PROJECT_PRIVATE_SOURCE} PROPERTIES
+	SKIP_AUTOGEN ON
+	SKIP_AUTOMOC ON
+	SKIP_AUTORCC ON
+	SKIP_AUTOUIC ON
+)
 
 target_sources(StreamFX_Core PRIVATE ${PROJECT_FILES})
 
