@@ -290,7 +290,6 @@ set(${PREFIX}VERSION "" CACHE STRING "Specify an override for the automatically 
 ## Filters
 set(${PREFIX}ENABLE_FILTER_AUTOFRAMING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Auto-Framing Filter")
 set(${PREFIX}ENABLE_FILTER_AUTOFRAMING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) Auto-Framing Filter")
-set(${PREFIX}ENABLE_FILTER_COLOR_GRADE ${FEATURE_STABLE} CACHE BOOL "Enable Color Grade Filter")
 set(${PREFIX}ENABLE_FILTER_DENOISING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Denoising filter")
 set(${PREFIX}ENABLE_FILTER_DENOISING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) for Denoising Filter")
 set(${PREFIX}ENABLE_FILTER_SDF_EFFECTS ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable SDF Effects Filter")
@@ -454,10 +453,6 @@ function(feature_filter_autoframing RESOLVE)
 	endif()
 endfunction()
 
-function(feature_filter_color_grade RESOLVE)
-	is_feature_enabled(FILTER_COLOR_GRADE T_CHECK)
-endfunction()
-
 function(feature_filter_denoising RESOLVE)
 	is_feature_enabled(FILTER_DENOISING T_CHECK)
 	if(RESOLVE AND T_CHECK)
@@ -564,7 +559,6 @@ endfunction()
 
 # Set Requirements
 feature_filter_autoframing(OFF)
-feature_filter_color_grade(OFF)
 feature_filter_denoising(OFF)
 feature_filter_sdf_effects(OFF)
 feature_filter_upscaling(OFF)
@@ -695,7 +689,6 @@ endif()
 
 # Verify Requirements
 feature_filter_autoframing(ON)
-feature_filter_color_grade(ON)
 feature_filter_denoising(ON)
 feature_filter_sdf_effects(ON)
 feature_filter_upscaling(ON)
@@ -989,22 +982,6 @@ if(T_CHECK)
 	endif()
 endif()
 
-# Filter/Color Grade
-is_feature_enabled(FILTER_COLOR_GRADE T_CHECK)
-if(T_CHECK)
-	list(APPEND PROJECT_DATA
-		"data/effects/color-grade.effect"
-	)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/filters/filter-color-grade.hpp"
-		"source/filters/filter-color-grade.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_FILTER_COLOR_GRADE
-	)
-	set(REQUIRE_LUT ON)
-endif()
-
 # Filter/SDF Effects
 is_feature_enabled(FILTER_SDF_EFFECTS T_CHECK)
 if(T_CHECK)
@@ -1152,23 +1129,6 @@ endif()
 ################################################################################
 # Parts
 ################################################################################
-
-# LUT
-if(REQUIRE_LUT)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/gfx/lut/gfx-lut.hpp"
-		"source/gfx/lut/gfx-lut.cpp"
-		"source/gfx/lut/gfx-lut-consumer.hpp"
-		"source/gfx/lut/gfx-lut-consumer.cpp"
-		"source/gfx/lut/gfx-lut-producer.hpp"
-		"source/gfx/lut/gfx-lut-producer.cpp"
-	)
-	list(APPEND PROJECT_DATA
-		"data/effects/lut.effect"
-		"data/effects/lut-consumer.effect"
-		"data/effects/lut-producer.effect"
-	)
-endif()
 
 # Windows
 if(D_PLATFORM_WINDOWS)
