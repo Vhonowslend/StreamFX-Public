@@ -290,7 +290,6 @@ set(${PREFIX}VERSION "" CACHE STRING "Specify an override for the automatically 
 ## Filters
 set(${PREFIX}ENABLE_FILTER_AUTOFRAMING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Auto-Framing Filter")
 set(${PREFIX}ENABLE_FILTER_AUTOFRAMING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) Auto-Framing Filter")
-set(${PREFIX}ENABLE_FILTER_BLUR ${FEATURE_UNSTABLE} CACHE BOOL "Enable Blur Filter")
 set(${PREFIX}ENABLE_FILTER_COLOR_GRADE ${FEATURE_STABLE} CACHE BOOL "Enable Color Grade Filter")
 set(${PREFIX}ENABLE_FILTER_DENOISING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Denoising filter")
 set(${PREFIX}ENABLE_FILTER_DENOISING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) for Denoising Filter")
@@ -455,10 +454,6 @@ function(feature_filter_autoframing RESOLVE)
 	endif()
 endfunction()
 
-function(feature_filter_blur RESOLVE)
-	is_feature_enabled(FILTER_BLUR T_CHECK)
-endfunction()
-
 function(feature_filter_color_grade RESOLVE)
 	is_feature_enabled(FILTER_COLOR_GRADE T_CHECK)
 endfunction()
@@ -569,7 +564,6 @@ endfunction()
 
 # Set Requirements
 feature_filter_autoframing(OFF)
-feature_filter_blur(OFF)
 feature_filter_color_grade(OFF)
 feature_filter_denoising(OFF)
 feature_filter_sdf_effects(OFF)
@@ -701,7 +695,6 @@ endif()
 
 # Verify Requirements
 feature_filter_autoframing(ON)
-feature_filter_blur(ON)
 feature_filter_color_grade(ON)
 feature_filter_denoising(ON)
 feature_filter_sdf_effects(ON)
@@ -994,39 +987,6 @@ if(T_CHECK)
 			ENABLE_FILTER_AUTOFRAMING_NVIDIA
 		)
 	endif()
-endif()
-
-# Filter/Blur
-is_feature_enabled(FILTER_BLUR T_CHECK)
-if(T_CHECK)
-	list(APPEND PROJECT_DATA
-		"data/effects/mask.effect"
-		"data/effects/blur/common.effect"
-		"data/effects/blur/box.effect"
-		"data/effects/blur/box-linear.effect"
-		"data/effects/blur/dual-filtering.effect"
-		"data/effects/blur/gaussian.effect"
-		"data/effects/blur/gaussian-linear.effect"
-	)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/gfx/blur/gfx-blur-base.hpp"
-		"source/gfx/blur/gfx-blur-base.cpp"
-		"source/gfx/blur/gfx-blur-box.hpp"
-		"source/gfx/blur/gfx-blur-box.cpp"
-		"source/gfx/blur/gfx-blur-box-linear.hpp"
-		"source/gfx/blur/gfx-blur-box-linear.cpp"
-		"source/gfx/blur/gfx-blur-dual-filtering.hpp"
-		"source/gfx/blur/gfx-blur-dual-filtering.cpp"
-		"source/gfx/blur/gfx-blur-gaussian.hpp"
-		"source/gfx/blur/gfx-blur-gaussian.cpp"
-		"source/gfx/blur/gfx-blur-gaussian-linear.hpp"
-		"source/gfx/blur/gfx-blur-gaussian-linear.cpp"
-		"source/filters/filter-blur.hpp"
-		"source/filters/filter-blur.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_FILTER_BLUR
-	)
 endif()
 
 # Filter/Color Grade
