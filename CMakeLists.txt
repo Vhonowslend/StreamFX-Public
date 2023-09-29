@@ -434,48 +434,6 @@ else()
 	set(JSON_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/third-party/nlohmann-json/single_include")
 endif()
 
-#- NVIDIA Augmented Reality SDK
-set(HAVE_NVIDIA_AR_SDK OFF)
-if(REQUIRE_NVIDIA_AR_SDK AND D_PLATFORM_WINDOWS)
-	if(EXISTS "${PROJECT_SOURCE_DIR}/third-party/nvidia-maxine-ar-sdk/version.h")
-		set(HAVE_NVIDIA_AR_SDK ON)
-	endif()
-
-	if(NOT TARGET NVIDIA::AR)
-		add_library(NVIDIA::AR IMPORTED INTERFACE)
-		target_include_directories(NVIDIA::AR
-			INTERFACE
-				"${PROJECT_SOURCE_DIR}/third-party/nvidia-maxine-ar-sdk/nvar/include/"
-				"${PROJECT_SOURCE_DIR}/third-party/nvidia-maxine-ar-sdk/nvar/src/"
-		)
-	endif()
-endif()
-
-#- NVIDIA Video Effects SDK
-set(HAVE_NVIDIA_VFX_SDK OFF)
-if(REQUIRE_NVIDIA_VFX_SDK AND D_PLATFORM_WINDOWS)
-	if(EXISTS "${PROJECT_SOURCE_DIR}/third-party/nvidia-maxine-vfx-sdk/version.h")
-		set(HAVE_NVIDIA_VFX_SDK ON)
-	endif()
-
-	if(NOT TARGET NVIDIA::VFX)
-		add_library(NVIDIA::VFX IMPORTED INTERFACE)
-		target_include_directories(NVIDIA::VFX
-			INTERFACE
-				"${PROJECT_SOURCE_DIR}/third-party/nvidia-maxine-vfx-sdk/nvvfx/include/"
-				"${PROJECT_SOURCE_DIR}/third-party/nvidia-maxine-vfx-sdk/nvvfx/src/"
-		)
-	endif()
-
-	set(REQUIRE_NVIDIA_CUDA ON)
-endif()
-
-#- NVIDIA CUDA (Windows)
-set(HAVE_NVIDIA_CUDA OFF)
-if(REQUIRE_NVIDIA_CUDA AND D_PLATFORM_WINDOWS)
-	set(HAVE_NVIDIA_CUDA ON)
-endif()
-
 #- Qt 6
 find_package("Qt6"
 	COMPONENTS Core Gui Widgets
@@ -568,69 +526,6 @@ if(TRUE) # OpenGL
 	endif()
 
 	list(APPEND PROJECT_LIBRARIES khronos_glad)
-endif()
-
-if(HAVE_NVIDIA_VFX_SDK OR HAVE_NVIDIA_AR_SDK)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/nvidia/cv/nvidia-cv.hpp"
-		"source/nvidia/cv/nvidia-cv.cpp"
-		"source/nvidia/cv/nvidia-cv-image.hpp"
-		"source/nvidia/cv/nvidia-cv-image.cpp"
-		"source/nvidia/cv/nvidia-cv-texture.hpp"
-		"source/nvidia/cv/nvidia-cv-texture.cpp"
-	)
-endif()
-
-if(HAVE_NVIDIA_AR_SDK)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/nvidia/ar/nvidia-ar.hpp"
-		"source/nvidia/ar/nvidia-ar.cpp"
-		"source/nvidia/ar/nvidia-ar-feature.hpp"
-		"source/nvidia/ar/nvidia-ar-feature.cpp"
-		"source/nvidia/ar/nvidia-ar-facedetection.hpp"
-		"source/nvidia/ar/nvidia-ar-facedetection.cpp"
-	)
-	list(APPEND PROJECT_LIBRARIES
-		NVIDIA::AR
-	)
-endif()
-
-if(HAVE_NVIDIA_VFX_SDK)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/nvidia/vfx/nvidia-vfx.hpp"
-		"source/nvidia/vfx/nvidia-vfx.cpp"
-		"source/nvidia/vfx/nvidia-vfx-denoising.hpp"
-		"source/nvidia/vfx/nvidia-vfx-denoising.cpp"
-		"source/nvidia/vfx/nvidia-vfx-effect.hpp"
-		"source/nvidia/vfx/nvidia-vfx-effect.cpp"
-		"source/nvidia/vfx/nvidia-vfx-greenscreen.hpp"
-		"source/nvidia/vfx/nvidia-vfx-greenscreen.cpp"
-		"source/nvidia/vfx/nvidia-vfx-superresolution.hpp"
-		"source/nvidia/vfx/nvidia-vfx-superresolution.cpp"
-	)
-	list(APPEND PROJECT_LIBRARIES
-		NVIDIA::VFX
-	)
-endif()
-
-if(HAVE_NVIDIA_CUDA)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/nvidia/cuda/nvidia-cuda.hpp"
-		"source/nvidia/cuda/nvidia-cuda.cpp"
-		"source/nvidia/cuda/nvidia-cuda-obs.hpp"
-		"source/nvidia/cuda/nvidia-cuda-obs.cpp"
-		"source/nvidia/cuda/nvidia-cuda-context.hpp"
-		"source/nvidia/cuda/nvidia-cuda-context.cpp"
-		"source/nvidia/cuda/nvidia-cuda-gs-texture.hpp"
-		"source/nvidia/cuda/nvidia-cuda-gs-texture.cpp"
-		"source/nvidia/cuda/nvidia-cuda-memory.hpp"
-		"source/nvidia/cuda/nvidia-cuda-memory.cpp"
-		"source/nvidia/cuda/nvidia-cuda-stream.hpp"
-		"source/nvidia/cuda/nvidia-cuda-stream.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_NVIDIA_CUDA
-	)
 endif()
 
 list(APPEND PROJECT_LIBRARIES OBS::obs-frontend-api)
