@@ -287,10 +287,6 @@ endif()
 set(${PREFIX}VERSION "" CACHE STRING "Specify an override for the automatically detected version. Accepts a mixture of SemVer 2.0 and CMake Version.")
 
 # Features
-## Filters
-set(${PREFIX}ENABLE_FILTER_UPSCALING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Upscaling Filter")
-set(${PREFIX}ENABLE_FILTER_UPSCALING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) for Upscaling Filter")
-
 ## FrontEnd & UI
 set(${PREFIX}ENABLE_FRONTEND ON CACHE BOOL "Enable Frontend code.")
 set(${PREFIX}ENABLE_UPDATER ON CACHE BOOL "Enable automatic update checks.")
@@ -422,26 +418,6 @@ macro(set_feature_disabled FEATURE DISABLED)
 	set(${PREFIX}DISABLE_${FEATURE} ${DISABLED} CACHE INTERNAL "" FORCE)
 endmacro()
 
-function(feature_filter_upscaling RESOLVE)
-	is_feature_enabled(FILTER_UPSCALING T_CHECK)
-	if(RESOLVE AND T_CHECK)
-		# Verify that the requirements for the providers are available
-		if(NOT HAVE_NVIDIA_VFX_SDK)
-			message(WARNING "'NVIDIA Video Effects SDK' is missing. Disabling NVIDIA provider(s)...")
-			set_feature_disabled(FILTER_UPSCALING_NVIDIA ON)
-		endif()
-
-		# Verify that we have at least one provider for Video Super-Resolution.
-		is_feature_enabled(FILTER_UPSCALING_NVIDIA T_CHECK_NVIDIA)
-		if(NOT T_CHECK_NVIDIA)
-			message(WARNING "Upscaling has no available providers. Disabling...")
-			set_feature_disabled(FILTER_UPSCALING ON)
-		endif()
-	elseif(T_CHECK)
-		set(REQUIRE_NVIDIA_VFX_SDK ON PARENT_SCOPE)
-	endif()
-endfunction()
-
 function(feature_frontend RESOLVE)
 	is_feature_enabled(FRONTEND T_CHECK)
 	if(RESOLVE AND T_CHECK)
@@ -479,7 +455,6 @@ function(feature_updater RESOLVE)
 endfunction()
 
 # Set Requirements
-feature_filter_upscaling(OFF)
 feature_frontend(OFF)
 feature_updater(OFF)
 
@@ -604,7 +579,6 @@ if(REQUIRE_QT)
 endif()
 
 # Verify Requirements
-feature_filter_upscaling(ON)
 feature_frontend(ON)
 feature_updater(ON)
 
@@ -874,24 +848,6 @@ list(APPEND PROJECT_INCLUDE_DIRS
 	"${PROJECT_BINARY_DIR}/generated"
 	"${PROJECT_SOURCE_DIR}/source"
 )
-
-# Filter/Upscaling
-is_feature_enabled(FILTER_UPSCALING T_CHECK)
-if(T_CHECK)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/filters/filter-upscaling.hpp"
-		"source/filters/filter-upscaling.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_FILTER_UPSCALING
-	)
-	is_feature_enabled(FILTER_UPSCALING_NVIDIA T_CHECK)
-	if(T_CHECK)
-		list(APPEND PROJECT_DEFINITIONS
-			ENABLE_FILTER_UPSCALING_NVIDIA
-		)
-	endif()
-endif()
 
 # Profiling
 is_feature_enabled(PROFILING T_CHECK)
