@@ -294,7 +294,6 @@ set(${PREFIX}ENABLE_FILTER_BLUR ${FEATURE_UNSTABLE} CACHE BOOL "Enable Blur Filt
 set(${PREFIX}ENABLE_FILTER_COLOR_GRADE ${FEATURE_STABLE} CACHE BOOL "Enable Color Grade Filter")
 set(${PREFIX}ENABLE_FILTER_DENOISING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Denoising filter")
 set(${PREFIX}ENABLE_FILTER_DENOISING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) for Denoising Filter")
-set(${PREFIX}ENABLE_FILTER_DYNAMIC_MASK ${FEATURE_STABLE} CACHE BOOL "Enable Dynamic Mask Filter")
 set(${PREFIX}ENABLE_FILTER_SDF_EFFECTS ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable SDF Effects Filter")
 set(${PREFIX}ENABLE_FILTER_TRANSFORM ${FEATURE_STABLE} CACHE BOOL "Enable Transform Filter")
 set(${PREFIX}ENABLE_FILTER_UPSCALING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Upscaling Filter")
@@ -485,10 +484,6 @@ function(feature_filter_denoising RESOLVE)
 	endif()
 endfunction()
 
-function(feature_filter_dynamic_mask RESOLVE)
-	is_feature_enabled(FILTER_DYNAMIC_MASK T_CHECK)
-endfunction()
-
 function(feature_filter_sdf_effects RESOLVE)
 	is_feature_enabled(FILTER_SDF_EFFECTS T_CHECK)
 endfunction()
@@ -582,7 +577,6 @@ feature_filter_autoframing(OFF)
 feature_filter_blur(OFF)
 feature_filter_color_grade(OFF)
 feature_filter_denoising(OFF)
-feature_filter_dynamic_mask(OFF)
 feature_filter_sdf_effects(OFF)
 feature_filter_transform(OFF)
 feature_filter_upscaling(OFF)
@@ -716,7 +710,6 @@ feature_filter_autoframing(ON)
 feature_filter_blur(ON)
 feature_filter_color_grade(ON)
 feature_filter_denoising(ON)
-feature_filter_dynamic_mask(ON)
 feature_filter_sdf_effects(ON)
 feature_filter_transform(ON)
 feature_filter_upscaling(ON)
@@ -1057,21 +1050,6 @@ if(T_CHECK)
 		ENABLE_FILTER_COLOR_GRADE
 	)
 	set(REQUIRE_LUT ON)
-endif()
-
-# Filter/Dynamic Mask
-is_feature_enabled(FILTER_DYNAMIC_MASK T_CHECK)
-if(T_CHECK)
-	list(APPEND PROJECT_DATA
-		"data/effects/channel-mask.effect"
-	)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/filters/filter-dynamic-mask.hpp"
-		"source/filters/filter-dynamic-mask.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_FILTER_DYNAMIC_MASK
-	)
 endif()
 
 # Filter/SDF Effects
