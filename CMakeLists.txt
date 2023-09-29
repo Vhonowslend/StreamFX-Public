@@ -298,9 +298,6 @@ set(${PREFIX}ENABLE_FILTER_UPSCALING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "
 set(${PREFIX}ENABLE_FILTER_VIRTUAL_GREENSCREEN ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Virtual Greenscreen Filter")
 set(${PREFIX}ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) for Virtual Greenscreen Filter")
 
-## Sources
-set(${PREFIX}ENABLE_SOURCE_MIRROR ${FEATURE_DEPRECATED} CACHE BOOL "Enable Mirror Source")
-
 ## FrontEnd & UI
 set(${PREFIX}ENABLE_FRONTEND ON CACHE BOOL "Enable Frontend code.")
 set(${PREFIX}ENABLE_UPDATER ON CACHE BOOL "Enable automatic update checks.")
@@ -517,10 +514,6 @@ function(feature_filter_virtual_greenscreen RESOLVE)
 	endif()
 endfunction()
 
-function(feature_source_mirror RESOLVE)
-	is_feature_enabled(SOURCE_MIRROR T_CHECK)
-endfunction()
-
 function(feature_frontend RESOLVE)
 	is_feature_enabled(FRONTEND T_CHECK)
 	if(RESOLVE AND T_CHECK)
@@ -563,7 +556,6 @@ feature_filter_denoising(OFF)
 feature_filter_sdf_effects(OFF)
 feature_filter_upscaling(OFF)
 feature_filter_virtual_greenscreen(OFF)
-feature_source_mirror(OFF)
 feature_frontend(OFF)
 feature_updater(OFF)
 
@@ -693,7 +685,6 @@ feature_filter_denoising(ON)
 feature_filter_sdf_effects(ON)
 feature_filter_upscaling(ON)
 feature_filter_virtual_greenscreen(ON)
-feature_source_mirror(ON)
 feature_frontend(ON)
 feature_updater(ON)
 
@@ -1050,18 +1041,6 @@ if(T_CHECK)
 			ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
 		)
 	endif()
-endif()
-
-# Source/Mirror
-is_feature_enabled(SOURCE_MIRROR T_CHECK)
-if(T_CHECK)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/sources/source-mirror.hpp"
-		"source/sources/source-mirror.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_SOURCE_MIRROR
-	)
 endif()
 
 # Profiling
