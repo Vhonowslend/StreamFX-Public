@@ -288,8 +288,6 @@ set(${PREFIX}VERSION "" CACHE STRING "Specify an override for the automatically 
 
 # Features
 ## Filters
-set(${PREFIX}ENABLE_FILTER_DENOISING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Denoising filter")
-set(${PREFIX}ENABLE_FILTER_DENOISING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) for Denoising Filter")
 set(${PREFIX}ENABLE_FILTER_UPSCALING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Upscaling Filter")
 set(${PREFIX}ENABLE_FILTER_UPSCALING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) for Upscaling Filter")
 set(${PREFIX}ENABLE_FILTER_VIRTUAL_GREENSCREEN ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Virtual Greenscreen Filter")
@@ -426,26 +424,6 @@ macro(set_feature_disabled FEATURE DISABLED)
 	set(${PREFIX}DISABLE_${FEATURE} ${DISABLED} CACHE INTERNAL "" FORCE)
 endmacro()
 
-function(feature_filter_denoising RESOLVE)
-	is_feature_enabled(FILTER_DENOISING T_CHECK)
-	if(RESOLVE AND T_CHECK)
-		# Verify that the requirements for the providers are available
-		if(NOT HAVE_NVIDIA_VFX_SDK)
-			message(WARNING "'NVIDIA Video Effects SDK' is missing. Disabling NVIDIA provider...")
-			set_feature_disabled(FILTER_DENOISING_NVIDIA ON)
-		endif()
-
-		# Verify that we have at least one provider for Video Denoising.
-		is_feature_enabled(FILTER_DENOISING_NVIDIA T_CHECK_NVIDIA)
-		if(NOT T_CHECK_NVIDIA)
-			message(WARNING "Denoising has no available providers. Disabling...")
-			set_feature_disabled(FILTER_DENOISING ON)
-		endif()
-	elseif(T_CHECK)
-		set(REQUIRE_NVIDIA_VFX_SDK ON PARENT_SCOPE)
-	endif()
-endfunction()
-
 function(feature_filter_upscaling RESOLVE)
 	is_feature_enabled(FILTER_UPSCALING T_CHECK)
 	if(RESOLVE AND T_CHECK)
@@ -523,7 +501,6 @@ function(feature_updater RESOLVE)
 endfunction()
 
 # Set Requirements
-feature_filter_denoising(OFF)
 feature_filter_upscaling(OFF)
 feature_filter_virtual_greenscreen(OFF)
 feature_frontend(OFF)
@@ -650,7 +627,6 @@ if(REQUIRE_QT)
 endif()
 
 # Verify Requirements
-feature_filter_denoising(ON)
 feature_filter_upscaling(ON)
 feature_filter_virtual_greenscreen(ON)
 feature_frontend(ON)
@@ -922,24 +898,6 @@ list(APPEND PROJECT_INCLUDE_DIRS
 	"${PROJECT_BINARY_DIR}/generated"
 	"${PROJECT_SOURCE_DIR}/source"
 )
-
-# Filter/Denoising
-is_feature_enabled(FILTER_DENOISING T_CHECK)
-if(T_CHECK)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/filters/filter-denoising.hpp"
-		"source/filters/filter-denoising.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_FILTER_DENOISING
-	)
-	is_feature_enabled(FILTER_DENOISING_NVIDIA T_CHECK)
-	if(T_CHECK)
-		list(APPEND PROJECT_DEFINITIONS
-			ENABLE_FILTER_DENOISING_NVIDIA
-		)
-	endif()
-endif()
 
 # Filter/Upscaling
 is_feature_enabled(FILTER_UPSCALING T_CHECK)
