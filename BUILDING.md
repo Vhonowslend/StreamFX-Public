@@ -8,14 +8,12 @@ This document intends to guide you through the process of building StreamFX. It 
 2. Follow the [OBS Studio build guide](https://obsproject.com/wiki/install-instructions) for automated building on your platform of choice.
     - **MacOS:** You will need to use the XCode generator to build StreamFX as the Ninja generator does not support the flags StreamFX requires.
 3. Integrate StreamFX into the OBS Studio build flow:
-    1. Navigate to either of these directories:
-         - **With UI:** `<obs studio source>/UI/frontend-plugins`
-         - **Without UI:** `<obs studio source>/plugins`
+    1. Navigate to `<obs studio source>/UI/frontend-plugins`
     2. Open a `git` enabled shell (git-bash on windows).
     3. Run `git submodule add 'https://github.com/Xaymar/obs-StreamFX.git' streamfx`.
     4. Run `git submodule update --init --recursive`.
     5. Append the line `add_subdirectory(streamfx)` to the `CMakeLists.txt` file in the same directory.
-4. Run the same script(s) from step 2 again.
+4. Run the same steps from the build guide in step 2 again.
 5. Done. StreamFX is now part of the build.
 
 </details>
@@ -54,8 +52,8 @@ This document intends to guide you through the process of building StreamFX. It 
       A Node.JS based tool is provided toread and parse the `/third-party/obs-studio/buildspec.json` file. See `/.github/workflows/main.yml` on usage and output parsing.
     - **MacOS**  
       A Node.JS based tool is provided toread and parse the `/third-party/obs-studio/buildspec.json` file. See `/.github/workflows/main.yml` on usage and output parsing.
-    - Linux:
-        - **Debian / Ubuntu:** `sudo apt install qt6-base-dev qt6-base-private-dev libqt6svg6-dev`
+    - **Debian / Ubuntu:**  
+      `sudo apt install qt6-base-dev qt6-base-private-dev libqt6svg6-dev`
 - [CURL](https://curl.se/):
     - **Windows**  
       A Node.JS based tool is provided toread and parse the `/third-party/obs-studio/buildspec.json` file. See `/.github/workflows/main.yml` on usage and output parsing.
