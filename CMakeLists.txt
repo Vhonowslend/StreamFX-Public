@@ -288,8 +288,6 @@ set(${PREFIX}VERSION "" CACHE STRING "Specify an override for the automatically 
 
 # Features
 ## Filters
-set(${PREFIX}ENABLE_FILTER_AUTOFRAMING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Auto-Framing Filter")
-set(${PREFIX}ENABLE_FILTER_AUTOFRAMING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) Auto-Framing Filter")
 set(${PREFIX}ENABLE_FILTER_DENOISING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Denoising filter")
 set(${PREFIX}ENABLE_FILTER_DENOISING_NVIDIA ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable NVIDIA provider(s) for Denoising Filter")
 set(${PREFIX}ENABLE_FILTER_UPSCALING ${FEATURE_EXPERIMENTAL} CACHE BOOL "Enable Upscaling Filter")
@@ -428,27 +426,6 @@ macro(set_feature_disabled FEATURE DISABLED)
 	set(${PREFIX}DISABLE_${FEATURE} ${DISABLED} CACHE INTERNAL "" FORCE)
 endmacro()
 
-function(feature_filter_autoframing RESOLVE)
-	is_feature_enabled(FILTER_AUTOFRAMING T_CHECK)
-	if(RESOLVE AND T_CHECK)
-		# Verify that the requirements for the providers are available
-		if(NOT HAVE_NVIDIA_AR_SDK)
-			message(WARNING "'NVIDIA Augmented Reality SDK' is missing. Disabling NVIDIA provider...")
-			set_feature_disabled(FILTER_AUTOFRAMING_NVIDIA ON)
-		endif()
-
-		# Verify that we have at least one provider for Auto-Framing.
-		is_feature_enabled(FILTER_AUTOFRAMING_NVIDIA T_CHECK_NVIDIA)
-		if(NOT T_CHECK_NVIDIA)
-			message(WARNING "Auto-Framing has no available providers. Disabling...")
-			set_feature_disabled(FILTER_AUTOFRAMING ON)
-		endif()
-	elseif(T_CHECK)
-		set(REQUIRE_NVIDIA_AR_SDK ON PARENT_SCOPE)
-		set(REQUIRE_NVIDIA_CUDA ON PARENT_SCOPE)
-	endif()
-endfunction()
-
 function(feature_filter_denoising RESOLVE)
 	is_feature_enabled(FILTER_DENOISING T_CHECK)
 	if(RESOLVE AND T_CHECK)
@@ -546,7 +523,6 @@ function(feature_updater RESOLVE)
 endfunction()
 
 # Set Requirements
-feature_filter_autoframing(OFF)
 feature_filter_denoising(OFF)
 feature_filter_upscaling(OFF)
 feature_filter_virtual_greenscreen(OFF)
@@ -674,7 +650,6 @@ if(REQUIRE_QT)
 endif()
 
 # Verify Requirements
-feature_filter_autoframing(ON)
 feature_filter_denoising(ON)
 feature_filter_upscaling(ON)
 feature_filter_virtual_greenscreen(ON)
@@ -947,24 +922,6 @@ list(APPEND PROJECT_INCLUDE_DIRS
 	"${PROJECT_BINARY_DIR}/generated"
 	"${PROJECT_SOURCE_DIR}/source"
 )
-
-# Filter/Auto-Framing
-is_feature_enabled(FILTER_AUTOFRAMING T_CHECK)
-if(T_CHECK)
-	list(APPEND PROJECT_PRIVATE_SOURCE
-		"source/filters/filter-autoframing.hpp"
-		"source/filters/filter-autoframing.cpp"
-	)
-	list(APPEND PROJECT_DEFINITIONS
-		ENABLE_FILTER_AUTOFRAMING
-	)
-	is_feature_enabled(FILTER_AUTOFRAMING_NVIDIA T_CHECK)
-	if(T_CHECK)
-		list(APPEND PROJECT_DEFINITIONS
-			ENABLE_FILTER_AUTOFRAMING_NVIDIA
-		)
-	endif()
-endif()
 
 # Filter/Denoising
 is_feature_enabled(FILTER_DENOISING T_CHECK)
