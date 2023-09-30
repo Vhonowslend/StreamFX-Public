@@ -16,7 +16,7 @@ function(streamfx_upscaling_resolver)
 	#- NVIDIA
 	streamfx_enabled_component("NVIDIA" T_CHECK)
 	if(T_CHECK)
-		target_compile_definitions(${COMPONENT_TARGET}
+		target_compile_definitions(${COMPONENT_TARGET} PRIVATE
 			ENABLE_NVIDIA
 		)
 	endif()
