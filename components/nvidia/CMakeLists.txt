@@ -5,8 +5,6 @@ cmake_minimum_required(VERSION 3.26)
 project("NVIDIA")
 list(APPEND CMAKE_MESSAGE_INDENT "[${PROJECT_NAME}] ")
 
-streamfx_add_component("NVIDIA")
-
 #- NVIDIA Audio Effects SDK
 if(NOT TARGET NVIDIA::AFX)
     add_library(NVIDIA::AFX IMPORTED INTERFACE)
@@ -36,9 +34,15 @@ if(NOT TARGET NVIDIA::VFX)
     )
 endif()
 
+streamfx_add_component("NVIDIA")
 target_link_libraries(${COMPONENT_TARGET}
     PRIVATE
         NVIDIA::AFX
         NVIDIA::AR
         NVIDIA::VFX
 )
+
+streamfx_add_component_dependency(Auto-Framing OPTIONAL)
+streamfx_add_component_dependency(Denoising OPTIONAL)
+streamfx_add_component_dependency(Upscaling OPTIONAL)
+streamfx_add_component_dependency("Virtual Greenscreen" OPTIONAL)
