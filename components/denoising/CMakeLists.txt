@@ -6,4 +6,18 @@ cmake_minimum_required(VERSION 3.26)
 project("Denoising")
 list(APPEND CMAKE_MESSAGE_INDENT "[${PROJECT_NAME}] ")
 
-streamfx_add_component("Denoising")
+streamfx_add_component("Denoising"
+	RESOLVER streamfx_denoising_resolver
+)
+streamfx_add_component_dependency("NVIDIA" OPTIONAL)
+
+function(streamfx_denoising_resolver)
+	# Providers
+	#- NVIDIA
+	streamfx_enabled_component("NVIDIA" T_CHECK)
+	if(T_CHECK)
+		target_compile_definitions(${COMPONENT_TARGET}
+			ENABLE_NVIDIA
+		)
+	endif()
+endfunction()
