@@ -146,7 +146,7 @@ autoframing_instance::~autoframing_instance()
 
 		// TODO: Make this asynchronous.
 		switch (_provider) {
-#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+#ifdef ENABLE_NVIDIA
 		case tracking_provider::NVIDIA_FACEDETECTION:
 			nvar_facedetection_unload();
 			break;
@@ -358,7 +358,7 @@ void autoframing_instance::update(obs_data_t* data)
 			std::unique_lock<std::mutex> ul(_provider_lock);
 
 			switch (_provider) {
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_NVIDIA
 			case tracking_provider::NVIDIA_FACEDETECTION:
 				nvar_facedetection_update(data);
 				break;
@@ -375,7 +375,7 @@ void autoframing_instance::update(obs_data_t* data)
 void streamfx::filter::autoframing::autoframing_instance::properties(obs_properties_t* properties)
 {
 	switch (_provider_ui) {
-#ifdef ENABLE_FILTER_AUTOFRAMING_NVIDIA
+#ifdef ENABLE_NVIDIA
 	case tracking_provider::NVIDIA_FACEDETECTION:
 		nvar_facedetection_properties(properties);
 		break;
@@ -490,7 +490,7 @@ void autoframing_instance::video_render(gs_effect_t* effect)
 
 			std::unique_lock<std::mutex> ul(_provider_lock);
 			switch (_provider) {
-#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+#ifdef ENABLE_NVIDIA
 			case tracking_provider::NVIDIA_FACEDETECTION:
 				nvar_facedetection_process();
 				break;
@@ -864,7 +864,7 @@ void streamfx::filter::autoframing::autoframing_instance::task_switch_provider(u
 	try {
 		// Unload the previous provider.
 		switch (spd->provider) {
-#ifdef ENABLE_FILTER_AUTOFRAMING_NVIDIA
+#ifdef ENABLE_NVIDIA
 		case tracking_provider::NVIDIA_FACEDETECTION:
 			nvar_facedetection_unload();
 			break;
@@ -875,7 +875,7 @@ void streamfx::filter::autoframing::autoframing_instance::task_switch_provider(u
 
 		// Load the new provider.
 		switch (_provider) {
-#ifdef ENABLE_FILTER_AUTOFRAMING_NVIDIA
+#ifdef ENABLE_NVIDIA
 		case tracking_provider::NVIDIA_FACEDETECTION:
 			nvar_facedetection_load();
 			break;
@@ -894,7 +894,7 @@ void streamfx::filter::autoframing::autoframing_instance::task_switch_provider(u
 	}
 }
 
-#ifdef ENABLE_FILTER_AUTOFRAMING_NVIDIA
+#ifdef ENABLE_NVIDIA
 void streamfx::filter::autoframing::autoframing_instance::nvar_facedetection_load()
 {
 	_nvidia_fx = std::make_shared<::streamfx::nvidia::ar::facedetection>();
@@ -1008,7 +1008,7 @@ autoframing_factory::autoframing_factory()
 	bool any_available = false;
 
 	// 1. Try and load any configured providers.
-#ifdef ENABLE_FILTER_AUTOFRAMING_NVIDIA
+#ifdef ENABLE_NVIDIA
 	try {
 		// Load CVImage and Video Effects SDK.
 		_nvcuda           = ::streamfx::nvidia::cuda::obs::get();
@@ -1213,7 +1213,7 @@ obs_properties_t* autoframing_factory::get_properties2(autoframing_instance* dat
 			auto p = obs_properties_add_list(grp, ST_KEY_ADVANCED_PROVIDER, D_TRANSLATE(ST_I18N_ADVANCED_PROVIDER), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 			obs_property_set_modified_callback(p, modified_provider);
 			obs_property_list_add_int(p, D_TRANSLATE(S_STATE_AUTOMATIC), static_cast<int64_t>(tracking_provider::AUTOMATIC));
-#ifdef ENABLE_FILTER_AUTOFRAMING_NVIDIA
+#ifdef ENABLE_NVIDIA
 			obs_property_list_add_int(p, D_TRANSLATE(ST_I18N_ADVANCED_PROVIDER_NVIDIA_FACEDETECTION), static_cast<int64_t>(tracking_provider::NVIDIA_FACEDETECTION));
 #endif
 		}
@@ -1235,7 +1235,7 @@ bool streamfx::filter::autoframing::autoframing_factory::on_manual_open(obs_prop
 bool streamfx::filter::autoframing::autoframing_factory::is_provider_available(tracking_provider provider)
 {
 	switch (provider) {
-#ifdef ENABLE_FILTER_AUTOFRAMING_NVIDIA
+#ifdef ENABLE_NVIDIA
 	case tracking_provider::NVIDIA_FACEDETECTION:
 		return _nvidia_available;
 #endif

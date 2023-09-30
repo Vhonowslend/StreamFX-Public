@@ -6,4 +6,19 @@ cmake_minimum_required(VERSION 3.26)
 project("AutoFraming")
 list(APPEND CMAKE_MESSAGE_INDENT "[${PROJECT_NAME}] ")
 
-streamfx_add_component("Auto-Framing")
+streamfx_add_component("Auto-Framing"
+	RESOLVER streamfx_auto_framing_resolver
+)
+streamfx_add_component_dependency("NVIDIA" OPTIONAL)
+
+function(streamfx_auto_framing_resolver)
+	# Providers
+	#- NVIDIA
+	streamfx_enabled_component("NVIDIA" T_CHECK)
+	if(T_CHECK)
+		target_compile_definitions(${COMPONENT_TARGET}
+			PRIVATE ENABLE_NVIDIA
+		)
+	endif()
+endfunction()
+
