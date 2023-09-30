@@ -30,7 +30,7 @@
 #define ST_I18N_PROVIDER ST_I18N "." ST_KEY_PROVIDER
 #define ST_I18N_PROVIDER_NVIDIA_DENOISING ST_I18N_PROVIDER ".NVIDIA.Denoising"
 
-#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+#ifdef ENABLE_NVIDIA
 #define ST_KEY_NVIDIA_DENOISING "NVIDIA.Denoising"
 #define ST_I18N_NVIDIA_DENOISING ST_I18N "." ST_KEY_NVIDIA_DENOISING
 #define ST_KEY_NVIDIA_DENOISING_STRENGTH "NVIDIA.Denoising.Strength"
@@ -121,7 +121,7 @@ denoising_instance::~denoising_instance()
 
 		// TODO: Make this asynchronous.
 		switch (_provider) {
-#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+#ifdef ENABLE_NVIDIA
 		case denoising_provider::NVIDIA_DENOISING:
 			nvvfx_denoising_unload();
 			break;
@@ -157,7 +157,7 @@ void denoising_instance::update(obs_data_t* data)
 		std::unique_lock<std::mutex> ul(_provider_lock);
 
 		switch (_provider) {
-#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+#ifdef ENABLE_NVIDIA
 		case denoising_provider::NVIDIA_DENOISING:
 			nvvfx_denoising_update(data);
 			break;
@@ -171,7 +171,7 @@ void denoising_instance::update(obs_data_t* data)
 void streamfx::filter::denoising::denoising_instance::properties(obs_properties_t* properties)
 {
 	switch (_provider_ui) {
-#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+#ifdef ENABLE_NVIDIA
 	case denoising_provider::NVIDIA_DENOISING:
 		nvvfx_denoising_properties(properties);
 		break;
@@ -208,7 +208,7 @@ void denoising_instance::video_tick(float time)
 		std::unique_lock<std::mutex> ul(_provider_lock);
 
 		switch (_provider) {
-#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+#ifdef ENABLE_NVIDIA
 		case denoising_provider::NVIDIA_DENOISING:
 			nvvfx_denoising_size();
 			break;
@@ -252,7 +252,7 @@ void denoising_instance::video_render(gs_effect_t* effect)
 
 		{ // Allow the provider to restrict the size.
 			switch (_provider) {
-#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+#ifdef ENABLE_NVIDIA
 			case denoising_provider::NVIDIA_DENOISING:
 				nvvfx_denoising_size();
 				break;
@@ -305,7 +305,7 @@ void denoising_instance::video_render(gs_effect_t* effect)
 			::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_convert, "Process"};
 #endif
 			switch (_provider) {
-#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+#ifdef ENABLE_NVIDIA
 			case denoising_provider::NVIDIA_DENOISING:
 				nvvfx_denoising_process();
 				break;
@@ -401,7 +401,7 @@ void streamfx::filter::denoising::denoising_instance::task_switch_provider(util:
 	try {
 		// 3. Unload the previous provider.
 		switch (spd->provider) {
-#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+#ifdef ENABLE_NVIDIA
 		case denoising_provider::NVIDIA_DENOISING:
 			nvvfx_denoising_unload();
 			break;
@@ -412,7 +412,7 @@ void streamfx::filter::denoising::denoising_instance::task_switch_provider(util:
 
 		// 4. Load the new provider.
 		switch (_provider) {
-#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+#ifdef ENABLE_NVIDIA
 		case denoising_provider::NVIDIA_DENOISING:
 			nvvfx_denoising_load();
 			break;
@@ -431,7 +431,7 @@ void streamfx::filter::denoising::denoising_instance::task_switch_provider(util:
 	}
 }
 
-#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+#ifdef ENABLE_NVIDIA
 void streamfx::filter::denoising::denoising_instance::nvvfx_denoising_load()
 {
 	_nvidia_fx = std::make_shared<::streamfx::nvidia::vfx::denoising>();
@@ -493,7 +493,7 @@ denoising_factory::denoising_factory()
 	bool any_available = false;
 
 	// 1. Try and load any configured providers.
-#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+#ifdef ENABLE_NVIDIA
 	try {
 		// Load CVImage and Video Effects SDK.
 		_nvcuda           = ::streamfx::nvidia::cuda::obs::get();
@@ -543,7 +543,7 @@ void denoising_factory::get_defaults2(obs_data_t* data)
 {
 	obs_data_set_default_int(data, ST_KEY_PROVIDER, static_cast<int64_t>(denoising_provider::AUTOMATIC));
 
-#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+#ifdef ENABLE_NVIDIA
 	obs_data_set_default_double(data, ST_KEY_NVIDIA_DENOISING_STRENGTH, 1.);
 #endif
 }
@@ -601,7 +601,7 @@ bool denoising_factory::on_manual_open(obs_properties_t* props, obs_property_t* 
 bool streamfx::filter::denoising::denoising_factory::is_provider_available(denoising_provider provider)
 {
 	switch (provider) {
-#ifdef ENABLE_FILTER_DENOISING_NVIDIA
+#ifdef ENABLE_NVIDIA
 	case denoising_provider::NVIDIA_DENOISING:
 		return _nvidia_available;
 #endif
