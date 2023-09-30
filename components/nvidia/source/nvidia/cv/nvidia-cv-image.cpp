@@ -6,7 +6,7 @@
 // - NVIDIA Video Effects SDK
 // - NVIDIA Augmented Reality SDK
 
-#include "nvidia-cv-image.hpp"
+#include "nvidia/cv/nvidia-cv-image.hpp"
 #include "nvidia/cuda/nvidia-cuda-obs.hpp"
 #include "obs/gs/gs-helper.hpp"
 
