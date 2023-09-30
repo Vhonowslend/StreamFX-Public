@@ -745,11 +745,9 @@ obs_properties_t* blur_factory::get_properties2(blur_instance* data)
 	obs_properties_t* pr = obs_properties_create();
 	obs_property_t*   p  = NULL;
 
-#ifdef ENABLE_FRONTEND
 	{
 		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), streamfx::filter::blur::blur_factory::on_manual_open, nullptr);
 	}
-#endif
 
 	// Blur Type and Sub-Type
 	{
@@ -840,7 +838,6 @@ std::string blur_factory::translate_string(const char* format, ...)
 	return std::string(buffer.data(), buffer.data() + len);
 }
 
-#ifdef ENABLE_FRONTEND
 bool blur_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
 {
 	try {
@@ -854,7 +851,6 @@ bool blur_factory::on_manual_open(obs_properties_t* props, obs_property_t* prope
 		return false;
 	}
 }
-#endif
 
 std::shared_ptr<blur_factory> blur_factory::instance()
 {

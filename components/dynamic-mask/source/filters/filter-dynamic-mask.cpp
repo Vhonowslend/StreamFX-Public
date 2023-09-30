@@ -721,11 +721,9 @@ obs_properties_t* dynamic_mask_factory::get_properties2(dynamic_mask_instance* d
 
 	_translation_cache.clear();
 
-#ifdef ENABLE_FRONTEND
 	{
 		obs_properties_add_button2(props, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), streamfx::filter::dynamic_mask::dynamic_mask_factory::on_manual_open, nullptr);
 	}
-#endif
 
 	{ // Input
 		p = obs_properties_add_list(props, ST_KEY_INPUT, D_TRANSLATE(ST_I18N_INPUT), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
@@ -806,7 +804,6 @@ std::string dynamic_mask_factory::translate_string(const char* format, ...)
 	return std::string(buffer.data(), buffer.data() + len);
 }
 
-#ifdef ENABLE_FRONTEND
 bool dynamic_mask_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
 {
 	try {
@@ -820,7 +817,6 @@ bool dynamic_mask_factory::on_manual_open(obs_properties_t* props, obs_property_
 		return false;
 	}
 }
-#endif
 
 std::shared_ptr<dynamic_mask_factory> dynamic_mask_factory::instance()
 {

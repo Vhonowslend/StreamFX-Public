@@ -562,11 +562,9 @@ obs_properties_t* upscaling_factory::get_properties2(upscaling_instance* data)
 {
 	obs_properties_t* pr = obs_properties_create();
 
-#ifdef ENABLE_FRONTEND
 	{
 		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), upscaling_factory::on_manual_open, nullptr);
 	}
-#endif
 
 	if (data) {
 		data->properties(pr);
@@ -587,7 +585,6 @@ obs_properties_t* upscaling_factory::get_properties2(upscaling_instance* data)
 	return pr;
 }
 
-#ifdef ENABLE_FRONTEND
 bool upscaling_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
 {
 	try {
@@ -601,7 +598,6 @@ bool upscaling_factory::on_manual_open(obs_properties_t* props, obs_property_t* 
 		return false;
 	}
 }
-#endif
 
 bool streamfx::filter::upscaling::upscaling_factory::is_provider_available(upscaling_provider provider)
 {

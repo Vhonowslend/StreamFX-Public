@@ -623,11 +623,9 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 {
 	obs_properties_t* pr = obs_properties_create();
 
-#ifdef ENABLE_FRONTEND
 	{
 		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), streamfx::filter::transform::transform_factory::on_manual_open, nullptr);
 	}
-#endif
 
 	// Camera
 	{
@@ -794,7 +792,6 @@ obs_properties_t* transform_factory::get_properties2(transform_instance* data)
 	return pr;
 }
 
-#ifdef ENABLE_FRONTEND
 bool transform_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
 {
 	try {
@@ -808,7 +805,6 @@ bool transform_factory::on_manual_open(obs_properties_t* props, obs_property_t* 
 		return false;
 	}
 }
-#endif
 
 std::shared_ptr<transform_factory> transform_factory::instance()
 {

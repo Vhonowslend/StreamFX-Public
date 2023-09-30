@@ -1030,11 +1030,9 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 {
 	obs_properties_t* props = obs_properties_create();
 
-#ifdef ENABLE_FRONTEND
 	{
 		obs_properties_add_button2(props, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), streamfx::encoder::ffmpeg::ffmpeg_factory::on_manual_open, this);
 	}
-#endif
 
 	if (data) {
 		data->get_properties(props);
@@ -1108,14 +1106,12 @@ obs_properties_t* ffmpeg_factory::get_properties2(instance_t* data)
 	return props;
 }
 
-#ifdef ENABLE_FRONTEND
 bool ffmpeg_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
 {
 	ffmpeg_factory* ptr = static_cast<ffmpeg_factory*>(data);
 	streamfx::open_url(ptr->_handler->help(ptr));
 	return false;
 }
-#endif
 
 const AVCodec* ffmpeg_factory::get_avcodec()
 {

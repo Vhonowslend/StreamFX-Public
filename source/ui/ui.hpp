@@ -5,10 +5,7 @@
 #pragma once
 #include "ui-common.hpp"
 #include "ui-about.hpp"
-
-#ifdef ENABLE_UPDATER
 #include "ui-updater.hpp"
-#endif
 
 namespace streamfx::ui {
 	class handler : public QObject {
@@ -32,9 +29,7 @@ namespace streamfx::ui {
 
 		QTranslator* _translator;
 
-#ifdef ENABLE_UPDATER
 		std::shared_ptr<streamfx::ui::updater> _updater;
-#endif
 
 		private:
 		handler();
