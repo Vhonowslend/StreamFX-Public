@@ -43,7 +43,6 @@ target_link_libraries(${COMPONENT_TARGET}
         NVIDIA::VFX
 )
 
-streamfx_add_component_dependency(Auto-Framing OPTIONAL)
-streamfx_add_component_dependency(Denoising OPTIONAL)
-streamfx_add_component_dependency(Upscaling OPTIONAL)
-streamfx_add_component_dependency("Virtual Greenscreen" OPTIONAL)
+if(NOT WINDOWS)
+    streamfx_disable_component("NVIDIA" REASON "NVIDIA integration is (currently) only available for Windows under Direct3D11.")
+endif()
