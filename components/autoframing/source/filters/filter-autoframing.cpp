@@ -1142,26 +1142,26 @@ obs_properties_t* autoframing_factory::get_properties2(autoframing_instance* dat
 		}
 
 		{
-			auto grp2 = obs_properties_create();
-			obs_properties_add_group(grp, ST_KEY_FRAMING_PADDING, D_TRANSLATE(ST_I18N_FRAMING_PADDING), OBS_GROUP_NORMAL, grp2);
+			auto grp2_ = obs_properties_create();
+			obs_properties_add_group(grp, ST_KEY_FRAMING_PADDING, D_TRANSLATE(ST_I18N_FRAMING_PADDING), OBS_GROUP_NORMAL, grp2_);
 
 			{
-				auto p = obs_properties_add_text(grp2, ST_KEY_FRAMING_PADDING ".X", "X", OBS_TEXT_DEFAULT);
+				auto p = obs_properties_add_text(grp2_, ST_KEY_FRAMING_PADDING ".X", "X", OBS_TEXT_DEFAULT);
 			}
 			{
-				auto p = obs_properties_add_text(grp2, ST_KEY_FRAMING_PADDING ".Y", "Y", OBS_TEXT_DEFAULT);
+				auto p = obs_properties_add_text(grp2_, ST_KEY_FRAMING_PADDING ".Y", "Y", OBS_TEXT_DEFAULT);
 			}
 		}
 
 		{
-			auto grp2 = obs_properties_create();
-			obs_properties_add_group(grp, ST_KEY_FRAMING_OFFSET, D_TRANSLATE(ST_I18N_FRAMING_OFFSET), OBS_GROUP_NORMAL, grp2);
+			auto grp2_ = obs_properties_create();
+			obs_properties_add_group(grp, ST_KEY_FRAMING_OFFSET, D_TRANSLATE(ST_I18N_FRAMING_OFFSET), OBS_GROUP_NORMAL, grp2_);
 
 			{
-				auto p = obs_properties_add_text(grp2, ST_KEY_FRAMING_OFFSET ".X", "X", OBS_TEXT_DEFAULT);
+				auto p = obs_properties_add_text(grp2_, ST_KEY_FRAMING_OFFSET ".X", "X", OBS_TEXT_DEFAULT);
 			}
 			{
-				auto p = obs_properties_add_text(grp2, ST_KEY_FRAMING_OFFSET ".Y", "Y", OBS_TEXT_DEFAULT);
+				auto p = obs_properties_add_text(grp2_, ST_KEY_FRAMING_OFFSET ".Y", "Y", OBS_TEXT_DEFAULT);
 			}
 		}
 
