@@ -102,7 +102,7 @@ void streamfx::nvidia::vfx::superresolution::set_strength(float strength)
 	uint32_t value = (_strength >= .5f) ? 1u : 0u;
 	auto     gctx  = ::streamfx::obs::gs::context();
 	auto     cctx  = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
-	if (auto res = set(::streamfx::nvidia::vfx::PARAMETER_STRENGTH, value); res != ::streamfx::nvidia::cv::result::SUCCESS) {
+	if (auto res = set_float32(::streamfx::nvidia::vfx::PARAMETER_STRENGTH, value); res != ::streamfx::nvidia::cv::result::SUCCESS) {
 		D_LOG_ERROR("Failed to set '%s' to %lu.", ::streamfx::nvidia::vfx::PARAMETER_STRENGTH, value);
 	};
 }
@@ -311,7 +311,7 @@ void streamfx::nvidia::vfx::superresolution::resize(uint32_t width, uint32_t hei
 			_source = std::make_shared<::streamfx::nvidia::cv::image>(_cache_input_size.first, _cache_input_size.second, ::streamfx::nvidia::cv::pixel_format::BGR, ::streamfx::nvidia::cv::component_type::FP32, ::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 
-		if (auto res = set(::streamfx::nvidia::vfx::PARAMETER_INPUT_IMAGE_0, _source); res != ::streamfx::nvidia::cv::result::SUCCESS) {
+		if (auto res = set_image(::streamfx::nvidia::vfx::PARAMETER_INPUT_IMAGE_0, _source); res != ::streamfx::nvidia::cv::result::SUCCESS) {
 			D_LOG_ERROR("Failed to set input image due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 			throw std::runtime_error("SetImage failed.");
 		}
@@ -326,7 +326,7 @@ void streamfx::nvidia::vfx::superresolution::resize(uint32_t width, uint32_t hei
 			_destination = std::make_shared<::streamfx::nvidia::cv::image>(_cache_output_size.first, _cache_output_size.second, ::streamfx::nvidia::cv::pixel_format::BGR, ::streamfx::nvidia::cv::component_type::FP32, ::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 
-		if (auto res = set(::streamfx::nvidia::vfx::PARAMETER_OUTPUT_IMAGE_0, _destination); res != ::streamfx::nvidia::cv::result::SUCCESS) {
+		if (auto res = set_image(::streamfx::nvidia::vfx::PARAMETER_OUTPUT_IMAGE_0, _destination); res != ::streamfx::nvidia::cv::result::SUCCESS) {
 			D_LOG_ERROR("Failed to set output image due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 			throw std::runtime_error("SetImage failed.");
 		}

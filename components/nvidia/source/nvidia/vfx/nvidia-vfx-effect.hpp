@@ -39,137 +39,137 @@ namespace streamfx::nvidia::vfx {
 		}
 
 		public /* Int32 */:
-		inline cv::result set(parameter_t param, uint32_t const value)
+		inline cv::result set_uint32(parameter_t param, uint32_t const value)
 		{
 			return _nvvfx->NvVFX_SetU32(_fx.get(), param, value);
-		};
-		inline cv::result get(parameter_t param, uint32_t& value)
+		}
+		inline cv::result get_uint32(parameter_t param, uint32_t& value)
 		{
 			return _nvvfx->NvVFX_GetU32(_fx.get(), param, &value);
-		};
+		}
 
-		inline cv::result set(parameter_t param, int32_t const value)
+		inline cv::result set_int32(parameter_t param, int32_t const value)
 		{
 			return _nvvfx->NvVFX_SetS32(_fx.get(), param, value);
-		};
-		inline cv::result get(parameter_t param, int32_t& value)
+		}
+		inline cv::result get_int32(parameter_t param, int32_t& value)
 		{
 			return _nvvfx->NvVFX_GetS32(_fx.get(), param, &value);
-		};
+		}
 
 		public /* Int64 */:
-		inline cv::result set(parameter_t param, uint64_t const value)
+		inline cv::result set_uint64(parameter_t param, uint64_t const value)
 		{
 			return _nvvfx->NvVFX_SetU64(_fx.get(), param, value);
-		};
-		inline cv::result get(parameter_t param, uint64_t& value)
+		}
+		inline cv::result get_uint64(parameter_t param, uint64_t& value)
 		{
 			return _nvvfx->NvVFX_GetU64(_fx.get(), param, &value);
-		};
+		}
 
 		public /* Float32 */:
-		inline cv::result set(parameter_t param, float const value)
+		inline cv::result set_float32(parameter_t param, float const value)
 		{
 			return _nvvfx->NvVFX_SetF32(_fx.get(), param, value);
-		};
-		inline cv::result get(parameter_t param, float& value)
+		}
+		inline cv::result get_float32(parameter_t param, float& value)
 		{
 			return _nvvfx->NvVFX_GetF32(_fx.get(), param, &value);
-		};
+		}
 
 		public /* Float64 */:
-		inline cv::result set(parameter_t param, double const value)
+		inline cv::result set_float64(parameter_t param, double const value)
 		{
 			return _nvvfx->NvVFX_SetF64(_fx.get(), param, value);
-		};
-		inline cv::result get(parameter_t param, double& value)
+		}
+		inline cv::result get_float64(parameter_t param, double& value)
 		{
 			return _nvvfx->NvVFX_GetF64(_fx.get(), param, &value);
-		};
+		}
 
 		public /* String */:
-		inline cv::result set(parameter_t param, const char* const value)
+		inline cv::result set_string(parameter_t param, const char* const value)
 		{
 			return _nvvfx->NvVFX_SetString(_fx.get(), param, value);
-		};
-		inline cv::result get(parameter_t param, const char*& value)
+		}
+		inline cv::result get_string(parameter_t param, const char*& value)
 		{
 			return _nvvfx->NvVFX_GetString(_fx.get(), param, &value);
-		};
+		}
 
-		inline cv::result set(parameter_t param, std::string_view const& value)
+		inline cv::result set_string(parameter_t param, std::string_view const& value)
 		{
 			return _nvvfx->NvVFX_SetString(_fx.get(), param, value.data());
-		};
-		cv::result get(parameter_t param, std::string_view& value);
+		}
+		cv::result get_string(parameter_t param, std::string_view& value);
 
-		inline cv::result set(parameter_t param, std::string const& value)
+		inline cv::result set_string(parameter_t param, std::string const& value)
 		{
 			return _nvvfx->NvVFX_SetString(_fx.get(), param, value.c_str());
-		};
-		cv::result get(parameter_t param, std::string& value);
+		}
+		cv::result get_string(parameter_t param, std::string& value);
 
 		public /* CUDA Stream */:
-		inline cv::result set(parameter_t param, cuda::stream_t const& value)
+		inline cv::result set_cuda_stream(parameter_t param, cuda::stream_t const& value)
 		{
 			return _nvvfx->NvVFX_SetCudaStream(_fx.get(), param, value);
-		};
-		inline cv::result get(parameter_t param, cuda::stream_t& value)
+		}
+		inline cv::result get_cuda_stream(parameter_t param, cuda::stream_t& value)
 		{
 			return _nvvfx->NvVFX_GetCudaStream(_fx.get(), param, &value);
-		};
+		}
 
-		inline cv::result set(parameter_t param, std::shared_ptr<cuda::stream> const& value)
+		inline cv::result set_cuda_stream(parameter_t param, std::shared_ptr<cuda::stream> const& value)
 		{
 			return _nvvfx->NvVFX_SetCudaStream(_fx.get(), param, value->get());
-		};
+		}
 		//cv::result get_stream(parameter_t param, std::shared_ptr<cuda::stream>& value);
 
 		public /* CV Image */:
-		inline cv::result set(parameter_t param, cv::image_t* value)
+		inline cv::result set_image(parameter_t param, cv::image_t* value)
 		{
 			return _nvvfx->NvVFX_SetImage(_fx.get(), param, value);
-		};
-		inline cv::result get(parameter_t param, cv::image_t* value)
+		}
+		inline cv::result get_image(parameter_t param, cv::image_t* value)
 		{
 			return _nvvfx->NvVFX_GetImage(_fx.get(), param, value);
-		};
+		}
 
-		inline cv::result set(parameter_t param, std::shared_ptr<cv::image> const& value)
+		inline cv::result set_image(parameter_t param, std::shared_ptr<cv::image> const& value)
 		{
 			return _nvvfx->NvVFX_SetImage(_fx.get(), param, value->get_image());
-		};
-		inline cv::result get(parameter_t param, std::shared_ptr<cv::image>& value)
+		}
+		inline cv::result get_image(parameter_t param, std::shared_ptr<cv::image>& value)
 		{
 			return _nvvfx->NvVFX_GetImage(_fx.get(), param, value->get_image());
-		};
+		}
 
 		public /* CV Texture */:
-		inline cv::result set(parameter_t param, std::shared_ptr<cv::texture> const& value)
+		inline cv::result set_image(parameter_t param, std::shared_ptr<cv::texture> const& value)
 		{
 			return _nvvfx->NvVFX_SetImage(_fx.get(), param, value->get_image());
-		};
+		}
 		//cv::result get(parameter_t param, std::shared_ptr<cv::texture>& value);
 
 		public /* Objects */:
 		inline cv::result set_object(parameter_t param, void* const value)
 		{
 			return _nvvfx->NvVFX_SetObject(_fx.get(), param, value);
-		};
+		}
 		inline cv::result get_object(parameter_t param, void*& value)
 		{
 			return _nvvfx->NvVFX_GetObject(_fx.get(), param, &value);
-		};
+		}
 
 		public /* Control */:
 		inline cv::result load()
 		{
 			return _nvvfx->NvVFX_Load(_fx.get());
-		};
+		}
 
 		inline cv::result run(bool async = false)
 		{
 			return _nvvfx->NvVFX_Run(_fx.get(), async ? 1 : 0);
-		};
+		}
 	};
 } // namespace streamfx::nvidia::vfx

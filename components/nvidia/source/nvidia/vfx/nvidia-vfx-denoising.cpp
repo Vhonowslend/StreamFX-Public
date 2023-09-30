@@ -69,7 +69,7 @@ void streamfx::nvidia::vfx::denoising::set_strength(float strength)
 	// Update Effect
 	auto gctx = ::streamfx::obs::gs::context();
 	auto cctx = _nvcuda->get_context()->enter();
-	if (auto res = set(PARAMETER_STRENGTH, _strength); res != ::streamfx::nvidia::cv::result::SUCCESS) {
+	if (auto res = set_float32(PARAMETER_STRENGTH, _strength); res != ::streamfx::nvidia::cv::result::SUCCESS) {
 		D_LOG_ERROR("Failed to set '%s' to %1.3f.", PARAMETER_STRENGTH, _strength);
 	};
 }
@@ -211,7 +211,7 @@ void streamfx::nvidia::vfx::denoising::resize(uint32_t width, uint32_t height)
 			_source = std::make_shared<::streamfx::nvidia::cv::image>(width, height, ::streamfx::nvidia::cv::pixel_format::BGR, ::streamfx::nvidia::cv::component_type::FP32, ::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 
-		if (auto res = set(::streamfx::nvidia::vfx::PARAMETER_INPUT_IMAGE_0, _source); res != ::streamfx::nvidia::cv::result::SUCCESS) {
+		if (auto res = set_image(::streamfx::nvidia::vfx::PARAMETER_INPUT_IMAGE_0, _source); res != ::streamfx::nvidia::cv::result::SUCCESS) {
 			D_LOG_ERROR("Failed to set input image due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 			_source.reset();
 			throw std::runtime_error("SetImage failed.");
@@ -227,7 +227,7 @@ void streamfx::nvidia::vfx::denoising::resize(uint32_t width, uint32_t height)
 			_destination = std::make_shared<::streamfx::nvidia::cv::image>(width, height, ::streamfx::nvidia::cv::pixel_format::BGR, ::streamfx::nvidia::cv::component_type::FP32, ::streamfx::nvidia::cv::component_layout::PLANAR, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 
-		if (auto res = set(::streamfx::nvidia::vfx::PARAMETER_OUTPUT_IMAGE_0, _destination); res != ::streamfx::nvidia::cv::result::SUCCESS) {
+		if (auto res = set_image(::streamfx::nvidia::vfx::PARAMETER_OUTPUT_IMAGE_0, _destination); res != ::streamfx::nvidia::cv::result::SUCCESS) {
 			D_LOG_ERROR("Failed to set output image due to error: %s", _nvcvi->NvCV_GetErrorStringFromCode(res));
 			_destination.reset();
 			throw std::runtime_error("SetImage failed.");
