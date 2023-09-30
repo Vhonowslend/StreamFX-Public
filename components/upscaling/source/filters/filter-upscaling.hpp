@@ -16,7 +16,7 @@
 #include <mutex>
 #include "warning-enable.hpp"
 
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_NVIDIA
 #include "nvidia/vfx/nvidia-vfx-superresolution.hpp"
 #endif
 
@@ -49,7 +49,7 @@ namespace streamfx::filter::upscaling {
 		std::shared_ptr<::streamfx::obs::gs::texture>      _output;
 		bool                                               _dirty;
 
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_NVIDIA
 		std::shared_ptr<::streamfx::nvidia::vfx::superresolution> _nvidia_fx;
 #endif
 
@@ -72,7 +72,7 @@ namespace streamfx::filter::upscaling {
 		void switch_provider(upscaling_provider provider);
 		void task_switch_provider(util::threadpool::task_data_t data);
 
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_NVIDIA
 		void nvvfxsr_load();
 		void nvvfxsr_unload();
 		void nvvfxsr_size();
@@ -83,7 +83,7 @@ namespace streamfx::filter::upscaling {
 	};
 
 	class upscaling_factory : public ::streamfx::obs::source_factory<::streamfx::filter::upscaling::upscaling_factory, ::streamfx::filter::upscaling::upscaling_instance> {
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_NVIDIA
 		bool                                           _nvidia_available;
 		std::shared_ptr<::streamfx::nvidia::cuda::obs> _nvcuda;
 		std::shared_ptr<::streamfx::nvidia::cv::cv>    _nvcvi;
