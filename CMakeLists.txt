@@ -1539,12 +1539,26 @@ endwhile()
 #- Linking
 target_link_libraries(StreamFX PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,StreamFX_Core>)
 foreach(_ENTITY ${_RESOLVED})
-	if(NOT TARGET StreamFX_${_ENTITY})
-		continue()
-	endif()
+	set(RENTITY "StreamFX_${_ENTITY}")
+	get_target_property(_DEPENDS "${RENTITY}" COMPONENT_DEPENDS)
 
 	# Finally if everything is correct, do things.
-	target_link_libraries(StreamFX PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,StreamFX_${_ENTITY}>)
+	target_link_libraries(StreamFX PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,${RENTITY}>)
+
+	if(_DEPENDS)
+		foreach(_DEPEND ${_DEPENDS})
+			list(GET _DEPEND 0 _ENTITY2)
+			set(RENTITY2 "StreamFX_${_ENTITY2}")
+
+			streamfx_enabled_component(${_ENTITY2} T_CHECK)
+			if(T_CHECK)
+				target_link_libraries(${RENTITY}
+					PUBLIC
+						$<LINK_LIBRARY:WHOLE_ARCHIVE,${RENTITY2}>
+				)
+			endif()
+		endforeach()
+	endif()
 endforeach()
 
 ################################################################################
