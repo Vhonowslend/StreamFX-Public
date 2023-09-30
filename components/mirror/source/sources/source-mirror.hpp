@@ -81,9 +81,7 @@ namespace streamfx::source::mirror {
 
 		virtual obs_properties_t* get_properties2(source::mirror::mirror_instance* data) override;
 
-#ifdef ENABLE_FRONTEND
 		static bool on_manual_open(obs_properties_t* props, obs_property_t* property, void* data);
-#endif
 
 		public: // Singleton
 		static void initialize();

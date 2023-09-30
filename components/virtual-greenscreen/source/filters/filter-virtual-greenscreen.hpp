@@ -99,9 +99,7 @@ namespace streamfx::filter::virtual_greenscreen {
 		virtual void              get_defaults2(obs_data_t* data) override;
 		virtual obs_properties_t* get_properties2(virtual_greenscreen_instance* data) override;
 
-#ifdef ENABLE_FRONTEND
 		static bool on_manual_open(obs_properties_t* props, obs_property_t* property, void* data);
-#endif
 
 		bool                         is_provider_available(virtual_greenscreen_provider);
 		virtual_greenscreen_provider find_ideal_provider();

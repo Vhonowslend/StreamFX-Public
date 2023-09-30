@@ -98,9 +98,7 @@ namespace streamfx::filter::denoising {
 		virtual void              get_defaults2(obs_data_t* data) override;
 		virtual obs_properties_t* get_properties2(denoising_instance* data) override;
 
-#ifdef ENABLE_FRONTEND
 		static bool on_manual_open(obs_properties_t* props, obs_property_t* property, void* data);
-#endif
 
 		bool               is_provider_available(denoising_provider);
 		denoising_provider find_ideal_provider();

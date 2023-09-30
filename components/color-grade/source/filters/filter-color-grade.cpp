@@ -613,11 +613,9 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 {
 	obs_properties_t* pr = obs_properties_create();
 
-#ifdef ENABLE_FRONTEND
 	{
 		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), streamfx::filter::color_grade::color_grade_factory::on_manual_open, nullptr);
 	}
-#endif
 
 	{
 		obs_properties_t* grp = obs_properties_create();
@@ -810,7 +808,6 @@ obs_properties_t* color_grade_factory::get_properties2(color_grade_instance* dat
 	return pr;
 }
 
-#ifdef ENABLE_FRONTEND
 bool color_grade_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
 {
 	try {
@@ -824,7 +821,6 @@ bool color_grade_factory::on_manual_open(obs_properties_t* props, obs_property_t
 		return false;
 	}
 }
-#endif
 
 std::shared_ptr<color_grade_factory> streamfx::filter::color_grade::color_grade_factory::instance()
 {

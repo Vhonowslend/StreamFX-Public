@@ -1097,11 +1097,9 @@ obs_properties_t* autoframing_factory::get_properties2(autoframing_instance* dat
 {
 	obs_properties_t* pr = obs_properties_create();
 
-#ifdef ENABLE_FRONTEND
 	{
 		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), autoframing_factory::on_manual_open, nullptr);
 	}
-#endif
 
 	{
 		auto grp = obs_properties_create();
@@ -1224,13 +1222,11 @@ obs_properties_t* autoframing_factory::get_properties2(autoframing_instance* dat
 	return pr;
 }
 
-#ifdef ENABLE_FRONTEND
 bool streamfx::filter::autoframing::autoframing_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
 {
 	streamfx::open_url(HELP_URL);
 	return false;
 }
-#endif
 
 bool streamfx::filter::autoframing::autoframing_factory::is_provider_available(tracking_provider provider)
 {

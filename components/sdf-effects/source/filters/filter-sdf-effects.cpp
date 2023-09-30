@@ -594,11 +594,9 @@ obs_properties_t* sdf_effects_factory::get_properties2(sdf_effects_instance* dat
 	obs_properties_t* prs = obs_properties_create();
 	obs_property_t*   p   = nullptr;
 
-#ifdef ENABLE_FRONTEND
 	{
 		obs_properties_add_button2(prs, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), streamfx::filter::sdf_effects::sdf_effects_factory::on_manual_open, nullptr);
 	}
-#endif
 
 	{ // Shadow Outer
 		auto pr = obs_properties_create();
@@ -669,7 +667,6 @@ obs_properties_t* sdf_effects_factory::get_properties2(sdf_effects_instance* dat
 	return prs;
 }
 
-#ifdef ENABLE_FRONTEND
 bool sdf_effects_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
 {
 	try {
@@ -683,7 +680,6 @@ bool sdf_effects_factory::on_manual_open(obs_properties_t* props, obs_property_t
 		return false;
 	}
 }
-#endif
 
 std::shared_ptr<sdf_effects_factory> sdf_effects_factory::instance()
 {

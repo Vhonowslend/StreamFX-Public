@@ -565,11 +565,9 @@ obs_properties_t* denoising_factory::get_properties2(denoising_instance* data)
 {
 	obs_properties_t* pr = obs_properties_create();
 
-#ifdef ENABLE_FRONTEND
 	{
 		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), denoising_factory::on_manual_open, nullptr);
 	}
-#endif
 
 	if (data) {
 		data->properties(pr);
@@ -590,13 +588,11 @@ obs_properties_t* denoising_factory::get_properties2(denoising_instance* data)
 	return pr;
 }
 
-#ifdef ENABLE_FRONTEND
 bool denoising_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
 {
 	streamfx::open_url(HELP_URL);
 	return false;
 }
-#endif
 
 bool streamfx::filter::denoising::denoising_factory::is_provider_available(denoising_provider provider)
 {

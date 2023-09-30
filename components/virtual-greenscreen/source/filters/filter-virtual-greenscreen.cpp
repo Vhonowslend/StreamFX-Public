@@ -561,11 +561,9 @@ obs_properties_t* virtual_greenscreen_factory::get_properties2(virtual_greenscre
 {
 	obs_properties_t* pr = obs_properties_create();
 
-#ifdef ENABLE_FRONTEND
 	{
 		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), virtual_greenscreen_factory::on_manual_open, nullptr);
 	}
-#endif
 
 	if (data) {
 		data->properties(pr);
@@ -586,7 +584,6 @@ obs_properties_t* virtual_greenscreen_factory::get_properties2(virtual_greenscre
 	return pr;
 }
 
-#ifdef ENABLE_FRONTEND
 bool virtual_greenscreen_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
 {
 	try {
@@ -600,7 +597,6 @@ bool virtual_greenscreen_factory::on_manual_open(obs_properties_t* props, obs_pr
 		return false;
 	}
 }
-#endif
 
 bool streamfx::filter::virtual_greenscreen::virtual_greenscreen_factory::is_provider_available(virtual_greenscreen_provider provider)
 {

@@ -316,11 +316,9 @@ obs_properties_t* mirror_factory::get_properties2(mirror_instance* data)
 	obs_properties_t* pr = obs_properties_create();
 	obs_property_t*   p  = nullptr;
 
-#ifdef ENABLE_FRONTEND
 	{
 		obs_properties_add_button2(pr, S_MANUAL_OPEN, D_TRANSLATE(S_MANUAL_OPEN), streamfx::source::mirror::mirror_factory::on_manual_open, nullptr);
 	}
-#endif
 
 	{
 		p = obs_properties_add_list(pr, ST_KEY_SOURCE, D_TRANSLATE(ST_I18N_SOURCE), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
@@ -365,7 +363,6 @@ obs_properties_t* mirror_factory::get_properties2(mirror_instance* data)
 	return pr;
 }
 
-#ifdef ENABLE_FRONTEND
 bool mirror_factory::on_manual_open(obs_properties_t* props, obs_property_t* property, void* data)
 {
 	try {
@@ -379,7 +376,6 @@ bool mirror_factory::on_manual_open(obs_properties_t* props, obs_property_t* pro
 		return false;
 	}
 }
-#endif
 
 std::shared_ptr<mirror_factory> mirror_factory::instance()
 {
