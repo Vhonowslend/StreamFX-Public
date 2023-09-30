@@ -1080,7 +1080,7 @@ function(streamfx_add_component COMPONENT_NAME)
 	
 	# If there is a resolver function, register it.
 	if(_ARG_RESOLVER)
-		set_target_properties(${COMPONENT_TARGET}
+		set_target_properties(${COMPONENT_TARGET} PROPERTIES
 			COMPONENT_RESOLVER "${_ARG_RESOLVER}"
 		)
 	endif()
@@ -1227,7 +1227,9 @@ function(streamfx_disable_component _NAME)
 	)
 
 	streamfx_sanitize_name("${_NAME}" _NAME _TARGET _OPTION)
-	set(_TARGET "StreamFX_${_TARGET}")
+	if(NOT (_TARGET MATCHES "^StreamFX_"))
+		set(_TARGET "StreamFX_${_TARGET}")
+	endif()
 
 	# If the component doesn't exist, skip it.
 	if(NOT TARGET ${_TARGET})
@@ -1458,6 +1460,7 @@ while(_UNRESOLVED)
 	foreach(_ENTITY ${_UNRESOLVED})
 		set(RENTITY "StreamFX_${_ENTITY}")
 		
+		get_target_property(_ALIAS "${RENTITY}" COMPONENT_NAME)
 		get_target_property(_LABEL "${RENTITY}" COMPONENT_LABEL)
 		get_target_property(_OPTION "${RENTITY}" COMPONENT_OPTION)
 		get_target_property(_DEPENDS "${RENTITY}" COMPONENT_DEPENDS)
@@ -1520,6 +1523,9 @@ while(_UNRESOLVED)
 
 		# Call Resolver function
 		if(_RESOLVER)
+			set(COMPONENT_TARGET "${RENTITY}")
+			set(COMPONENT_ALIAS "${_ALIAS}")
+			set(COMPONENT_OPTION "${_OPTION}")
 			cmake_language(CALL ${_RESOLVER})
 		endif()
 		if(${_OPTION}_DISABLED) # Test for resolve disabling.
