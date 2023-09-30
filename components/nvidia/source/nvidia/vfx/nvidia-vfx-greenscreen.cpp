@@ -78,7 +78,7 @@ void streamfx::nvidia::vfx::greenscreen::size(std::pair<uint32_t, uint32_t>& siz
 
 void streamfx::nvidia::vfx::greenscreen::set_mode(greenscreen_mode mode)
 {
-	set(PARAMETER_MODE, static_cast<uint32_t>(mode));
+	set_uint32(PARAMETER_MODE, static_cast<uint32_t>(mode));
 	_dirty = true;
 }
 
@@ -196,7 +196,7 @@ void streamfx::nvidia::vfx::greenscreen::resize(uint32_t width, uint32_t height)
 			_source = std::make_shared<::streamfx::nvidia::cv::image>(in_size.first, in_size.second, ::streamfx::nvidia::cv::pixel_format::BGR, ::streamfx::nvidia::cv::component_type::UINT8, ::streamfx::nvidia::cv::component_layout::INTERLEAVED, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 
-		if (auto v = set(PARAMETER_INPUT_IMAGE_0, _source); v != ::streamfx::nvidia::cv::result::SUCCESS) {
+		if (auto v = set_image(PARAMETER_INPUT_IMAGE_0, _source); v != ::streamfx::nvidia::cv::result::SUCCESS) {
 			throw ::streamfx::nvidia::cv::exception(PARAMETER_INPUT_IMAGE_0, v);
 		}
 
@@ -210,7 +210,7 @@ void streamfx::nvidia::vfx::greenscreen::resize(uint32_t width, uint32_t height)
 			_destination = std::make_shared<::streamfx::nvidia::cv::image>(in_size.first, in_size.second, ::streamfx::nvidia::cv::pixel_format::A, ::streamfx::nvidia::cv::component_type::UINT8, ::streamfx::nvidia::cv::component_layout::INTERLEAVED, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 
-		if (auto v = set(PARAMETER_OUTPUT_IMAGE_0, _destination); v != ::streamfx::nvidia::cv::result::SUCCESS) {
+		if (auto v = set_image(PARAMETER_OUTPUT_IMAGE_0, _destination); v != ::streamfx::nvidia::cv::result::SUCCESS) {
 			throw ::streamfx::nvidia::cv::exception(PARAMETER_OUTPUT_IMAGE_0, v);
 		}
 
@@ -234,7 +234,7 @@ void streamfx::nvidia::vfx::greenscreen::load()
 	auto cctx = _nvcuda->get_context()->enter();
 
 	// Assign CUDA Stream object.
-	if (auto v = set(PARAMETER_CUDA_STREAM, _nvcuda->get_stream()); v != cv::result::SUCCESS) {
+	if (auto v = set_cuda_stream(PARAMETER_CUDA_STREAM, _nvcuda->get_stream()); v != cv::result::SUCCESS) {
 		throw ::streamfx::nvidia::cv::exception(PARAMETER_CUDA_STREAM, v);
 	}
 

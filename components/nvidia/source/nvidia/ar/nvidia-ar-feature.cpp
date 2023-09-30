@@ -40,15 +40,15 @@ streamfx::nvidia::ar::feature::feature(feature_t feature) : _nvcuda(::streamfx::
 	_fx = std::shared_ptr<void>(handle, [this](::streamfx::nvidia::ar::handle_t handle) { _nvar->NvAR_Destroy(handle); });
 
 	// Set CUDA stream and model directory.
-	set(P_NVAR_CONFIG "CUDAStream", _nvcuda->get_stream());
+	set_cuda_stream(P_NVAR_CONFIG "CUDAStream", _nvcuda->get_stream());
 	_model_path = _nvar->get_model_path().generic_u8string();
-	set(P_NVAR_CONFIG "ModelDir", _model_path);
+	set_string(P_NVAR_CONFIG "ModelDir", _model_path);
 }
 
 streamfx::nvidia::cv::result streamfx::nvidia::ar::feature::get(parameter_t param, std::string_view& value)
 {
 	const char* cvalue = nullptr;
-	cv::result  res    = get(param, cvalue);
+	cv::result  res    = get_string(param, cvalue);
 	if (res == cv::result::SUCCESS) {
 		if (cvalue) {
 			value = std::string_view(cvalue);
@@ -62,7 +62,7 @@ streamfx::nvidia::cv::result streamfx::nvidia::ar::feature::get(parameter_t para
 streamfx::nvidia::cv::result streamfx::nvidia::ar::feature::get(parameter_t param, std::string& value)
 {
 	const char* cvalue = nullptr;
-	cv::result  res    = get(param, cvalue);
+	cv::result  res    = get_string(param, cvalue);
 	if (res == cv::result::SUCCESS) {
 		if (cvalue) {
 			value = cvalue;

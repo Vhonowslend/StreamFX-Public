@@ -32,58 +32,58 @@ namespace streamfx::nvidia::ar {
 		}
 
 		public /* Int32 */:
-		inline cv::result set(parameter_t param, uint32_t const value)
+		inline cv::result set_uint32(parameter_t param, uint32_t const value)
 		{
 			return _nvar->NvAR_SetU32(_fx.get(), param, value);
 		}
-		inline cv::result get(parameter_t param, uint32_t* value)
+		inline cv::result get_uint32(parameter_t param, uint32_t* value)
 		{
 			return _nvar->NvAR_GetU32(_fx.get(), param, value);
 		}
 
-		inline cv::result set(parameter_t param, int32_t const value)
+		inline cv::result set_int32(parameter_t param, int32_t const value)
 		{
 			return _nvar->NvAR_SetS32(_fx.get(), param, value);
 		}
-		inline cv::result get(parameter_t param, int32_t* value)
+		inline cv::result get_int32(parameter_t param, int32_t* value)
 		{
 			return _nvar->NvAR_GetS32(_fx.get(), param, value);
 		}
 
 		public /* Int64 */:
-		inline cv::result set(parameter_t param, uint64_t const value)
+		inline cv::result set_uint64(parameter_t param, uint64_t const value)
 		{
 			return _nvar->NvAR_SetU64(_fx.get(), param, value);
 		}
-		inline cv::result get(parameter_t param, uint64_t* value)
+		inline cv::result get_uint64(parameter_t param, uint64_t* value)
 		{
 			return _nvar->NvAR_GetU64(_fx.get(), param, value);
 		}
 
 		public /* Float32 */:
-		inline cv::result set(parameter_t param, float const value)
+		inline cv::result set_float32(parameter_t param, float const value)
 		{
 			return _nvar->NvAR_SetF32(_fx.get(), param, value);
 		}
-		inline cv::result get(parameter_t param, float* value)
+		inline cv::result get_float32(parameter_t param, float* value)
 		{
 			return _nvar->NvAR_GetF32(_fx.get(), param, value);
 		}
 
-		inline cv::result set(parameter_t param, float* const value, int32_t size)
+		inline cv::result set_float32array(parameter_t param, float* const value, int32_t size)
 		{
 			return _nvar->NvAR_SetF32Array(_fx.get(), param, value, static_cast<int32_t>(size));
 		}
-		inline cv::result get(parameter_t param, const float* value, int32_t size)
+		inline cv::result get_float32array(parameter_t param, const float* value, int32_t size)
 		{
 			return _nvar->NvAR_GetF32Array(_fx.get(), param, &value, &size);
 		}
 
-		inline cv::result set(parameter_t param, std::vector<float> const& value)
+		inline cv::result set_float32array(parameter_t param, std::vector<float> const& value)
 		{
 			return _nvar->NvAR_SetF32Array(_fx.get(), param, value.data(), static_cast<int32_t>(value.size()));
 		}
-		inline cv::result get(parameter_t param, std::vector<float>& value)
+		inline cv::result get_float32array(parameter_t param, std::vector<float>& value)
 		{
 			const float* data;
 			int32_t      size;
@@ -98,71 +98,71 @@ namespace streamfx::nvidia::ar {
 		}
 
 		public /* Float64 */:
-		inline cv::result set(parameter_t param, double const value)
+		inline cv::result set_float64(parameter_t param, double const value)
 		{
 			return _nvar->NvAR_SetF64(_fx.get(), param, value);
 		}
-		inline cv::result get(parameter_t param, double* value)
+		inline cv::result get_float64(parameter_t param, double* value)
 		{
 			return _nvar->NvAR_GetF64(_fx.get(), param, value);
 		}
 
 		public /* String */:
-		inline cv::result set(parameter_t param, const char* const value)
+		inline cv::result set_string(parameter_t param, const char* const value)
 		{
 			return _nvar->NvAR_SetString(_fx.get(), param, value);
 		};
-		inline cv::result get(parameter_t param, const char*& value)
+		inline cv::result get_string(parameter_t param, const char*& value)
 		{
 			return _nvar->NvAR_GetString(_fx.get(), param, &value);
 		};
 
-		inline cv::result set(parameter_t param, std::string_view const value)
+		inline cv::result set_string(parameter_t param, std::string_view const value)
 		{
 			return _nvar->NvAR_SetString(_fx.get(), param, value.data());
 		};
 		cv::result get(parameter_t param, std::string_view& value);
 
-		inline cv::result set(parameter_t param, std::string const& value)
+		inline cv::result set_string(parameter_t param, std::string const& value)
 		{
 			return _nvar->NvAR_SetString(_fx.get(), param, value.c_str());
 		};
 		cv::result get(parameter_t param, std::string& value);
 
 		public /* CUDA Stream */:
-		inline cv::result set(parameter_t param, cuda::stream_t const value)
+		inline cv::result set_cuda_stream(parameter_t param, cuda::stream_t const value)
 		{
 			return _nvar->NvAR_SetCudaStream(_fx.get(), param, value);
 		};
-		inline cv::result get(parameter_t param, cuda::stream_t& value)
+		inline cv::result get_cuda_stream(parameter_t param, cuda::stream_t& value)
 		{
 			return _nvar->NvAR_GetCudaStream(_fx.get(), param, &value);
 		};
 
-		inline cv::result set(parameter_t param, std::shared_ptr<::streamfx::nvidia::cuda::stream> const value)
+		inline cv::result set_cuda_stream(parameter_t param, std::shared_ptr<::streamfx::nvidia::cuda::stream> const value)
 		{
 			return _nvar->NvAR_SetCudaStream(_fx.get(), param, value->get());
 		}
 		//inline cv::result get(parameter_t param, std::shared_ptr<::streamfx::nvidia::cuda::stream> value);
 
 		public /* CV Image */:
-		inline cv::result set(parameter_t param, cv::image_t& value)
+		inline cv::result set_image(parameter_t param, cv::image_t& value)
 		{
 			return _nvar->NvAR_SetObject(_fx.get(), param, &value, sizeof(cv::image_t));
 		};
-		inline cv::result get(parameter_t param, cv::image_t*& value)
+		inline cv::result get_image(parameter_t param, cv::image_t*& value)
 		{
 			return _nvar->NvAR_GetObject(_fx.get(), param, reinterpret_cast<object_t*>(&value), sizeof(cv::image_t));
 		};
 
-		inline cv::result set(parameter_t param, std::shared_ptr<cv::image> const value)
+		inline cv::result set_image(parameter_t param, std::shared_ptr<cv::image> const value)
 		{
 			return _nvar->NvAR_SetObject(_fx.get(), param, value->get_image(), sizeof(cv::image_t));
 		};
 		//inline cv::result get(parameter_t param, std::shared_ptr<cv::image>& value);
 
 		public /* CV Texture */:
-		inline cv::result set(parameter_t param, std::shared_ptr<cv::texture> const value)
+		inline cv::result set_image(parameter_t param, std::shared_ptr<cv::texture> const value)
 		{
 			return _nvar->NvAR_SetObject(_fx.get(), param, value->get_image(), sizeof(cv::image_t));
 		};

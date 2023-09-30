@@ -51,21 +51,21 @@ streamfx::nvidia::vfx::effect::effect(effect_t effect) : _nvcuda(cuda::obs::get(
 	_fx = std::shared_ptr<void>(handle, [](::vfx::handle_t handle) { ::vfx::vfx::get()->NvVFX_DestroyEffect(handle); });
 
 	// Assign CUDA Stream object.
-	if (auto v = set(PARAMETER_CUDA_STREAM, _nvcuda->get_stream()); v != cv::result::SUCCESS) {
+	if (auto v = set_cuda_stream(PARAMETER_CUDA_STREAM, _nvcuda->get_stream()); v != cv::result::SUCCESS) {
 		throw ::streamfx::nvidia::cv::exception(PARAMETER_CUDA_STREAM, v);
 	}
 
 	// Assign Model Directory.
 	_model_path = _nvvfx->model_path().generic_u8string();
-	if (auto v = set(PARAMETER_MODEL_DIRECTORY, _model_path); v != cv::result::SUCCESS) {
+	if (auto v = set_string(PARAMETER_MODEL_DIRECTORY, _model_path); v != cv::result::SUCCESS) {
 		throw ::streamfx::nvidia::cv::exception(PARAMETER_MODEL_DIRECTORY, v);
 	}
 }
 
-cv::result streamfx::nvidia::vfx::effect::get(parameter_t param, std::string_view& value)
+cv::result streamfx::nvidia::vfx::effect::get_string(parameter_t param, std::string_view& value)
 {
 	const char* cvalue = nullptr;
-	cv::result  res    = get(param, cvalue);
+	cv::result  res    = get_string(param, cvalue);
 	if (res == cv::result::SUCCESS) {
 		if (cvalue) {
 			value = std::string_view(cvalue);
@@ -76,10 +76,10 @@ cv::result streamfx::nvidia::vfx::effect::get(parameter_t param, std::string_vie
 	return res;
 }
 
-cv::result streamfx::nvidia::vfx::effect::get(parameter_t param, std::string& value)
+cv::result streamfx::nvidia::vfx::effect::get_string(parameter_t param, std::string& value)
 {
 	const char* cvalue = nullptr;
-	cv::result  res    = get(param, cvalue);
+	cv::result  res    = get_string(param, cvalue);
 	if (res == cv::result::SUCCESS) {
 		if (cvalue) {
 			value = cvalue;

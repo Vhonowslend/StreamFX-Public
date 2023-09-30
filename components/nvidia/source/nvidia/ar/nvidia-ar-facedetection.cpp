@@ -40,11 +40,6 @@ streamfx::nvidia::ar::facedetection::facedetection() : feature(FEATURE_FACE_DETE
 {
 	D_LOG_DEBUG("Initializing... (Addr: 0x%" PRIuPTR ")", this);
 
-	// Assign CUDA Stream object.
-	if (auto err = set(P_NVAR_CONFIG "CUDAStream", _nvcuda->get_stream()); err != cv::result::SUCCESS) {
-		throw cv::exception("CUDAStream", err);
-	}
-
 	// Prepare initial memory
 	_rects.resize(ST_MAX_TRACKED_FACES);
 	_rects_confidence.resize(ST_MAX_TRACKED_FACES);
@@ -86,10 +81,10 @@ void ar::facedetection::set_tracking_limit(size_t v)
 	if (auto err = set_object(P_NVAR_OUTPUT "BoundingBoxes", reinterpret_cast<void*>(&_bboxes), sizeof(bounds_t)); err != cv::result::SUCCESS) {
 		throw cv::exception("BoundingBoxes", err);
 	}
-	if (auto err = set(P_NVAR_OUTPUT "BoundingBoxesConfidence", _rects_confidence); err != cv::result::SUCCESS) {
+	if (auto err = set_float32array(P_NVAR_OUTPUT "BoundingBoxesConfidence", _rects_confidence); err != cv::result::SUCCESS) {
 		throw cv::exception("BoundingBoxesConfidence", err);
 	}
-	if (auto err = set(P_NVAR_CONFIG "Temporal", (v == 1)); err != cv::result::SUCCESS) {
+	if (auto err = set_uint32(P_NVAR_CONFIG "Temporal", (v == 1)); err != cv::result::SUCCESS) {
 		throw cv::exception("Temporal", err);
 	}
 
@@ -189,7 +184,7 @@ void ar::facedetection::resize(uint32_t width, uint32_t height)
 			_source = std::make_shared<::streamfx::nvidia::cv::image>(width, height, ::streamfx::nvidia::cv::pixel_format::BGR, ::streamfx::nvidia::cv::component_type::UINT8, ::streamfx::nvidia::cv::component_layout::INTERLEAVED, ::streamfx::nvidia::cv::memory_location::GPU, 1);
 		}
 
-		if (auto err = set(P_NVAR_INPUT "Image", _source); err != cv::result::SUCCESS) {
+		if (auto err = set_image(P_NVAR_INPUT "Image", _source); err != cv::result::SUCCESS) {
 			throw cv::exception("Image", err);
 		}
 
@@ -203,7 +198,7 @@ void streamfx::nvidia::ar::facedetection::load()
 	auto cctx = ::streamfx::nvidia::cuda::obs::get()->get_context()->enter();
 
 	// Assign CUDA Stream object.
-	if (auto err = set(P_NVAR_CONFIG "CUDAStream", _nvcuda->get_stream()); err != cv::result::SUCCESS) {
+	if (auto err = set_cuda_stream(P_NVAR_CONFIG "CUDAStream", _nvcuda->get_stream()); err != cv::result::SUCCESS) {
 		throw cv::exception("CUDAStream", err);
 	}
 
