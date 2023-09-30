@@ -43,6 +43,6 @@ target_link_libraries(${COMPONENT_TARGET}
         NVIDIA::VFX
 )
 
-if(NOT WINDOWS)
+if(NOT D_PLATFORM_WINDOWS)
     streamfx_disable_component("NVIDIA" REASON "NVIDIA integration is (currently) only available for Windows under Direct3D11.")
 endif()
