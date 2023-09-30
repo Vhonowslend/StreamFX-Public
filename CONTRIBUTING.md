@@ -8,19 +8,64 @@ As this is a rather large project, we have certain rules to follow when contribu
 ### Linear History
 We follow the paradigm of linear history which forbids branches from being merged, thus changes made on branches are `git rebase`d back onto the root. This simplifies the code history significantly, but makes reverting changes more difficult.
 
-❌ `git merge`
+❌ `git merge`  
 ✅ `git rebase`
 
 ### Commits
 A commit should be containing a single change, even if it spans multiple units, and has the following format:
 
 ```
-short description
+prefix: short description
 
 optional long description
 ```
 
 The short description should be no longer than 120 characters and focus on the important things. The long description is optional, but should be included for larger changes.
+
+#### The appropriate `prefix`
+
+<table>
+	<tr>
+		<th>Path(s)</th>
+		<th>Prefix</th>
+		<th>Example</th>
+	</tr>
+	<tr>
+		<td>
+			data/locale
+		</td>
+		<td>locale</td>
+		<td>
+			<code>data/locale/en-US.ini</code> -> <code>locale</code>
+		</td>
+	</tr>
+	<tr>
+		<td>components/name</td>
+		<td>name</td>
+		<td>
+			<code>components/shader</code> -> <code>shader</code>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			source<br>
+			templates<br>
+			data<br>
+			ui
+		</td>
+		<td>core</td>
+		<td>
+			<code>ui/main.ui</code> -> <code>core</code>
+		</td>
+	</tr>
+	<tr>
+		<td>Anything else</td>
+		<td><b>Omit the prefix</b></td>
+		<td></td>
+	</tr>
+</table>
+
+If multiple match, apply the prefix that changes the most files. If all are equal, alphabetically sort the prefixes and list comma separated.
 
 </details>
 
