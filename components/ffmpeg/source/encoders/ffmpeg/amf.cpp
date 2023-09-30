@@ -135,7 +135,7 @@ bool streamfx::encoder::ffmpeg::amf::is_available()
 #else
 	std::filesystem::path lib_name = std::filesystem::u8path("amfrt32.dll");
 #endif
-#elif defined(D_PLATFORM_LINUX)
+#else
 #if defined(D_PLATFORM_64BIT)
 	std::filesystem::path lib_name = std::filesystem::u8path("libamfrt64.so.1");
 #else
