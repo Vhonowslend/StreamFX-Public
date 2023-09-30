@@ -133,8 +133,7 @@ async function git_retrieveAuthors(file) {
 				let proc = CHILD_PROCESS.spawn("git", [
 					"--no-pager",
 					"log",
-					"--date-order",
-					"--reverse",
+					"--follow",
 					"--format=format:%aI|%aN <%aE>",
 					"--",
 					file
@@ -190,7 +189,11 @@ async function git_retrieveAuthors(file) {
 
 		let author = authors.get(name);
 		if (author) {
-			author.to = new Date(date)
+			let dt = new Date(date)
+			if (author.from > dt)
+				author.from = dt;
+			if (author.to < dt)
+				author.to = dt;
 		} else {
 			authors.set(name, {
 				from: new Date(date),
@@ -203,6 +206,14 @@ async function git_retrieveAuthors(file) {
 
 async function generateCopyright(file) {
 	let authors = await git_retrieveAuthors(file)
+	authors = new Map([...authors].sort((a, b) => {
+		if (a[1].from < b[1].from) {
+			return -1;
+		} else if (a[1].from > b[1].from) {
+			return 1;
+		}
+		return 0;
+	}));
 	let lines = [];
 	for (let entry of authors) {
 		let from = entry[1].from.getUTCFullYear();
