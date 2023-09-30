@@ -754,6 +754,7 @@ endif()
 define_property(TARGET PROPERTY COMPONENT_LABEL)
 define_property(TARGET PROPERTY COMPONENT_NAME)
 define_property(TARGET PROPERTY COMPONENT_OPTION)
+define_property(TARGET PROPERTY COMPONENT_RESOLVER)
 define_property(TARGET PROPERTY COMPONENT_DEPENDS)
 
 function(streamfx_add_library TARGET_NAME TARGET_TYPE)
@@ -1025,17 +1026,27 @@ function(streamfx_add_library TARGET_NAME TARGET_TYPE)
 	endif()
 endfunction()
 
+function(streamfx_sanitize_name TEXT _OUTPUT_NAME _OUTPUT_TARGET _OUTPUT_OPTION)
+	string(REGEX REPLACE "^[ \t]+" "" TEXT "${TEXT}")
+	string(REGEX REPLACE "[ \t]+$" "" TEXT "${TEXT}")
+	string(REGEX REPLACE "[^a-zA-Z0-9_-]+" "_" TEXT2 "${TEXT}")
+	string(REGEX REPLACE "_[_]+" "_" TEXT2 "${TEXT2}")
+	string(TOUPPER "${TEXT2}" TEXT3)
+
+	set(${_OUTPUT_NAME} "${TEXT}" PARENT_SCOPE)
+	set(${_OUTPUT_TARGET} "${TEXT2}" PARENT_SCOPE)
+	set(${_OUTPUT_OPTION} "${TEXT3}" PARENT_SCOPE)
+endfunction()
+
 function(streamfx_add_component COMPONENT_NAME)
-	# Sanitize the component name by trimming whitespace.
-	string(REGEX REPLACE "^[ \t]+" "" COMPONENT_NAME "${COMPONENT_NAME}")
-	string(REGEX REPLACE "[ \t]+$" "" COMPONENT_NAME "${COMPONENT_NAME}")
+	cmake_parse_arguments(PARSE_ARGV 1 _ARG
+		""
+		"RESOLVER"
+		""
+	)
 
-	# Generate a sanitized version of the component name for use in targets and options.
-	string(REGEX REPLACE "[^a-zA-Z0-9_-]+" "_" COMPONENT_SANITIZED_NAME "${COMPONENT_NAME}")
-	string(REGEX REPLACE "_[_]+" "_" COMPONENT_SANITIZED_NAME "${COMPONENT_SANITIZED_NAME}")
-
-	# Convert the sanitized version to upper case.
-	string(TOUPPER "${COMPONENT_SANITIZED_NAME}" COMPONENT_OPTION_NAME)
+	# Sanitize name for further use.
+	streamfx_sanitize_name("${COMPONENT_NAME}" COMPONENT_NAME COMPONENT_SANITIZED_NAME COMPONENT_OPTION_NAME)
 	set(COMPONENT_OPTION "${PREFIX}COMPONENT_${COMPONENT_OPTION_NAME}")
 	set(COMPONENT_OPTION "${COMPONENT_OPTION}" PARENT_SCOPE)
 
@@ -1059,13 +1070,20 @@ function(streamfx_add_component COMPONENT_NAME)
 	# Register the component globally.
 	get_target_property(_DEPENDS StreamFX COMPONENT_DEPENDS)
 	if(_DEPENDS)
-		list(APPEND _DEPENDS "${COMPONENT_TARGET}")
+		list(APPEND _DEPENDS "${COMPONENT_SANITIZED_NAME}")
 	else()
-		set(_DEPENDS "${COMPONENT_TARGET}")
+		set(_DEPENDS "${COMPONENT_SANITIZED_NAME}")
 	endif()
 	set_target_properties(StreamFX PROPERTIES 
 		COMPONENT_DEPENDS "${_DEPENDS}"
 	)
+	
+	# If there is a resolver function, register it.
+	if(_ARG_RESOLVER)
+		set_target_properties(${COMPONENT_TARGET}
+			COMPONENT_RESOLVER "${_ARG_RESOLVER}"
+		)
+	endif()
 
 	# Allow disabling this component.
 	set(${COMPONENT_OPTION} ON CACHE BOOL "Enable the ${COMPONENT_NAME} component?")
@@ -1153,26 +1171,76 @@ function(streamfx_add_component COMPONENT_NAME)
 	)
 endfunction()
 
-# Use this to add a dependency on another component, 
-function(streamfx_add_component_dependency _NAME)
-	get_target_property(DEPENDS ${COMPONENT_TARGET} COMPONENT_DEPENDS)
-	list(APPEND DEPENDS "${_NAME}")
-	set_target_properties(${COMPONENT_TARGET} PROPERTIES COMPONENT_DEPENDS "${DEPENDS}")
+function(streamfx_has_component _NAME _OUTPUT)
+	streamfx_sanitize_name("${_NAME}" _NAME _TARGET _OPTION)
+
+	set(${_OUTPUT} OFF PARENT_SCOPE)
+	if(TARGET "StreamFX_${_TARGET}")		
+		set(${_OUTPUT} ON PARENT_SCOPE)
+	endif()
 endfunction()
 
-function(streamfx_disable_component _NAME _REASON)
+function(streamfx_enabled_component _NAME _OUTPUT)
+	streamfx_sanitize_name("${_NAME}" _NAME _TARGET _OPTION)
+	if(NOT TARGET "StreamFX_${_TARGET}")
+		message(FATAL_ERROR "Unknown component '${_NAME}'.")
+	endif()
+
+	get_target_property(_OPTION "StreamFX_${_TARGET}" COMPONENT_OPTION)
+	set(${_OUTPUT} OFF PARENT_SCOPE)
+	if(${_OPTION} AND NOT (${_OPTION}_DISABLED))
+		set(${_OUTPUT} ON PARENT_SCOPE)
+	endif()	
+endfunction()
+
+# Use this to add a dependency on another component.
+function(streamfx_add_component_dependency _NAME)
+	cmake_parse_arguments(PARSE_ARGV 1 _ARG
+		"OPTIONAL"
+		""
+		""
+	)
+
+	streamfx_sanitize_name("${_NAME}" _NAME _TARGET _OPTION)
+
+	set(DEPENDENCY "${_TARGET}")
+	if(_ARG_OPTIONAL)
+		list(APPEND DEPENDENCY "OPTIONAL")
+	endif()
+	string(REPLACE ";" "\\;" DEPENDENCY "${DEPENDENCY}")
+
+	get_target_property(DEPENDS "${COMPONENT_TARGET}" COMPONENT_DEPENDS)
+	if(DEPENDS)
+		list(APPEND DEPENDS "${DEPENDENCY}")
+	else()
+		set(DEPENDS "${DEPENDENCY}")
+	endif()
+	set_target_properties("${COMPONENT_TARGET}" PROPERTIES COMPONENT_DEPENDS "${DEPENDS}")
+endfunction()
+
+# Use this to disable a component via script.
+function(streamfx_disable_component _NAME)
+	cmake_parse_arguments(PARSE_ARGV 1 _ARG
+		""
+		"REASON"
+		""
+	)
+
+	streamfx_sanitize_name("${_NAME}" _NAME _TARGET _OPTION)
+	set(_TARGET "StreamFX_${_TARGET}")
+
 	# If the component doesn't exist, skip it.
-	if(NOT TARGET ${_NAME})
-		message(WARNING "Not disabling invalid component '${COMPONENT}'.")
+	if(NOT TARGET ${_TARGET})
+		message(WARNING "Not disabling invalid component '${_NAME}'.")
 		return()
 	endif()
 	
-	get_target_property(_NAME ${COMPONENT} COMPONENT_LABEL)
-	get_target_property(_OPTION ${COMPONENT} COMPONENT_OPTION)
+	get_target_property(_LABEL ${_TARGET} COMPONENT_LABEL)
+	get_target_property(_OPTION ${_TARGET} COMPONENT_OPTION)
 
 	CacheSet(${_OPTION}_DISABLED ON)
-	if(_REASON)
-		message(STATUS "[${_NAME}] Disabled due to: ${_REASON}")
+	if(_ARG_REASON)
+		message(STATUS "[${_LABEL}] Disabled due to: ${_ARG_REASON}")
 	endif()
 endfunction()
 
@@ -1363,73 +1431,121 @@ foreach(COMPONENT ${COMPONENTS})
 	endif()
 endforeach()
 
-get_target_property(_DEPENDS StreamFX COMPONENT_DEPENDS)
+get_target_property(_UNRESOLVED StreamFX COMPONENT_DEPENDS)
+set(_RESOLVED "")
+set(_DISABLED "")
 
-#- Resolving
-if(_DEPENDS)
-	foreach(COMPONENT ${_DEPENDS})
-		# If the component doesn't exist, skip it.
-		if(NOT TARGET ${COMPONENT})
-			message(WARNING "Encountered invalid component '${COMPONENT}' in list of all components.")
-			continue()
-		endif()
+#- Cleanup
+list(REMOVE_DUPLICATES _UNRESOLVED)
+foreach(_ENTITY ${_UNRESOLVED})
+	# Remove any invalid entries.
+	if(NOT TARGET "StreamFX_${_ENTITY}")
+		message(WARNING "Encountered invalid component '${_ENTITY}', removing...")
+		list(REMOVE_ITEM _UNRESOLVED "${_ENTITY}")
+		continue()
+	endif()
+endforeach()
 
-		get_target_property(_NAME ${COMPONENT} COMPONENT_LABEL)
+#- Resolve Dependencies in a loop
+set(_UNRESOLVED_LOOP 0)
+while(_UNRESOLVED)
+	MATH(EXPR _UNRESOLVED_LOOP "${_UNRESOLVED_LOOP}+1")	
+	if(_UNRESOLVED_LOOP GREATER_EQUAL 10)
+		message(FATAL_ERROR "Infinite loop while resolving components: ${_UNRESOLVED}")
+	endif()
 
-		# If the component is disabled, skip it.
-		get_target_property(_OPTION ${COMPONENT} COMPONENT_OPTION)
-		if(NOT ${_OPTION})
-			continue()
-		elseif(${_OPTION}_DISABLED)
-			continue()
-		endif()
+	# Attempt to resolve while there are still unresolved entries.
+	foreach(_ENTITY ${_UNRESOLVED})
+		set(RENTITY "StreamFX_${_ENTITY}")
 		
-		# Test if all dependencies are valid.
-		set(_HASDEPENDENCY ON)
-		get_target_property(_CDEPENDS ${COMPONENT} COMPONENT_DEPENDS)
-		foreach(_DEPEND ${_CDEPENDS})
-			get_target_property(_DNAME ${COMPONENT} COMPONENT_LABEL)
-			get_target_property(_DOPTION ${COMPONENT} COMPONENT_OPTION)
-			if((NOT ${_DOPTION}) OR (${_DOPTION}_DISABLED))
-				message(STATUS "[${_NAME}] Missing or disabled dependency on '${_DNAME}'.")
-				set(_HASDEPENDENCY OFF)
-				continue()
-			endif()
-		endforeach()
-		if(NOT _HASDEPENDENCY)
-			message(STATUS "[${_NAME}] Missing dependencies, disabling...")
-			set(${_OPTION}_DISABLED TRUE)
+		get_target_property(_LABEL "${RENTITY}" COMPONENT_LABEL)
+		get_target_property(_OPTION "${RENTITY}" COMPONENT_OPTION)
+		get_target_property(_DEPENDS "${RENTITY}" COMPONENT_DEPENDS)
+		get_target_property(_RESOLVER "${RENTITY}" COMPONENT_RESOLVER)
+	
+		# Remove any that have been disabled.
+		if(NOT ${_OPTION})
+			message(STATUS "[${_LABEL}] Disabled by user.")
+			list(REMOVE_ITEM _UNRESOLVED "${_ENTITY}")
+			list(APPEND _DISABLED "${_ENTITY}")
+			continue()
+		elseif(${_OPTION}_DISABLED) # Test for pre-resolve disabling.
+			message(STATUS "[${_LABEL}] Disabled by build script.")
+			list(REMOVE_ITEM _UNRESOLVED "${_ENTITY}")
+			list(APPEND _DISABLED "${_ENTITY}")
 			continue()
 		endif()
+
+		# Check if all dependencies are resolved.
+		set(_HAS_UNRESOLVED_DEPENDS OFF)
+		set(_HAS_DISABLED_DEPENDS OFF)
+		set(_HAS_UNRESOLVED_OPTIONAL_DEPENDS OFF)
+		if(_DEPENDS)
+			foreach(_DEPEND ${_DEPENDS})
+				list(GET _DEPEND 0 _ENTITY2)
+				set(RENTITY2 "StreamFX_${_ENTITY2}")
+				
+				get_target_property(_ENTITY2_LABEL "${RENTITY2}" COMPONENT_LABEL)
+
+				if(NOT ("OPTIONAL" IN_LIST _DEPEND))
+					if("${_ENTITY2}" IN_LIST _DISABLED)
+						message("[${_LABEL}] Required dependency '${_ENTITY2_LABEL}' is disabled.")
+						set(_HAS_DISABLED_DEPENDS ON)
+					endif()
+					if("${_ENTITY2}" IN_LIST _UNRESOLVED)
+						set(_HAS_UNRESOLVED_DEPENDS ON)
+					endif()
+				else()
+					if("${_ENTITY2}" IN_LIST _UNRESOLVED)
+						set(_HAS_UNRESOLVED_OPTIONAL_DEPENDS ON)
+					endif()
+				endif()
+			endforeach()
+			list(JOIN _DEPENDS ", " _DEPENDS)
+		else()
+			set(_DEPENDS "")
+		endif()
+		if(_HAS_DISABLED_DEPENDS) # A required dependency is disabled, so disable this entry.
+			message(STATUS "[${_LABEL}] Disabled by dependency.")
+			list(REMOVE_ITEM _UNRESOLVED "${_ENTITY}")
+			list(APPEND _DISABLED "${_ENTITY}")
+			streamfx_disable_component(${_ENTITY})
+			continue()
+		elseif(_HAS_UNRESOLVED_DEPENDS)
+			continue()
+		elseif(_HAS_UNRESOLVED_OPTIONAL_DEPENDS AND (_UNRESOLVED_LOOP LESS 8))
+			# Temporarily skip this element while there are still remaining loops.
+			continue()
+		endif()
+
+		# Call Resolver function
+		if(_RESOLVER)
+			cmake_language(CALL ${_RESOLVER})
+		endif()
+		if(${_OPTION}_DISABLED) # Test for resolve disabling.
+			message(STATUS "[${_LABEL}] Disabled by resolver.")
+			list(REMOVE_ITEM _UNRESOLVED "${_ENTITY}")
+			list(APPEND _DISABLED "${_ENTITY}")
+			continue()
+		endif()
+
+		# Finally, if everything went well, we now have a resolved entity.
+		list(REMOVE_ITEM _UNRESOLVED "${_ENTITY}")
+		list(APPEND _RESOLVED "${_ENTITY}")
+		message(STATUS "[${_LABEL}] Enabled. Depends: ${_DEPENDS}")
 	endforeach()
-endif()
+endwhile()
 
 #- Linking
 target_link_libraries(StreamFX PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,StreamFX_Core>)
-if(_DEPENDS)
-	foreach(COMPONENT ${_DEPENDS})
-		if(NOT TARGET ${COMPONENT})
-			continue()
-		endif()
+foreach(_ENTITY ${_RESOLVED})
+	if(NOT TARGET StreamFX_${_ENTITY})
+		continue()
+	endif()
 
-		get_target_property(_NAME ${COMPONENT} COMPONENT_LABEL)
-
-		# If the component is disabled, skip it.
-		get_target_property(_OPTION ${COMPONENT} COMPONENT_OPTION)
-		if(NOT ${_OPTION})
-			message(STATUS "[${_NAME}] Disabled by developer.")
-			continue()
-		elseif(${_OPTION}_DISABLED)
-			message(STATUS "[${_NAME}] Disabled by build script.")
-			continue()
-		endif()
-
-		# Finally if everything is correct, do things.
-		message(STATUS "[${_NAME}] Enabled.")
-		target_link_libraries(StreamFX PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,${COMPONENT}>)
-	endforeach()
-endif()
-
+	# Finally if everything is correct, do things.
+	target_link_libraries(StreamFX PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,StreamFX_${_ENTITY}>)
+endforeach()
 
 ################################################################################
 # Installation
