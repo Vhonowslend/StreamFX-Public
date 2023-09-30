@@ -30,7 +30,7 @@
 #define ST_I18N_PROVIDER ST_I18N "." ST_KEY_PROVIDER
 #define ST_I18N_PROVIDER_NVIDIA_SUPERRES ST_I18N_PROVIDER ".NVIDIA.SuperResolution"
 
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_NVIDIA
 #define ST_KEY_NVIDIA_SUPERRES "NVIDIA.SuperRes"
 #define ST_I18N_NVIDIA_SUPERRES ST_I18N "." ST_KEY_NVIDIA_SUPERRES
 #define ST_KEY_NVIDIA_SUPERRES_STRENGTH "NVIDIA.SuperRes.Strength"
@@ -123,7 +123,7 @@ upscaling_instance::~upscaling_instance()
 
 		// TODO: Make this asynchronous.
 		switch (_provider) {
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_NVIDIA
 		case upscaling_provider::NVIDIA_SUPERRESOLUTION:
 			nvvfxsr_unload();
 			break;
@@ -159,7 +159,7 @@ void upscaling_instance::update(obs_data_t* data)
 		std::unique_lock<std::mutex> ul(_provider_lock);
 
 		switch (_provider) {
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_NVIDIA
 		case upscaling_provider::NVIDIA_SUPERRESOLUTION:
 			nvvfxsr_update(data);
 			break;
@@ -173,7 +173,7 @@ void upscaling_instance::update(obs_data_t* data)
 void streamfx::filter::upscaling::upscaling_instance::properties(obs_properties_t* properties)
 {
 	switch (_provider_ui) {
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_NVIDIA
 	case upscaling_provider::NVIDIA_SUPERRESOLUTION:
 		nvvfxsr_properties(properties);
 		break;
@@ -206,7 +206,7 @@ void upscaling_instance::video_tick(float time)
 		std::unique_lock<std::mutex> ul(_provider_lock);
 
 		switch (_provider) {
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_NVIDIA
 		case upscaling_provider::NVIDIA_SUPERRESOLUTION:
 			nvvfxsr_size();
 			break;
@@ -291,7 +291,7 @@ void upscaling_instance::video_render(gs_effect_t* effect)
 			::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_convert, "Process"};
 #endif
 			switch (_provider) {
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_NVIDIA
 			case upscaling_provider::NVIDIA_SUPERRESOLUTION:
 				nvvfxsr_process();
 				break;
@@ -384,7 +384,7 @@ void streamfx::filter::upscaling::upscaling_instance::task_switch_provider(util:
 	try {
 		// 3. Unload the previous provider.
 		switch (spd->provider) {
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_NVIDIA
 		case upscaling_provider::NVIDIA_SUPERRESOLUTION:
 			nvvfxsr_unload();
 			break;
@@ -395,7 +395,7 @@ void streamfx::filter::upscaling::upscaling_instance::task_switch_provider(util:
 
 		// 4. Load the new provider.
 		switch (_provider) {
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_NVIDIA
 		case upscaling_provider::NVIDIA_SUPERRESOLUTION:
 			nvvfxsr_load();
 			{
@@ -420,7 +420,7 @@ void streamfx::filter::upscaling::upscaling_instance::task_switch_provider(util:
 	}
 }
 
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_NVIDIA
 void streamfx::filter::upscaling::upscaling_instance::nvvfxsr_load()
 {
 	_nvidia_fx = std::make_shared<::streamfx::nvidia::vfx::superresolution>();
@@ -489,7 +489,7 @@ upscaling_factory::upscaling_factory()
 	bool any_available = false;
 
 	// 1. Try and load any configured providers.
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_NVIDIA
 	try {
 		// Load CVImage and Video Effects SDK.
 		_nvcuda           = ::streamfx::nvidia::cuda::obs::get();
@@ -539,7 +539,7 @@ void upscaling_factory::get_defaults2(obs_data_t* data)
 {
 	obs_data_set_default_int(data, ST_KEY_PROVIDER, static_cast<int64_t>(upscaling_provider::AUTOMATIC));
 
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_NVIDIA
 	obs_data_set_default_double(data, ST_KEY_NVIDIA_SUPERRES_SCALE, 150.);
 	obs_data_set_default_double(data, ST_KEY_NVIDIA_SUPERRES_STRENGTH, 0.);
 #endif
@@ -606,7 +606,7 @@ bool upscaling_factory::on_manual_open(obs_properties_t* props, obs_property_t* 
 bool streamfx::filter::upscaling::upscaling_factory::is_provider_available(upscaling_provider provider)
 {
 	switch (provider) {
-#ifdef ENABLE_FILTER_UPSCALING_NVIDIA
+#ifdef ENABLE_NVIDIA
 	case upscaling_provider::NVIDIA_SUPERRESOLUTION:
 		return _nvidia_available;
 #endif
