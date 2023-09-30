@@ -16,7 +16,7 @@
 #include <mutex>
 #include "warning-enable.hpp"
 
-#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
+#ifdef ENABLE_NVIDIA
 #include "nvidia/vfx/nvidia-vfx-greenscreen.hpp"
 #endif
 
@@ -49,7 +49,7 @@ namespace streamfx::filter::virtual_greenscreen {
 		std::shared_ptr<::streamfx::obs::gs::texture>      _output_alpha;
 		bool                                               _dirty;
 
-#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
+#ifdef ENABLE_NVIDIA
 		std::shared_ptr<::streamfx::nvidia::vfx::greenscreen> _nvidia_fx;
 #endif
 
@@ -72,7 +72,7 @@ namespace streamfx::filter::virtual_greenscreen {
 		void switch_provider(virtual_greenscreen_provider provider);
 		void task_switch_provider(util::threadpool::task_data_t data);
 
-#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
+#ifdef ENABLE_NVIDIA
 		void nvvfxgs_load();
 		void nvvfxgs_unload();
 		void nvvfxgs_size();
@@ -83,7 +83,7 @@ namespace streamfx::filter::virtual_greenscreen {
 	};
 
 	class virtual_greenscreen_factory : public ::streamfx::obs::source_factory<::streamfx::filter::virtual_greenscreen::virtual_greenscreen_factory, ::streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance> {
-#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
+#ifdef ENABLE_NVIDIA
 		bool                                           _nvidia_available;
 		std::shared_ptr<::streamfx::nvidia::cuda::obs> _nvcuda;
 		std::shared_ptr<::streamfx::nvidia::cv::cv>    _nvcvi;
