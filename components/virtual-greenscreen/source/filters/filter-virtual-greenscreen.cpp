@@ -30,7 +30,7 @@
 #define ST_I18N_PROVIDER ST_I18N "." ST_KEY_PROVIDER
 #define ST_I18N_PROVIDER_NVIDIA_GREENSCREEN ST_I18N_PROVIDER ".NVIDIA.Greenscreen"
 
-#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
+#ifdef ENABLE_NVIDIA
 #define ST_KEY_NVIDIA_GREENSCREEN "NVIDIA.Greenscreen"
 #define ST_I18N_NVIDIA_GREENSCREEN ST_I18N "." ST_KEY_NVIDIA_GREENSCREEN
 #define ST_KEY_NVIDIA_GREENSCREEN_MODE ST_KEY_NVIDIA_GREENSCREEN ".Mode"
@@ -132,7 +132,7 @@ virtual_greenscreen_instance::~virtual_greenscreen_instance()
 
 		// TODO: Make this asynchronous.
 		switch (_provider) {
-#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
+#ifdef ENABLE_NVIDIA
 		case virtual_greenscreen_provider::NVIDIA_GREENSCREEN:
 			nvvfxgs_unload();
 			break;
@@ -168,7 +168,7 @@ void virtual_greenscreen_instance::update(obs_data_t* data)
 		std::unique_lock<std::mutex> ul(_provider_lock);
 
 		switch (_provider) {
-#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
+#ifdef ENABLE_NVIDIA
 		case virtual_greenscreen_provider::NVIDIA_GREENSCREEN:
 			nvvfxgs_update(data);
 			break;
@@ -182,7 +182,7 @@ void virtual_greenscreen_instance::update(obs_data_t* data)
 void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::properties(obs_properties_t* properties)
 {
 	switch (_provider_ui) {
-#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
+#ifdef ENABLE_NVIDIA
 	case virtual_greenscreen_provider::NVIDIA_GREENSCREEN:
 		nvvfxgs_properties(properties);
 		break;
@@ -214,7 +214,7 @@ void virtual_greenscreen_instance::video_tick(float time)
 		std::unique_lock<std::mutex> ul(_provider_lock);
 
 		switch (_provider) {
-#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
+#ifdef ENABLE_NVIDIA
 		case virtual_greenscreen_provider::NVIDIA_GREENSCREEN:
 			nvvfxgs_size();
 			break;
@@ -302,7 +302,7 @@ void virtual_greenscreen_instance::video_render(gs_effect_t* effect)
 			::streamfx::obs::gs::debug_marker profiler1{::streamfx::obs::gs::debug_color_convert, "Process"};
 #endif
 			switch (_provider) {
-#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
+#ifdef ENABLE_NVIDIA
 			case virtual_greenscreen_provider::NVIDIA_GREENSCREEN:
 				nvvfxgs_process(_output_color, _output_alpha);
 				break;
@@ -394,7 +394,7 @@ void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::task_s
 	try {
 		// Unload the previous provider.
 		switch (spd->provider) {
-#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
+#ifdef ENABLE_NVIDIA
 		case virtual_greenscreen_provider::NVIDIA_GREENSCREEN:
 			nvvfxgs_unload();
 			break;
@@ -405,7 +405,7 @@ void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::task_s
 
 		// Load the new provider.
 		switch (_provider) {
-#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
+#ifdef ENABLE_NVIDIA
 		case virtual_greenscreen_provider::NVIDIA_GREENSCREEN:
 			nvvfxgs_load();
 			{
@@ -430,7 +430,7 @@ void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::task_s
 	}
 }
 
-#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
+#ifdef ENABLE_NVIDIA
 void streamfx::filter::virtual_greenscreen::virtual_greenscreen_instance::nvvfxgs_load()
 {
 	_nvidia_fx = std::make_shared<::streamfx::nvidia::vfx::greenscreen>();
@@ -492,7 +492,7 @@ virtual_greenscreen_factory::virtual_greenscreen_factory()
 	bool any_available = false;
 
 	// 1. Try and load any configured providers.
-#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
+#ifdef ENABLE_NVIDIA
 	try {
 		// Load CVImage and Video Effects SDK.
 		_nvcuda           = ::streamfx::nvidia::cuda::obs::get();
@@ -539,7 +539,7 @@ void virtual_greenscreen_factory::get_defaults2(obs_data_t* data)
 {
 	obs_data_set_default_int(data, ST_KEY_PROVIDER, static_cast<int64_t>(virtual_greenscreen_provider::AUTOMATIC));
 
-#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
+#ifdef ENABLE_NVIDIA
 	obs_data_set_default_int(data, ST_KEY_NVIDIA_GREENSCREEN_MODE, static_cast<int64_t>(::streamfx::nvidia::vfx::greenscreen_mode::QUALITY));
 #endif
 }
@@ -605,7 +605,7 @@ bool virtual_greenscreen_factory::on_manual_open(obs_properties_t* props, obs_pr
 bool streamfx::filter::virtual_greenscreen::virtual_greenscreen_factory::is_provider_available(virtual_greenscreen_provider provider)
 {
 	switch (provider) {
-#ifdef ENABLE_FILTER_VIRTUAL_GREENSCREEN_NVIDIA
+#ifdef ENABLE_NVIDIA
 	case virtual_greenscreen_provider::NVIDIA_GREENSCREEN:
 		return _nvidia_available;
 #endif
