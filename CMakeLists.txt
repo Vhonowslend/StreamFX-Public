@@ -1050,7 +1050,7 @@ function(streamfx_add_component COMPONENT_NAME)
 	set(COMPONENT_ALIAS "StreamFX::${COMPONENT_SANITIZED_NAME}")
 	set(COMPONENT_ALIAS "${COMPONENT_ALIAS}" PARENT_SCOPE)
 
-	streamfx_add_library(${COMPONENT_TARGET} STATIC EXCLUDE_FROM_ALL)
+	streamfx_add_library(${COMPONENT_TARGET} OBJECT EXCLUDE_FROM_ALL)
 	add_library(${COMPONENT_ALIAS} ALIAS ${COMPONENT_TARGET})
 	set_target_properties(${COMPONENT_TARGET} PROPERTIES
 		COMPONENT_LABEL "${COMPONENT_NAME}"
@@ -1059,7 +1059,10 @@ function(streamfx_add_component COMPONENT_NAME)
 	)
 
 	# Always depend on StreamFX::Core
-	target_link_libraries(${COMPONENT_TARGET} PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,StreamFX_Core>)
+	target_link_libraries(${COMPONENT_TARGET} 
+		PUBLIC
+			StreamFX_Core
+	)
 
 	# Register the component globally.
 	get_target_property(_DEPENDS StreamFX COMPONENT_DEPENDS)
@@ -1537,14 +1540,12 @@ while(_UNRESOLVED)
 endwhile()
 
 #- Linking
-target_link_libraries(StreamFX PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,StreamFX_Core>)
+target_link_libraries(StreamFX PUBLIC StreamFX_Core)
 foreach(_ENTITY ${_RESOLVED})
 	set(RENTITY "StreamFX_${_ENTITY}")
 	get_target_property(_DEPENDS "${RENTITY}" COMPONENT_DEPENDS)
 
 	# Finally if everything is correct, do things.
-	target_link_libraries(StreamFX PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,${RENTITY}>)
-
 	if(_DEPENDS)
 		foreach(_DEPEND ${_DEPENDS})
 			list(GET _DEPEND 0 _ENTITY2)
@@ -1554,11 +1555,16 @@ foreach(_ENTITY ${_RESOLVED})
 			if(T_CHECK)
 				target_link_libraries(${RENTITY}
 					PUBLIC
-						$<LINK_LIBRARY:WHOLE_ARCHIVE,${RENTITY2}>
+						${RENTITY2}
 				)
 			endif()
 		endforeach()
 	endif()
+
+	target_link_libraries(StreamFX
+		PRIVATE			
+			${RENTITY}
+	)
 endforeach()
 
 ################################################################################
