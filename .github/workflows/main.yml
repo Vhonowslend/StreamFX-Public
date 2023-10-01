@@ -359,6 +359,7 @@ jobs:
 
           echo "CMAKE_C_COMPILER=gcc-${compiler[1]}" >> "$GITHUB_ENV"
           echo "CMAKE_CXX_COMPILER=g++-${compiler[1]}" >> "$GITHUB_ENV"
+          echo "CMAKE_LINKER=gold" >> "$GITHUB_ENV"
         elif [[ "${compiler[0]}" == "Clang" ]]; then
           curl -jLo /tmp/llvm.sh "https://apt.llvm.org/llvm.sh"
           chmod +x /tmp/llvm.sh
@@ -373,6 +374,7 @@ jobs:
 
           echo "CMAKE_C_COMPILER=clang-${compiler[1]}" >> "$GITHUB_ENV"
           echo "CMAKE_CXX_COMPILER=clang++-${compiler[1]}" >> "$GITHUB_ENV"
+          echo "CMAKE_LINKER=ld.lld-${compiler[1]}" >> "$GITHUB_ENV"
         else
           echo "Unknown Compiler"
           exit 1
