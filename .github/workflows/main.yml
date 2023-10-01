@@ -312,24 +312,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ "ubuntu-22.04", "ubuntu-20.04" ]
-        compiler: [ "GCC-12", "GCC-11", "Clang-16" ]
-        qt: [ 5, 6 ]
+        runner: [ "ubuntu-22.04" ]
+        compiler: [ "GCC-12", "Clang-16" ]
+        qt: [ 6 ]
         CMAKE_GENERATOR: [ "Ninja Multi-Config" ]
-        exclude:
-          - runner: "ubuntu-22.04"
-            qt: 5
-          - runner: "ubuntu-22.04"
-            compiler: "GCC-11"
-          - runner: "ubuntu-20.04"
-            qt: 6
-          - runner: "ubuntu-20.04"
-            compiler: "GCC-12"
         include:
           - runner: "ubuntu-22.04"
             name: "Ubuntu 22.04"
-          - runner: "ubuntu-20.04"
-            name: "Ubuntu 20.04"
     runs-on: "${{ matrix.runner }}"
     name: "${{ matrix.name }} (${{ matrix.compiler }}, Qt${{ matrix.qt }})"
     env:
@@ -383,13 +372,8 @@ jobs:
       id: qt
       shell: bash
       run: |
-        if [[ ${{ matrix.qt }} -eq 5 ]]; then
-          sudo apt-get -y install -V \
-            qtbase5-dev qtbase5-private-dev libqt5svg5-dev
-        elif [[ ${{ matrix.qt }} -eq 6 ]]; then
-          sudo apt-get -y install -V \
-            qt6-base-dev qt6-base-private-dev libqt6svg6-dev libgles2-mesa-dev libegl1-mesa-dev libgl1-mesa-dev
-        fi
+        sudo apt-get -y install -V \
+          qt6-base-dev qt6-base-private-dev libqt6svg6-dev libgles2-mesa-dev libegl1-mesa-dev libgl1-mesa-dev
     - name: "Dependency: Prebuilt OBS Studio Dependencies"
       id: obsdeps
       shell: bash
