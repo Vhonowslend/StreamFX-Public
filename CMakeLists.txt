@@ -305,8 +305,6 @@ if(STANDALONE)
 	set(STRUCTURE_UNIFIED CACHE BOOL "Install for use in a Plugin Manager")
 	if(D_PLATFORM_LINUX)
 		set(STRUCTURE_PACKAGEMANAGER CACHE BOOL "Install for use in a Package Manager (system-wide installation)")
-	elseif(D_PLATFORM_MAC)
-		set(STRUCTURE_BUNDLE ON CACHE BOOL "Install as a Loadable Bundle (.plugin)")
 	endif()
 
 	set(PACKAGE_PREFIX "${CMAKE_BINARY_DIR}" CACHE PATH "Where to place the packages?")
@@ -1267,9 +1265,7 @@ else()
 	)
 endif()
 
-if(D_PLATFORM_WINDOWS)
-	# Windows-exclusive
-
+if(D_PLATFORM_WINDOWS) # Windows-exclusive
 	# Version Resource
 	set(PROJECT_PRODUCT_NAME "${PROJECT_FULL_NAME}")
 	set(PROJECT_COMPANY_NAME "${PROJECT_AUTHORS}")
@@ -1286,55 +1282,20 @@ if(D_PLATFORM_WINDOWS)
 			"templates/windows/version.rc.in"
 			"${PROJECT_BINARY_DIR}/generated/version.rc"
 	)
-elseif(D_PLATFORM_MAC)
-	# MacOS exclusive Changes
-
+elseif(D_PLATFORM_MAC) # MacOS exclusive Changes
 	set_target_properties(StreamFX PROPERTIES
 		# No automatic code signing in XCode
 		XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ""
 		XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO"
+
 		# @rpath in installed binaries
 		INSTALL_RPATH "@executable_path/../Frameworks/;@loader_path/../Frameworks/;@loader_path/../Resources/"
 	)
+
 	if(STANDALONE)
 		set_target_properties(StreamFX PROPERTIES
 			# @rpath in built binaries
 			BUILD_WITH_INSTALL_RPATH ON
-		)
-	endif()
-
-	# Bundle exporting
-	if(STRUCTURE_BUNDLE)
-		# Proper location for resources in Bundles
-		foreach(FILE IN LISTS PROJECT_DATA)
-			cmake_path(ABSOLUTE_PATH FILE OUTPUT_VARIABLE FILE_PATH)
-			cmake_path(RELATIVE_PATH FILE_PATH BASE_DIRECTORY "${PROJECT_SOURCE_DIR}/data/")
-			cmake_path(GET FILE_PATH PARENT_PATH FILE_PATH)
-			set_source_files_properties("${FILE}" PROPERTIES
-				MACOSX_PACKAGE_LOCATION "Resources/${FILE_PATH}"
-			)
-		endforeach()
-
-		# Bundle Icon
-		set_source_files_properties("media/icon.png" PROPERTIES
-			MACOSX_PACKAGE_LOCATION "Resources"
-		)
-
-		# Bundle Information
-		set(MACOSX_BUNDLE_BUNDLE_NAME "StreamFX")
-		set(MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}")
-		set(MACOSX_BUNDLE_COPYRIGHT "${PROJECT_COPYRIGHT}")
-		set(MACOSX_BUNDLE_GUI_IDENTIFIER "${PROJECT_IDENTIFER}")
-		set(MACOSX_BUNDLE_ICON_FILE "icon.png")
-		set(MACOSX_BUNDLE_VERSION_STRING "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
-		set(MACOSX_BUNDLE_LONG_VERSION_STRING "${_VERSION}")
-		set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}")
-		set_target_properties(StreamFX PROPERTIES
-			BUNDLE ON
-			BUNDLE_EXTENSION "plugin"
-			OUTPUT_NAME StreamFX
-			MACOSX_BUNDLE_INFO_PLIST "${PROJECT_SOURCE_DIR}/templates/macos/Info.plist.in"
-			XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${MACOSX_BUNDLE_GUI_IDENTIFIER}"
 		)
 	endif()
 endif()
@@ -1669,29 +1630,45 @@ if(STANDALONE)
 			)
 		endif()
 	elseif(D_PLATFORM_MAC)
-		if(STRUCTURE_BUNDLE)
-			install(
-				TARGETS StreamFX
-				RUNTIME DESTINATION "." COMPONENT StreamFX
-				LIBRARY DESTINATION "." COMPONENT StreamFX
-				BUNDLE DESTINATION "." COMPONENT StreamFX
-				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+		# Bundle Information
+		set(MACOSX_BUNDLE_BUNDLE_NAME "StreamFX")
+		set(MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}")
+		set(MACOSX_BUNDLE_COPYRIGHT "${PROJECT_COPYRIGHT}")
+		set(MACOSX_BUNDLE_GUI_IDENTIFIER "${PROJECT_IDENTIFER}")
+		set(MACOSX_BUNDLE_ICON_FILE "icon.png")
+		set(MACOSX_BUNDLE_VERSION_STRING "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+		set(MACOSX_BUNDLE_LONG_VERSION_STRING "${_VERSION}")
+		set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}")
+		set_target_properties(StreamFX PROPERTIES
+			BUNDLE ON
+			BUNDLE_EXTENSION "plugin"
+			OUTPUT_NAME StreamFX
+			MACOSX_BUNDLE_INFO_PLIST "${PROJECT_SOURCE_DIR}/templates/macos/Info.plist.in"
+			XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${MACOSX_BUNDLE_GUI_IDENTIFIER}"
+		)
+
+		# Proper location for resources in Bundles
+		foreach(FILE IN LISTS PROJECT_DATA)
+			cmake_path(ABSOLUTE_PATH FILE OUTPUT_VARIABLE FILE_PATH)
+			cmake_path(RELATIVE_PATH FILE_PATH BASE_DIRECTORY "${PROJECT_SOURCE_DIR}/data/")
+			cmake_path(GET FILE_PATH PARENT_PATH FILE_PATH)
+			set_source_files_properties("${FILE}" PROPERTIES
+				MACOSX_PACKAGE_LOCATION "Resources/${FILE_PATH}"
 			)
-		else()
-			install(
-				TARGETS StreamFX
-				RUNTIME DESTINATION "StreamFX/bin/" COMPONENT StreamFX
-				LIBRARY DESTINATION "StreamFX/bin/" COMPONENT StreamFX
-				PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-			)
-			install(
-				DIRECTORY "data/"
-				DESTINATION "StreamFX/data/"
-				COMPONENT StreamFX
-				FILE_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-				DIRECTORY_PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
-			)
-		endif()
+		endforeach()
+
+		# Bundle Icon
+		set_source_files_properties("media/icon.png" PROPERTIES
+			MACOSX_PACKAGE_LOCATION "Resources"
+		)
+
+		install(
+			TARGETS StreamFX
+			RUNTIME DESTINATION "." COMPONENT StreamFX
+			LIBRARY DESTINATION "." COMPONENT StreamFX
+			BUNDLE DESTINATION "." COMPONENT StreamFX
+			PERMISSIONS WORLD_EXECUTE;WORLD_READ;OWNER_EXECUTE;OWNER_READ;OWNER_WRITE;GROUP_EXECUTE;GROUP_READ;GROUP_WRITE
+		)
 	endif()
 else()
 	if(COMMAND setup_plugin_target)
