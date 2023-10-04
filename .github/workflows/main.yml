@@ -444,9 +444,6 @@ jobs:
           -DCMAKE_C_COMPILER="${{ env.CMAKE_C_COMPILER }}" \
           -DCMAKE_CXX_COMPILER="${{ env.CMAKE_CXX_COMPILER }}" \
           -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
-          -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/build/ci/install" \
-          -DPACKAGE_NAME="streamfx-${{ env.PACKAGE_NAME }}" \
-          -DPACKAGE_PREFIX="${{ github.workspace }}/build/package" \
           -Dlibobs_DIR="${{ github.workspace }}/build/obs/install"
     - name: "Build: Debug"
       continue-on-error: true
