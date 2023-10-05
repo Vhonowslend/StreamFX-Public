@@ -589,8 +589,8 @@ void nvenc::update(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_
 		if (!context->internal) {
 			if (streamfx::ffmpeg::tools::avoption_exists(context->priv_data, "multipass")) {
 				// Multi-Pass
-				if (const char* v = obs_data_get_string(settings, ST_KEY_RATECONTROL_MULTIPASS); (v != nullptr) && (v[0] != '\0')) {
-					av_opt_set(context->priv_data, "multipass", v, AV_OPT_SEARCH_CHILDREN);
+				if (const char* v2 = obs_data_get_string(settings, ST_KEY_RATECONTROL_MULTIPASS); (v2 != nullptr) && (v2[0] != '\0')) {
+					av_opt_set(context->priv_data, "multipass", v2, AV_OPT_SEARCH_CHILDREN);
 					av_opt_set_int(context->priv_data, "2pass", 0, AV_OPT_SEARCH_CHILDREN);
 				}
 			} else {

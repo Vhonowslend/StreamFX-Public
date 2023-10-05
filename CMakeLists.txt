@@ -530,6 +530,7 @@ function(streamfx_add_library TARGET_NAME TARGET_TYPE)
 			"4505"
 			"4514"
 			"5245"
+			"5264"
 			# Don't warn about unreferenced variables or parameters which are assigned/initialized.
 			"4189"
 			# Don't warn about not-explicitly-handled enumeration identifiers
@@ -556,6 +557,10 @@ function(streamfx_add_library TARGET_NAME TARGET_TYPE)
 			"5045"
 			# Ignore inserted padding.
 			"4324"
+			# Ignore non-standard nameless struct/union.
+			"4201"
+			# Intended behavior: Replace undefined macros with 0
+			"4668"
 		)
 		foreach(WARN ${DISABLED_WARNINGS})
 			target_compile_options(${TARGET_NAME} PRIVATE "/wd${WARN}")
@@ -704,6 +709,35 @@ function(streamfx_add_library TARGET_NAME TARGET_TYPE)
 		# - Enable most useful warnings.
 		target_compile_options(${TARGET_NAME} PRIVATE "-Wall")
 		target_compile_options(${TARGET_NAME} PRIVATE "-Wextra")
+
+		# - Disable useless warnings
+		set(DISABLED_WARNINGS
+			# Don't warn about unused variables, parameters, labels, functions, or typedefs.
+			"unused-function"
+			"unused-label"
+			"unused-local-typedefs"
+			"unused-parameter"
+			"unused-result"
+			"unused-const-variable"
+			"unused-variable"
+			"unused-value"
+			# Don't warn about unreferenced variables or parameters which are assigned/initialized.
+			"unused-but-set-parameter"
+			"unused-but-set-variable"
+			# Don't warn about not-explicitly-handled enumeration identifiers
+			"switch"
+			# Ignore automatic padding warnings.
+			"padded"
+			# Ignore implicit '= delete;'.
+			# Ignore extra arguments for printf
+			"format-extra-args"
+			# Ignore undefined, unused or unreferenced pre-processor macros
+			"unused-macros"
+		)
+		foreach(WARN ${DISABLED_WARNINGS})
+			target_compile_options(${TARGET_NAME} PRIVATE "-Wno-${WARN}")
+		endforeach()
+
 
 		# - Require enabled instruction sets.
 		if(${PREFIX}TARGET_NATIVE)
