@@ -28,14 +28,14 @@ struct d3d_info {
 	ID3D11Resource*      target  = nullptr;
 };
 
-void d3d_initialize(d3d_info& info, std::shared_ptr<streamfx::obs::gs::texture> source, std::shared_ptr<streamfx::obs::gs::texture> target)
+static void d3d_initialize(d3d_info& info, std::shared_ptr<streamfx::obs::gs::texture> source, std::shared_ptr<streamfx::obs::gs::texture> target)
 {
 	info.target = reinterpret_cast<ID3D11Resource*>(gs_texture_get_obj(target->get_object()));
 	info.device = reinterpret_cast<ID3D11Device*>(gs_get_device_obj());
 	info.device->GetImmediateContext(&info.context);
 }
 
-void d3d_copy_subregion(d3d_info& info, std::shared_ptr<streamfx::obs::gs::texture> source, uint32_t mip_level, uint32_t width, uint32_t height)
+static void d3d_copy_subregion(d3d_info& info, std::shared_ptr<streamfx::obs::gs::texture> source, uint32_t mip_level, uint32_t width, uint32_t height)
 {
 	D3D11_BOX box        = {0, 0, 0, width, height, 1};
 	auto      source_ref = reinterpret_cast<ID3D11Resource*>(gs_texture_get_obj(source->get_object()));
@@ -49,7 +49,7 @@ struct opengl_info {
 	GLuint fbo    = 0;
 };
 
-std::string opengl_translate_error(GLenum error)
+static std::string opengl_translate_error(GLenum error)
 {
 #define TRANSLATE_CASE(X) \
 	case X:               \
@@ -70,7 +70,7 @@ std::string opengl_translate_error(GLenum error)
 #undef TRANSLATE_CASE
 }
 
-std::string opengl_translate_framebuffer_status(GLenum error)
+static std::string opengl_translate_framebuffer_status(GLenum error)
 {
 #define TRANSLATE_CASE(X) \
 	case X:               \
@@ -106,19 +106,19 @@ std::string opengl_translate_framebuffer_status(GLenum error)
 		throw std::runtime_error(sstr.str());                                          \
 	}
 
-void opengl_initialize(opengl_info& info, std::shared_ptr<streamfx::obs::gs::texture> source, std::shared_ptr<streamfx::obs::gs::texture> target)
+static void opengl_initialize(opengl_info& info, std::shared_ptr<streamfx::obs::gs::texture> source, std::shared_ptr<streamfx::obs::gs::texture> target)
 {
 	info.target = *reinterpret_cast<GLuint*>(gs_texture_get_obj(target->get_object()));
 
 	glGenFramebuffers(1, &info.fbo);
 }
 
-void opengl_finalize(opengl_info& info)
+static void opengl_finalize(opengl_info& info)
 {
 	glDeleteFramebuffers(1, &info.fbo);
 }
 
-void opengl_copy_subregion(opengl_info& info, std::shared_ptr<streamfx::obs::gs::texture> source, uint32_t mip_level, uint32_t width, uint32_t height)
+static void opengl_copy_subregion(opengl_info& info, std::shared_ptr<streamfx::obs::gs::texture> source, uint32_t mip_level, uint32_t width, uint32_t height)
 {
 	GLuint source_ref = *reinterpret_cast<GLuint*>(gs_texture_get_obj(source->get_object()));
 
