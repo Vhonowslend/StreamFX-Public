@@ -71,7 +71,7 @@ void prores_aw::update(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_d
 void prores_aw::log(ffmpeg_factory* factory, ffmpeg_instance* instance, obs_data_t* settings)
 {
 	DLOG_INFO("[%s]   Apple ProRes:", factory->get_avcodec()->name);
-	::streamfx::ffmpeg::tools::print_av_option_string(instance->get_avcodeccontext(), "profile", "    Profile", [&factory, &instance](int64_t v) {
+	::streamfx::ffmpeg::tools::print_av_option_string(instance->get_avcodeccontext(), "profile", "    Profile", [&factory](int64_t v) {
 		int val = static_cast<int>(v);
 		for (auto ptr = factory->get_avcodec()->profiles; (ptr->profile != FF_PROFILE_UNKNOWN) && (ptr != nullptr); ptr++) {
 			if (ptr->profile == val) {

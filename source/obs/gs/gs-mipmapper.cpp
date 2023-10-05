@@ -55,7 +55,7 @@ std::string opengl_translate_error(GLenum error)
 {
 #define TRANSLATE_CASE(X) \
 	case X:               \
-		return #X;
+		return #X; break;
 
 	switch (error) {
 		TRANSLATE_CASE(GL_NO_ERROR);
@@ -76,7 +76,7 @@ std::string opengl_translate_framebuffer_status(GLenum error)
 {
 #define TRANSLATE_CASE(X) \
 	case X:               \
-		return #X;
+		return #X; break;
 
 	switch (error) {
 		TRANSLATE_CASE(GL_FRAMEBUFFER_COMPLETE);
