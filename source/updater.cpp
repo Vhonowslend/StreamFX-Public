@@ -221,7 +221,7 @@ void streamfx::updater::task(streamfx::util::threadpool::task_data_t)
 {
 	try {
 		auto query_fn = [](std::vector<char>& buffer) {
-			static constexpr std::string_view ST_API_URL = "https://api.github.com/repos/Xaymar/obs-StreamFX/releases?per_page=25&page=1";
+			static constexpr std::string_view ST_API_URL = "https://api.github.com/repos/DAMIOSKIDEV/obs-StreamFX-free/releases?per_page=25&page=1";
 
 			streamfx::util::curl curl;
 			size_t               buffer_offset = 0;
