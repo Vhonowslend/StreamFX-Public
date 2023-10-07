@@ -32,10 +32,12 @@ jobs:
         qt: [ 6 ]
         include:
           - compiler: "MSVC"
+            package_name: "windows"
             CMAKE_SYSTEM_VERSION: "10.0.20348.0"
             CMAKE_GENERATOR: "Visual Studio 17 2022"
             CMAKE_GENERATOR_PLATFORM: "x64"
           - compiler: "Clang"
+            package_name: "windows-clang"
             CMAKE_SYSTEM_VERSION: "10.0.20348.0"
             CMAKE_GENERATOR: "Visual Studio 17 2022"
             CMAKE_GENERATOR_TOOLSET: "ClangCL"
@@ -59,19 +61,16 @@ jobs:
       run: |
         # Define buildspec file
         buildspec="${{ github.workspace }}/third-party/obs-studio/buildspec.json"
-
         # Prebuilt Dependencies Version
         IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "prebuilt" "windows-x64"))
         echo "obs_deps_version=${buildspecdata[0]}" >> "$GITHUB_ENV"
         echo "obs_deps_hash=${buildspecdata[1]}" >> "$GITHUB_ENV"
         echo "obs_deps_url=${buildspecdata[2]}" >> "$GITHUB_ENV"
-
         # Qt Version
         IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "qt${{ matrix.qt }}" "windows-x64"))
         echo "qt_version=${buildspecdata[0]}" >> "$GITHUB_ENV"
         echo "qt_hash=${buildspecdata[1]}" >> "$GITHUB_ENV"
         echo "qt_url=${buildspecdata[2]}" >> "$GITHUB_ENV"
-
         # libOBS Version
         echo "obs_version=$(cd "${{ github.workspace }}/third-party/obs-studio" && git describe --tags --long)" >> "$GITHUB_ENV"
     - name: "Dependency: Qt (Cache)"
@@ -107,24 +106,20 @@ jobs:
       uses: actions/cache@v3
       with:
         path: "${{ github.workspace }}/build/obs"
-        key: "obs${{ env.obs_version }}-${{ matrix.runner }}_${{ matrix.compiler }}-obsdeps${{ env.obs_deps_hash }}-qt${{ env.qt_hash }}-${{ env.CACHE_VERSION }}"
+        key: "obs${{ env.obs_version }}-obsdeps${{ env.obs_deps_hash }}-qt${{ env.qt_hash }}-${{ env.CACHE_VERSION }}"
     - name: "Dependency: OBS Libraries"
       id: obs
       if: ${{ steps.obs-cache.outputs.cache-hit != 'true' }}
-      env:
-        # obs-studio does not support ClangCL
-        CMAKE_GENERATOR_TOOLSET: ""
       shell: bash
       run: |
         # Apply patches to obs-studio
         pushd "${{ github.workspace }}/third-party/obs-studio" > /dev/null
-        for f in ../../patches/obs-studio/*.patch; do
+        for f in ${{ github.workspace }}/patches/obs-studio/*.patch; do
           echo "Applying patch '${f}''..."
           [ -e "$f" ] || continue
           git apply "$f"
         done
         popd > /dev/null
-
         # Build obs-studio
         cmake \
           -S "${{ github.workspace }}/third-party/obs-studio" \
@@ -152,6 +147,9 @@ jobs:
           -B "${{ github.workspace }}/build/ci" \
           -DCMAKE_SYSTEM_VERSION="${{ env.CMAKE_SYSTEM_VERSION }}" \
           -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
+          -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/build/ci/install" \
+          -DPACKAGE_NAME="streamfx-${{ matrix.package_name }}" \
+          -DPACKAGE_PREFIX="${{ github.workspace }}/build/package" \
           -Dlibobs_DIR="${{ github.workspace }}/build/obs/install" \
           -DQt${{ matrix.qt }}_DIR="${{ github.workspace }}/build/qt" \
           -DFFmpeg_DIR="${{ github.workspace }}/build/obsdeps" \
@@ -168,7 +166,21 @@ jobs:
       env:
         CMAKE_BUILD_TYPE: "RelWithDebInfo"
       run: |
-        cmake --build "build/ci" --config ${{ env.CMAKE_BUILD_TYPE }} --target StreamFX
+        cmake --build "build/ci" --config ${{ env.CMAKE_BUILD_TYPE }} --target install
+    - name: "Packaging: Install InnoSetup"
+      if: startsWith( matrix.runner, 'windows' )
+      run: |
+        curl "-kL" "https://cdn.damioski.de/streamfx/innosetup-6.2.1.exe" "-f" "--retry" "5" "-o" "inno.exe"
+        .\inno.exe /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART
+    - name: "Packaging"
+      shell: cmd
+      run: |
+        "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /V10 ".\build\ci\installer.iss"
+    - name: "Artifacts"
+      uses: actions/upload-artifact@v1
+      with:
+        name: "${{ matrix.runner }}-${{ matrix.compiler }}-qt${{ matrix.qt }}"
+        path: "${{ github.workspace }}/build/package"
 
   macos:
     strategy:
@@ -180,6 +192,7 @@ jobs:
         include:
           - compiler: "Clang"
             name: "MacOS"
+            package_name: "macos"
             CMAKE_GENERATOR: "Xcode"
             CMAKE_OSX_DEPLOYMENT_TARGET: "10.15"
             CMAKE_OSX_ARCHITECTURES: "x86_64;arm64"
@@ -204,19 +217,16 @@ jobs:
       run: |
         # Define buildspec file
         buildspec="${{ github.workspace }}/third-party/obs-studio/buildspec.json"
-
         # Prebuilt Dependencies Version
         IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "prebuilt" "macos-universal"))
         echo "obs_deps_version=${buildspecdata[0]}" >> "$GITHUB_ENV"
         echo "obs_deps_hash=${buildspecdata[1]}" >> "$GITHUB_ENV"
         echo "obs_deps_url=${buildspecdata[2]}" >> "$GITHUB_ENV"
-
         # Qt Version
         IFS=$'\n' buildspecdata=($(node tools/buildspec.js "${buildspec}" "qt${{ matrix.qt }}" "macos-universal"))
         echo "qt_version=${buildspecdata[0]}" >> "$GITHUB_ENV"
         echo "qt_hash=${buildspecdata[1]}" >> "$GITHUB_ENV"
         echo "qt_url=${buildspecdata[2]}" >> "$GITHUB_ENV"
-
         # libOBS Version
         echo "obs_version=$(cd "${{ github.workspace }}/third-party/obs-studio" && git describe --tags --long)" >> "$GITHUB_ENV"
     - name: "Dependency: Qt (Cache)"
@@ -252,7 +262,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: "${{ github.workspace }}/build/obs"
-        key: "obs${{ env.obs_version }}-${{ matrix.runner }}_${{ matrix.compiler }}--obsdeps${{ env.obs_deps_hash }}-qt${{ env.qt_hash }}-${{ env.CACHE_VERSION }}"
+        key: "obs${{ env.obs_version }}-obsdeps${{ env.obs_deps_hash }}-qt${{ env.qt_hash }}-${{ env.CACHE_VERSION }}"
     - name: "Dependency: OBS Libraries"
       id: obs
       if: ${{ steps.obs-cache.outputs.cache-hit != 'true' }}
@@ -260,13 +270,12 @@ jobs:
       run: |
         # Apply patches to obs-studio
         pushd "${{ github.workspace }}/third-party/obs-studio" > /dev/null
-        for f in ../../patches/obs-studio/*.patch; do
+        for f in ${{ github.workspace }}/patches/obs-studio/*.patch; do
           echo "Applying patch '${f}''..."
           [ -e "$f" ] || continue
           git apply "$f"
         done
         popd > /dev/null
-
         # Build obs-studio
         cmake \
           -S "${{ github.workspace }}/third-party/obs-studio" \
@@ -292,6 +301,9 @@ jobs:
           -S "${{ github.workspace }}" \
           -B "${{ github.workspace }}/build/ci" \
           -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
+          -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/build/ci/install" \
+          -DPACKAGE_NAME="streamfx-${{ matrix.package_name }}" \
+          -DPACKAGE_PREFIX="${{ github.workspace }}/build/package" \
           -Dlibobs_DIR="${{ github.workspace }}/build/obs/install" \
           -DQt${{ matrix.qt }}_DIR="${{ github.workspace }}/build/qt" \
           -DFFmpeg_DIR="${{ github.workspace }}/build/obsdeps" \
@@ -306,19 +318,42 @@ jobs:
       env:
         CMAKE_BUILD_TYPE: "RelWithDebInfo"
       run: |
-        cmake --build "build/ci" --config RelWithDebInfo --target StreamFX
+        cmake --build "build/ci" --config RelWithDebInfo --target install
+    - name: 'Packaging: Install Packages'
+      shell: bash
+      run: |
+        curl -kL https://cdn.damioski.de/streamfx/Packages-1.2.10.dmg -f --retry 5 -o "Packages.dmg"
+        sudo hdiutil attach ./Packages.dmg
+        pushd /Volumes/Packages*
+        sudo installer -pkg ./Install\ Packages.pkg -target /
+    - name: "Packaging"
+      if: startsWith( matrix.runner, 'macos' )
+      shell: bash
+      run: |
+        packagesbuild "${{ github.workspace }}/build/ci/installer.pkgproj"
+    - name: "Artifacts"
+      uses: actions/upload-artifact@v1
+      with:
+        name: "${{ matrix.runner }}-${{ matrix.compiler }}-qt${{ matrix.qt }}"
+        path: "${{ github.workspace }}/build/package"
 
   ubuntu:
     strategy:
       fail-fast: false
       matrix:
         runner: [ "ubuntu-22.04" ]
-        compiler: [ "GCC-12", "Clang-16" ]
+        compiler: [ "GCC-12", "GCC-11", "Clang-16" ]
         qt: [ 6 ]
         CMAKE_GENERATOR: [ "Ninja Multi-Config" ]
+        exclude:
+          - runner: "ubuntu-22.04"
+            qt: 5
+          - runner: "ubuntu-22.04"
+            compiler: "GCC-11"
         include:
           - runner: "ubuntu-22.04"
             name: "Ubuntu 22.04"
+            package_name: "ubuntu22.04-qt6"
     runs-on: "${{ matrix.runner }}"
     name: "${{ matrix.name }} (${{ matrix.compiler }}, Qt${{ matrix.qt }})"
     env:
@@ -326,6 +361,7 @@ jobs:
       CMAKE_GENERATOR_PLATFORM: "${{ matrix.CMAKE_GENERATOR_PLATFORM }}"
       CMAKE_GENERATOR_TOOLSET: "${{ matrix.CMAKE_GENERATOR_TOOLSET }}"
       CMAKE_SYSTEM_VERSION: "${{ matrix.CMAKE_SYSTEM_VERSION }}"
+      PACKAGE_NAME: "streamfx-${{ matrix.package_name }}"
     steps:
     - name: "Clone"
       uses: actions/checkout@v3
@@ -338,17 +374,14 @@ jobs:
         echo "Installing essential tools..."
         sudo apt-get -qq update
         sudo apt-get install build-essential checkinstall pkg-config cmake ninja-build git
-
         # Install the appropriate compiler
         IFS=$'-' compiler=($(echo "${{ matrix.compiler }}")) # ToDo: Can this be done without invoking a sub-shell?
         echo "Installing '${compiler[0]}' version ${compiler[1]}..."
         if [[ "${compiler[0]}" == "GCC" ]]; then
           sudo apt-get install binutils gcc-${compiler[1]} g++-${compiler[1]}
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${compiler[1]} 800 --slave /usr/bin/g++ g++ /usr/bin/g++-${compiler[1]}
-
           echo "CMAKE_C_COMPILER=gcc-${compiler[1]}" >> "$GITHUB_ENV"
           echo "CMAKE_CXX_COMPILER=g++-${compiler[1]}" >> "$GITHUB_ENV"
-          echo "CMAKE_LINKER=gold" >> "$GITHUB_ENV"
         elif [[ "${compiler[0]}" == "Clang" ]]; then
           curl -jLo /tmp/llvm.sh "https://apt.llvm.org/llvm.sh"
           chmod +x /tmp/llvm.sh
@@ -360,20 +393,25 @@ jobs:
           sudo update-alternatives --install /usr/bin/lldb lldb /usr/bin/lldb-${compiler[1]} 800
           sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-${compiler[1]} 800
           sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-${compiler[1]} 800
-
           echo "CMAKE_C_COMPILER=clang-${compiler[1]}" >> "$GITHUB_ENV"
           echo "CMAKE_CXX_COMPILER=clang++-${compiler[1]}" >> "$GITHUB_ENV"
-          echo "CMAKE_LINKER=ld.lld-${compiler[1]}" >> "$GITHUB_ENV"
         else
           echo "Unknown Compiler"
           exit 1
         fi
+        # Adjust package name
+        echo "PACKAGE_NAME=${{ env.PACKAGE_NAME }}-${compiler[0]}${compiler[1]}" >> "$GITHUB_ENV"
     - name: "Dependency: Qt"
       id: qt
       shell: bash
       run: |
-        sudo apt-get -y install -V \
-          qt6-base-dev qt6-base-private-dev libqt6svg6-dev libgles2-mesa-dev libegl1-mesa-dev libgl1-mesa-dev
+        if [[ ${{ matrix.qt }} -eq 5 ]]; then
+          sudo apt-get -y install -V \
+            qtbase5-dev qtbase5-private-dev libqt5svg5-dev
+        elif [[ ${{ matrix.qt }} -eq 6 ]]; then
+          sudo apt-get -y install -V \
+            qt6-base-dev qt6-base-private-dev libqt6svg6-dev libgles2-mesa-dev libegl1-mesa-dev libgl1-mesa-dev
+        fi
     - name: "Dependency: Prebuilt OBS Studio Dependencies"
       id: obsdeps
       shell: bash
@@ -386,7 +424,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: "${{ github.workspace }}/build/obs"
-        key: "obs${{ env.obs_version }}-${{ matrix.runner }}_${{ matrix.compiler }}--${{ matrix.runner }}-${{ matrix.compiler }}-${{ env.CACHE_VERSION }}"
+        key: "obs${{ env.obs_version }}-${{ matrix.runner }}-${{ matrix.compiler }}-${{ env.CACHE_VERSION }}"
     - name: "Dependency: OBS Libraries"
       id: obs
       if: ${{ steps.obs-cache.outputs.cache-hit != 'true' }}
@@ -394,13 +432,12 @@ jobs:
       run: |
         # Apply patches to obs-studio
         pushd "${{ github.workspace }}/third-party/obs-studio" > /dev/null
-        for f in ../../patches/obs-studio/*.patch; do
+        for f in ${{ github.workspace }}/patches/obs-studio/*.patch; do
           echo "Applying patch '${f}''..."
           [ -e "$f" ] || continue
           git apply "$f"
         done
         popd > /dev/null
-
         # Extra requirements by libobs on Linux.
         sudo apt-get install \
           libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev \
@@ -410,7 +447,6 @@ jobs:
           libgles2-mesa-dev libwayland-dev \
           libasound2-dev libfdk-aac-dev libfontconfig-dev libfreetype6-dev libjack-jackd2-dev libpulse-dev \
           libsndio-dev libspeexdsp-dev libudev-dev libv4l-dev libva-dev libvlc-dev libdrm-dev
-
         # Build obs-studio
         cmake \
           -S "${{ github.workspace }}/third-party/obs-studio" \
@@ -443,7 +479,12 @@ jobs:
           -B "${{ github.workspace }}/build/ci" \
           -DCMAKE_C_COMPILER="${{ env.CMAKE_C_COMPILER }}" \
           -DCMAKE_CXX_COMPILER="${{ env.CMAKE_CXX_COMPILER }}" \
+          -DCMAKE_C_FLAGS="${{ env.CMAKE_C_FLAGS }}" \
+          -DCMAKE_CXX_FLAGS="${{ env.CMAKE_CXX_FLAGS }}" \
           -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
+          -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/build/ci/install" \
+          -DPACKAGE_NAME="streamfx-${{ env.PACKAGE_NAME }}" \
+          -DPACKAGE_PREFIX="${{ github.workspace }}/build/package" \
           -Dlibobs_DIR="${{ github.workspace }}/build/obs/install"
     - name: "Build: Debug"
       continue-on-error: true
@@ -453,4 +494,14 @@ jobs:
     - name: "Build: Release"
       shell: bash
       run: |
-        cmake --build "build/ci" --config RelWithDebInfo --target StreamFX
+        cmake --build "build/ci" --config RelWithDebInfo --target install/strip
+    - name: "Packaging"
+      shell: bash
+      run: |
+        mkdir "${{ github.workspace }}/build/package"
+        cmake --build "${{ github.workspace }}/build/ci" --config RelWithDebInfo --target PACKAGE_7Z
+    - name: "Artifacts"
+      uses: actions/upload-artifact@v1
+      with:
+        name: "${{ matrix.runner }}-${{ matrix.compiler }}-qt${{ matrix.qt }}"
+        path: "${{ github.workspace }}/build/package"
