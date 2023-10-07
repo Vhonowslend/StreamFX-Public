@@ -342,18 +342,12 @@ jobs:
       fail-fast: false
       matrix:
         runner: [ "ubuntu-22.04" ]
-        compiler: [ "GCC-12", "GCC-11", "Clang-16" ]
+        compiler: [ "GCC-12", "Clang-16" ]
         qt: [ 6 ]
         CMAKE_GENERATOR: [ "Ninja Multi-Config" ]
-        exclude:
-          - runner: "ubuntu-22.04"
-            qt: 5
-          - runner: "ubuntu-22.04"
-            compiler: "GCC-11"
         include:
           - runner: "ubuntu-22.04"
             name: "Ubuntu 22.04"
-            package_name: "ubuntu22.04-qt6"
     runs-on: "${{ matrix.runner }}"
     name: "${{ matrix.name }} (${{ matrix.compiler }}, Qt${{ matrix.qt }})"
     env:
@@ -361,7 +355,6 @@ jobs:
       CMAKE_GENERATOR_PLATFORM: "${{ matrix.CMAKE_GENERATOR_PLATFORM }}"
       CMAKE_GENERATOR_TOOLSET: "${{ matrix.CMAKE_GENERATOR_TOOLSET }}"
       CMAKE_SYSTEM_VERSION: "${{ matrix.CMAKE_SYSTEM_VERSION }}"
-      PACKAGE_NAME: "streamfx-${{ matrix.package_name }}"
     steps:
     - name: "Clone"
       uses: actions/checkout@v3
@@ -382,6 +375,7 @@ jobs:
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${compiler[1]} 800 --slave /usr/bin/g++ g++ /usr/bin/g++-${compiler[1]}
           echo "CMAKE_C_COMPILER=gcc-${compiler[1]}" >> "$GITHUB_ENV"
           echo "CMAKE_CXX_COMPILER=g++-${compiler[1]}" >> "$GITHUB_ENV"
+          echo "CMAKE_LINKER=gold" >> "$GITHUB_ENV"
         elif [[ "${compiler[0]}" == "Clang" ]]; then
           curl -jLo /tmp/llvm.sh "https://apt.llvm.org/llvm.sh"
           chmod +x /tmp/llvm.sh
@@ -395,12 +389,11 @@ jobs:
           sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-${compiler[1]} 800
           echo "CMAKE_C_COMPILER=clang-${compiler[1]}" >> "$GITHUB_ENV"
           echo "CMAKE_CXX_COMPILER=clang++-${compiler[1]}" >> "$GITHUB_ENV"
+          echo "CMAKE_LINKER=ld.lld-${compiler[1]}" >> "$GITHUB_ENV"
         else
           echo "Unknown Compiler"
           exit 1
         fi
-        # Adjust package name
-        echo "PACKAGE_NAME=${{ env.PACKAGE_NAME }}-${compiler[0]}${compiler[1]}" >> "$GITHUB_ENV"
     - name: "Dependency: Qt"
       id: qt
       shell: bash
