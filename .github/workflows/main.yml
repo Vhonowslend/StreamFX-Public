@@ -398,13 +398,8 @@ jobs:
       id: qt
       shell: bash
       run: |
-        if [[ ${{ matrix.qt }} -eq 5 ]]; then
-          sudo apt-get -y install -V \
-            qtbase5-dev qtbase5-private-dev libqt5svg5-dev
-        elif [[ ${{ matrix.qt }} -eq 6 ]]; then
-          sudo apt-get -y install -V \
-            qt6-base-dev qt6-base-private-dev libqt6svg6-dev libgles2-mesa-dev libegl1-mesa-dev libgl1-mesa-dev
-        fi
+        sudo apt-get -y install -V \
+          qt6-base-dev qt6-base-private-dev libqt6svg6-dev libgles2-mesa-dev libegl1-mesa-dev libgl1-mesa-dev
     - name: "Dependency: Prebuilt OBS Studio Dependencies"
       id: obsdeps
       shell: bash
@@ -425,12 +420,13 @@ jobs:
       run: |
         # Apply patches to obs-studio
         pushd "${{ github.workspace }}/third-party/obs-studio" > /dev/null
-        for f in ${{ github.workspace }}/patches/obs-studio/*.patch; do
+        for f in ../../patches/obs-studio/*.patch; do
           echo "Applying patch '${f}''..."
           [ -e "$f" ] || continue
           git apply "$f"
         done
         popd > /dev/null
+        
         # Extra requirements by libobs on Linux.
         sudo apt-get install \
           libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev \
@@ -440,6 +436,7 @@ jobs:
           libgles2-mesa-dev libwayland-dev \
           libasound2-dev libfdk-aac-dev libfontconfig-dev libfreetype6-dev libjack-jackd2-dev libpulse-dev \
           libsndio-dev libspeexdsp-dev libudev-dev libv4l-dev libva-dev libvlc-dev libdrm-dev
+          
         # Build obs-studio
         cmake \
           -S "${{ github.workspace }}/third-party/obs-studio" \
@@ -492,7 +489,7 @@ jobs:
       shell: bash
       run: |
         mkdir "${{ github.workspace }}/build/package"
-        cmake --build "${{ github.workspace }}/build/ci" --config RelWithDebInfo --target PACKAGE_7Z
+        cmake --build "${{ github.workspace }}/build/ci" --config RelWithDebInfo --target PACKAGE
     - name: "Artifacts"
       uses: actions/upload-artifact@v1
       with:
