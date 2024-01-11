@@ -13,4 +13,3 @@ There's two ways you can directly contribute to the project. One is by [submitti
 ## Further Links
 * [Wiki](https://github.com/Xaymar/obs-StreamFX/wiki)
 * [Installation Guide](https://github.com/xaymar/obs-streamfx/wiki/Installation)
-
