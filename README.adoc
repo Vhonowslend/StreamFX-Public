@@ -11,6 +11,7 @@ Upgrade your setup with several modern sources, filters, transitions and encoder
 </p>
 ++++
 
+
 === Support the development of StreamFX!
 ++++
 <a href="https://patreon.com/join/xaymar" target="_blank">
