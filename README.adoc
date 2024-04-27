@@ -55,3 +55,4 @@ Licensed under link:https://github.com/Xaymar/obs-StreamFX/blob/root/LICENSE[GPL
 |link:https://www.qt.io/[The Qt Company], and open source contributors
 
 |=================
+
