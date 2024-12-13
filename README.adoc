@@ -1,36 +1,22 @@
-== image:https://raw.githubusercontent.com/Xaymar/obs-StreamFX/master/media/logo.png[alt="StreamFX"]
-Upgrade your setup with several modern sources, filters, transitions and encoders using StreamFX! With several performant and flexible features, you will discover new ways to build your scenes, better ways to encode your content, and take your stream to the next level. Create cool new scenes with 3D effects, add glow or shadow, or blur out content - endless choices, and all of it at your fingertips.
+== image:https://raw.githubusercontent.com/Vhonowslend/StreamFX-Public/root/media/logo.png[alt="StreamFX"]
+StreamFX is a powerful plugin for the popular OBS Studio streaming platform, packed with cutting-edge effects and game-changing features that will elevate your stream to new heights. With a range of high-performance tools and flexible options, you'll unlock endless creative possibilities to transform your scenes. Dive into dynamic 3D layouts, enhance your visuals with glowing effects and shadows, blur content for dramatic flair, or even write your own custom shaders. Whether you're refining your stream or experimenting with fresh looks, StreamFX opens up a world of potential for every creative streamer.
 
 ++++
-<p style="text-align: center; font-weight: bold; font-size: 1.5em;">
-
-<a href="https://github.com/Xaymar/obs-StreamFX/wiki">More Information</a><br/>
-<a href="https://github.com/Xaymar/obs-StreamFX/actions"><img src="https://github.com/Xaymar/obs-StreamFX/actions/workflows/main.yml/badge.svg" alt="CI Status" /></a>
-<a href="https://crowdin.com/project/obs-stream-effects"><img src="https://badges.crowdin.net/obs-stream-effects/localized.svg" alt="Crowdin Status" /></a>
-
-</p>
+<p style="text-align: center; font-weight: bold; font-size: 1.5em;">→→→ <a href="https://github.com/Vhonowslend/StreamFX-Public/wiki/About-StreamFX">Further Information</a> ←←←</p>
 ++++
 
-=== Support the development of StreamFX!
-++++
-<a href="https://patreon.com/join/xaymar" target="_blank">
-<img height="70px" alt="Patreon" style="height: 70px; float:right;" align="right" src="https://user-images.githubusercontent.com/437395/106462708-bd602980-6496-11eb-8f35-038577cf8fd7.jpg"/>
-</a>
-++++
-Maintaining a project like StreamFX requires time and money, of which both are in short supply. If you use any feature of StreamFX, please consider supporting StreamFX via link:https://patreon.com/xaymar[Patreon]. Even as little as 1€ per month matters a lot, plus you get a number of benefits!
-
-=== License
+=== Licenses
 Licensed under link:https://github.com/Xaymar/obs-StreamFX/blob/root/LICENSE[GPLv3 (or later), see LICENSE]. Additional works included are:
 
 [options="header"]
 |=================
-|Work |License |Author(s)
+|Work |License(s) |Author(s)
 
 |link:https://gen.glad.sh/[GLAD]
 |link:https://github.com/Dav1dde/glad/blob/glad2/LICENSE[MIT License]
 |link:https://github.com/Dav1dde/glad/graphs/contributors?type=a[Dav1dde, madebr, BtbN, and more]
 
-|link:https://github.com/nlohmann/json[JSON for Modern C++] 
+|link:https://github.com/nlohmann/json[JSON for Modern C++]
 |link:https://github.com/nlohmann/json/blob/develop/LICENSE.MIT[MIT License]
 |link:https://github.com/nlohmann/json/graphs/contributors?type=a[nlohmann, ChrisKtiching, nickaein, and more]
 
