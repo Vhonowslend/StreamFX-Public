@@ -20,14 +20,14 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CACHE_VERSION: "2022-12-02"
+  CACHE_VERSION: "2025-01-27"
 
 jobs:
   windows:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ "windows-2022" ]
+        runner: [ "windows-2025" ]
         name: [ "Windows" ]
         compiler: [ "MSVC"]
         qt: [ 6 ]
